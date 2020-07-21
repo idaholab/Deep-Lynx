@@ -1,0 +1,13 @@
+.env
+.DS_Store
+dist
+settings.json
+combined.log
+exceptions.log
+node_modules
+/src/user_management/authentication/saml/*.crt
+/src/user_management/authentication/saml/*.key
+.nyc_output
+/src/privateKey.key
+/src/user_management/authentication/saml/localhost.cert
+/src/user_management/authentication/saml/localhost.xml

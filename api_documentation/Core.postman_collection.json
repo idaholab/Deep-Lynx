@@ -1,0 +1,2672 @@
+{
+	"info": {
+		"_postman_id": "b0245026-1d76-44d5-9766-87d2824a30d8",
+		"name": "Deep Lynx",
+		"description": "The construction of megaprojects has consistently demonstrated challenges for project managers in regard to meeting cost, schedule, and performance requirements. Megaproject construction challenges are common place within megaprojects with many active projects in the United States failing to meet cost and schedule efforts by significant margins. Currently, engineering teams operate in siloed tools and disparate teams where connections across design, procurement, and construction systems are translated manually or over brittle point-to-point integrations. The manual nature of data exchange increases the risk of silent errors in the reactor design, with each silent error cascading across the design. These cascading errors lead to uncontrollable risk during construction, resulting in significant delays and cost overruns. Deep Lynx allows for an integrated platform during design and operations of mega projects.\n\nThe Deep Lynx Core API delivers a few main features.\n\n1. Core provides a set of methods and endpoints for manipulating data in an object oriented database. This allows use to store complex datatypes as records and then to compile them into actual, modifiable objects at run-time. Users can store taxonomies or ontologies in a readable format.\n\n2. Core provides methods for storing and retrieving data in a graph database. This data is structured and validated against the aformentioned object oriented database before storage.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Containers",
+			"item": [
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test Container\",\n    \"description\": \"Test Container Description\"\n}",
+							"options": {
+								"raw": {}
+							}
+						},
+						"url": "{{baseURL}}/containers",
+						"description": "Creates a new container object. Containers are the root level object and are considered to contain both the ontology(in form of Metatypes, Metatype Keys, and MetatypeRelationships) as well as the data stored under that ontology.\n\nEndpoint will accept both a single container request object, or an array of container request objects"
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"description\": \"Final Test Description\"\n}",
+							"options": {
+								"raw": {}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id"
+							],
+							"variable": [
+								{
+									"id": "a48e8407-11ef-4800-9400-e22bd6eb5cd2",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Updates the container. This will fail if a container already exists with the proposed updated name."
+					},
+					"response": []
+				},
+				{
+					"name": "Batch Update",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test Container\",\n    \"description\": \"Test Container New Description\",\n    \"id\": \"\"\n}",
+							"options": {
+								"raw": {}
+							}
+						},
+						"url": "{{baseURL}}/containers",
+						"description": "Accepts an array of container objects - will attempt to update all of them in a single transaction. If the update fails, none of them will go through."
+					},
+					"response": []
+				},
+				{
+					"name": "Fetch by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id"
+							],
+							"variable": [
+								{
+									"id": "4eb75a2c-8065-4311-9030-aa0ada1f9a38",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Fetch container by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers?offset=0&limit=100",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers"
+							],
+							"query": [
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "List all containers. MUST include the limit/offset query parameters as of 3/26/2020."
+					},
+					"response": []
+				},
+				{
+					"name": "Archive",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id"
+							],
+							"variable": [
+								{
+									"id": "ae6760f8-e98b-4c8c-b9fe-4349e0d3e1e0",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Archives a Container. This is preferred over deletion as deletion has a cascading effect on the deleted type's keys, relationships, and relationship keys. When in doubt, archive over delete. We'd rather have tombstones than cremating the type."
+					},
+					"response": []
+				}
+			],
+			"description": "Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. All data is separated by containers.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "079fa592-1e40-4bc7-99b5-2b763cd3de36",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "716305b8-a9ea-4b3f-8018-bedeb654517b",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Metatypes",
+			"item": [
+				{
+					"name": "Metatypes",
+					"item": [
+						{
+							"name": "New Type",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Equipment\",\n\t\"description\": \"Physical piece of equipement\"\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatypes",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatypes"
+									],
+									"variable": [
+										{
+											"id": "3599fd3f-539c-42a5-b67f-d8e6d2947a24",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Create a new meta type. Pass in an array for bulk creation."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Type",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatypes/:type-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatypes",
+										":type-id"
+									],
+									"variable": [
+										{
+											"id": "5c14ed86-43df-4f55-93c6-2f28e9319def",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "54364cf5-3a16-4844-b1d1-b440aecabd4b",
+											"key": "type-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Retrieves a single Type."
+							},
+							"response": []
+						},
+						{
+							"name": "List Types",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatypes?limit=100&offset=0",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatypes"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "100"
+										},
+										{
+											"key": "offset",
+											"value": "0"
+										}
+									],
+									"variable": [
+										{
+											"id": "001aa5cd-c78a-4faa-a324-68778fdee717",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "List all types that current container has access to. MUST include the limit/offset query parameters as of 3/26/2020"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Type",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Updated Metatype Name\",\n\t\"description\": \"Final Description\"\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatypes/:type-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatypes",
+										":type-id"
+									],
+									"variable": [
+										{
+											"id": "292c22a2-7496-4f0a-ae34-5bd5444e7c66",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "9896bafb-cbfc-43a9-9733-8df708e372ff",
+											"key": "type-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Update a single Metatype in storage. Will fail if the updated name has already been taken."
+							},
+							"response": []
+						},
+						{
+							"name": "Archive Type",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatypes/:type-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatypes",
+										":type-id"
+									],
+									"variable": [
+										{
+											"id": "069d7d76-3c38-4041-b625-6f589c6f7721",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "06e801ad-987f-49b0-872c-ed20a11c04b8",
+											"key": "type-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Archives the current meta type. This is preferred over deletion as deletion has a cascading effect on the deleted type's keys, relationships, and relationship keys. When in doubt, archive over delete. We'd rather have tombstones than cremating the type."
+							},
+							"response": []
+						}
+					],
+					"description": "Metatypes only consist of a name and a description. While this might change, the bulk of information about a type should reside in its keys and relationships. Metatypes can be considered as \"classes\" when referring to web ontology.",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "a5b1537d-bbb0-4d92-9672-d653a60cd2c6",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "6bca5a1d-aaaf-493c-9ffb-e47fa3081b1f",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Metatype Keys",
+					"item": [
+						{
+							"name": "New Type Key",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"File Name\",\n\t\"required\": true,\n\t\"property_name\": \"fileName\",\n\t\"description\":\"File Upload Name\",\n\t\"data_type\": \"string\",\n\t\"cardinality\": 1,\n\t\"validation\": {\n\t\t\"regex\": \"\",\n\t\t\"min\": 0,\n\t\t\"max\": 0\n\t},\n\t\"unique\": true,\n\t\"options\": [\"\"],\n\t\"defaultValue\": \"can be any type\"\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatypes/:type-id/keys",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatypes",
+										":type-id",
+										"keys"
+									],
+									"variable": [
+										{
+											"id": "4fe94880-bc0e-4b49-8827-b44685f343b1",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "680b2c30-2b72-4dee-949d-8013592e6fa2",
+											"key": "type-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Creates a new key for a type. Keys consist of a unique key name (unique to the type not as a whole), key type, default values, and allowed values. Of those, only the first two are required.\n\nThe `dataType` field accepts only one of the following values: number, string, date, boolean, enumeration. \n\nThe fields `defaultValue` and `options` will only accept an array of the following types: string, boolean, number, float.\n\nPass in an array for bulk creation.\n\nCurrently the validation and cardinality functionality of keys are NOT checked at data insertion."
+							},
+							"response": []
+						},
+						{
+							"name": "List Type's Keys",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatypes/:type-id/keys",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatypes",
+										":type-id",
+										"keys"
+									],
+									"variable": [
+										{
+											"id": "6248d51e-b083-4476-b0aa-21fb33794ef9",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "3b8dec78-f99e-475f-8a8d-30023b8b715d",
+											"key": "type-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Lists all currently valid and available keys for the type. The response includes the key name, its types, allowed values, and default value if present. MUST include the limit/offset query parameters as of 3/26/2020"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Type Key",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatypes/:type-id/keys/:key-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatypes",
+										":type-id",
+										"keys",
+										":key-id"
+									],
+									"variable": [
+										{
+											"id": "a47bf9e0-1973-4cc1-8ed3-374cdaa96d9a",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "e2c14bd2-c79f-4826-8fbd-827d79c1608c",
+											"key": "type-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "a306b5e5-a941-450b-a61e-dbf18b9b4852",
+											"key": "key-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Lists all currently valid and available keys for the type. The response includes the key name, its types, allowed values, and default value if present."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Type Key",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Updated String\",\n\t\"property_name\": \"string\",\n\t\"description\": \"sting\",\n\t\"data_type\": \"string\",\n\t\"default_value\": \"optional - data structure here is dependent on dataType value\"\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatypes/:type-id/keys/:key-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatypes",
+										":type-id",
+										"keys",
+										":key-id"
+									],
+									"variable": [
+										{
+											"id": "991c289c-c5a1-4715-a94d-5478026d6f74",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "3220304e-92d5-42e7-b97e-2816b6789b1a",
+											"key": "type-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "263a7d58-e36c-4224-87bf-9d4513dfea65",
+											"key": "key-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Updates a single key for a type."
+							},
+							"response": []
+						},
+						{
+							"name": "Archive Type Key",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatypes/:type-id/keys/:key-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatypes",
+										":type-id",
+										"keys",
+										":key-id"
+									],
+									"variable": [
+										{
+											"id": "5c651866-1325-4463-a2d6-87a031ff48d5",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "357dc572-394b-44e3-9492-24e5cc68c886",
+											"key": "type-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "32925317-1a16-48bb-863b-d929425a3f3f",
+											"key": "key-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Archiving the type key prevents any new types from implementing the key. It *does not remove key/value pairs on existing types*. We highly recommend you archive type keys instead of deleting them so that previous data is not affected."
+							},
+							"response": []
+						}
+					],
+					"description": "Keys represent a Metatype's properties, and in the future, its methods. This information allows for a user to modify and compile a complex object type/class and store it in a readable format. Inserted data is then validated against a Metatype's declared keys/properties.",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "1754e90f-efda-4485-9576-f3922edf1e95",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "d20ab176-a932-4f1a-921c-8a497cf878eb",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "1f5c5d5e-0d27-494c-9442-8f26619c2722",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "488ff35b-7772-484e-8988-b856596445ce",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Metatype Relationships",
+			"item": [
+				{
+					"name": "Metatype Relationships",
+					"item": [
+						{
+							"name": "New Type Relationship",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Relationhip Test\",\n\t\"description\": \"string\"\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatype_relationships",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatype_relationships"
+									],
+									"variable": [
+										{
+											"id": "ce09e7fd-4a0f-46ec-b6cb-a78d4fb7afbf",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Create a new Type Relationship. Describes the connection that could exist between two types and acts as a vehicle for relationship specific keys.\n\nPass in an array for bulk creation."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Type Relationship",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatype_relationships/:relationship-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatype_relationships",
+										":relationship-id"
+									],
+									"variable": [
+										{
+											"id": "f5da9984-4f66-4a42-a5a8-a8709b4b48ae",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "8b08d9ee-5d98-40c1-ba12-ceff6c7fcfe1",
+											"key": "relationship-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Retrieve a single Type Relationship."
+							},
+							"response": []
+						},
+						{
+							"name": "List Container Type Relationships",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatype_relationships?offset=0&limit=100",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatype_relationships"
+									],
+									"query": [
+										{
+											"key": "offset",
+											"value": "0"
+										},
+										{
+											"key": "limit",
+											"value": "100"
+										}
+									],
+									"variable": [
+										{
+											"id": "c94d1322-26fc-4aa2-a295-2e46679056b8",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Create a new Type relationship pair. Describes the connection between two types and acts as a vehicle for relationship specific keys."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Type Relationship",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Update Test\",\n\t\"description\": \"Final Test Description\"\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatype_relationships/:relationship-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatype_relationships",
+										":relationship-id"
+									],
+									"variable": [
+										{
+											"id": "a72c16d3-defc-43b2-a3cc-1e992e899790",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "cb9ef595-cd1f-4789-8dbd-e122c1a8781d",
+											"key": "relationship-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Archive Type Relationship",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatype_relationships/:relationship-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatype_relationships",
+										":relationship-id"
+									],
+									"variable": [
+										{
+											"id": "1317fcbc-da6f-496b-89ec-90a77c21dca5",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "a05ef9b1-46d2-4d39-a849-40f97339f803",
+											"key": "relationship-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Archive the type relationship key. This does not affect any instances of the parent relationship type."
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "53d73c71-6c27-48f2-abfa-a8681a998323",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "794d12e7-29d6-43f0-9aa2-307c71d295bb",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Metatype Relationship Keys",
+					"item": [
+						{
+							"name": "New Type Relationship Key",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"File Name\",\n\t\"required\": true,\n\t\"property_name\": \"fileName\",\n\t\"description\":\"File Upload Name\",\n\t\"data_type\": \"string\",\n\t\"cardinality\": 1,\n\t\"validation\": {\n\t\t\"regex\": \"\",\n\t\t\"min\": 0,\n\t\t\"max\": 0\n\t},\n\t\"unique\": true,\n\t\"options\": [\"\"],\n\t\"defaultValue\": \"can be any type\"\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatype_relationships/:relationship-id/keys",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatype_relationships",
+										":relationship-id",
+										"keys"
+									],
+									"variable": [
+										{
+											"id": "851a1c0a-8657-41a7-a871-42155b34a3b3",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "b11efc2a-72a6-4a78-8d5e-77d2d2d31cb3",
+											"key": "relationship-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Creates a new key for a type relationship. Keys consist of a unique key name (unique to the type not as a whole), key type, default values, and allowed values. Of those, only the first two are required.\n\nThe `dataType` field accepts only one of the following values: number, string, date, boolean, enumeration. \n\nThe fields `defaultValue` and `options` will only accept an array of the following types: string, boolean, number, float."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Type Relationship Key",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatype_relationships/:relationship-id/keys/:key-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatype_relationships",
+										":relationship-id",
+										"keys",
+										":key-id"
+									],
+									"variable": [
+										{
+											"id": "a80ab3ef-9cb1-4a25-adfb-a2480cbf9c0e",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "3c65e288-c2fa-4b3d-be50-5ffa22a17b16",
+											"key": "relationship-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "5eef63de-61b6-4f36-8e1c-8cdfcc32ecb5",
+											"key": "key-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Retrieve a single key for a Type Relationship by id."
+							},
+							"response": []
+						},
+						{
+							"name": "List Type Relationship Keys",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:id/metatypes_relationships/:relationship-id/keys?offset=0&limit=100",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":id",
+										"metatypes_relationships",
+										":relationship-id",
+										"keys"
+									],
+									"query": [
+										{
+											"key": "offset",
+											"value": "0"
+										},
+										{
+											"key": "limit",
+											"value": "100"
+										}
+									],
+									"variable": [
+										{
+											"id": "3812a051-7285-4e25-9cca-a06159c47dd9",
+											"key": "id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "40f5ffc3-74e4-4af2-a57f-ab2ea626392a",
+											"key": "relationship-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Retrieves all keys for a Type Relationship."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Type Relationship Key",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Updated Name\",\n\t\"description\": \"Updated Name Description\",\n\t\"data_type\": \"string\",\n\t\"default_value\": \"optional - data structure here is dependent on dataType value\"\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatype_relationships/:relationship-id/keys/:key-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatype_relationships",
+										":relationship-id",
+										"keys",
+										":key-id"
+									],
+									"variable": [
+										{
+											"id": "9d20512d-ebea-40ad-b04d-4787a6e40c08",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "5979e787-8171-4666-851a-d248018db7f5",
+											"key": "relationship-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "17a6d541-fabd-453f-b8a4-8f5e2c3b7f5d",
+											"key": "key-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Updates a Type Relationship key. The update must follow the same format as creation."
+							},
+							"response": []
+						},
+						{
+							"name": "Archive Type Relationship Key",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatype_relationships/:relationship-id/keys/:key-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatype_relationships",
+										":relationship-id",
+										"keys",
+										":key-id"
+									],
+									"variable": [
+										{
+											"id": "7f8dc008-f846-4e96-b940-a69003b93550",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "9989a609-3382-4377-a29f-40d7475d8ef3",
+											"key": "relationship-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "9b7084af-110b-42ff-b9ce-c65689ecc4fc",
+											"key": "key-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Archives a Type Relationship Key. This is preferred over deletion as deletion has a cascading effect on the deleted type's keys, relationships, and relationship keys. When in doubt, archive over delete. We'd rather have tombstones than cremating the type."
+							},
+							"response": []
+						}
+					],
+					"description": "Keys represent a Metatype Relationship's properties, and in the future, its methods. This information allows for a user to modify and compile a complex object type/class relationship and store it in a readable format. Relationships declared between already inserted data will be verified against its declared Metatype Relationship.",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "df1a6cec-0438-445e-8cb8-c9acf20a9b3a",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "44c25e63-1e00-41ca-b798-bf2fe7a95ab9",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Metatype Relationship Pairs",
+					"item": [
+						{
+							"name": "New Type Relationship Pair",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Relationship Pair Test\",\n\t\"description\": \"Relationship Pair Test description\",\n\t\"origin_metatype_id\": \"566e3862-6853-45af-8a45-3050576dfb9a\",\n\t\"destination_metatype_id\": \"8bcc0b06-bb44-4176-a581-aa68eafca7f3\",\n\t\"metatype_relationship_id\": \"885e3fca-5066-4be8-a720-63b3c4744e97\",\n\t\"relationship_type\": \"many:many\"\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatype_relationship_pairs/",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatype_relationship_pairs",
+										""
+									],
+									"variable": [
+										{
+											"id": "5d2e4db9-4130-42f8-8360-e9893d1aadab",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Create a new Type Relationship Pair. Describes the connection between two Types by connecting them using a Type Relationship and acts as a vehicle for relationship specific keys.\n\nPass in an array for bulk creation."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Type Relationship Pair",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatype_relationship_pairs/:pair-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatype_relationship_pairs",
+										":pair-id"
+									],
+									"variable": [
+										{
+											"id": "c8e178c7-a823-4c85-9d25-92bfedb89ab0",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "31a2f820-f64b-4496-b89a-8858f217b8a2",
+											"key": "pair-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Retrieves a single Type Relationship Pair."
+							},
+							"response": []
+						},
+						{
+							"name": "List Type Relationship Pairs",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatype_relationship_pairs?limit=100&offset=0",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatype_relationship_pairs"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "100"
+										},
+										{
+											"key": "offset",
+											"value": "0"
+										}
+									],
+									"variable": [
+										{
+											"id": "7e54a6e0-b7f6-4da0-9fc3-aa77b2cf022d",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "List all Type Relationship Pairs for current container."
+							},
+							"response": []
+						},
+						{
+							"name": "Archive Type Pair",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatype_relationship_pairs/:pair-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatype_relationship_pairs",
+										":pair-id"
+									],
+									"variable": [
+										{
+											"id": "86242bee-fbcd-4bda-833d-5bf323c3f0ed",
+											"key": "container-id",
+											"value": "",
+											"type": "string"
+										},
+										{
+											"id": "9cfbdac3-24fd-46fa-bf8d-535ceef4419b",
+											"key": "pair-id",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"description": "Archives a Type Relationship Pair. This is preferred over deletion as deletion has a cascading effect on the deleted type's keys, relationships, and relationship keys. When in doubt, archive over delete. We'd rather have tombstones than cremating the type."
+							},
+							"response": []
+						}
+					],
+					"description": "Metatype Relationship pairs represent the actual connection between two Metatypes. Properties of that relationship are attached to the Metatype Relationship. Again, this only represents the connection between two Metatypes.",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "e906fd5c-8b9a-4fe2-bc35-d8bcfd4c6790",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "26e82fab-a31c-4456-a797-8adb892a3005",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				}
+			],
+			"description": "Type Relationships are stand-alone data types, despite what the name implies. A type relationship consists of a name, description, and a set of keys, or properties. This is much like a Type itself.\n\nA Type Relationship is used to join two Types together, in a Type Relationship Pair. The pair consists of the Type Relationship and its keys(properties) and two Types. This is very similar to a triple storage method where the Type Relationship fulfills of the `verb` portion of a `noun verb noun` storage and ontology pattern.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "d2ae2168-2df8-482f-a48c-50f438773243",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "5f884b69-d39e-4c89-b2cb-8f8287a0180a",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Data Sources",
+			"item": [
+				{
+					"name": "Create Data Source",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"adapter_type\":\"http\",\n\t\"active\": true,\n\t\"config\": {\n\t\t\"endpoint\":\"\",\n        \"auth_method\":\"basic\",\n        \"username\": \"test\",\n       \"password\": \"test\"\n\t}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources"
+							],
+							"variable": [
+								{
+									"id": "c8f98829-b62b-4b20-b2c8-4e8cb7129fe6",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Create new datasource. Currently the only supported data source \ntype is `http` "
+					},
+					"response": []
+				},
+				{
+					"name": "Create Manual Import",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[{\"test\":\"test\"}]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:dataSourceID/imports",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":dataSourceID",
+								"imports"
+							],
+							"variable": [
+								{
+									"id": "7db97c19-dfb3-495f-afaa-a88cafe28a71",
+									"key": "container-id",
+									"value": "eefd565d-b229-45ed-a0a5-4d7cf9ca832c",
+									"type": "string"
+								},
+								{
+									"id": "56f866f5-d708-492c-8ee2-dd3bd6d1c158",
+									"key": "dataSourceID",
+									"value": "52453b10-88ff-4ca4-94f0-bfe920499325",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Create a manual import."
+					},
+					"response": []
+				},
+				{
+					"name": "List Data Sources",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources"
+							],
+							"variable": [
+								{
+									"id": "0a3faa01-2852-4156-8ea7-e22a0113b61f",
+									"key": "container-id",
+									"value": "32462c1d-f512-49ed-81f8-244f77451275",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Imports for Data Source",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:data-source-id/imports",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":data-source-id",
+								"imports"
+							],
+							"variable": [
+								{
+									"id": "06beff49-2190-4b80-9a71-faa7412d054f",
+									"key": "container-id",
+									"value": "32462c1d-f512-49ed-81f8-244f77451275",
+									"type": "string"
+								},
+								{
+									"id": "5f820bd4-c6ab-43ec-9246-7353c5310f4b",
+									"key": "data-source-id",
+									"value": "12c023db-af48-46ab-ad2e-fa30574f5cf8",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Count Unmapped Data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources"
+							],
+							"variable": [
+								{
+									"id": "d51379fb-b2b8-4890-8b0c-71fa07edebec",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Data Source",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":id"
+							],
+							"variable": [
+								{
+									"id": "c56b1a99-6158-43b2-b7ac-cb3c8a00975f",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"id": "c20564f2-cca7-473f-be82-c12bdbb868a9",
+									"key": "id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Retrieve a single data source by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Set Configuration",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"endpoint\":\"\",\n    \"auth_method\":\"basic\",\n\t\"username\": \"test\",\n\t\"password\": \"test\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":id"
+							],
+							"variable": [
+								{
+									"id": "729670c5-bd60-4540-925c-a3d4424d2f6e",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"id": "8e5ec5d9-434d-42d9-955e-05dbb52ac366",
+									"key": "id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Updates a data source's configuration in storage. Note that this request body's structure must match that of the data source's adapter type."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Data Source",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":id"
+							],
+							"variable": [
+								{
+									"id": "049c5b7c-8c43-4bc8-bb22-56039f03966d",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"id": "7e11f8a4-fab0-46b7-ae4e-eda36cba55e5",
+									"key": "id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Permanently remove a data source. Future development includes an option to delete all data inserted by this functionality as well."
+					},
+					"response": []
+				},
+				{
+					"name": "Set Active",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:id/active",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":id",
+								"active"
+							],
+							"variable": [
+								{
+									"id": "f19dbcd5-b33b-4ebb-a375-9b3ef4e27698",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"id": "fc7d74b8-693d-407f-8fbd-120f0e958b46",
+									"key": "id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Permanently remove a data source. Future development includes an option to delete all data inserted by this functionality as well."
+					},
+					"response": []
+				},
+				{
+					"name": "Set Inactive",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:id/active",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":id",
+								"active"
+							],
+							"variable": [
+								{
+									"id": "aab7360d-2652-4a1b-a978-37b2841f25a5",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"id": "784e03fa-bc28-442c-9d2b-45aad2188420",
+									"key": "id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Permanently remove a data source. Future development includes an option to delete all data inserted by this functionality as well."
+					},
+					"response": []
+				}
+			],
+			"description": "This set of endpoints allows the user to create and manage data sources. As of 3/26/2020 only the HTTP data source type is supported, and that's still under construction. Each endpoint functions - but there is no guaranteed functionality with regards to data sources beyond this point.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "215ce222-748b-492a-b004-baca74e82546",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "f0ac35d6-3536-4c5d-8bb4-e8c381b7f675",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Data Export",
+			"item": [
+				{
+					"name": "New Data Export",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"adapter\": \"gremlin\",\n    \"config\": {\n        \"traversal_source\": \"g\",\n        \"graphson_v1\": false,\n        \"user\": \"\",\n        \"key\": \"\",\n        \"endpoint\": \"localhost\",\n        \"port\": \"8182\",\n        \"path\": \"/gremlin\",\n        \"writes_per_second\": 300\n    }\n}",
+							"options": {
+								"raw": {}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/data/export",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"data",
+								"export"
+							],
+							"variable": [
+								{
+									"id": "10acab20-acad-4491-a69e-2381bb0303f5",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Create a new data export with the included configuration. Configuration values may be encrypted depending on the adapter you've choosen. See the readme for the exporters for more information."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Data Export",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/data/export/:export-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"data",
+								"export",
+								":export-id"
+							],
+							"variable": [
+								{
+									"id": "5e55c61f-538d-4b58-9662-bd61dfb13fd7",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"id": "3a792fde-26bd-4872-8c9a-5520908980a4",
+									"key": "export-id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Fetch a data export record by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Start Data Export",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/data/export/:export-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"data",
+								"export",
+								":export-id"
+							],
+							"variable": [
+								{
+									"id": "72f556a0-c4aa-4347-85c8-4b2b19c5b359",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"id": "0585d016-c747-4aa7-9c56-ea6bb8cdb1e9",
+									"key": "export-id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Start or restart a data export by id."
+					},
+					"response": []
+				},
+				{
+					"name": "Stop Data Export",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"adapter\": \"gremlin\",\n\t\"config\": {\n        \"traversal_source\": \"g\",\n        \"mime_type\": \"application/vnd.gremlin-v2.0+json\",\n        \"graphson_v1\": false,\n        \"user\": \"process.env.GREMLIN_PLUGIN_USER || \"\",\n        \"key\": \"process.env.GREMLIN_PLUGIN_KEY || \"\",\n        \"endpoint\": \"process.env.GREMLIN_PLUGIN_ENDPOINT || localhost\",\n        \"port\": \"process.env.GREMLIN_PLUGIN_PORT || 8182\",\n        \"path\": \"process.env.GREMLIN_PLUGIN_ROOT_PATH || gremlin\"\n    }\n}",
+							"options": {
+								"raw": {}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/data/export/:export-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"data",
+								"export",
+								":export-id"
+							],
+							"variable": [
+								{
+									"id": "46c307c8-aafc-4322-bbef-e898c7ef5b11",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"id": "ae6c0e64-6f4b-4850-bcea-1918bc4bfd9f",
+									"key": "export-id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Stops a data export. Please note that this just sends a \"stop\" signal. The application's export adapter determines how to handle the said signal. In some cases the export stopping might not be immediate."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Data Export",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/data/export/:export-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"data",
+								"export",
+								":export-id"
+							],
+							"variable": [
+								{
+									"id": "e7a949d8-d63a-4d49-a249-c9ccefe28b1f",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"id": "d1d02f89-845d-4c9c-9c42-97b5e71263e6",
+									"key": "export-id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Deletes a data export record. This does not guarantee the export will stop immediately."
+					},
+					"response": []
+				}
+			],
+			"description": "These endpoints have to do with the export functionality. A snapshot of the contained data can be exported to numerous different data sources. However, only Gremlin enabled Graph databases are supported for export.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "4a2fc0ef-6c5d-406c-bcf7-c9c5b0efc661",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "7dab1ca7-00b4-437d-b2d0-7a2bcb16333d",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "New User (Username/Password)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"identity_provider\": \"username_password\",\r\n    \"display_name\": \"Test User\",\r\n    \"email\": \"test@test.com\",\r\n    \"password\": \"admin\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{baseURL}}/users",
+						"description": "Create a new user using the username_password identity type."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container_id/users/:user-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container_id",
+								"users",
+								":user-id"
+							],
+							"variable": [
+								{
+									"key": "container_id",
+									"type": "string",
+									"value": ""
+								},
+								{
+									"key": "user-id",
+									"type": "string",
+									"value": ""
+								}
+							]
+						},
+						"description": "List Users"
+					},
+					"response": []
+				},
+				{
+					"name": "List Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container_id/users?limit=100&offset=0",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container_id",
+								"users"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							],
+							"variable": [
+								{
+									"key": "container_id",
+									"type": "string",
+									"value": ""
+								}
+							]
+						},
+						"description": "List Users"
+					},
+					"response": []
+				},
+				{
+					"name": "List User's Roles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container_id/users/:user_id/roles",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container_id",
+								"users",
+								":user_id",
+								"roles"
+							],
+							"variable": [
+								{
+									"key": "container_id",
+									"type": "string",
+									"value": "2a49dc7b-cf56-4e03-85e7-14ac8f0e4b40"
+								},
+								{
+									"key": "user_id",
+									"type": "string",
+									"value": "fb127f5f-0318-4866-9570-10ec81a85cc2"
+								}
+							]
+						},
+						"description": "List Users"
+					},
+					"response": []
+				},
+				{
+					"name": "Assign Role",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"user_id\": \"fb127f5f-0318-4866-9570-10ec81a85cc2\",\n\t\"container_id\": \"2a49dc7b-cf56-4e03-85e7-14ac8f0e4b40\",\n\t\"role_name\": \"editor\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container_id/users/roles",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container_id",
+								"users",
+								"roles"
+							],
+							"variable": [
+								{
+									"key": "container_id",
+									"type": "string",
+									"value": "2a49dc7b-cf56-4e03-85e7-14ac8f0e4b40"
+								}
+							]
+						},
+						"description": "Assign a role to a user, roles must consist of role name and domain"
+					},
+					"response": []
+				}
+			],
+			"description": "These endpoints have to do with user functionality. As of 3/26/2020 there are no methods for creating new users - other than enabling and use SAML-ADFS authentication methods. Unless using this method, either request/build a feature or use Basic Authentication configuration.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "034489e1-6ff9-4b26-baab-1a1afd73cef5",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "74857e33-d666-4ece-87d1-e943481d0d94",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Data Type Mappings",
+			"item": [
+				{
+					"name": "Create Data Type Mapping",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type_key\": \"type\",\n    \"type_value\": \"EQUIPMENT\",\n    \"unique_identifier_key\": \"id\",\n    \"metatype_id\": \"\",\n    \"keys\": [\n        {\n            \"key\": \"RADIUS\",\n            \"metatype_key_id\": \"\"\n        }\n    ],\n    \"example_payload\": {\n        \"RADIUS\": 0.1\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:source-id/mappings",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":source-id",
+								"mappings"
+							],
+							"variable": [
+								{
+									"id": "a48f1caf-ce75-4d0b-9cb8-9e91b9918e1e",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"id": "95246a47-934b-44ba-bb50-73608230a027",
+									"key": "source-id",
+									"value": "fb3290bb-6bbd-4439-a068-a9c1d81c46ba",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Creates a new type mapping in storage"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Data Type Mapping",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type_key\": \"type\",\n    \"type_value\": \"EQUIPMENT\",\n    \"unique_identifier_key\": \"id\",\n    \"metatype_id\": \"\",\n    \"keys\": [\n        {\n            \"key\": \"RADIUS\",\n            \"metatype_key_id\": \"\"\n        }\n    ],\n    \"example_payload\": {\n        \"RADIUS\": 0.1\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:source-id/mappings/:mappingID",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":source-id",
+								"mappings",
+								":mappingID"
+							],
+							"variable": [
+								{
+									"id": "3beb7e52-6f22-4bf5-ba4f-83ee399ae995",
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"id": "d02d2540-ec3c-4ff7-9575-7521f0dad2c3",
+									"key": "source-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"id": "074230ce-c708-466e-9915-7ded842a92a7",
+									"key": "mappingID",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Updates a type mapping in storage."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Data Type Mapping",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type_key\": \"type\",\n    \"type_value\": \"EQUIPMENT\",\n    \"unique_identifier_key\": \"id\",\n    \"metatype_id\": \"\",\n    \"keys\": [\n        {\n            \"key\": \"RADIUS\",\n            \"metatype_key_id\": \"\"\n        }\n    ],\n    \"example_payload\": {\n        \"RADIUS\": 0.1\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:source-id/mappings/:mappingID",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":source-id",
+								"mappings",
+								":mappingID"
+							],
+							"variable": [
+								{
+									"id": "08ddad7e-fe16-49d4-a39c-06bb1ac7a03c",
+									"key": "container-id",
+									"value": "fb3290bb-6bbd-4439-a068-a9c1d81c46ba",
+									"type": "string"
+								},
+								{
+									"id": "c8644610-2fc7-4a39-b4e4-96a5692fd657",
+									"key": "source-id",
+									"value": "fb3290bb-6bbd-4439-a068-a9c1d81c46ba",
+									"type": "string"
+								},
+								{
+									"id": "125bc64d-ed5e-4a9a-9360-4bf60e430540",
+									"key": "mappingID",
+									"value": "877d7d95-d132-4164-8188-0f071d80a9cd",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Retrieve a type mapping from storage."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Unmapped Data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:id/mappings/unmapped",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":id",
+								"mappings",
+								"unmapped"
+							],
+							"variable": [
+								{
+									"id": "bd6be80d-9eff-4cb2-9aca-9ea56d993e0a",
+									"key": "container-id",
+									"value": "c3f86950-ecd5-4397-bbcf-a653c0f93cb0",
+									"type": "string"
+								},
+								{
+									"id": "d0aa1b57-9de3-43f2-97ad-8025425ac719",
+									"key": "id",
+									"value": "5c763b0d-9171-46c9-b744-5853e090d09b",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Retrieve a single unmapped payload for a data source. Use this endpoint as a foundation to build a type mapping off of. This return value will allow you to create a type mapping, and should be saved as the \"example_payload\" for any type mapping created as a result of this return."
+					},
+					"response": []
+				},
+				{
+					"name": "Count Unmapped Data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:id/mappings/unmapped/count",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":id",
+								"mappings",
+								"unmapped",
+								"count"
+							],
+							"variable": [
+								{
+									"id": "e4d60ce1-da42-41c3-a94d-112877efc248",
+									"key": "container-id",
+									"value": "c3f86950-ecd5-4397-bbcf-a653c0f93cb0",
+									"type": "string"
+								},
+								{
+									"id": "b1c2713d-78f4-48e1-8c27-316fcefad3c8",
+									"key": "id",
+									"value": "5c763b0d-9171-46c9-b744-5853e090d09b",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Retrieve a single unmapped payload for a data source. Use this endpoint as a foundation to build a type mapping off of. This return value will allow you to create a type mapping, and should be saved as the \"example_payload\" for any type mapping created as a result of this return."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Data Type Mapping",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type_key\": \"type\",\n    \"type_value\": \"EQUIPMENT\",\n    \"unique_identifier_key\": \"id\",\n    \"metatype_id\": \"\",\n    \"keys\": [\n        {\n            \"key\": \"RADIUS\",\n            \"metatype_key_id\": \"\"\n        }\n    ],\n    \"example_payload\": {\n        \"RADIUS\": 0.1\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:source-id/mappings/:mappingID",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":source-id",
+								"mappings",
+								":mappingID"
+							],
+							"variable": [
+								{
+									"id": "a60cbd7f-79b0-4853-98c7-dca78f15c247",
+									"key": "container-id",
+									"value": "fb3290bb-6bbd-4439-a068-a9c1d81c46ba",
+									"type": "string"
+								},
+								{
+									"id": "ab2efb2d-35b4-4d0c-83ca-549f391ddbb4",
+									"key": "source-id",
+									"value": "fb3290bb-6bbd-4439-a068-a9c1d81c46ba",
+									"type": "string"
+								},
+								{
+									"id": "7f6d748d-4a38-4c16-a3e5-d5608cb35b8c",
+									"key": "mappingID",
+									"value": "877d7d95-d132-4164-8188-0f071d80a9cd",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Permanently removes type mapping from storage."
+					},
+					"response": []
+				}
+			],
+			"description": "These are mappings for taking unknown payloads and mapping them to known data classes and structures prior to storage.",
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "{{baseURL}}/health",
+				"description": "Simple endpoint, returns 200 on call. Can be used for a simple Up monitor by an external service."
+			},
+			"response": []
+		},
+		{
+			"name": "Login (Local)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "",
+							"type": "text"
+						},
+						{
+							"key": "redirect",
+							"value": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": "{{baseURL}}/login",
+				"description": "This endpoint will accept a form submission with three paramters - username, password and redirect. This endpoint will log a user in and then redirect them to the redirect url passed in as part of the form. This allows a SPA like site to log users in effectively."
+			},
+			"response": []
+		},
+		{
+			"name": "Login (API Key/Secret)",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "",
+						"type": "text"
+					},
+					{
+						"key": "x-api-secret",
+						"value": "",
+						"type": "text"
+					}
+				],
+				"url": "{{baseURL}}/login-token",
+				"description": "Calling this endpoint with the x-api-key and x-api-secret headers will return a JWT for the user to whom the key/secert pair belongs. This exists so that a user can programmatically use Deep Lynx by making their own calls against the service instead of using the provided UI."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "e51fcea8-e597-4682-a5ad-c339e2fad3cb",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "028c0934-a9de-45f4-860e-b7185159793a",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

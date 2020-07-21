@@ -1,0 +1,620 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>deep-lynx - v0.0.1</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.js" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">deep-lynx - v0.0.1</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="globals.html">Globals</a>
+				</li>
+			</ul>
+			<h1> deep-lynx - v0.0.1</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<a href="#setup" id="setup" style="color: inherit; text-decoration: none;">
+					<h2>Setup</h2>
+				</a>
+				<hr>
+				<p><strong>Description</strong></p>
+				<p>The construction of megaprojects has consistently demonstrated challenges for project managers in regard to meeting cost, schedule, and performance requirements. Megaproject construction challenges are common place within megaprojects with many active projects in the United States failing to meet cost and schedule efforts by significant margins. Currently, engineering teams operate in siloed tools and disparate teams where connections across design, procurement, and construction systems are translated manually or over brittle point-to-point integrations. The manual nature of data exchange increases the risk of silent errors in the reactor design, with each silent error cascading across the design. These cascading errors lead to uncontrollable risk during construction, resulting in significant delays and cost overruns. Deep Lynx allows for an integrated platform during design and operations of mega projects.</p>
+				<p><strong>Documentation</strong></p>
+				<p><code>de-lynx</code> is documented in the following ways</p>
+				<ol>
+					<li><code>readme.md</code> files throughout the application. Can be found for the main application, export adapters, import adapters, and authentication levels.</li>
+					<li>API level documentation in the form of Postman and Swagger collections - found in <code>api_documentation</code></li>
+					<li>Interactive documentation displayed as a website, found by opening <code>interactive_documentation/index.html</code></li>
+				</ol>
+				<p><strong>Requirements</strong></p>
+				<ul>
+					<li>node.js ^10.x</li>
+					<li>Typescript ^3.5.x</li>
+					<li>npm ^6.x</li>
+					<li>Docker ^18.x (optional - used for reproducible builds and development)</li>
+					<li>Docker Compose ^1.x.x (optional - used for isolation testing)</li>
+				</ul>
+				<p><strong><em>Data Source Requirements</em></strong></p>
+				<ul>
+					<li>PostgreSQL ^11.x <strong>NOTE</strong>: <code>de-lynx</code> only functions with a PostgreSQL database. No other SQL like database is currently supported.</li>
+					<li>pg_cron PostgreSQL extension: Instructions for installation can be found <a href="https://github.com/citusdata/pg_cron">here</a></li>
+				</ul>
+				<p><strong>Installation</strong></p>
+				<ol>
+					<li><code>npm upgrade &amp;&amp; npm install</code></li>
+					<li>Copy and rename <code>.env-sample</code> to <code>.env</code> </li>
+					<li>Update <code>.env</code> file you <strong>must</strong> have the following variables set - everything else has default values you can find in <code>src/config.ts</code> or in the <code>.env-sample</code> file itself.<ul>
+							<li><code>CORE_DB_CONNECTION_STRING</code> - your PostgreSQL database connection string. Note that <code>de-lynx</code> only works with a Postgres data source</li>
+						</ul>
+					</li>
+					<li>Run <code>npm run migrate</code> to automatically create the application schemas in your PostgreSQL database. Scripts are run in alphanumeric order</li>
+					<li>Either use <code>npm run build:dev</code> and run the resulting <code>dist/main.js</code> file or use <code>npm run start</code> to initiate application.</li>
+					<li>At some point you must provide the application with a <code>.key</code> file in order for the encryption of data source configurations and SAML authentication to work. See the scripts located in <code>src/authentication</code> for more information. Generate and provide your secret key to the application via the environment configuration.</li>
+				</ol>
+				<p><strong>Configuration</strong></p>
+				<p>This application&#39;s configuration relies on environment variables of its host system. It is best to rely on your CI/CD pipeline to inject those variables into your runtime environment.</p>
+				<p>In order to facilitate local development, a method has been provided to configure the application as if you were setting environment variables on your local machine. Including a <code>.env</code> file at the projects root and using the <code>npm run watch</code>, <code>npm run start</code>, or any of the <code>npm run docker:*</code> commands will start the application loading the listed variables in that file. See the <code>.env-sample</code> file included as part of the project for a list of required variables and formatting help.</p>
+				<p><strong>Database Migrations</strong></p>
+				<p>A migration tool is provided to run SQL scripts against the configured database. You must run the migration tool at least once after installing the application. </p>
+				<p>Run using <code>npm run migrate</code> after configuring your datasource.</p>
+				<p><strong><em>Authentication</em></strong></p>
+				<p>Instructions for configuring of provided authentication methods (basic, saml etc.) can be found in the authentication readme. See <a href="src/user_management/authentication/readme.md">Authetication Readme</a>. </p>
+				<p><strong>Testing</strong></p>
+				<p>This application uses <a href="https://mochajs.org/">Mocha</a> and <a href="https://www.chaijs.com/">Chai</a> for its unit and integration tests. Visit their respective websites and documentation to learn more about how to use and develop tests with their platforms. Only Gremlin functionality of the application is tested at the present time.</p>
+				<p>Currently, in order to run tests you must provide the application with a data source endpoint. The data source must be a graph database and the data source endpoint must be to a <a href="https://tinkerpop.apache.org/gremlin.html">Gremlin API</a>. If you do not have access to a data source and cannot set one up locally, testing commands have been provided for creating a local instance of Gremlin&#39;s in memory graph database <a href="http://tinkerpop.apache.org/javadocs/3.2.2/full/org/apache/tinkerpop/gremlin/tinkergraph/structure/TinkerGraph.html">TinkerGraph</a>.</p>
+				<p><strong>IMPORTANT NOTE</strong></p>
+				<p>If you decide to test graph functionality (Gremlin functionality in particular) in isolation or use something other than a CosmosDB or CosmosDB emulator you <em>must</em> insure that the <code>DATA_SOURCE_GRAPHSON_V1</code> environment variable is left blank. Failure to do so means you might be communicating in an unsupported format, or an unsupported combination of formats.</p>
+				<p><strong>Available Commands</strong></p>
+				<p>Below is a list of all <code>npm run</code> commands as listed in the <code>package.json</code> file.</p>
+				<ul>
+					<li><code>docker:api:build</code> Creates a docker image of Deep Lynx, injecting the <code>.env</code> file into it.</li>
+					<li><code>docker:api:run</code> Runs previously created Deep Lynx image.</li>
+					<li><code>docker:api:clean</code> Stops the Deep Lynx docker container run by the command above and deletes the container and image.</li>
+					<li><code>docker:postgres:build</code> Creates a docker image containing a Postgres 12 data source, along with all needed extensions.</li>
+					<li><code>docker:postgres:run</code> Runs previously created Postgres.</li>
+					<li><code>docker:postgres:clean</code> Stops the Postgres docker container run by the command above and deletes the container and image.</li>
+					<li><code>gremlin:docker:up</code> Creates and runs a container with the TinkerGraph database and its Gremlin API endpoint exposed on port 8182.</li>
+					<li><code>gremlin:docker:down</code> Stops the TinkerGraph container.</li>
+					<li><code>watch</code> Runs <code>nodemon</code> using the <code>nodemon.json</code> configuration file. This runs the application and automatically rebuilds it when file changes are detected.</li>
+					<li><code>start</code> Compiles and runs the application.</li>
+					<li><code>build:dev</code> Compiles the application in development mode.</li>
+					<li><code>test</code>: Runs all tests using the <code>.env</code> file to configure application and tests.</li>
+					<li><code>generate:documentation</code> Generates HTML documentation.</li>
+				</ul>
+				<a href="#development" id="development" style="color: inherit; text-decoration: none;">
+					<h2>Development</h2>
+				</a>
+				<p>###<strong>Tenets</strong></p>
+				<p>This project has adopted a few basic tenets with regards to development.</p>
+				<ul>
+					<li><strong>Skinny API Layer:</strong> The API layer should be as small and unobtrusive as possible. It should be fairly easy to switch out the <code>express.js</code> framework for another API framework if needed in the future. This practice also allows the use of created code to be more easily used across applications or packaged into standalone libraries.</li>
+					<li><strong>Simple and Explicit:</strong> Variable names, class names, and file names should all be explicit in their naming. While we want to avoid extremely long names, we do favor the use of a slightly longer naming if by doing so the reader can more easily grasp the functionality they&#39;re looking at. While the application is complex, the code making up each of its parts should not be. We favor simple code over elegant masterpieces as we hope to create a project that even beginners can contribute to quickly.</li>
+				</ul>
+				<p>###<strong>General Structure</strong></p>
+				<pre><code class="language-shell">    API (src/api/*.ts)
+       ^
+  API Handlers (src/api_handlers/*.ts)
+       ^
+  Data Functions (src/data_*.ts)
+       ^
+  Data Storage (src/data_storage/*.ts)</code></pre>
+				<p><strong>API</strong></p>
+				<p>The API layer (currently) handles things like user authentication, authorization on routes and connects to either a handler or directly to the data storage layer.</p>
+				<p><strong>API Handlers</strong></p>
+				<p>When a request needs to do more than simply query the storage layer, a handler can be created. Handlers should be free to access any other part of the system - think of them as glue. We want to keep the other parts of the system pure, talking to themselves only, but with handlers we don&#39;t care if they get messy. Handlers should NOT be Express.js specific.</p>
+				<p><strong>Data Functions</strong></p>
+				<p>Data functions should contain all logic related to the importing, handling, and processing of data post-API handling.</p>
+				<p><strong>Data Storage</strong></p>
+				<p>Data storage operations should be limited to a single data type and functionality for manipulating it in storage. On creation and update routes, the storage layer also validates and sanitizes user input (we decided to move that into the storage layer in order to maintain a skinny api layer and to provide an &quot;accept anything, return static types&quot; mentality)</p>
+				<p>###<strong>Data Model Patterns and <code>io-ts</code></strong></p>
+				<p><a href="https://github.com/gcanti/io-ts#piping">io-ts</a> allows the use of type validation and constraints at runtime. For more information I suggest you read this <a href="https://lorefnon.tech/2018/03/25/typescript-and-validations-at-runtime-boundaries/">post</a> and study the repo and documentation.</p>
+				<p>We choose to use <code>io-ts</code> over a more traditional type and class approach for a few reasons. First, we get &quot;free&quot; validation in that once we declare our data model, the mechanics of <code>io-ts</code>&#39;s decoding and encoding system hands us a very robust and safe type validation at runtime. This allowed us to remove much of the validation logic from the API layer and move it closer to our storage layers. It also allowed us to more easily restrict what information can be put into the document storage database and what is shown when the record is retrieved. Second, program safety afforded by runtime type enforcement and validation gives the program a higher chance of recovering from failure and handling illegal input.</p>
+				<p>Here is the <code>io-ts</code> representation of the <code>Container</code> class.</p>
+				<pre><code class="language-$ts">import * as t from &#39;io-ts&#39;
+
+
+const containerRequired = t.type({
+    name: t.string,
+    description: t.string,
+});
+
+const containerOptional= t.partial({
+    _id: t.string,
+});
+
+export const container = t.exact(t.intersection([containerRequired, containerOptional]));
+
+export type Container = t.TypeOf&lt;typeof container&gt;
+</code></pre>
+				<p><code>t.type</code> and <code>t.partial</code> allow the user to declare properties whose value is a valid <code>io-ts</code> type. The use of <code>t.type</code> and/or <code>t.partial</code> allow the user to compose other <code>io-ts</code> types into a complex data object. In this case we have created two data objects. The first, <code>containerRequired</code> is declared with the <code>t.type</code> functionality. In order for an object to be encoded or decoded with this type the object must contain all the properties specified, and their value&#39;s datatype must match the declared type. <code>t.partial</code> on the other hand performs no such check.</p>
+				<p>After we&#39;ve declared the two types, one representing required properties and the other representing optional, we combine them into a single type. We also declare that type to be &quot;exact&quot;. This means that the encoding and decoding functionality will ignore any property on the entered or resulting object that haven&#39;t been declared in the type.</p>
+				<p>The following code is equivalent to this type declaration:</p>
+				<pre><code class="language-$typescript">export type Container = {
+    name: string
+    description: string
+    _id?: string
+}</code></pre>
+				<p>While the <code>io-ts</code> implementation requires more code, and looks more complex, the flexibility and functionality we gain from using <code>io-ts</code> makes the higher learning curve and longer declaration worth it. Take a look at <code>src/data_types/metatype_keyT.ts</code> for an even better look at a complex data type using <code>io.ts</code></p>
+				<p><strong>Payload Validation Errors</strong></p>
+				<p>The use of <code>io-ts</code> for payload validation produces detailed, if seemingly complex, set of validation error messages. Below is an example of what a validation error might look like. We will walk through each bit.</p>
+				<pre><code class="language-$xslt">Invalid value undefined supplied to : Exact&lt;({ name: string, description: string, originMetatypeID: string, destinationMetatypeID: string, metatypeRelationshipID: string } &amp; Partial&lt;{ _id: string, containerID: string }&gt;)&gt;
+0: { name: string, description: string, originMetatypeID: string, destinationMetatypeID: string, metatypeRelationshipID: string }
+name: string</code></pre>
+				<p>The first line of the error message informs the user that an error occurred, the type of error, and then returns a formatted representation of the <code>io-ts</code> structured type the validation error was thrown for. This error was thrown when attempting to decode a user supplied payload into the <code>MetatypeRelationshipPair</code> type. That type is a combination of required fields, <code>t.exact</code>, and partial fields, <code>t.partial</code>. This is incredibly useful. We inform the user of the exact payload format they must follow in order to avoid errors.</p>
+				<p>The second line is a simplified expression of what the user supplied payload must look like, along with each field&#39;s expected type.</p>
+				<p>The third line informs the user of the exact field which caused the payload validation failure.</p>
+				<a href="#application" id="application" style="color: inherit; text-decoration: none;">
+					<h2>Application</h2>
+				</a>
+				<p><strong>Data storage operations and <code>PostgresStorage</code></strong></p>
+				<p>TODO: fill this with the explanation of the two ways of handling data storage classes
+					one being the way containers/metatypes etc are stored - meant to be thin layers
+				between storage and API vs ORM like functionality for more general, internal operations</p>
+				<a href="#data-sources" id="data-sources" style="color: inherit; text-decoration: none;">
+					<h3>Data Sources</h3>
+				</a>
+				<p>Data can only be ingested through the use of Data Sources. A user must create a Data Source using the relevant endpoints before Deep Lynx can ingest data. This application comes with the ability to connect to various data sources via data source adapters. See <a href="src/data_importing/readme.md">Data Sources</a>.</p>
+				<a href="#export-snapshot" id="export-snapshot" style="color: inherit; text-decoration: none;">
+					<h3>Export Snapshot</h3>
+				</a>
+				<p>This application comes with the ability to export a snapshot to various storage mediums. See <a href="src/data_exporting/readme.md">Export Adapters</a>. </p>
+				<a href="#authentication" id="authentication" style="color: inherit; text-decoration: none;">
+					<h3>Authentication</h3>
+				</a>
+				<p>This application allows the end user to use either Bearer Token or Basic Authentication for application security. See <a href="src/user_management/authentication/readme.md">Authentication</a> for more information.</p>
+				<a href="#authorization" id="authorization" style="color: inherit; text-decoration: none;">
+					<h3>Authorization</h3>
+				</a>
+				<p>This application uses <a href="https://casbin.org/">Casbin</a> to handle user authorization.</p>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_api_container_routes_.html">&quot;api/container_<wbr>routes&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_api_data_source_routes_.html">&quot;api/data_<wbr>source_<wbr>routes&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_api_metatype_key_routes_.html">&quot;api/metatype_<wbr>key_<wbr>routes&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_api_metatype_relationship_key_routes_.html">&quot;api/metatype_<wbr>relationship_<wbr>key_<wbr>routes&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_api_metatype_relationship_pair_routes_.html">&quot;api/metatype_<wbr>relationship_<wbr>pair_<wbr>routes&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_api_metatype_relationship_routes_.html">&quot;api/metatype_<wbr>relationship_<wbr>routes&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_api_metatype_routes_.html">&quot;api/metatype_<wbr>routes&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_api_middleware_.html">&quot;api/middleware&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_api_router_.html">&quot;api/router&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_api_server_.html">&quot;api/server&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_api_user_routes_.html">&quot;api/user_<wbr>routes&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_api_handlers_container_.html">&quot;api_<wbr>handlers/container&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_api_handlers_data_source_.html">&quot;api_<wbr>handlers/data_<wbr>source&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_boot_storage_.html">&quot;boot_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_config_.html">&quot;config&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_exporting_exporter_.html">&quot;data_<wbr>exporting/exporter&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_exporting_gremlinimpl_.html">&quot;data_<wbr>exporting/gremlin<wbr>Impl&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_importing_data_source_.html">&quot;data_<wbr>importing/data_<wbr>source&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_importing_httpimpl_.html">&quot;data_<wbr>importing/http<wbr>Impl&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_processing_processing_.html">&quot;data_<wbr>processing/processing&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_processing_type_mapping_.html">&quot;data_<wbr>processing/type_<wbr>mapping&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_adapters_gremlin_edges_.html">&quot;data_<wbr>storage/adapters/gremlin/edges&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_adapters_gremlin_graphson_v1_reader_reader_.html">&quot;data_<wbr>storage/adapters/gremlin/graphson_<wbr>v1_<wbr>reader/reader&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_adapters_gremlin_graphson_v1_reader_type_serializers_.html">&quot;data_<wbr>storage/adapters/gremlin/graphson_<wbr>v1_<wbr>reader/type_<wbr>serializers&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_adapters_gremlin_gremlin_.html">&quot;data_<wbr>storage/adapters/gremlin/gremlin&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_adapters_gremlin_types_.html">&quot;data_<wbr>storage/adapters/gremlin/types&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_adapters_gremlin_vertices_.html">&quot;data_<wbr>storage/adapters/gremlin/vertices&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_adapters_mongo_mongo_.html">&quot;data_<wbr>storage/adapters/mongo/mongo&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_adapters_postgres_postgres_.html">&quot;data_<wbr>storage/adapters/postgres/postgres&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_container_storage_.html">&quot;data_<wbr>storage/container_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_export_export_storage_.html">&quot;data_<wbr>storage/export/export_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_export_gremlin_export_storage_.html">&quot;data_<wbr>storage/export/gremlin_<wbr>export_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_graph_edge_storage_.html">&quot;data_<wbr>storage/graph/edge_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_graph_graph_storage_.html">&quot;data_<wbr>storage/graph/graph_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_graph_node_storage_.html">&quot;data_<wbr>storage/graph/node_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_import_data_source_storage_.html">&quot;data_<wbr>storage/import/data_<wbr>source_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_import_data_staging_storage_.html">&quot;data_<wbr>storage/import/data_<wbr>staging_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_import_import_storage_.html">&quot;data_<wbr>storage/import/import_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_import_type_mapping_storage_.html">&quot;data_<wbr>storage/import/type_<wbr>mapping_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_metatype_key_storage_.html">&quot;data_<wbr>storage/metatype_<wbr>key_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_metatype_relationship_key_storage_.html">&quot;data_<wbr>storage/metatype_<wbr>relationship_<wbr>key_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_metatype_relationship_pair_storage_.html">&quot;data_<wbr>storage/metatype_<wbr>relationship_<wbr>pair_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_metatype_relationship_storage_.html">&quot;data_<wbr>storage/metatype_<wbr>relationship_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_metatype_storage_.html">&quot;data_<wbr>storage/metatype_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_mongostorage_.html">&quot;data_<wbr>storage/mongo<wbr>Storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_postgresstorage_.html">&quot;data_<wbr>storage/postgres<wbr>Storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_user_management_keypair_storage_.html">&quot;data_<wbr>storage/user_<wbr>management/keypair_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_data_storage_user_management_user_storage_.html">&quot;data_<wbr>storage/user_<wbr>management/user_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_file_storage_file_storage_.html">&quot;file_<wbr>storage/file_<wbr>storage&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_logger_.html">&quot;logger&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_main_.html">&quot;main&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_migrate_.html">&quot;migrate&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_result_.html">&quot;result&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_containers_storage_spec_.html">&quot;test/containers/storage.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_data_processing_http_impl_spec_.html">&quot;test/data_<wbr>processing/http_<wbr>impl.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_data_processing_import_spec_.html">&quot;test/data_<wbr>processing/import.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_data_processing_processing_spec_.html">&quot;test/data_<wbr>processing/processing.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_data_processing_storage_spec_.html">&quot;test/data_<wbr>processing/storage.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_data_processing_type_mapping_spec_.html">&quot;test/data_<wbr>processing/type_<wbr>mapping.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_edges_storage_spec_.html">&quot;test/edges/storage.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_exports_gremlin_storage_spec_.html">&quot;test/exports/gremlin_<wbr>storage.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_exports_storage_spec_.html">&quot;test/exports/storage.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_file_storage_storage_spec_.html">&quot;test/file_<wbr>storage/storage.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_graphs_storage_spec_.html">&quot;test/graphs/storage.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_gremlin_graphson_test_bodies_.html">&quot;test/gremlin/graphson_<wbr>test_<wbr>bodies&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_gremlin_graphson_v1_reader_spec_.html">&quot;test/gremlin/graphson_<wbr>v1_<wbr>reader.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_gremlin_gremlin_spec_.html">&quot;test/gremlin/gremlin.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_metatype_keys_compile_spec_.html">&quot;test/metatype_<wbr>keys/compile.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_metatype_keys_storage_spec_.html">&quot;test/metatype_<wbr>keys/storage.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_metatype_relationship_pairs_storage_spec_.html">&quot;test/metatype_<wbr>relationship_<wbr>pairs/storage.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_metatype_relationships_storage_spec_.html">&quot;test/metatype_<wbr>relationships/storage.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_metatypes_storage_spec_.html">&quot;test/metatypes/storage.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_nodes_storage_spec_.html">&quot;test/nodes/storage.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_users_keypair_spec_.html">&quot;test/users/keypair.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_test_users_storage_spec_.html">&quot;test/users/storage.spec&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_containert_.html">&quot;types/container<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_export_exportt_.html">&quot;types/export/export<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_export_gremlinconfigt_.html">&quot;types/export/gremlin<wbr>Config<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_export_gremlinedget_.html">&quot;types/export/gremlin<wbr>Edge<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_export_gremlinnodet_.html">&quot;types/export/gremlin<wbr>Node<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_graph_edget_.html">&quot;types/graph/edge<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_graph_grapht_.html">&quot;types/graph/graph<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_graph_nodet_.html">&quot;types/graph/node<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_import_aveva_avevaelementt_.html">&quot;types/import/aveva/aveva<wbr>Element<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_import_datasourcet_.html">&quot;types/import/data<wbr>Source<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_import_datastagingt_.html">&quot;types/import/data<wbr>Staging<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_import_httpconfigt_.html">&quot;types/import/http<wbr>Config<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_import_importt_.html">&quot;types/import/import<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_import_manualconfigt_.html">&quot;types/import/manual<wbr>Config<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_import_typemappingt_.html">&quot;types/import/type<wbr>Mapping<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_metatypet_.html">&quot;types/metatype<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_metatype_keyt_.html">&quot;types/metatype_<wbr>key<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_metatype_relationshipt_.html">&quot;types/metatype_<wbr>relationship<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_metatype_relationship_keyt_.html">&quot;types/metatype_<wbr>relationship_<wbr>key<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_metatype_relationship_pairt_.html">&quot;types/metatype_<wbr>relationship_<wbr>pair<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_recordmetat_.html">&quot;types/record<wbr>Meta<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_sessiont_.html">&quot;types/session<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_user_management_assignrolepayloadt_.html">&quot;types/user_<wbr>management/assign<wbr>Role<wbr>Payload<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_user_management_keypairt_.html">&quot;types/user_<wbr>management/key<wbr>Pair<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_user_management_usert_.html">&quot;types/user_<wbr>management/user<wbr>T&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_user_management_authentication_jwt_.html">&quot;user_<wbr>management/authentication/jwt&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_user_management_authentication_local_.html">&quot;user_<wbr>management/authentication/local&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_user_management_authentication_saml_saml_adfs_.html">&quot;user_<wbr>management/authentication/saml/saml-<wbr>adfs&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_user_management_authorization_authorization_.html">&quot;user_<wbr>management/authorization/authorization&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_user_management_users_.html">&quot;user_<wbr>management/users&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_utilities_.html">&quot;utilities&quot;</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
+				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>
