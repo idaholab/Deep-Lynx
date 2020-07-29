@@ -12,6 +12,9 @@
 				{
 					"name": "Create",
 					"request": {
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -19,12 +22,6 @@
 								"name": "Content-Type",
 								"value": "application/json",
 								"type": "text"
-							},
-							{
-								"key": "Authorization",
-								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZWNyZXQiOiIkMmIkMTAkZXJOU0tDTXZzd3gvYWIwODY0bTBXZUEwZEswcG5GU09vdEE2TDFmYkxPWWY3b2NOcEpTamkiLCJrZXkiOiJaR0psT1RFelltVXRNek16WWkwME1HTTRMV0ptT0RFdE9HWTFaamcxTldJMVlXUTQiLCJ1c2VyX2lkIjoiMWEyOTgxODktNTJhYS00MDVlLTkwZmItMTgwZjM3MDE5YjI4IiwiaWQiOiIxYTI5ODE4OS01MmFhLTQwNWUtOTBmYi0xODBmMzcwMTliMjgiLCJpZGVudGl0eV9wcm92aWRlcl9pZCI6bnVsbCwiaWRlbnRpdHlfcHJvdmlkZXIiOiJ1c2VybmFtZV9wYXNzd29yZCIsImRpc3BsYXlfbmFtZSI6IlN1cGVydXNlciIsImVtYWlsIjoiYWRtaW5AYWRtaW4uY29tIiwiYWN0aXZlIjp0cnVlLCJhZG1pbiI6dHJ1ZSwiY3JlYXRlZF9hdCI6IjIwMjAtMDctMDlUMDY6MDA6MDAuMDAwWiIsIm1vZGlmaWVkX2F0IjoiMjAyMC0wNy0wOVQwNjowMDowMC4wMDBaIiwiY3JlYXRlZF9ieSI6InN5c3RlbSIsIm1vZGlmaWVkX2J5Ijoic3lzdGVtIiwicGFzc3dvcmQiOiIkMmIkMTQkZWpOR0IzYzN2WmdXVGszSWUuYkJmdUJFUjY5VDNYOWxvcHc2bU93aURWeW01ZXE1YnFLdnEiLCJwZXJtaXNzaW9ucyI6W10sImlhdCI6MTU5NDMxNTY0MSwiZXhwIjoxNTk0MzIxNzAxfQ.HkfzakiM0yhSk1KAuvCl0M6MyQf5JQ5Dr226nad8hF0",
-								"type": "text",
-								"disabled": true
 							}
 						],
 						"body": {
@@ -188,6 +185,9 @@
 				}
 			],
 			"description": "Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. All data is separated by containers.",
+			"auth": {
+				"type": "noauth"
+			},
 			"event": [
 				{
 					"listen": "prerequest",
