@@ -9,9 +9,12 @@ import {StartDataSourcePolling} from "./data_importing/data_source";
 import {StartDataProcessing} from "./data_processing/processing";
 import Config from "./config"
 import {CreateDefaultSuperUser} from "./user_management/users";
+import FileStorageProvider from "./file_storage/file_storage";
 
 
 const storage = new Storage();
+
+FileStorageProvider()
 
 storage.boot()
     .then(() => {

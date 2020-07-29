@@ -87,7 +87,7 @@ export class Config {
   }
 
   get file_storage_method(): string {
-    return this.file_storage_method;
+    return this._file_storage_method;
   }
 
   get azure_blob_connection_string(): string {

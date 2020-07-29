@@ -21,6 +21,10 @@ export default class AzureBlobImpl implements FileStorage {
         // check to see if the container has been created already
         this._ContainerClient = this._BlobServiceClient.getContainerClient(containerName)
 
+        this._ContainerClient.create()
+            .then(response => console.log(response))
+            .catch((e: any) => console.log(`ERROR ${e}`))
+
     }
 
 }
