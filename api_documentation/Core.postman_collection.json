@@ -248,9 +248,8 @@
 									],
 									"variable": [
 										{
-											"id": "3599fd3f-539c-42a5-b67f-d8e6d2947a24",
 											"key": "container-id",
-											"value": "",
+											"value": "b01885bf-c513-425f-af86-6d5043ef3d64",
 											"type": "string"
 										}
 									]
@@ -300,7 +299,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseURL}}/containers/:container-id/metatypes?limit=100&offset=0&name",
+									"raw": "{{baseURL}}/containers/:container-id/metatypes?limit=100&offset=0&name=",
 									"host": [
 										"{{baseURL}}"
 									],
@@ -320,14 +319,13 @@
 										},
 										{
 											"key": "name",
-											"value": null
+											"value": ""
 										}
 									],
 									"variable": [
 										{
-											"id": "001aa5cd-c78a-4faa-a324-68778fdee717",
 											"key": "container-id",
-											"value": "",
+											"value": "84adf9cf-23ab-43c9-a002-b8f748ae83da",
 											"type": "string"
 										}
 									]
@@ -2106,10 +2104,7 @@
 					},
 					"request": {
 						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZWNyZXQiOiIkMmIkMTAkdE5kc2NRamV2YnRrL2YzYjdSNG8yLngvczJxNWRlQWVwRjhDZTZxZDEvUUhmc2FSVkdSQnUiLCJrZXkiOiJNR0kxWXpFek9ERXRNV1ZpTnkwMFpUazNMVGt4TkRJdE4yVXdNVEprWkRjelptWmsiLCJ1c2VyX2lkIjoiNGJlNzRkMWQtMDliYi00ODc2LTk4MzktMDM4N2ViOTZjYzcwIiwiaWQiOiI0YmU3NGQxZC0wOWJiLTQ4NzYtOTgzOS0wMzg3ZWI5NmNjNzAiLCJpZGVudGl0eV9wcm92aWRlcl9pZCI6bnVsbCwiaWRlbnRpdHlfcHJvdmlkZXIiOiJ1c2VybmFtZV9wYXNzd29yZCIsImRpc3BsYXlfbmFtZSI6IlN1cGVydXNlciIsImVtYWlsIjoiYWRtaW5AYWRtaW4uY29tIiwiYWN0aXZlIjp0cnVlLCJhZG1pbiI6dHJ1ZSwiY3JlYXRlZF9hdCI6IjIwMjAtMDctMTBUMDY6MDA6MDAuMDAwWiIsIm1vZGlmaWVkX2F0IjoiMjAyMC0wNy0xMFQwNjowMDowMC4wMDBaIiwiY3JlYXRlZF9ieSI6InN5c3RlbSIsIm1vZGlmaWVkX2J5Ijoic3lzdGVtIiwicGFzc3dvcmQiOiIkMmIkMTQkTFRHTmNSM2Z6cU1vYklSSUY3WmpBTzRDdFFzeW14a1hBUlBFa2xkb2gzOTRmN1FiVFpnblciLCJwZXJtaXNzaW9ucyI6W10sImlhdCI6MTU5NDY1NjY1MSwiZXhwIjoxNTk0NjYyNzExfQ.8E7wbDT4NDFHez70PZTBPBvDQUer_5hfcR_CG1CyqEI"
-							}
+							"type": "noauth"
 						},
 						"method": "GET",
 						"header": [],
@@ -2147,10 +2142,7 @@
 					"name": "Generate KeyPair For User",
 					"request": {
 						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZWNyZXQiOiIkMmIkMTAkdE5kc2NRamV2YnRrL2YzYjdSNG8yLngvczJxNWRlQWVwRjhDZTZxZDEvUUhmc2FSVkdSQnUiLCJrZXkiOiJNR0kxWXpFek9ERXRNV1ZpTnkwMFpUazNMVGt4TkRJdE4yVXdNVEprWkRjelptWmsiLCJ1c2VyX2lkIjoiNGJlNzRkMWQtMDliYi00ODc2LTk4MzktMDM4N2ViOTZjYzcwIiwiaWQiOiI0YmU3NGQxZC0wOWJiLTQ4NzYtOTgzOS0wMzg3ZWI5NmNjNzAiLCJpZGVudGl0eV9wcm92aWRlcl9pZCI6bnVsbCwiaWRlbnRpdHlfcHJvdmlkZXIiOiJ1c2VybmFtZV9wYXNzd29yZCIsImRpc3BsYXlfbmFtZSI6IlN1cGVydXNlciIsImVtYWlsIjoiYWRtaW5AYWRtaW4uY29tIiwiYWN0aXZlIjp0cnVlLCJhZG1pbiI6dHJ1ZSwiY3JlYXRlZF9hdCI6IjIwMjAtMDctMTBUMDY6MDA6MDAuMDAwWiIsIm1vZGlmaWVkX2F0IjoiMjAyMC0wNy0xMFQwNjowMDowMC4wMDBaIiwiY3JlYXRlZF9ieSI6InN5c3RlbSIsIm1vZGlmaWVkX2J5Ijoic3lzdGVtIiwicGFzc3dvcmQiOiIkMmIkMTQkTFRHTmNSM2Z6cU1vYklSSUY3WmpBTzRDdFFzeW14a1hBUlBFa2xkb2gzOTRmN1FiVFpnblciLCJwZXJtaXNzaW9ucyI6W10sImlhdCI6MTU5NDY1NjY1MSwiZXhwIjoxNTk0NjYyNzExfQ.8E7wbDT4NDFHez70PZTBPBvDQUer_5hfcR_CG1CyqEI"
-							}
+							"type": "noauth"
 						},
 						"method": "POST",
 						"header": [],
@@ -2188,10 +2180,7 @@
 					"name": "Delete KeyPair For User",
 					"request": {
 						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZWNyZXQiOiIkMmIkMTAkdE5kc2NRamV2YnRrL2YzYjdSNG8yLngvczJxNWRlQWVwRjhDZTZxZDEvUUhmc2FSVkdSQnUiLCJrZXkiOiJNR0kxWXpFek9ERXRNV1ZpTnkwMFpUazNMVGt4TkRJdE4yVXdNVEprWkRjelptWmsiLCJ1c2VyX2lkIjoiNGJlNzRkMWQtMDliYi00ODc2LTk4MzktMDM4N2ViOTZjYzcwIiwiaWQiOiI0YmU3NGQxZC0wOWJiLTQ4NzYtOTgzOS0wMzg3ZWI5NmNjNzAiLCJpZGVudGl0eV9wcm92aWRlcl9pZCI6bnVsbCwiaWRlbnRpdHlfcHJvdmlkZXIiOiJ1c2VybmFtZV9wYXNzd29yZCIsImRpc3BsYXlfbmFtZSI6IlN1cGVydXNlciIsImVtYWlsIjoiYWRtaW5AYWRtaW4uY29tIiwiYWN0aXZlIjp0cnVlLCJhZG1pbiI6dHJ1ZSwiY3JlYXRlZF9hdCI6IjIwMjAtMDctMTBUMDY6MDA6MDAuMDAwWiIsIm1vZGlmaWVkX2F0IjoiMjAyMC0wNy0xMFQwNjowMDowMC4wMDBaIiwiY3JlYXRlZF9ieSI6InN5c3RlbSIsIm1vZGlmaWVkX2J5Ijoic3lzdGVtIiwicGFzc3dvcmQiOiIkMmIkMTQkTFRHTmNSM2Z6cU1vYklSSUY3WmpBTzRDdFFzeW14a1hBUlBFa2xkb2gzOTRmN1FiVFpnblciLCJwZXJtaXNzaW9ucyI6W10sImlhdCI6MTU5NDY1NjY1MSwiZXhwIjoxNTk0NjYyNzExfQ.8E7wbDT4NDFHez70PZTBPBvDQUer_5hfcR_CG1CyqEI"
-							}
+							"type": "noauth"
 						},
 						"method": "DELETE",
 						"header": [],
@@ -2205,19 +2194,24 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}/users/:user_id/keys",
+							"raw": "{{baseURL}}/users/:user_id/keys/:key_id",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"users",
 								":user_id",
-								"keys"
+								"keys",
+								":key_id"
 							],
 							"variable": [
 								{
 									"key": "user_id",
 									"value": "0ace57f6-c88c-46a5-87d0-31f2fde85f5f"
+								},
+								{
+									"key": "key_id",
+									"value": "ODFmMTdjOGUtYzg1ZC00M2YyLTg4MWItMGZhNTU3MmM4YTY0"
 								}
 							]
 						},
