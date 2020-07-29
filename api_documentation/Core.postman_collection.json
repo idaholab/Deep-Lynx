@@ -2135,7 +2135,7 @@
 								}
 							]
 						},
-						"description": "Retreives only the active keys for supplied user. Secerts are hashed and are never revealed past initial creation."
+						"description": "Retrieves only the active keys for supplied user. Secerts are hashed and are never revealed past initial creation."
 					},
 					"response": []
 				},
