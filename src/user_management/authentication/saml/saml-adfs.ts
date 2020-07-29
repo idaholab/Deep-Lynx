@@ -39,7 +39,7 @@ export function SetSamlAdfs(app: express.Application) {
                     }
 
                     if(result.isError && result.error?.errorCode === 404) {
-                        storage.List(0, 1)
+                        storage.List()
                             .then(users => {
                                 storage.Create('saml-adfs login', {
                                     identity_provider_id: profile["http://schemas.microsoft.com/identity/claims/objectidentifier"],

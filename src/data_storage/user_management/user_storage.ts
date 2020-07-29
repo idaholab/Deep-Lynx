@@ -69,8 +69,12 @@ export default class UserStorage extends PostgresStorage{
         return super.retrieve<UserT>(UserStorage.retrieveByIdentityProviderStatement(id))
     }
 
-    public List(offset: number, limit:number): Promise<Result<UserT[]>> {
-        return super.rows<UserT>(UserStorage.listStatement(offset, limit))
+    public List(): Promise<Result<UserT[]>> {
+        return super.rows<UserT>(UserStorage.listStatement())
+    }
+
+    public ListFromIDs(ids: string[]): Promise<Result<UserT[]>> {
+        return super.rows<UserT>(UserStorage.listFromIDsStatement(ids))
     }
 
     // Update partially updates the User. This function will allow you to
@@ -163,10 +167,18 @@ export default class UserStorage extends PostgresStorage{
         }
     }
 
-    private static listStatement(offset:number, limit:number): QueryConfig {
+    private static listStatement(): QueryConfig {
         return {
-            text: `SELECT * FROM users OFFSET $1 LIMIT $2`,
-            values: [offset, limit]
+            text: `SELECT * FROM users`,
+        }
+    }
+
+    private static listFromIDsStatement(ids: string[]): QueryConfig {
+        ids.map(id => `${id}`)
+
+        return {
+            text: `SELECT * FROM users WHERE id IN($1)`,
+            values: ids
         }
     }
 }

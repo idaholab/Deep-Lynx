@@ -1,6 +1,6 @@
 /* tslint:disable */
 import { expect } from 'chai'
-import MockFileStorageImpl from "../../file_storage/file_storage";
+import MockFileStorageImpl from "../../file_storage/mock_impl";
 
 
 describe('A File Storage', async() => {
@@ -14,7 +14,7 @@ describe('A File Storage', async() => {
         let fileStorage = new MockFileStorageImpl();
 
         let localUpload = await fileStorage.uploadPipe('../../.env-sample',
-            'UTF-8', 'md');
+            'UTF-8', 'md', null);
 
         let filepath = localUpload.value;
         expect(localUpload.isError).false;
@@ -27,8 +27,8 @@ describe('A File Storage', async() => {
         let fileStorage = new MockFileStorageImpl();
 
         let localUpload = await fileStorage.uploadPipe(
-            'https://raw.githubusercontent.com/idaholab/DIAMOND/master/README.md', 
-            'UTF-8', 'md');
+            'https://raw.githubusercontent.com/idaholab/DIAMOND/master/README.md',
+            'UTF-8', 'md', null);
 
         let filepath = localUpload.value;
         expect(localUpload.isError).false;

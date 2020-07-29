@@ -62,6 +62,7 @@
     "winston": "^3.2.1"
   },
   "dependencies": {
+    "@azure/storage-blob": "^12.2.0-preview.1",
     "@types/bcrypt": "^3.0.0",
     "@types/busboy": "^0.2.3",
     "@types/connect-pg-simple": "^4.2.0",

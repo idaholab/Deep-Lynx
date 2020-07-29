@@ -6,8 +6,6 @@ import UserStorage from "../data_storage/user_management/user_storage";
 import Authorization from "./authorization/authorization";
 import {assignRolePayloadT, AssignRolePayloadT} from "../types/user_management/assignRolePayloadT";
 import {onDecodeError} from "../utilities";
-import NodeRSA from "node-rsa";
-import fs from "fs";
 import Config from "../config";
 import Logger from "./../logger";
 import bcrypt from "bcrypt"
@@ -60,8 +58,6 @@ export async function CreateNewUser(user: UserT, payload: any ): Promise<Result<
                 // encrypt the password before passing this on to the create function
                 // we can pass this directly into the create function afterwards because
                 // the NewUserPayloadT type is a subset of the UserT type
-                const key = new NodeRSA(fs.readFileSync(Config.encryption_key_path));
-
                 bcrypt.hash(up.password, 14)
                     .then(hashed => {
                         up.password = hashed

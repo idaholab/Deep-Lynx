@@ -47,7 +47,7 @@ export default class MetatypeRoutes {
         }
 
         private static listMetatypes(req: Request, res: Response, next: NextFunction) {
-            storage.List(req.params.id, +req.query.offset, +req.query.limit)
+            storage.List(req.params.id, +req.query.offset, +req.query.limit, req.query.name as string)
                 .then((result) => {
                     if (result.isError && result.error) {
                         res.status(result.error.errorCode).json(result);
@@ -60,7 +60,6 @@ export default class MetatypeRoutes {
                 })
                 .finally(() => next())
         }
-
 
     private static updateMetatype(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT;
