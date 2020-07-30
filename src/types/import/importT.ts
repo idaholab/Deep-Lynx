@@ -12,7 +12,7 @@ const importLogRequired = t.type({
     errors: t.array(t.string)
 });
 
-const importLogOptional = t.type({
+const importLogOptional = t.partial({
     reference: t.string
 })
 

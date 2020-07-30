@@ -14,6 +14,10 @@ export class Config {
   private readonly _session_secret: string;
   private readonly _encryption_key_path: string;
 
+  private readonly _file_storage_method: string;
+  private readonly _azure_blob_connection_string: string
+  private readonly _azure_blob_container_name: string
+
   private readonly _server_port: string;
   private readonly _log_level: string;
 
@@ -47,6 +51,10 @@ export class Config {
     this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || "";
     this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH || path.resolve(__dirname, '../src/privateKey.key');
 
+    this._file_storage_method = process.env.FILE_STORAGE_METHOD || "filesystem"
+    this._azure_blob_connection_string = process.env.AZURE_BLOB_CONNECTION_STRING || ""
+    this._azure_blob_container_name = process.env.AZURE_BLOB_CONTAINER_NAME || "deep-lynx"
+
     this._server_port = process.env.SERVER_PORT || "8090";
     this._log_level = process.env.LOG_LEVEL || "debug";
     this._session_secret = process.env.SESSION_SECRET || "changeme";
@@ -76,6 +84,18 @@ export class Config {
 
   get core_db_connection_string(): string {
     return this._core_db_connection_string;
+  }
+
+  get file_storage_method(): string {
+    return this._file_storage_method;
+  }
+
+  get azure_blob_connection_string(): string {
+    return this._azure_blob_connection_string;
+  }
+
+  get azure_blob_container_name(): string {
+    return this._azure_blob_container_name;
   }
 
   get initial_super_user(): boolean {

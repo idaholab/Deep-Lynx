@@ -1,26 +1,28 @@
 /* tslint:disable */
 import { expect } from 'chai'
 import MockFileStorageImpl from "../../file_storage/mock_impl";
+import FileStorageProvider from "../../file_storage/file_storage";
+import * as fs from "fs";
 
 
-describe('A File Storage', async() => {
+describe('Azure Blob Storage can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
         // return Promise.resolve()
     });
 
-    it('can save a local file', async()=> {
-        let fileStorage = new MockFileStorageImpl();
+    it('can upload a file', async()=> {
+        let fileStorage = FileStorageProvider()
+        expect(fileStorage).not.null
 
-        let localUpload = await fileStorage.uploadPipe('../../.env-sample',
-            null, 'UTF-8', 'md');
+        const readable = fs.createReadStream('./.env-sample')
 
-        let filepath = localUpload.value;
-        expect(localUpload.isError).false;
-        expect(localUpload.value).not.empty;
+        const result = await fileStorage?.uploadPipe("bob/test", readable, "", "")
+        console.log(result!.value)
 
-        return fileStorage.deleteFile(filepath);
+
+        return fileStorage!.deleteFile("");
     });
 
     it('can save a file through http get', async()=> {

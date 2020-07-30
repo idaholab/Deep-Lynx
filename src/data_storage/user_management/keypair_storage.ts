@@ -67,8 +67,12 @@ export default class KeyPairStorage extends PostgresStorage{
        return super.retrieve<UserT>(KeyPairStorage.userForKeyStatement(key))
     }
 
-    public PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.run(KeyPairStorage.deleteStatement(id))
+    public async KeysForUser(userID: string): Promise<Result<KeyPairT[]>> {
+        return super.rows<KeyPairT>(KeyPairStorage.keysForUserStatement(userID))
+    }
+
+    public PermanentlyDelete(userID: string ,id: string): Promise<Result<boolean>> {
+        return super.run(KeyPairStorage.deleteStatement(userID, id))
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -94,13 +98,19 @@ export default class KeyPairStorage extends PostgresStorage{
             text: `SELECT * FROM keypairs LEFT JOIN users on users.id = keypairs.user_id  WHERE key = $1`,
             values: [key]
         }
-
     }
 
-    private static deleteStatement(key: string): QueryConfig {
+    private static keysForUserStatement(userID: string): QueryConfig {
         return {
-            text:`DELETE FROM keypairs WHERE key = $1`,
-            values: [key]
+            text: `SELECT key, user_id FROM keypairs WHERE user_id = $1`,
+            values: [userID]
+        }
+    }
+
+    private static deleteStatement(userID:string, key: string): QueryConfig {
+        return {
+            text:`DELETE FROM keypairs WHERE key = $1 AND user_id = $2`,
+            values: [key, userID]
         }
     }
 }
