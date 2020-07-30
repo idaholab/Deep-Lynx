@@ -6,9 +6,8 @@ import {FileStorage} from "./file_storage";
 const http = require('http');
 const https = require('https');
 
-// TODO: needs ripped out completely?
 export default class MockFileStorageImpl implements FileStorage {
-    public async uploadPipe(filepath: string, encoding: string, mimeType: string, stream: Readable | null): Promise<Result<string>> {
+    public async uploadPipe(filepath: string, stream: Readable| null,  encoding?: string, mimeType?: string): Promise<Result<string>> {
         // how to use mimeType?
         // get name of the file from full path
         const filenameArr = filepath.match(/[\w.\- ]*$/);

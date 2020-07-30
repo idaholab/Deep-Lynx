@@ -5,7 +5,7 @@ import MockFileStorageImpl from "./mock_impl";
 import AzureBlobImpl from "./azure_blob_impl";
 
 export interface FileStorage {
-    uploadPipe(filepath:string, encoding:string, mimeType:string, stream: Readable | null ): Promise<Result<string>>
+    uploadPipe(filepath:string, stream: Readable | null, encoding?:string, mimeType?:string): Promise<Result<string>>
     deleteFile(filepath:string): Promise<Result<boolean>>
 }
 
