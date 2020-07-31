@@ -14,7 +14,6 @@ describe('Azure Blob Storage can', async() => {
             this.skip()
         }
 
-        // return Promise.resolve()
         provider = new AzureBlobImpl(process.env.AZURE_BLOB_CONNECTION_STRING!, process.env.AZURE_BLOB_TEST_CONTAINER!)
     });
 
