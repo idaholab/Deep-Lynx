@@ -8,7 +8,8 @@ const fileRequired = t.type({
     adapter: t.keyof({
         'aws_s3': null,
         'filesystem': null,
-        'azure_blob': null
+        'azure_blob': null,
+        'mock': null
     }),
 })
 

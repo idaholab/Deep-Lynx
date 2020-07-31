@@ -2,12 +2,16 @@ import {Readable} from "stream";
 import Result from "../result";
 import fs from "fs";
 import Logger from "../logger";
-import {FileStorage} from "./file_storage";
+import {FileStorage, FileUploadResponse} from "./file_storage";
 const http = require('http');
 const https = require('https');
 
 export default class MockFileStorageImpl implements FileStorage {
-    public async uploadPipe(filepath: string, stream: Readable| null,  encoding?: string, mimeType?: string): Promise<Result<string>> {
+    name(): string {
+        return "mock"
+    }
+
+    public async uploadPipe(filepath: string, fileName:string, stream: Readable| null, contentType?: string, encoding?: string, ): Promise<Result<FileUploadResponse>> {
         // how to use mimeType?
         // get name of the file from full path
         const filenameArr = filepath.match(/[\w.\- ]*$/);
@@ -35,7 +39,13 @@ export default class MockFileStorageImpl implements FileStorage {
                         .on('finish', () => {
                             Logger.info(`Sucessful GET to ${filepath}`);
                             Logger.info(`File written to ${uploadPath}`);
-                            resolve(Result.Success(uploadPath));
+                            resolve(Result.Success({
+                                filepath: uploadPath,
+                                filename: fileName,
+                                size: 0,
+                                metadata: {},
+                                adapter_name: 'mock'
+                            }));
                         })
                         .on('error', (error:any) => {
                             Logger.error(`Error with GET to ${filepath} and write to ${uploadPath}`);
@@ -50,7 +60,13 @@ export default class MockFileStorageImpl implements FileStorage {
                     .on('finish', () => {
                         Logger.info(`Sucessful read from ${filepath}`);
                         Logger.info(`File written to ${uploadPath}`);
-                        resolve(Result.Success(uploadPath));
+                        resolve(Result.Success({
+                            filepath: uploadPath,
+                            filename: fileName,
+                            size: 0,
+                            metadata: {},
+                            adapter_name: 'mock'
+                        }));
                     })
                     .on('error', (error) => {
                         Logger.error(`Error with GET to ${filepath} and write to ${uploadPath}`);

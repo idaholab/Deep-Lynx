@@ -2,6 +2,7 @@ import {Request, Response, NextFunction, Application} from "express"
 import {UserT} from "../types/user_management/userT";
 import {authInContainer} from "./middleware";
 import {
+    DataSourceUploadFile,
     ManualJsonImport,
     NewDataSource,
     SetDataSourceActive,
@@ -11,6 +12,9 @@ import DataSourceStorage from "../data_storage/import/data_source_storage";
 import ImportStorage from "../data_storage/import/import_storage";
 import TypeMappingStorage from "../data_storage/import/type_mapping_storage";
 import DataStagingStorage from "../data_storage/import/data_staging_storage";
+import {Readable} from "stream";
+const Busboy = require('busboy');
+const fileUpload = require('express-fileupload')
 
 // This contains all routes pertaining to DataSources and type mappings.
 export default class DataSourceRoutes {
@@ -25,7 +29,9 @@ export default class DataSourceRoutes {
         app.delete("/containers/:id/import/datasources/:sourceID/active",...middleware, authInContainer("read", "data"),this.setInactive);
 
         app.get("/containers/:id/import/datasources/:sourceID/imports",...middleware, authInContainer("read", "data"),this.listDataSourcesImports);
-        app.post("/containers/:id/import/datasources/:sourceID/imports",...middleware, authInContainer("write", "data"),this.createManualJsonImport);
+        app.post("/containers/:id/import/datasources/:sourceID/imports",...middleware, fileUpload({limits:{fileSize: 50 * 1024 *1024}}), authInContainer("write", "data"),this.createManualJsonImport);
+
+        app.post('/containers/:id/import/datasources/:sourceID/file', ...middleware, authInContainer("write", "data"), this.uploadFile)
 
         app.post('/containers/:id/import/datasources/:sourceID/mappings', ...middleware, authInContainer("write", "data"), this.createTypeMapping)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/unmapped', ...middleware, authInContainer("read", "data"), this.getUnmappedData)
@@ -33,6 +39,8 @@ export default class DataSourceRoutes {
         app.put('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.updateTypeMapping)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.retrieveTypeMapping)
         app.delete('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.deleteTypeMapping)
+
+
     }
 
     private static createDataSource(req: Request, res: Response, next: NextFunction) {
@@ -294,6 +302,61 @@ export default class DataSourceRoutes {
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
+    }
+
+    private static uploadFile(req: Request, res: Response, next: NextFunction) {
+        const fileNames: string[] = []
+        const busboy = new Busboy({headers: req.headers})
+        const metadata: {[key: string]: any} = {}
+        let metadataFieldCount = 0;
+
+        // upload the file to the relevant file storage provider, saving the file name
+        // we can't actually wait on the full upload to finish, so there is no way we
+        // can take information about the upload and pass it later on in the busboy parsing
+        // because of this we're treating the file upload as fairly standalone
+        busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
+            const user = req.user as UserT
+            DataSourceUploadFile(req.params.id, req.params.sourceID, user.id!, filename, encoding, mimeType, file as Readable)
+            fileNames.push(filename)
+        })
+
+        // hold on to the field data, we consider this metadata and will create
+        // a record to be ingested by deep lynx once the busboy finishes parsing
+        busboy.on('field', (fieldName: string, value: any, fieldNameTruncated: boolean, encoding: string, mimetype:string) => {
+            metadata[fieldName] = value
+            metadataFieldCount++
+        })
+
+        busboy.on('finish', () => {
+            // if there is no additional metadata we do not not create information
+            // to be processed by Deep Lynx, simply store the file and make it available
+            // via the normal file querying channels
+            if(metadataFieldCount === 0) {
+                res.sendStatus(200)
+                next()
+                return;
+            }
+
+            // update the passed meta information with the file name deep lynx
+            // has stored it under
+            for(const i in fileNames) metadata[`deep-lynx-file-${i}`] = fileNames[i]
+            const user = req.user as UserT
+
+            // create an "import" with a single object, the metadata and file information
+            // the user will then handle the mapping of this via the normal type mapping channels
+            ImportStorage.Instance.InitiateJSONImportAndUnpack(req.params.sourceID, user.id!, 'file upload', metadata)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+                res.sendStatus(200)
+            })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        })
+
+        return req.pipe(busboy)
     }
 }
 

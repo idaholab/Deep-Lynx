@@ -1,42 +1,34 @@
 /* tslint:disable */
 import { expect } from 'chai'
-import MockFileStorageImpl from "../../file_storage/mock_impl";
-import FileStorageProvider from "../../file_storage/file_storage";
 import * as fs from "fs";
+import AzureBlobImpl from "../../file_storage/azure_blob_impl";
+import Logger from "../../logger";
 
 
 describe('Azure Blob Storage can', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let provider: AzureBlobImpl
 
     before(async function() {
+        if (process.env.AZURE_BLOB_CONNECTION_STRING === "") {
+            Logger.debug("skipping azure tests, no connection string indicated");
+            this.skip()
+        }
+
         // return Promise.resolve()
+        provider = new AzureBlobImpl(process.env.AZURE_BLOB_CONNECTION_STRING!, process.env.AZURE_BLOB_TEST_CONTAINER!)
     });
 
     it('can upload a file', async()=> {
-        let fileStorage = FileStorageProvider()
-        expect(fileStorage).not.null
-
         const readable = fs.createReadStream('./.env-sample')
 
-        const result = await fileStorage?.uploadPipe("bob/test", readable, "", "")
-        console.log(result!.value)
+        const result = await provider.uploadPipe("test/.env-sample", '.env-sample', readable, "text/plain", 'utf8')
+        if(result) {
+            expect(result.isError).false
+        } else {
+            expect(false).true
+        }
 
-
-        return fileStorage!.deleteFile("");
-    });
-
-    it('can save a file through http get', async()=> {
-        let fileStorage = new MockFileStorageImpl();
-
-        let localUpload = await fileStorage.uploadPipe(
-            'https://raw.githubusercontent.com/idaholab/DIAMOND/master/README.md',
-            null, 'UTF-8', 'md');
-
-        let filepath = localUpload.value;
-        expect(localUpload.isError).false;
-        expect(localUpload.value).not.empty;
-
-        return fileStorage.deleteFile(filepath);
+        return provider.deleteFile("test/.env-sample");
     });
 
 });
