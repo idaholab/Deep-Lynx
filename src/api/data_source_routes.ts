@@ -31,7 +31,7 @@ export default class DataSourceRoutes {
         app.get("/containers/:id/import/datasources/:sourceID/imports",...middleware, authInContainer("read", "data"),this.listDataSourcesImports);
         app.post("/containers/:id/import/datasources/:sourceID/imports",...middleware, fileUpload({limits:{fileSize: 50 * 1024 *1024}}), authInContainer("write", "data"),this.createManualJsonImport);
 
-        app.post('/containers/:id/import/datasources/:sourceID/file', ...middleware, authInContainer("write", "data"), this.uploadFile)
+        app.post('/containers/:id/import/datasources/:sourceID/files', ...middleware, authInContainer("write", "data"), this.uploadFile)
 
         app.post('/containers/:id/import/datasources/:sourceID/mappings', ...middleware, authInContainer("write", "data"), this.createTypeMapping)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/unmapped', ...middleware, authInContainer("read", "data"), this.getUnmappedData)

@@ -1538,7 +1538,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:dataSourceID/file",
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:dataSourceID/files",
 							"host": [
 								"{{baseURL}}"
 							],
@@ -1548,7 +1548,7 @@
 								"import",
 								"datasources",
 								":dataSourceID",
-								"file"
+								"files"
 							],
 							"variable": [
 								{
@@ -1563,7 +1563,7 @@
 								}
 							]
 						},
-						"description": "Uploads a file and metadata to Deep Lynx"
+						"description": "Uploads a file and metadata to Deep Lynx. This endpoint will accept multiple files and multiple properties as form values."
 					},
 					"response": []
 				},
