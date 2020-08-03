@@ -122,7 +122,7 @@ export async function DataSourceUploadFile(containerID: string, dataSourceID: st
     if(!provider) return Promise.resolve(Result.Failure("no storage provider set"))
 
     // run the actual file upload the storage provider
-    const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID}/${filename}`,filename, stream);
+    const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID}/`,filename, stream);
     if(result.isError) return Promise.resolve(Result.Pass(result))
 
     const file = {

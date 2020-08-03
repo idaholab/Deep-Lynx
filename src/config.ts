@@ -7,6 +7,8 @@ import * as path from "path";
 export class Config {
   private static instance: Config;
 
+  private readonly _is_windows: boolean;
+
   private readonly _mongo_source_uri : string;
   private readonly _mongo_source_db : string;
 
@@ -15,6 +17,7 @@ export class Config {
   private readonly _encryption_key_path: string;
 
   private readonly _file_storage_method: string;
+  private readonly _filesystem_storage_directory: string
   private readonly _azure_blob_connection_string: string
   private readonly _azure_blob_container_name: string
 
@@ -45,6 +48,12 @@ export class Config {
     // Either assign a sane default of the env var is missing, or create your
     // own checks on process.env. There is most likely a more elegant way but
     // I like including sane defaults in the app itself vs. an env-sample file
+
+    // we could simply have whatever needs to know if its windows access the platform
+    // part of process, but I'd rather keep all configuration and accessing of process
+    // here in the config file.
+    this._is_windows = process.platform === 'win32'
+
     this._mongo_source_uri= process.env.MONGO_SOURCE_URI || "localhost:8081";
     this._mongo_source_db = process.env.MONGO_SOURCE_DB || "inl-core-m";
 
@@ -52,6 +61,7 @@ export class Config {
     this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH || path.resolve(__dirname, '../src/privateKey.key');
 
     this._file_storage_method = process.env.FILE_STORAGE_METHOD || "filesystem"
+    this._filesystem_storage_directory = process.env.FILESYSTEM_STORAGE_DIRECTORY || ""
     this._azure_blob_connection_string = process.env.AZURE_BLOB_CONNECTION_STRING || ""
     this._azure_blob_container_name = process.env.AZURE_BLOB_CONTAINER_NAME || "deep-lynx"
 
@@ -78,6 +88,10 @@ export class Config {
     this._data_source_processing_batch_size = (process.env.DATA_SOURCE_PROCESSING_BATCH_SIZE) ? parseInt(process.env.DATA_SOURCE_PROCESSING_BATCH_SIZE!, 10) : 1000
   }
 
+  get is_windows(): boolean {
+    return this._is_windows
+  }
+
   get server_port(): string {
     return this._server_port;
   }
@@ -88,6 +102,10 @@ export class Config {
 
   get file_storage_method(): string {
     return this._file_storage_method;
+  }
+
+  get filesystem_storage_directory(): string {
+    return this._filesystem_storage_directory
   }
 
   get azure_blob_connection_string(): string {

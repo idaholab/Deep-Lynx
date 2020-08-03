@@ -1,20 +1,20 @@
 /* tslint:disable */
 import { expect } from 'chai'
 import * as fs from "fs";
-import AzureBlobImpl from "../../file_storage/azure_blob_impl";
 import Logger from "../../logger";
+import Filesystem from "../../file_storage/filesystem_impl";
 
 
-describe('Azure Blob Storage can', async() => {
-    let provider: AzureBlobImpl
+describe('Filesystem storage can', async() => {
+    let provider: Filesystem
 
     before(async function() {
-        if (process.env.AZURE_BLOB_CONNECTION_STRING === "") {
-            Logger.debug("skipping azure tests, no connection string indicated");
+        if (process.env.FILESYSTEM_STORAGE_DIR === "") {
+            Logger.debug("skipping filesystem storage tests, no storage directory indicated");
             this.skip()
         }
 
-        provider = new AzureBlobImpl(process.env.AZURE_BLOB_CONNECTION_STRING!, process.env.AZURE_BLOB_TEST_CONTAINER!)
+        provider = new Filesystem(process.env.FILESYSTEM_STORAGE_DIR || "", process.platform === 'win32')
     });
 
     it('can upload a file', async()=> {
@@ -27,7 +27,7 @@ describe('Azure Blob Storage can', async() => {
             expect(false).true
         }
 
-        return provider.deleteFile("test/.env-sample");
+        return provider.deleteFile(`${result.value.filepath}${result.value.filename}`);
     });
 
 });

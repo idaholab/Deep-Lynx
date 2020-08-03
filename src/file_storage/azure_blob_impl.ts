@@ -25,7 +25,7 @@ export default class AzureBlobImpl implements FileStorage {
     }
 
     async uploadPipe(filepath: string, filename: string, stream: Readable | null, contentType: string, encoding: string): Promise<Result<FileUploadResponse>> {
-        const blobClient = this._ContainerClient.getBlockBlobClient(filepath);
+        const blobClient = this._ContainerClient.getBlockBlobClient(`${filepath}${filename}`);
 
         if(stream) {
             // buffer size and max concurrency are set to their default values

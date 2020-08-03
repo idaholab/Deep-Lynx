@@ -3,6 +3,7 @@ import {Readable} from "stream";
 import Config from "../config"
 import AzureBlobImpl from "./azure_blob_impl";
 import MockFileStorageImpl from "./mock_impl";
+import Filesystem from "./filesystem_impl";
 
 export interface FileStorage {
     uploadPipe(filepath:string, filename: string, stream: Readable | null, contentType?:string, encoding?:string,): Promise<Result<FileUploadResponse>>
@@ -24,6 +25,10 @@ export default function FileStorageProvider(adapterName?: string): FileStorage |
     switch ((adapterName) ? adapterName : Config.file_storage_method) {
         case "azure_blob_storage": {
             return new AzureBlobImpl(Config.azure_blob_connection_string, Config.azure_blob_container_name)
+        }
+
+        case "filesystem": {
+            return new Filesystem(Config.filesystem_storage_directory, Config.is_windows)
         }
 
         case "mock": {
