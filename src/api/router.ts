@@ -87,13 +87,6 @@ export class Router {
 
     this.app.use(express.json());
 
-
-    this.app.use(fileUpload({
-      limits: {
-        fileSize: 50 * 1024 * 1024 // TODO: set max filesize to expected max of postgres single column value
-      }
-    }))
-
     // basic session storage to postgres - keep in mind that this is currently
     // not used. It's here to facilitate future extension of the application and
     // as an example.

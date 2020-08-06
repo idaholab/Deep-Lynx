@@ -1524,6 +1524,50 @@
 					"response": []
 				},
 				{
+					"name": "Upload File",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [],
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:dataSourceID/files",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":dataSourceID",
+								"files"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"type": "string",
+									"value": ""
+								},
+								{
+									"key": "dataSourceID",
+									"type": "string",
+									"value": ""
+								}
+							]
+						},
+						"description": "Uploads a file and metadata to Deep Lynx. This endpoint will accept multiple files and multiple properties as form values."
+					},
+					"response": []
+				},
+				{
 					"name": "List Data Sources",
 					"request": {
 						"method": "GET",

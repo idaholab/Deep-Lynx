@@ -3,7 +3,7 @@ CREATE TYPE file_upload_adapters as ENUM('aws_s3', 'filesystem', 'azure_blob');
 CREATE TABLE IF NOT EXISTS files(
     id uuid NOT NULL,
     file_name text NOT NULL,
-    file_size bigint NOT NULL,
+    file_size float8 NOT NULL,
     adapter_file_path text NOT NULL,
     adapter file_upload_adapters NOT NULL,
     metadata jsonb,

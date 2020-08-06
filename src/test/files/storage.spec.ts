@@ -62,7 +62,7 @@ describe('A Data Source', async() => {
         expect(file.value).not.empty
 
 
-        return storage.PermanentlyDelete(file.value[0].id!)
+        return storage.PermanentlyDelete(file.value.id!)
     });
 
     it('can be retrieved from  storage', async()=> {
@@ -75,11 +75,11 @@ describe('A Data Source', async() => {
             adapter: "filesystem",
         })
 
-        let retrieved = await storage.Retrieve(file.value[0].id!);
+        let retrieved = await storage.Retrieve(file.value.id!);
         expect(retrieved.isError).false;
-        expect(retrieved.value.id).eq(file.value[0].id);
+        expect(retrieved.value.id).eq(file.value.id);
 
-        return storage.PermanentlyDelete(file.value[0].id!)
+        return storage.PermanentlyDelete(file.value.id!)
     });
 
     it('can be updated in storage', async()=> {
@@ -92,14 +92,14 @@ describe('A Data Source', async() => {
             adapter: "filesystem",
         })
 
-        let updateResult = await storage.Update(file.value[0].id!, "test-suite",
+        let updateResult = await storage.Update(file.value.id!, "test-suite",
             {adapter : 'aws_s3'});
         expect(updateResult.isError).false;
 
-        let retrieved = await storage.Retrieve(file.value[0].id!);
+        let retrieved = await storage.Retrieve(file.value.id!);
         expect(retrieved.isError).false;
-        expect(retrieved.value.id).eq(file.value[0].id);
+        expect(retrieved.value.id).eq(file.value.id);
 
-        return storage.PermanentlyDelete(file.value[0].id!)
+        return storage.PermanentlyDelete(file.value.id!)
     })
 });

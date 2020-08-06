@@ -3,6 +3,7 @@ import Result from "../../result";
 import {QueryConfig} from "pg";
 import {ImportT} from "../../types/import/importT";
 import uuid from "uuid";
+import * as t from "io-ts";
 
 export default class ImportStorage extends PostgresStorage {
     private static instance: ImportStorage;
@@ -15,11 +16,16 @@ export default class ImportStorage extends PostgresStorage {
         return ImportStorage.instance
     }
 
+
     public InitiateJSONImportAndUnpack(dataSourceID: string, userID:string, reference: string, payload: any): Promise<Result<boolean>> {
         const id = uuid.v4();
 
+        // the payload MUST BE AN ARRAY OF OBJECTS, unfortunately the way Typescript's type system works I cannot
+        // easily enforce your payload's type to match the required type by the postgres node driver and functionality
+        const input = (t.array(t.unknown).is(payload)) ? payload : [payload];
+
         return super.runAsTransaction(
-            ImportStorage.initiateImportJSONStatement(id, dataSourceID,userID, reference, payload), ImportStorage.unpackJsonStatement(id)
+            ImportStorage.initiateImportJSONStatement(id, dataSourceID,userID, reference, input), ImportStorage.unpackJsonStatement(id)
         )
     }
 

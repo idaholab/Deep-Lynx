@@ -1,4 +1,4 @@
-import {FileStorage} from "./file_storage";
+import {FileStorage, FileUploadResponse} from "./file_storage";
 import Result from "../result";
 import {Readable} from "stream";
 import {BlobServiceClient, ContainerClient, RestError} from "@azure/storage-blob";
@@ -8,24 +8,57 @@ export default class AzureBlobImpl implements FileStorage {
     private _BlobServiceClient: BlobServiceClient
     private _ContainerClient: ContainerClient
 
-    deleteFile(filepath: string): Promise<Result<boolean>> {
-        return Promise.resolve(Result.Failure("unimplemented"));
+    name(): string {
+        return "azure_blob"
     }
 
-    async uploadPipe(filepath: string, stream: Readable | null): Promise<Result<string>> {
-        const blobClient = this._ContainerClient.getBlockBlobClient(filepath);
+    async deleteFile(filepath: string): Promise<Result<boolean>> {
+        const blobClient = this._ContainerClient.getBlockBlobClient(filepath)
+
+        const response = await blobClient.delete()
+        if(response.errorCode) {
+            Logger.error(`error deleting file in azure blob storage ${response.errorCode}`)
+            return Promise.resolve(Result.Failure(response.errorCode!))
+        }
+
+        return Promise.resolve(Result.Success(true));
+    }
+
+    async uploadPipe(filepath: string, filename: string, stream: Readable | null, contentType: string, encoding: string): Promise<Result<FileUploadResponse>> {
+        const blobClient = this._ContainerClient.getBlockBlobClient(`${filepath}${filename}`);
 
         if(stream) {
-            const uploadResult = await blobClient.uploadStream(stream)
+            // buffer size and max concurrency are set to their default values
+            // we only have to set them manually because we need access to the
+            // final parameter which are the upload options.
+            const uploadResult = await blobClient.uploadStream(
+                stream,
+                8000,
+                5, {blobHTTPHeaders:{
+                    blobContentType: contentType,
+                    blobContentEncoding: encoding
+                }})
 
             if(uploadResult._response.status !== 201) {
+                Logger.error(`error uploading file to azure blob storage ${uploadResult.errorCode}`)
                 return Promise.resolve(Result.Failure(`azure service responded with a status ${uploadResult._response.status} on upload`));
             }
 
-            return Promise.resolve(Result.Success(`${JSON.stringify(uploadResult)}`))
+            // fetch the properties so we know the content size. This is the only
+            // real way of finding file size apart from creating a man in the middle
+            // pipe that gets used before the azure blob pipe upload, not ideal
+            const props = await blobClient.getProperties()
+
+            return Promise.resolve(Result.Success({
+                filepath,
+                filename,
+                size: (props.contentLength) ? props.contentLength / 1000 : 0 ,
+                metadata: {},
+                adapter_name: this.name()
+            }))
         }
 
-        return Promise.resolve(Result.Failure("unimplemented"));
+        return Promise.resolve(Result.Failure("must provide a valid Readable stream"));
     }
 
     constructor(connectionString: string, containerName: string) {

@@ -1,8 +1,7 @@
-import {FileT, FilesT, filesT} from "../types/fileT"
+import {FileT, fileT} from "../types/fileT"
 import Result from "../result"
 import PostgresStorage from "./postgresStorage";
 import { QueryConfig} from "pg";
-import * as t from "io-ts";
 import PostgresAdapter from "./adapters/postgres/postgres";
 
 /*
@@ -25,23 +24,21 @@ export default class FileStorage extends PostgresStorage{
     // Create accepts a single object, or array of objects. The function will validate
     // if those objects are a valid type and will return a detailed error message
     // if not.
-    public async Create(userID:string, dataSourceID:string, input:any | FilesT, preQueries?:QueryConfig[], postQueries?:QueryConfig[]): Promise<Result<FilesT>> {
+    public async Create(userID:string, dataSourceID:string, input:any | FileT, preQueries?:QueryConfig[], postQueries?:QueryConfig[]): Promise<Result<FileT>> {
         // onValidateSuccess is a callback that happens after the input has been
         // validated and confirmed to be of the Container(s) type
-           const onValidateSuccess = ( resolve: (r:any) => void): (c: FilesT)=> void => {
-               return async (cs:FilesT) => {
+           const onValidateSuccess = ( resolve: (r:any) => void): (c: FileT)=> void => {
+               return async (cs:FileT) => {
                    const queries: QueryConfig[] = [];
 
                    if(preQueries) queries.push(...preQueries);
 
-                   for(const i in cs) {
-                       cs[i].id = super.generateUUID();
-                       cs[i].data_source_id = dataSourceID
-                       cs[i].created_by = userID;
-                       cs[i].modified_by = userID;
+                   cs.id = super.generateUUID();
+                   cs.data_source_id = dataSourceID
+                   cs.created_by = userID;
+                   cs.modified_by = userID;
 
-                       queries.push(...FileStorage.createStatement(cs[i]))
-                   }
+                   queries.push(...FileStorage.createStatement(cs))
 
                    if (postQueries) queries.push(...postQueries);
 
@@ -52,15 +49,13 @@ export default class FileStorage extends PostgresStorage{
                               return
                           }
 
-                          resolve(Result.Success(filesT.encode(cs)))
+                          resolve(Result.Success(fileT.encode(cs)))
                        })
                }
            };
 
-           // allows us to accept an array of input if needed
-           const payload = (t.array(t.unknown).is(input)) ? input : [input];
 
-           return super.decodeAndValidate<FilesT>(filesT, onValidateSuccess, payload)
+           return super.decodeAndValidate<FileT>(fileT, onValidateSuccess, input)
     }
 
     public async Retrieve(id:string): Promise<Result<FileT>>{
