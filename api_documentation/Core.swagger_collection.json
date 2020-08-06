@@ -1462,7 +1462,7 @@
           }
         ],
         "responses": {
-          "200": {
+          "201": {
             "description": "",
             "headers": {}
           }
@@ -1936,7 +1936,7 @@
     },
     "/users/{user_id}/keys": {
       "get": {
-        "description": "Retrieves only the active keys for supplied user. Secerts are hashed and are never revealed past initial creation.",
+        "description": "Retrieves only the active keys for supplied user. Secrets are hashed and are never revealed past initial creation.",
         "summary": "Keys For User",
         "tags": [
           "Users"

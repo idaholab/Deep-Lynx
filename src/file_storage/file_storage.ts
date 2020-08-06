@@ -23,7 +23,7 @@ export type FileUploadResponse = {
 // can provide a specific adapter name to fetch an instance of specified adapter
 export default function FileStorageProvider(adapterName?: string): FileStorage | null {
     switch ((adapterName) ? adapterName : Config.file_storage_method) {
-        case "azure_blob_storage": {
+        case "azure_blob": {
             return new AzureBlobImpl(Config.azure_blob_connection_string, Config.azure_blob_container_name)
         }
 

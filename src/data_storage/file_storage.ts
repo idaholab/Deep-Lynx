@@ -1,8 +1,7 @@
-import {FileT, FilesT, filesT, fileT} from "../types/fileT"
+import {FileT, fileT} from "../types/fileT"
 import Result from "../result"
 import PostgresStorage from "./postgresStorage";
 import { QueryConfig} from "pg";
-import * as t from "io-ts";
 import PostgresAdapter from "./adapters/postgres/postgres";
 
 /*
