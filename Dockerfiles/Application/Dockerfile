@@ -1,15 +1,25 @@
 FROM node:10
 
-WORKDIR /usr/src/app
-COPY package*.json ./
+# Create the base directory and make user "node" the owner
+RUN mkdir /srv/core_api && chown node:node /srv/core_api
 
-# You're welcome to change this, but ci is essential to a reproducible build
-# based on the current package-lock file. Keep in mind that only a clean working
-# branch up to date with master will be guaranteed reproducible.
-RUN npm ci
+WORKDIR /srv/core_api
+COPY --chown=node:node package*.json ./
 
-COPY ../.. .
-RUN ["npm", "run", "build:dev"]
+RUN npm install
+
+# If you are building your code for production
+# RUN npm ci --only=production
+
+# Bundle app source
+COPY --chown=node:node . .
+
+# Add docker-compose-wait tool ----------------------
+USER root
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait /wait
+RUN chmod +x /wait
+
+USER node
 
 EXPOSE 8080
-CMD ["node", "./dist/main.js"]
+CMD ["node", "start"]
