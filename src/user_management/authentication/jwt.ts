@@ -9,7 +9,7 @@ const JwtStrategy = passportJWT.Strategy;
 export function SetJWTAuthMethod(app: express.Application) {
     passport.use(new JwtStrategy({
         jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-        secretOrKey: fs.readFileSync(Config.encryption_key_path)
+        secretOrKey: Config.encryption_key_secret
     }, (jwt, done) => {
             done(null, jwt)
     } ))
