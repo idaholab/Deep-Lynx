@@ -12,6 +12,9 @@
 				{
 					"name": "Create",
 					"request": {
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -182,6 +185,9 @@
 				}
 			],
 			"description": "Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. All data is separated by containers.",
+			"auth": {
+				"type": "noauth"
+			},
 			"event": [
 				{
 					"listen": "prerequest",
@@ -243,9 +249,8 @@
 									],
 									"variable": [
 										{
-											"id": "3599fd3f-539c-42a5-b67f-d8e6d2947a24",
 											"key": "container-id",
-											"value": "",
+											"value": "b01885bf-c513-425f-af86-6d5043ef3d64",
 											"type": "string"
 										}
 									]
@@ -295,7 +300,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseURL}}/containers/:container-id/metatypes?limit=100&offset=0",
+									"raw": "{{baseURL}}/containers/:container-id/metatypes?limit=100&offset=0&name=",
 									"host": [
 										"{{baseURL}}"
 									],
@@ -312,13 +317,16 @@
 										{
 											"key": "offset",
 											"value": "0"
+										},
+										{
+											"key": "name",
+											"value": ""
 										}
 									],
 									"variable": [
 										{
-											"id": "001aa5cd-c78a-4faa-a324-68778fdee717",
 											"key": "container-id",
-											"value": "",
+											"value": "84adf9cf-23ab-43c9-a002-b8f748ae83da",
 											"type": "string"
 										}
 									]
@@ -1516,6 +1524,50 @@
 					"response": []
 				},
 				{
+					"name": "Upload File",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [],
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:dataSourceID/files",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":dataSourceID",
+								"files"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"type": "string",
+									"value": ""
+								},
+								{
+									"key": "dataSourceID",
+									"type": "string",
+									"value": ""
+								}
+							]
+						},
+						"description": "Uploads a file and metadata to Deep Lynx. This endpoint will accept multiple files and multiple properties as form values."
+					},
+					"response": []
+				},
+				{
 					"name": "List Data Sources",
 					"request": {
 						"method": "GET",
@@ -2091,6 +2143,128 @@
 					"response": []
 				},
 				{
+					"name": "Keys For User",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/users/:user_id/keys",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"users",
+								":user_id",
+								"keys"
+							],
+							"variable": [
+								{
+									"key": "user_id",
+									"value": "0ace57f6-c88c-46a5-87d0-31f2fde85f5f"
+								}
+							]
+						},
+						"description": "Retrieves only the active keys for supplied user. Secerts are hashed and are never revealed past initial creation."
+					},
+					"response": []
+				},
+				{
+					"name": "Generate KeyPair For User",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/users/:user_id/keys",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"users",
+								":user_id",
+								"keys"
+							],
+							"variable": [
+								{
+									"key": "user_id",
+									"value": "0ace57f6-c88c-46a5-87d0-31f2fde85f5f"
+								}
+							]
+						},
+						"description": "Create a new user using the username_password identity type."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete KeyPair For User",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/users/:user_id/keys/:key_id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"users",
+								":user_id",
+								"keys",
+								":key_id"
+							],
+							"variable": [
+								{
+									"key": "user_id",
+									"value": "0ace57f6-c88c-46a5-87d0-31f2fde85f5f"
+								},
+								{
+									"key": "key_id",
+									"value": "ODFmMTdjOGUtYzg1ZC00M2YyLTg4MWItMGZhNTU3MmM4YTY0"
+								}
+							]
+						},
+						"description": "Create a new user using the username_password identity type."
+					},
+					"response": []
+				},
+				{
 					"name": "Get User",
 					"request": {
 						"method": "GET",
@@ -2208,7 +2382,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"user_id\": \"fb127f5f-0318-4866-9570-10ec81a85cc2\",\n\t\"container_id\": \"2a49dc7b-cf56-4e03-85e7-14ac8f0e4b40\",\n\t\"role_name\": \"editor\"\n}",
+							"raw": "{\n\t\"user_id\": \"fb127f5f-0318-4866-9570-10ec81a85cc2\",\n\t\"container_id\": \"2a49dc7b-cf56-4e03-85e7-14ac8f0e4b40\",\n\t\"role_name\": \"admin\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -2229,7 +2403,6 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"type": "string",
 									"value": "2a49dc7b-cf56-4e03-85e7-14ac8f0e4b40"
 								}
 							]
@@ -2631,12 +2804,12 @@
 				"header": [
 					{
 						"key": "x-api-key",
-						"value": "",
+						"value": "MGI1YzEzODEtMWViNy00ZTk3LTkxNDItN2UwMTJkZDczZmZk",
 						"type": "text"
 					},
 					{
 						"key": "x-api-secret",
-						"value": "",
+						"value": "ZTNjNDRjYTQtNGNjMC00YmEyLWE2NzItM2U4NWZjOTY2YWU3",
 						"type": "text"
 					}
 				],

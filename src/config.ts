@@ -3,16 +3,25 @@
 // environment at time of original construction. If at all possible, all properties
 // should have sane defaults assigned.
 import * as path from "path";
+import * as fs from "fs";
 
 export class Config {
   private static instance: Config;
+
+  private readonly _is_windows: boolean;
 
   private readonly _mongo_source_uri : string;
   private readonly _mongo_source_db : string;
 
   private readonly _core_db_connection_string: string;
   private readonly _session_secret: string;
-  private readonly _encryption_key_path: string;
+  private readonly _encryption_key_path: string | undefined;
+  private readonly _encryption_key_secret: string // secret if no key file is present
+
+  private readonly _file_storage_method: string;
+  private readonly _filesystem_storage_directory: string
+  private readonly _azure_blob_connection_string: string
+  private readonly _azure_blob_container_name: string
 
   private readonly _server_port: string;
   private readonly _log_level: string;
@@ -28,8 +37,8 @@ export class Config {
   private readonly _saml_adfs_entry_point: string;
   private readonly _saml_adfs_issuer: string;
   private readonly _saml_adfs_callback: string;
-  private readonly _saml_adfs_private_cert_path: string;
-  private readonly _saml_adfs_public_cert_path: string;
+  private readonly _saml_adfs_private_cert_path: string | undefined;
+  private readonly _saml_adfs_public_cert_path: string | undefined;
 
   private readonly _auth_config_file: string;
   private readonly _auth_token_expiry: string;
@@ -41,11 +50,24 @@ export class Config {
     // Either assign a sane default of the env var is missing, or create your
     // own checks on process.env. There is most likely a more elegant way but
     // I like including sane defaults in the app itself vs. an env-sample file
+
+    // we could simply have whatever needs to know if its windows access the platform
+    // part of process, but I'd rather keep all configuration and accessing of process
+    // here in the config file.
+    this._is_windows = process.platform === 'win32'
+
     this._mongo_source_uri= process.env.MONGO_SOURCE_URI || "localhost:8081";
     this._mongo_source_db = process.env.MONGO_SOURCE_DB || "inl-core-m";
 
     this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || "";
-    this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH || path.resolve(__dirname, '../src/privateKey.key');
+
+    this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
+    this._encryption_key_secret = process.env.ENCRYPTION_KEY_SECRET || ""
+
+    this._file_storage_method = process.env.FILE_STORAGE_METHOD || "filesystem"
+    this._filesystem_storage_directory = process.env.FILESYSTEM_STORAGE_DIRECTORY || ""
+    this._azure_blob_connection_string = process.env.AZURE_BLOB_CONNECTION_STRING || ""
+    this._azure_blob_container_name = process.env.AZURE_BLOB_CONTAINER_NAME || "deep-lynx"
 
     this._server_port = process.env.SERVER_PORT || "8090";
     this._log_level = process.env.LOG_LEVEL || "debug";
@@ -61,13 +83,17 @@ export class Config {
     this._saml_adfs_entry_point = process.env.SAML_ADFS_ENTRY_POINT || "";
     this._saml_adfs_issuer = process.env.SAML_ADFS_ISSUER || "";
     this._saml_adfs_callback = process.env.SAML_ADFS_CALLBACK || "http://localhost:8090/login";
-    this._saml_adfs_private_cert_path = process.env.SAML_ADFS_PRIVATE_CERT_PATH || path.resolve(__dirname,'../src/user_management/authentication/saml/privateKey.key');
-    this._saml_adfs_public_cert_path = process.env.SAML_ADFS_PUBLIC_CERT_PATH || path.resolve(__dirname, '../src/user_management/authentication/saml/adfs.localhost.crt');
+    this._saml_adfs_private_cert_path = process.env.SAML_ADFS_PRIVATE_CERT_PATH
+    this._saml_adfs_public_cert_path = process.env.SAML_ADFS_PUBLIC_CERT_PATH
     this._auth_config_file = process.env.AUTH_CONFIG_FILE_PATH || path.resolve(__dirname, '../src/user_management/authorization/auth_model.conf');
     this._auth_token_expiry = process.env.AUTH_TOKEN_EXPIRY || "24h"
 
     this._data_source_processing_interval = (process.env.DATA_SOURCE_PROCESSING_INTERVAL) ? parseInt(process.env.DATA_SOURCE_PROCESSING_INTERVAL!, 10) : 10000
     this._data_source_processing_batch_size = (process.env.DATA_SOURCE_PROCESSING_BATCH_SIZE) ? parseInt(process.env.DATA_SOURCE_PROCESSING_BATCH_SIZE!, 10) : 1000
+  }
+
+  get is_windows(): boolean {
+    return this._is_windows
   }
 
   get server_port(): string {
@@ -76,6 +102,22 @@ export class Config {
 
   get core_db_connection_string(): string {
     return this._core_db_connection_string;
+  }
+
+  get file_storage_method(): string {
+    return this._file_storage_method;
+  }
+
+  get filesystem_storage_directory(): string {
+    return this._filesystem_storage_directory
+  }
+
+  get azure_blob_connection_string(): string {
+    return this._azure_blob_connection_string;
+  }
+
+  get azure_blob_container_name(): string {
+    return this._azure_blob_container_name;
   }
 
   get initial_super_user(): boolean {
@@ -102,8 +144,12 @@ export class Config {
     return this._session_secret
   }
 
-  get encryption_key_path(): string {
-    return this._encryption_key_path
+  // this will either return a reading of the .key file, or a plaintext secret
+  // as determined by whether or not the environment variables were set correctly
+  get encryption_key_secret(): Buffer {
+    if(this._encryption_key_path) return fs.readFileSync(this._encryption_key_path)
+
+    return Buffer.from(this._encryption_key_secret, 'utf8')
   }
 
   get mongo_source_uri(): string {
@@ -142,12 +188,12 @@ export class Config {
     return this._saml_adfs_callback;
   }
 
-  get saml_adfs_private_cert_path(): string {
+  get saml_adfs_private_cert_path(): string | undefined {
     return this._saml_adfs_private_cert_path
 
   }
 
-  get saml_adfs_public_cert_path(): string {
+  get saml_adfs_public_cert_path(): string | undefined {
     return this._saml_adfs_public_cert_path
   }
 

@@ -12,14 +12,19 @@ import Result from "../../../result";
 const SamlStrategy = passportSaml.Strategy;
 
 export function SetSamlAdfs(app: express.Application) {
-    passport.serializeUser((user, done) => {
+    // do not set the auth strategy if we don't have a public/private key pair.
+    // If a user attempts to auth with this strategy attempting the login routes
+    // without a public/private key present the application will return an error
+     if(!Config.saml_adfs_private_cert_path || !Config.saml_adfs_public_cert_path) return;
+
+     passport.serializeUser((user, done) => {
         done(null, user);
     });
-    passport.deserializeUser((user, done) => {
+     passport.deserializeUser((user, done) => {
         done(null, user);
     });
 
-    passport.use(new SamlStrategy({
+     passport.use(new SamlStrategy({
         entryPoint: Config.saml_adfs_entry_point,
         issuer: Config.saml_adfs_issuer,
         callbackUrl: Config.saml_adfs_callback,
@@ -39,7 +44,7 @@ export function SetSamlAdfs(app: express.Application) {
                     }
 
                     if(result.isError && result.error?.errorCode === 404) {
-                        storage.List(0, 1)
+                        storage.List()
                             .then(users => {
                                 storage.Create('saml-adfs login', {
                                     identity_provider_id: profile["http://schemas.microsoft.com/identity/claims/objectidentifier"],

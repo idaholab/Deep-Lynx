@@ -1,80 +1,41 @@
 import Result from "../result"
-import * as fs from "fs";
-import Logger from "../logger";
-const http = require('http');
-const https = require('https');
+import {Readable} from "stream";
+import Config from "../config"
+import AzureBlobImpl from "./azure_blob_impl";
+import MockFileStorageImpl from "./mock_impl";
+import Filesystem from "./filesystem_impl";
 
 export interface FileStorage {
-    uploadPipe(filepath:string, encoding:string, mimeType:string): Promise<Result<string>>
+    uploadPipe(filepath:string, filename: string, stream: Readable | null, contentType?:string, encoding?:string,): Promise<Result<FileUploadResponse>>
     deleteFile(filepath:string): Promise<Result<boolean>>
+    name(): string
 }
 
-export default class MockFileStorageImpl implements FileStorage {
-    public async uploadPipe(filepath: string, encoding: string, mimeType: string): Promise<Result<string>> {
-        // how to use mimeType?
-        // get name of the file from full path
-        const filenameArr = filepath.match(/[\w.\- ]*$/);
-        let filename = null;
-        if (filenameArr) {
-            filename = filenameArr[0];
-        }
-        // create local dir if it doesn't exist
-        const dir = './files';
-        if (!fs.existsSync(dir)){
-            fs.mkdirSync(dir);
-        }
-
-        const uploadPath = dir + '/' + filename;
-        const filewrite = fs.createWriteStream(uploadPath, {encoding});
-
-        return new Promise(resolve => {
-            if (filepath.match(/(www\.|http)/)) {
-                // determine http or https
-                const url = new URL(filepath);
-                const client = (url.protocol === "https"||"https:") ? https : http;
-                // read the file from a remote source
-                client.get(filepath, (res:any) => {
-                    res.pipe(filewrite)
-                    .on('finish', () => {
-                        Logger.info(`Sucessful GET to ${filepath}`);
-                        Logger.info(`File written to ${uploadPath}`);
-                        resolve(Result.Success(uploadPath));
-                    })
-                    .on('error', (error:any) => {
-                        Logger.error(`Error with GET to ${filepath} and write to ${uploadPath}`);
-                        Logger.error(`Error returned: ${error}`);
-                        resolve(Result.Error(error));
-                    })
-                })
-            } else {
-                // read from file and pipe to write stream
-                fs.createReadStream(filepath, {encoding})
-                    .pipe(filewrite)
-                    .on('finish', () => {
-                        Logger.info(`Sucessful read from ${filepath}`);
-                        Logger.info(`File written to ${uploadPath}`);
-                        resolve(Result.Success(uploadPath));
-                    })
-                    .on('error', (error) => {
-                        Logger.error(`Error with GET to ${filepath} and write to ${uploadPath}`);
-                        Logger.error(`Error returned: ${error}`);
-                        resolve(Result.Error(error));
-                    });
-            }
-        })
-    }
-
-    public async deleteFile(filepath: string): Promise<Result<boolean>> {
-        return new Promise(resolve => {
-            fs.unlink(filepath, (err: any) => {
-                if (err) {
-                    resolve(Result.Error(err));
-                } else {
-                    resolve(Result.Success(true))
-                }
-            })
-        })
-    }
-
+export type FileUploadResponse = {
+    filename: string
+    filepath: string
+    size: number // size in KB
+    metadata: {[key:string]: any} // adapter specific metadata if needed
+    adapter_name: string
 }
 
+// Returns an instantiated FileStorage provider if provider method is set, or user
+// can provide a specific adapter name to fetch an instance of specified adapter
+export default function FileStorageProvider(adapterName?: string): FileStorage | null {
+    switch ((adapterName) ? adapterName : Config.file_storage_method) {
+        case "azure_blob": {
+            return new AzureBlobImpl(Config.azure_blob_connection_string, Config.azure_blob_container_name)
+        }
+
+        case "filesystem": {
+            return new Filesystem(Config.filesystem_storage_directory, Config.is_windows)
+        }
+
+        case "mock": {
+            return new MockFileStorageImpl()
+        }
+
+    }
+
+    return null
+}

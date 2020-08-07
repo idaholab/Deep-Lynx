@@ -87,13 +87,6 @@ export class Router {
 
     this.app.use(express.json());
 
-
-    this.app.use(fileUpload({
-      limits: {
-        fileSize: 50 * 1024 * 1024 // TODO: set max filesize to expected max of postgres single column value
-      }
-    }))
-
     // basic session storage to postgres - keep in mind that this is currently
     // not used. It's here to facilitate future extension of the application and
     // as an example.
@@ -159,7 +152,7 @@ export class Router {
         // fetch set of permissions per resource for the user before returning
         RetrieveResourcePermissions((user as UserT).id!)
             .then((permissions: string[][]) => {
-                const token = jwt.sign(user, fs.readFileSync(Config.encryption_key_path), {expiresIn: '100m'})
+                const token = jwt.sign(user, Config.encryption_key_secret, {expiresIn: '100m'})
 
                 return resp.redirect(req.body.RelayState + `?jwt=${token}`)
             })
@@ -192,7 +185,7 @@ export class Router {
           RetrieveResourcePermissions((user as UserT).id!)
               .then((permissions: string[][]) => {
                   user.permissions = permissions
-                  const token = jwt.sign(user, fs.readFileSync(Config.encryption_key_path), {expiresIn: '100m'})
+                  const token = jwt.sign(user, Config.encryption_key_secret, {expiresIn: '100m'})
                   return resp.redirect(req.body.redirect + `?jwt=${token}`)
               })
 
@@ -230,7 +223,7 @@ export class Router {
                           .then(permissions => {
                               user.value.permissions = permissions
 
-                              const token = jwt.sign(user.value, fs.readFileSync(Config.encryption_key_path), {expiresIn: '101m'})
+                              const token = jwt.sign(user.value, Config.encryption_key_secret, {expiresIn: '101m'})
                               res.status(200).json(token)
                               return
                           })

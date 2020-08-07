@@ -15,9 +15,9 @@ describe('A Metatype', async() => {
            this.skip()
        }
 
+        await PostgresAdapter.Instance.init();
         let storage = ContainerStorage.Instance;
 
-        await PostgresAdapter.Instance.init();
         let container = await storage.Create("test suite", {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
 
         expect(container.isError).false;

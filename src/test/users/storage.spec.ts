@@ -76,7 +76,7 @@ describe('A User', async() => {
         expect(user.isError).false;
         expect(user.value).not.empty;
 
-        let retrieved = await storage.List(0, 100);
+        let retrieved = await storage.List();
         expect(retrieved.isError).false;
         expect(retrieved.value).not.empty;
 

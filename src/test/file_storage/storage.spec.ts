@@ -1,40 +1,34 @@
 /* tslint:disable */
 import { expect } from 'chai'
-import MockFileStorageImpl from "../../file_storage/file_storage";
+import MockFileStorageImpl from "../../file_storage/mock_impl";
 
 
 describe('A File Storage', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
-
-    before(async function() {
-        // return Promise.resolve()
-    });
-
     it('can save a local file', async()=> {
         let fileStorage = new MockFileStorageImpl();
 
         let localUpload = await fileStorage.uploadPipe('../../.env-sample',
-            'UTF-8', 'md');
+            '.env-sample',null, 'md', 'UTF-8');
 
-        let filepath = localUpload.value;
+        let result = localUpload.value;
         expect(localUpload.isError).false;
         expect(localUpload.value).not.empty;
 
-        return fileStorage.deleteFile(filepath);
+        return fileStorage.deleteFile(result.filepath);
     });
 
     it('can save a file through http get', async()=> {
         let fileStorage = new MockFileStorageImpl();
 
         let localUpload = await fileStorage.uploadPipe(
-            'https://raw.githubusercontent.com/idaholab/DIAMOND/master/README.md', 
-            'UTF-8', 'md');
+            'https://raw.githubusercontent.com/idaholab/DIAMOND/master/README.md',
+            'README.md', null, 'md','UTF-8');
 
-        let filepath = localUpload.value;
+        let result = localUpload.value;
         expect(localUpload.isError).false;
         expect(localUpload.value).not.empty;
 
-        return fileStorage.deleteFile(filepath);
+        return fileStorage.deleteFile(result.filepath);
     });
 
 });

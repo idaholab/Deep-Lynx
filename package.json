@@ -62,6 +62,7 @@
     "winston": "^3.2.1"
   },
   "dependencies": {
+    "@azure/storage-blob": "12.1.2",
     "@types/bcrypt": "^3.0.0",
     "@types/busboy": "^0.2.3",
     "@types/connect-pg-simple": "^4.2.0",
@@ -75,7 +76,7 @@
     "bcrypt": "^5.0.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "express-fileupload": "^1.1.7-alpha.3",
+    "express-fileupload": "^1.1.9",
     "express-validator": "^6.4.1",
     "fp-ts": "^2.5.4",
     "gremlin": "^3.4.6",

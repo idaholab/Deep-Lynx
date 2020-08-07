@@ -11,6 +11,11 @@ import {fold} from "fp-ts/lib/Either";
 import {onDecodeError} from "../utilities";
 import ImportStorage from "../data_storage/import/import_storage";
 import {DataSource} from "../data_importing/data_source"
+import {Readable} from "stream";
+import {FileT} from "../types/fileT";
+import FileStorageProvider, {FileUploadResponse} from "../file_storage/file_storage";
+import FileStorage from "../data_storage/file_storage";
+import Logger from "../logger";
 
 
 
@@ -108,3 +113,26 @@ export async function SetDataSourceActive(dataSourceID: string): Promise<Result<
 
     return new Promise(resolve => resolve(Result.Success(true)))
 }
+
+// Upload a file and create a File record in the database. Even if the file record creation fails, we need to maintain
+// the file in cold storage as both insurance against data loss and versioning
+export async function DataSourceUploadFile(containerID: string, dataSourceID: string, userID:string, filename: string, encoding: string, mimetype: string, stream: Readable): Promise<Result<FileT>> {
+    const provider = FileStorageProvider()
+
+    if(!provider) return Promise.resolve(Result.Failure("no storage provider set"))
+
+    // run the actual file upload the storage provider
+    const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID}/`,filename, stream);
+    if(result.isError) return Promise.resolve(Result.Pass(result))
+
+    const file = {
+        file_name: filename,
+        file_size: result.value.size,
+        adapter_file_path: result.value.filepath,
+        adapter: provider.name(),
+        metadata: result.value.metadata,
+    }
+
+    return FileStorage.Instance.Create(userID, dataSourceID, file)
+}
+

@@ -56,7 +56,8 @@
             "description": "",
             "headers": {}
           }
-        }
+        },
+        "security": []
       },
       "put": {
         "description": "Accepts an array of container objects - will attempt to update all of them in a single transaction. If the update fails, none of them will go through.",
@@ -309,6 +310,13 @@
             "required": true,
             "type": "integer",
             "format": "int32",
+            "description": ""
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "type": "string",
             "description": ""
           },
           {
@@ -1425,6 +1433,42 @@
         }
       }
     },
+    "/containers/{container-id}/import/datasources/{dataSourceID}/file": {
+      "post": {
+        "description": "Uploads a file and metadata to Deep Lynx",
+        "summary": "Upload File",
+        "tags": [
+          "Data Sources"
+        ],
+        "operationId": "UploadFile",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "dataSourceID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
     "/containers/{container-id}/import/datasources/{data-source-id}/imports": {
       "get": {
         "summary": "List Imports for Data Source",
@@ -1888,6 +1932,101 @@
             "headers": {}
           }
         }
+      }
+    },
+    "/users/{user_id}/keys": {
+      "get": {
+        "description": "Retrieves only the active keys for supplied user. Secrets are hashed and are never revealed past initial creation.",
+        "summary": "Keys For User",
+        "tags": [
+          "Users"
+        ],
+        "operationId": "KeysForUser",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "description": "Create a new user using the username_password identity type.",
+        "summary": "Generate KeyPair For User",
+        "tags": [
+          "Users"
+        ],
+        "operationId": "GenerateKeyPairForUser",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/users/{user_id}/keys/{key_id}": {
+      "delete": {
+        "description": "Create a new user using the username_password identity type.",
+        "summary": "Delete KeyPair For User",
+        "tags": [
+          "Users"
+        ],
+        "operationId": "DeleteKeyPairForUser",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "key_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "security": []
       }
     },
     "/containers/{container_id}/users/{user-id}": {
@@ -3092,7 +3231,7 @@
       "example": {
         "user_id": "fb127f5f-0318-4866-9570-10ec81a85cc2",
         "container_id": "2a49dc7b-cf56-4e03-85e7-14ac8f0e4b40",
-        "role_name": "editor"
+        "role_name": "admin"
       },
       "type": "object",
       "properties": {

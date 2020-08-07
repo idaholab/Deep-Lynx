@@ -17,7 +17,7 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 
 **Requirements**
 
-- node.js ^10.x
+- node.js 12.x 
 - Typescript ^3.5.x
 - npm ^6.x
 - Docker ^18.x (optional - used for reproducible builds and development)
@@ -191,6 +191,9 @@ TODO: fill this with the explanation of the two ways of handling data storage cl
       
 ### Data Sources
 Data can only be ingested through the use of Data Sources. A user must create a Data Source using the relevant endpoints before Deep Lynx can ingest data. This application comes with the ability to connect to various data sources via data source adapters. See [Data Sources](src/data_importing/readme.md).
+
+### File Storage
+Deep Lynx can accept files as part of its data ingestion functionality. See the [readme](src/file_storage/readme.md).
 
 ### Export Snapshot
 This application comes with the ability to export a snapshot to various storage mediums. See [Export Adapters](src/data_exporting/readme.md). 
