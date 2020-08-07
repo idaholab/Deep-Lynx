@@ -33,7 +33,7 @@ export class HttpImpl implements DataSource {
             const onSuccess = (res: (r:any) => void): (c: HttpConfigT) => void => {
                 return async (co: HttpConfigT) => {
                     // encrypt the configuration prior to storage
-                    const key = new NodeRSA(fs.readFileSync(Config.encryption_key_path));
+                    const key = new NodeRSA(Config.encryption_key_secret);
 
                     if(co.auth_method === "basic") {
                         co.username = key.encryptPrivate(co.username!, "base64");
@@ -70,7 +70,7 @@ export class HttpImpl implements DataSource {
         const instance = new HttpImpl(config);
 
         // encrypt credentials prior to storage
-        const key = new NodeRSA(fs.readFileSync(Config.encryption_key_path));
+        const key = new NodeRSA(Config.encryption_key_secret);
 
         if(config.auth_method === "basic") {
             config.username = key.encryptPrivate(config.username!, "base64");
@@ -114,7 +114,7 @@ export class HttpImpl implements DataSource {
         if(imp.isError) return new Promise(resolve => resolve(Result.Pass(imp)));
 
         // decrypt the configuration
-        const key = new NodeRSA(fs.readFileSync(Config.encryption_key_path));
+        const key = new NodeRSA(Config.encryption_key_secret);
 
         const config = imp.value.config as HttpConfigT;
 
@@ -142,7 +142,7 @@ export class HttpImpl implements DataSource {
 
     public static async NewFromDataSourceRecord(dataSource: DataSourceT): Promise<Result<HttpImpl>> {
         // decrypt the configuration
-        const key = new NodeRSA(fs.readFileSync(Config.encryption_key_path));
+        const key = new NodeRSA(Config.encryption_key_secret);
 
         const config = dataSource.config as HttpConfigT;
 
