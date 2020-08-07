@@ -35,7 +35,7 @@ export class GremlinImpl implements Exporter {
         const gremlinExportStorage = GremlinExportStorage.Instance;
 
         // encrypt the key and user information
-        const key = new NodeRSA(fs.readFileSync(Config.encryption_key_path));
+        const key = new NodeRSA(Config.encryption_key_secret);
 
         config.key = key.encryptPrivate(config.key, "base64");
         config.user = key.encryptPrivate(config.user, "base64");
@@ -69,7 +69,7 @@ export class GremlinImpl implements Exporter {
         if(exp.isError) return new Promise(resolve => resolve(Result.Pass(exp)));
 
         // decrypt configuration
-        const key = new NodeRSA(fs.readFileSync(Config.encryption_key_path));
+        const key = new NodeRSA(Config.encryption_key_secret);
 
         const config = exp.value.config as GremlinConfigT;
         config.user = key.decryptPublic(config.user, "utf8");
