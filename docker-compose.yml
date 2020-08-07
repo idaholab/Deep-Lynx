@@ -39,4 +39,3 @@ services:
       - WAIT_SLEEP_INTERVAL=30
       - WAIT_HOST_CONNECT_TIMEOUT=30
     command: bash -c "npm run migrate && npm run start"
-    
