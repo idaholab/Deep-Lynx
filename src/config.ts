@@ -3,6 +3,7 @@
 // environment at time of original construction. If at all possible, all properties
 // should have sane defaults assigned.
 import * as path from "path";
+import * as fs from "fs";
 
 export class Config {
   private static instance: Config;
@@ -14,7 +15,8 @@ export class Config {
 
   private readonly _core_db_connection_string: string;
   private readonly _session_secret: string;
-  private readonly _encryption_key_path: string;
+  private readonly _encryption_key_path: string | undefined;
+  private readonly _encryption_key_secret: string // secret if no key file is present
 
   private readonly _file_storage_method: string;
   private readonly _filesystem_storage_directory: string
@@ -35,8 +37,8 @@ export class Config {
   private readonly _saml_adfs_entry_point: string;
   private readonly _saml_adfs_issuer: string;
   private readonly _saml_adfs_callback: string;
-  private readonly _saml_adfs_private_cert_path: string;
-  private readonly _saml_adfs_public_cert_path: string;
+  private readonly _saml_adfs_private_cert_path: string | undefined;
+  private readonly _saml_adfs_public_cert_path: string | undefined;
 
   private readonly _auth_config_file: string;
   private readonly _auth_token_expiry: string;
@@ -58,7 +60,9 @@ export class Config {
     this._mongo_source_db = process.env.MONGO_SOURCE_DB || "inl-core-m";
 
     this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || "";
-    this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH || path.resolve(__dirname, '../src/privateKey.key');
+
+    this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
+    this._encryption_key_secret = process.env.ENCRYPTION_KEY_SECRET || ""
 
     this._file_storage_method = process.env.FILE_STORAGE_METHOD || "filesystem"
     this._filesystem_storage_directory = process.env.FILESYSTEM_STORAGE_DIRECTORY || ""
@@ -79,8 +83,8 @@ export class Config {
     this._saml_adfs_entry_point = process.env.SAML_ADFS_ENTRY_POINT || "";
     this._saml_adfs_issuer = process.env.SAML_ADFS_ISSUER || "";
     this._saml_adfs_callback = process.env.SAML_ADFS_CALLBACK || "http://localhost:8090/login";
-    this._saml_adfs_private_cert_path = process.env.SAML_ADFS_PRIVATE_CERT_PATH || path.resolve(__dirname,'../src/user_management/authentication/saml/privateKey.key');
-    this._saml_adfs_public_cert_path = process.env.SAML_ADFS_PUBLIC_CERT_PATH || path.resolve(__dirname, '../src/user_management/authentication/saml/adfs.localhost.crt');
+    this._saml_adfs_private_cert_path = process.env.SAML_ADFS_PRIVATE_CERT_PATH
+    this._saml_adfs_public_cert_path = process.env.SAML_ADFS_PUBLIC_CERT_PATH
     this._auth_config_file = process.env.AUTH_CONFIG_FILE_PATH || path.resolve(__dirname, '../src/user_management/authorization/auth_model.conf');
     this._auth_token_expiry = process.env.AUTH_TOKEN_EXPIRY || "24h"
 
@@ -140,8 +144,12 @@ export class Config {
     return this._session_secret
   }
 
-  get encryption_key_path(): string {
-    return this._encryption_key_path
+  // this will either return a reading of the .key file, or a plaintext secret
+  // as determined by whether or not the environment variables were set correctly
+  get encryption_key_secret(): Buffer {
+    if(this._encryption_key_path) return fs.readFileSync(this._encryption_key_path)
+
+    return Buffer.from(this._encryption_key_secret, 'utf8')
   }
 
   get mongo_source_uri(): string {
@@ -180,12 +188,12 @@ export class Config {
     return this._saml_adfs_callback;
   }
 
-  get saml_adfs_private_cert_path(): string {
+  get saml_adfs_private_cert_path(): string | undefined {
     return this._saml_adfs_private_cert_path
 
   }
 
-  get saml_adfs_public_cert_path(): string {
+  get saml_adfs_public_cert_path(): string | undefined {
     return this._saml_adfs_public_cert_path
   }
 
