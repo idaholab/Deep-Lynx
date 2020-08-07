@@ -26,6 +26,7 @@ import {SetLocalAuthMethod} from "../user_management/authentication/local";
 import KeyPairStorage from "../data_storage/user_management/keypair_storage";
 import {RetrieveResourcePermissions} from "../user_management/users";
 import {Resource} from "typedoc/dist/lib/output/utils/resources/stack";
+import QueryRoutes from "./query_routes";
 import GraphRoutes from "./graphs";
 
 const BasicStrategy = passportHttp.BasicStrategy;
@@ -73,7 +74,6 @@ export class Router {
     MetatypeRelationshipRoutes.mount(this.app, [authenticateRoute()]);
     MetatypeRelationshipKeyRoutes.mount(this.app, [authenticateRoute()]);
     MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute()]);
-    GraphRoutes.mount(this.app, [authenticateRoute()]);
 
     this.mountPostMiddleware()
   }
