@@ -238,7 +238,7 @@ WHERE id = $6`,
 
     private static retrieveForDestinationAndOriginAndRelationshipStatement(origin: string, destination :string, relationship:string): QueryConfig {
         return {
-            text:`SELECT * FROM metatype_relationship_pairs WHERE origin_metatype_id = $1 AND destination_metatype_id = $2 AND relationship_id = $3 AND NOT ARCHIVED`,
+            text:`SELECT * FROM metatype_relationship_pairs WHERE origin_metatype_id = $1 AND destination_metatype_id = $2 AND id = $3 AND NOT ARCHIVED`,
             values: [origin, destination, relationship]
         }
     }

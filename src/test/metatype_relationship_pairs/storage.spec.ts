@@ -166,61 +166,7 @@ describe('A Metatype Relationship Pair can', async() => {
         expect(fetchedPair.isError).false;
         expect(fetchedPair.value.id).not.undefined;
 
-        let fetchedPairs = await rpStorage.ListByDestinationMetatype(metatype.value[1].id!);
-        expect(fetchedPairs.isError).false;
-        expect(fetchedPairs.value).not.empty;
-
-        let fetchedPairs2 = await rpStorage.ListByOriginMetatype(metatype.value[0].id!);
-        expect(fetchedPairs2.isError).false;
-        expect(fetchedPairs2.value).not.empty;
-
-        return mStorage.PermanentlyDelete(metatype.value[0].id!);
-    });
-
-    it('can be listed by destination and origin', async()=> {
-        const kStorage = MetatypeKeyStorage.Instance;
-        const mStorage = MetatypeStorage.Instance;
-        const rStorage = MetatypeRelationshipStorage.Instance;
-        const rpStorage = MetatypeRelationshipPairStorage.Instance;
-
-        const metatype = await mStorage.Create(containerID, "test suite",
-            [
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
-            ]);
-
-        expect(metatype.isError).false;
-        expect(metatype.value).not.empty;
-
-        const keys = await kStorage.Create(metatype.value[0].id!, "test suite", test_keys);
-        expect(keys.isError).false;
-
-        const keys2 = await kStorage.Create(metatype.value[1].id!, "test suite", test_keys);
-        expect(keys2.isError).false;
-
-
-        let relationship = await rStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
-
-        expect(relationship.isError).false;
-        expect(relationship.value).not.empty;
-
-        let pair = await rpStorage.Create(containerID, "test suite", {
-            "name": faker.name.findName(),
-            "description": faker.random.alphaNumeric(),
-            "origin_metatype_id": metatype.value[0].id,
-            "destination_metatype_id": metatype.value[1].id,
-            "relationship_id": relationship.value[0].id,
-            "relationship_type": "one:one"
-        });
-
-        expect(pair.isError).false;
-
-        let fetchedPair = await rpStorage.RetrieveByMetatypes(metatype.value[0].id!, metatype.value[1].id!);
-        expect(fetchedPair.isError).false;
-        expect(fetchedPair.value.id).not.undefined;
-
-        let fetchedPair2 = await rpStorage.RetrieveByMetatypesAndRelationship(metatype.value[0].id!, metatype.value[1].id!, pair.value[0].relationship_id!);
+        let fetchedPair2 = await rpStorage.RetrieveByMetatypesAndRelationship(metatype.value[0].id!, metatype.value[1].id!, pair.value[0].id!);
         expect(fetchedPair2.isError).false;
         expect(fetchedPair2.value.id).not.undefined;
 

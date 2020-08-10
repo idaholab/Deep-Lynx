@@ -43,7 +43,7 @@ export async function TransformPayload(mapping: TypeMappingT, payload: {[key:str
 
 
    // return a NodeT if we're handling data nodes
-   if(mapping.metatype_id && !mapping.metatype_relationship_id) {
+   if(mapping.metatype_id && !mapping.metatype_relationship_pair_id) {
       const node = {
           metatype_id: mapping.metatype_id,
           properties: newPayload,
@@ -61,9 +61,9 @@ export async function TransformPayload(mapping: TypeMappingT, payload: {[key:str
    }
 
    // return EdgeT if we're handling relationships between nodes
-   if(mapping.metatype_relationship_id && !mapping.metatype_id) {
+   if(mapping.metatype_relationship_pair_id && !mapping.metatype_id) {
        const edge = {
-           relationship_id: mapping.metatype_relationship_id,
+           relationship_pair_id: mapping.metatype_relationship_pair_id,
            properties: newPayload,
            origin_node_original_id: getNestedValue(mapping.origin_key!, payload),
            destination_node_original_id: getNestedValue(mapping.destination_key!, payload),
@@ -80,7 +80,7 @@ export async function TransformPayload(mapping: TypeMappingT, payload: {[key:str
    }
 
    // return a combination of both a new NodeT and EdgeT based on the type mapping
-   if(mapping.metatype_id && mapping.metatype_relationship_id) {
+   if(mapping.metatype_id && mapping.metatype_relationship_pair_id) {
        const node = {
            metatype_id: mapping.metatype_id,
            properties: newPayload,
@@ -90,7 +90,7 @@ export async function TransformPayload(mapping: TypeMappingT, payload: {[key:str
        } as NodeT
 
        const edge = {
-           relationship_id: mapping.metatype_relationship_id,
+           relationship_pair_id: mapping.metatype_relationship_pair_id,
            properties: newPayloadRelationship,
            origin_node_original_id: (mapping.origin_key) ? getNestedValue(mapping.origin_key, payload) : getNestedValue(mapping.unique_identifier_key, payload),
            destination_node_original_id: (mapping.destination_key) ? getNestedValue(mapping.destination_key,payload) : getNestedValue(mapping.unique_identifier_key, payload),

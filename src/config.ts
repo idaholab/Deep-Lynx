@@ -14,6 +14,7 @@ export class Config {
   private readonly _mongo_source_db : string;
 
   private readonly _core_db_connection_string: string;
+  private readonly _db_name: string;
   private readonly _session_secret: string;
   private readonly _encryption_key_path: string | undefined;
   private readonly _encryption_key_secret: string // secret if no key file is present
@@ -60,6 +61,7 @@ export class Config {
     this._mongo_source_db = process.env.MONGO_SOURCE_DB || "inl-core-m";
 
     this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || "";
+    this._db_name = process.env.DB_NAME || "";
 
     this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
     this._encryption_key_secret = process.env.ENCRYPTION_KEY_SECRET || ""
@@ -102,6 +104,10 @@ export class Config {
 
   get core_db_connection_string(): string {
     return this._core_db_connection_string;
+  }
+
+  get db_name(): string {
+    return this._db_name;
   }
 
   get file_storage_method(): string {
@@ -150,6 +156,10 @@ export class Config {
     if(this._encryption_key_path) return fs.readFileSync(this._encryption_key_path)
 
     return Buffer.from(this._encryption_key_secret, 'utf8')
+  }
+
+  get encryption_key_path(): string {
+    return this._encryption_key_path!
   }
 
   get mongo_source_uri(): string {

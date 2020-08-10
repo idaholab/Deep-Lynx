@@ -97,7 +97,7 @@ describe('A Graph Edge can', async() => {
 
        // EDGE SETUP
         let edge = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_id: pair.value[0].relationship_id,
+            relationship_pair_id: pair.value[0].id,
             properties: payload,
             origin_node_id: node.value[0].id,
             destination_node_id: node.value[1].id
@@ -185,7 +185,7 @@ describe('A Graph Edge can', async() => {
 
         // EDGE SETUP
         let edge = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_id: pair.value[0].relationship_id,
+            relationship_pair_id: pair.value[0].id,
             properties: payload,
             origin_node_original_id: node.value[0].original_data_id,
             destination_node_original_id: node.value[1].original_data_id,
@@ -257,7 +257,7 @@ describe('A Graph Edge can', async() => {
 
         // EDGE SETUP
         let edge = await storage.CreateOrUpdate(containerID, graph.value.id, {
-            relationship_id: pair.value[0].relationship_id,
+            relationship_pair_id: pair.value[0].id,
             properties: payload,
             origin_node_id: node.value[0].id,
             destination_node_id: node.value[1].id
@@ -333,7 +333,7 @@ describe('A Graph Edge can', async() => {
 
         // EDGE SETUP
         let edge = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_id: pair.value[0].relationship_id,
+            relationship_pair_id: pair.value[0].id,
             properties: payload,
             origin_node_id: node.value[0].id,
             destination_node_id: node.value[1].id
@@ -341,7 +341,7 @@ describe('A Graph Edge can', async() => {
 
         expect(edge.isError).false;
 
-       edge.value[0].modified_at = new Date()
+       edge.value[0].modified_at = new Date().toISOString();
 
         let updatedEdge = await storage.CreateOrUpdate(containerID, graph.value.id,  edge.value[0]);
         expect(updatedEdge.isError, updatedEdge.error?.error).false;

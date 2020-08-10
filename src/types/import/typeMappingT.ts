@@ -29,7 +29,7 @@ const typeMappingOptional = t.partial({
     container_id: t.string,
     example_payload: t.unknown,
     metatype_id: t.string, // optional because mapping could be either type or relationship
-    metatype_relationship_id: t.string,
+    metatype_relationship_pair_id: t.string,
     origin_key: t.string,
     destination_key: t.string,
     keys: t.array(keyMapping),

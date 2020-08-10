@@ -56,7 +56,7 @@ export default class DataStagingStorage extends PostgresStorage {
     }
 
     private static ListMatchedForTypeMappingStatement(tm: TypeMappingT): QueryConfig {
-        if (tm.metatype_relationship_id) {
+        if (tm.metatype_relationship_pair_id) {
             return {
                 text: `SELECT * FROM data_staging
                     WHERE data_source_id = $1

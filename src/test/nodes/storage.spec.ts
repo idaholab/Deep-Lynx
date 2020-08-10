@@ -131,7 +131,7 @@ describe('Graph Node Creation', async() => {
         // Run the update test
 
         node.value[0].properties = updatedPayload;
-        node.value[0].modified_at = new Date()
+        node.value[0].modified_at = new Date().toISOString();
 
         const updatedNode = await storage.CreateOrUpdate(containerID, graph.value.id,  node.value[0]);
         expect(updatedNode.isError, updatedNode.error?.error).false;
@@ -172,7 +172,7 @@ describe('Graph Node Creation', async() => {
 
         // Run the update test
         node.value[0].properties = malformed_payload;
-        node.value[0].modified_at = new Date()
+        node.value[0].modified_at = new Date().toISOString();
         const updatedNode = await storage.CreateOrUpdate(containerID, graph.value.id,  node.value[0]);
         expect(updatedNode.isError, updatedNode.error?.error).true;
 
@@ -270,7 +270,7 @@ describe('Graph Node Creation', async() => {
         expect(node.isError, metatype.error?.error).false;
 
         node.value[0].properties = updatedPayload;
-        node.value[0].modified_at = new Date()
+        node.value[0].modified_at = new Date().toISOString();
         node.value[0].id = undefined
 
         const updatedNode = await storage.CreateOrUpdate(containerID, graph.value.id,  node.value[0]);

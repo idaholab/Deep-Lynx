@@ -9,7 +9,7 @@ describe('Azure Blob Storage can', async() => {
     let provider: AzureBlobImpl
 
     before(async function() {
-        if (process.env.AZURE_BLOB_CONNECTION_STRING === "") {
+        if (process.env.AZURE_BLOB_CONNECTION_STRING === "" || process.env.AZURE_BLOB_CONNECTION_STRING === undefined) {
             Logger.debug("skipping azure tests, no connection string indicated");
             this.skip()
         }

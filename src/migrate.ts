@@ -5,16 +5,37 @@
 
 import {Pool} from "pg";
 import PostgresAdapter from "./data_storage/adapters/postgres/postgres";
+import Config from "./config"
 import * as fs from "fs";
 import Logger from "./logger"
+import pgtools from "pgtools";
 
 class Migrator {
     private pool!: Pool;
 
     constructor() {
+        pgtools.createdb(Config.core_db_connection_string, Config.db_name, (err: any, res: string) => {
+            if (err) {
+                if (err.name === 'duplicate_database') {
+                    Logger.info(`${Config.db_name} database already exists. Proceeding to migration scripts`)
+                    this.init();
+                } else {
+                    Logger.error(`creation of ${Config.db_name} database failed`)
+                    console.error(err);
+                    process.exit(-1);
+                }
+            } else {
+                Logger.info(`successful creation of ${Config.db_name} database`)
+                this.init();
+            }
+        })
+    }
+
+    init() {
         const adapter = PostgresAdapter.Instance;
         adapter.init();
         this.pool = PostgresAdapter.Instance.Pool
+        this.migrate();
     }
 
     async migrate() {
@@ -81,4 +102,3 @@ class Migrator {
 }
 
 const migrator = new Migrator();
-migrator.migrate();
