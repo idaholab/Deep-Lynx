@@ -6,7 +6,7 @@ for auto-generating resolvers based on the stored ontology.
 import NodeStorage from "../data_storage/graph/node_storage";
 import MetatypeStorage from "../data_storage/metatype_storage";
 import EdgeStorage from "../data_storage/graph/edge_storage";
-import {EdgeQL, MetatypeQL, NodeQL, PropertyQL} from "./types";
+import {EdgeQL, MetatypeQL, MetatypeRelationshipQL, NodeQL, PropertyQL} from "./types";
 import {NodeT} from "../types/graph/nodeT";
 
 export default function resolversRoot(containerID: string):any {
@@ -118,7 +118,7 @@ async function EdgeOutgoingResolver(nodeID: string): Promise<() => Promise<EdgeQ
                 archived: edge.archived!,
                 properties: PropertyResolver(edge.properties),
                 raw_properties: JSON.stringify(edge.properties),
-                relationship: {} as MetatypeQL,
+                relationship: {} as MetatypeRelationshipQL,
                 destination: NodeResolverByID(edge.destination_node_id!, edge.container_id!),
                 origin: NodeResolverByID(edge.origin_node_id!, edge.container_id!),
                 created_at: createdAt,
@@ -148,7 +148,7 @@ async function EdgeIncomingResolver(nodeID: string): Promise<() => Promise<EdgeQ
                 original_data_id: edge.original_data_id!,
                 data_source_id: edge.data_source_id!,
                 archived: edge.archived!,
-                relationship: {} as MetatypeQL,
+                relationship: {} as MetatypeRelationshipQL,
                 properties: PropertyResolver(edge.properties),
                 raw_properties: JSON.stringify(edge.properties),
                 destination: NodeResolverByID(edge.destination_node_id!, edge.container_id!),
