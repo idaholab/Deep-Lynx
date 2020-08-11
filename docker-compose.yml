@@ -12,7 +12,6 @@ services:
     volumes:
       - ./Dockerfiles/PostgreSQL/deeplynx.conf:/etc/postgresql/postgresql.conf
       - ./Dockerfiles/PostgreSQL/basedata:/private/var/lib/postgresql/data
-      - ./Dockerfiles/PostgreSQL/InitializationScripts:/docker-entrypoint-initdb.d/
     environment:
       - POSTGRES_PASSWORD=#{PostgresPassword}
     tty: true

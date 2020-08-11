@@ -1,0 +1,30 @@
+{
+  "name": "ontology-extractor",
+  "version": "1.0.0",
+  "description": "Library for extracting an ontology (.owl) to a graph database",
+  "main": "extractor.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://hpcgitlab.hpc.inl.gov/rittcs/de-tcr.git"
+  },
+  "keywords": [
+    "API",
+    "Node",
+    "Postgres",
+    "Digital",
+    "Engineering"
+  ],
+  "author": "INL",
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  },
+  "dependencies": {
+    "workerpool": "^5.0.4",
+    "xml2json": "^0.12.0",
+    "yargs": "^15.1.0"
+  }
+}

@@ -12,10 +12,15 @@ describe('An HTTP Data Source', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
-       if (process.env.CORE_DB_CONNECTION_STRING === "") {
+        if (process.env.SKIP_DATA_SOURCE_TESTS === 'true') {
+            Logger.debug("skipping HTTP data source tests");
+            this.skip()
+        }
+       
+        if (process.env.CORE_DB_CONNECTION_STRING === "") {
            Logger.debug("skipping export tests, no storage layer");
            this.skip()
-       }
+        }
 
         let storage = ContainerStorage.Instance;
 

@@ -34,6 +34,7 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 2. Copy and rename `.env-sample` to `.env` 
 3. Update `.env` file you **must** have the following variables set - everything else has default values you can find in `src/config.ts` or in the `.env-sample` file itself.
     *  `CORE_DB_CONNECTION_STRING` - your PostgreSQL database connection string. Note that `de-lynx` only works with a Postgres data source
+    *  `DB_NAME` - the name of the database you would like to use. Defaults to `deep_lynx`. This must be the same name as specified in the end of the `CORE_DB_CONNECTION_STRING`.
 4. Run `npm run migrate` to automatically create the application schemas in your PostgreSQL database. Scripts are run in alphanumeric order
 5. Either use `npm run build:dev` and run the resulting `dist/main.js` file or use `npm run start` to initiate application.
 6. At some point you must provide the application with a `.key` file in order for the encryption of data source configurations and SAML authentication to work. See the scripts located in `src/authentication` for more information. Generate and provide your secret key to the application via the environment configuration.

@@ -12,6 +12,8 @@ import {NodeT} from "../../types/graph/nodeT";
 import NodeStorage from "./node_storage";
 import MetatypeRelationshipPairStorage from "../metatype_relationship_pair_storage";
 import {MetatypeRelationshipPairT} from "../../types/metatype_relationship_pairT";
+import GraphStorage from "./graph_storage";
+import Logger from "../../logger";
 
 /*
 * EdgeStorage allows the user to create a graph relationship (edge) between two nodes of data
@@ -28,6 +30,16 @@ export default class EdgeStorage extends PostgresStorage{
         }
 
         return EdgeStorage.instance
+    }
+
+    public async CreateOrUpdateByActiveGraph(containerID: string, input: any | EdgesT, preQueries?: QueryConfig[], postQueries?: QueryConfig[]): Promise<Result<EdgesT>> {
+        const activeGraph = await GraphStorage.Instance.ActiveForContainer(containerID);
+        if (activeGraph.isError || !activeGraph.value) {
+            Logger.error(activeGraph.error?.error!);
+        }
+        const graphID: string = activeGraph.value.graph_id;
+
+        return EdgeStorage.Instance.CreateOrUpdate(containerID, graphID, input);
     }
 
     // Create Edge Unknown
@@ -59,15 +71,15 @@ export default class EdgeStorage extends PostgresStorage{
 
                for(const e in es) {
                    // find and register metatype relationship keys
-                   if(!keysByRelationshipID[es[e].relationship_id]) {
+                   if(!keysByRelationshipID[es[e].relationship_pair_id]) {
 
-                       const typeKeys = await MetatypeRelationshipKeyStorage.Instance.List(es[e].relationship_id);
+                       const typeKeys = await MetatypeRelationshipKeyStorage.Instance.List(es[e].relationship_pair_id);
                        if(typeKeys.isError) {
                            resolve(Result.Failure(`edges's properties do no match declared relationship: ${es[e]}`));
                            return
                        }
 
-                       keysByRelationshipID[es[e].relationship_id] = typeKeys.value
+                       keysByRelationshipID[es[e].relationship_pair_id] = typeKeys.value
                    }
 
 
@@ -121,24 +133,25 @@ export default class EdgeStorage extends PostgresStorage{
 
 
 
-                   const pair = await MetatypeRelationshipPairStorage.Instance.RetrieveByMetatypesAndRelationship(origin.metatype_id, destination.metatype_id, es[e].relationship_id);
+                   const pair = await MetatypeRelationshipPairStorage.Instance.RetrieveByMetatypesAndRelationship(origin.metatype_id, destination.metatype_id, es[e].relationship_pair_id);
                    if(pair.isError) {
                        resolve(Result.Failure(`unable to verify the validity of the proposed relationship between nodes`));
                        return
                    }
 
-                   const valid = await this.validateEdgeProperties((keysByRelationshipID[es[e].relationship_id]),es[e].properties);
+                   const valid = await this.validateEdgeProperties((keysByRelationshipID[es[e].relationship_pair_id]),es[e].properties);
                    if(valid.isError || !valid.value) {
-                       resolve(Result.Failure(`edges's properties do no match declared relationship type: ${es[e].relationship_id}`));
+                       resolve(Result.Failure(`edges's properties do no match declared relationship type: ${es[e].relationship_pair_id}`));
                        return
                    }
 
-                   // verify that the relationship is valid
-                   const relationshipValid = await this.validateRelationship(pair.value, origin, destination);
-                   if(relationshipValid.isError || !relationshipValid.value) {
-                       resolve(Result.Failure(`unable to create relationship between nodes, fails relationship constraint: ${relationshipValid.error?.error}`))
-                   }
-
+                   // verify that the relationship is valid if new edge
+                   if(!es[e].modified_at && !es[e].deleted_at && !es[e].id) {
+                        const relationshipValid = await this.validateRelationship(pair.value, origin, destination);
+                        if(relationshipValid.isError || !relationshipValid.value) {
+                            resolve(Result.Failure(`unable to create relationship between nodes, fails relationship constraint: ${relationshipValid.error?.error}`))
+                        }
+                    }
 
                    es[e].graph_id = graphID;
                    es[e].container_id = containerID;
@@ -182,14 +195,14 @@ export default class EdgeStorage extends PostgresStorage{
 
             for(const e in es) {
                 // find and register metatype relationship keys
-                if(!keysByRelationshipID[es[e].relationship_id]) {
+                if(!keysByRelationshipID[es[e].relationship_pair_id]) {
 
-                    const typeKeys = await MetatypeRelationshipKeyStorage.Instance.List(es[e].relationship_id);
+                    const typeKeys = await MetatypeRelationshipKeyStorage.Instance.List(es[e].relationship_pair_id);
                     if(typeKeys.isError) {
                         return new Promise(resolve => resolve(Result.Failure(`edges's properties do no match declared relationship: ${es[e]}`)));
                     }
 
-                    keysByRelationshipID[es[e].relationship_id] = typeKeys.value
+                    keysByRelationshipID[es[e].relationship_pair_id] = typeKeys.value
                 }
 
 
@@ -237,22 +250,23 @@ export default class EdgeStorage extends PostgresStorage{
 
 
 
-                const pair = await MetatypeRelationshipPairStorage.Instance.RetrieveByMetatypesAndRelationship(origin.metatype_id, destination.metatype_id, es[e].relationship_id);
+                const pair = await MetatypeRelationshipPairStorage.Instance.RetrieveByMetatypesAndRelationship(origin.metatype_id, destination.metatype_id, es[e].relationship_pair_id);
                 if(pair.isError) {
                     return new Promise(resolve => resolve(Result.Failure(`unable to verify the validity of the proposed relationship between nodes`)));
                 }
 
-                const valid = await this.validateEdgeProperties((keysByRelationshipID[es[e].relationship_id]),es[e].properties);
+                const valid = await this.validateEdgeProperties((keysByRelationshipID[es[e].relationship_pair_id]),es[e].properties);
                 if(valid.isError || !valid.value) {
-                    return new Promise(resolve => resolve(Result.Failure(`edges's properties do no match declared relationship type: ${es[e].relationship_id}`)));
+                    return new Promise(resolve => resolve(Result.Failure(`edges's properties do no match declared relationship type: ${es[e].relationship_pair_id}`)));
                 }
 
-                // verify that the relationship is valid
-                const relationshipValid = await this.validateRelationship(pair.value, origin, destination);
-                if(relationshipValid.isError || !relationshipValid.value) {
-                    return new Promise(resolve => resolve(Result.Failure(`unable to create relationship between nodes, fails relationship constraint: ${relationshipValid.error?.error}`)))
+                // verify that the relationship is valid if new edge
+                if(!es[e].modified_at && !es[e].deleted_at && es[e].id) {
+                    const relationshipValid = await this.validateRelationship(pair.value, origin, destination);
+                    if(relationshipValid.isError || !relationshipValid.value) {
+                        return new Promise(resolve => resolve(Result.Failure(`unable to create relationship between nodes, fails relationship constraint: ${relationshipValid.error?.error}`)))
+                    }
                 }
-
 
                 es[e].graph_id = graphID;
                 es[e].container_id = containerID;
@@ -271,10 +285,21 @@ export default class EdgeStorage extends PostgresStorage{
             return new Promise(resolve => resolve(Result.Success(queries)))
     }
 
-    public ListByOrigin(nodeID: string): Promise<Result<EdgeT[]>> {
-        return super.rows<EdgeT>(EdgeStorage.listAllByOrigin(nodeID))
+    public async ListByOrigin(nodeID: string): Promise<Result<EdgeT[]>> {
+        return super.rows<EdgeT>(EdgeStorage.listAllByOriginStatement(nodeID))
     }
 
+    public async ListByDestination(nodeID: string): Promise<Result<EdgeT[]>> {
+        return super.rows<EdgeT>(EdgeStorage.listAllByDestinationStatement(nodeID))
+    }
+
+    public async List(containerID: string, offset: number, limit:number): Promise<Result<EdgeT[]>> {
+        return super.rows<EdgeT>(EdgeStorage.listStatement(containerID, offset, limit))
+    }
+
+    public async RetriveByOriginAndDestination(originID: string, destinationID: string): Promise<Result<EdgeT[]>> {
+        return super.rows<EdgeT>(EdgeStorage.retrieveByOriginAndDestinationStatement(originID, destinationID))
+    }
 
     private async validateEdgeProperties(relationshipKeys: MetatypeRelationshipKeyT[], input: any): Promise<Result<boolean>> {
        const compiledType = CompileMetatypeKeys(relationshipKeys);
@@ -297,13 +322,13 @@ export default class EdgeStorage extends PostgresStorage{
             return Promise.resolve(Result.Failure('origin and destination node types do not match relationship pair'))
         }
 
-        const currentRelationships = await super.rows<EdgeT>(EdgeStorage.listAllByRelationshipType(pair.id!, origin.id!, destination.id!));
+        const currentRelationships = await super.rows<EdgeT>(EdgeStorage.listAllByRelationshipTypeStatement(pair.id!, origin.id!, destination.id!));
         if(!currentRelationships.isError && currentRelationships.value.length > 0) {
             return Promise.resolve(Result.Failure(`proposed relationship of type: ${pair.relationship_id} between ${origin.id} and ${destination.id} already exists, modify or delete current relationship first`))
         }
 
-        const destinationRelationships = await super.rows<EdgeT>(EdgeStorage.listAllByDestinationAndPair(destination.id!, pair.id!));
-        const originRelationships = await super.rows<EdgeT>(EdgeStorage.listAllByOriginAndPair(origin.id!, pair.id!));
+        const destinationRelationships = await super.rows<EdgeT>(EdgeStorage.listAllByDestinationAndPairStatement(destination.id!, pair.id!));
+        const originRelationships = await super.rows<EdgeT>(EdgeStorage.listAllByOriginAndPairStatement(origin.id!, pair.id!));
 
         switch(pair.relationship_type) {
             // we don't need to check a many:many as we don't have to verify more than whether or not the origin
@@ -356,67 +381,95 @@ export default class EdgeStorage extends PostgresStorage{
         return [
             {
                 text:`
-INSERT INTO edges(id, container_id, relationship_id, graph_id, origin_node_id, destination_node_id, properties,original_data_id,data_source_id,data_type_mapping_id,origin_node_original_id,destination_node_original_id)
+INSERT INTO edges(id, container_id, relationship_pair_id, graph_id, origin_node_id, destination_node_id, properties,original_data_id,data_source_id,data_type_mapping_id,origin_node_original_id,destination_node_original_id)
 VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-                values: [e.id, e.container_id, e.relationship_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties,e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id]
+                values: [e.id, e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties,e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id]
             }
         ]
     }
 
     private static updateStatement(e: EdgeT): QueryConfig[] {
         return [{
-            text: `UPDATE edges SET container_id = $1, relationship_id = $2, graph_id = $3, origin_node_id = $4, destination_node_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, origin_node_original_id = $10, destination_node_original_id = $11 WHERE id = $12`,
-            values: [e.container_id, e.relationship_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties, e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id, e.id]
+            text: `UPDATE edges SET container_id = $1, relationship_pair_id = $2, graph_id = $3, origin_node_id = $4, destination_node_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, origin_node_original_id = $10, destination_node_original_id = $11 WHERE id = $12`,
+            values: [e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties, e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id, e.id]
         }]
     }
 
     private static updateByOriginalIDStatement(e: EdgeT): QueryConfig[] {
         return [{
-            text: `UPDATE edges SET container_id = $1, relationship_id = $2, graph_id = $3, origin_node_id = $4, destination_node_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, origin_node_original_id = $10, destination_node_original_id = $11 WHERE original_id = $12 AND data_source_id = $13`,
-            values: [e.container_id, e.relationship_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties, e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id, e.original_data_id, e.data_source_id]
+            text: `UPDATE edges SET container_id = $1, relationship_pair_id = $2, graph_id = $3, origin_node_id = $4, destination_node_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, origin_node_original_id = $10, destination_node_original_id = $11 WHERE original_id = $12 AND data_source_id = $13`,
+            values: [e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties, e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id, e.original_data_id, e.data_source_id]
         }]
     }
 
-    private static listAllByOrigin(nodeID: string): QueryConfig {
+    private static listAllByOriginStatement(nodeID: string): QueryConfig {
         return {
             text: `SELECT * FROM edges WHERE origin_node_id = $1 AND NOT archived`,
             values: [nodeID]
         }
     }
 
-
-    private static listAllByDestinationAndPair(nodeID: string, relationshipPairID: string): QueryConfig {
+    private static listAllByDestinationStatement(nodeID: string): QueryConfig {
         return {
-            text: `SELECT * FROM edges WHERE destination_node_id = $1 AND relationship_id = $2 AND NOT archived`,
+            text: `SELECT * FROM edges WHERE destination_node_id = $1 AND NOT archived`,
+            values: [nodeID]
+        }
+    }
+
+
+    private static listAllByDestinationAndPairStatement(nodeID: string, relationshipPairID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM edges WHERE destination_node_id = $1 AND relationship_pair_id = $2 AND NOT archived`,
             values: [nodeID, relationshipPairID]
         }
     }
 
-    private static listAllByOriginAndPair(nodeID: string, relationshipPairID: string): QueryConfig {
+    private static listAllByOriginAndPairStatement(nodeID: string, relationshipPairID: string): QueryConfig {
         return {
-            text: `SELECT * FROM edges WHERE origin_node_id = $1 AND relationship_id = $2 AND NOT archived`,
+            text: `SELECT * FROM edges WHERE origin_node_id = $1 AND relationship_pair_id = $2 AND NOT archived`,
             values: [nodeID, relationshipPairID]
         }
     }
 
-    private static listAllByRelationshipType(relationshipTypeID: string, origin:string, destination:string): QueryConfig {
+    private static listAllByRelationshipTypeStatement(relationshipTypeID: string, origin:string, destination:string): QueryConfig {
         return {
-            text: `SELECT * FROM edges WHERE relationship_id = $1 AND origin_node_id = $2 AND destination_node_id = $3 AND NOT archived`,
+            text: `SELECT * FROM edges WHERE relationship_pair_id = $1 AND origin_node_id = $2 AND destination_node_id = $3 AND NOT archived`,
             values: [relationshipTypeID, origin, destination]
         }
     }
 
-    private static edgesByRelationshipAndOrigin(relationshipID: string, originID: string): QueryConfig {
+    private static edgesByRelationshipAndOriginStatement(relationshipID: string, originID: string): QueryConfig {
         return {
-            text: `SELECT * from edges WHERE relationship_id = $1 AND origin_node_id = $2`,
+            text: `SELECT * from edges WHERE relationship_pair_id = $1 AND origin_node_id = $2`,
             values: [relationshipID, originID]
         }
     }
 
-    private static edgesByRelationshipAndDestination(relationshipID: string, destinationID: string): QueryConfig {
+    private static edgesByRelationshipAndDestinationStatement(relationshipID: string, destinationID: string): QueryConfig {
         return {
-            text: `SELECT * from edges WHERE relationship_id = $1 AND destination_node_id = $2`,
+            text: `SELECT * from edges WHERE relationship_pair_id = $1 AND destination_node_id = $2`,
             values: [relationshipID, destinationID]
+        }
+    }
+
+    private static listStatement(containerID: string, offset:number, limit:number): QueryConfig {
+        return {
+            text: `SELECT * FROM edges WHERE container_id = $1 AND NOT archived OFFSET $2 LIMIT $3`,
+            values: [containerID, offset, limit]
+        }
+    }
+
+    private static retrieveByOriginAndDestinationStatement(originID: string, destinationID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM edges WHERE origin_node_id = $1 AND destination_node_id = $2 AND NOT archived`,
+            values: [originID, destinationID]
+        }
+    }
+
+    private static retrieveStatement(nodeID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM edges WHERE id = $1 AND NOT archived`,
+            values: [nodeID]
         }
     }
 

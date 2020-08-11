@@ -1,8 +1,8 @@
 import * as t from 'io-ts'
-import {date} from "io-ts-types/lib/date"
+import {DateFromISOString} from "io-ts-types/lib/DateFromISOString"
 
 export const edgeRequired = t.type({
-    relationship_id: t.string,
+    relationship_pair_id: t.string,
     properties: t.unknown,
 
 });
@@ -19,9 +19,9 @@ export const edgeOptional = t.partial({
     destination_node_id: t.string,
     origin_node_original_id: t.string,
     destination_node_original_id: t.string,
-    created_at: date,
-    modified_at: date,
-    deleted_at: date,
+    created_at: t.union([DateFromISOString, t.string]),
+    modified_at: t.union([DateFromISOString, t.string]),
+    deleted_at: t.union([DateFromISOString, t.string]),
 });
 
 export const edgeT = t.exact(t.intersection([edgeRequired, edgeOptional]));
