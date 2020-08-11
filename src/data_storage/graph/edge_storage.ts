@@ -14,6 +14,7 @@ import MetatypeRelationshipPairStorage from "../metatype_relationship_pair_stora
 import {MetatypeRelationshipPairT} from "../../types/metatype_relationship_pairT";
 import GraphStorage from "./graph_storage";
 import Logger from "../../logger";
+import MetatypeRelationshipStorage from "../metatype_relationship_storage";
 
 /*
 * EdgeStorage allows the user to create a graph relationship (edge) between two nodes of data
@@ -71,15 +72,25 @@ export default class EdgeStorage extends PostgresStorage{
 
                for(const e in es) {
                    // find and register metatype relationship keys
-                   if(!keysByRelationshipID[es[e].relationship_pair_id]) {
+                   // fetch the relationship itself first
+                   const metatypeRelationshipPair = await MetatypeRelationshipPairStorage.Instance.Retrieve(es[e].relationship_pair_id)
+                   if(metatypeRelationshipPair.isError) {
+                       resolve(Result.Pass(metatypeRelationshipPair))
+                   }
 
-                       const typeKeys = await MetatypeRelationshipKeyStorage.Instance.List(es[e].relationship_pair_id);
+                   const relationship = await MetatypeRelationshipStorage.Instance.Retrieve(metatypeRelationshipPair.value.relationship_id)
+                   if(relationship.isError) {
+                       resolve(Result.Pass(relationship))
+                   }
+
+                   if(!keysByRelationshipID[relationship.value.id!]) {
+
+                       const typeKeys = await MetatypeRelationshipKeyStorage.Instance.List(relationship.value.id!);
                        if(typeKeys.isError) {
-                           resolve(Result.Failure(`edges's properties do no match declared relationship: ${es[e]}`));
-                           return
+                          resolve(Result.Failure(`edges's properties do no match declared relationship: ${es[e]}`));
                        }
 
-                       keysByRelationshipID[es[e].relationship_pair_id] = typeKeys.value
+                       keysByRelationshipID[relationship.value.id!] = typeKeys.value
                    }
 
 
@@ -139,7 +150,7 @@ export default class EdgeStorage extends PostgresStorage{
                        return
                    }
 
-                   const valid = await this.validateEdgeProperties((keysByRelationshipID[es[e].relationship_pair_id]),es[e].properties);
+                   const valid = await this.validateEdgeProperties((keysByRelationshipID[relationship.value.id!]),es[e].properties);
                    if(valid.isError || !valid.value) {
                        resolve(Result.Failure(`edges's properties do no match declared relationship type: ${es[e].relationship_pair_id}`));
                        return
@@ -195,14 +206,26 @@ export default class EdgeStorage extends PostgresStorage{
 
             for(const e in es) {
                 // find and register metatype relationship keys
-                if(!keysByRelationshipID[es[e].relationship_pair_id]) {
 
-                    const typeKeys = await MetatypeRelationshipKeyStorage.Instance.List(es[e].relationship_pair_id);
+                // fetch the relationship itself first
+                const metatypeRelationshipPair = await MetatypeRelationshipPairStorage.Instance.Retrieve(es[e].relationship_pair_id)
+                if(metatypeRelationshipPair.isError) {
+                    return new Promise(resolve => resolve(Result.Pass(metatypeRelationshipPair)))
+                }
+
+                const relationship = await MetatypeRelationshipStorage.Instance.Retrieve(metatypeRelationshipPair.value.relationship_id)
+                if(relationship.isError) {
+                    return new Promise(resolve => resolve(Result.Pass(relationship)))
+                }
+
+                if(!keysByRelationshipID[relationship.value.id!]) {
+
+                    const typeKeys = await MetatypeRelationshipKeyStorage.Instance.List(relationship.value.id!);
                     if(typeKeys.isError) {
                         return new Promise(resolve => resolve(Result.Failure(`edges's properties do no match declared relationship: ${es[e]}`)));
                     }
 
-                    keysByRelationshipID[es[e].relationship_pair_id] = typeKeys.value
+                    keysByRelationshipID[relationship.value.id!] = typeKeys.value
                 }
 
 
@@ -255,7 +278,7 @@ export default class EdgeStorage extends PostgresStorage{
                     return new Promise(resolve => resolve(Result.Failure(`unable to verify the validity of the proposed relationship between nodes`)));
                 }
 
-                const valid = await this.validateEdgeProperties((keysByRelationshipID[es[e].relationship_pair_id]),es[e].properties);
+                const valid = await this.validateEdgeProperties((keysByRelationshipID[relationship.value.id!]),es[e].properties);
                 if(valid.isError || !valid.value) {
                     return new Promise(resolve => resolve(Result.Failure(`edges's properties do no match declared relationship type: ${es[e].relationship_pair_id}`)));
                 }
