@@ -7,7 +7,7 @@ describe('A File Storage', async() => {
     it('can save a local file', async()=> {
         let fileStorage = new MockFileStorageImpl();
 
-        let localUpload = await fileStorage.uploadPipe('../../.env-sample',
+        let localUpload = await fileStorage.uploadPipe('./.env-sample',
             '.env-sample',null, 'md', 'UTF-8');
 
         let result = localUpload.value;

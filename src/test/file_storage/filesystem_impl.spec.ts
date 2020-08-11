@@ -9,12 +9,12 @@ describe('Filesystem storage can', async() => {
     let provider: Filesystem
 
     before(async function() {
-        if (process.env.FILESYSTEM_STORAGE_DIR === "") {
+        if (process.env.FILESYSTEM_STORAGE_DIRECTORY === "" || process.env.FILESYSTEM_STORAGE_DIRECTORY === undefined) {
             Logger.debug("skipping filesystem storage tests, no storage directory indicated");
             this.skip()
         }
 
-        provider = new Filesystem(process.env.FILESYSTEM_STORAGE_DIR || "", process.platform === 'win32')
+        provider = new Filesystem(process.env.FILESYSTEM_STORAGE_DIRECTORY || "", process.platform === 'win32')
     });
 
     it('can upload a file', async()=> {

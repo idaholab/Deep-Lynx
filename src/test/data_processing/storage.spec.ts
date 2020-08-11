@@ -122,7 +122,7 @@ describe('A Data Source', async() => {
         expect(activeSince.value).not.empty
 
         // should not happen now
-        activeSince = await storage.ListActiveSince(new Date())
+        activeSince = await storage.ListActiveSince(new Date((Date.now() + (60 * 1000))))
         expect(activeSince.isError).false
         expect(activeSince.value).empty
 

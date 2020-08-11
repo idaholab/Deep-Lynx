@@ -8,6 +8,8 @@ import {CompileMetatypeKeys, MetatypeKeyT} from "../../types/metatype_keyT";
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
 import MetatypeStorage from "../metatype_storage";
+import GraphStorage from "./graph_storage";
+import Logger from "../../logger";
 
 /*
 * NodeStorage encompasses all logic dealing with the manipulation of the data nodes
@@ -24,6 +26,16 @@ export default class NodeStorage extends PostgresStorage{
         }
 
         return NodeStorage.instance
+    }
+
+    public async CreateOrUpdateByActiveGraph(containerID: string, input: any | NodesT, preQueries?: QueryConfig[], postQueries?: QueryConfig[]): Promise<Result<NodesT>> {
+        const activeGraph = await GraphStorage.Instance.ActiveForContainer(containerID);
+        if (activeGraph.isError || !activeGraph.value) {
+            Logger.error(activeGraph.error?.error!);
+        }
+        const graphID: string = activeGraph.value.graph_id;
+
+        return NodeStorage.Instance.CreateOrUpdate(containerID, graphID, input);
     }
 
     /*
@@ -61,7 +73,8 @@ export default class NodeStorage extends PostgresStorage{
                         }
 
                         const typeKeys = await MetatypeKeyStorage.Instance.List(m.value.id!);
-                        if(typeKeys.isError || typeKeys.value.length <= 0) {
+                        // allow creation of nodes for metatypes with no associated keys
+                        if(typeKeys.isError || typeKeys.value.length < 0) {
                             resolve(Result.Failure(typeKeys.error?.error!));
                             return
                         }
@@ -77,6 +90,10 @@ export default class NodeStorage extends PostgresStorage{
 
                     ns[n].graph_id = graphID;
                     ns[n].container_id = containerID;
+                    // grab metatype_name if it was not supplied
+                    if (typeof ns[n].metatype_name === 'undefined') {
+                        ns[n].metatype_name = (await MetatypeStorage.Instance.Retrieve(ns[n].metatype_id)).value.name;
+                    }
 
 
                     // the only way we can tell if we should update this or not is through the modified_at tag. Is there
@@ -190,14 +207,21 @@ export default class NodeStorage extends PostgresStorage{
         })
     }
 
-    public Retrieve(id: string): Promise<Result<NodeT>> {
+    public async Retrieve(id: string): Promise<Result<NodeT>> {
         return super.retrieve<NodeT>(NodeStorage.retrieveStatement(id))
     }
 
-    public RetrieveByOriginalID(originalID: string, dataSourceID: string): Promise<Result<NodeT>> {
+    public async RetrieveByOriginalID(originalID: string, dataSourceID: string): Promise<Result<NodeT>> {
         return super.retrieve<NodeT>(NodeStorage.retrieveByOriginalIDStatement(dataSourceID, originalID))
     }
 
+    public async ListByMetatypeID(metatypeID: string, offset: number, limit:number): Promise<Result<NodeT[]>> {
+        return super.rows<NodeT>(NodeStorage.listByMetatypeIDStatement(metatypeID, offset, limit))
+    }
+
+    public async List(containerID: string, offset: number, limit:number): Promise<Result<NodeT[]>> {
+        return super.rows<NodeT>(NodeStorage.listStatement(containerID, offset, limit))
+    }
 
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
@@ -206,11 +230,11 @@ export default class NodeStorage extends PostgresStorage{
     private static createStatement(n: NodeT): QueryConfig[] {
         return [
             {
-            text:`INSERT INTO nodes(id, container_id, metatype_id, graph_id, properties,original_data_id,data_source_id,data_type_mapping_id) VALUES($1, $2, $3, $4, $5, $6, $7,$8)
+            text:`INSERT INTO nodes(id, container_id, metatype_id, metatype_name, graph_id, properties,original_data_id,data_source_id,data_type_mapping_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
 ON CONFLICT (original_data_id, data_source_id)
 DO
-UPDATE  SET container_id = $2, metatype_id = $3, graph_id = $4, properties = $5, original_data_id = $6, data_source_id = $7, data_type_mapping_id = $8, modified_at = NOW()`,
-            values: [n.id, n.container_id, n.metatype_id,n.graph_id, n.properties,n.original_data_id, n.data_source_id, n.data_type_mapping_id]
+UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, modified_at = NOW()`,
+            values: [n.id, n.container_id, n.metatype_id, n.metatype_name, n.graph_id, n.properties, n.original_data_id, n.data_source_id, n.data_type_mapping_id]
              }
 
         ]
@@ -257,6 +281,20 @@ UPDATE  SET container_id = $2, metatype_id = $3, graph_id = $4, properties = $5,
         return {
             text:`DELETE FROM nodes WHERE id = $1`,
             values: [nodeID]
+        }
+    }
+
+    private static listStatement(containerID: string, offset:number, limit:number): QueryConfig {
+        return {
+            text: `SELECT * FROM nodes WHERE container_id = $1 AND NOT archived OFFSET $2 LIMIT $3`,
+            values: [containerID, offset, limit]
+        }
+    }
+
+    private static listByMetatypeIDStatement(metatypeID:string, offset:number, limit:number) {
+        return {
+            text:`SELECT * FROM nodes WHERE metatype_id = $1 AND NOT archived OFFSET $2 LIMIT $3`,
+            values: [metatypeID, offset, limit]
         }
     }
 }

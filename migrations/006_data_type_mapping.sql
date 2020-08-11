@@ -24,12 +24,7 @@ ADD COLUMN original_data_id text,
 ADD COLUMN data_source_id uuid REFERENCES data_sources(id) ON DELETE SET NULL,
 ADD COLUMN data_type_mapping_id uuid REFERENCES data_type_mappings(id) ON DELETE SET NULL;
 
-
-ALTER TABLE IF EXISTS edges
-DROP COLUMN relationship_pair_id;
-
 ALTER TABLE IF EXISTS edges
 ADD COLUMN original_data_id text,
-ADD COLUMN relationship_id uuid REFERENCES metatype_relationships(id) ON DELETE SET NULL,
 ADD COLUMN data_source_id uuid REFERENCES data_sources(id) ON DELETE SET NULL,
 ADD COLUMN data_type_mapping_id uuid REFERENCES data_type_mappings(id) ON DELETE SET NULL;

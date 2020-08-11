@@ -108,8 +108,8 @@ export default class TypeMappingStorage extends PostgresStorage{
     // queries more easily.
     private static createStatement(imp: TypeMappingT): QueryConfig {
         return {
-            text:`INSERT INTO data_type_mappings(id,container_id,data_source_id,type_key,type_value,unique_identifier_key,metatype_id,metatype_relationship_id,origin_key,destination_key,keys,ignored_keys,example_payload,action_key,action_value,relationship_type_key, relationship_type_value,created_by,modified_by) VALUES($1, $2, $3, $4, $5, $6, $7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
-            values: [imp.id, imp.container_id,imp.data_source_id, imp.type_key, imp.type_value,imp.unique_identifier_key,imp.metatype_id,imp.metatype_relationship_id, imp.origin_key, imp.destination_key,JSON.stringify(imp.keys),imp.ignored_keys,imp.example_payload,imp.action_key,imp.action_value,imp.relationship_type_key, imp.relationship_type_value, imp.created_by,imp.modified_by]
+            text:`INSERT INTO data_type_mappings(id,container_id,data_source_id,type_key,type_value,unique_identifier_key,metatype_id,metatype_relationship_pair_id,origin_key,destination_key,keys,ignored_keys,example_payload,action_key,action_value,relationship_type_key, relationship_type_value,created_by,modified_by) VALUES($1, $2, $3, $4, $5, $6, $7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
+            values: [imp.id, imp.container_id,imp.data_source_id, imp.type_key, imp.type_value,imp.unique_identifier_key,imp.metatype_id,imp.metatype_relationship_pair_id, imp.origin_key, imp.destination_key,JSON.stringify(imp.keys),imp.ignored_keys,imp.example_payload,imp.action_key,imp.action_value,imp.relationship_type_key, imp.relationship_type_value, imp.created_by,imp.modified_by]
         }
     }
 
