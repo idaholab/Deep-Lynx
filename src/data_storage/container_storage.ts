@@ -5,6 +5,7 @@ import { QueryConfig} from "pg";
 import * as t from "io-ts";
 import PostgresAdapter from "./adapters/postgres/postgres";
 import uuid from "uuid";
+import GraphStorage from "./graph/graph_storage";
 
 /*
 * ContainerStorage encompasses all logic dealing with the manipulation of the
@@ -50,6 +51,14 @@ export default class ContainerStorage extends PostgresStorage{
                           if(r.isError) {
                               resolve(r);
                               return
+                          }
+
+                          for(const i in cs) {
+                            // create graph
+                            GraphStorage.Instance.Create(cs[i].id!, userID).then((result) => {
+                                // set active graph from graph ID
+                                GraphStorage.Instance.SetActiveForContainer(cs[i].id!, result.value.id);
+                            })
                           }
 
                           resolve(Result.Success(containersT.encode(cs)))

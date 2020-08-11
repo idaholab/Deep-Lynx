@@ -61,7 +61,7 @@ export class Config {
     this._mongo_source_db = process.env.MONGO_SOURCE_DB || "inl-core-m";
 
     this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || "";
-    this._db_name = process.env.DB_NAME || "";
+    this._db_name = process.env.DB_NAME || "deep_lynx";
 
     this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
     this._encryption_key_secret = process.env.ENCRYPTION_KEY_SECRET || ""

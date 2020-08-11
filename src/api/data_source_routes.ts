@@ -166,6 +166,20 @@ export default class DataSourceRoutes {
                     return
                 }
 
+                for(const i in result.value) {
+                    // TODO: slightly hacky, might be a better way of doing this.
+                    // this is needed to remove encrypted data from the return
+                    if(result.value[i].config) {
+                        // @ts-ignore
+                        delete result.value[i].config.token
+                        // @ts-ignore
+                        delete result.value[i].config.username
+                        // @ts-ignore
+                        delete result.value[i].config.password
+                    }
+
+                }
+
                 res.status(200).json(result)
             })
             .catch((err) => {
