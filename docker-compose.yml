@@ -14,7 +14,7 @@ services:
       - ./Dockerfiles/PostgreSQL/basedata:/private/var/lib/postgresql/data
       - ./Dockerfiles/PostgreSQL/InitializationScripts:/docker-entrypoint-initdb.d/
     environment:
-      - POSTGRES_PASSWORD=deeplynxcore
+      - POSTGRES_PASSWORD=#{PostgresPassword}
     tty: true
     stdin_open: true
     command:
