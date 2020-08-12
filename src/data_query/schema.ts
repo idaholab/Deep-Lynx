@@ -37,6 +37,12 @@ function generateSchema(): string {
     description: String
   }
 
+  type MetatypeRelationship {
+    id: String
+    name: String
+    description: String
+  }
+
   type Edge {
   id: String
   container_id: String
@@ -46,7 +52,7 @@ function generateSchema(): string {
   created_at: String
   modified_at: String
 
-  relationship_type: String
+  relationship: MetatypeRelationship
 
   origin: Node
   destination: Node
