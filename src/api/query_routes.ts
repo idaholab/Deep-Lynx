@@ -20,5 +20,6 @@ export default class QueryRoutes {
             .catch(e => {
                 res.status(500).json(e)
             })
+            .finally(() => next())
     }
 }
