@@ -227,12 +227,6 @@ export default class NodeStorage extends PostgresStorage{
         return super.rows<NodeT>(NodeStorage.listStatement(containerID, offset, limit))
     }
 
-    // built specifically for the node resolvers for the GraphQL query system, needed to avoid
-    // re-fetching the entire node object after building a list of nodes to return.
-    ListNodeForContainer(containerID: string, limit: number, offset: number): Promise<Result<NodeT[]>> {
-        return super.rows<NodeT>(NodeStorage.listForContainerStatement(containerID, limit, offset))
-    }
-
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -261,13 +255,6 @@ UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = 
         return {
             text: `SELECT * FROM nodes WHERE id = $1 AND container_id = $2 AND NOT archived`,
             values: [nodeID, containerID]
-        }
-    }
-
-    private static listForContainerStatement(containerID: string, limit: number, offset:number): QueryConfig {
-        return {
-            text: `SELECT * FROM nodes WHERE container_id = $1 AND NOT archived OFFSET $2 LIMIT $3 `,
-            values: [containerID, offset, limit]
         }
     }
 
