@@ -53,7 +53,7 @@ export type EdgeQL = {
     created_at: string
     modified_at: string
 
-    relationship: MetatypeRelationshipQL
+    relationship: Promise<MetatypeRelationshipQL>
     origin: Promise<NodeQL>
     destination: Promise<NodeQL>
     properties: PropertyQL[]

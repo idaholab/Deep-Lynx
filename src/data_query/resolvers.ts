@@ -8,6 +8,9 @@ import MetatypeStorage from "../data_storage/metatype_storage";
 import EdgeStorage from "../data_storage/graph/edge_storage";
 import {EdgeQL, MetatypeQL, MetatypeRelationshipQL, NodeQL, PropertyQL} from "./types";
 import {NodeT} from "../types/graph/nodeT";
+import MetatypeRelationshipPairStorage from "../data_storage/metatype_relationship_pair_storage";
+import Logger from "../logger";
+import MetatypeRelationshipStorage from "../data_storage/metatype_relationship_storage";
 
 export default function resolversRoot(containerID: string):any {
 
@@ -99,6 +102,26 @@ async function MetatypeResolver(metatypeID: string): Promise<MetatypeQL> {
     } as MetatypeQL)
 }
 
+async function MetatypeRelationshipByPairResolver(relationshipPairID: string): Promise<MetatypeRelationshipQL> {
+    const pair = await MetatypeRelationshipPairStorage.Instance.Retrieve(relationshipPairID)
+    if(pair.isError) {
+        Logger.error(`unable to resolve metatype relationship pair: ${pair.error}`)
+        return Promise.resolve({} as MetatypeRelationshipQL)
+    }
+
+    const relationship = await MetatypeRelationshipStorage.Instance.Retrieve(pair.value.relationship_id)
+    if(relationship.isError) {
+        Logger.error(`unable to resolve metatype relationship pair: ${relationship.error}`)
+        return Promise.resolve({} as MetatypeRelationshipQL)
+    }
+
+    return Promise.resolve({
+        id: relationship.value.id,
+        name: relationship.value.name,
+        description: relationship.value.description
+    } as MetatypeRelationshipQL)
+}
+
 async function EdgeOutgoingResolver(nodeID: string): Promise<() => Promise<EdgeQL[]>> {
     return Promise.resolve(async (): Promise<EdgeQL[]> => {
         const edges = await EdgeStorage.Instance.ListByOrigin(nodeID)
@@ -118,7 +141,7 @@ async function EdgeOutgoingResolver(nodeID: string): Promise<() => Promise<EdgeQ
                 archived: edge.archived!,
                 properties: PropertyResolver(edge.properties),
                 raw_properties: JSON.stringify(edge.properties),
-                relationship: {} as MetatypeRelationshipQL,
+                relationship: MetatypeRelationshipByPairResolver(edge.relationship_pair_id),
                 destination: NodeResolverByID(edge.destination_node_id!, edge.container_id!),
                 origin: NodeResolverByID(edge.origin_node_id!, edge.container_id!),
                 created_at: createdAt,
@@ -148,7 +171,7 @@ async function EdgeIncomingResolver(nodeID: string): Promise<() => Promise<EdgeQ
                 original_data_id: edge.original_data_id!,
                 data_source_id: edge.data_source_id!,
                 archived: edge.archived!,
-                relationship: {} as MetatypeRelationshipQL,
+                relationship: MetatypeRelationshipByPairResolver(edge.relationship_pair_id),
                 properties: PropertyResolver(edge.properties),
                 raw_properties: JSON.stringify(edge.properties),
                 destination: NodeResolverByID(edge.destination_node_id!, edge.container_id!),

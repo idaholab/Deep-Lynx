@@ -1,6 +1,5 @@
 import express from "express"
 const cors = require('cors')
-const fileUpload = require('express-fileupload')
 import helmet from "helmet"
 import passport from "passport"
 import passportHttp from "passport-http"
@@ -21,11 +20,9 @@ import UserRoutes from "./user_routes";
 import DataSourceRoutes from "./data_source_routes";
 import {SetJWTAuthMethod} from "../user_management/authentication/jwt";
 import jwt from "jsonwebtoken"
-import * as fs from "fs";
 import {SetLocalAuthMethod} from "../user_management/authentication/local";
 import KeyPairStorage from "../data_storage/user_management/keypair_storage";
 import {RetrieveResourcePermissions} from "../user_management/users";
-import {Resource} from "typedoc/dist/lib/output/utils/resources/stack";
 import QueryRoutes from "./query_routes";
 import GraphRoutes from "./graph_routes";
 
@@ -74,7 +71,6 @@ export class Router {
     MetatypeRelationshipRoutes.mount(this.app, [authenticateRoute()]);
     MetatypeRelationshipKeyRoutes.mount(this.app, [authenticateRoute()]);
     MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute()]);
-    GraphRoutes.mount(this.app, [authenticateRoute()]);
 
     this.mountPostMiddleware()
   }

@@ -116,7 +116,7 @@ describe('A Complex Graph can be created', async() => {
             "origin_metatype_id": metatype.value[0].id,
             "destination_metatype_id": metatype.value[1].id,
             "relationship_id": relationship.value[0].id,
-            "relationship_type": "one:one"
+            "relationship_type": "many:many"
         });
 
         let pair2 = await rpStorage.Create(containerID, "test suite", {
@@ -125,14 +125,14 @@ describe('A Complex Graph can be created', async() => {
             "destination_metatype_id": metatype.value[0].id,
             "origin_metatype_id": metatype.value[1].id,
             "relationship_id": relationship.value[0].id,
-            "relationship_type": "one:one"
+            "relationship_type": "many:many"
         });
 
         expect(pair2.isError).false
 
        // EDGE SETUP
         let edge1 = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_id: pair.value[0].relationship_id,
+            relationship_pair_id: pair.value[0].id,
             properties: payload,
             origin_node_id: nodePair.value[0].id,
             destination_node_id: nodePair.value[1].id
@@ -141,7 +141,7 @@ describe('A Complex Graph can be created', async() => {
         expect(edge1.isError, "edge 1").false;
 
         let edge2 = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_id: pair2.value[0].relationship_id,
+            relationship_pair_id: pair.value[0].id,
             properties: payload,
             origin_node_id: nodePair.value[0].id,
             destination_node_id: nodePair.value[5].id
@@ -150,7 +150,7 @@ describe('A Complex Graph can be created', async() => {
         expect(edge2.isError, "edge 2").false;
 
         let edge3 = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_id: pair.value[0].relationship_id,
+            relationship_pair_id: pair2.value[0].id,
             properties: payload,
             origin_node_id: nodePair.value[5].id,
             destination_node_id: nodePair.value[0].id
@@ -159,7 +159,7 @@ describe('A Complex Graph can be created', async() => {
         expect(edge3.isError, "edge 3").false;
 
         let edge4 = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_id: pair.value[0].relationship_id,
+            relationship_pair_id: pair2.value[0].id,
             properties: payload,
             origin_node_id: nodePair.value[5].id,
             destination_node_id: nodePair.value[6].id
@@ -168,7 +168,7 @@ describe('A Complex Graph can be created', async() => {
         expect(edge4.isError, "edge 4").false;
 
         let edge5 = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_id: pair.value[0].relationship_id,
+            relationship_pair_id: pair2.value[0].id,
             properties: payload,
             origin_node_id: nodePair.value[1].id,
             destination_node_id: nodePair.value[4].id
@@ -177,7 +177,7 @@ describe('A Complex Graph can be created', async() => {
         expect(edge5.isError, "edge 5").false;
 
         let edge6 = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_id: pair.value[0].relationship_id,
+            relationship_pair_id: pair2.value[0].id,
             properties: payload,
             origin_node_id: nodePair.value[1].id,
             destination_node_id: nodePair.value[6].id
@@ -186,7 +186,7 @@ describe('A Complex Graph can be created', async() => {
         expect(edge6.isError, "edge 6").false;
 
         let edge7 = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_id: pair.value[0].relationship_id,
+            relationship_pair_id: pair.value[0].id,
             properties: payload,
             origin_node_id: nodePair.value[4].id,
             destination_node_id: nodePair.value[5].id
@@ -196,22 +196,13 @@ describe('A Complex Graph can be created', async() => {
 
 
         let edge8 = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_id: pair.value[0].relationship_id,
-            properties: payload,
-            origin_node_id: nodePair.value[5].id,
-            destination_node_id: nodePair.value[6].id
-        });
-
-        expect(edge8.isError, "edge 8").false;
-
-        let edge9 = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_id: pair.value[0].relationship_id,
+            relationship_pair_id: pair2.value[0].id,
             properties: payload,
             origin_node_id: nodePair.value[7].id,
             destination_node_id: nodePair.value[0].id
         });
 
-        expect(edge9.isError, "edge 9").false;
+        expect(edge8.isError, "edge 8").false;
 
         console.log(`Graph ID = ${graph.value.id}`)
 
