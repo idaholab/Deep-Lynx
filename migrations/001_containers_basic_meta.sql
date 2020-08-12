@@ -82,10 +82,6 @@ CREATE TABLE metatype_relationship_keys (
     modified_by character varying(255) NOT NULL
 );
 
-
-CREATE UNIQUE INDEX metatype_relationship_key_id ON metatype_relationship_keys(id uuid_ops);
-CREATE UNIQUE INDEX metatype_relationship_key_name ON metatype_relationship_keys(name text_ops);
-
 CREATE TABLE metatype_relationship_pairs (
     relationship_id uuid REFERENCES metatype_relationships(id) ON DELETE CASCADE,
     origin_metatype_id uuid REFERENCES metatypes(id) ON DELETE CASCADE,

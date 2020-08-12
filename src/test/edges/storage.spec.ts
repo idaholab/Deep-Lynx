@@ -15,6 +15,7 @@ import MetatypeRelationshipPairStorage from "../../data_storage/metatype_relatio
 import EdgeStorage from "../../data_storage/graph/edge_storage";
 import {EdgeT} from "../../types/graph/edgeT";
 import DataSourceStorage from "../../data_storage/import/data_source_storage";
+import MetatypeRelationshipKeyStorage from "../../data_storage/metatype_relationship_key_storage";
 
 describe('A Graph Edge can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -46,6 +47,7 @@ describe('A Graph Edge can', async() => {
         const mStorage = MetatypeStorage.Instance;
         const gStorage = GraphStorage.Instance;
         const rStorage = MetatypeRelationshipStorage.Instance;
+        const rkStorage = MetatypeRelationshipKeyStorage.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
 
         // SETUP
@@ -85,6 +87,8 @@ describe('A Graph Edge can', async() => {
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
+
+        const rkeys = await rkStorage.Create(relationship.value[0].id!, "test suite", test_relationship_keys)
 
         let pair = await rpStorage.Create(containerID, "test suite", {
             "name": faker.name.findName(),
