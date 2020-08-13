@@ -25,8 +25,6 @@ import KeyPairStorage from "../data_storage/user_management/keypair_storage";
 import {RetrieveResourcePermissions} from "../user_management/users";
 import QueryRoutes from "./query_routes";
 import GraphRoutes from "./graph_routes";
-import {driver} from "gremlin";
-import auth = driver.auth;
 
 const BasicStrategy = passportHttp.BasicStrategy;
 const session = require('express-session');
