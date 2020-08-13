@@ -25,6 +25,8 @@ import KeyPairStorage from "../data_storage/user_management/keypair_storage";
 import {RetrieveResourcePermissions} from "../user_management/users";
 import QueryRoutes from "./query_routes";
 import GraphRoutes from "./graph_routes";
+import {driver} from "gremlin";
+import auth = driver.auth;
 
 const BasicStrategy = passportHttp.BasicStrategy;
 const session = require('express-session');
@@ -71,6 +73,8 @@ export class Router {
     MetatypeRelationshipRoutes.mount(this.app, [authenticateRoute()]);
     MetatypeRelationshipKeyRoutes.mount(this.app, [authenticateRoute()]);
     MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute()]);
+    QueryRoutes.mount(this.app, [authenticateRoute()]);
+    GraphRoutes.mount(this.app, [authenticateRoute()]);
 
     this.mountPostMiddleware()
   }
