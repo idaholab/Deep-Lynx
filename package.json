@@ -20,8 +20,7 @@
     "migrate": "tsc && node -r dotenv/config ./dist/migrate.js",
     "build:dev": "tsc",
     "test": "cross-env TS_NODE_FILES=true npm run test:raw",
-    "test:raw": " cd src/test && cross-env-shell nyc mocha --exit  -r ts-node/register -r dotenv/config  **/*.spec.ts ",
-    "generate:documentation": "typedoc --module commonjs --target ES6 --exclude /Users/john/inl/core/src/**/*.spec.ts --excludeExternals --tsconfig ./src  --out ./interactive_documentation ./src"
+    "test:raw": " cd src/test && cross-env-shell nyc mocha --exit  -r ts-node/register -r dotenv/config  **/*.spec.ts "
   },
   "devDependencies": {
     "@types/chai": "^4.2.11",

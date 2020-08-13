@@ -13,7 +13,6 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 
 1. `readme.md` files throughout the application. Can be found for the main application, export adapters, import adapters, and authentication levels.
 2. API level documentation in the form of Postman and Swagger collections - found in `api_documentation`
-3. Interactive documentation displayed as a website, found by opening `interactive_documentation/index.html`
 
 **Requirements**
 

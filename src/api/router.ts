@@ -26,7 +26,7 @@ import {SetLocalAuthMethod} from "../user_management/authentication/local";
 import KeyPairStorage from "../data_storage/user_management/keypair_storage";
 import {RetrieveResourcePermissions} from "../user_management/users";
 import {Resource} from "typedoc/dist/lib/output/utils/resources/stack";
-import GraphRoutes from "./graphs";
+import GraphRoutes from "./graph_routes";
 
 const BasicStrategy = passportHttp.BasicStrategy;
 const session = require('express-session');

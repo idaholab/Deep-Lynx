@@ -237,6 +237,345 @@
         }
       }
     },
+    "/containers/{container-id}/query": {
+      "post": {
+        "description": "Fetch container by ID.",
+        "summary": "Query",
+        "tags": [
+          "Data Query"
+        ],
+        "operationId": "Query",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "description": "",
+            "schema": {
+              "example": "{\r\n    nodes {\r\n        id\r\n        metatype {name}\r\n        properties {key value type}\r\n        raw_properties\r\n        outgoing_edges {\r\n            id\r\n            relationship {name description id} \r\n            }\r\n        incoming_edges {id}\r\n       \r\n    }\r\n}",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/containers/{container_id}/graphs/nodes": {
+      "post": {
+        "description": "This endpoint will either create new nodes or update nodes if a \"modified_at\" property with a valid DateTime is passed.",
+        "summary": "Create Or Update Nodes",
+        "tags": [
+          "Graph"
+        ],
+        "operationId": "CreateOrUpdateNodes",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CreateOrUpdateNodesRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      },
+      "get": {
+        "description": "List Nodes from storage",
+        "summary": "List Nodes",
+        "tags": [
+          "Graph"
+        ],
+        "operationId": "ListNodes",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "description": ""
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "description": ""
+          },
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/containers/{container_id}/graphs/nodes/{node_id}": {
+      "get": {
+        "description": "Retrieve a single node from storage.",
+        "summary": "Retrieve Node",
+        "tags": [
+          "Graph"
+        ],
+        "operationId": "RetrieveNode",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      },
+      "delete": {
+        "summary": "Archive Node",
+        "tags": [
+          "Graph"
+        ],
+        "operationId": "ArchiveNode",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ArchiveNodeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/containers/{container_id}/graphs/nodes/metatype/{metatype_id}": {
+      "get": {
+        "description": "List Nodes from storage, filter by MetatypeID",
+        "summary": "List Nodes by Metatype ID",
+        "tags": [
+          "Graph"
+        ],
+        "operationId": "ListNodesbyMetatypeID",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "description": ""
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "description": ""
+          },
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "metatype_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/containers/{container_id}/graphs/edges": {
+      "get": {
+        "description": "List Nodes from storage",
+        "summary": "List Edges",
+        "tags": [
+          "Graph"
+        ],
+        "operationId": "ListEdges",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "description": ""
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "description": ""
+          },
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/containers/{container_id}/graphs/edges/{edge_id}": {
+      "delete": {
+        "summary": "Archive Edge",
+        "tags": [
+          "Graph"
+        ],
+        "operationId": "ArchiveEdge",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "edge_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ArchiveEdgeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
     "/containers/{container-id}/metatypes": {
       "post": {
         "description": "Create a new meta type. Pass in an array for bulk creation.",
@@ -1433,9 +1772,9 @@
         }
       }
     },
-    "/containers/{container-id}/import/datasources/{dataSourceID}/file": {
+    "/containers/{container-id}/import/datasources/{dataSourceID}/files": {
       "post": {
-        "description": "Uploads a file and metadata to Deep Lynx",
+        "description": "Uploads a file and metadata to Deep Lynx. This endpoint will accept multiple files and multiple properties as form values.",
         "summary": "Upload File",
         "tags": [
           "Data Sources"
@@ -1462,7 +1801,7 @@
           }
         ],
         "responses": {
-          "201": {
+          "200": {
             "description": "",
             "headers": {}
           }
@@ -1936,7 +2275,7 @@
     },
     "/users/{user_id}/keys": {
       "get": {
-        "description": "Retrieves only the active keys for supplied user. Secrets are hashed and are never revealed past initial creation.",
+        "description": "Retrieves only the active keys for supplied user. Secerts are hashed and are never revealed past initial creation.",
         "summary": "Keys For User",
         "tags": [
           "Users"
@@ -2657,6 +2996,201 @@
         "name",
         "description",
         "id"
+      ]
+    },
+    "CreateOrUpdateNodesRequest": {
+      "title": "CreateOrUpdateNodesRequest",
+      "example": {
+        "container_id": "required",
+        "original_data_id": "optional",
+        "data_source_id": "required",
+        "data_type_mapping_id": "optional",
+        "metatype_id": "required",
+        "modified_at": "optional - set to update node if it exists",
+        "properties": {}
+      },
+      "type": "object",
+      "properties": {
+        "container_id": {
+          "type": "string"
+        },
+        "original_data_id": {
+          "type": "string"
+        },
+        "data_source_id": {
+          "type": "string"
+        },
+        "data_type_mapping_id": {
+          "type": "string"
+        },
+        "metatype_id": {
+          "type": "string"
+        },
+        "modified_at": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "container_id",
+        "original_data_id",
+        "data_source_id",
+        "data_type_mapping_id",
+        "metatype_id",
+        "modified_at",
+        "properties"
+      ]
+    },
+    "ArchiveNodeRequest": {
+      "title": "ArchiveNodeRequest",
+      "example": {
+        "container_id": "required",
+        "original_data_id": "optional",
+        "data_source_id": "required",
+        "data_type_mapping_id": "optional",
+        "metatype_id": "required",
+        "modified_at": "optional - set to update node if it exists",
+        "properties": {}
+      },
+      "type": "object",
+      "properties": {
+        "container_id": {
+          "type": "string"
+        },
+        "original_data_id": {
+          "type": "string"
+        },
+        "data_source_id": {
+          "type": "string"
+        },
+        "data_type_mapping_id": {
+          "type": "string"
+        },
+        "metatype_id": {
+          "type": "string"
+        },
+        "modified_at": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "container_id",
+        "original_data_id",
+        "data_source_id",
+        "data_type_mapping_id",
+        "metatype_id",
+        "modified_at",
+        "properties"
+      ]
+    },
+    "CreateOrUpdateEdgesRequest": {
+      "title": "CreateOrUpdateEdgesRequest",
+      "example": {
+        "container_id": "required",
+        "original_data_id": "required",
+        "data_source_id": "required",
+        "origin_node_id": "required (if origin_node_original_id not set)",
+        "destination_node_id": "required (if destination_node_original_id not set)",
+        "origin_node_original_id": "create edge based on original ID of node, not Deep Lynx ID",
+        "destination_node_original_id": "create edge based on original ID of node, not Deep Lynx ID",
+        "relationship_pair_id": "required",
+        "modified_at": "will attempt to update edge if exists",
+        "properties": {}
+      },
+      "type": "object",
+      "properties": {
+        "container_id": {
+          "type": "string"
+        },
+        "original_data_id": {
+          "type": "string"
+        },
+        "data_source_id": {
+          "type": "string"
+        },
+        "origin_node_id": {
+          "type": "string"
+        },
+        "destination_node_id": {
+          "type": "string"
+        },
+        "origin_node_original_id": {
+          "type": "string"
+        },
+        "destination_node_original_id": {
+          "type": "string"
+        },
+        "relationship_pair_id": {
+          "type": "string"
+        },
+        "modified_at": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "container_id",
+        "original_data_id",
+        "data_source_id",
+        "origin_node_id",
+        "destination_node_id",
+        "origin_node_original_id",
+        "destination_node_original_id",
+        "relationship_pair_id",
+        "modified_at",
+        "properties"
+      ]
+    },
+    "ArchiveEdgeRequest": {
+      "title": "ArchiveEdgeRequest",
+      "example": {
+        "container_id": "required",
+        "original_data_id": "optional",
+        "data_source_id": "required",
+        "data_type_mapping_id": "optional",
+        "metatype_id": "required",
+        "modified_at": "optional - set to update node if it exists",
+        "properties": {}
+      },
+      "type": "object",
+      "properties": {
+        "container_id": {
+          "type": "string"
+        },
+        "original_data_id": {
+          "type": "string"
+        },
+        "data_source_id": {
+          "type": "string"
+        },
+        "data_type_mapping_id": {
+          "type": "string"
+        },
+        "metatype_id": {
+          "type": "string"
+        },
+        "modified_at": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "container_id",
+        "original_data_id",
+        "data_source_id",
+        "data_type_mapping_id",
+        "metatype_id",
+        "modified_at",
+        "properties"
       ]
     },
     "NewTypeRequest": {
@@ -3442,6 +3976,14 @@
     {
       "name": "Containers",
       "description": "Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. All data is separated by containers."
+    },
+    {
+      "name": "Data Query",
+      "description": "Deep Lynx gives you the ability to query data using a GraphQL enabled endpoint. Please see the documentation on GraphQL and run a schema query to learn more about what search methods, query arguments, and fields are available to you."
+    },
+    {
+      "name": "Graph",
+      "description": "These endpoints give you the ability to add nodes and edges to the graph manually as well as perform some basic queries. For all advanced queries, please use the GraphQL query endpoint."
     },
     {
       "name": "Metatypes",
