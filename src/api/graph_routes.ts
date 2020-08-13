@@ -4,8 +4,8 @@ import EdgeStorage from "../data_storage/graph/edge_storage";
 import {Request, Response, NextFunction, Application} from "express";
 import {authInContainer} from "./middleware";
 
-const node_storage = NodeStorage.Instance;
-const edge_storage = EdgeStorage.Instance;
+const nodeStorage = NodeStorage.Instance;
+const edgeStorage = EdgeStorage.Instance;
 
 export default class GraphRoutes {
     public static mount(app: Application, middleware: any[]) {
@@ -20,7 +20,7 @@ export default class GraphRoutes {
     }
 
     private static async listNodes(req: Request, res: Response, next: NextFunction) {
-      node_storage.List(req.params.id, +req.query.offset, +req.query.limit)
+      nodeStorage.List(req.params.id, +req.query.offset, +req.query.limit)
           .then((result) => {
               if (result.isError && result.error) {
                   res.status(result.error.errorCode).json(result);
@@ -31,9 +31,9 @@ export default class GraphRoutes {
           .catch((err) => res.status(404).send(err))
           .finally(() => next())
     }
-    
+
     private static async retrieveNode(req: Request, res: Response, next: NextFunction) {
-      node_storage.Retrieve(req.params.nodeID)
+      nodeStorage.Retrieve(req.params.nodeID)
           .then((result) => {
               if (result.isError && result.error) {
                   res.status(result.error.errorCode).json(result);
@@ -46,7 +46,7 @@ export default class GraphRoutes {
     }
 
     private static async listNodesByMetatypeID(req: Request, res: Response, next: NextFunction) {
-      node_storage.ListByMetatypeID(req.params.metatypeID, +req.query.offset, +req.query.limit)
+      nodeStorage.ListByMetatypeID(req.params.metatypeID, +req.query.offset, +req.query.limit)
           .then((result) => {
               if (result.isError && result.error) {
                   res.status(result.error.errorCode).json(result);
@@ -60,7 +60,7 @@ export default class GraphRoutes {
 
     private static listEdges(req: Request, res: Response, next: NextFunction) {
       if (typeof req.query.originID !== "undefined" && typeof req.query.destinationID !== "undefined") {
-        edge_storage.RetriveByOriginAndDestination(req.query.originID as string, req.query.destinationID as string)
+        edgeStorage.RetriveByOriginAndDestination(req.query.originID as string, req.query.destinationID as string)
               .then((result) => {
                   if (result.isError && result.error) {
                       res.status(result.error.errorCode).json(result);
@@ -73,7 +73,7 @@ export default class GraphRoutes {
               })
               .finally(() => next())
       } else if (typeof req.query.destinationID !== "undefined") {
-        edge_storage.ListByDestination(req.query.destinationID as string)
+        edgeStorage.ListByDestination(req.query.destinationID as string)
               .then((result) => {
                   if (result.isError && result.error) {
                       res.status(result.error.errorCode).json(result);
@@ -86,7 +86,7 @@ export default class GraphRoutes {
               })
               .finally(() => next())
       } else if (typeof req.query.originID !== "undefined") {
-        edge_storage.ListByOrigin(req.query.originID as string)
+        edgeStorage.ListByOrigin(req.query.originID as string)
               .then((result) => {
                   if (result.isError && result.error) {
                       res.status(result.error.errorCode).json(result);
@@ -99,7 +99,7 @@ export default class GraphRoutes {
               })
               .finally(() => next())
       } else {
-        edge_storage.List(req.params.id, +req.query.offset, +req.query.limit)
+        edgeStorage.List(req.params.id, +req.query.offset, +req.query.limit)
               .then((result) => {
                   if (result.isError && result.error) {
                       res.status(result.error.errorCode).json(result);
@@ -115,7 +115,7 @@ export default class GraphRoutes {
   }
 
   private static async createOrUpdateNodes(req: Request, res: Response, next: NextFunction) {
-    node_storage.CreateOrUpdateByActiveGraph(req.params.id, req.body)
+    nodeStorage.CreateOrUpdateByActiveGraph(req.params.id, req.body)
         .then((result) => {
             if (result.isError && result.error) {
                 res.status(result.error.errorCode).json(result);
@@ -131,7 +131,7 @@ export default class GraphRoutes {
   }
 
   private static async createOrUpdateEdges(req: Request, res: Response, next: NextFunction) {
-    edge_storage.CreateOrUpdateByActiveGraph(req.params.id, req.body)
+    edgeStorage.CreateOrUpdateByActiveGraph(req.params.id, req.body)
         .then((result) => {
             if (result.isError && result.error) {
                 res.status(result.error.errorCode).json(result);
@@ -147,7 +147,7 @@ export default class GraphRoutes {
   }
 
   private static archiveEdge(req: Request, res: Response, next: NextFunction) {
-    edge_storage.Archive(req.params.edgeID)
+    edgeStorage.Archive(req.params.edgeID)
         .then((result) => {
             if (result.isError && result.error) {
                 res.status(result.error.errorCode).json(result);
@@ -160,7 +160,7 @@ export default class GraphRoutes {
   }
 
   private static archiveNode(req: Request, res: Response, next: NextFunction) {
-    node_storage.Archive(req.params.nodeID)
+    nodeStorage.Archive(req.params.nodeID)
         .then((result) => {
             if (result.isError && result.error) {
                 res.status(result.error.errorCode).json(result);
