@@ -8,12 +8,24 @@ export default class NodeFilter extends Filter {
         super(NodeStorage.tableName);
     }
 
+    containerID(operator: string, value: any) {
+        super.query("container_id", operator, value)
+        return this
+    }
+
     metatypeID(operator: string, value: any) {
         super.query("metatype_id", operator, value)
         return this
     }
 
+    metatypeName(operator: string, value: any) {
+        super.query("metatype_name", operator, value)
+        return this
+    }
+
     all(): Promise<Result<NodeT[]>> {
-       return super.findAll<NodeT>();
+       const results = super.findAll<NodeT>();
+
+       return results
     }
 }

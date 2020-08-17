@@ -12,7 +12,7 @@ import NodeStorage from "../../data_storage/graph/node_storage";
 import ContainerStorage from "../../data_storage/container_storage";
 import NodeFilter from "../../data_storage/graph/node_filter";
 
-describe('Graph Node Creation', async() => {
+describe('Filtering Nodes', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
@@ -33,7 +33,7 @@ describe('Graph Node Creation', async() => {
         return Promise.resolve()
     });
 
-    it('can save mixed node types', async()=> {
+    it('can filter by equality', async()=> {
         const storage = NodeStorage.Instance;
         const kStorage = MetatypeKeyStorage.Instance;
         const mStorage = MetatypeStorage.Instance;
@@ -64,14 +64,31 @@ describe('Graph Node Creation', async() => {
 
         // filter by metatypeID
         const filter = new NodeFilter()
-        let nodes = await filter.where().metatypeID("eq", metatype.value[0].id!).all()
+        let nodes = await filter.where()
+            .containerID("eq", containerID)
+            .and()
+            .metatypeID("eq", metatype.value[0].id!)
+            .all()
         expect(nodes.isError, nodes.error?.error).false
         expect(nodes.value).not.empty
 
         // check garbage
-        let noNodes = await filter.where().metatypeID("eq", uuid.v4()).all()
+        let noNodes = await filter.where()
+            .containerID("eq", containerID)
+            .and()
+            .metatypeID("eq", uuid.v4())
+            .all()
         expect(noNodes.isError, nodes.error?.error).false
         expect(noNodes.value).empty
+
+        // check inequality
+        nodes = await filter.where()
+            .containerID("eq",containerID)
+            .and()
+            .metatypeID("neq", uuid.v4())
+            .all()
+        expect(nodes.isError, nodes.error?.error).false
+        expect(nodes.value).not.empty
 
         await mStorage.PermanentlyDelete(metatype.value[0].id!);
         return gStorage.PermanentlyDelete(graph.value.id);

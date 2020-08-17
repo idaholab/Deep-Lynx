@@ -29,8 +29,14 @@ export default abstract class Filter {
     query(fieldName: string, operator: string, value: any) {
         switch(operator) {
             case "eq": {
-               this._rawQuery.push(`${fieldName} = $${this._values.length+1}`);
-               this._values.push(value)
+                this._values.push(value)
+                this._rawQuery.push(`${fieldName} = $${this._values.length}`);
+                break;
+            }
+            case "neq" :{
+                this._values.push(value)
+                this._rawQuery.push(`${fieldName} <> $${this._values.length}`);
+                break;
             }
         }
 
