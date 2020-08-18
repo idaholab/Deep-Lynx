@@ -11,8 +11,8 @@ import Logger from "../logger"
 
 // PostgresStorage contains ORM like CRUD functions, and a few helpers for more complex functionality.
 // This contains things like transaction runners, as well as things like the type decoder
-// and simple row/query functions. This is intended to be extended only - never used alone
-export default abstract class PostgresStorage {
+// and simple row/query functions.
+export default class PostgresStorage {
     // Decode and Validate attempts to decode the input into the type requested by the user. If successful, a user
     // supplied function will run (usually calling whatever storage operation they originally wanted). On failure a
     // formatted error result will be returned instead.

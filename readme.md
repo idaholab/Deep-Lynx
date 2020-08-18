@@ -86,7 +86,7 @@ Below is a list of all `npm run` commands as listed in the `package.json` file.
 
 
 ## Development
-###**Tenets**
+### **Tenets**
 
 This project has adopted a few basic tenets with regards to development.
 
@@ -94,7 +94,7 @@ This project has adopted a few basic tenets with regards to development.
 * **Simple and Explicit:** Variable names, class names, and file names should all be explicit in their naming. While we want to avoid extremely long names, we do favor the use of a slightly longer naming if by doing so the reader can more easily grasp the functionality they're looking at. While the application is complex, the code making up each of its parts should not be. We favor simple code over elegant masterpieces as we hope to create a project that even beginners can contribute to quickly.
 
 
-###**General Structure**
+### **General Structure**
 ```shell script
     API (src/api/*.ts)
        ^
@@ -102,7 +102,7 @@ This project has adopted a few basic tenets with regards to development.
        ^
   Data Functions (src/data_*.ts)
        ^
-  Data Storage (src/data_storage/*.ts)
+  Data Storage/Filters (src/data_storage/*.ts)
 ```
 **API**
 
@@ -119,9 +119,28 @@ Data functions should contain all logic related to the importing, handling, and 
 **Data Storage**
 
 Data storage operations should be limited to a single data type and functionality for manipulating it in storage. On creation and update routes, the storage layer also validates and sanitizes user input (we decided to move that into the storage layer in order to maintain a skinny api layer and to provide an "accept anything, return static types" mentality)
+You may also use the filter class for a relevant data type (e.g `NodeFilter` for `NodeT`) to run complex filtering queries. Here is a brief example on how to accomplish this, as well as a list of currently supported query operators.
+
+```
+const nodeFilter = new NodeFilter()
+
+const results = await nodeFilter.where().
+                        .containerID("eq", "container ID")
+                        .and()
+                        .metatypeID("neq", "metatype ID")
+                        .all() 
+```
+
+**Currently Supported Operators**
+
+Operator | Description
+------------ | -------------
+`eq` | equals  
+`neq` | not equals
 
 
-###**Data Model Patterns and `io-ts`**
+
+### **Data Model Patterns and `io-ts`**
 
 [io-ts](https://github.com/gcanti/io-ts#piping) allows the use of type validation and constraints at runtime. For more information I suggest you read this [post](https://lorefnon.tech/2018/03/25/typescript-and-validations-at-runtime-boundaries/) and study the repo and documentation.
 
