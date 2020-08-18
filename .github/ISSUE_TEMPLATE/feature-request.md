@@ -1,17 +1,17 @@
 ---
-name: Bug Report
-about: Report a bug that is preventing proper operation of the framework or an application
+name: Feature or Enhancement Request
+about: New Features or enhancements to existing capabilities
 title: ''
-labels: 'T: defect'
+labels: 'T: task, P: normal'
 assignees: ''
 
 ---
 
-## Bug Description
-<!--A clear and concise description of the problem (Note: A missing feature is not a bug).-->
+## Reason
+<!--Why do you need this feature or what is the enhancement?-->
 
-## Steps to Reproduce
-<!--Steps to reproduce the behavior (input file, or modifications to an existing input file, etc.)-->
+## Design
+<!--A concise description (design) of what you want to happen.--->
 
 ## Impact
-<!--Does this prevent you from getting your work done, or is it more of an annoyance?-->
+<!--Will the enhancement change existing public APIs, internal APIs, or add something new?-->
