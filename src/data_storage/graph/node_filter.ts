@@ -24,8 +24,6 @@ export default class NodeFilter extends Filter {
     }
 
     all(): Promise<Result<NodeT[]>> {
-       const results = super.findAll<NodeT>();
-
-       return results
+       return super.findAll<NodeT>();
     }
 }
