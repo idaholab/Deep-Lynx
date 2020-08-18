@@ -90,6 +90,15 @@ describe('Filtering Nodes', async() => {
         expect(nodes.isError, nodes.error?.error).false
         expect(nodes.value).not.empty
 
+        // check name filter
+        nodes = await filter.where()
+            .containerID("eq",containerID)
+            .and()
+            .metatypeName("eq", metatype.value[0].name)
+            .all()
+        expect(nodes.isError, nodes.error?.error).false
+        expect(nodes.value).not.empty
+
         await mStorage.PermanentlyDelete(metatype.value[0].id!);
         return gStorage.PermanentlyDelete(graph.value.id);
     });
