@@ -29,7 +29,7 @@ export default function resolversRoot(containerID: string):any {
             // no search parameters, return a simple list for graph based on
             // limit/offset. Default values are provided by the schema so as
             // not to overwhelm the response with hundreds of thousands of nodes
-            const nodes = await NodeStorage.Instance.List(containerID, limit, offset)
+            const nodes = await NodeStorage.Instance.List(containerID, offset, limit)
             if(nodes.isError) return Promise.resolve([])
 
             const output: Promise<NodeQL>[] = []
