@@ -44,6 +44,29 @@ export type NodeQL = {
     outgoing_edges: ({depth}:any) => Promise<EdgeQL[]>
 }
 
+export type NodeWhereQL = {
+    AND: NodeFilterQL[]
+    OR: NodeFilterQL[]
+}
+
+export type NodeFilterQL = {
+    container_id: string
+    original_data_id: string
+    data_source_id: string
+    archived: boolean
+    created_at: string
+    modified_at: string
+    metatype_name: string
+    metatype_id: string
+    properties: PropertyFilter[]
+}
+
+export type PropertyFilter = {
+    key: string
+    operator: string
+    value: string
+}
+
 export type EdgeQL = {
     id: string
     container_id: string

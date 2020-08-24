@@ -26,6 +26,11 @@ export default abstract class Filter {
         return this
     }
 
+    or() {
+        this._rawQuery.push("OR")
+        return this
+    }
+
     query(fieldName: string, operator: string, value: any) {
         switch(operator) {
             case "eq": {
@@ -43,8 +48,18 @@ export default abstract class Filter {
         return this
     }
 
-    findAll<T>(): Promise<Result<T[]>> {
+    findAll<T>(limit?: number, offset?: number): Promise<Result<T[]>> {
         const storage = new PostgresStorage()
+
+        if(offset) {
+            this._values.push(offset)
+            this._rawQuery.push(`OFFSET $${this._values.length}`)
+        }
+
+        if(limit) {
+            this._values.push(limit)
+            this._rawQuery.push(`LIMIT $${this._values.length}`)
+        }
 
         const query = {
             text: this._rawQuery.join(" "),
@@ -57,5 +72,4 @@ export default abstract class Filter {
 
         return storage.rows<T>(query)
     }
-
 }

@@ -8,7 +8,8 @@
         "align": [true, "parameters", "statements"],
         "forin": false,
         "max-classes-per-file": false,
-        "no-var-requires": false
+        "no-var-requires": false,
+        "no-shadowed-variable": false
     },
     "rulesDirectory": []
 }

@@ -6,18 +6,18 @@ for auto-generating resolvers based on the stored ontology.
 import NodeStorage from "../data_storage/graph/node_storage";
 import MetatypeStorage from "../data_storage/metatype_storage";
 import EdgeStorage from "../data_storage/graph/edge_storage";
-import {EdgeQL, MetatypeQL, MetatypeRelationshipQL, NodeQL, PropertyQL} from "./types";
+import {EdgeQL, MetatypeQL, MetatypeRelationshipQL, NodeFilterQL, NodeQL, NodeWhereQL, PropertyQL} from "./types";
 import {NodeT} from "../types/graph/nodeT";
 import MetatypeRelationshipPairStorage from "../data_storage/metatype_relationship_pair_storage";
 import Logger from "../logger";
 import MetatypeRelationshipStorage from "../data_storage/metatype_relationship_storage";
+import NodeFilter from "../data_storage/graph/node_filter";
 
 export default function resolversRoot(containerID: string):any {
-
     return {
         // the depth parameter isn't used by GraphQL, rather its an option
         // for when other functions use the node resolver
-        nodes: async ({nodeID, limit, offset}: any) => {
+        nodes: async ({nodeID, limit, offset, where}: any) => {
             if(nodeID) {
                 const node = await NodeResolverByID(nodeID, containerID)
                 return new Promise(resolve => {
@@ -26,15 +26,66 @@ export default function resolversRoot(containerID: string):any {
                 })
             }
 
-            // no search parameters, return a simple list for graph based on
-            // limit/offset. Default values are provided by the schema so as
-            // not to overwhelm the response with hundreds of thousands of nodes
-            const nodes = await NodeStorage.Instance.List(containerID, offset, limit)
-            if(nodes.isError) return Promise.resolve([])
+            if(!where) {
+                // no search parameters, return a simple list for graph based on
+                // limit/offset. Default values are provided by the schema so as
+                // not to overwhelm the response with hundreds of thousands of nodes
+                const nodes = await NodeStorage.Instance.List(containerID, offset, limit)
+                if(nodes.isError) return Promise.resolve([])
+
+                const output: Promise<NodeQL>[] = []
+
+                for(const node of nodes.value) {
+                    output.push(NodeResolver(node, containerID))
+                }
+
+                return Promise.resolve(Promise.all(output));
+            }
+
+            const nodeWhere = where as NodeWhereQL
+            let filter = new NodeFilter().where()
+
+            for(const n in nodeWhere.AND) {
+                // in order to utilize the GraphQL error handling we wrap everything
+                // in a try catch and pass any errors up
+                try {
+                    filter = buildNodeFilter(filter,nodeWhere.AND[n])
+
+                    if(+n !== (nodeWhere.AND.length - 1)) {
+                        filter = filter.and()
+                    }
+                } catch(e) {
+                    throw e
+                }
+            }
+
+            for(const n in nodeWhere.OR) {
+                // in order to utilize the GraphQL error handling we wrap everything
+                // in a try catch and pass any errors up
+                try {
+                    if(+n === 0) {
+                        filter = filter.or() // initial OR
+                    }
+
+                    filter = buildNodeFilter(filter,nodeWhere.OR[n])
+
+                    if(+n !== (nodeWhere.OR.length - 1)) {
+                        filter = filter.or()
+                    }
+                } catch(e) {
+                    throw e
+                }
+            }
+
+            // limit all results to the currently selected container
+            filter = filter.and().containerID("eq", containerID)
+
+            const results = await filter.all(limit, offset)
+            if(results.isError) return Promise.resolve([])
 
             const output: Promise<NodeQL>[] = []
 
-            for(const node of nodes.value) {
+            for(const node of results.value) {
                 output.push(NodeResolver(node, containerID))
             }
 
@@ -42,6 +93,7 @@ export default function resolversRoot(containerID: string):any {
         }
     }
 }
+
 
 async function NodeResolverByID(nodeID: string, containerID:string): Promise<NodeQL> {
     const result = await NodeStorage.Instance.DomainRetrieve(nodeID, containerID)
@@ -202,4 +254,55 @@ function PropertyResolver(properties: any): PropertyQL[]{
     }
 
     return output
+}
+
+// In order to utilize GraphQL's error type we must throw errors instead of
+// returning a Result type for this function. This is one of the few places in
+// the application in which throwing errors is encouraged.
+function buildNodeFilter(f: NodeFilter, fql: NodeFilterQL): NodeFilter {
+    if(Object.keys(fql).length > 1) {
+        throw Error('filter object must only contain a single field')
+    }
+
+    Object.keys(fql).forEach(k => {
+        switch(k) {
+            case "container_id": {
+                let values: string[];
+                values = (fql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for container_id")
+                    break;
+                }
+
+                f.containerID(values[0], values[1])
+                break;
+            }
+
+            case "metatype_id": {
+                let values: string[];
+                values = (fql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for metatype_id")
+                    break;
+                }
+
+                f.metatypeID(values[0], values[1])
+                break;
+            }
+
+            case "metatype_name": {
+                let values: string[];
+                values = (fql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for metatype_id")
+                    break;
+                }
+
+                f.metatypeName(values[0], values[1])
+                break;
+            }
+        }
+    })
+
+    return f
 }

@@ -23,7 +23,7 @@ export default class NodeFilter extends Filter {
         return this
     }
 
-    all(): Promise<Result<NodeT[]>> {
-       return super.findAll<NodeT>();
+    all(limit?: number, offset?:number): Promise<Result<NodeT[]>> {
+       return super.findAll<NodeT>(limit, offset);
     }
 }

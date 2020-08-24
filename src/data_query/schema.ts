@@ -6,7 +6,7 @@ export const schema = buildSchema(generateSchema())
 function generateSchema(): string {
     return `
   type Query {
-    nodes(limit: Int = 1000, offset: Int = 0, nodeID: String): [Node]
+    nodes(limit: Int = 1000, offset: Int = 0, nodeID: String, where: NodeWhere): [Node]
   }
 
   type Property {
@@ -30,6 +30,29 @@ function generateSchema(): string {
     incoming_edges: [Edge]
     outgoing_edges: [Edge]
   }
+
+input NodeWhere {
+    AND: [NodeFilter]
+    OR: [NodeFilter]
+}
+
+input NodeFilter {
+    container_id: String
+    original_data_id: String
+    data_source_id: String
+    archived: String
+    created_at: String
+    modified_at: String
+    metatype_name: String
+    metatype_id: String
+    properties: [PropertyFilter]
+  }
+
+input PropertyFilter {
+    key: String
+    operator: String
+    value: String
+}
 
   type Metatype {
     id: String
