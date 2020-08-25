@@ -23,6 +23,26 @@ export default class NodeFilter extends Filter {
         return this
     }
 
+    originalDataID(operator: string, value: any) {
+        super.query("original_data_id", operator, value)
+        return this
+    }
+
+    archived(operator: string, value: any) {
+        super.query("archived", operator, value)
+        return this
+    }
+
+    dataSourceID(operator: string, value: any) {
+        super.query("data_source_id", operator, value)
+        return this
+    }
+
+    property(key: string, operator: string, value: any) {
+        super.queryJsonb(key, "properties", operator, value)
+        return this
+    }
+
     all(limit?: number, offset?:number): Promise<Result<NodeT[]>> {
        return super.findAll<NodeT>(limit, offset);
     }

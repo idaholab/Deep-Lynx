@@ -31,6 +31,29 @@ export default abstract class Filter {
         return this
     }
 
+    queryJsonb(key: string, fieldName: string, operator:string, value: any) {
+        this._rawQuery.push(`${fieldName}->> `)
+        switch(operator) {
+            case "eq": {
+                this._values.push(value)
+                this._rawQuery.push(`'${key}' = $${this._values.length}`);
+                break;
+            }
+            case "neq" :{
+                this._values.push(value)
+                this._rawQuery.push(`'${key}' <> $${this._values.length}`);
+                break;
+            }
+            case "like":{
+                this._values.push(value)
+                this._rawQuery.push(`'${key}' LIKE $${this._values.length}`);
+                break;
+            }
+        }
+
+        return this;
+    }
+
     query(fieldName: string, operator: string, value: any) {
         switch(operator) {
             case "eq": {
@@ -41,6 +64,11 @@ export default abstract class Filter {
             case "neq" :{
                 this._values.push(value)
                 this._rawQuery.push(`${fieldName} <> $${this._values.length}`);
+                break;
+            }
+            case "like":{
+                this._values.push(value)
+                this._rawQuery.push(`'${fieldName}' LIKE $${this._values.length}`);
                 break;
             }
         }

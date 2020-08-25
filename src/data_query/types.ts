@@ -58,10 +58,10 @@ export type NodeFilterQL = {
     modified_at: string
     metatype_name: string
     metatype_id: string
-    properties: PropertyFilter[]
+    properties: PropertyFilterQL[]
 }
 
-export type PropertyFilter = {
+export type PropertyFilterQL = {
     key: string
     operator: string
     value: string

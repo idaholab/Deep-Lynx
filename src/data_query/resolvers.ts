@@ -6,7 +6,16 @@ for auto-generating resolvers based on the stored ontology.
 import NodeStorage from "../data_storage/graph/node_storage";
 import MetatypeStorage from "../data_storage/metatype_storage";
 import EdgeStorage from "../data_storage/graph/edge_storage";
-import {EdgeQL, MetatypeQL, MetatypeRelationshipQL, NodeFilterQL, NodeQL, NodeWhereQL, PropertyQL} from "./types";
+import {
+    EdgeQL,
+    MetatypeQL,
+    MetatypeRelationshipQL,
+    NodeFilterQL,
+    NodeQL,
+    NodeWhereQL,
+    PropertyFilterQL,
+    PropertyQL
+} from "./types";
 import {NodeT} from "../types/graph/nodeT";
 import MetatypeRelationshipPairStorage from "../data_storage/metatype_relationship_pair_storage";
 import Logger from "../logger";
@@ -43,7 +52,7 @@ export default function resolversRoot(containerID: string):any {
             }
 
             const nodeWhere = where as NodeWhereQL
-            let filter = new NodeFilter().where()
+            let filter = new NodeFilter().where().containerID("eq", containerID).and()
 
             for(const n in nodeWhere.AND) {
                 // in order to utilize the GraphQL error handling we wrap everything
@@ -75,10 +84,11 @@ export default function resolversRoot(containerID: string):any {
                 } catch(e) {
                     throw e
                 }
+
+                // limit all results to the currently selected container and unarchived
+                filter = filter.and().containerID("eq", containerID)
             }
 
-            // limit all results to the currently selected container
-            filter = filter.and().containerID("eq", containerID)
 
             const results = await filter.all(limit, offset)
             if(results.isError) return Promise.resolve([])
@@ -271,7 +281,6 @@ function buildNodeFilter(f: NodeFilter, fql: NodeFilterQL): NodeFilter {
                 values = (fql[k] as string).split(" ");
                 if(values.length < 2) {
                     throw Error("malformed query for container_id")
-                    break;
                 }
 
                 f.containerID(values[0], values[1])
@@ -283,7 +292,6 @@ function buildNodeFilter(f: NodeFilter, fql: NodeFilterQL): NodeFilter {
                 values = (fql[k] as string).split(" ");
                 if(values.length < 2) {
                     throw Error("malformed query for metatype_id")
-                    break;
                 }
 
                 f.metatypeID(values[0], values[1])
@@ -294,11 +302,61 @@ function buildNodeFilter(f: NodeFilter, fql: NodeFilterQL): NodeFilter {
                 let values: string[];
                 values = (fql[k] as string).split(" ");
                 if(values.length < 2) {
-                    throw Error("malformed query for metatype_id")
-                    break;
+                    throw Error("malformed query for metatype_name")
                 }
 
                 f.metatypeName(values[0], values[1])
+                break;
+            }
+
+            case "original_data_id": {
+                let values: string[];
+                values = (fql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for original_data_id")
+                }
+
+                f.originalDataID(values[0], values[1])
+                break;
+            }
+
+            case "archived": {
+                let values: string[];
+                // @ts-ignore
+                values = (fql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for archived")
+                }
+
+                if(values[1] !== "t" && values[1] !== "true" && values[1] !== "f" && values[1] !== "false") {
+                    throw new Error("malformed query for archived query value must be true, t, false, f")
+                }
+
+                f.archived(values[0], values[1])
+                break;
+            }
+
+            case "data_source_id": {
+                let values: string[];
+                values = (fql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for data_source_id")
+                }
+
+                f.dataSourceID(values[0], values[1])
+                break;
+            }
+
+            case "properties": {
+                const propertyFilter = fql[k] as PropertyFilterQL[]
+                for(const i in propertyFilter) {
+                    f.property(propertyFilter[i].key, propertyFilter[i].operator, propertyFilter[i].value)
+
+                    if(+i !== propertyFilter.length - 1) {
+                        f.and()
+                    }
+                }
+
                 break;
             }
         }
