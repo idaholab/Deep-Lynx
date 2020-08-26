@@ -27,8 +27,8 @@ function generateSchema(): string {
     created_at: String
     modified_at: String
     graph: String
-    incoming_edges: [Edge]
-    outgoing_edges: [Edge]
+    incoming_edges(where: EdgeWhere): [Edge]
+    outgoing_edges(where: EdgeWhere): [Edge]
   }
 
 input NodeWhere {
@@ -41,12 +41,28 @@ input NodeFilter {
     original_data_id: String
     data_source_id: String
     archived: String
-    created_at: String
-    modified_at: String
     metatype_name: String
     metatype_id: String
     properties: [PropertyFilter]
-  }
+}
+
+input EdgeWhere {
+    AND: [EdgeFilter]
+    OR: [EdgeFilter]
+}
+
+input EdgeFilter {
+    container_id: String
+    original_data_id: String
+    data_source_id: String
+    archived: String
+    relationship_pair_id: String
+    origin_node_id: String
+    origin_node_original_id: String
+    destination_node_id: String
+    destination_node_original_id: String
+    properties: [PropertyFilter]
+}
 
 input PropertyFilter {
     key: String

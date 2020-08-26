@@ -5,9 +5,9 @@ for auto-generating resolvers based on the stored ontology.
  */
 import NodeStorage from "../data_storage/graph/node_storage";
 import MetatypeStorage from "../data_storage/metatype_storage";
-import EdgeStorage from "../data_storage/graph/edge_storage";
 import {
-    EdgeQL,
+    EdgeFilterQL,
+    EdgeQL, EdgeWhereQL,
     MetatypeQL,
     MetatypeRelationshipQL,
     NodeFilterQL,
@@ -21,6 +21,8 @@ import MetatypeRelationshipPairStorage from "../data_storage/metatype_relationsh
 import Logger from "../logger";
 import MetatypeRelationshipStorage from "../data_storage/metatype_relationship_storage";
 import NodeFilter from "../data_storage/graph/node_filter";
+import {EdgeT} from "../types/graph/edgeT";
+import EdgeFilter from "../data_storage/graph/edge_filter";
 
 export default function resolversRoot(containerID: string):any {
     return {
@@ -123,8 +125,8 @@ async function NodeResolverByID(nodeID: string, containerID:string): Promise<Nod
         metatype: MetatypeResolver(result.value.metatype_id),
         properties: PropertyResolver(result.value.properties),
         raw_properties: JSON.stringify(result.value.properties),
-        outgoing_edges: await EdgeOutgoingResolver(result.value.id!),
-        incoming_edges: await EdgeIncomingResolver(result.value.id!),
+        outgoing_edges: await EdgeResolver(result.value.id!, "outgoing"),
+        incoming_edges: await EdgeResolver(result.value.id!, "incoming"),
     } as NodeQL
 
     return Promise.resolve(node)
@@ -146,8 +148,8 @@ async function NodeResolver(node: NodeT, containerID:string): Promise<NodeQL> {
         metatype: MetatypeResolver(node.metatype_id),
         properties: PropertyResolver(node.properties),
         raw_properties: JSON.stringify(node.properties),
-        outgoing_edges: await EdgeOutgoingResolver(node.id!),
-        incoming_edges: await EdgeIncomingResolver(node.id!),
+        outgoing_edges: await EdgeResolver(node.id!, "outgoing"),
+        incoming_edges: await EdgeResolver(node.id!, "incoming"),
     } as NodeQL
 
     return Promise.resolve(nodeQL)
@@ -184,46 +186,66 @@ async function MetatypeRelationshipByPairResolver(relationshipPairID: string): P
     } as MetatypeRelationshipQL)
 }
 
-async function EdgeOutgoingResolver(nodeID: string): Promise<() => Promise<EdgeQL[]>> {
-    return Promise.resolve(async (): Promise<EdgeQL[]> => {
-        const edges = await EdgeStorage.Instance.ListByOrigin(nodeID)
-        if(edges.isError) return Promise.resolve([])
+async function EdgeResolver(nodeID: string, direction: "incoming" | "outgoing"): Promise<(where: EdgeWhereQL) => Promise<EdgeQL[]>> {
+    return Promise.resolve(async (where: EdgeWhereQL): Promise<EdgeQL[]> => {
+        let edges: EdgeT[] = []
 
-        const output: EdgeQL[] = []
+        let filter = new EdgeFilter().where()
 
-        for(const edge of edges.value) {
-            const createdAt = (edge.created_at) ? edge.created_at.toString() : ""
-            const modifiedAt = (edge.modified_at) ? edge.modified_at.toString() : ""
-
-            output.push({
-                id: edge.id!,
-                container_id: edge.container_id!,
-                original_data_id: edge.original_data_id!,
-                data_source_id: edge.data_source_id!,
-                archived: edge.archived!,
-                properties: PropertyResolver(edge.properties),
-                raw_properties: JSON.stringify(edge.properties),
-                relationship: MetatypeRelationshipByPairResolver(edge.relationship_pair_id),
-                destination: NodeResolverByID(edge.destination_node_id!, edge.container_id!),
-                origin: NodeResolverByID(edge.origin_node_id!, edge.container_id!),
-                created_at: createdAt,
-                modified_at: modifiedAt
-            })
+        if(direction === "incoming") {
+            filter = filter.destination_node_id("eq", nodeID)
+        } else if (direction === "outgoing") {
+            filter = filter.origin_node_id("eq", nodeID)
         }
 
-        return Promise.resolve(output)
-    })
-}
+        if(where) {
+            const edgeWhere = where as EdgeWhereQL
 
+            for (const e in edgeWhere.AND) {
+                try {
+                    filter = buildEdgeFilter(filter, edgeWhere.AND[e])
 
-async function EdgeIncomingResolver(nodeID: string): Promise<() => Promise<EdgeQL[]>> {
-    return Promise.resolve(async (): Promise<EdgeQL[]> => {
-        const edges = await EdgeStorage.Instance.ListByDestination(nodeID)
-        if(edges.isError) return Promise.resolve([])
+                    if(+e !== (edgeWhere.AND.length -1)) {
+                        filter = filter.and()
+                    }
+                } catch(e) {
+                    throw e
+                }
+            }
+
+            for (const e in edgeWhere.OR) {
+                try {
+                    if(+e === 0) {
+                        filter = filter.or()
+                    }
+
+                    filter = buildEdgeFilter(filter, edgeWhere.OR[e])
+
+                    if(+e !== (edgeWhere.OR.length - 1)) {
+                        filter = filter.or()
+                    }
+                } catch(e) {
+                    throw e
+                }
+            }
+
+            // if they setup and OR just right they could get edges back not belonging
+            // to the node, verify that this can't happen
+            if(direction === "incoming") {
+                filter = filter.and().destination_node_id("eq", nodeID)
+            } else if (direction === "outgoing") {
+                filter = filter.and().origin_node_id("eq", nodeID)
+            }
+        }
+
+        const result = await filter.all()
+        if(result.isError) return Promise.resolve([])
+
+        edges = result.value
 
         const output: EdgeQL[] = []
 
-        for(const edge of edges.value) {
+        for(const edge of edges) {
             const createdAt = (edge.created_at) ? edge.created_at.toString() : ""
             const modifiedAt = (edge.modified_at) ? edge.modified_at.toString() : ""
 
@@ -233,9 +255,9 @@ async function EdgeIncomingResolver(nodeID: string): Promise<() => Promise<EdgeQ
                 original_data_id: edge.original_data_id!,
                 data_source_id: edge.data_source_id!,
                 archived: edge.archived!,
-                relationship: MetatypeRelationshipByPairResolver(edge.relationship_pair_id),
                 properties: PropertyResolver(edge.properties),
                 raw_properties: JSON.stringify(edge.properties),
+                relationship: MetatypeRelationshipByPairResolver(edge.relationship_pair_id),
                 destination: NodeResolverByID(edge.destination_node_id!, edge.container_id!),
                 origin: NodeResolverByID(edge.origin_node_id!, edge.container_id!),
                 created_at: createdAt,
@@ -305,7 +327,11 @@ function buildNodeFilter(f: NodeFilter, fql: NodeFilterQL): NodeFilter {
                     throw Error("malformed query for metatype_name")
                 }
 
-                f.metatypeName(values[0], values[1])
+                const operator = values[0]
+                values.shift()
+                const query = values.join(" ")
+
+                f.metatypeName(operator, query)
                 break;
             }
 
@@ -349,6 +375,132 @@ function buildNodeFilter(f: NodeFilter, fql: NodeFilterQL): NodeFilter {
 
             case "properties": {
                 const propertyFilter = fql[k] as PropertyFilterQL[]
+                for(const i in propertyFilter) {
+                    f.property(propertyFilter[i].key, propertyFilter[i].operator, propertyFilter[i].value)
+
+                    if(+i !== propertyFilter.length - 1) {
+                        f.and()
+                    }
+                }
+
+                break;
+            }
+        }
+    })
+
+    return f
+}
+
+// In order to utilize GraphQL's error type we must throw errors instead of
+// returning a Result type for this function. This is one of the few places in
+// the application in which throwing errors is encouraged.
+function buildEdgeFilter(f: EdgeFilter, eql: EdgeFilterQL): EdgeFilter {
+    if(Object.keys(eql).length > 1) {
+        throw Error('filter object must only contain a single field')
+    }
+
+    Object.keys(eql).forEach(k => {
+        switch(k) {
+            case "container_id": {
+                let values: string[];
+                values = (eql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for container_id")
+                }
+
+
+                f.containerID(values[0], values[1])
+                break;
+            }
+
+            case "original_data_id": {
+                let values: string[];
+                values = (eql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for original_data_id")
+                }
+
+                f.originalDataID(values[0], values[1])
+                break;
+            }
+
+            case "archived": {
+                let values: string[];
+                // @ts-ignore
+                values = (eql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for archived")
+                }
+
+                if(values[1] !== "t" && values[1] !== "true" && values[1] !== "f" && values[1] !== "false") {
+                    throw new Error("malformed query for archived query value must be true, t, false, f")
+                }
+
+                f.archived(values[0], values[1])
+                break;
+            }
+
+            case "data_source_id": {
+                let values: string[];
+                values = (eql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for data_source_id")
+                }
+
+                f.dataSourceID(values[0], values[1])
+                break;
+            }
+
+            case "origin_node_id": {
+                let values: string[];
+                values = (eql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for origin_node_id")
+                }
+                const operator = values[0]
+                values.shift()
+                const query = values.join(" ")
+
+
+                f.origin_node_id(values[0], values[1])
+                break;
+            }
+
+            case "origin_node_original_id": {
+                let values: string[];
+                values = (eql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for origin_node_original_id")
+                }
+
+                f.origin_node_original_id(values[0], values[1])
+                break;
+            }
+
+            case "destination_node_id": {
+                let values: string[];
+                values = (eql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for destination_node_id")
+                }
+
+                f.destination_node_id(values[0], values[1])
+                break;
+            }
+
+            case "destination_node_original_id": {
+                let values: string[];
+                values = (eql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for destination_node_original_id")
+                }
+
+                f.destination_node_original_id(values[0], values[1])
+                break;
+            }
+
+            case "properties": {
+                const propertyFilter = eql[k] as PropertyFilterQL[]
                 for(const i in propertyFilter) {
                     f.property(propertyFilter[i].key, propertyFilter[i].operator, propertyFilter[i].value)
 

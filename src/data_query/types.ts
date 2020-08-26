@@ -61,6 +61,24 @@ export type NodeFilterQL = {
     properties: PropertyFilterQL[]
 }
 
+export type EdgeWhereQL = {
+    AND: EdgeFilterQL[]
+    OR: EdgeFilterQL[]
+}
+
+export type EdgeFilterQL = {
+    container_id: string
+    original_data_id: string
+    data_source_id: string
+    archived: boolean
+    relationship_pair_id: string
+    origin_node_id: string
+    origin_node_original_id: string
+    destination_node_id: string
+    destination_node_original_id: string
+    properties: PropertyFilterQL[]
+}
+
 export type PropertyFilterQL = {
     key: string
     operator: string
