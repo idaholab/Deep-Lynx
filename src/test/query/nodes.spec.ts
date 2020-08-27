@@ -136,7 +136,7 @@ describe('Using a GraphQL Query on nodes we', async() => {
 
     });
 
-    it('can include a filter on metatype name', async()=> {
+    it('can include a filter on metatype name, id', async()=> {
         let response = await graphql(schema, `{
             nodes(where: {AND: [{metatype_name: "eq ${metatype.name}"}]}) {
                 metatype { id name description}
@@ -155,6 +155,73 @@ describe('Using a GraphQL Query on nodes we', async() => {
             expect(n.metatype.description).not.undefined
         }
 
+        response = await graphql(schema, `{
+            nodes(where: {AND: [{metatype_id: "eq ${metatype.id}"}]}) {
+                metatype { id name description}
+            }
+        }`, resolversRoot(containerID))
+
+        expect(response.errors).undefined
+        expect(response.data).not.undefined
+
+        expect(response.data!.nodes.length).eq(1)
+
+        for(const n of response.data!.nodes) {
+            expect(n.metatype).not.undefined
+            expect(n.metatype.id).not.undefined
+            expect(n.metatype.name).not.undefined
+            expect(n.metatype.description).not.undefined
+        }
+
+    });
+
+    it('can include a filter on properties', async()=> {
+        let response = await graphql(schema, `
+        {
+            nodes(where: {
+                AND: [
+                    {properties: [
+                    {key: "flower" value:"Daisy" operator:"eq"}
+                    ]}
+                    ]
+            }) {
+                id
+            }
+        }
+        `, resolversRoot(containerID))
+
+        expect(response.errors).undefined
+        expect(response.data).not.undefined
+
+        expect(response.data!.nodes.length).eq(1)
+
+        for(const n of response.data!.nodes) {
+            expect(n.id).not.undefined
+        }
+
+        // test Postgres Pattern matching
+        response = await graphql(schema, `
+        {
+            nodes(where: {
+                AND: [
+                    {properties: [
+                    {key: "flower" value:"Dais%" operator:"like"}
+                    ]}
+                    ]
+            }) {
+                id
+            }
+        }
+        `, resolversRoot(containerID))
+
+        expect(response.errors).undefined
+        expect(response.data).not.undefined
+
+        expect(response.data!.nodes.length).eq(1)
+
+        for(const n of response.data!.nodes) {
+            expect(n.id).not.undefined
+        }
     });
 
 });
