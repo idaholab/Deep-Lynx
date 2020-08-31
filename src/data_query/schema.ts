@@ -37,6 +37,7 @@ input NodeWhere {
 }
 
 input NodeFilter {
+    id: String
     container_id: String
     original_data_id: String
     data_source_id: String

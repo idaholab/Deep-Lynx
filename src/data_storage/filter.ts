@@ -68,7 +68,24 @@ export default abstract class Filter {
             }
             case "like":{
                 this._values.push(value)
-                this._rawQuery.push(`'${fieldName}' LIKE $${this._values.length}`);
+                this._rawQuery.push(`${fieldName} LIKE $${this._values.length}`);
+                break;
+            }
+            case "in":{
+                let values: any[] = []
+                if(!Array.isArray(value)) {
+                    values =`${value}`.split(",") // support comma separated lists
+                } else {
+                    values = value
+                }
+
+                const output: string[] = []
+
+                values.forEach(v => {
+                    output.push(`'${v}'`)
+                })
+
+                this._rawQuery.push(`${fieldName} IN (${output.join(',')})`)
                 break;
             }
         }

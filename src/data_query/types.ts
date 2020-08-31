@@ -50,6 +50,7 @@ export type NodeWhereQL = {
 }
 
 export type NodeFilterQL = {
+    id: string
     container_id: string
     original_data_id: string
     data_source_id: string

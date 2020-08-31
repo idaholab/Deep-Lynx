@@ -8,6 +8,11 @@ export default class NodeFilter extends Filter {
         super(NodeStorage.tableName);
     }
 
+    id(operator: string, value: any) {
+        super.query("id", operator, value)
+        return this
+    }
+
     containerID(operator: string, value: any) {
         super.query("container_id", operator, value)
         return this

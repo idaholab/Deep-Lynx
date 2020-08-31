@@ -298,6 +298,17 @@ function buildNodeFilter(f: NodeFilter, fql: NodeFilterQL): NodeFilter {
 
     Object.keys(fql).forEach(k => {
         switch(k) {
+            case "id": {
+                let values: string[];
+                values = (fql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for id")
+                }
+
+                f.id(values[0], values[1])
+                break;
+            }
+
             case "container_id": {
                 let values: string[];
                 values = (fql[k] as string).split(" ");

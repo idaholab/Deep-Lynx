@@ -175,6 +175,37 @@ describe('Using a GraphQL Query on nodes we', async() => {
 
     });
 
+    it('can include a filter on id, with IN functionality', async()=> {
+        let response = await graphql(schema, `{
+            nodes(where: {AND: [{metatype_name: "eq ${metatype.name}"}]}) {
+                metatype { id name description}
+            }
+        }`, resolversRoot(containerID))
+
+        expect(response.errors).undefined
+        expect(response.data).not.undefined
+
+        expect(response.data!.nodes.length).eq(1)
+
+        for(const n of response.data!.nodes) {
+            expect(n.metatype).not.undefined
+            expect(n.metatype.id).not.undefined
+            expect(n.metatype.name).not.undefined
+            expect(n.metatype.description).not.undefined
+        }
+
+        response = await graphql(schema, `{
+            nodes(where: {AND: [{id: "in ${node.id}"}]}) {
+                id
+            }
+        }`, resolversRoot(containerID))
+
+        expect(response.errors).undefined
+        expect(response.data).not.undefined
+
+        expect(response.data!.nodes.length).eq(1)
+    });
+
     it('can include a filter on properties', async()=> {
         let response = await graphql(schema, `
         {
