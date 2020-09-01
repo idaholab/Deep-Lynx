@@ -223,3 +223,5 @@ This application allows the end user to use either Bearer Token or Basic Authent
 ### Authorization
 This application uses [Casbin](https://casbin.org/) to handle user authorization.
 
+### Querying
+Deep Lynx provides the user with the ability to query data by using a GraphQL enabled endpoint, as well as providing filter classes for those writing plugins. See [Querying](src/data_query/readme.md) for more information.
