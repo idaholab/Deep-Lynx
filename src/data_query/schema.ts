@@ -58,6 +58,7 @@ input EdgeFilter {
     data_source_id: String
     archived: String
     relationship_pair_id: String
+    relationship_name: String
     origin_node_id: String
     origin_node_original_id: String
     destination_node_id: String

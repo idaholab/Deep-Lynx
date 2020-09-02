@@ -6,60 +6,74 @@ import {EdgeT} from "../../types/graph/edgeT";
 export default class EdgeFilter extends Filter {
     constructor() {
         super(EdgeStorage.tableName);
+
+        // we must include the joins for the relationship and relationship pair table
+        // in order to be able to filter by relationship name
+        this._rawQuery.push(`LEFT JOIN metatype_relationship_pairs ON edges.relationship_pair_id = metatype_relationship_pairs.id`)
+        this._rawQuery.push(`LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id`)
     }
 
     containerID(operator: string, value: any) {
-        super.query("container_id", operator, value)
+        super.query("edges.container_id", operator, value)
         return this
     }
 
     relationshipPairID(operator: string, value: any) {
-        super.query("relationship_pair_id", operator, value)
+        super.query("edges.relationship_pair_id", operator, value)
         return this
     }
 
+    relationshipName(operator: string, value: any) {
+        super.query("metatype_relationships.name", operator, value)
+        return this
+    }
 
     originalDataID(operator: string, value: any) {
-        super.query("original_data_id", operator, value)
+        super.query("edges.original_data_id", operator, value)
         return this
     }
 
     archived(operator: string, value: any) {
-        super.query("archived", operator, value)
+        super.query("edges.archived", operator, value)
         return this
     }
 
     dataSourceID(operator: string, value: any) {
-        super.query("data_source_id", operator, value)
+        super.query("edges.data_source_id", operator, value)
         return this
     }
 
     property(key: string, operator: string, value: any) {
-        super.queryJsonb(key, "properties", operator, value)
+        super.queryJsonb(key, "edges.properties", operator, value)
         return this
     }
 
     origin_node_id(operator: string, value: any) {
-        super.query("origin_node_id", operator, value)
+        super.query("edges.origin_node_id", operator, value)
         return this
     }
 
     destination_node_id(operator: string, value: any) {
-        super.query("destination_node_id", operator, value)
+        super.query("edges.destination_node_id", operator, value)
         return this
     }
 
     origin_node_original_id(operator: string, value: any) {
-        super.query("origin_node_original_id", operator, value)
+        super.query("edges.origin_node_original_id", operator, value)
         return this
     }
 
     destination_node_original_id(operator: string, value: any) {
-        super.query("destination_node_original_id", operator, value)
+        super.query("edges.destination_node_original_id", operator, value)
         return this
     }
 
-    all(limit?: number, offset?:number): Promise<Result<EdgeT[]>> {
-        return super.findAll<EdgeT>(limit, offset);
+    async all(limit?: number, offset?:number): Promise<Result<EdgeT[]>> {
+        const results = await super.findAll<EdgeT>(limit, offset);
+
+        this._rawQuery.push(`LEFT JOIN metatype_relationship_pairs ON edges.relationship_pair_id = metatype_relationship_pairs.id`)
+        this._rawQuery.push(`LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id`)
+
+        return new Promise(resolve => resolve(results))
     }
 }

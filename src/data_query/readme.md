@@ -77,3 +77,33 @@ ______
     }
 }
 ```
+
+#### Filtering returned node's edges 
+When requesting that your query returns a node's incoming or outgoing edges you may also pass in a filter. The query will filter the node's edges to show you only those edges that matched your filter. This is a very common query when attempting to walk the graph.
+
+
+```
+// filter by edge properties
+{
+            nodes(nodeID: "${nodeID}") {
+                incoming_edges(where: {
+                AND: [
+                    {properties: [
+                    {key: "flower" value:"Daisy" operator:"eq"}
+                    ]}
+                    ]
+            }) {id}
+            }
+}
+
+// filter by edge's relationship name
+{
+            nodes(nodeID: "${nodeID}") {
+                incoming_edges(where: {
+                AND: [
+                    {relationship_name: "eq parent" }
+                    ]
+            }) {id}
+            }
+}
+```

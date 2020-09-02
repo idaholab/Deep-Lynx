@@ -424,6 +424,21 @@ function buildEdgeFilter(f: EdgeFilter, eql: EdgeFilterQL): EdgeFilter {
                 break;
             }
 
+            case "relationship_name": {
+                let values: string[];
+                values = (eql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for metatype_name")
+                }
+
+                const operator = values[0]
+                values.shift()
+                const query = values.join(" ")
+
+                f.relationshipName(operator, query)
+                break;
+            }
+
             case "original_data_id": {
                 let values: string[];
                 values = (eql[k] as string).split(" ");

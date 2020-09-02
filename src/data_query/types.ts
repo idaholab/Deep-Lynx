@@ -73,6 +73,7 @@ export type EdgeFilterQL = {
     data_source_id: string
     archived: boolean
     relationship_pair_id: string
+    relationship_name: string
     origin_node_id: string
     origin_node_original_id: string
     destination_node_id: string

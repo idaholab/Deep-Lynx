@@ -6,8 +6,8 @@ import PostgresStorage from "./postgresStorage";
 
 export default abstract class Filter {
     private readonly _tableName: string
-    private _rawQuery: string[] = []
-    private _values: any[] = []
+    public _rawQuery: string[] = []
+    public _values: any[] = []
 
 
     protected constructor(tableName: string) {

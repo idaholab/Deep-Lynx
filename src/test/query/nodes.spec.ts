@@ -255,12 +255,64 @@ describe('Using a GraphQL Query on nodes we', async() => {
         }
     });
 
+    it('can include a filter on nested properties', async()=> {
+        let response = await graphql(schema, `
+        {
+            nodes(where: {
+                AND: [
+                    {properties: [
+                    {key: "flower" value:"Daisy" operator:"eq"}
+                    ]}
+                    ]
+            }) {
+                id
+            }
+        }
+        `, resolversRoot(containerID))
+
+        expect(response.errors).undefined
+        expect(response.data).not.undefined
+
+        expect(response.data!.nodes.length).eq(1)
+
+        for(const n of response.data!.nodes) {
+            expect(n.id).not.undefined
+        }
+
+        // test Postgres Pattern matching
+        response = await graphql(schema, `
+        {
+            nodes(where: {
+                AND: [
+                    {properties: [
+                    {key: "nested.nested1" value:"nested1 value" operator:"eq"}
+                    ]}
+                    ]
+            }) {
+                id
+            }
+        }
+        `, resolversRoot(containerID))
+
+        expect(response.errors).undefined
+        expect(response.data).not.undefined
+
+        expect(response.data!.nodes.length).eq(1)
+
+        for(const n of response.data!.nodes) {
+            expect(n.id).not.undefined
+        }
+    });
+
 });
 
 const payload: {[key:string]:any} = {
     "flower": "Daisy",
     "color": "yellow",
-    "notRequired": 1
+    "notRequired": 1,
+    "nested": {
+        "nested1": "nested1 value"
+    }
 };
 
 const test_keys: MetatypeKeyT[] = [{
