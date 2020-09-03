@@ -64,12 +64,26 @@ ______
 }
 
 // filter by properties - slightly complex as it deals with a properties object
-//                        keep in mind that this cannot handle nested properties
 {
     nodes(where: {
         AND: [
             {properties: [
             {key: "flower" value:"Daisy" operator:"eq"}
+            ]}
+            ]
+    }) {
+       {list set of properties desired to retrieve}
+    }
+}
+
+
+// filter by properties (nested) - by using dot notation you can filter by nested
+// keys on the properties object
+{
+    nodes(where: {
+        AND: [
+            {properties: [
+            {key: "key1.key2" value:"Daisy" operator:"eq"}
             ]}
             ]
     }) {
