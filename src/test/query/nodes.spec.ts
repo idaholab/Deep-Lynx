@@ -261,7 +261,7 @@ describe('Using a GraphQL Query on nodes we', async() => {
             nodes(where: {
                 AND: [
                     {properties: [
-                    {key: "flower" value:"Daisy" operator:"eq"}
+                    {key: "nested.nested1" value:"nested1 value" operator:"eq"}
                     ]}
                     ]
             }) {
@@ -279,13 +279,13 @@ describe('Using a GraphQL Query on nodes we', async() => {
             expect(n.id).not.undefined
         }
 
-        // test Postgres Pattern matching
+        // deeply nested key matching
         response = await graphql(schema, `
         {
             nodes(where: {
                 AND: [
                     {properties: [
-                    {key: "nested.nested1" value:"nested1 value" operator:"eq"}
+                    {key: "nested.nested2.nested2" value:"nested2 value" operator:"eq"}
                     ]}
                     ]
             }) {
@@ -311,7 +311,8 @@ const payload: {[key:string]:any} = {
     "color": "yellow",
     "notRequired": 1,
     "nested": {
-        "nested1": "nested1 value"
+        "nested1": "nested1 value",
+        "nested2": {"nested2": "nested2 value"}
     }
 };
 

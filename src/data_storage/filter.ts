@@ -32,22 +32,53 @@ export default abstract class Filter {
     }
 
     queryJsonb(key: string, fieldName: string, operator:string, value: any) {
-        this._rawQuery.push(`${fieldName}->> `)
+        this._rawQuery.push(`${fieldName}`)
+
+        // the key can be a dot.notation nested set of keys
+        const keys = key.split(".")
+        const finalKey = keys.pop()
+
+        for(const i in keys) {
+            keys[i] = `'${keys[i]}'`
+        }
+
+        if(keys.length > 0) {
+            this._rawQuery.push(`-> ${keys.join("->")}`)
+        }
+
         switch(operator) {
             case "eq": {
                 this._values.push(value)
-                this._rawQuery.push(`'${key}' = $${this._values.length}`);
+                this._rawQuery.push(`->> '${finalKey}' = $${this._values.length}`);
                 break;
             }
-            case "neq" :{
+            case "neq" : {
                 this._values.push(value)
-                this._rawQuery.push(`'${key}' <> $${this._values.length}`);
+                this._rawQuery.push(`->> '${finalKey}' <> $${this._values.length}`);
                 break;
             }
-            case "like":{
+            case "like": {
                 this._values.push(value)
-                this._rawQuery.push(`'${key}' LIKE $${this._values.length}`);
+                this._rawQuery.push(`->> '${finalKey}' LIKE $${this._values.length}`);
                 break;
+            }
+            case "in": {
+                let values: any[] = []
+                if (!Array.isArray(value)) {
+                    values = `${value}`.split(",") // support comma separated lists
+                } else {
+                    values = value
+                }
+
+                const output: string[] = []
+
+                values.forEach(v => {
+                    output.push(`'${v}'`)
+                })
+
+                this._rawQuery.push(`->> ${finalKey} IN (${output.join(',')})`)
+                break;
+
             }
         }
 
