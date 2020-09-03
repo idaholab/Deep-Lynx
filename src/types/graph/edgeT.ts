@@ -4,7 +4,6 @@ import {DateFromISOString} from "io-ts-types/lib/DateFromISOString"
 export const edgeRequired = t.type({
     relationship_pair_id: t.string,
     properties: t.unknown,
-
 });
 
 export const edgeOptional = t.partial({

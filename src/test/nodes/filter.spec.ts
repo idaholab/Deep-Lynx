@@ -103,6 +103,101 @@ describe('Filtering Nodes', async() => {
         return gStorage.PermanentlyDelete(graph.value.id);
     });
 
+    it('can filter by like', async()=> {
+        const storage = NodeStorage.Instance;
+        const kStorage = MetatypeKeyStorage.Instance;
+        const mStorage = MetatypeStorage.Instance;
+        const gStorage = GraphStorage.Instance;
+
+        // SETUP
+        let graph = await gStorage.Create(containerID, "test suite");
+
+        expect(graph.isError, graph.error?.error).false;
+        expect(graph.value).not.empty;
+
+        const metatype = await mStorage.Create(containerID, "test suite",
+            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+
+        expect(metatype.isError).false;
+        expect(metatype.value).not.empty;
+
+        const keys = await kStorage.Create(metatype.value[0].id!, "test suite", test_keys);
+        expect(keys.isError).false;
+
+        const mixed = {
+            metatype_id: metatype.value[0].id!,
+            properties: payload
+        };
+
+        const node = await storage.CreateOrUpdate(containerID, graph.value.id,  mixed);
+        expect(node.isError, metatype.error?.error).false;
+
+        // filter by name likeness
+        const filter = new NodeFilter()
+        let nodes = await filter.where()
+            .containerID("eq", containerID)
+            .and()
+            .metatypeName("like", metatype.value[0].name)
+            .all()
+        expect(nodes.isError, nodes.error?.error).false
+        expect(nodes.value).not.empty
+
+        await mStorage.PermanentlyDelete(metatype.value[0].id!);
+        return gStorage.PermanentlyDelete(graph.value.id);
+    });
+
+    it('can filter by ids', async()=> {
+        const storage = NodeStorage.Instance;
+        const kStorage = MetatypeKeyStorage.Instance;
+        const mStorage = MetatypeStorage.Instance;
+        const gStorage = GraphStorage.Instance;
+
+        // SETUP
+        let graph = await gStorage.Create(containerID, "test suite");
+
+        expect(graph.isError, graph.error?.error).false;
+        expect(graph.value).not.empty;
+
+        const metatype = await mStorage.Create(containerID, "test suite",
+            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+
+        expect(metatype.isError).false;
+        expect(metatype.value).not.empty;
+
+        const keys = await kStorage.Create(metatype.value[0].id!, "test suite", test_keys);
+        expect(keys.isError).false;
+
+        const mixed = {
+            metatype_id: metatype.value[0].id!,
+            properties: payload
+        };
+
+        const node = await storage.CreateOrUpdate(containerID, graph.value.id,  mixed);
+        expect(node.isError, metatype.error?.error).false;
+
+        // filter by node id IN
+        let filter = new NodeFilter()
+        let nodes = await filter.where()
+            .containerID("eq", containerID)
+            .and()
+            .id("in", [node.value[0].id])
+            .all()
+        expect(nodes.isError, nodes.error?.error).false
+        expect(nodes.value).not.empty
+
+        // verify we can do the same with comma separated lists
+        filter = new NodeFilter()
+        nodes = await filter.where()
+            .id("in", node.value[0].id)
+            .all()
+        expect(nodes.isError, nodes.error?.error).false
+        expect(nodes.value).not.empty
+
+
+        await mStorage.PermanentlyDelete(metatype.value[0].id!);
+        return gStorage.PermanentlyDelete(graph.value.id);
+    });
+
 });
 
 const payload: {[key:string]:any} = {

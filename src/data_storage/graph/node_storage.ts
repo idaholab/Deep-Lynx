@@ -215,6 +215,10 @@ export default class NodeStorage extends PostgresStorage{
         return super.retrieve<NodeT>(NodeStorage.retrieveByOriginalIDStatement(dataSourceID, originalID))
     }
 
+    public DomainRetrieve(id: string, containerID: string): Promise<Result<NodeT>> {
+        return super.retrieve<NodeT>(NodeStorage.domainRetrieveStatement(id, containerID))
+    }
+
     public async ListByMetatypeID(metatypeID: string, offset: number, limit:number): Promise<Result<NodeT[]>> {
         return super.rows<NodeT>(NodeStorage.listByMetatypeIDStatement(metatypeID, offset, limit))
     }
@@ -244,6 +248,13 @@ UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = 
         return {
             text: `SELECT * FROM nodes WHERE id = $1 AND NOT archived`,
             values: [nodeID]
+        }
+    }
+
+    private static domainRetrieveStatement(nodeID: string, containerID:string): QueryConfig {
+        return {
+            text: `SELECT * FROM nodes WHERE id = $1 AND container_id = $2 AND NOT archived`,
+            values: [nodeID, containerID]
         }
     }
 
