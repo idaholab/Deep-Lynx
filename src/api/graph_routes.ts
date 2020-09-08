@@ -20,6 +20,7 @@ export default class GraphRoutes {
     }
 
     private static async listNodes(req: Request, res: Response, next: NextFunction) {
+        // @ts-ignore
       nodeStorage.List(req.params.id, +req.query.offset, +req.query.limit)
           .then((result) => {
               if (result.isError && result.error) {
@@ -46,6 +47,7 @@ export default class GraphRoutes {
     }
 
     private static async listNodesByMetatypeID(req: Request, res: Response, next: NextFunction) {
+        // @ts-ignore
       nodeStorage.ListByMetatypeID(req.params.metatypeID, +req.query.offset, +req.query.limit)
           .then((result) => {
               if (result.isError && result.error) {
@@ -99,6 +101,7 @@ export default class GraphRoutes {
               })
               .finally(() => next())
       } else {
+          // @ts-ignore
         edgeStorage.List(req.params.id, +req.query.offset, +req.query.limit)
               .then((result) => {
                   if (result.isError && result.error) {

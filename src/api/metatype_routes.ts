@@ -47,6 +47,7 @@ export default class MetatypeRoutes {
         }
 
         private static listMetatypes(req: Request, res: Response, next: NextFunction) {
+            // @ts-ignore
             storage.List(req.params.id, +req.query.offset, +req.query.limit, req.query.name as string)
                 .then((result) => {
                     if (result.isError && result.error) {

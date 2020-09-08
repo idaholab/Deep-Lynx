@@ -19,17 +19,17 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 - node.js 12.x 
 - Typescript ^3.5.x
 - npm ^6.x
-- Docker ^18.x (optional - used for reproducible builds and development)
-- Docker Compose ^1.x.x (optional - used for isolation testing)
+- Docker ^18.x - **required** if attempting to run Deep Lynx on a Windows system because the pg_cron PostgreSQL extension cannot be compiled and used on Windows.
+- Docker Compose ^1.x.x - *optional* 
 
 ***Data Source Requirements***
 
-- PostgreSQL ^11.x **NOTE**: `de-lynx` only functions with a PostgreSQL database. No other SQL like database is currently supported.
-- pg_cron PostgreSQL extension: Instructions for installation can be found [here](https://github.com/citusdata/pg_cron)
+- **Required** - PostgreSQL ^11.x 
+- **Required** - pg_cron PostgreSQL extension: Instructions for installation can be found [here](https://github.com/citusdata/pg_cron)
 
 **Installation**
 
-1. `npm upgrade && npm install`
+1. `npm upgrade` & `npm install`
 2. Copy and rename `.env-sample` to `.env` 
 3. Update `.env` file you **must** have the following variables set - everything else has default values you can find in `src/config.ts` or in the `.env-sample` file itself.
     *  `CORE_DB_CONNECTION_STRING` - your PostgreSQL database connection string. Note that `de-lynx` only works with a Postgres data source
@@ -102,7 +102,7 @@ This project has adopted a few basic tenets with regards to development.
        ^
   Data Functions (src/data_*.ts)
        ^
-  Data Storage (src/data_storage/*.ts)
+  Data Storage/Filters (src/data_storage/*.ts)
 ```
 **API**
 
@@ -119,6 +119,25 @@ Data functions should contain all logic related to the importing, handling, and 
 **Data Storage**
 
 Data storage operations should be limited to a single data type and functionality for manipulating it in storage. On creation and update routes, the storage layer also validates and sanitizes user input (we decided to move that into the storage layer in order to maintain a skinny api layer and to provide an "accept anything, return static types" mentality)
+You may also use the filter class for a relevant data type (e.g `NodeFilter` for `NodeT`) to run complex filtering queries. Here is a brief example on how to accomplish this, as well as a list of currently supported query operators.
+
+```
+const nodeFilter = new NodeFilter()
+
+const results = await nodeFilter.where().
+                        .containerID("eq", "container ID")
+                        .and()
+                        .metatypeID("neq", "metatype ID")
+                        .all() 
+```
+
+**Currently Supported Operators**
+
+Operator | Description
+------------ | -------------
+`eq` | equals  
+`neq` | not equals
+
 
 
 ### **Data Model Patterns and `io-ts`**
@@ -204,3 +223,5 @@ This application allows the end user to use either Bearer Token or Basic Authent
 ### Authorization
 This application uses [Casbin](https://casbin.org/) to handle user authorization.
 
+### Querying
+Deep Lynx provides the user with the ability to query data by using a GraphQL enabled endpoint, as well as providing filter classes for those writing plugins. See [Querying](src/data_query/readme.md) for more information.

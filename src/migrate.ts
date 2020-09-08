@@ -21,7 +21,6 @@ class Migrator {
                     this.init();
                 } else {
                     Logger.error(`creation of ${Config.db_name} database failed`)
-                    console.error(err);
                     process.exit(-1);
                 }
             } else {
@@ -88,7 +87,8 @@ class Migrator {
                     await this.pool.query('COMMIT')
                 } catch(e) {
                     await this.pool.query('ROLLBACK');
-                    Logger.error(`unable to create migrations table, stopping ${e}`)
+                    Logger.error(`unable to execute migration, rolling back ${e}`)
+                    return Promise.resolve()
                 }
 
                 Logger.info(`migration of ${file} successful`)
