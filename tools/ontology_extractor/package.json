@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://hpcgitlab.hpc.inl.gov/rittcs/de-tcr.git"
+    "url": "https://github.com/idaholab/Deep-Lynx"
   },
   "keywords": [
     "API",
@@ -25,6 +25,6 @@
   "dependencies": {
     "workerpool": "^5.0.4",
     "xml2json": "^0.12.0",
-    "yargs": "^15.1.0"
+    "yargs": "^15.4.1"
   }
 }

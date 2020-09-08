@@ -1,5 +1,5 @@
 import Config from "../../../config"
-import {Pool, Client} from "pg";
+import {Pool, Client, types} from "pg";
 
 // PostgresAdapter represents a connection to the PostgreSQL database.
 export default class PostgresAdapter {
@@ -19,6 +19,11 @@ export default class PostgresAdapter {
     public async  init() {
         this.pool = new Pool({
             connectionString: Config.core_db_connection_string
+        })
+        // ensures timestamps returned from the db are in UTC strings to match what is in the db
+        const timestampOID = 1114
+        types.setTypeParser(1114, (stringValue) => {
+            return new Date(Date.parse(stringValue + "+0000"))
         })
     }
 

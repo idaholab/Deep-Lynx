@@ -1,10 +1,11 @@
 # Ontology Extractor
 
-Ontology Extractor is a NodeJS script that utilizes the Digital Engineering [Deep Lynx](https://hpcgitlab.hpc.inl.gov/rittcs/de-lynx) API suite to parse an ontology (.owl) file and create the corresponding container, relationships, and metatypes within a Deep Lynx PostgreSQL database. Please note that this script is dependent on a running local instance of Deep Lynx. See the Deep Lynx repo for additional schema information and for help with setting it up.
+Ontology Extractor is a NodeJS script that utilizes the Digital Engineering [Deep Lynx](https://github.com/idaholab/Deep-Lynx) API suite to parse an ontology (.owl) file and create the corresponding container, relationships, and metatypes within a Deep Lynx PostgreSQL database. See the Deep Lynx repo for additional schema information and for help with setting it up.
 
 ## How to Run
 
 1. Begin by cloning the repo and running `npm install`  
+    * Please note that you will need to have **Python installed** (Mac users must also have the XCode Command Line Tools installed). Please see this page for additional [details](https://www.npmjs.com/package/node-gyp).   
 2. The script can be run from the command line. Enter the project directory and run `node extractor.js` with the following available options:  
 
 | Name        | Option | Required | Description                                                       |
@@ -17,7 +18,7 @@ Ontology Extractor is a NodeJS script that utilizes the Digital Engineering [Dee
 | Explain     | e      | No       | Explain what containers and classes will be created              |
 | Profiles    | l      | No       | Add parsing of profile annotations                                |
 | Help        | h      | No       | Display help showing available options                            |  
-
+  
 For example, run `node extractor.js -f diamond.owl -n DIAMOND -d obo:IAO_0000115` to run the extractor on the file `diamond.owl` located in the same directory with a container name `DIAMOND`, a description specified by the annotation `obo:IAO_0000115` (taken from the ontology annotations at rdf:RDF -> owl:Ontology), and using the default hostname and port values.  
 Note that it is recommended to first run with the option `-e` to verify what results will be achieved with the extractor.  
 
