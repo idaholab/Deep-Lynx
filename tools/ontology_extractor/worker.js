@@ -15,10 +15,8 @@ function apiCall(hostname, port, path, data) {
             },
             timeout: 2000
         }
-        // console.log(options);
 
         const req = http.request(options, res => {
-            // console.log(`statusCode: ${res.statusCode}`)
             let chunks_of_data = [];
         
             res.on('data', d => {
