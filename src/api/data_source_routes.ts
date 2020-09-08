@@ -189,7 +189,7 @@ export default class DataSourceRoutes {
     }
 
     private static listDataSourcesImports(req: Request, res: Response, next: NextFunction) {
-
+        // @ts-ignore
         ImportStorage.Instance.List(req.params.sourceID, +req.query.offset, +req.query.limit)
             .then((result) => {
                 if (result.isError && result.error) {

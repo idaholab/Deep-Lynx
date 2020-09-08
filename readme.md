@@ -19,17 +19,17 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 - node.js 12.x 
 - Typescript ^3.5.x
 - npm ^6.x
-- Docker ^18.x (optional - used for reproducible builds and development)
-- Docker Compose ^1.x.x (optional - used for isolation testing)
+- Docker ^18.x - **required** if attempting to run Deep Lynx on a Windows system because the pg_cron PostgreSQL extension cannot be compiled and used on Windows.
+- Docker Compose ^1.x.x - *optional* 
 
 ***Data Source Requirements***
 
-- PostgreSQL ^11.x **NOTE**: `de-lynx` only functions with a PostgreSQL database. No other SQL like database is currently supported.
-- pg_cron PostgreSQL extension: Instructions for installation can be found [here](https://github.com/citusdata/pg_cron)
+- **Required** - PostgreSQL ^11.x 
+- **Required** - pg_cron PostgreSQL extension: Instructions for installation can be found [here](https://github.com/citusdata/pg_cron)
 
 **Installation**
 
-1. `npm upgrade && npm install`
+1. `npm upgrade` & `npm install`
 2. Copy and rename `.env-sample` to `.env` 
 3. Update `.env` file you **must** have the following variables set - everything else has default values you can find in `src/config.ts` or in the `.env-sample` file itself.
     *  `CORE_DB_CONNECTION_STRING` - your PostgreSQL database connection string. Note that `de-lynx` only works with a Postgres data source

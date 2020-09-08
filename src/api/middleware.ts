@@ -142,7 +142,9 @@ export function authenticateRoute(): any {
 // query params. TODO: This could lead to unexpected behavior, perhaps find a better way to accomplish this.
 export function offsetLimitReplacer(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // @ts-ignore
         if(isNaN(+req.query.offset))  req.query.offset = "0";
+        // @ts-ignore
         if(isNaN(+req.query.limit))  req.query.limit = "10000";
         next()};
 
