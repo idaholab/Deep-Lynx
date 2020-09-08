@@ -47,6 +47,7 @@ export default class MetatypeRelationshipRoutes {
         }
 
         private static listMetatypeRelationships(req: Request, res: Response, next: NextFunction) {
+            // @ts-ignore
             storage.List(req.params.id, +req.query.offset, +req.query.limit)
                 .then((result) => {
                     if (result.isError && result.error) {

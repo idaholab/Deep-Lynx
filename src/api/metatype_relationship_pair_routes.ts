@@ -73,6 +73,7 @@ export default class MetatypeRelationshipPairRoutes {
                 })
                 .finally(() => next())
         } else {
+            // @ts-ignore
             storage.List(req.params.id, +req.query.offset, +req.query.limit)
                 .then((result) => {
                     if (result.isError && result.error) {
