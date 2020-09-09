@@ -28,7 +28,6 @@ CREATE TABLE metatypes (
 
 
 CREATE UNIQUE INDEX metatype_id_pk ON metatypes(id uuid_ops);
-CREATE UNIQUE INDEX metatype_name ON metatypes(name text_ops);
 
 CREATE TABLE metatype_keys (
     metatype_id uuid NOT NULL REFERENCES metatypes(id) ON DELETE CASCADE,
