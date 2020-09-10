@@ -89,6 +89,11 @@ export default class TypeMappingStorage extends PostgresStorage{
         return super.retrieve<TypeMappingT>(TypeMappingStorage.retrieveStatement(id))
     }
 
+    // runs a stored procedure which will update data in data staging with type mappings if any match
+    public SetAllTypeMappings(): Promise<Result<boolean>> {
+        return super.run(TypeMappingStorage.setTypeMappingProcedureStatement())
+    }
+
     public List(containerID: string, offset: number, limit: number): Promise<Result<TypeMappingT[]>> {
         return super.rows<TypeMappingT>(TypeMappingStorage.listStatement(containerID, offset, limit))
     }
@@ -138,6 +143,12 @@ export default class TypeMappingStorage extends PostgresStorage{
         return {
             text: `SELECT * FROM data_type_mappings WHERE data_source_id = $1 OFFSET $2 LIMIT $3`,
             values: [dataSourceID, offset, limit]
+        }
+    }
+
+    private static setTypeMappingProcedureStatement(): QueryConfig {
+        return {
+            text: `SELECT set_type_mapping(data_type_mappings) from data_type_mappings`
         }
     }
 }
