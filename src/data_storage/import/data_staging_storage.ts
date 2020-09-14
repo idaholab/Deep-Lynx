@@ -94,7 +94,7 @@ export default class DataStagingStorage extends PostgresStorage {
 
     private static countUnprocessedByDataSourceStatement(dataSourceID: string): QueryConfig {
         return {
-            text: `SELECT COUNT(*) FROM data_staging WHERE data_source_id = $1 AND inserted_at IS NULL`,
+            text: `SELECT COUNT(*) FROM data_staging WHERE data_source_id = $1 AND inserted_at IS NULL AND mapping_id IS NULL`,
             values: [dataSourceID]
         }
     }
