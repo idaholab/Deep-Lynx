@@ -19,13 +19,12 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 - node.js 12.x 
 - Typescript ^3.5.x
 - npm ^6.x
-- Docker ^18.x - **required** if attempting to run Deep Lynx on a Windows system because the pg_cron PostgreSQL extension cannot be compiled and used on Windows.
-- Docker Compose ^1.x.x - *optional* 
+- Docker ^18.x - *optional* - for ease of use in development
+- Docker Compose ^1.x.x - *optional* - for ease of use in development
 
 ***Data Source Requirements***
 
 - **Required** - PostgreSQL ^11.x 
-- **Required** - pg_cron PostgreSQL extension: Instructions for installation can be found [here](https://github.com/citusdata/pg_cron)
 
 **Installation**
 

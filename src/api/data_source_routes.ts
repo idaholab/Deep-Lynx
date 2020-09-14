@@ -34,7 +34,7 @@ export default class DataSourceRoutes {
         app.post('/containers/:id/import/datasources/:sourceID/files', ...middleware, authInContainer("write", "data"), this.uploadFile)
 
         app.post('/containers/:id/import/datasources/:sourceID/mappings', ...middleware, authInContainer("write", "data"), this.createTypeMapping)
-        app.get('/containers/:id/import/datasources/:sourceID/mappings/unmapped', ...middleware, authInContainer("read", "data"), this.getUnmappedData)
+        app.get('/containers/:id/import/datasources/:sourceID/mappings/unmapped/data', ...middleware, authInContainer("read", "data"), this.getUnmappedData)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/unmapped/count', ...middleware, authInContainer("read", "data"), this.countUnmappedData)
         app.put('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.updateTypeMapping)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.retrieveTypeMapping)

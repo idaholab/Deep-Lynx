@@ -1,5 +1,3 @@
-CREATE EXTENSION pg_cron;
-
 CREATE OR REPLACE FUNCTION set_type_mapping(arg data_type_mappings)
 	RETURNS void
 	language plpgsql
@@ -30,8 +28,6 @@ BEGIN
 
 END;
 $$;
-
-SELECT cron.schedule('* * * * *', $$SELECT set_type_mapping(data_type_mappings) from data_type_mappings$$);
 
 CREATE OR REPLACE FUNCTION set_type_mapping_trigger()
 	RETURNS TRIGGER

@@ -169,6 +169,9 @@ export async function StartDataProcessing(): Promise<Result<boolean>> {
     let i = 0
 
     while(true) {
+        // run type mapping set stored procedure - this will assign type mappings if some exist for data currently
+        TypeMappingStorage.Instance.SetAllTypeMappings()
+
         let dataSources: DataSourceT[] = []
 
         // make sure we only ever start one processing loop per active data source
