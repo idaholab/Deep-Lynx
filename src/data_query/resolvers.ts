@@ -7,7 +7,7 @@ import NodeStorage from "../data_storage/graph/node_storage";
 import MetatypeStorage from "../data_storage/metatype_storage";
 import {
     EdgeFilterQL,
-    EdgeQL, EdgeWhereQL,
+    EdgeQL, EdgeWhereQL, FileFilterQL, FileQL, FileWhereQL,
     MetatypeQL,
     MetatypeRelationshipQL,
     NodeFilterQL,
@@ -23,6 +23,10 @@ import MetatypeRelationshipStorage from "../data_storage/metatype_relationship_s
 import NodeFilter from "../data_storage/graph/node_filter";
 import {EdgeT} from "../types/graph/edgeT";
 import EdgeFilter from "../data_storage/graph/edge_filter";
+import FileStorage from "../data_storage/file_storage";
+import Config from "../config";
+import {FileT} from "../types/fileT";
+import FileFilter from "../data_storage/file_filter";
 
 export default function resolversRoot(containerID: string):any {
     return {
@@ -102,10 +106,119 @@ export default function resolversRoot(containerID: string):any {
             }
 
             return Promise.resolve(Promise.all(output));
+        },
+
+        files: async ({fileID, limit, offset, where}: any) => {
+           if(fileID) {
+               const file = await FileResolverByID(fileID, containerID)
+               return new Promise(resolve => {
+                   resolve([file])
+               })
+           }
+
+           if(!where) {
+               const files = await FileStorage.Instance.List(containerID, offset, limit)
+               if(files.isError) return Promise.resolve([])
+
+               const output: Promise<FileQL>[] = []
+
+               for(const file of files.value) {
+                   output.push(FileResolver(file, containerID))
+               }
+
+               return Promise.resolve(Promise.all(output))
+           }
+
+           const fileWhere = where as FileWhereQL;
+           let filter = new FileFilter().where().containerID("eq", containerID).and();
+
+           for(const n in fileWhere.AND) {
+                // in order to utilize the GraphQL error handling we wrap everything
+                // in a try catch and pass any errors up
+                try {
+                    filter = buildFileFilter(filter,fileWhere.AND[n])
+
+                    if(+n !== (fileWhere.AND.length - 1)) {
+                        filter = filter.and()
+                    }
+                } catch(e) {
+                    throw e
+                }
+            }
+
+           for(const n in fileWhere.OR) {
+                // in order to utilize the GraphQL error handling we wrap everything
+                // in a try catch and pass any errors up
+                try {
+                    if(+n === 0) {
+                        filter = filter.or() // initial OR
+                    }
+
+                    filter = buildFileFilter(filter,fileWhere.OR[n])
+
+                    if(+n !== (fileWhere.OR.length - 1)) {
+                        filter = filter.or()
+                    }
+                } catch(e) {
+                    throw e
+                }
+
+                // limit all results to the currently selected container and unarchived
+                filter = filter.and().containerID("eq", containerID)
+            }
+
+
+           const results = await filter.all(limit, offset)
+           if(results.isError) return Promise.resolve([])
+
+           const output: Promise<FileQL>[] = []
+
+           for(const file of results.value) {
+                output.push(FileResolver(file, containerID))
+            }
+
+           return Promise.resolve(Promise.all(output));
         }
     }
 }
 
+async function FileResolverByID(fileID: string, containerID: string): Promise<FileQL> {
+    const result = await FileStorage.Instance.DomainRetrieve(fileID, containerID)
+    if(result.isError) return Promise.resolve({} as FileQL)
+
+    const createdAt = (result.value.created_at) ? result.value.created_at.toString() : ""
+    const modifiedAt = (result.value.modified_at) ? result.value.modified_at.toString() : ""
+
+    const file = {
+        id: result.value.id,
+        file_name: result.value.file_name,
+        file_size: result.value.file_size,
+        download_path: `${Config.root_address}/containers/${containerID}/files/${result.value.id}`,
+        metadata: JSON.stringify(result.value.metadata),
+        created_at: createdAt,
+        modified_at: modifiedAt,
+    } as FileQL
+
+    return Promise.resolve(file)
+}
+
+
+async function FileResolver(file: FileT, containerID: string): Promise<FileQL> {
+    const createdAt = (file.created_at) ? file.created_at.toString() : ""
+    const modifiedAt = (file.modified_at) ? file.modified_at.toString() : ""
+
+    const out = {
+        id: file.id,
+        file_name: file.file_name,
+        file_size: file.file_size,
+        download_path: `${Config.root_address}/containers/${containerID}/files/${file.id}`,
+        metadata: JSON.stringify(file.metadata),
+        created_at: createdAt,
+        modified_at: modifiedAt,
+    } as FileQL
+
+    return Promise.resolve(out)
+}
 
 async function NodeResolverByID(nodeID: string, containerID:string): Promise<NodeQL> {
     const result = await NodeStorage.Instance.DomainRetrieve(nodeID, containerID)
@@ -535,6 +648,69 @@ function buildEdgeFilter(f: EdgeFilter, eql: EdgeFilterQL): EdgeFilter {
                     }
                 }
 
+                break;
+            }
+        }
+    })
+
+    return f
+}
+
+// In order to utilize GraphQL's error type we must throw errors instead of
+// returning a Result type for this function. This is one of the few places in
+// the application in which throwing errors is encouraged.
+function buildFileFilter(f: FileFilter, fql: FileFilterQL): FileFilter{
+    if(Object.keys(fql).length > 1) {
+        throw Error('filter object must only contain a single field')
+    }
+
+    Object.keys(fql).forEach(k => {
+        switch(k) {
+            case "id": {
+                let values: string[];
+                values = (fql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for id")
+                }
+
+                f.id(values[0], values[1])
+                break;
+            }
+
+            case "container_id": {
+                let values: string[];
+                values = (fql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for container_id")
+                }
+
+                f.containerID(values[0], values[1])
+                break;
+            }
+
+            case "file_name": {
+                let values: string[];
+                values = (fql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for metatype_name")
+                }
+
+                const operator = values[0]
+                values.shift()
+                const query = values.join(" ")
+
+                f.file_name(operator, query)
+                break;
+            }
+
+            case "data_source_id": {
+                let values: string[];
+                values = (fql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for data_source_id")
+                }
+
+                f.dataSourceID(values[0], values[1])
                 break;
             }
         }

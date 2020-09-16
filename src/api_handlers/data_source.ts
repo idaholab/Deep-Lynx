@@ -133,6 +133,6 @@ export async function DataSourceUploadFile(containerID: string, dataSourceID: st
         metadata: result.value.metadata,
     }
 
-    return FileStorage.Instance.Create(userID, dataSourceID, file)
+    return FileStorage.Instance.Create(userID, containerID, dataSourceID, file)
 }
 

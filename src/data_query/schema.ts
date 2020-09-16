@@ -7,6 +7,7 @@ function generateSchema(): string {
     return `
   type Query {
     nodes(limit: Int = 1000, offset: Int = 0, nodeID: String, where: NodeWhere): [Node]
+    files(limit: Int = 1000, offset: Int = 0, fileID: String, where: FileWhere): [File]
   }
 
   type Property {
@@ -45,6 +46,19 @@ input NodeFilter {
     metatype_name: String
     metatype_id: String
     properties: [PropertyFilter]
+}
+
+input FileWhere {
+    AND: [FileFilter]
+    OR: [FileFilter]
+}
+
+input FileFilter {
+    id: String
+    container_id: String
+    data_source_id: String
+    adapter: String
+    file_name: String
 }
 
 input EdgeWhere {
@@ -97,6 +111,16 @@ input PropertyFilter {
 
   origin: Node
   destination: Node
+  }
+
+  type File {
+  id: String
+  file_name: String
+  file_size: Int
+  created_at: String
+  modified_at: String
+  download_path: String
+  metadata: String
   }
 `
 }
