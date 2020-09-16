@@ -89,4 +89,7 @@ export default class MockFileStorageImpl implements FileStorage {
         })
     }
 
+    downloadStream(filepath: string): Promise<Readable | undefined> {
+        return Promise.resolve(fs.createReadStream(filepath))
+    }
 }

@@ -30,4 +30,21 @@ describe('Azure Blob Storage can', async() => {
         return provider.deleteFile("test/.env-sample");
     });
 
+    it('can download a file', async()=> {
+        const readable = fs.createReadStream('./.env-sample')
+
+        const result = await provider.uploadPipe("test/", '.env-sample', readable, "text/plain", 'utf8')
+        if(result) {
+            expect(result.isError).false
+        } else {
+            expect(false).true
+        }
+
+        // as long as the stream is open and not undefined, we can count this test as successful
+        const stream = await provider.downloadStream(`${result.value.filepath}${result.value.filename}`)
+        expect(stream).not.undefined
+
+        return provider.deleteFile(`${result.value.filepath}${result.value.filename}`);
+    });
+
 });

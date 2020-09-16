@@ -54,6 +54,10 @@ export default class Filesystem implements FileStorage {
         } as FileUploadResponse));
     }
 
+    downloadStream(filepath: string): Promise<Readable | undefined> {
+        return Promise.resolve(fs.createReadStream(`${filepath}`))
+    }
+
     // the isWindows could be solved by looking at process.platform instead, but I'd rather limit the access
     // to environment variables and environment to the config file, meaning the user is in charge of telling
     // this class whether or not its operating in a windows environment

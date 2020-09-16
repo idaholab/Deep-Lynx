@@ -13,6 +13,12 @@ import ImportStorage from "../data_storage/import/import_storage";
 import TypeMappingStorage from "../data_storage/import/type_mapping_storage";
 import DataStagingStorage from "../data_storage/import/data_staging_storage";
 import {Readable} from "stream";
+import FileDataStorage from "../data_storage/file_storage";
+import {FileStorage} from "../file_storage/file_storage";
+import AzureBlobImpl from "../file_storage/azure_blob_impl";
+import Config from "../config";
+import Filesystem from "../file_storage/filesystem_impl";
+import MockFileStorageImpl from "../file_storage/mock_impl";
 const Busboy = require('busboy');
 const fileUpload = require('express-fileupload')
 
@@ -32,6 +38,7 @@ export default class DataSourceRoutes {
         app.post("/containers/:id/import/datasources/:sourceID/imports",...middleware, fileUpload({limits:{fileSize: 50 * 1024 *1024}}), authInContainer("write", "data"),this.createManualJsonImport);
 
         app.post('/containers/:id/import/datasources/:sourceID/files', ...middleware, authInContainer("write", "data"), this.uploadFile)
+        app.get('/containers/:id/files/:fileID', ...middleware, authInContainer("read", "data"), this.downloadFile)
 
         app.post('/containers/:id/import/datasources/:sourceID/mappings', ...middleware, authInContainer("write", "data"), this.createTypeMapping)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/unmapped/data', ...middleware, authInContainer("read", "data"), this.getUnmappedData)
@@ -289,8 +296,6 @@ export default class DataSourceRoutes {
             .finally(() => next())
     }
 
-
-
     private static deleteTypeMapping(req: Request, res: Response, next: NextFunction) {
         TypeMappingStorage.Instance.PermanentlyDelete(req.params.mappingID)
             .then((result) => {
@@ -302,6 +307,50 @@ export default class DataSourceRoutes {
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
+    }
+
+    private static downloadFile(req: Request, res: Response, next: NextFunction) {
+        FileDataStorage.Instance.DomainRetrieve(req.params.fileID, req.params.id)
+            .then(file => {
+                if(file.isError) {
+                   res.status(500).send(file.error)
+                   return
+                }
+
+                let fileStorageInstance: FileStorage
+
+                switch(file.value.adapter) {
+                    case "azure_blob": {
+                        fileStorageInstance = new AzureBlobImpl(Config.azure_blob_connection_string, Config.azure_blob_container_name)
+
+                        res.attachment(file.value.file_name)
+                        fileStorageInstance.downloadStream(`${file.value.adapter_file_path}${file.value.file_name}`)
+                            .then((stream) => stream?.pipe(res))
+                        break;
+                    }
+
+                    case "filesystem": {
+                        fileStorageInstance = new Filesystem(Config.filesystem_storage_directory, Config.is_windows)
+
+                        res.attachment(file.value.file_name)
+                        fileStorageInstance.downloadStream(`${file.value.adapter_file_path}${file.value.file_name}`)
+                            .then((stream) => stream?.pipe(res))
+                        break;
+                    }
+
+                    case "mock": {
+                        fileStorageInstance = new MockFileStorageImpl()
+
+                        res.attachment(file.value.file_name)
+                        fileStorageInstance.downloadStream(`${file.value.adapter_file_path}${file.value.file_name}`)
+                            .then((stream) => stream?.pipe(res))
+                        break;
+                    }
+
+                }
+
+            })
+            .catch((err) => res.status(500).send(err))
     }
 
     private static uploadFile(req: Request, res: Response, next: NextFunction) {
