@@ -102,3 +102,26 @@ export type EdgeQL = {
     properties: PropertyQL[]
     raw_properties: string
 }
+
+export type FileQL = {
+    id: string
+    file_name: string
+    file_size: number
+    created_at: string
+    modified_at: string
+    download_path: string
+    metadata: string
+}
+
+export type FileWhereQL = {
+    AND: FileFilterQL[]
+    OR: FileFilterQL[]
+}
+
+export type FileFilterQL = {
+    id: string
+    container_id: string
+    data_source_id: string
+    adapter: string
+    file_name: string
+}

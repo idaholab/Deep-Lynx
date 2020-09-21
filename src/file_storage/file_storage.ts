@@ -8,6 +8,7 @@ import Filesystem from "./filesystem_impl";
 export interface FileStorage {
     uploadPipe(filepath:string, filename: string, stream: Readable | null, contentType?:string, encoding?:string,): Promise<Result<FileUploadResponse>>
     deleteFile(filepath:string): Promise<Result<boolean>>
+    downloadStream(filepath: string): Promise<Readable | undefined>
     name(): string
 }
 

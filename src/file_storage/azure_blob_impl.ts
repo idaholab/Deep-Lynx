@@ -81,4 +81,11 @@ export default class AzureBlobImpl implements FileStorage {
 
     }
 
+    async downloadStream(filepath: string): Promise<Readable | undefined> {
+        const blobClient = this._ContainerClient.getBlockBlobClient(`${filepath}`);
+        const download = await blobClient.download(0)
+
+        return Promise.resolve(download.readableStreamBody as Readable)
+    }
+
 }

@@ -8,6 +8,7 @@ import * as fs from "fs";
 export class Config {
   private static instance: Config;
 
+  private _root_address: string;
   private readonly _is_windows: boolean;
 
   private readonly _mongo_source_uri : string;
@@ -52,6 +53,8 @@ export class Config {
     // own checks on process.env. There is most likely a more elegant way but
     // I like including sane defaults in the app itself vs. an env-sample file
 
+    this._root_address = process.env.ROOT_ADDRESS || "http://localhost:8090"
+
     // we could simply have whatever needs to know if its windows access the platform
     // part of process, but I'd rather keep all configuration and accessing of process
     // here in the config file.
@@ -94,8 +97,12 @@ export class Config {
     this._data_source_processing_batch_size = (process.env.DATA_SOURCE_PROCESSING_BATCH_SIZE) ? parseInt(process.env.DATA_SOURCE_PROCESSING_BATCH_SIZE!, 10) : 1000
   }
 
+  get root_address(): string {
+    return this._root_address;
+  }
+
   get is_windows(): boolean {
-    return this._is_windows
+    return this._is_windows;
   }
 
   get server_port(): string {

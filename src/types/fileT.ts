@@ -16,6 +16,7 @@ const fileRequired = t.type({
 const fileOptional = t.partial({
     id: t.string,
     metadata: t.unknown,
+    container_id: t.string,
     data_source_id: t.string,
 })
 

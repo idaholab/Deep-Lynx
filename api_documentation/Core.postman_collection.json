@@ -216,7 +216,7 @@
 			"name": "Data Query",
 			"item": [
 				{
-					"name": "Query",
+					"name": "Query Graph",
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -238,7 +238,38 @@
 								{
 									"key": "container-id",
 									"type": "string",
-									"value": "20e22d75-338f-4b7d-b3d3-aafaeb1f8621"
+									"value": ""
+								}
+							]
+						},
+						"description": "Fetch container by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Query Files",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    files(where: {\r\n        AND: [{file_name: \"like archive.json\"}]\r\n    }) {\r\n        id\r\n        \r\n    }\r\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/query",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"query"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"type": "string",
+									"value": "c807a9f9-148d-4bb6-afae-cb8dff71c0b9"
 								}
 							]
 						},
@@ -1978,6 +2009,95 @@
 							]
 						},
 						"description": "Uploads a file and metadata to Deep Lynx. This endpoint will accept multiple files and multiple properties as form values."
+					},
+					"response": []
+				},
+				{
+					"name": "Download File",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [],
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/files/:file-id/download",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"files",
+								":file-id",
+								"download"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"type": "string",
+									"value": ""
+								},
+								{
+									"key": "file-id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Downloads a previously uploaded file."
+					},
+					"response": []
+				},
+				{
+					"name": "Get File",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [],
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/files/:file-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"files",
+								":file-id"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"type": "string",
+									"value": ""
+								},
+								{
+									"key": "file-id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get information about a file by ID."
 					},
 					"response": []
 				},

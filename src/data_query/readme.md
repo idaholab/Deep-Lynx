@@ -121,3 +121,33 @@ When requesting that your query returns a node's incoming or outgoing edges you 
             }
 }
 ```
+
+
+#### Fetching files and files with filter
+Here are a few other examples, this time we're querying the file storage system of Deep Lynx, not the graph system. The change is subtle.
+
+
+______
+```
+// list by single file id
+{
+    files(fileID: "id") {
+     {list set of properties desired to retrieve} 
+    }
+}
+
+// list by group of ids, notice how we have to use the "where" filter parameter
+{
+    files(where: {AND: [ {id: "in id1,id2,id3"} ] }) {
+     {list set of properties desired to retrieve} 
+    }
+}
+
+// filter by file name/id
+{
+    files(where: {AND: [ {file_name: "eq name"} ]
+                  OR:  [ {id: "eq id"} ] }) {
+     {list set of properties desired to retrieve} 
+    }
+}
+```
