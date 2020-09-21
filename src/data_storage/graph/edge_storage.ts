@@ -150,11 +150,14 @@ export default class EdgeStorage extends PostgresStorage{
                        return
                    }
 
-                   const valid = await this.validateEdgeProperties((keysByRelationshipID[relationship.value.id!]),es[e].properties);
-                   if(valid.isError || !valid.value) {
+                   const validPayload = await this.validateAndTransformEdgeProperties((keysByRelationshipID[relationship.value.id!]),es[e].properties);
+                   if(validPayload.isError ) {
                        resolve(Result.Failure(`edges's properties do no match declared relationship type: ${es[e].relationship_pair_id}`));
                        return
                    }
+
+                   // replace the properties with the validated and transformed payload
+                   es[e].properties = validPayload.value
 
                    // verify that the relationship is valid if new edge
                    if(!es[e].modified_at && !es[e].deleted_at && !es[e].id) {
@@ -278,10 +281,13 @@ export default class EdgeStorage extends PostgresStorage{
                     return new Promise(resolve => resolve(Result.Failure(`unable to verify the validity of the proposed relationship between nodes`)));
                 }
 
-                const valid = await this.validateEdgeProperties((keysByRelationshipID[relationship.value.id!]),es[e].properties);
-                if(valid.isError || !valid.value) {
+                const validPayload = await this.validateAndTransformEdgeProperties((keysByRelationshipID[relationship.value.id!]),es[e].properties);
+                if(validPayload.isError) {
                     return new Promise(resolve => resolve(Result.Failure(`edges's properties do no match declared relationship type: ${es[e].relationship_pair_id}`)));
                 }
+
+                // replace the properties with the validated and transformed payload
+                es[e].properties = validPayload.value
 
                 // verify that the relationship is valid if new edge
                 if(!es[e].modified_at && !es[e].deleted_at && es[e].id) {
@@ -324,19 +330,40 @@ export default class EdgeStorage extends PostgresStorage{
         return super.rows<EdgeT>(EdgeStorage.retrieveByOriginAndDestinationStatement(originID, destinationID))
     }
 
-    private async validateEdgeProperties(relationshipKeys: MetatypeRelationshipKeyT[], input: any): Promise<Result<boolean>> {
+    private async validateAndTransformEdgeProperties(relationshipKeys: MetatypeRelationshipKeyT[], input: any): Promise<Result<any>> {
        const compiledType = CompileMetatypeKeys(relationshipKeys);
 
-       const payload = (t.array(t.unknown).is(input)) ? input : [input];
+        // before we attempt to validate we need to insure that any keys with default values have that applied to the payload
+       for(const key of relationshipKeys) {
+            if(key.property_name in input) continue;
+
+            switch(key.data_type) {
+                case "number": {
+                    input[key.property_name] = +key.default_value!
+                    break;
+                }
+
+                case "boolean": {
+                    input[key.property_name] = key.default_value === "true" || key.default_value === "t"
+                    break;
+                }
+
+                default: {
+                    input[key.property_name] = key.default_value
+                    break;
+                }
+            }
+        }
+
 
        const onValidateSuccess = ( resolve: (r:any) => void): (c: any)=> void => {
             return async (cts:any) => {
-                resolve(Result.Success(true))
+                resolve(Result.Success(input))
             }
         };
 
        return new Promise((resolve) => {
-            pipe(t.array(compiledType).decode(payload), fold(this.OnDecodeError(resolve), onValidateSuccess(resolve)))
+            pipe(compiledType.decode(input), fold(this.OnDecodeError(resolve), onValidateSuccess(resolve)))
         })
     }
 

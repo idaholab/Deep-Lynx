@@ -280,6 +280,40 @@ describe('Graph Node Creation', async() => {
         await mStorage.PermanentlyDelete(metatype.value[0].id!);
         return gStorage.PermanentlyDelete(graph.value.id);
     })
+
+
+    it('can save with default values', async()=> {
+        const storage = NodeStorage.Instance;
+        const kStorage = MetatypeKeyStorage.Instance;
+        const mStorage = MetatypeStorage.Instance;
+        const gStorage = GraphStorage.Instance;
+
+        // SETUP
+        let graph = await gStorage.Create(containerID, "test suite");
+
+        expect(graph.isError, graph.error?.error).false;
+        expect(graph.value).not.empty;
+
+        const metatype = await mStorage.Create(containerID, "test suite",
+            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+
+        expect(metatype.isError).false;
+        expect(metatype.value).not.empty;
+
+        const keys = await kStorage.Create(metatype.value[0].id!, "test suite", test_key_default_value);
+        expect(keys.isError).false;
+
+        const mixed = {
+            metatype_id: metatype.value[0].id!,
+            properties: payload
+        };
+
+        const node = await storage.CreateOrUpdate(containerID, graph.value.id,  mixed);
+        expect(node.isError, metatype.error?.error).false;
+
+        await mStorage.PermanentlyDelete(metatype.value[0].id!);
+        return gStorage.PermanentlyDelete(graph.value.id);
+    });
 });
 
 const payload: {[key:string]:any} = {
@@ -320,6 +354,54 @@ const test_keys: MetatypeKeyT[] = [{
         required: false,
         description: "not required",
         data_type: "number",
+    },
+];
+
+
+const test_key_default_value: MetatypeKeyT[] = [{
+    name: "Test",
+    property_name: "flower",
+    required: true,
+    description: "flower name",
+    data_type: "string"
+},
+    {
+        name: "Test 2",
+        property_name: "color",
+        required: true,
+        description: "color of flower allowed",
+        data_type: "enumeration",
+        options: ["yellow", "blue"]
+    },
+    {
+        name: "Test Default Value Number",
+        property_name: "default",
+        required: true,
+        description: "not required",
+        data_type: "number",
+        default_value: 1
+    },{
+        name: "Test Default Value String",
+        property_name: "defaultString",
+        required: true,
+        description: "not required",
+        data_type: "string",
+        default_value: "test"
+    },{
+        name: "Test Default Value Enum",
+        property_name: "defaultEnum",
+        required: true,
+        description: "not required",
+        data_type: "enumeration",
+        default_value: "yellow",
+        options: ["yellow", "blue"]
+    },{
+        name: "Test Default Value Boolean",
+        property_name: "defaultBoolean",
+        required: true,
+        description: "not required",
+        data_type: "boolean",
+        default_value: true,
     },
 ];
 
