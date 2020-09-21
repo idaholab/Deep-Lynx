@@ -240,11 +240,11 @@
     "/containers/{container-id}/query": {
       "post": {
         "description": "Fetch container by ID.",
-        "summary": "Query",
+        "summary": "Query Graph",
         "tags": [
           "Data Query"
         ],
-        "operationId": "Query",
+        "operationId": "QueryGraph",
         "deprecated": false,
         "produces": [
           "application/json"
@@ -263,7 +263,7 @@
             "required": true,
             "description": "",
             "schema": {
-              "example": "{\r\n    nodes {\r\n        id\r\n        metatype {name}\r\n        properties {key value type}\r\n        raw_properties\r\n        outgoing_edges {\r\n            id\r\n            relationship {name description id} \r\n            }\r\n        incoming_edges {id}\r\n       \r\n    }\r\n}",
+              "example": "{\r\n    nodes(where: {\r\n        AND: [\r\n            {properties: [\r\n            {key: \"notRequired\" value:\"false\" operator:\"like\"}\r\n            ]}\r\n            ]\r\n    }) {\r\n        id\r\n        metatype{id}\r\n        archived\r\n    }\r\n}",
               "type": "string"
             }
           }
@@ -1681,7 +1681,8 @@
             "required": true,
             "description": "",
             "schema": {
-              "$ref": "#/definitions/CreateDataSourceRequest"
+              "example": "{\n\t\"name\": \"testing data source\"\n\t\"adapter_type\":\"http OR manual\",\n\t\"active\": true,\n\t\"config\": { // needed only if you are using the HTTP data source\n\t\t\"endpoint\":\"\",\n        \"auth_method\":\"basic\",\n        \"username\": \"test\",\n       \"password\": \"test\"\n\t}\n}",
+              "type": "string"
             }
           }
         ],
@@ -1794,6 +1795,78 @@
           },
           {
             "name": "dataSourceID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/containers/{container-id}/files/{file-id}/download": {
+      "get": {
+        "description": "Downloads a previously uploaded file.",
+        "summary": "Download File",
+        "tags": [
+          "Data Sources"
+        ],
+        "operationId": "DownloadFile",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "file-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/containers/{container-id}/files/{file-id}": {
+      "get": {
+        "description": "Get information about a file by ID.",
+        "summary": "Get File",
+        "tags": [
+          "Data Sources"
+        ],
+        "operationId": "GetFile",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "file-id",
             "in": "path",
             "required": true,
             "type": "string",
@@ -3002,11 +3075,11 @@
       "title": "CreateOrUpdateNodesRequest",
       "example": {
         "container_id": "required",
-        "original_data_id": "optional",
+        "original_data_id": "optional - but required if planning on being able to update the node from this endpoint",
         "data_source_id": "required",
         "data_type_mapping_id": "optional",
         "metatype_id": "required",
-        "modified_at": "optional - set to update node if it exists",
+        "modified_at": "optional - set to update node along with the original data id to update if it exists",
         "properties": {}
       },
       "type": "object",
@@ -3545,66 +3618,6 @@
         "relationship_type"
       ]
     },
-    "CreateDataSourceRequest": {
-      "title": "CreateDataSourceRequest",
-      "example": {
-        "adapter_type": "http",
-        "active": true,
-        "config": {
-          "endpoint": "",
-          "auth_method": "basic",
-          "username": "test",
-          "password": "test"
-        }
-      },
-      "type": "object",
-      "properties": {
-        "adapter_type": {
-          "type": "string"
-        },
-        "active": {
-          "type": "boolean"
-        },
-        "config": {
-          "$ref": "#/definitions/Config"
-        }
-      },
-      "required": [
-        "adapter_type",
-        "active",
-        "config"
-      ]
-    },
-    "Config": {
-      "title": "Config",
-      "example": {
-        "endpoint": "",
-        "auth_method": "basic",
-        "username": "test",
-        "password": "test"
-      },
-      "type": "object",
-      "properties": {
-        "endpoint": {
-          "type": "string"
-        },
-        "auth_method": {
-          "type": "string"
-        },
-        "username": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "endpoint",
-        "auth_method",
-        "username",
-        "password"
-      ]
-    },
     "CreateManualImportRequest": {
       "title": "CreateManualImportRequest",
       "example": {
@@ -3671,7 +3684,7 @@
           "type": "string"
         },
         "config": {
-          "$ref": "#/definitions/Config1"
+          "$ref": "#/definitions/Config"
         }
       },
       "required": [
@@ -3679,8 +3692,8 @@
         "config"
       ]
     },
-    "Config1": {
-      "title": "Config1",
+    "Config": {
+      "title": "Config",
       "example": {
         "traversal_source": "g",
         "graphson_v1": false,

@@ -2030,6 +2030,51 @@
 							}
 						},
 						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/files/:file-id/download",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"files",
+								":file-id",
+								"download"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"type": "string",
+									"value": ""
+								},
+								{
+									"key": "file-id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Downloads a previously uploaded file."
+					},
+					"response": []
+				},
+				{
+					"name": "Get File",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [],
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
 							"raw": "{{baseURL}}/containers/:container-id/files/:file-id",
 							"host": [
 								"{{baseURL}}"
@@ -2044,15 +2089,15 @@
 								{
 									"key": "container-id",
 									"type": "string",
-									"value": "c807a9f9-148d-4bb6-afae-cb8dff71c0b9"
+									"value": ""
 								},
 								{
 									"key": "file-id",
-									"value": "aeac30e0-b3c0-4b81-8e29-8de749df29a8"
+									"value": ""
 								}
 							]
 						},
-						"description": "Downloads a previously uploaded file."
+						"description": "Get information about a file by ID."
 					},
 					"response": []
 				},

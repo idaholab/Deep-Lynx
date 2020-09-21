@@ -19,6 +19,8 @@ import AzureBlobImpl from "../file_storage/azure_blob_impl";
 import Config from "../config";
 import Filesystem from "../file_storage/filesystem_impl";
 import MockFileStorageImpl from "../file_storage/mock_impl";
+import Result from "../result";
+import {FileT} from "../types/fileT";
 const Busboy = require('busboy');
 const fileUpload = require('express-fileupload')
 
@@ -38,7 +40,8 @@ export default class DataSourceRoutes {
         app.post("/containers/:id/import/datasources/:sourceID/imports",...middleware, fileUpload({limits:{fileSize: 50 * 1024 *1024}}), authInContainer("write", "data"),this.createManualJsonImport);
 
         app.post('/containers/:id/import/datasources/:sourceID/files', ...middleware, authInContainer("write", "data"), this.uploadFile)
-        app.get('/containers/:id/files/:fileID', ...middleware, authInContainer("read", "data"), this.downloadFile)
+        app.get('/containers/:id/files/:fileID', ...middleware, authInContainer("read", "data"), this.getFile)
+        app.get('/containers/:id/files/:fileID/download', ...middleware, authInContainer("read", "data"), this.downloadFile)
 
         app.post('/containers/:id/import/datasources/:sourceID/mappings', ...middleware, authInContainer("write", "data"), this.createTypeMapping)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/unmapped/data', ...middleware, authInContainer("read", "data"), this.getUnmappedData)
@@ -309,6 +312,20 @@ export default class DataSourceRoutes {
             .finally(() => next())
     }
 
+    private static getFile(req: Request, res: Response, next: NextFunction) {
+        FileDataStorage.Instance.Retrieve(req.params.fileID)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(200).json(result)
+            })
+            .catch((err) => res.status(404).send(err))
+            .finally(() => next())
+    }
+
     private static downloadFile(req: Request, res: Response, next: NextFunction) {
         FileDataStorage.Instance.DomainRetrieve(req.params.fileID, req.params.id)
             .then(file => {
@@ -353,8 +370,9 @@ export default class DataSourceRoutes {
             .catch((err) => res.status(500).send(err))
     }
 
-    private static uploadFile(req: Request, res: Response, next: NextFunction) {
+    private static async uploadFile(req: Request, res: Response, next: NextFunction) {
         const fileNames: string[] = []
+        const files:  Promise<Result<FileT>>[] = []
         const busboy = new Busboy({headers: req.headers})
         const metadata: {[key: string]: any} = {}
         let metadataFieldCount = 0;
@@ -363,9 +381,9 @@ export default class DataSourceRoutes {
         // we can't actually wait on the full upload to finish, so there is no way we
         // can take information about the upload and pass it later on in the busboy parsing
         // because of this we're treating the file upload as fairly standalone
-        busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
+        busboy.on('file', async (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
             const user = req.user as UserT
-            DataSourceUploadFile(req.params.id, req.params.sourceID, user.id!, filename, encoding, mimeType, file as Readable)
+            files.push(DataSourceUploadFile(req.params.id, req.params.sourceID, user.id!, filename, encoding, mimeType, file as Readable))
             fileNames.push(filename)
         })
 
@@ -381,28 +399,32 @@ export default class DataSourceRoutes {
             // to be processed by Deep Lynx, simply store the file and make it available
             // via the normal file querying channels
             if(metadataFieldCount === 0) {
-                res.sendStatus(200)
-                next()
-                return;
+                Promise.all(files)
+                    .then((results) => {
+                        res.status(200).json(results)
+                        next()
+                        return;
+                    })
+            } else {
+                // update the passed meta information with the file name deep lynx
+                // has stored it under
+                for(const i in fileNames) metadata[`deep-lynx-file-${i}`] = fileNames[i]
+                const user = req.user as UserT
+
+                // create an "import" with a single object, the metadata and file information
+                // the user will then handle the mapping of this via the normal type mapping channels
+                ImportStorage.Instance.InitiateJSONImportAndUnpack(req.params.sourceID, user.id!, 'file upload', metadata)
+                    .then((result) => {
+                        if (result.isError && result.error) {
+                            res.status(result.error.errorCode).json(result);
+                            return
+                        }
+                        res.sendStatus(200)
+                    })
+                    .catch((err) => res.status(500).send(err))
+                    .finally(() => next())
             }
 
-            // update the passed meta information with the file name deep lynx
-            // has stored it under
-            for(const i in fileNames) metadata[`deep-lynx-file-${i}`] = fileNames[i]
-            const user = req.user as UserT
-
-            // create an "import" with a single object, the metadata and file information
-            // the user will then handle the mapping of this via the normal type mapping channels
-            ImportStorage.Instance.InitiateJSONImportAndUnpack(req.params.sourceID, user.id!, 'file upload', metadata)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-                res.sendStatus(200)
-            })
-                .catch((err) => res.status(500).send(err))
-                .finally(() => next())
         })
 
         return req.pipe(busboy)
