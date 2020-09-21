@@ -6,6 +6,10 @@ import {FileStorage, FileUploadResponse} from "./file_storage";
 const http = require('http');
 const https = require('https');
 
+// Mock is considered deprecated and is no longer used apart from a test or two
+// There is functionality that Mock has, namely downloading a file from a source
+// that Filesystem does not. So far this hasn't been required, if it does become
+// required, then it is planned Mock will be subsumed into Filesystem.
 export default class MockFileStorageImpl implements FileStorage {
     name(): string {
         return "mock"
