@@ -118,8 +118,8 @@ export default class ImportStorage extends PostgresStorage {
 
     private static setStoppedStatement(logID:string): QueryConfig {
         return {
-            text: `UPDATE imports SET stopped_at = NOW() WHERE id = $1`,
-            values: [logID]
+            text: `UPDATE imports SET stopped_at = NOW(), errors = $2 WHERE id = $1`,
+            values: [logID, []]
         }
     }
 
