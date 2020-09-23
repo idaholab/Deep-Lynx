@@ -225,7 +225,7 @@ export default class NodeStorage extends PostgresStorage{
                 // now that we know the payload matches the shape of the data required, run additional validation
                 // such as regex pattern matching on string payloads
                 for(const key of typeKeys) {
-                    if(key.validation === undefined) continue;
+                    if(key.validation === null || key.validation === undefined) continue;
 
                     if(key.validation.min || key.validation.max) {
                         if(key.validation.min !== undefined || input[key.property_name] < key.validation.min!) {

@@ -359,7 +359,7 @@ export default class EdgeStorage extends PostgresStorage{
        const onValidateSuccess = ( resolve: (r:any) => void): (c: any)=> void => {
             return async (cts:any) => {
                 for(const key of relationshipKeys) {
-                    if(key.validation === undefined) continue;
+                    if(key.validation === undefined || key.validation === null) continue;
 
                     if(key.validation.min || key.validation.max) {
                         if(key.validation.min !== undefined || input[key.property_name] < key.validation.min!) {
