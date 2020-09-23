@@ -222,7 +222,33 @@ export default class NodeStorage extends PostgresStorage{
 
         const onValidateSuccess = ( resolve: (r:any) => void): (c: any)=> void => {
             return async (cts:any) => {
-               resolve(Result.Success(cts))
+                // now that we know the payload matches the shape of the data required, run additional validation
+                // such as regex pattern matching on string payloads
+                for(const key of typeKeys) {
+                    if(key.validation === undefined) continue;
+
+                    if(key.validation.min || key.validation.max) {
+                        if(key.validation.min !== undefined || input[key.property_name] < key.validation.min!) {
+                            resolve(Result.Failure(`validation of ${key.property_name} failed, less than min`))
+                        }
+
+                        if(key.validation.max !== undefined || input[key.property_name] > key.validation.max!) {
+                            resolve(Result.Failure(`validation of ${key.property_name} failed, more than max`))
+                        }
+                    }
+
+                    if(key.validation && key.validation.regex) {
+                        const matcher = new RegExp(key.validation.regex)
+
+                        if(!matcher.test(input[key.property_name])) {
+                            resolve(Result.Failure(`validation of ${key.property_name} failed, regex mismatch `))
+                        }
+                    }
+
+                }
+
+
+                resolve(Result.Success(cts))
             }
         };
 

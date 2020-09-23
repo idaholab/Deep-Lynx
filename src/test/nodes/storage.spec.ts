@@ -314,6 +314,47 @@ describe('Graph Node Creation', async() => {
         await mStorage.PermanentlyDelete(metatype.value[0].id!);
         return gStorage.PermanentlyDelete(graph.value.id);
     });
+
+    it('can save with regex matched payloads', async()=> {
+        const storage = NodeStorage.Instance;
+        const kStorage = MetatypeKeyStorage.Instance;
+        const mStorage = MetatypeStorage.Instance;
+        const gStorage = GraphStorage.Instance;
+
+        // SETUP
+        let graph = await gStorage.Create(containerID, "test suite");
+
+        expect(graph.isError, graph.error?.error).false;
+        expect(graph.value).not.empty;
+
+        const metatype = await mStorage.Create(containerID, "test suite",
+            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+
+        expect(metatype.isError).false;
+        expect(metatype.value).not.empty;
+
+        const keys = await kStorage.Create(metatype.value[0].id!, "test suite", regex_test_key);
+        expect(keys.isError).false;
+
+        const mixed = {
+            metatype_id: metatype.value[0].id!,
+            properties: regex_payload
+        };
+
+        const node = await storage.CreateOrUpdate(containerID, graph.value.id,  mixed);
+        expect(node.isError, metatype.error?.error).false;
+
+        const fails = {
+            metatype_id: metatype.value[0].id!,
+            properties: regex_payload_fails
+        };
+
+        const node2 = await storage.CreateOrUpdate(containerID, graph.value.id,  fails);
+        expect(node2.isError, metatype.error?.error).true;
+
+        await mStorage.PermanentlyDelete(metatype.value[0].id!);
+        return gStorage.PermanentlyDelete(graph.value.id);
+    });
 });
 
 const payload: {[key:string]:any} = {
@@ -411,4 +452,23 @@ export const single_test_key: MetatypeKeyT = {
     required: false,
     description: "not required",
     data_type: "number",
+};
+
+export const regex_test_key: MetatypeKeyT = {
+    name: "Test Key Regex",
+    property_name: "regex",
+    required: true,
+    description: "testing key regex",
+    data_type: "string",
+    // validation is a pattern match verifying that the value has at least 6 characters
+    // with 1 uppercase, 1 lowercase, 1 number and no spaces test at https://regex101.com/r/fX8dY0/1
+    validation: {regex: "^((?=\\S*?[A-Z])(?=\\S*?[a-z])(?=\\S*?[0-9]).{6,})\\S$"}
+}
+
+const regex_payload : {[key:string]:any} = {
+    regex: "Catcat1"
+};
+
+const regex_payload_fails : {[key:string]:any} = {
+    regex: "catcat"
 };
