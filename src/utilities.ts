@@ -1,11 +1,17 @@
-import {Errors} from "io-ts";
+import {Errors, ValidationError} from "io-ts";
 import Result from "./result";
-import {failure} from "io-ts/lib/PathReporter";
 
 // This is a collection of functions that have proved useful across the application.
 export function onDecodeError(resolve:((check: any) => void) ): ((e: Errors ) => void) {
-    return ((e) => {
-        resolve(Result.Failure(`${failure(e)}`))
+    return ((e: ValidationError[]) => {
+        const errorStrings: string[] = []
+        for(const error of e) {
+            const last = error.context[error.context.length - 1]
+
+            errorStrings.push(`Invalid Value '${error.value}' supplied for field '${last.key}'`)
+        }
+
+        resolve(Result.Failure(errorStrings.join(",")))
     })
 }
 

@@ -2,8 +2,7 @@ import * as t from "io-ts";
 import Result, {ErrorNotFound} from "../result";
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
-import {Errors} from "io-ts";
-import {failure} from "io-ts/lib/PathReporter";
+import {Errors, ValidationError} from "io-ts";
 import {PoolClient, QueryConfig, QueryResult} from "pg";
 import uuid from "uuid"
 import PostgresAdapter from "./adapters/postgres/postgres";
@@ -126,8 +125,15 @@ export default class PostgresStorage {
     }
 
     OnDecodeError(resolve:((check: any) => void) ): ((e: Errors ) => void) {
-        return ((e) => {
-            resolve(Result.Failure(`${failure(e)}`))
+        return ((e: ValidationError[]) => {
+            const errorStrings: string[] = []
+            for(const error of e) {
+                const last = error.context[error.context.length - 1]
+
+                errorStrings.push(`Invalid Value '${error.value}' supplied for field '${last.key}'`)
+            }
+
+            resolve(Result.Failure(errorStrings.join(",")))
         })
     }
 
