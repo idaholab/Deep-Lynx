@@ -19,6 +19,11 @@ const metatypeRelationshipPairOptional= t.partial({
     id: t.string,
     archived: t.boolean,
     container_id: t.string,
+
+    // for composite return
+    origin_metatype_name: t.string,
+    destination_metatype_name: t.string,
+    relationship_pair_name: t.string
 });
 
 export const metatypeRelationshipPairT = t.exact(t.intersection([metatypeRelationshipPairRequired, metatypeRelationshipPairOptional, recordMetaT]));

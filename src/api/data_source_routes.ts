@@ -21,6 +21,7 @@ import Filesystem from "../file_storage/filesystem_impl";
 import MockFileStorageImpl from "../file_storage/mock_impl";
 import Result from "../result";
 import {FileT} from "../types/fileT";
+import TypeMappingFilter from "../data_storage/import/type_mapping_filter";
 const Busboy = require('busboy');
 const fileUpload = require('express-fileupload')
 
@@ -44,6 +45,7 @@ export default class DataSourceRoutes {
         app.get('/containers/:id/files/:fileID/download', ...middleware, authInContainer("read", "data"), this.downloadFile)
 
         app.post('/containers/:id/import/datasources/:sourceID/mappings', ...middleware, authInContainer("write", "data"), this.createTypeMapping)
+        app.get('/containers/:id/import/datasources/:sourceID/mappings/', ...middleware, authInContainer("read", "data"), this.listTypeMapping)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/unmapped/data', ...middleware, authInContainer("read", "data"), this.getUnmappedData)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/unmapped/count', ...middleware, authInContainer("read", "data"), this.countUnmappedData)
         app.put('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.updateTypeMapping)
@@ -287,6 +289,28 @@ export default class DataSourceRoutes {
 
     private static retrieveTypeMapping(req: Request, res: Response, next: NextFunction) {
         TypeMappingStorage.Instance.Retrieve(req.params.mappingID)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(200).json(result)
+            })
+            .catch((err) => res.status(404).send(err))
+            .finally(() => next())
+    }
+
+    private static listTypeMapping(req: Request, res: Response, next: NextFunction) {
+        let filter = new TypeMappingFilter()
+        filter = filter.where().containerID("eq", req.params.id)
+
+        if(typeof req.query.metatypeID  !== "undefined") {
+            filter = filter.and().metatype_id("eq", `%${req.query.metatypeID}%`)
+        }
+
+        // @ts-ignore
+        filter.all(+req.query.limit, +req.query.offset)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
