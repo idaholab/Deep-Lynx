@@ -20,13 +20,11 @@ const metatypeRelationshipKeyOptional = t.partial({
     id: t.string,
     archived: t.boolean,
     metatype_relationship_id: t.string,
-    cardinality: t.number, // not entirely sure why we have this yet
     validation: t.partial({
         regex: t.string,
         min: t.number,
         max: t.number
     }),
-    unique: t.boolean, // not entirely sure why we have this yet, or in what context it should be "unique
     options: t.array(t.string),
     default_value: t.union([
         t.string,
