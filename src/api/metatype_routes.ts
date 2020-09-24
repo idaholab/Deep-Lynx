@@ -2,6 +2,7 @@ import MetatypeStorage from "../data_storage/metatype_storage";
 import {Request, Response, NextFunction, Application} from "express"
 import {authInContainer} from "./middleware";
 import {UserT} from "../types/user_management/userT";
+import MetatypeFilter from "../data_storage/metatype_filter";
 
 const storage = MetatypeStorage.Instance;
 
@@ -47,8 +48,15 @@ export default class MetatypeRoutes {
         }
 
         private static listMetatypes(req: Request, res: Response, next: NextFunction) {
+            const filter = new MetatypeFilter()
+            filter.where().containerID("eq", req.params.id)
+
+            if(req.query.name as string !== "") {
+                filter.and().name("like", `%${req.query.name}%`)
+            }
+
             // @ts-ignore
-            storage.List(req.params.id, +req.query.offset, +req.query.limit, req.query.name as string)
+            filter.all(+req.query.limit, +req.query.offset)
                 .then((result) => {
                     if (result.isError && result.error) {
                         res.status(result.error.errorCode).json(result);

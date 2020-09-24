@@ -10,8 +10,7 @@ The following steps demonstrate how data ingestion and processing work, as of 4/
 In order to begin data ingestion you must first specify a data source. A data source serves to maintain both a set of data retrieved/sent and the type mappings (connection between the shape of incoming data and the shape it must be stored in). 
 
 
-From here you can follow the rest of the instructions or navigate to BYPASS at the bottom of the page for more instructions.
-
+## Method 1 (Recommended)
 
 #### Manual JSON Data Source 
 
@@ -104,7 +103,7 @@ This mapping indicates to Deep Lynx all it needs to know in order to transform t
 Data is processed by the system automatically. As long as an ingested piece of data is mapped to a type the system will automatically take the data and type mapping - using them to transform and load the data into the Deep Lynx system. This processing is handled by a mix of database triggers, scheduled jobs, and a long polling process handled by the Deep Lynx system itself. See the diagram above for reference.
 
 
-# BYPASS
+## Method 2 (Not Recommended)
 
 Deep Lynx _does_ provide the ability to bypass this data storage methodology. This can be useful if you already know the Metatype your data corresponds to and that your data already maps to the Metatype keys. Bypassing the methodology might be beneficial as your data will be instantly queryable and not held back, waiting for type mapping.
 
