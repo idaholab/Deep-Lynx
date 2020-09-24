@@ -152,11 +152,11 @@ export default class MetatypeRelationshipKeyStorage extends PostgresStorage{
     // queries more easily.
     private static createStatement(key: MetatypeRelationshipKeyT): QueryConfig {
         return {
-            text:`INSERT INTO metatype_relationship_keys(metatype_relationship_id, id, name, description, property_name, required, data_type, options, default_value, created_by, modified_by)
-VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+            text:`INSERT INTO metatype_relationship_keys(metatype_relationship_id, id, name, description, property_name, required, data_type, options, default_value,validation, created_by, modified_by)
+VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
             values: [key.metatype_relationship_id, key.id, key.name, key.description,
                 key.property_name, key.required, key.data_type, key.options,
-                key.default_value, key.created_by, key.modified_by]
+                key.default_value,key.validation, key.created_by, key.modified_by]
         }
     }
 
@@ -196,11 +196,12 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
                  required = $4,
                  data_type = $5,
                  options = $6,
-                 default_value = $7
-                 WHERE id = $8`,
+                 default_value = $7,
+                 validation = $8
+                 WHERE id = $9`,
             values: [key.name, key.description,
                 key.property_name, key.required, key.data_type, key.options,
-                key.default_value, key.id]
+                key.default_value,key.validation, key.id]
         }
     }
 }

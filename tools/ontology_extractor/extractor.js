@@ -46,7 +46,7 @@ function validateTarget(target) {
     // Replace incompatible data_type properties (ID, IDREF, etc.)
     // Don't replace any IDs of other classes
     const regex = new RegExp('[1-9:-]');
-    if (!['string', 'number', 'boolean', 'date', 'enumeration', 'file'].includes(target) && 
+    if (!['string', 'number', 'boolean', 'date', 'enumeration', 'file'].includes(target) &&
             !regex.test(target)) {
         // console.log('Nonmatching target: ' + target)
         switch(target) {
@@ -66,7 +66,7 @@ function validateTarget(target) {
                 target = 'file';
                 break;
             default:
-                target = 'string';                                
+                target = 'string';
         }
     }
     return target;
@@ -189,7 +189,7 @@ fs.readFile(argv.file, function(err, data) {
 
     // Relationships
     // console.log(object_properties);
-    for (i = 0; i < object_properties.length; i++) { 
+    for (i = 0; i < object_properties.length; i++) {
         let relationship = object_properties[i];
         let relationship_id = relationship["rdf:about"];
         let relationship_name = relationship["rdfs:label"]["$t"] ? relationship["rdfs:label"]["$t"] : relationship["rdfs:label"];
@@ -200,7 +200,7 @@ fs.readFile(argv.file, function(err, data) {
     relationship_map.set('inheritance', {name: 'inheritance', description: 'Identifies the parent of the entity.'})
 
     // Datatype Properties
-    for (i = 0; i < datatype_properties.length; i++) { 
+    for (i = 0; i < datatype_properties.length; i++) {
         let data_property = datatype_properties[i];
         let dp_id = data_property["rdf:about"];
         let dp_name = data_property["rdfs:label"]["$t"] ? data_property["rdfs:label"]["$t"] : data_property["rdfs:label"];
@@ -211,7 +211,7 @@ fs.readFile(argv.file, function(err, data) {
         let dp_enum_range = null;
         if (typeof data_property["rdfs:range"] != "undefined") {
             dp_enum_range = data_property["rdfs:range"]["rdfs:Datatype"] ? data_property["rdfs:range"]["rdfs:Datatype"] : null;
-            
+
             if (dp_enum_range != null) {
                 // Add the first enum value
                 let current_option = dp_enum_range["owl:oneOf"]["rdf:Description"];
@@ -280,7 +280,7 @@ fs.readFile(argv.file, function(err, data) {
                     promises.push(worker.apiCall(hostname, port, path, data));
                 });
                 await Promise.all(promises).then(buffer_data => {
-                    
+
                     let buffer_count = 0;
                     relationship_map.forEach(async function(value, key, map) {
                         // console.log(buffer_count + ': ' + buffer_data[buffer_count])
@@ -291,8 +291,8 @@ fs.readFile(argv.file, function(err, data) {
                     })
                     // console.log(relationship_map.values());
                 });
-                
-                // Create metatypes (classes) 
+
+                // Create metatypes (classes)
                 console.log('Class list length: ' + class_list.length);
                 console.log('Creating classes/metatypes...');
                 path = '/containers/'+containerID+'/metatypes';
@@ -302,7 +302,7 @@ fs.readFile(argv.file, function(err, data) {
                         name: this_class["name"],
                         description: this_class["description"]
                     });
-                    class_promises.push(worker.apiCall(hostname, port, path, data)); 
+                    class_promises.push(worker.apiCall(hostname, port, path, data));
                 });
                 await Promise.all(class_promises).then(buffer_data => {
                     let buffer_count = 0;
@@ -314,7 +314,7 @@ fs.readFile(argv.file, function(err, data) {
                         buffer_count++;
                     })
                 });
-                
+
                 console.log('Creating class/metatype properties...');
                 let property_data = [];
                 // Add metatype keys (properties) and relationship pairs
@@ -367,13 +367,11 @@ fs.readFile(argv.file, function(err, data) {
                                 property_name: data_prop.name,
                                 description: data_prop.description,
                                 data_type: property.target,
-                                cardinality: 1,
                                 validation: {
                                     regex: "",
                                     min: min,
                                     max: max
                                 },
-                                unique: true,
                                 options: property_options,
                                 defaultValue: ""
                             });
@@ -399,7 +397,7 @@ fs.readFile(argv.file, function(err, data) {
                     console.log('Ontology creation is complete!')
                     // console.log(buffer_data)
                 });
-                
+
             })
             .catch(function (err) {
                 console.error(err);

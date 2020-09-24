@@ -82,12 +82,14 @@ export default class NodeStorage extends PostgresStorage{
                         keysByMetatypeID[ns[n].metatype_id] = typeKeys.value
                     }
 
-                    const valid = await this.validateNodeProperties((keysByMetatypeID[ns[n].metatype_id]), ns[n].properties);
-                    if(valid.isError || !valid.value) {
+                    const validPayload = await this.validateAndTransformNodeProperties((keysByMetatypeID[ns[n].metatype_id]), ns[n].properties);
+                    if(validPayload.isError) {
                         resolve(Result.Failure(`node's properties do no match declared metatype: ${ns[n].metatype_id}`));
                         return
                     }
 
+                    // replace the properties with the validated and transformed payload
+                    ns[n].properties = validPayload.value
                     ns[n].graph_id = graphID;
                     ns[n].container_id = containerID;
                     // grab metatype_name if it was not supplied
@@ -154,11 +156,13 @@ export default class NodeStorage extends PostgresStorage{
                         keysByMetatypeID[ns[n].metatype_id] = typeKeys.value
                     }
 
-                    const valid = await this.validateNodeProperties((keysByMetatypeID[ns[n].metatype_id]), ns[n].properties);
-                    if(valid.isError || !valid.value) {
+                    const validPayload = await this.validateAndTransformNodeProperties((keysByMetatypeID[ns[n].metatype_id]), ns[n].properties);
+                    if(validPayload.isError) {
                         return new Promise(resolve => resolve(Result.Failure(`node's properties do no match declared metatype: ${ns[n].metatype_id}`)));
                     }
 
+                    // replace the properties with the validated and transformed payload
+                    ns[n].properties = validPayload.value
                     ns[n].graph_id = graphID;
                     ns[n].container_id = containerID;
 
@@ -189,21 +193,67 @@ export default class NodeStorage extends PostgresStorage{
         return super.run(NodeStorage.archiveStatement(id))
     }
 
-    private async validateNodeProperties(typeKeys: MetatypeKeyT[], input:any): Promise<Result<boolean>> {
+    private async validateAndTransformNodeProperties(typeKeys: MetatypeKeyT[], input:any): Promise<Result<any>> {
         // easiest way to create type for callback func
         const compiledType = CompileMetatypeKeys(typeKeys);
 
-        // allows us to accept an array of input if needed
-        const payload = (t.array(t.unknown).is(input)) ? input : [input];
+
+        // before we attempt to validate we need to insure that any keys with default values have that applied to the payload
+        for(const key of typeKeys) {
+            if(key.property_name in input) continue;
+
+            switch(key.data_type) {
+                case "number": {
+                    input[key.property_name] = +key.default_value!
+                    break;
+                }
+
+                case "boolean": {
+                    input[key.property_name] = key.default_value === "true" || key.default_value === "t"
+                    break;
+                }
+
+                default: {
+                    input[key.property_name] = key.default_value
+                    break;
+                }
+            }
+        }
 
         const onValidateSuccess = ( resolve: (r:any) => void): (c: any)=> void => {
             return async (cts:any) => {
-               resolve(Result.Success(true))
+                // now that we know the payload matches the shape of the data required, run additional validation
+                // such as regex pattern matching on string payloads
+                for(const key of typeKeys) {
+                    if(key.validation === null || key.validation === undefined) continue;
+
+                    if(key.validation.min || key.validation.max) {
+                        if(key.validation.min !== undefined || input[key.property_name] < key.validation.min!) {
+                            resolve(Result.Failure(`validation of ${key.property_name} failed, less than min`))
+                        }
+
+                        if(key.validation.max !== undefined || input[key.property_name] > key.validation.max!) {
+                            resolve(Result.Failure(`validation of ${key.property_name} failed, more than max`))
+                        }
+                    }
+
+                    if(key.validation && key.validation.regex) {
+                        const matcher = new RegExp(key.validation.regex)
+
+                        if(!matcher.test(input[key.property_name])) {
+                            resolve(Result.Failure(`validation of ${key.property_name} failed, regex mismatch `))
+                        }
+                    }
+
+                }
+
+
+                resolve(Result.Success(cts))
             }
         };
 
         return new Promise((resolve) => {
-            pipe(t.array(compiledType).decode(payload), fold(this.OnDecodeError(resolve), onValidateSuccess(resolve)))
+            pipe(compiledType.decode(input), fold(this.OnDecodeError(resolve), onValidateSuccess(resolve)))
         })
     }
 

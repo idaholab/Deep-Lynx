@@ -280,6 +280,81 @@ describe('Graph Node Creation', async() => {
         await mStorage.PermanentlyDelete(metatype.value[0].id!);
         return gStorage.PermanentlyDelete(graph.value.id);
     })
+
+
+    it('can save with default values', async()=> {
+        const storage = NodeStorage.Instance;
+        const kStorage = MetatypeKeyStorage.Instance;
+        const mStorage = MetatypeStorage.Instance;
+        const gStorage = GraphStorage.Instance;
+
+        // SETUP
+        let graph = await gStorage.Create(containerID, "test suite");
+
+        expect(graph.isError, graph.error?.error).false;
+        expect(graph.value).not.empty;
+
+        const metatype = await mStorage.Create(containerID, "test suite",
+            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+
+        expect(metatype.isError).false;
+        expect(metatype.value).not.empty;
+
+        const keys = await kStorage.Create(metatype.value[0].id!, "test suite", test_key_default_value);
+        expect(keys.isError).false;
+
+        const mixed = {
+            metatype_id: metatype.value[0].id!,
+            properties: payload
+        };
+
+        const node = await storage.CreateOrUpdate(containerID, graph.value.id,  mixed);
+        expect(node.isError, metatype.error?.error).false;
+
+        await mStorage.PermanentlyDelete(metatype.value[0].id!);
+        return gStorage.PermanentlyDelete(graph.value.id);
+    });
+
+    it('can save with regex matched payloads', async()=> {
+        const storage = NodeStorage.Instance;
+        const kStorage = MetatypeKeyStorage.Instance;
+        const mStorage = MetatypeStorage.Instance;
+        const gStorage = GraphStorage.Instance;
+
+        // SETUP
+        let graph = await gStorage.Create(containerID, "test suite");
+
+        expect(graph.isError, graph.error?.error).false;
+        expect(graph.value).not.empty;
+
+        const metatype = await mStorage.Create(containerID, "test suite",
+            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+
+        expect(metatype.isError).false;
+        expect(metatype.value).not.empty;
+
+        const keys = await kStorage.Create(metatype.value[0].id!, "test suite", regex_test_key);
+        expect(keys.isError).false;
+
+        const mixed = {
+            metatype_id: metatype.value[0].id!,
+            properties: regex_payload
+        };
+
+        const node = await storage.CreateOrUpdate(containerID, graph.value.id,  mixed);
+        expect(node.isError, metatype.error?.error).false;
+
+        const fails = {
+            metatype_id: metatype.value[0].id!,
+            properties: regex_payload_fails
+        };
+
+        const node2 = await storage.CreateOrUpdate(containerID, graph.value.id,  fails);
+        expect(node2.isError, metatype.error?.error).true;
+
+        await mStorage.PermanentlyDelete(metatype.value[0].id!);
+        return gStorage.PermanentlyDelete(graph.value.id);
+    });
 });
 
 const payload: {[key:string]:any} = {
@@ -323,10 +398,77 @@ const test_keys: MetatypeKeyT[] = [{
     },
 ];
 
+
+const test_key_default_value: MetatypeKeyT[] = [{
+    name: "Test",
+    property_name: "flower",
+    required: true,
+    description: "flower name",
+    data_type: "string"
+},
+    {
+        name: "Test 2",
+        property_name: "color",
+        required: true,
+        description: "color of flower allowed",
+        data_type: "enumeration",
+        options: ["yellow", "blue"]
+    },
+    {
+        name: "Test Default Value Number",
+        property_name: "default",
+        required: true,
+        description: "not required",
+        data_type: "number",
+        default_value: 1
+    },{
+        name: "Test Default Value String",
+        property_name: "defaultString",
+        required: true,
+        description: "not required",
+        data_type: "string",
+        default_value: "test"
+    },{
+        name: "Test Default Value Enum",
+        property_name: "defaultEnum",
+        required: true,
+        description: "not required",
+        data_type: "enumeration",
+        default_value: "yellow",
+        options: ["yellow", "blue"]
+    },{
+        name: "Test Default Value Boolean",
+        property_name: "defaultBoolean",
+        required: true,
+        description: "not required",
+        data_type: "boolean",
+        default_value: true,
+    },
+];
+
 export const single_test_key: MetatypeKeyT = {
     name: "Test Not Required",
     property_name: "notRequired",
     required: false,
     description: "not required",
     data_type: "number",
+};
+
+export const regex_test_key: MetatypeKeyT = {
+    name: "Test Key Regex",
+    property_name: "regex",
+    required: true,
+    description: "testing key regex",
+    data_type: "string",
+    // validation is a pattern match verifying that the value has at least 6 characters
+    // with 1 uppercase, 1 lowercase, 1 number and no spaces test at https://regex101.com/r/fX8dY0/1
+    validation: {regex: "^((?=\\S*?[A-Z])(?=\\S*?[a-z])(?=\\S*?[0-9]).{6,})\\S$"}
+}
+
+const regex_payload : {[key:string]:any} = {
+    regex: "Catcat1"
+};
+
+const regex_payload_fails : {[key:string]:any} = {
+    regex: "catcat"
 };

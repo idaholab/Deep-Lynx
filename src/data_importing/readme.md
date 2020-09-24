@@ -10,6 +10,7 @@ The following steps demonstrate how data ingestion and processing work, as of 4/
 In order to begin data ingestion you must first specify a data source. A data source serves to maintain both a set of data retrieved/sent and the type mappings (connection between the shape of incoming data and the shape it must be stored in). 
 
 
+## Method 1 (Recommended)
 
 #### Manual JSON Data Source 
 
@@ -101,4 +102,45 @@ This mapping indicates to Deep Lynx all it needs to know in order to transform t
 
 Data is processed by the system automatically. As long as an ingested piece of data is mapped to a type the system will automatically take the data and type mapping - using them to transform and load the data into the Deep Lynx system. This processing is handled by a mix of database triggers, scheduled jobs, and a long polling process handled by the Deep Lynx system itself. See the diagram above for reference.
 
+
+## Method 2 (Not Recommended)
+
+Deep Lynx _does_ provide the ability to bypass this data storage methodology. This can be useful if you already know the Metatype your data corresponds to and that your data already maps to the Metatype keys. Bypassing the methodology might be beneficial as your data will be instantly queryable and not held back, waiting for type mapping. We recommend you use this method only for the following:
+
+
+  1. Populating test or demo data when in early stages of development or for demonstration purposes and
+  2. Providing an API for modifying an existing data set (creation of data which must be done manually and providing a means to update and delete nodes, their properties, and edges from a GUI)
+
+
+You can create a node, or edge, through the following endpoints and with the following request bodies. **Note** that you can pass in an array of nodes or edges, you don't need to do just one.
+
+```
+/containers/:container-id/graphs/nodes
+
+[{
+     "container_id": "required",
+     "original_data_id": "optional - but required if planning on being able to update the node from this endpoint",
+     "data_source_id": "required",
+     "data_type_mapping_id": "optional",
+     "metatype_id": "required",
+     "modified_at": "optional - set to update node along with the original data id to update if it exists",
+     "properties": {}
+ }]
+
+
+/containers/:container-id/graphs/edges
+
+[{
+     "container_id": "required",
+     "original_data_id": "required",
+     "data_source_id": "required",
+     "origin_node_id": "required (if origin_node_original_id not set)",
+     "destination_node_id": "required (if destination_node_original_id not set)",
+     "origin_node_original_id": "create edge based on original ID of node, not Deep Lynx ID",
+     "destination_node_original_id": "create edge based on original ID of node, not Deep Lynx ID",
+     "relationship_pair_id": "required",
+     "modified_at": "will attempt to update edge if exists",
+     "properties": {}
+ }]
+```
 
