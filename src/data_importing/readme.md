@@ -105,7 +105,12 @@ Data is processed by the system automatically. As long as an ingested piece of d
 
 ## Method 2 (Not Recommended)
 
-Deep Lynx _does_ provide the ability to bypass this data storage methodology. This can be useful if you already know the Metatype your data corresponds to and that your data already maps to the Metatype keys. Bypassing the methodology might be beneficial as your data will be instantly queryable and not held back, waiting for type mapping.
+Deep Lynx _does_ provide the ability to bypass this data storage methodology. This can be useful if you already know the Metatype your data corresponds to and that your data already maps to the Metatype keys. Bypassing the methodology might be beneficial as your data will be instantly queryable and not held back, waiting for type mapping. We recommend you use this method only for the following:
+
+
+  1. Populating test or demo data when in early stages of development or for demonstration purposes and
+  2. Providing an API for modifying an existing data set (creation of data which must be done manually and providing a means to update and delete nodes, their properties, and edges from a GUI)
+
 
 You can create a node, or edge, through the following endpoints and with the following request bodies. **Note** that you can pass in an array of nodes or edges, you don't need to do just one.
 
