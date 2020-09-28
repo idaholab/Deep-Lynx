@@ -200,7 +200,7 @@ export default class NodeStorage extends PostgresStorage{
 
         // before we attempt to validate we need to insure that any keys with default values have that applied to the payload
         for(const key of typeKeys) {
-            if(key.property_name in input) continue;
+            if(key.property_name in input || key.default_value === null) continue;
 
             switch(key.data_type) {
                 case "number": {
