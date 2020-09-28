@@ -87,7 +87,7 @@ export default class DataStagingStorage extends PostgresStorage {
 
     private static listUnprocessedByDataSourceStatement(dataSourceID: string, offset: number, limit: number): QueryConfig {
         return {
-            text: `SELECT * FROM data_staging WHERE data_source_id = $1 AND inserted_at IS NULL OFFSET $2 LIMIT $3`,
+            text: `SELECT * FROM data_staging WHERE data_source_id = $1 AND inserted_at IS NULL AND mapping_id IS NULL OFFSET $2 LIMIT $3`,
             values: [dataSourceID, offset, limit]
         }
     }

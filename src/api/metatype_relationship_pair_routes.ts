@@ -50,16 +50,20 @@ export default class MetatypeRelationshipPairRoutes {
         let filter = new MetatypeRelationshipPairFilter()
         filter = filter.where().containerID("eq", req.params.id)
 
-        if(req.query.destinationID as string !== "") {
+        if(typeof req.query.destinationID !== "undefined" && req.query.destinationID as string !== "") {
             filter = filter.and().destination_metatype_id("eq", req.query.destinationID)
         }
 
-        if(req.query.originID as string !== "") {
+        if(typeof req.query.originID !== "undefined" && req.query.originID as string !== "") {
             filter = filter.and().origin_metatype_id("eq", req.query.originID)
         }
 
-        if(req.query.name as string !== "") {
+        if(typeof req.query.name !== "undefined" && req.query.name as string !== "") {
             filter = filter.and().name("like", `%${req.query.name}%`)
+        }
+
+        if(typeof req.query.metatypeID !== "undefined" && req.query.metatypeID as string !== "") {
+            filter = filter.and().metatypeID("eq", req.query.metatypeID)
         }
 
         // @ts-ignore

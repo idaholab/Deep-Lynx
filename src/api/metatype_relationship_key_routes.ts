@@ -10,7 +10,7 @@ export default class MetatypeRelationshipKeyRoutes {
     public static mount(app: Application, middleware: any[]) {
         app.post("/containers/:id/metatype_relationships/:relationshipID/keys", ...middleware, authInContainer("write", "ontology"),this.createMetatypeRelationshipKey);
         app.get("/containers/:id/metatype_relationships/:relationshipID/keys/:relationshipKeyID", ...middleware, authInContainer("read", "ontology"), this.retrieveMetatypeRelationshipKey);
-        app.get("/containers/:id/metatypes_relationships/:relationshipID/keys", ...middleware, authInContainer("read", "ontology"), this.listMetatypeRelationshipKeys);
+        app.get("/containers/:id/metatype_relationships/:relationshipID/keys", ...middleware, authInContainer("read", "ontology"), this.listMetatypeRelationshipKeys);
         app.delete("/containers/:id/metatype_relationships/:relationshipID/keys/:relationshipKeyID", ...middleware, authInContainer("write", "ontology"), this.archiveMetatypeRelationshipKey);
         app.put("/containers/:id/metatype_relationships/:relationshipID/keys/:relationshipKeyID", ...middleware, authInContainer("write", "ontology"),this.updateMetatypeRelationshipKey)
     }

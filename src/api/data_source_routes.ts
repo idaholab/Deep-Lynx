@@ -305,7 +305,7 @@ export default class DataSourceRoutes {
         let filter = new TypeMappingFilter()
         filter = filter.where().containerID("eq", req.params.id)
 
-        if(typeof req.query.metatypeID  !== "undefined") {
+        if(typeof req.query.metatypeID  !== "undefined" && req.query.metatypeID !== "") {
             filter = filter.and().metatype_id("eq", `%${req.query.metatypeID}%`)
         }
 

@@ -1509,14 +1509,14 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseURL}}/containers/:id/metatypes_relationships/:relationship-id/keys?offset=0&limit=100",
+									"raw": "{{baseURL}}/containers/:id/metatype_relationships/:relationship-id/keys?offset=0&limit=100",
 									"host": [
 										"{{baseURL}}"
 									],
 									"path": [
 										"containers",
 										":id",
-										"metatypes_relationships",
+										"metatype_relationships",
 										":relationship-id",
 										"keys"
 									],
@@ -3139,6 +3139,66 @@
 							]
 						},
 						"description": "Retrieve a type mapping from storage."
+					},
+					"response": []
+				},
+				{
+					"name": "List Type Mappings",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type_key\": \"type\",\n    \"type_value\": \"EQUIPMENT\",\n    \"unique_identifier_key\": \"id\",\n    \"metatype_id\": \"\",\n    \"keys\": [\n        {\n            \"key\": \"RADIUS\",\n            \"metatype_key_id\": \"\"\n        }\n    ],\n    \"example_payload\": {\n        \"RADIUS\": 0.1\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:source-id/mappings/:mappingID",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":source-id",
+								"mappings",
+								":mappingID"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "source-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "mappingID",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Lists type mappings from storage"
 					},
 					"response": []
 				},
