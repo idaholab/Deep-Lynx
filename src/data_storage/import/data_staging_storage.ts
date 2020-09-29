@@ -9,6 +9,7 @@ import {DataStagingT} from "../../types/import/dataStagingT";
 import Result from "../../result";
 import {Query, QueryConfig} from "pg";
 import {TypeMappingT} from "../../types/import/typeMappingT";
+import PostgresAdapter from "../adapters/postgres/postgres";
 
 export default class DataStagingStorage extends PostgresStorage {
     public static tableName = "data_staging";
@@ -32,11 +33,19 @@ export default class DataStagingStorage extends PostgresStorage {
     }
 
     public async CountUnmappedData(importID: string): Promise<Result<number>> {
-        return super.count(DataStagingStorage.CountUnmappedForImportStatement(importID))
+        return super.count(DataStagingStorage.countUnmappedForImportStatement(importID))
     }
 
     public async Count(importID: string): Promise<Result<number>> {
-        return super.count(DataStagingStorage.CountImportStatement(importID))
+        return super.count(DataStagingStorage.countImportStatement(importID))
+    }
+
+    public async Retrieve(id: string): Promise<Result<DataStagingT>> {
+        return super.retrieve<DataStagingT>(DataStagingStorage.retrieveStatement(id))
+    }
+
+    public async List(importID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
+        return super.rows<DataStagingT>(DataStagingStorage.listStatement(importID, offset, limit))
     }
 
     public async ListUnprocessed(importID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
@@ -52,7 +61,41 @@ export default class DataStagingStorage extends PostgresStorage {
     }
 
     public async SetProcessed(importID: string): Promise<Result<boolean>> {
-        return super.runAsTransaction(DataStagingStorage.SetProcessedStatement(importID))
+        return super.runAsTransaction(DataStagingStorage.setProcessedStatement(importID))
+    }
+
+    public async PartialUpdate(id: string, userID:string, updatedField: {[key:string]: any}): Promise<Result<boolean>> {
+        const toUpdate = await this.Retrieve(id);
+
+        if(toUpdate.isError) {
+            return new Promise(resolve => resolve(Result.Failure(toUpdate.error!.error)))
+        }
+
+        const updateStatement:string[] = [];
+        const values:string[] = [];
+        let i = 1;
+
+        Object.keys(updatedField).map(k => {
+            updateStatement.push(`${k} = $${i}`);
+            values.push(updatedField[k]);
+            i++
+        });
+
+        return new Promise(resolve => {
+            PostgresAdapter.Instance.Pool.query({
+                text: `UPDATE data_statging SET ${updateStatement.join(",")} WHERE id = '${id}'`,
+                values
+            })
+                .then(() => {
+                    resolve(Result.Success(true))
+                })
+                .catch(e => resolve(Result.Failure(e)))
+        })
+
+    }
+
+    public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
+        return super.run(DataStagingStorage.deleteStatement(id))
     }
 
     private static ListMatchedForTypeMappingStatement(tm: TypeMappingT): QueryConfig {
@@ -78,6 +121,20 @@ export default class DataStagingStorage extends PostgresStorage {
 
     }
 
+    private static retrieveStatement(metatypeID:string): QueryConfig {
+        return {
+            text:`SELECT * FROM data_staging WHERE id = $1`,
+            values: [metatypeID]
+        }
+    }
+
+    private static listStatement(importID: string, offset: number, limit: number): QueryConfig {
+        return {
+            text: `SELECT * FROM data_staging WHERE import_id = $1 OFFSET $2 LIMIT $3`,
+            values: [importID, offset, limit]
+        }
+    }
+
     private static listUnprocessedStatement(importID: string, offset: number, limit: number): QueryConfig {
         return {
             text: `SELECT * FROM data_staging WHERE import_id = $1 AND inserted_at IS NULL OFFSET $2 LIMIT $3`,
@@ -99,24 +156,31 @@ export default class DataStagingStorage extends PostgresStorage {
         }
     }
 
-    private static CountUnmappedForImportStatement(importID: string): QueryConfig {
+    private static countUnmappedForImportStatement(importID: string): QueryConfig {
        return {
            text: `SELECT COUNT(*) FROM data_staging WHERE mapping_id IS NULL AND import_id = $1`,
            values: [importID]
        }
     }
 
-    private static CountImportStatement(importID: string): QueryConfig {
+    private static countImportStatement(importID: string): QueryConfig {
         return {
             text: `SELECT COUNT(*) FROM data_staging WHERE import_id = $1`,
             values: [importID]
         }
     }
 
-    private static SetProcessedStatement(importID: string): QueryConfig {
+    private static setProcessedStatement(importID: string): QueryConfig {
         return {
             text: `UPDATE data_staging SET inserted_At = NOW() WHERE import_id = $1`,
             values: [importID]
+        }
+    }
+
+    private static deleteStatement(id: string): QueryConfig {
+        return {
+            text:`DELETE FROM data_staging WHERE id = $1`,
+            values: [id]
         }
     }
 }

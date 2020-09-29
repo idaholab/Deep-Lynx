@@ -40,6 +40,11 @@ export default class DataSourceRoutes {
         app.get("/containers/:id/import/datasources/:sourceID/imports",...middleware, authInContainer("read", "data"),this.listDataSourcesImports);
         app.post("/containers/:id/import/datasources/:sourceID/imports",...middleware, fileUpload({limits:{fileSize: 50 * 1024 *1024}}), authInContainer("write", "data"),this.createManualJsonImport);
 
+        app.get("/containers/:id/import/imports/:importID/data",...middleware, authInContainer("read", "data"),this.listDataForImport);
+        app.get("/containers/:id/import/imports/:importID/data/:dataID",...middleware, authInContainer("read", "data"),this.getImportData);
+        app.put("/containers/:id/import/imports/:importID/data/:dataID",...middleware, authInContainer("write", "data"),this.updateImportData);
+        app.delete("/containers/:id/import/imports/:importID/data/:dataID",...middleware, authInContainer("write", "data"),this.deleteImportData);
+
         app.post('/containers/:id/import/datasources/:sourceID/files', ...middleware, authInContainer("write", "data"), this.uploadFile)
         app.get('/containers/:id/files/:fileID', ...middleware, authInContainer("read", "data"), this.getFile)
         app.get('/containers/:id/files/:fileID/download', ...middleware, authInContainer("read", "data"), this.downloadFile)
@@ -51,8 +56,6 @@ export default class DataSourceRoutes {
         app.put('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.updateTypeMapping)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.retrieveTypeMapping)
         app.delete('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.deleteTypeMapping)
-
-
     }
 
     private static createDataSource(req: Request, res: Response, next: NextFunction) {
@@ -215,6 +218,21 @@ export default class DataSourceRoutes {
             .finally(() => next())
     }
 
+    private static listDataForImport(req: Request, res: Response, next: NextFunction) {
+        // @ts-ignore
+        DataStagingStorage.Instance.List(req.params.importID, +req.query.offset, +req.query.limit)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(200).json(result)
+            })
+            .catch((err) => res.status(404).send(err))
+            .finally(() => next())
+    }
+
     // creeateManualImport will accept either a file or a raw JSON body
     // TODO: set a file size limit that corresponds to the single column data limit of postgres
     private static createManualJsonImport(req: Request, res: Response, next: NextFunction) {
@@ -257,6 +275,46 @@ export default class DataSourceRoutes {
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
+    }
+
+    private static deleteImportData(req: Request, res: Response, next: NextFunction) {
+        DataStagingStorage.Instance.PermanentlyDelete(req.params.dataID)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+                res.sendStatus(200)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static getImportData(req: Request, res: Response, next: NextFunction) {
+        DataStagingStorage.Instance.Retrieve(req.params.dataID)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+                res.status(200).json(result)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static updateImportData(req: Request, res: Response, next: NextFunction) {
+        const user = req.user as UserT;
+
+        DataStagingStorage.Instance.PartialUpdate(req.params.dataID, user.id!, req.body)
+            .then((updated: Result<boolean>) => {
+                if (updated.isError && updated.error) {
+                    res.status(updated.error.errorCode).json(updated);
+                    return
+                }
+                res.status(200).json(updated)
+            })
+            .catch((updated:any) => res.status(500).send(updated))
     }
 
     private static createTypeMapping(req: Request, res: Response, next: NextFunction) {
