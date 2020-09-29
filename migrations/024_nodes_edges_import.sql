@@ -1,0 +1,2 @@
+ALTER TABLE nodes ADD COLUMN import_id uuid REFERENCES imports(id) ON DELETE SET NULL;
+ALTER TABLE edges ADD COLUMN import_id uuid REFERENCES imports(id) ON DELETE SET NULL;
