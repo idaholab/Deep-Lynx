@@ -13,6 +13,7 @@ import GraphStorage from "../data_storage/graph/graph_storage";
 import {QueryConfig} from "pg";
 import EdgeStorage from "../data_storage/graph/edge_storage";
 import DataSourceStorage from "../data_storage/import/data_source_storage";
+import {DataStagingT} from "../types/import/dataStagingT";
 
 // DataSourceProcessor starts an unending processing loop for a data source. This
 // loop is what takes mapped data from data_staging and inserts it into the actual
@@ -35,7 +36,7 @@ export class DataSourceProcessor {
            const active = await DataSourceStorage.Instance.IsActive(this.dataSource.id!)
            if(active.isError || !active.value) break;
 
-           const incompleteImports = await ImportStorage.Instance.ListUncompleted(this.dataSource.id!, 0, 1)
+           const incompleteImports = await ImportStorage.Instance.ListReady(this.dataSource.id!, 0, 1)
            if(!incompleteImports.isError) {
                for(const incompleteImport of incompleteImports.value) {
                    const processed = await this.process(incompleteImport.id)
@@ -59,7 +60,7 @@ export class DataSourceProcessor {
         // order its received.
         const unmappedData = await ds.CountUnmappedData(dataImportID)
         if(unmappedData.isError || unmappedData.value > 0) {
-            await ImportStorage.Instance.SetErrors(dataImportID, ["import has unmapped data, resolve by creating type mappings"])
+            await ImportStorage.Instance.SetStatus(dataImportID,"error",  "import has unmapped data, resolve by creating type mappings")
 
             return new Promise(resolve => resolve(Result.SilentFailure(`data import has unmapped data, resolve by creating type mappings`)))
         }
@@ -75,7 +76,7 @@ export class DataSourceProcessor {
         for(let i = 0; i < totalToProcess.value ; i++) {
            const toProcess = await ds.ListUnprocessed(dataImportID, i * Config.data_source_batch_size, Config.data_source_batch_size)
            if(toProcess.isError) {
-                await ImportStorage.Instance.SetErrors(dataImportID, [`error attempting to fetch from data_staging ${toProcess.error?.error}`])
+                await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to fetch from data_staging ${toProcess.error?.error}`)
 
                 return new Promise(resolve => resolve(Result.Failure(`error attempting to fetch from data_staging ${toProcess.error?.error}`)))
             }
@@ -85,7 +86,7 @@ export class DataSourceProcessor {
            for(const row of toProcess.value) {
                 const mapping = await TypeMappingStorage.Instance.Retrieve(row.mapping_id)
                 if(mapping.isError) {
-                   await ImportStorage.Instance.SetErrors(dataImportID, [`error attempting to fetch type mapping ${mapping.error?.error}`])
+                   await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to fetch type mapping ${mapping.error?.error}`)
 
                    return new Promise(resolve => resolve(Result.Failure(`error attempting to fetch type mapping ${mapping.error?.error}`)))
                }
@@ -93,7 +94,7 @@ export class DataSourceProcessor {
                 // use the type mapping assigned to a piece of data to transform it prior to insertion into the graph database.
                 const transformedPayload = await TransformPayload(mapping.value, row.data as {[key:string]: any})
                 if(transformedPayload.isError) {
-                   await ImportStorage.Instance.SetErrors(dataImportID, [`error attempting to transform data ${transformedPayload.error?.error}`])
+                   await ImportStorage.Instance.SetStatus(dataImportID,"error",  `error attempting to transform data ${transformedPayload.error?.error}`)
 
                    return new Promise(resolve => resolve(Result.Failure(`error attempting to transform data ${transformedPayload.error?.error}`)))
                }
@@ -111,7 +112,6 @@ export class DataSourceProcessor {
                     edgesToInsert.push(transformedPayload.value[1])
                 }
             }
-
         }
 
 
@@ -121,7 +121,7 @@ export class DataSourceProcessor {
             // insert all nodes first, then edges
             const insertedNodes = await NodeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, nodesToInsert)
             if(insertedNodes.isError) {
-                await ImportStorage.Instance.SetErrors(dataImportID, [`error attempting to insert nodes ${insertedNodes.error?.error}`])
+                await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to insert nodes ${insertedNodes.error?.error}`)
 
                 return new Promise(resolve => resolve(Result.Failure(`error attempting to insert nodes ${insertedNodes.error?.error}`)))
             }
@@ -132,7 +132,7 @@ export class DataSourceProcessor {
         if(edgesToInsert.length > 0) {
             const insertedEdges = await EdgeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, edgesToInsert)
             if(insertedEdges.isError) {
-                await ImportStorage.Instance.SetErrors(dataImportID, [`error attempting to insert edges ${insertedEdges.error?.error}`])
+                await ImportStorage.Instance.SetStatus(dataImportID, "error",`error attempting to insert edges ${insertedEdges.error?.error}`)
 
                 return new Promise(resolve => resolve(Result.Failure(`error attempting to insert edges ${insertedEdges.error?.error}`)))
             }
@@ -147,7 +147,7 @@ export class DataSourceProcessor {
         const setProcessed = await DataStagingStorage.Instance.SetProcessed(dataImportID)
         if(setProcessed.isError || !setProcessed.value) Logger.debug(`unable to set data import ${dataImportID} to processed`)
 
-        return ImportStorage.Instance.SetStopped(dataImportID)
+        return ImportStorage.Instance.SetStatus(dataImportID, "stopped")
     }
 
 

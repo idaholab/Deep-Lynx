@@ -446,6 +446,10 @@ export default class EdgeStorage extends PostgresStorage{
         return super.run(EdgeStorage.deleteStatement(id))
     }
 
+    public DeleteForImport(importID: string): Promise<Result<boolean>> {
+        return super.run(EdgeStorage.deleteForImportStatement(importID))
+    }
+
     public Archive(id: string): Promise<Result<boolean>> {
         return super.run(EdgeStorage.archiveStatement(id))
     }
@@ -511,20 +515,6 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
         }
     }
 
-    private static edgesByRelationshipAndOriginStatement(relationshipID: string, originID: string): QueryConfig {
-        return {
-            text: `SELECT * from edges WHERE relationship_pair_id = $1 AND origin_node_id = $2`,
-            values: [relationshipID, originID]
-        }
-    }
-
-    private static edgesByRelationshipAndDestinationStatement(relationshipID: string, destinationID: string): QueryConfig {
-        return {
-            text: `SELECT * from edges WHERE relationship_pair_id = $1 AND destination_node_id = $2`,
-            values: [relationshipID, destinationID]
-        }
-    }
-
     private static listStatement(containerID: string, offset:number, limit:number): QueryConfig {
         return {
             text: `SELECT * FROM edges WHERE container_id = $1 AND NOT archived OFFSET $2 LIMIT $3`,
@@ -539,24 +529,24 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
         }
     }
 
-    private static retrieveStatement(nodeID: string): QueryConfig {
-        return {
-            text: `SELECT * FROM edges WHERE id = $1 AND NOT archived`,
-            values: [nodeID]
-        }
-    }
-
-    private static archiveStatement(nodeID: string): QueryConfig {
+    private static archiveStatement(edgeID: string): QueryConfig {
         return {
             text:`UPDATE edges SET archived = true  WHERE id = $1`,
-            values: [nodeID]
+            values: [edgeID]
         }
     }
 
-    private static deleteStatement(nodeID: string): QueryConfig {
+    private static deleteStatement(edgeID: string): QueryConfig {
         return {
             text:`DELETE FROM edges WHERE id = $1`,
-            values: [nodeID]
+            values: [edgeID]
+        }
+    }
+
+    private static deleteForImportStatement(importID: string): QueryConfig {
+        return {
+            text:`DELETE FROM edges WHERE import_id = $1`,
+            values: [importID]
         }
     }
 }

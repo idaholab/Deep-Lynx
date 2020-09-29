@@ -121,6 +121,10 @@ export default class DataStagingStorage extends PostgresStorage {
 
     }
 
+    public SetErrors(id:string, errors: string[]): Promise<Result<boolean>> {
+        return super.runAsTransaction(DataStagingStorage.setErrorsStatement(id, errors))
+    }
+
     private static retrieveStatement(metatypeID:string): QueryConfig {
         return {
             text:`SELECT * FROM data_staging WHERE id = $1`,
@@ -181,6 +185,13 @@ export default class DataStagingStorage extends PostgresStorage {
         return {
             text:`DELETE FROM data_staging WHERE id = $1`,
             values: [id]
+        }
+    }
+
+    private static setErrorsStatement(id: string, errors: string[]): QueryConfig {
+        return {
+            text: `UPDATE data_staging SET errors = $1 WHERE id = $2`,
+            values: [errors, id]
         }
     }
 }

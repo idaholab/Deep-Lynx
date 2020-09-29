@@ -58,20 +58,16 @@ export default class ImportStorage extends PostgresStorage {
         return super.retrieve<ImportT>(ImportStorage.retrieveLastStatement(dataSourceID))
     }
 
-    public SetStopped(id: string): Promise<Result<boolean>> {
-        return super.runAsTransaction(ImportStorage.setStoppedStatement(id))
-    }
-
-    public SetErrors(id:string, errors: string[]): Promise<Result<boolean>> {
-        return super.runAsTransaction(ImportStorage.setErrorsStatement(id, errors))
+    public SetStatus(importID: string, status: "ready" | "processing" | "error" | "stopped" | "completed", message?: string): Promise<Result<boolean>> {
+        return super.runAsTransaction(ImportStorage.setStatusStatement(importID, status, message))
     }
 
     public async List(importAdapterID:string, offset:number, limit:number): Promise<Result<ImportT[]>>{
         return super.rows<ImportT>(ImportStorage.listStatement(importAdapterID,offset,limit))
     }
 
-    public async ListUncompleted(dataSourceID:string, offset:number, limit:number): Promise<Result<ImportT[]>>{
-        return super.rows<ImportT>(ImportStorage.listUncompletedStatement(dataSourceID,offset,limit))
+    public async ListReady(dataSourceID:string, offset:number, limit:number): Promise<Result<ImportT[]>>{
+        return super.rows<ImportT>(ImportStorage.listReady(dataSourceID,offset,limit))
     }
 
     private static initiateImportJSONStatement(id: string, dataSourceID: string, userID:string, reference:string,  payload:any): QueryConfig {
@@ -111,22 +107,15 @@ export default class ImportStorage extends PostgresStorage {
 
     private static retrieveLastStatement(logID: string): QueryConfig {
         return {
-            text: `SELECT * FROM imports WHERE data_source_id = $1 ORDER BY stopped_at DESC NULLS LAST LIMIT 1 `,
+            text: `SELECT * FROM imports WHERE data_source_id = $1 ORDER BY modified_at DESC NULLS LAST LIMIT 1 `,
             values: [logID]
         }
     }
 
-    private static setStoppedStatement(logID:string): QueryConfig {
+    private static setStatusStatement(id:string, status: "ready" | "processing" | "error" | "stopped" | "completed", message?: string): QueryConfig {
         return {
-            text: `UPDATE imports SET stopped_at = NOW(), errors = $2 WHERE id = $1`,
-            values: [logID, []]
-        }
-    }
-
-    private static setErrorsStatement(logID: string, errors: string[]): QueryConfig {
-        return {
-            text: `UPDATE imports SET errors = $1 WHERE id = $2`,
-            values: [errors, logID]
+            text: `UPDATE imports SET status = $2, status_message = $3, modified_at = NOW() WHERE id = $1`,
+            values: [id, status, message]
         }
     }
 
@@ -134,9 +123,8 @@ export default class ImportStorage extends PostgresStorage {
         return {
             text: `SELECT id,
                     data_source_id,
-                    started_at,
-                    stopped_at,
-                    errors,
+                    status,
+                    status_message
                     created_at,
                     reference,
                     modified_at FROM imports WHERE data_source_id = $1 OFFSET $2 LIMIT $3`,
@@ -144,9 +132,9 @@ export default class ImportStorage extends PostgresStorage {
         }
     }
 
-    private static listUncompletedStatement(importAdapterID: string, offset:number, limit:number): QueryConfig {
+    private static listReady(importAdapterID: string, offset:number, limit:number): QueryConfig {
         return {
-            text: `SELECT * FROM imports WHERE data_source_id = $1 AND stopped_at IS NULL OFFSET $2 LIMIT $3`,
+            text: `SELECT * FROM imports WHERE data_source_id = $1 AND status = 'ready' OFFSET $2 LIMIT $3`,
             values: [importAdapterID, offset, limit]
         }
     }

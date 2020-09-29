@@ -5,11 +5,17 @@ import {recordMetaT} from "../recordMetaT";
 const importLogRequired = t.type({
     id:t.string,
     data_source_id:t.string,
-    started_at:DateFromISOString,
-    stopped_at:DateFromISOString,
+    modified_at: t.union([DateFromISOString, t.string]),
     data_json: t.unknown,
     data_csv: t.unknown,
-    errors: t.array(t.string)
+    status_message: t.string,
+    status: t.keyof({
+        "ready": null,
+        "processing": null,
+        "error": null,
+        "stopped": null,
+        "completed": null
+    })
 });
 
 const importLogOptional = t.partial({

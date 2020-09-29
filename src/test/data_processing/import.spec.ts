@@ -66,7 +66,7 @@ describe('An Import Adapter Import', async() => {
         expect(log.isError).false;
 
 
-        let logs = await logStorage.ListUncompleted(exp.value.id!, 0, 100);
+        let logs = await logStorage.ListReady(exp.value.id!, 0, 100);
         expect(logs.isError).false;
         expect(logs.value).not.empty;
 
@@ -119,17 +119,17 @@ describe('An Import Adapter Import', async() => {
         let log = await logStorage.InitiateJSONImportAndUnpack(exp.value.id!, "test suite", "test", payload);
         expect(log.isError).false;
 
-        let logs = await logStorage.ListUncompleted(exp.value.id!, 0, 100);
+        let logs = await logStorage.ListReady(exp.value.id!, 0, 100);
         expect(logs.isError).false;
         expect(logs.value).not.empty;
 
         for(const l of logs.value) {
-            let stopped = await logStorage.SetStopped(l.id);
+            let stopped = await logStorage.SetStatus(l.id, "stopped");
             expect(stopped.isError).false;
 
             let check = await logStorage.Retrieve(l.id);
             expect(check.isError).false;
-            expect(check.value.stopped_at).not.null
+            expect(check.value.status).eq("stopped")
         }
 
         return storage.PermanentlyDelete(exp.value.id!)
@@ -152,17 +152,17 @@ describe('An Import Adapter Import', async() => {
         let log = await logStorage.InitiateJSONImportAndUnpack(exp.value.id!, "test suite", "test", payload);
         expect(log.isError).false;
 
-        let logs = await logStorage.ListUncompleted(exp.value.id!, 0, 100);
+        let logs = await logStorage.ListReady(exp.value.id!, 0, 100);
         expect(logs.isError).false;
         expect(logs.value).not.empty;
 
         for(const l of logs.value) {
-            let stopped = await logStorage.SetErrors(l.id, ["test error"]);
+            let stopped = await logStorage.SetStatus(l.id,"error", "test error");
             expect(stopped.isError).false;
 
             let check = await logStorage.Retrieve(l.id);
             expect(check.isError).false;
-            expect(check.value.errors!).not.empty
+            expect(check.value.status_message!).not.empty
         }
 
         return storage.PermanentlyDelete(exp.value.id!)
@@ -185,17 +185,17 @@ describe('An Import Adapter Import', async() => {
         let log = await logStorage.InitiateJSONImportAndUnpack(exp.value.id!, "test suite", "test", payload);
         expect(log.isError).false;
 
-        let logs = await logStorage.ListUncompleted(exp.value.id!, 0, 100);
+        let logs = await logStorage.ListReady(exp.value.id!, 0, 100);
         expect(logs.isError).false;
         expect(logs.value).not.empty;
 
         for(const l of logs.value) {
-            let stopped = await logStorage.SetStopped(l.id);
+            let stopped = await logStorage.SetStatus(l.id, "stopped");
             expect(stopped.isError).false;
 
             let check = await logStorage.Retrieve(l.id);
             expect(check.isError).false;
-            expect(check.value.stopped_at).not.null
+            expect(check.value.status).eq("stopped")
         }
 
         let stopped = await logStorage.RetrieveLast(exp.value.id!);

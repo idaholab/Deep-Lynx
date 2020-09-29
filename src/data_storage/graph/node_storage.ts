@@ -192,6 +192,10 @@ export default class NodeStorage extends PostgresStorage{
         return super.run(NodeStorage.deleteStatement(id))
     }
 
+    public DeleteForImport(importID: string): Promise<Result<boolean>> {
+        return super.run(NodeStorage.deleteForImport(importID))
+    }
+
     public Archive(id: string): Promise<Result<boolean>> {
         return super.run(NodeStorage.archiveStatement(id))
     }
@@ -345,6 +349,13 @@ UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = 
         return {
             text:`DELETE FROM nodes WHERE id = $1`,
             values: [nodeID]
+        }
+    }
+
+    private static deleteForImport(importID: string): QueryConfig {
+        return {
+            text:`DELETE FROM nodes WHERE import_id = $1`,
+            values: [importID]
         }
     }
 
