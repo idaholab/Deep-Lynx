@@ -14,6 +14,8 @@ import {QueryConfig} from "pg";
 import EdgeStorage from "../data_storage/graph/edge_storage";
 import DataSourceStorage from "../data_storage/import/data_source_storage";
 import {DataStagingT} from "../types/import/dataStagingT";
+import {structure} from "gremlin";
+import Graph = structure.Graph;
 
 // DataSourceProcessor starts an unending processing loop for a data source. This
 // loop is what takes mapped data from data_staging and inserts it into the actual
@@ -114,35 +116,54 @@ export class DataSourceProcessor {
             }
         }
 
-
-        const processQueries: QueryConfig[] = []
+        // we must wrap this insert as a transaction so that if there are errors
+        // we are capable of rolling back Deep Lynx's data to a point before the
+        // import. Because we need the transaction client for edge verification
+        // we'll use the transaction primitives of a storage class.
+        const transaction = await GraphStorage.Instance.startTransaction()
 
         if(nodesToInsert.length > 0) {
             // insert all nodes first, then edges
             const insertedNodes = await NodeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, nodesToInsert)
-            if(insertedNodes.isError) {
+            if (insertedNodes.isError) {
                 await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to insert nodes ${insertedNodes.error?.error}`)
+                await GraphStorage.Instance.rollbackTransaction(transaction.value)
 
                 return new Promise(resolve => resolve(Result.Failure(`error attempting to insert nodes ${insertedNodes.error?.error}`)))
             }
 
-            processQueries.push(...insertedNodes.value)
+            const inserted = await GraphStorage.Instance.runInTransaction(transaction.value, ...insertedNodes.value)
+            if (inserted.isError) {
+                await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to insert nodes ${inserted.error?.error}`)
+                await GraphStorage.Instance.rollbackTransaction(transaction.value)
+
+                return new Promise(resolve => resolve(Result.Failure(`error attempting to insert nodes ${inserted.error?.error}`)))
+
+            }
         }
 
         if(edgesToInsert.length > 0) {
-            const insertedEdges = await EdgeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, edgesToInsert)
+            // we must also pass the transaction client to this function so that the edge verification of origin/destination
+            // node can take place even if there are new nodes coming in that are part of this transaction
+            const insertedEdges = await EdgeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, edgesToInsert, transaction.value)
             if(insertedEdges.isError) {
                 await ImportStorage.Instance.SetStatus(dataImportID, "error",`error attempting to insert edges ${insertedEdges.error?.error}`)
+                await GraphStorage.Instance.rollbackTransaction(transaction.value)
 
                 return new Promise(resolve => resolve(Result.Failure(`error attempting to insert edges ${insertedEdges.error?.error}`)))
             }
 
-            processQueries.push(...insertedEdges.value)
+            const inserted = await GraphStorage.Instance.runInTransaction(transaction.value, ...insertedEdges.value)
+            if (inserted.isError) {
+                await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to insert edges ${inserted.error?.error}`)
+                await GraphStorage.Instance.rollbackTransaction(transaction.value)
+
+                return new Promise(resolve => resolve(Result.Failure(`error attempting to insert edges ${inserted.error?.error}`)))
+
+            }
         }
 
-        // insert into graph TODO: This is a hacky workaround for using the postgres classes "Run as transaction" feature, fix it
-        const inserted = await GraphStorage.Instance.InsertNodesAndEdges(processQueries)
-        if(inserted.isError || !inserted.value) return new Promise(resolve => resolve(Result.Failure('unable to insert into database')))
+        await GraphStorage.Instance.completeTransaction(transaction.value)
 
         const setProcessed = await DataStagingStorage.Instance.SetProcessed(dataImportID)
         if(setProcessed.isError || !setProcessed.value) Logger.debug(`unable to set data import ${dataImportID} to processed`)

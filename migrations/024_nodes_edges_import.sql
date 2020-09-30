@@ -1,6 +1,3 @@
-ALTER TABLE nodes ADD COLUMN import_id uuid REFERENCES imports(id) ON DELETE SET NULL;
-ALTER TABLE edges ADD COLUMN import_id uuid REFERENCES imports(id) ON DELETE SET NULL;
-
 ALTER TABLE imports DROP COLUMN errors;
 ALTER TABLE imports DROP COLUMN started_at;
 ALTER TABLE imports DROP COLUMN stopped_at;

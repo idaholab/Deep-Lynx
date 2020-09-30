@@ -9,7 +9,6 @@ export const edgeRequired = t.type({
 export const edgeOptional = t.partial({
     id: t.string,
     container_id: t.string,
-    import_id: t.string,
     original_data_id: t.string, // we should always retain inserted data's original ID, for both back reference and bulk connection operations
     data_source_id: t.string, // whenever possible you should include this property, this allows better separation and searching by source
     data_type_mapping_id:t.string,

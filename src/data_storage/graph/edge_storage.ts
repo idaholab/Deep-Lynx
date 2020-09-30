@@ -1,5 +1,5 @@
 import PostgresStorage from "../postgresStorage";
-import {Query, QueryConfig} from "pg";
+import {PoolClient, Query, QueryConfig} from "pg";
 import {edgesT, EdgesT, EdgeT} from "../../types/graph/edgeT";
 import * as t from "io-ts";
 import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
@@ -57,7 +57,7 @@ export default class EdgeStorage extends PostgresStorage{
     This will attempt to create an edge if one doesn't exist, or update the edge if
     exists and is valid.
      */
-    public async CreateOrUpdate(containerID: string, graphID: string, input: any | EdgesT, importID?: string, preQueries?: QueryConfig[], postQueries?: QueryConfig[]): Promise<Result<EdgesT>> {
+    public async CreateOrUpdate(containerID: string, graphID: string, input: any | EdgesT, client?: PoolClient, preQueries?: QueryConfig[], postQueries?: QueryConfig[]): Promise<Result<EdgesT>> {
         const onValidateSuccess = ( resolve: (r:any) => void): (e: EdgesT) => void => {
            return async (es: EdgesT) => {
 
@@ -169,7 +169,6 @@ export default class EdgeStorage extends PostgresStorage{
 
                    es[e].graph_id = graphID;
                    es[e].container_id = containerID;
-                   if(importID) es[e].import_id = importID;
 
                    if((es[e].modified_at || es[e].deleted_at) && es[e].id) queries.push(...EdgeStorage.updateStatement(es[e]))
                    else if((es[e].modified_at || es[e].deleted_at) && !es[e].id && es[e].original_data_id && es[e].data_source_id) queries.push(...EdgeStorage.updateByOriginalIDStatement(es[e]))
@@ -198,7 +197,9 @@ export default class EdgeStorage extends PostgresStorage{
         return super.decodeAndValidate<EdgesT>(edgesT, onValidateSuccess, payload)
     }
 
-    public async CreateOrUpdateStatement(containerID: string, graphID: string, es: EdgesT, importID?: string, preQueries?: QueryConfig[], postQueries?: QueryConfig[]): Promise<Result<QueryConfig[]>> {
+    // client? is needed so that we can search for nodes inside of a transaction. See the data processing loop where this is used to
+    // get a better picture of whats happening
+    public async CreateOrUpdateStatement(containerID: string, graphID: string, es: EdgesT, client?: PoolClient, preQueries?: QueryConfig[], postQueries?: QueryConfig[]): Promise<Result<QueryConfig[]>> {
             const queries : QueryConfig[] = [];
             if(preQueries) queries.push(...preQueries);
 
@@ -236,14 +237,14 @@ export default class EdgeStorage extends PostgresStorage{
                 // Verifies that a relationship pair actually exists for these two nodes
                 let origin: NodeT
                 if(es[e].origin_node_id){
-                    const request = await NodeStorage.Instance.Retrieve(es[e].origin_node_id!);
+                    const request = await NodeStorage.Instance.Retrieve(es[e].origin_node_id!, client);
                     if(request.isError) {
                         return new Promise(resolve => resolve(Result.Failure("origin node not found")));
                     }
 
                     origin = request.value
                 } else if(es[e].origin_node_original_id && es[e].data_source_id) {
-                    const request = await NodeStorage.Instance.RetrieveByOriginalID(es[e].origin_node_original_id!, es[e].data_source_id!);
+                    const request = await NodeStorage.Instance.RetrieveByOriginalID(es[e].origin_node_original_id!, es[e].data_source_id!, client);
                     if(request.isError) {
                         return new Promise(resolve => resolve(Result.Failure("origin node not found")));
                     }
@@ -257,14 +258,14 @@ export default class EdgeStorage extends PostgresStorage{
 
                 let destination: NodeT
                 if(es[e].destination_node_id) {
-                    const request = await NodeStorage.Instance.Retrieve(es[e].destination_node_id!);
+                    const request = await NodeStorage.Instance.Retrieve(es[e].destination_node_id!, client);
                     if(request.isError) {
                         return new Promise(resolve => resolve(Result.Failure("destination node not found")));
                     }
 
                     destination = request.value
                 } else if(es[e].destination_node_original_id && es[e].data_source_id) {
-                    const request = await NodeStorage.Instance.RetrieveByOriginalID(es[e].destination_node_original_id!, es[e].data_source_id!);
+                    const request = await NodeStorage.Instance.RetrieveByOriginalID(es[e].destination_node_original_id!, es[e].data_source_id!, client);
                     if(request.isError) {
                         return new Promise(resolve => resolve(Result.Failure("destination node not found")));
                     }
@@ -300,7 +301,6 @@ export default class EdgeStorage extends PostgresStorage{
 
                 es[e].graph_id = graphID;
                 es[e].container_id = containerID;
-                if(importID) es[e].import_id = importID
 
                 if((es[e].modified_at || es[e].deleted_at) && es[e].id) queries.push(...EdgeStorage.updateStatement(es[e]))
                 else if((es[e].modified_at || es[e].deleted_at) && !es[e].id && es[e].original_data_id && es[e].data_source_id) queries.push(...EdgeStorage.updateByOriginalIDStatement(es[e]))
@@ -446,10 +446,6 @@ export default class EdgeStorage extends PostgresStorage{
         return super.run(EdgeStorage.deleteStatement(id))
     }
 
-    public DeleteForImport(importID: string): Promise<Result<boolean>> {
-        return super.run(EdgeStorage.deleteForImportStatement(importID))
-    }
-
     public Archive(id: string): Promise<Result<boolean>> {
         return super.run(EdgeStorage.archiveStatement(id))
     }
@@ -458,24 +454,24 @@ export default class EdgeStorage extends PostgresStorage{
         return [
             {
                 text:`
-INSERT INTO edges(id, container_id, relationship_pair_id, graph_id, import_id, origin_node_id, destination_node_id, properties,original_data_id,data_source_id,data_type_mapping_id,origin_node_original_id,destination_node_original_id)
-VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-                values: [e.id, e.container_id, e.relationship_pair_id,e.graph_id, e.import_id, e.origin_node_id, e.destination_node_id,  e.properties,e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id]
+INSERT INTO edges(id, container_id, relationship_pair_id, graph_id, origin_node_id, destination_node_id, properties,original_data_id,data_source_id,data_type_mapping_id,origin_node_original_id,destination_node_original_id)
+VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+                values: [e.id, e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties,e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id]
             }
         ]
     }
 
     private static updateStatement(e: EdgeT): QueryConfig[] {
         return [{
-            text: `UPDATE edges SET container_id = $1, relationship_pair_id = $2, graph_id = $3, import_id = $13, origin_node_id = $4, destination_node_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, origin_node_original_id = $10, destination_node_original_id = $11 WHERE id = $12`,
-            values: [e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties, e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id, e.id, e.import_id]
+            text: `UPDATE edges SET container_id = $1, relationship_pair_id = $2, graph_id = $3, origin_node_id = $4, destination_node_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, origin_node_original_id = $10, destination_node_original_id = $11 WHERE id = $12`,
+            values: [e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties, e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id, e.id]
         }]
     }
 
     private static updateByOriginalIDStatement(e: EdgeT): QueryConfig[] {
         return [{
-            text: `UPDATE edges SET container_id = $1, relationship_pair_id = $2, graph_id = $3, import_id = $14, origin_node_id = $4, destination_node_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, origin_node_original_id = $10, destination_node_original_id = $11 WHERE original_id = $12 AND data_source_id = $13`,
-            values: [e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties, e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id, e.original_data_id, e.data_source_id, e.import_id]
+            text: `UPDATE edges SET container_id = $1, relationship_pair_id = $2, graph_id = $3, origin_node_id = $4, destination_node_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, origin_node_original_id = $10, destination_node_original_id = $11 WHERE original_id = $12 AND data_source_id = $13`,
+            values: [e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties, e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id, e.original_data_id, e.data_source_id]
         }]
     }
 
@@ -540,13 +536,6 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
         return {
             text:`DELETE FROM edges WHERE id = $1`,
             values: [edgeID]
-        }
-    }
-
-    private static deleteForImportStatement(importID: string): QueryConfig {
-        return {
-            text:`DELETE FROM edges WHERE import_id = $1`,
-            values: [importID]
         }
     }
 }

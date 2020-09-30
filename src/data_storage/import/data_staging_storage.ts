@@ -121,7 +121,7 @@ export default class DataStagingStorage extends PostgresStorage {
 
     }
 
-    public SetErrors(id:string, errors: string[]): Promise<Result<boolean>> {
+    public SetErrors(id:number, errors: string[]): Promise<Result<boolean>> {
         return super.runAsTransaction(DataStagingStorage.setErrorsStatement(id, errors))
     }
 
@@ -188,7 +188,7 @@ export default class DataStagingStorage extends PostgresStorage {
         }
     }
 
-    private static setErrorsStatement(id: string, errors: string[]): QueryConfig {
+    private static setErrorsStatement(id: number, errors: string[]): QueryConfig {
         return {
             text: `UPDATE data_staging SET errors = $1 WHERE id = $2`,
             values: [errors, id]

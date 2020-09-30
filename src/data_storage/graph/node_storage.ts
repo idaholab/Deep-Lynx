@@ -1,6 +1,6 @@
 import Result from "../../result"
 import PostgresStorage from "../postgresStorage";
-import {QueryConfig} from "pg";
+import {PoolClient, QueryConfig} from "pg";
 import * as t from "io-ts";
 import {NodesT, NodeT, nodeT, nodesT} from "../../types/graph/nodeT";
 import MetatypeKeyStorage from "../metatype_key_storage";
@@ -93,7 +93,6 @@ export default class NodeStorage extends PostgresStorage{
                     ns[n].graph_id = graphID;
                     ns[n].container_id = containerID;
 
-                    if(importID) ns[n].import_id = importID
                     // grab metatype_name if it was not supplied
                     if (typeof ns[n].metatype_name === 'undefined') {
                         ns[n].metatype_name = (await MetatypeStorage.Instance.Retrieve(ns[n].metatype_id)).value.name;
@@ -167,7 +166,6 @@ export default class NodeStorage extends PostgresStorage{
                     ns[n].properties = validPayload.value
                     ns[n].graph_id = graphID;
                     ns[n].container_id = containerID;
-                    if(importID) ns[n].import_id = importID;
 
 
                     // the only way we can tell if we should update this or not is through the modified_at tag. Is there
@@ -190,10 +188,6 @@ export default class NodeStorage extends PostgresStorage{
 
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
         return super.run(NodeStorage.deleteStatement(id))
-    }
-
-    public DeleteForImport(importID: string): Promise<Result<boolean>> {
-        return super.run(NodeStorage.deleteForImport(importID))
     }
 
     public Archive(id: string): Promise<Result<boolean>> {
@@ -264,12 +258,12 @@ export default class NodeStorage extends PostgresStorage{
         })
     }
 
-    public async Retrieve(id: string): Promise<Result<NodeT>> {
-        return super.retrieve<NodeT>(NodeStorage.retrieveStatement(id))
+    public async Retrieve(id: string, client?:PoolClient): Promise<Result<NodeT>> {
+        return super.retrieve<NodeT>(NodeStorage.retrieveStatement(id), client)
     }
 
-    public async RetrieveByOriginalID(originalID: string, dataSourceID: string): Promise<Result<NodeT>> {
-        return super.retrieve<NodeT>(NodeStorage.retrieveByOriginalIDStatement(dataSourceID, originalID))
+    public async RetrieveByOriginalID(originalID: string, dataSourceID: string, client?:PoolClient): Promise<Result<NodeT>> {
+        return super.retrieve<NodeT>(NodeStorage.retrieveByOriginalIDStatement(dataSourceID, originalID), client)
     }
 
     public DomainRetrieve(id: string, containerID: string): Promise<Result<NodeT>> {
@@ -291,11 +285,11 @@ export default class NodeStorage extends PostgresStorage{
     private static createStatement(n: NodeT): QueryConfig[] {
         return [
             {
-            text:`INSERT INTO nodes(id, container_id, metatype_id, metatype_name, graph_id,import_id,properties,original_data_id,data_source_id,data_type_mapping_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            text:`INSERT INTO nodes(id, container_id, metatype_id, metatype_name, graph_id,properties,original_data_id,data_source_id,data_type_mapping_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
 ON CONFLICT (original_data_id, data_source_id)
 DO
-UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = $5, import_id = $6, properties = $7, original_data_id = $8, data_source_id = $9, data_type_mapping_id = $10, modified_at = NOW()`,
-            values: [n.id, n.container_id, n.metatype_id, n.metatype_name, n.graph_id, n.import_id, n.properties, n.original_data_id, n.data_source_id, n.data_type_mapping_id]
+UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, modified_at = NOW()`,
+            values: [n.id, n.container_id, n.metatype_id, n.metatype_name, n.graph_id,  n.properties, n.original_data_id, n.data_source_id, n.data_type_mapping_id]
              }
 
         ]
@@ -326,15 +320,15 @@ UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = 
 
     private static fullUpdateStatement(n: NodeT): QueryConfig[] {
         return [{
-            text: `UPDATE nodes SET container_id = $1, graph_id = $2, import_id = $10, properties = $3, original_data_id = $4, data_source_id = $5, data_type_mapping_id = $6, modified_at = $7, deleted_at = $8 WHERE id = $9`,
-            values: [n.container_id, n.graph_id, n.properties,n.original_data_id, n.data_source_id, n.data_type_mapping_id, n.modified_at,n.deleted_at, n.id, n.import_id]
+            text: `UPDATE nodes SET container_id = $1, graph_id = $2,properties = $3, original_data_id = $4, data_source_id = $5, data_type_mapping_id = $6, modified_at = $7, deleted_at = $8 WHERE id = $9`,
+            values: [n.container_id, n.graph_id, n.properties,n.original_data_id, n.data_source_id, n.data_type_mapping_id, n.modified_at,n.deleted_at, n.id ]
         }]
     }
 
     private static fullUpdateByOriginalIDStatement(n: NodeT): QueryConfig[] {
         return [{
-            text: `UPDATE nodes SET container_id = $1, graph_id = $2, import_id = $11, properties = $3, original_data_id = $4, data_source_id = $5, data_type_mapping_id = $6, modified_at = $7, deleted_at = $8 WHERE original_data_id = $9 AND data_source_id = $10`,
-            values: [n.container_id, n.graph_id, n.properties,n.original_data_id, n.data_source_id, n.data_type_mapping_id, n.modified_at,n.deleted_at, n.original_data_id, n.data_source_id, n.import_id]
+            text: `UPDATE nodes SET container_id = $1, graph_id = $2, properties = $3, original_data_id = $4, data_source_id = $5, data_type_mapping_id = $6, modified_at = $7, deleted_at = $8 WHERE original_data_id = $9 AND data_source_id = $10`,
+            values: [n.container_id, n.graph_id, n.properties,n.original_data_id, n.data_source_id, n.data_type_mapping_id, n.modified_at,n.deleted_at, n.original_data_id, n.data_source_id]
         }]
     }
 
@@ -349,13 +343,6 @@ UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = 
         return {
             text:`DELETE FROM nodes WHERE id = $1`,
             values: [nodeID]
-        }
-    }
-
-    private static deleteForImport(importID: string): QueryConfig {
-        return {
-            text:`DELETE FROM nodes WHERE import_id = $1`,
-            values: [importID]
         }
     }
 
