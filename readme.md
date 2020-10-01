@@ -180,19 +180,19 @@ While the `io-ts` implementation requires more code, and looks more complex, the
 
 
 ### Data Sources
-Data can only be ingested through the use of Data Sources. A user must create a Data Source using the relevant endpoints before Deep Lynx can ingest data. This application comes with the ability to connect to various data sources via data source adapters. See [Data Sources](src/data_importing/readme.md).
+Data can only be ingested through the use of Data Sources. A user must create a Data Source using the relevant endpoints before Deep Lynx can ingest data. This application comes with the ability to connect to various data sources via data source adapters. See [How to Ingest Data](https://github.com/idaholab/Deep-Lynx/wiki/How-to-Ingest-Data).
 
 ### File Storage
-Deep Lynx can accept files as part of its data ingestion functionality. See the [readme](src/file_storage/readme.md).
+Deep Lynx can accept files as part of its data ingestion functionality. See the [readme](https://github.com/idaholab/Deep-Lynx/wiki/Uploading-Files).
 
 ### Export Snapshot
-This application comes with the ability to export a snapshot to various storage mediums. See [Export Adapters](src/data_exporting/readme.md). 
+This application comes with the ability to export a snapshot to various storage mediums. See [Export Adapters](https://github.com/idaholab/Deep-Lynx/wiki/Exporting-Data). 
 
 ### Authentication
-This application allows the end user to use either Bearer Token or Basic Authentication for application security. See [Authentication](src/user_management/authentication/readme.md) for more information.
+This application allows the end user to use either Bearer Token or Basic Authentication for application security. See [Authentication](https://github.com/idaholab/Deep-Lynx/wiki/Authentication) for more information.
 
 ### Authorization
-This application uses [Casbin](https://casbin.org/) to handle user authorization.
+This application uses [Casbin](https://casbin.org/) to handle user authorization. See [Authorization](https://github.com/idaholab/Deep-Lynx/wiki/Authorization)
 
 ### Querying
-Deep Lynx provides the user with the ability to query data by using a GraphQL enabled endpoint, as well as providing filter classes for those writing plugins. See [Querying](src/data_query/readme.md) for more information.
+Deep Lynx provides the user with the ability to query data by using a GraphQL enabled endpoint, as well as providing filter classes for those writing plugins. See [Querying](https://github.com/idaholab/Deep-Lynx/wiki/Querying-Data) for more information.
