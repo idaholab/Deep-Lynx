@@ -1,12 +1,12 @@
 The construction of megaprojects has consistently demonstrated challenges for project managers in regard to meeting cost, schedule, and performance requirements. Megaproject construction challenges are common place within megaprojects with many active projects in the United States failing to meet cost and schedule efforts by significant margins. Currently, engineering teams operate in siloed tools and disparate teams where connections across design, procurement, and construction systems are translated manually or over brittle point-to-point integrations. The manual nature of data exchange increases the risk of silent errors in the reactor design, with each silent error cascading across the design. These cascading errors lead to uncontrollable risk during construction, resulting in significant delays and cost overruns. Deep Lynx allows for an integrated platform during design and operations of mega projects.
 
-
 **Documentation**
 
 `de-lynx` is documented in the following ways
 
 1. `readme.md` files throughout the application. Can be found for the main application, export adapters, import adapters, and authentication levels.
 2. API level documentation in the form of Postman and Swagger collections - found in `api_documentation`
+3. [Wiki](https://github.com/idaholab/Deep-Lynx/wiki)
 
 **Requirements**
 
