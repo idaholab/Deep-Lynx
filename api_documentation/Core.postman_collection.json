@@ -3337,6 +3337,123 @@
 			"protocolProfileBehavior": {}
 		},
 		{
+			"name": "Imports",
+			"item": [
+				{
+					"name": "List Import's Data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/imports/:import-id/data",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"imports",
+								":import-id",
+								"data"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"type": "string",
+									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
+								},
+								{
+									"key": "import-id",
+									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Import Data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/imports/:import-id/data/:data-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"imports",
+								":import-id",
+								"data",
+								":data-id"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"type": "string",
+									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
+								},
+								{
+									"key": "import-id",
+									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7"
+								},
+								{
+									"key": "data-id",
+									"value": "66"
+								}
+							]
+						},
+						"description": "Retrieve a single piece of data from an import."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Import Data",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/imports/:import-id/data/:data-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"imports",
+								":import-id",
+								"data",
+								":data-id"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"type": "string",
+									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
+								},
+								{
+									"key": "import-id",
+									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7"
+								},
+								{
+									"key": "data-id",
+									"value": "65"
+								}
+							]
+						},
+						"description": "Delete a single piece of data from an import."
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
 			"name": "Health",
 			"request": {
 				"method": "GET",
