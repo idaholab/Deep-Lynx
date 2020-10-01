@@ -159,7 +159,7 @@ const containerRequired = t.type({
 });
 
 const containerOptional= t.partial({
-    _id: t.string,
+    id: t.string,
 });
 
 export const container = t.exact(t.intersection([containerRequired, containerOptional]));
@@ -177,7 +177,7 @@ The following code is equivalent to this type declaration:
 export type Container = {
     name: string
     description: string
-    _id?: string
+    id?: string
 }
 ```
 

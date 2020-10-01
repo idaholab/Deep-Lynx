@@ -40,7 +40,7 @@ Once you have those two pieces you're ready to configure the application.
 *Note: This document assumes that you have configured the Identity Provider service correctly. It is out of scope to provide information on how to do that here. Contact your Active Directory systems administrator if you need help or information*
 
 
-####Authentication flow
+#### Authentication flow
 
 1. The user would be sent to the `/login-saml` route with a query parameter named `redirect` - `localhost:8090/login?redirect={yoururl}`
 2. The user is redirected by the Deep Lynx program to Identity Service Provider.
