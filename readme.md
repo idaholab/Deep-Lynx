@@ -136,6 +136,8 @@ Operator | Description
 ------------ | -------------
 `eq` | equals  
 `neq` | not equals
+`like` | like - PostgreSQL style pattern matching syntax required
+`in` | in - comma separated list of values needed.
 
 
 
@@ -182,31 +184,7 @@ export type Container = {
 While the `io-ts` implementation requires more code, and looks more complex, the flexibility and functionality we gain from using `io-ts` makes the higher learning curve and longer declaration worth it. Take a look at `src/data_types/metatype_keyT.ts` for an even better look at a complex data type using `io.ts`
 
 
-**Payload Validation Errors**
 
-The use of `io-ts` for payload validation produces detailed, if seemingly complex, set of validation error messages. Below is an example of what a validation error might look like. We will walk through each bit.
-```$xslt
-Invalid value undefined supplied to : Exact<({ name: string, description: string, originMetatypeID: string, destinationMetatypeID: string, metatypeRelationshipID: string } & Partial<{ _id: string, containerID: string }>)>
-0: { name: string, description: string, originMetatypeID: string, destinationMetatypeID: string, metatypeRelationshipID: string }
-name: string
-```
-
-The first line of the error message informs the user that an error occurred, the type of error, and then returns a formatted representation of the `io-ts` structured type the validation error was thrown for. This error was thrown when attempting to decode a user supplied payload into the `MetatypeRelationshipPair` type. That type is a combination of required fields, `t.exact`, and partial fields, `t.partial`. This is incredibly useful. We inform the user of the exact payload format they must follow in order to avoid errors.
-
-The second line is a simplified expression of what the user supplied payload must look like, along with each field's expected type.
-
-The third line informs the user of the exact field which caused the payload validation failure.
-
-
-## Application
-
-**Data storage operations and `PostgresStorage`**
-
-TODO: fill this with the explanation of the two ways of handling data storage classes
-      one being the way containers/metatypes etc are stored - meant to be thin layers
-      between storage and API vs ORM like functionality for more general, internal operations
-      
-      
 ### Data Sources
 Data can only be ingested through the use of Data Sources. A user must create a Data Source using the relevant endpoints before Deep Lynx can ingest data. This application comes with the ability to connect to various data sources via data source adapters. See [Data Sources](src/data_importing/readme.md).
 
