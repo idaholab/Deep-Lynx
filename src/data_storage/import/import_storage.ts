@@ -70,6 +70,18 @@ export default class ImportStorage extends PostgresStorage {
         return super.rows<ImportT>(ImportStorage.listReady(dataSourceID,offset,limit))
     }
 
+    public async PermanentlyDelete(importID: string): Promise<Result<boolean>> {
+        return super.run(ImportStorage.deleteStatement(importID))
+    }
+
+    // can only allow deletes on unprocessed imports
+    private static deleteStatement(importID: string): QueryConfig {
+        return {
+            text:`DELETE FROM imports WHERE id = $1 AND status <> 'processed'`,
+            values: [importID]
+        }
+    }
+
     private static initiateImportJSONStatement(id: string, dataSourceID: string, userID:string, reference:string,  payload:any): QueryConfig {
         return {
             text: `INSERT INTO imports(id,data_source_id,data_json,created_by,modified_by, reference) VALUES($1,$2,$3,$4,$5,$6)`,
@@ -124,7 +136,7 @@ export default class ImportStorage extends PostgresStorage {
             text: `SELECT id,
                     data_source_id,
                     status,
-                    status_message
+                    status_message,
                     created_at,
                     reference,
                     modified_at FROM imports WHERE data_source_id = $1 OFFSET $2 LIMIT $3`,

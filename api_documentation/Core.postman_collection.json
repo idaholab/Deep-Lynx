@@ -3373,6 +3373,40 @@
 					"response": []
 				},
 				{
+					"name": "Delete Import",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/imports/:import-id/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"imports",
+								":import-id",
+								""
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"type": "string",
+									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
+								},
+								{
+									"key": "import-id",
+									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7"
+								}
+							]
+						},
+						"description": "Delete import will delete an import ONLY IF the import has not been processed."
+					},
+					"response": []
+				},
+				{
 					"name": "Get Import Data",
 					"request": {
 						"method": "GET",

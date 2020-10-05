@@ -10,6 +10,7 @@ export const edgeOptional = t.partial({
     id: t.string,
     container_id: t.string,
     original_data_id: t.string, // we should always retain inserted data's original ID, for both back reference and bulk connection operations
+    import_data_id: t.number, // references a data record in data_staging, which comes from when a user imports data
     data_source_id: t.string, // whenever possible you should include this property, this allows better separation and searching by source
     data_type_mapping_id:t.string,
     graph_id: t.string,

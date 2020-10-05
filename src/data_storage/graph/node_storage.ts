@@ -285,11 +285,11 @@ export default class NodeStorage extends PostgresStorage{
     private static createStatement(n: NodeT): QueryConfig[] {
         return [
             {
-            text:`INSERT INTO nodes(id, container_id, metatype_id, metatype_name, graph_id,properties,original_data_id,data_source_id,data_type_mapping_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            text:`INSERT INTO nodes(id, container_id, metatype_id, metatype_name, graph_id,properties,original_data_id,data_source_id,data_type_mapping_id,import_data_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 ON CONFLICT (original_data_id, data_source_id)
 DO
-UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, modified_at = NOW()`,
-            values: [n.id, n.container_id, n.metatype_id, n.metatype_name, n.graph_id,  n.properties, n.original_data_id, n.data_source_id, n.data_type_mapping_id]
+UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, import_data_id = $10, modified_at = NOW()`,
+            values: [n.id, n.container_id, n.metatype_id, n.metatype_name, n.graph_id,  n.properties, n.original_data_id, n.data_source_id, n.data_type_mapping_id, n.import_data_id]
              }
 
         ]
@@ -320,15 +320,15 @@ UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = 
 
     private static fullUpdateStatement(n: NodeT): QueryConfig[] {
         return [{
-            text: `UPDATE nodes SET container_id = $1, graph_id = $2,properties = $3, original_data_id = $4, data_source_id = $5, data_type_mapping_id = $6, modified_at = $7, deleted_at = $8 WHERE id = $9`,
-            values: [n.container_id, n.graph_id, n.properties,n.original_data_id, n.data_source_id, n.data_type_mapping_id, n.modified_at,n.deleted_at, n.id ]
+            text: `UPDATE nodes SET container_id = $1, graph_id = $2,properties = $3, original_data_id = $4, data_source_id = $5, data_type_mapping_id = $6, modified_at = $7, deleted_at = $8, import_data_id = $10 WHERE id = $9`,
+            values: [n.container_id, n.graph_id, n.properties,n.original_data_id, n.data_source_id, n.data_type_mapping_id, n.modified_at,n.deleted_at, n.id, n.import_data_id ]
         }]
     }
 
     private static fullUpdateByOriginalIDStatement(n: NodeT): QueryConfig[] {
         return [{
-            text: `UPDATE nodes SET container_id = $1, graph_id = $2, properties = $3, original_data_id = $4, data_source_id = $5, data_type_mapping_id = $6, modified_at = $7, deleted_at = $8 WHERE original_data_id = $9 AND data_source_id = $10`,
-            values: [n.container_id, n.graph_id, n.properties,n.original_data_id, n.data_source_id, n.data_type_mapping_id, n.modified_at,n.deleted_at, n.original_data_id, n.data_source_id]
+            text: `UPDATE nodes SET container_id = $1, graph_id = $2, properties = $3, original_data_id = $4, data_source_id = $5, data_type_mapping_id = $6, modified_at = $7, deleted_at = $8, import_data_id = $11 WHERE original_data_id = $9 AND data_source_id = $10`,
+            values: [n.container_id, n.graph_id, n.properties,n.original_data_id, n.data_source_id, n.data_type_mapping_id, n.modified_at,n.deleted_at, n.original_data_id, n.data_source_id, n.import_data_id]
         }]
     }
 

@@ -62,7 +62,7 @@ export class DataSourceProcessor {
         // order its received.
         const unmappedData = await ds.CountUnmappedData(dataImportID)
         if(unmappedData.isError || unmappedData.value > 0) {
-            await ImportStorage.Instance.SetStatus(dataImportID,"error",  "import has unmapped data, resolve by creating type mappings")
+            await ImportStorage.Instance.SetStatus(dataImportID,"ready",  "import has unmapped data, resolve by creating type mappings")
 
             return new Promise(resolve => resolve(Result.SilentFailure(`data import has unmapped data, resolve by creating type mappings`)))
         }
@@ -102,14 +102,18 @@ export class DataSourceProcessor {
                }
 
                 if(nodeT.is(transformedPayload.value)) {
+                    transformedPayload.value.import_data_id = row.id
                     nodesToInsert.push(transformedPayload.value)
                 }
 
                 if(edgeT.is(transformedPayload.value)) {
+                    transformedPayload.value.import_data_id = row.id
                     edgesToInsert.push(transformedPayload.value)
                 }
 
                 if(transformedPayload.value instanceof Array) {
+                    transformedPayload.value[0].import_data_id = row.id
+                    transformedPayload.value[1].import_data_id = row.id
                     nodesToInsert.push(transformedPayload.value[0])
                     edgesToInsert.push(transformedPayload.value[1])
                 }
@@ -122,44 +126,61 @@ export class DataSourceProcessor {
         // we'll use the transaction primitives of a storage class.
         const transaction = await GraphStorage.Instance.startTransaction()
 
+        // insert all nodes first, then edges
         if(nodesToInsert.length > 0) {
-            // insert all nodes first, then edges
-            const insertedNodes = await NodeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, nodesToInsert)
-            if (insertedNodes.isError) {
-                await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to insert nodes ${insertedNodes.error?.error}`)
-                await GraphStorage.Instance.rollbackTransaction(transaction.value)
+            for(const node of nodesToInsert) {
+                const insertedNodes = await NodeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, [node])
+                if (insertedNodes.isError) {
+                    await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to insert nodes ${insertedNodes.error?.error}`)
+                    await GraphStorage.Instance.rollbackTransaction(transaction.value)
 
-                return new Promise(resolve => resolve(Result.Failure(`error attempting to insert nodes ${insertedNodes.error?.error}`)))
+                    // update the individual data row which failed
+                    await DataStagingStorage.Instance.SetErrors(node.import_data_id!, [`error attempting to insert nodes ${insertedNodes.error?.error}`] )
+
+                    return new Promise(resolve => resolve(Result.Failure(`error attempting to insert nodes ${insertedNodes.error?.error}`)))
+                }
+
+                const inserted = await GraphStorage.Instance.runInTransaction(transaction.value, ...insertedNodes.value)
+                if (inserted.isError) {
+                    await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to insert nodes ${inserted.error?.error}`)
+                    await GraphStorage.Instance.rollbackTransaction(transaction.value)
+
+                    // update the individual data row which failed
+                    await DataStagingStorage.Instance.SetErrors(node.import_data_id!, [`error attempting to insert nodes ${inserted.error?.error}`] )
+
+                    return new Promise(resolve => resolve(Result.Failure(`error attempting to insert nodes ${inserted.error?.error}`)))
+
+                }
             }
 
-            const inserted = await GraphStorage.Instance.runInTransaction(transaction.value, ...insertedNodes.value)
-            if (inserted.isError) {
-                await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to insert nodes ${inserted.error?.error}`)
-                await GraphStorage.Instance.rollbackTransaction(transaction.value)
-
-                return new Promise(resolve => resolve(Result.Failure(`error attempting to insert nodes ${inserted.error?.error}`)))
-
-            }
         }
 
         if(edgesToInsert.length > 0) {
-            // we must also pass the transaction client to this function so that the edge verification of origin/destination
-            // node can take place even if there are new nodes coming in that are part of this transaction
-            const insertedEdges = await EdgeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, edgesToInsert, transaction.value)
-            if(insertedEdges.isError) {
-                await ImportStorage.Instance.SetStatus(dataImportID, "error",`error attempting to insert edges ${insertedEdges.error?.error}`)
-                await GraphStorage.Instance.rollbackTransaction(transaction.value)
+            for(const edge of edgesToInsert) {
+                // we must also pass the transaction client to this function so that the edge verification of origin/destination
+                // node can take place even if there are new nodes coming in that are part of this transaction
+                const insertedEdges = await EdgeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, [edge], transaction.value)
+                if(insertedEdges.isError) {
+                    await ImportStorage.Instance.SetStatus(dataImportID, "error",`error attempting to insert edges ${insertedEdges.error?.error}`)
+                    await GraphStorage.Instance.rollbackTransaction(transaction.value)
 
-                return new Promise(resolve => resolve(Result.Failure(`error attempting to insert edges ${insertedEdges.error?.error}`)))
-            }
+                    // update the individual data row which failed
+                    await DataStagingStorage.Instance.SetErrors(edge.import_data_id!, [`error attempting to insert nodes ${insertedEdges.error?.error}`] )
 
-            const inserted = await GraphStorage.Instance.runInTransaction(transaction.value, ...insertedEdges.value)
-            if (inserted.isError) {
-                await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to insert edges ${inserted.error?.error}`)
-                await GraphStorage.Instance.rollbackTransaction(transaction.value)
+                    return new Promise(resolve => resolve(Result.Failure(`error attempting to insert edges ${insertedEdges.error?.error}`)))
+                }
 
-                return new Promise(resolve => resolve(Result.Failure(`error attempting to insert edges ${inserted.error?.error}`)))
+                const inserted = await GraphStorage.Instance.runInTransaction(transaction.value, ...insertedEdges.value)
+                if (inserted.isError) {
+                    await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to insert edges ${inserted.error?.error}`)
+                    await GraphStorage.Instance.rollbackTransaction(transaction.value)
 
+                    // update the individual data row which failed
+                    await DataStagingStorage.Instance.SetErrors(edge.import_data_id!, [`error attempting to insert nodes ${inserted.error?.error}`] )
+
+                    return new Promise(resolve => resolve(Result.Failure(`error attempting to insert edges ${inserted.error?.error}`)))
+
+                }
             }
         }
 

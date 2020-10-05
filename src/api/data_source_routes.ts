@@ -40,6 +40,7 @@ export default class DataSourceRoutes {
         app.get("/containers/:id/import/datasources/:sourceID/imports",...middleware, authInContainer("read", "data"),this.listDataSourcesImports);
         app.post("/containers/:id/import/datasources/:sourceID/imports",...middleware, fileUpload({limits:{fileSize: 50 * 1024 *1024}}), authInContainer("write", "data"),this.createManualJsonImport);
 
+        app.delete("/containers/:id/import/imports/:importID",...middleware, authInContainer("write", "data"),this.deleteImport);
         app.get("/containers/:id/import/imports/:importID/data",...middleware, authInContainer("read", "data"),this.listDataForImport);
         app.get("/containers/:id/import/imports/:importID/data/:dataID",...middleware, authInContainer("read", "data"),this.getImportData);
         app.put("/containers/:id/import/imports/:importID/data/:dataID",...middleware, authInContainer("write", "data"),this.updateImportData);
@@ -196,6 +197,22 @@ export default class DataSourceRoutes {
                 }
 
                 res.status(200).json(result)
+            })
+            .catch((err) => {
+                res.status(404).send(err)
+            })
+            .finally(() => next())
+    }
+
+    private static deleteImport(req: Request, res: Response, next: NextFunction) {
+        ImportStorage.Instance.PermanentlyDelete(req.params.importID)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.sendStatus(200)
             })
             .catch((err) => {
                 res.status(404).send(err)
