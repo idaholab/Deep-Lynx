@@ -153,7 +153,7 @@ export class Router {
         // fetch set of permissions per resource for the user before returning
         RetrieveResourcePermissions((user as UserT).id!)
             .then((permissions: string[][]) => {
-                const token = jwt.sign(user, Config.encryption_key_secret, {expiresIn: '100m'})
+                const token = jwt.sign(user, Config.encryption_key_secret, {expiresIn: '1000m'})
 
                 return resp.redirect(req.body.RelayState + `?jwt=${token}`)
             })
@@ -186,7 +186,7 @@ export class Router {
           RetrieveResourcePermissions((user as UserT).id!)
               .then((permissions: string[][]) => {
                   user.permissions = permissions
-                  const token = jwt.sign(user, Config.encryption_key_secret, {expiresIn: '100m'})
+                  const token = jwt.sign(user, Config.encryption_key_secret, {expiresIn: '1000m'})
                   return resp.redirect(req.body.redirect + `?jwt=${token}`)
               })
 
@@ -224,7 +224,7 @@ export class Router {
                           .then(permissions => {
                               user.value.permissions = permissions
 
-                              const token = jwt.sign(user.value, Config.encryption_key_secret, {expiresIn: '101m'})
+                              const token = jwt.sign(user.value, Config.encryption_key_secret, {expiresIn: '1000m'})
                               res.status(200).json(token)
                               return
                           })

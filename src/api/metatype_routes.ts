@@ -48,11 +48,11 @@ export default class MetatypeRoutes {
         }
 
         private static listMetatypes(req: Request, res: Response, next: NextFunction) {
-            const filter = new MetatypeFilter()
-            filter.where().containerID("eq", req.params.id)
+            let filter = new MetatypeFilter()
+            filter = filter.where().containerID("eq", req.params.id)
 
             if(req.query.name as string !== "") {
-                filter.and().name("like", `%${req.query.name}%`)
+                filter = filter.and().name("like", `%${req.query.name}%`)
             }
 
             // @ts-ignore

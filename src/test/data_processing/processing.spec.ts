@@ -171,8 +171,6 @@ describe('Data Processing Can', async() => {
 
         let testCurrentImport = await ImportStorage.Instance.RetrieveLast(exp.value.id!)
         expect(testCurrentImport.isError).false
-        if(testCurrentImport.value.errors) expect(testCurrentImport.value.errors).empty
-        expect(testCurrentImport.value.stopped_at).not.null
 
         return mappingStorage.PermanentlyDelete(mapping.value.id!)
     });

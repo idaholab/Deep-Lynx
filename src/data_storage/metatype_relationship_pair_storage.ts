@@ -142,14 +142,6 @@ export default class MetatypeRelationshipPairStorage extends PostgresStorage{
         return super.rows<MetatypeRelationshipPairT>(MetatypeRelationshipPairStorage.listStatement(containerID, offset, limit))
     }
 
-    public async ListByDestinationMetatype(id: string): Promise<Result<MetatypeRelationshipPairT[]>> {
-        return super.rows<MetatypeRelationshipPairT>(MetatypeRelationshipPairStorage.retrieveForDestinationStatement(id))
-    }
-
-    public async ListByOriginMetatype(id: string): Promise<Result<MetatypeRelationshipPairT[]>> {
-        return super.rows<MetatypeRelationshipPairT>(MetatypeRelationshipPairStorage.retrieveForOriginStatement(id))
-    }
-
     public async Archive(pairID: string, userID: string): Promise<Result<boolean>> {
         return super.run(MetatypeRelationshipPairStorage.archiveStatement(pairID, userID))
     }
@@ -210,22 +202,8 @@ WHERE id = $6`,
 
     private static retrieveStatement(pairID:string): QueryConfig {
         return {
-            text:`SELECT * FROM metatype_relationship_pairs WHERE id = $1 AND NOT ARCHIVED`,
+            text:`SELECT * FROM metatype_relationship_pairs WHERE id = $1 AND NOT ARCHIVED `,
             values: [pairID]
-        }
-    }
-
-    private static retrieveForOriginStatement(origin:string): QueryConfig {
-        return {
-            text:`SELECT * FROM metatype_relationship_pairs WHERE origin_metatype_id = $1 AND NOT ARCHIVED`,
-            values: [origin]
-        }
-    }
-
-    private static retrieveForDestinationStatement(destination :string): QueryConfig {
-        return {
-            text:`SELECT * FROM metatype_relationship_pairs WHERE destination_metatype_id = $1 AND NOT ARCHIVED`,
-            values: [destination]
         }
     }
 

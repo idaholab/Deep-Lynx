@@ -196,11 +196,11 @@ export class HttpImpl implements DataSource {
             const lastImport = await ImportStorage.Instance.RetrieveLast(this.dataSourceT.id!);
 
             let lastImportTime = "";
-            if(!lastImport.isError && lastImport.value.stopped_at != null) {
-                lastImportTime = lastImport.value.stopped_at.toUTCString()
+            if(!lastImport.isError && lastImport.value.status === "completed") {
+                lastImportTime = (lastImport.value.modified_at as Date).toUTCString()
             }
 
-            if(lastImport.value && lastImport.value.errors && lastImport.value.errors.length > 0) {
+            if(lastImport.value && lastImport.value.status !== "completed") {
                 (this.config.poll_interval) ?  await this.delay((this.config.poll_interval! * 1000)) : await this.delay(1000)
                 continue;
             }

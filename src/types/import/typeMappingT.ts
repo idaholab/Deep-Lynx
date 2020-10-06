@@ -34,6 +34,10 @@ const typeMappingOptional = t.partial({
     destination_key: t.string,
     keys: t.array(keyMapping),
     ignored_keys: t.array(t.string),
+
+    // composite fields
+    metatype_name: t.string,
+    metatype_relationship_pair_name: t.string
 })
 
 export const typeMappingT = t.intersection([typeMappingRequired, typeMappingOptional, recordMetaT])

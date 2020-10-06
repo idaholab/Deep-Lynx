@@ -3,7 +3,7 @@ import Result, {ErrorNotFound} from "../result";
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
 import {Errors, ValidationError} from "io-ts";
-import {PoolClient, QueryConfig, QueryResult} from "pg";
+import {Pool, PoolClient, QueryConfig, QueryResult} from "pg";
 import uuid from "uuid"
 import PostgresAdapter from "./adapters/postgres/postgres";
 import Logger from "../logger"
@@ -21,7 +21,7 @@ export default class PostgresStorage {
         })
     }
 
-    private async startTransaction(): Promise<Result<PoolClient>> {
+    async startTransaction(): Promise<Result<PoolClient>> {
         const client = await PostgresAdapter.Instance.Pool.connect();
 
         return new Promise(resolve => {
@@ -38,6 +38,39 @@ export default class PostgresStorage {
 
         })
     }
+
+    async runInTransaction(transactionClient: PoolClient, ...statements:QueryConfig[]): Promise<Result<boolean>> {
+        const i = 0
+        try {
+            for(const j in statements) {
+                await transactionClient.query(statements[j])
+            }
+        } catch (e) {
+            return new Promise(resolve => {
+                Logger.error(`transaction failed - ${(e as Error).message} for values ${statements[i].values}`);
+                resolve(Result.Failure(`${(e as Error).message} for values ${statements[i].values} `))
+            })
+        }
+
+        return new Promise(resolve => resolve(Result.Success(true)))
+    }
+
+    async completeTransaction(transactionClient: PoolClient): Promise<Result<boolean>> {
+        try {
+            await transactionClient.query('COMMIT')
+        } catch(e) {
+            return new Promise(resolve => resolve(Result.Failure(e.message)))
+        }
+
+        return new Promise(resolve => resolve(Result.Success(true)))
+    }
+
+    async rollbackTransaction(transactionClient: PoolClient): Promise<Result<boolean>> {
+        await transactionClient.query('ROLLBACK');
+        transactionClient.release();
+        return new Promise(resolve => resolve(Result.Success(true)))
+    }
+
 
     // generally you'll use transactions for create/update/destroy functionality
     // as such, you'll be in charge of your own return and input values.
@@ -56,7 +89,7 @@ export default class PostgresStorage {
            await client.value.query('ROLLBACK');
            client.value.release();
            return new Promise(resolve => {
-               Logger.error(`INSERT transaction failed - ${(e as Error).message} for values ${statements[i].values}`);
+               Logger.error(`transaction failed - ${(e as Error).message} for values ${statements[i].values}`);
                resolve(Result.Failure(`${(e as Error).message} for values ${statements[i].values} `))
            })
         }
@@ -68,60 +101,114 @@ export default class PostgresStorage {
     }
 
     // run simple query
-    async run(statement:QueryConfig): Promise<Result<boolean>> {
-        return new Promise(resolve => {
-            PostgresAdapter.Instance.Pool.query(statement)
-                .then(() => {
-                    resolve(Result.Success(true))
-                })
-                .catch(e => {
-                    Logger.error(`query failed - ${(e as Error).message}`);
-                    resolve(Result.Failure(e))
-                })
-        })
+    async run(statement:QueryConfig, client?: PoolClient): Promise<Result<boolean>> {
+        if(client) {
+            return new Promise(resolve => {
+                client.query(statement)
+                    .then(() => {
+                        resolve(Result.Success(true))
+                    })
+                    .catch(e => {
+                        Logger.error(`query failed - ${(e as Error).message}`);
+                        resolve(Result.Failure(e))
+                    })
+            })
+
+        } else {
+            return new Promise(resolve => {
+                PostgresAdapter.Instance.Pool.query(statement)
+                    .then(() => {
+                        resolve(Result.Success(true))
+                    })
+                    .catch(e => {
+                        Logger.error(`query failed - ${(e as Error).message}`);
+                        resolve(Result.Failure(e))
+                    })
+            })
+        }
     }
 
     // run a query, retrieve first result and cast to T
-    retrieve<T>(q: QueryConfig): Promise<Result<T>> {
+    retrieve<T>(q: QueryConfig, client?: PoolClient): Promise<Result<T>> {
         return new Promise<Result<any>>(resolve => {
-            PostgresAdapter.Instance.Pool.query<T>(q)
-                .then(res => {
-                    if(res.rows.length < 1) resolve(Result.Error(ErrorNotFound));
+            if(client) {
+                client.query<T>(q)
+                    .then(res => {
+                        if(res.rows.length < 1) resolve(Result.Error(ErrorNotFound));
 
-                    resolve(Result.Success(res.rows[0]))
-                })
-                .catch(e => {
-                    resolve(Result.Failure(`record retrieval failed - ${(e as Error).message}`))
-                })
+                        resolve(Result.Success(res.rows[0]))
+                    })
+                    .catch(e => {
+                        resolve(Result.Failure(`record retrieval failed - ${(e as Error).message}`))
+                    })
+            } else {
+                PostgresAdapter.Instance.Pool.query<T>(q)
+                    .then(res => {
+                        if(res.rows.length < 1) resolve(Result.Error(ErrorNotFound));
+
+                        resolve(Result.Success(res.rows[0]))
+                    })
+                    .catch(e => {
+                        resolve(Result.Failure(`record retrieval failed - ${(e as Error).message}`))
+                    })
+            }
         })
     }
 
     // run query and return all rows, cast to T
-    rows<T>(q:QueryConfig): Promise<Result<T[]>> {
-        return new Promise<Result<any[]>>(resolve => {
-            PostgresAdapter.Instance.Pool.query<T>(q)
-                .then(res => {
-                    resolve(Result.Success(res.rows))
-                })
-                .catch(e => {
-                    resolve(Result.Failure(`row retrieval failed - ${(e as Error).message}`))
-                })
-        })
+    rows<T>(q:QueryConfig, client?: PoolClient): Promise<Result<T[]>> {
+        if(client) {
+            return new Promise<Result<any[]>>(resolve => {
+                client.query<T>(q)
+                    .then(res => {
+                        resolve(Result.Success(res.rows))
+                    })
+                    .catch(e => {
+                        resolve(Result.Failure(`row retrieval failed - ${(e as Error).message}`))
+                    })
+            })
+        } else {
+            return new Promise<Result<any[]>>(resolve => {
+                PostgresAdapter.Instance.Pool.query<T>(q)
+                    .then(res => {
+                        resolve(Result.Success(res.rows))
+                    })
+                    .catch(e => {
+                        resolve(Result.Failure(`row retrieval failed - ${(e as Error).message}`))
+                    })
+            })
+        }
+
     }
 
     // count accepts SELECT COUNT(*) queries only
-    count(q:QueryConfig): Promise<Result<number>> {
-        return new Promise<Result<number>>(resolve => {
-            if(!q.text.includes("SELECT COUNT")) resolve(Result.Failure('query must be a SELECT COUNT(*) query'))
+    count(q:QueryConfig, client?: PoolClient): Promise<Result<number>> {
+        if(client) {
+            return new Promise<Result<number>>(resolve => {
+                if(!q.text.includes("SELECT COUNT")) resolve(Result.Failure('query must be a SELECT COUNT(*) query'))
 
-            PostgresAdapter.Instance.Pool.query(q)
-                .then(res => {
-                    resolve(Result.Success(parseInt(res.rows[0].count, 10)))
-                })
-                .catch(e => {
-                    resolve(Result.Failure(`row retrieval failed - ${(e as Error).message}`))
-                })
-        })
+                client.query(q)
+                    .then(res => {
+                        resolve(Result.Success(parseInt(res.rows[0].count, 10)))
+                    })
+                    .catch(e => {
+                        resolve(Result.Failure(`row retrieval failed - ${(e as Error).message}`))
+                    })
+            })
+        } else {
+            return new Promise<Result<number>>(resolve => {
+                if(!q.text.includes("SELECT COUNT")) resolve(Result.Failure('query must be a SELECT COUNT(*) query'))
+
+                PostgresAdapter.Instance.Pool.query(q)
+                    .then(res => {
+                        resolve(Result.Success(parseInt(res.rows[0].count, 10)))
+                    })
+                    .catch(e => {
+                        resolve(Result.Failure(`row retrieval failed - ${(e as Error).message}`))
+                    })
+            })
+        }
+
     }
 
     OnDecodeError(resolve:((check: any) => void) ): ((e: Errors ) => void) {

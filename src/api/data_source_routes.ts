@@ -21,6 +21,7 @@ import Filesystem from "../file_storage/filesystem_impl";
 import MockFileStorageImpl from "../file_storage/mock_impl";
 import Result from "../result";
 import {FileT} from "../types/fileT";
+import TypeMappingFilter from "../data_storage/import/type_mapping_filter";
 const Busboy = require('busboy');
 const fileUpload = require('express-fileupload')
 
@@ -39,18 +40,23 @@ export default class DataSourceRoutes {
         app.get("/containers/:id/import/datasources/:sourceID/imports",...middleware, authInContainer("read", "data"),this.listDataSourcesImports);
         app.post("/containers/:id/import/datasources/:sourceID/imports",...middleware, fileUpload({limits:{fileSize: 50 * 1024 *1024}}), authInContainer("write", "data"),this.createManualJsonImport);
 
+        app.delete("/containers/:id/import/imports/:importID",...middleware, authInContainer("write", "data"),this.deleteImport);
+        app.get("/containers/:id/import/imports/:importID/data",...middleware, authInContainer("read", "data"),this.listDataForImport);
+        app.get("/containers/:id/import/imports/:importID/data/:dataID",...middleware, authInContainer("read", "data"),this.getImportData);
+        app.put("/containers/:id/import/imports/:importID/data/:dataID",...middleware, authInContainer("write", "data"),this.updateImportData);
+        app.delete("/containers/:id/import/imports/:importID/data/:dataID",...middleware, authInContainer("write", "data"),this.deleteImportData);
+
         app.post('/containers/:id/import/datasources/:sourceID/files', ...middleware, authInContainer("write", "data"), this.uploadFile)
         app.get('/containers/:id/files/:fileID', ...middleware, authInContainer("read", "data"), this.getFile)
         app.get('/containers/:id/files/:fileID/download', ...middleware, authInContainer("read", "data"), this.downloadFile)
 
         app.post('/containers/:id/import/datasources/:sourceID/mappings', ...middleware, authInContainer("write", "data"), this.createTypeMapping)
+        app.get('/containers/:id/import/datasources/:sourceID/mappings/', ...middleware, authInContainer("read", "data"), this.listTypeMapping)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/unmapped/data', ...middleware, authInContainer("read", "data"), this.getUnmappedData)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/unmapped/count', ...middleware, authInContainer("read", "data"), this.countUnmappedData)
         app.put('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.updateTypeMapping)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.retrieveTypeMapping)
         app.delete('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.deleteTypeMapping)
-
-
     }
 
     private static createDataSource(req: Request, res: Response, next: NextFunction) {
@@ -198,9 +204,40 @@ export default class DataSourceRoutes {
             .finally(() => next())
     }
 
+    private static deleteImport(req: Request, res: Response, next: NextFunction) {
+        ImportStorage.Instance.PermanentlyDelete(req.params.importID)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.sendStatus(200)
+            })
+            .catch((err) => {
+                res.status(404).send(err)
+            })
+            .finally(() => next())
+    }
+
     private static listDataSourcesImports(req: Request, res: Response, next: NextFunction) {
         // @ts-ignore
         ImportStorage.Instance.List(req.params.sourceID, +req.query.offset, +req.query.limit)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(200).json(result)
+            })
+            .catch((err) => res.status(404).send(err))
+            .finally(() => next())
+    }
+
+    private static listDataForImport(req: Request, res: Response, next: NextFunction) {
+        // @ts-ignore
+        DataStagingStorage.Instance.List(req.params.importID, +req.query.offset, +req.query.limit)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -257,6 +294,46 @@ export default class DataSourceRoutes {
             .finally(() => next())
     }
 
+    private static deleteImportData(req: Request, res: Response, next: NextFunction) {
+        DataStagingStorage.Instance.PermanentlyDelete(req.params.dataID)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+                res.sendStatus(200)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static getImportData(req: Request, res: Response, next: NextFunction) {
+        DataStagingStorage.Instance.Retrieve(req.params.dataID)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+                res.status(200).json(result)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static updateImportData(req: Request, res: Response, next: NextFunction) {
+        const user = req.user as UserT;
+
+        DataStagingStorage.Instance.PartialUpdate(req.params.dataID, user.id!, req.body)
+            .then((updated: Result<boolean>) => {
+                if (updated.isError && updated.error) {
+                    res.status(updated.error.errorCode).json(updated);
+                    return
+                }
+                res.status(200).json(updated)
+            })
+            .catch((updated:any) => res.status(500).send(updated))
+    }
+
     private static createTypeMapping(req: Request, res: Response, next: NextFunction) {
         TypeMappingStorage.Instance.Create(req.params.id, req.params.sourceID, (req.user as UserT).id!, req.body)
             .then((result) => {
@@ -287,6 +364,28 @@ export default class DataSourceRoutes {
 
     private static retrieveTypeMapping(req: Request, res: Response, next: NextFunction) {
         TypeMappingStorage.Instance.Retrieve(req.params.mappingID)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(200).json(result)
+            })
+            .catch((err) => res.status(404).send(err))
+            .finally(() => next())
+    }
+
+    private static listTypeMapping(req: Request, res: Response, next: NextFunction) {
+        let filter = new TypeMappingFilter()
+        filter = filter.where().containerID("eq", req.params.id)
+
+        if(typeof req.query.metatypeID  !== "undefined" && req.query.metatypeID !== "") {
+            filter = filter.and().metatype_id("eq", `%${req.query.metatypeID}%`)
+        }
+
+        // @ts-ignore
+        filter.all(+req.query.limit, +req.query.offset)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);

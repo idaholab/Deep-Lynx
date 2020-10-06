@@ -1,11 +1,4 @@
-## Setup
-
----
-
-**Description**
-
 The construction of megaprojects has consistently demonstrated challenges for project managers in regard to meeting cost, schedule, and performance requirements. Megaproject construction challenges are common place within megaprojects with many active projects in the United States failing to meet cost and schedule efforts by significant margins. Currently, engineering teams operate in siloed tools and disparate teams where connections across design, procurement, and construction systems are translated manually or over brittle point-to-point integrations. The manual nature of data exchange increases the risk of silent errors in the reactor design, with each silent error cascading across the design. These cascading errors lead to uncontrollable risk during construction, resulting in significant delays and cost overruns. Deep Lynx allows for an integrated platform during design and operations of mega projects.
-
 
 **Documentation**
 
@@ -13,6 +6,7 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 
 1. `readme.md` files throughout the application. Can be found for the main application, export adapters, import adapters, and authentication levels.
 2. API level documentation in the form of Postman and Swagger collections - found in `api_documentation`
+3. [Wiki](https://github.com/idaholab/Deep-Lynx/wiki)
 
 **Requirements**
 
@@ -136,6 +130,8 @@ Operator | Description
 ------------ | -------------
 `eq` | equals  
 `neq` | not equals
+`like` | like - PostgreSQL style pattern matching syntax required
+`in` | in - comma separated list of values needed.
 
 
 
@@ -157,7 +153,7 @@ const containerRequired = t.type({
 });
 
 const containerOptional= t.partial({
-    _id: t.string,
+    id: t.string,
 });
 
 export const container = t.exact(t.intersection([containerRequired, containerOptional]));
@@ -175,52 +171,28 @@ The following code is equivalent to this type declaration:
 export type Container = {
     name: string
     description: string
-    _id?: string
+    id?: string
 }
 ```
 
 While the `io-ts` implementation requires more code, and looks more complex, the flexibility and functionality we gain from using `io-ts` makes the higher learning curve and longer declaration worth it. Take a look at `src/data_types/metatype_keyT.ts` for an even better look at a complex data type using `io.ts`
 
 
-**Payload Validation Errors**
 
-The use of `io-ts` for payload validation produces detailed, if seemingly complex, set of validation error messages. Below is an example of what a validation error might look like. We will walk through each bit.
-```$xslt
-Invalid value undefined supplied to : Exact<({ name: string, description: string, originMetatypeID: string, destinationMetatypeID: string, metatypeRelationshipID: string } & Partial<{ _id: string, containerID: string }>)>
-0: { name: string, description: string, originMetatypeID: string, destinationMetatypeID: string, metatypeRelationshipID: string }
-name: string
-```
-
-The first line of the error message informs the user that an error occurred, the type of error, and then returns a formatted representation of the `io-ts` structured type the validation error was thrown for. This error was thrown when attempting to decode a user supplied payload into the `MetatypeRelationshipPair` type. That type is a combination of required fields, `t.exact`, and partial fields, `t.partial`. This is incredibly useful. We inform the user of the exact payload format they must follow in order to avoid errors.
-
-The second line is a simplified expression of what the user supplied payload must look like, along with each field's expected type.
-
-The third line informs the user of the exact field which caused the payload validation failure.
-
-
-## Application
-
-**Data storage operations and `PostgresStorage`**
-
-TODO: fill this with the explanation of the two ways of handling data storage classes
-      one being the way containers/metatypes etc are stored - meant to be thin layers
-      between storage and API vs ORM like functionality for more general, internal operations
-      
-      
 ### Data Sources
-Data can only be ingested through the use of Data Sources. A user must create a Data Source using the relevant endpoints before Deep Lynx can ingest data. This application comes with the ability to connect to various data sources via data source adapters. See [Data Sources](src/data_importing/readme.md).
+Data can only be ingested through the use of Data Sources. A user must create a Data Source using the relevant endpoints before Deep Lynx can ingest data. This application comes with the ability to connect to various data sources via data source adapters. See [How to Ingest Data](https://github.com/idaholab/Deep-Lynx/wiki/How-to-Ingest-Data).
 
 ### File Storage
-Deep Lynx can accept files as part of its data ingestion functionality. See the [readme](src/file_storage/readme.md).
+Deep Lynx can accept files as part of its data ingestion functionality. See the [readme](https://github.com/idaholab/Deep-Lynx/wiki/Uploading-Files).
 
 ### Export Snapshot
-This application comes with the ability to export a snapshot to various storage mediums. See [Export Adapters](src/data_exporting/readme.md). 
+This application comes with the ability to export a snapshot to various storage mediums. See [Export Adapters](https://github.com/idaholab/Deep-Lynx/wiki/Exporting-Data). 
 
 ### Authentication
-This application allows the end user to use either Bearer Token or Basic Authentication for application security. See [Authentication](src/user_management/authentication/readme.md) for more information.
+This application allows the end user to use either Bearer Token or Basic Authentication for application security. See [Authentication](https://github.com/idaholab/Deep-Lynx/wiki/Authentication) for more information.
 
 ### Authorization
-This application uses [Casbin](https://casbin.org/) to handle user authorization.
+This application uses [Casbin](https://casbin.org/) to handle user authorization. See [Authorization](https://github.com/idaholab/Deep-Lynx/wiki/Authorization)
 
 ### Querying
-Deep Lynx provides the user with the ability to query data by using a GraphQL enabled endpoint, as well as providing filter classes for those writing plugins. See [Querying](src/data_query/readme.md) for more information.
+Deep Lynx provides the user with the ability to query data by using a GraphQL enabled endpoint, as well as providing filter classes for those writing plugins. See [Querying](https://github.com/idaholab/Deep-Lynx/wiki/Querying-Data) for more information.

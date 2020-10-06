@@ -170,14 +170,6 @@ describe('A Metatype Relationship Pair can', async() => {
         expect(fetchedPair2.isError).false;
         expect(fetchedPair2.value.id).not.undefined;
 
-        let fetchedPairs = await rpStorage.ListByDestinationMetatype(metatype.value[1].id!);
-        expect(fetchedPairs.isError).false;
-        expect(fetchedPairs.value).not.empty;
-
-        let fetchedPairs2 = await rpStorage.ListByOriginMetatype(metatype.value[0].id!);
-        expect(fetchedPairs2.isError).false;
-        expect(fetchedPairs2.value).not.empty;
-
         return mStorage.PermanentlyDelete(metatype.value[0].id!);
     });
 });

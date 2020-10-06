@@ -1509,14 +1509,14 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseURL}}/containers/:id/metatypes_relationships/:relationship-id/keys?offset=0&limit=100",
+									"raw": "{{baseURL}}/containers/:id/metatype_relationships/:relationship-id/keys?offset=0&limit=100",
 									"host": [
 										"{{baseURL}}"
 									],
 									"path": [
 										"containers",
 										":id",
-										"metatypes_relationships",
+										"metatype_relationships",
 										":relationship-id",
 										"keys"
 									],
@@ -3143,6 +3143,66 @@
 					"response": []
 				},
 				{
+					"name": "List Type Mappings",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type_key\": \"type\",\n    \"type_value\": \"EQUIPMENT\",\n    \"unique_identifier_key\": \"id\",\n    \"metatype_id\": \"\",\n    \"keys\": [\n        {\n            \"key\": \"RADIUS\",\n            \"metatype_key_id\": \"\"\n        }\n    ],\n    \"example_payload\": {\n        \"RADIUS\": 0.1\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:source-id/mappings/:mappingID",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":source-id",
+								"mappings",
+								":mappingID"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "source-id",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "mappingID",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Lists type mappings from storage"
+					},
+					"response": []
+				},
+				{
 					"name": "Get Unmapped Data",
 					"request": {
 						"method": "GET",
@@ -3274,6 +3334,157 @@
 				}
 			],
 			"description": "These are mappings for taking unknown payloads and mapping them to known data classes and structures prior to storage.",
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Imports",
+			"item": [
+				{
+					"name": "List Import's Data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/imports/:import-id/data",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"imports",
+								":import-id",
+								"data"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"type": "string",
+									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
+								},
+								{
+									"key": "import-id",
+									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Import",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/imports/:import-id/",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"imports",
+								":import-id",
+								""
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"type": "string",
+									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
+								},
+								{
+									"key": "import-id",
+									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7"
+								}
+							]
+						},
+						"description": "Delete import will delete an import ONLY IF the import has not been processed."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Import Data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/imports/:import-id/data/:data-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"imports",
+								":import-id",
+								"data",
+								":data-id"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"type": "string",
+									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
+								},
+								{
+									"key": "import-id",
+									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7"
+								},
+								{
+									"key": "data-id",
+									"value": "66"
+								}
+							]
+						},
+						"description": "Retrieve a single piece of data from an import."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Import Data",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/imports/:import-id/data/:data-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"imports",
+								":import-id",
+								"data",
+								":data-id"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"type": "string",
+									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
+								},
+								{
+									"key": "import-id",
+									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7"
+								},
+								{
+									"key": "data-id",
+									"value": "65"
+								}
+							]
+						},
+						"description": "Delete a single piece of data from an import."
+					},
+					"response": []
+				}
+			],
 			"protocolProfileBehavior": {}
 		},
 		{

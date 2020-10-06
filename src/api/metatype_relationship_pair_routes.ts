@@ -2,6 +2,7 @@ import {Request, Response, NextFunction, Application} from "express"
 import MetatypeRelationshipPairStorage from "../data_storage/metatype_relationship_pair_storage";
 import {authInContainer} from "./middleware";
 import {UserT} from "../types/user_management/userT";
+import MetatypeRelationshipPairFilter from "../data_storage/metatype_relationship_pair_filter";
 
 const storage = MetatypeRelationshipPairStorage.Instance;
 
@@ -46,47 +47,38 @@ export default class MetatypeRelationshipPairRoutes {
     }
 
     private static listMetatypeRelationshipPairs(req: Request, res: Response, next: NextFunction) {
-        if (typeof req.query.destinationID !== "undefined") {
-            storage.ListByDestinationMetatype(req.query.destinationID as string)
-                .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-                    res.status(200).json(result)
-                })
-                .catch((err) => {
-                    res.status(404).send(err)
-                })
-                .finally(() => next())
-        } else if (typeof req.query.originID !== "undefined") {
-            storage.ListByOriginMetatype(req.query.originID as string)
-                .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-                    res.status(200).json(result)
-                })
-                .catch((err) => {
-                    res.status(404).send(err)
-                })
-                .finally(() => next())
-        } else {
-            // @ts-ignore
-            storage.List(req.params.id, +req.query.offset, +req.query.limit)
-                .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-                    res.status(200).json(result)
-                })
-                .catch((err) => {
-                    res.status(404).send(err)
-                })
-                .finally(() => next())
+        let filter = new MetatypeRelationshipPairFilter()
+        filter = filter.where().containerID("eq", req.params.id)
+
+        if(typeof req.query.destinationID !== "undefined" && req.query.destinationID as string !== "") {
+            filter = filter.and().destination_metatype_id("eq", req.query.destinationID)
         }
+
+        if(typeof req.query.originID !== "undefined" && req.query.originID as string !== "") {
+            filter = filter.and().origin_metatype_id("eq", req.query.originID)
+        }
+
+        if(typeof req.query.name !== "undefined" && req.query.name as string !== "") {
+            filter = filter.and().name("like", `%${req.query.name}%`)
+        }
+
+        if(typeof req.query.metatypeID !== "undefined" && req.query.metatypeID as string !== "") {
+            filter = filter.and().metatypeID("eq", req.query.metatypeID)
+        }
+
+        // @ts-ignore
+        filter.all(+req.query.limit, +req.query.offset)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+                res.status(200).json(result)
+            })
+            .catch((err) => {
+                res.status(404).send(err)
+            })
+            .finally(() => next())
     }
 
 
