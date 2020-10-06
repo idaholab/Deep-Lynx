@@ -189,7 +189,7 @@ export class DataSourceProcessor {
         const setProcessed = await DataStagingStorage.Instance.SetProcessed(dataImportID)
         if(setProcessed.isError || !setProcessed.value) Logger.debug(`unable to set data import ${dataImportID} to processed`)
 
-        return ImportStorage.Instance.SetStatus(dataImportID, "stopped")
+        return ImportStorage.Instance.SetStatus(dataImportID, "completed")
     }
 
 
