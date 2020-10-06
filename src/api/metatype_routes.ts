@@ -55,6 +55,10 @@ export default class MetatypeRoutes {
                 filter = filter.and().name("like", `%${req.query.name}%`)
             }
 
+            if(req.query.archived as string !== "true") {
+                filter = filter.and().archived("eq", false)
+            }
+
             // @ts-ignore
             filter.all(+req.query.limit, +req.query.offset)
                 .then((result) => {

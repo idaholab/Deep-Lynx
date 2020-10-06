@@ -28,6 +28,11 @@ export default class MetatypeFilter extends Filter {
         return this
     }
 
+    archived(operator: string, value: any) {
+        super.query("archived", operator, value)
+        return this
+    }
+
     all(limit?: number, offset?:number): Promise<Result<MetatypeT[]>> {
         return super.findAll<MetatypeT>(limit, offset)
     }

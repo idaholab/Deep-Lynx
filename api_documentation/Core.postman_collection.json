@@ -1693,7 +1693,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"name\": \"Relationship Pair Test\",\n\t\"description\": \"Relationship Pair Test description\",\n\t\"origin_metatype_id\": \"566e3862-6853-45af-8a45-3050576dfb9a\",\n\t\"destination_metatype_id\": \"8bcc0b06-bb44-4176-a581-aa68eafca7f3\",\n\t\"metatype_relationship_id\": \"885e3fca-5066-4be8-a720-63b3c4744e97\",\n\t\"relationship_type\": \"many:many\"\n}",
+									"raw": "{\n\t\"name\": \"Relationship Pair Test\",\n\t\"description\": \"Relationship Pair Test description\",\n\t\"origin_metatype_id\": \"566e3862-6853-45af-8a45-3050576dfb9a\",\n\t\"destination_metatype_id\": \"8bcc0b06-bb44-4176-a581-aa68eafca7f3\",\n\t\"relationship_id\": \"885e3fca-5066-4be8-a720-63b3c4744e97\",\n\t\"relationship_type\": \"many:many\"\n}",
 									"options": {
 										"raw": {}
 									}
@@ -1792,6 +1792,46 @@
 									]
 								},
 								"description": "List all Type Relationship Pairs for current container."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Type Relationship Pair",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Relationship Pair Test\",\n\t\"description\": \"Relationship Pair Test description\",\n\t\"origin_metatype_id\": \"566e3862-6853-45af-8a45-3050576dfb9a\",\n\t\"destination_metatype_id\": \"8bcc0b06-bb44-4176-a581-aa68eafca7f3\",\n\t\"relationship_id\": \"885e3fca-5066-4be8-a720-63b3c4744e97\",\n\t\"relationship_type\": \"many:many\"\n}"
+								},
+								"url": {
+									"raw": "{{baseURL}}/containers/:container-id/metatype_relationship_pairs/:pair-id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"containers",
+										":container-id",
+										"metatype_relationship_pairs",
+										":pair-id"
+									],
+									"variable": [
+										{
+											"key": "container-id",
+											"value": ""
+										},
+										{
+											"key": "pair-id",
+											"value": ""
+										}
+									]
+								}
 							},
 							"response": []
 						},

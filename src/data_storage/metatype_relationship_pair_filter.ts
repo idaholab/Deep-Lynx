@@ -63,6 +63,11 @@ export default class MetatypeRelationshipPairFilter extends Filter {
         return this
     }
 
+    archived(operator: string, value: any) {
+        super.query("metatype_relationship_pairs.archived", operator, value)
+        return this
+    }
+
     all(limit?: number, offset?:number): Promise<Result<MetatypeRelationshipPairT[]>> {
         return super.findAll<MetatypeRelationshipPairT>(limit, offset)
     }

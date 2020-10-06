@@ -12,6 +12,7 @@ export default class MetatypeRelationshipPairRoutes {
         app.post("/containers/:id/metatype_relationship_pairs", ...middleware, authInContainer("write", "ontology"),this.createMetatypeRelationshipPair);
         app.get("/containers/:id/metatype_relationship_pairs/:relationshipPairID", ...middleware,authInContainer("read", "ontology"), this.retrieveMetatypeRelationshipPair);
         app.get("/containers/:id/metatype_relationship_pairs/", ...middleware, authInContainer("read", "ontology"),this.listMetatypeRelationshipPairs);
+        app.put("/containers/:id/metatype_relationship_pairs/:relationshipPairID", ...middleware, authInContainer("write", "ontology"), this.updateMetatypeRelationshipPair);
         app.delete("/containers/:id/metatype_relationship_pairs/:relationshipPairID", ...middleware, authInContainer("write", "ontology"),this.archiveMetatypeRelationshipPair);
     }
 
@@ -66,6 +67,10 @@ export default class MetatypeRelationshipPairRoutes {
             filter = filter.and().metatypeID("eq", req.query.metatypeID)
         }
 
+        if(req.query.archived as string !== "true") {
+            filter = filter.and().archived("eq", false)
+        }
+
         // @ts-ignore
         filter.all(+req.query.limit, +req.query.offset)
             .then((result) => {
@@ -79,6 +84,18 @@ export default class MetatypeRelationshipPairRoutes {
                 res.status(404).send(err)
             })
             .finally(() => next())
+    }
+
+    private static updateMetatypeRelationshipPair(req: Request, res: Response, next: NextFunction) {
+        storage.Update(req.params.relationshipPairID, req.body)
+            .then((updated) => {
+                if (updated.isError && updated.error) {
+                    res.status(updated.error.errorCode).json(updated);
+                    return
+                }
+                res.status(200).json(updated)
+            })
+            .catch((updated) => res.status(500).send(updated))
     }
 
 
