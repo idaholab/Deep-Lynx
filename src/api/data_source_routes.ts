@@ -512,7 +512,7 @@ export default class DataSourceRoutes {
 
                 // create an "import" with a single object, the metadata and file information
                 // the user will then handle the mapping of this via the normal type mapping channels
-                ImportStorage.Instance.InitiateJSONImportAndUnpack(req.params.sourceID, user.id!, 'file upload', metadata)
+                ManualJsonImport(user, req.params.sourceID, metadata)
                     .then((result) => {
                         if (result.isError && result.error) {
                             res.status(result.error.errorCode).json(result);

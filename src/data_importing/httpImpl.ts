@@ -17,6 +17,7 @@ import {fold} from "fp-ts/lib/Either";
 import NodeRSA from "node-rsa";
 import * as fs from "fs";
 import axios, {AxiosResponse} from "axios"
+import DataStagingStorage from "../data_storage/import/data_staging_storage";
 
 // HttpImpl is a data source which polls and HTTP source for data every x seconds
 // this implementation allows the user to query both basic authentication and
@@ -236,8 +237,24 @@ export class HttpImpl implements DataSource {
                     let reference = ""
                     if("Reference" in resp.headers) reference = resp.headers.Reference
 
+                    if(!Array.isArray(resp.data)) {
+                        Logger.error(`response from http importer must be an array of JSON objects`)
+                        continue
+                    }
+
                     // create json import record
-                    await ImportStorage.Instance.InitiateJSONImportAndUnpack(this.dataSourceT.id!, "polling system", reference, resp.data)
+                    const importRecord = await ImportStorage.Instance.InitiateImport(this.dataSourceT.id!, "polling system", reference)
+                    if(importRecord.isError) {
+                        Logger.error(`error creating import ${importRecord.error}`)
+                        continue
+                    }
+
+                    for(const data of resp.data) {
+                        const inserted = await DataStagingStorage.Instance.Create(this.dataSourceT.id!, importRecord.value, data)
+                        if(inserted.isError) {
+                            Logger.error(`error inserting data for import ${inserted}`)
+                        }
+                    }
                 }
             } catch (err) {
                 Logger.error(`data source ${this.dataSourceT} poll failed ${err}`)

@@ -28,56 +28,6 @@ describe('An Import Adapter Import', async() => {
         return Promise.resolve()
     });
 
-    it('can be initiated and unpacked', async()=> {
-        let storage = DataSourceStorage.Instance;
-        let logStorage = ImportStorage.Instance;
-
-        let exp = await storage.Create(containerID, "test suite",
-            {
-                name: "Test Data Source",
-                active:false,
-                adapter_type:"http",
-                config: {}});
-
-        expect(exp.isError).false;
-        expect(exp.value).not.empty;
-
-        let log = await logStorage.InitiateJSONImportAndUnpack(exp.value.id!, "test suite", "test", payload);
-        expect(log.isError).false;
-
-        return storage.PermanentlyDelete(exp.value.id!)
-    });
-
-    it('can be initiated, appended to, and unpacked', async()=> {
-        let storage = DataSourceStorage.Instance;
-        let logStorage = ImportStorage.Instance;
-
-        let exp = await storage.Create(containerID, "test suite",
-            {
-                name: "Test Data Source",
-                active:false,
-                adapter_type:"http",
-                config: {}});
-
-        expect(exp.isError).false;
-        expect(exp.value).not.empty;
-
-        let log = await logStorage.InitiateJSONImport(exp.value.id!, "test suite", "test", payload);
-        expect(log.isError).false;
-
-
-        let logs = await logStorage.ListReady(exp.value.id!, 0, 100);
-        expect(logs.isError).false;
-        expect(logs.value).not.empty;
-
-        for(const l of logs.value) {
-           let appended = await logStorage.AppendToJSONImport(l.id, [{"appended": "appended"}])
-            expect(appended.isError).false
-        }
-
-        return storage.PermanentlyDelete(exp.value.id!)
-    });
-
     it('can be listed', async()=> {
         let storage = DataSourceStorage.Instance;
         let logStorage = ImportStorage.Instance;
@@ -92,7 +42,7 @@ describe('An Import Adapter Import', async() => {
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let log = await logStorage.InitiateJSONImportAndUnpack(exp.value.id!, "test suite", "test", payload);
+        let log = await logStorage.InitiateImport(exp.value.id!, "test suite", "test");
         expect(log.isError).false;
 
         let logs = await logStorage.List(exp.value.id!, 0, 100);
@@ -116,7 +66,7 @@ describe('An Import Adapter Import', async() => {
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let log = await logStorage.InitiateJSONImportAndUnpack(exp.value.id!, "test suite", "test", payload);
+        let log = await logStorage.InitiateImport(exp.value.id!, "test suite", "test");
         expect(log.isError).false;
 
         let logs = await logStorage.ListReady(exp.value.id!, 0, 100);
@@ -149,7 +99,7 @@ describe('An Import Adapter Import', async() => {
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let log = await logStorage.InitiateJSONImportAndUnpack(exp.value.id!, "test suite", "test", payload);
+        let log = await logStorage.InitiateImport(exp.value.id!, "test suite", "test");
         expect(log.isError).false;
 
         let logs = await logStorage.ListReady(exp.value.id!, 0, 100);
@@ -182,7 +132,7 @@ describe('An Import Adapter Import', async() => {
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let log = await logStorage.InitiateJSONImportAndUnpack(exp.value.id!, "test suite", "test", payload);
+        let log = await logStorage.InitiateImport(exp.value.id!, "test suite", "test");
         expect(log.isError).false;
 
         let logs = await logStorage.ListReady(exp.value.id!, 0, 100);
