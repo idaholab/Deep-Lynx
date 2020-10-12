@@ -24,6 +24,7 @@ import {FileT} from "../types/fileT";
 import TypeMappingFilter from "../data_storage/import/type_mapping_filter";
 const Busboy = require('busboy');
 const fileUpload = require('express-fileupload')
+import Logger from "../logger"
 
 // This contains all routes pertaining to DataSources and type mappings.
 export default class DataSourceRoutes {
@@ -38,7 +39,7 @@ export default class DataSourceRoutes {
         app.delete("/containers/:id/import/datasources/:sourceID/active",...middleware, authInContainer("read", "data"),this.setInactive);
 
         app.get("/containers/:id/import/datasources/:sourceID/imports",...middleware, authInContainer("read", "data"),this.listDataSourcesImports);
-        app.post("/containers/:id/import/datasources/:sourceID/imports",...middleware, fileUpload({limits:{fileSize: 50 * 1024 *1024}}), authInContainer("write", "data"),this.createManualJsonImport);
+        app.post("/containers/:id/import/datasources/:sourceID/imports",...middleware, fileUpload({limits:{fileSize: 50 * 5024 *5024}}), authInContainer("write", "data"),this.createManualJsonImport);
 
         app.delete("/containers/:id/import/imports/:importID",...middleware, authInContainer("write", "data"),this.deleteImport);
         app.get("/containers/:id/import/imports/:importID/data",...middleware, authInContainer("read", "data"),this.listDataForImport);
@@ -512,13 +513,20 @@ export default class DataSourceRoutes {
 
                 // create an "import" with a single object, the metadata and file information
                 // the user will then handle the mapping of this via the normal type mapping channels
-                ImportStorage.Instance.InitiateJSONImportAndUnpack(req.params.sourceID, user.id!, 'file upload', metadata)
+                ImportStorage.Instance.InitiateImport(req.params.sourceID, user.id!, 'file upload')
                     .then((result) => {
-                        if (result.isError && result.error) {
+                       if (result.isError && result.error) {
                             res.status(result.error.errorCode).json(result);
                             return
                         }
-                        res.sendStatus(200)
+
+                       DataStagingStorage.Instance.Create(req.params.sourceID, result.value, metadata)
+                           .then(result => {
+                               if(result.isError) {
+                                   Logger.error(`error uploading file metadata ${result.error}`)
+                               }
+                           })
+                       res.sendStatus(200)
                     })
                     .catch((err) => res.status(500).send(err))
                     .finally(() => next())

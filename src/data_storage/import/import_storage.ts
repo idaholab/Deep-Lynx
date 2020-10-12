@@ -3,7 +3,7 @@ import Result from "../../result";
 import {QueryConfig} from "pg";
 import {ImportT} from "../../types/import/importT";
 import uuid from "uuid";
-import * as t from "io-ts";
+import DataStagingStorage from "./data_staging_storage";
 
 export default class ImportStorage extends PostgresStorage {
     private static instance: ImportStorage;
@@ -16,38 +16,18 @@ export default class ImportStorage extends PostgresStorage {
         return ImportStorage.instance
     }
 
-
-    public InitiateJSONImportAndUnpack(dataSourceID: string, userID:string, reference: string, payload: any): Promise<Result<boolean>> {
+    // Initiate Import will create the initial import record
+    public async InitiateImport(dataSourceID: string, userID:string, reference: string): Promise<Result<string>> {
         const id = uuid.v4();
 
-        // the payload MUST BE AN ARRAY OF OBJECTS, unfortunately the way Typescript's type system works I cannot
-        // easily enforce your payload's type to match the required type by the postgres node driver and functionality
-        const input = (t.array(t.unknown).is(payload)) ? payload : [payload];
-
-        return super.runAsTransaction(
-            ImportStorage.initiateImportJSONStatement(id, dataSourceID,userID, reference, input), ImportStorage.unpackJsonStatement(id)
-        )
-    }
-
-    public async InitiateJSONImport(dataSourceID: string, userID:string, reference: string, payload: any): Promise<Result<string>> {
-        const id = uuid.v4();
-
-        const initiated = await super.runAsTransaction(ImportStorage.initiateImportJSONStatement(id, dataSourceID,userID, reference, payload))
+        const initiated = await super.runAsTransaction(ImportStorage.initiateImportStatement(id, dataSourceID,userID, reference))
         if(initiated.isError) {return new Promise(resolve => resolve(Result.Pass(initiated)))}
 
         return new Promise(resolve => resolve(Result.Success(id)))
     }
 
-    public AppendToJSONImport(importID: string, payload: any): Promise<Result<boolean>> {
-        return super.runAsTransaction(ImportStorage.appendToJSONImportStatement(importID, payload))
-    }
-
-    public UnpackJSONImport(importID: string): Promise<Result<boolean>> {
-        return super.runAsTransaction(ImportStorage.unpackJsonStatement(importID))
-    }
-
-    public InitiateCSVImport(dataSourceID: string, userID:string, reference:string, payload: any): Promise<Result<boolean>> {
-        return super.runAsTransaction(ImportStorage.initiateImportCSVStatement(dataSourceID,userID, reference, payload))
+    public async AddData(importID: string, dataSourceID:string, data:unknown): Promise<Result<boolean>>{
+        return DataStagingStorage.Instance.Create(dataSourceID, importID, data)
     }
 
     public Retrieve(id: string): Promise<Result<ImportT>> {
@@ -82,31 +62,10 @@ export default class ImportStorage extends PostgresStorage {
         }
     }
 
-    private static initiateImportJSONStatement(id: string, dataSourceID: string, userID:string, reference:string,  payload:any): QueryConfig {
+    private static initiateImportStatement(id: string, dataSourceID: string, userID:string, reference:string): QueryConfig {
         return {
-            text: `INSERT INTO imports(id,data_source_id,data_json,created_by,modified_by, reference) VALUES($1,$2,$3,$4,$5,$6)`,
-            values: [id,dataSourceID,JSON.stringify(payload), userID, userID, reference]
-        }
-    }
-
-    private static appendToJSONImportStatement(importID: string, payload:any): QueryConfig {
-        return {
-            text: `UPDATE imports SET data_json = data_json || $2::jsonb WHERE id = $1`,
-            values: [importID, JSON.stringify(payload)]
-        }
-    }
-
-    private static initiateImportCSVStatement(dataSourceID: string, userID:string, reference:string, payload:any): QueryConfig {
-        return {
-            text: `INSERT INTO imports(id,data_source_id,data_csv,created_by,modified_by) VALUES($1,$2,$3,$4,$5,$6)`,
-            values: [uuid.v4(),dataSourceID,payload, userID, userID, reference]
-        }
-    }
-
-    private static unpackJsonStatement(importID: string): QueryConfig {
-        return {
-            text: `SELECT "unpack_import_row"($1);`,
-            values: [importID]
+            text: `INSERT INTO imports(id,data_source_id,created_by,modified_by, reference) VALUES($1,$2,$3,$4,$5)`,
+            values: [id,dataSourceID, userID, userID, reference]
         }
     }
 

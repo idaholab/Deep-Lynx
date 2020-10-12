@@ -672,9 +672,10 @@ describe('We can use a Data Type Mapping To', async() => {
 
         // First create the import and load the test data as an import, we create
         // a manual data storage object in this instance, though it doesn't really matter
-        let imports = await importStorage.InitiateJSONImportAndUnpack(dataSourceID, "test suite", "test", [test_raw_payload])
+        let imports = await importStorage.InitiateImport(dataSourceID, "test suite", "test")
         expect(imports.isError).false
 
+        await importStorage.AddData(imports.value, dataSourceID, test_raw_payload)
         // Next, create the mapping and attempt to use mapping to query matching data
         // that should exist in data_staging. Has the added bonus of testing that
         // trigger for taking json data from imports and parsing to data_staging
@@ -730,8 +731,10 @@ describe('We can use a Data Type Mapping To', async() => {
 
         // First create the import and load the test data as an import, we create
         // a manual data storage object in this instance, though it doesn't really matter
-        let imports = await importStorage.InitiateJSONImportAndUnpack(dataSourceID, "test suite",  "test", [test_raw_payload2])
+        let imports = await importStorage.InitiateImport(dataSourceID, "test suite",  "test")
         expect(imports.isError).false
+
+        await importStorage.AddData(imports.value, dataSourceID, test_raw_payload2)
 
         // Next, create the mapping and attempt to use mapping to query matching data
         // that should exist in data_staging. Has the added bonus of testing that
@@ -787,9 +790,10 @@ describe('We can use a Data Type Mapping To', async() => {
 
         // First create the import and load the test data as an import, we create
         // a manual data storage object in this instance, though it doesn't really matter
-        let imports = await importStorage.InitiateJSONImportAndUnpack(dataSourceID, "test suite", "test", [test_raw_payload])
+        let imports = await importStorage.InitiateImport(dataSourceID, "test suite", "test")
         expect(imports.isError).false
 
+        await importStorage.AddData(imports.value, dataSourceID, test_raw_payload)
         // Next, create the mapping and attempt to use mapping to query matching data
         // that should exist in data_staging. Has the added bonus of testing that
         // trigger for taking json data from imports and parsing to data_staging

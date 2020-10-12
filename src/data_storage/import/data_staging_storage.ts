@@ -28,6 +28,17 @@ export default class DataStagingStorage extends PostgresStorage {
         super();
     }
 
+    public async Create(dataSourceID: string, importID:string, data: unknown): Promise<Result<boolean>> {
+        return new Promise(resolve => {
+            PostgresAdapter.Instance.Pool.query(DataStagingStorage.createStatement(dataSourceID, importID,data))
+                // we don't want the return value, only to know that it was inserted successfully
+                .then(() => {
+                    resolve(Result.Success(true))
+                })
+                .catch((e:Error) => resolve(Result.Failure(e.message)))
+        })
+    }
+
     public async ListForTypeMapping(typeMapping: TypeMappingT): Promise<Result<DataStagingT[]>> {
         return super.rows<DataStagingT>(DataStagingStorage.ListMatchedForTypeMappingStatement(typeMapping))
     }
@@ -123,6 +134,13 @@ export default class DataStagingStorage extends PostgresStorage {
 
     public SetErrors(id:number, errors: string[]): Promise<Result<boolean>> {
         return super.runAsTransaction(DataStagingStorage.setErrorsStatement(id, errors))
+    }
+
+    private static createStatement(dataSourceID:string, importID:string, data: unknown): QueryConfig {
+        return {
+            text: `INSERT INTO data_staging(data_source_id,import_id,data) VALUES($1, $2, $3)`,
+            values: [dataSourceID, importID, data]
+        }
     }
 
     private static retrieveStatement(metatypeID:string): QueryConfig {

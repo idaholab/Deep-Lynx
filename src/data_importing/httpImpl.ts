@@ -234,10 +234,30 @@ export class HttpImpl implements DataSource {
                     Logger.debug(`data source ${this.dataSourceT.id} poll failed or had no data`)
                 } else {
                     let reference = ""
-                    if("Reference" in resp.headers) reference = resp.headers.Reference
+                    if("Reference" in resp.headers) reference = resp.headers.Reference;
+
+
+                    if(!Array.isArray(resp.data)) {
+                        Logger.error(`response from ${this.dataSourceT.id} was not an array of JSON objects, aborting`)
+                        continue;
+                    }
+
 
                     // create json import record
-                    await ImportStorage.Instance.InitiateJSONImportAndUnpack(this.dataSourceT.id!, "polling system", reference, resp.data)
+                    const newImport = await ImportStorage.Instance.InitiateImport(this.dataSourceT.id!, "polling system", reference)
+                    if(newImport.isError){
+                        Logger.error(`error creating import ${newImport.error}`)
+                        continue
+                    }
+
+                    for(const data of resp.data) {
+                        const imported = await ImportStorage.Instance.AddData(newImport.value, this.dataSourceT.id!, data)
+                        if(imported.isError) {
+                            Logger.error(`error importing data from http import ${imported.error}`)
+                            continue
+                        }
+                    }
+
                 }
             } catch (err) {
                 Logger.error(`data source ${this.dataSourceT} poll failed ${err}`)

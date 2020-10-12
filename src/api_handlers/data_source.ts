@@ -61,13 +61,23 @@ export async function NewDataSource(user:UserT, containerID:string, input: any):
     })
 }
 
-export async function ManualJsonImport(user:UserT, dataSourceID: string, payload:any): Promise<Result<boolean>> {
+export async function ManualJsonImport(user:UserT, dataSourceID: string, payload:any): Promise<Result<string>> {
     const dataSource = await DataSourceStorage.Instance.Retrieve(dataSourceID)
     if(dataSource.isError) return new Promise(resolve => resolve(Result.Pass(dataSource)))
 
     if(dataSource.value.adapter_type !== "manual") return new Promise(resolve => resolve(Result.Failure('cannot run manual import for non-manual data source')))
+    if(!Array.isArray(payload)) return new Promise(resolve => resolve(Result.Failure('payload must be an array of JSON objects')))
 
-    return ImportStorage.Instance.InitiateJSONImportAndUnpack(dataSourceID, user.id!, "test", payload)
+    const newImport = await ImportStorage.Instance.InitiateImport(dataSourceID, user.id!, "test")
+
+    for(const data of payload) {
+        const inserted = await ImportStorage.Instance.AddData(newImport.value, dataSourceID, data)
+        if(inserted.isError) {
+            Logger.error(`unable to add data to import ${inserted.isError}`)
+        }
+    }
+
+    return new Promise(resolve => resolve(Result.Success(newImport.value)))
 }
 
 // Each data source's configuration is different, this allows us to both set that configuration and perform
