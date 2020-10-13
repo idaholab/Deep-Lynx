@@ -2981,6 +2981,63 @@
 						"description": "Assign a role to a user, roles must consist of role name and domain"
 					},
 					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/users/:user-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"users",
+								":user-id"
+							],
+							"variable": [
+								{
+									"key": "user-id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"identity_provider\": \"username_password\",\n    \"display_name\": \"Test User\",\n    \"email\": \"test@test.com\",\n    \"password\": \"admin\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/users/:user-id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"users",
+								":user-id"
+							],
+							"variable": [
+								{
+									"key": "user-id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			],
 			"description": "These endpoints have to do with user functionality. As of 3/26/2020 there are no methods for creating new users - other than enabling and use SAML-ADFS authentication methods. Unless using this method, either request/build a feature or use Basic Authentication configuration.",

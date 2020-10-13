@@ -18,6 +18,8 @@ export default class UserRoutes {
         // TODO: endpoint for user creation that immediately assigns the user to a container
         app.post("/users", ...middleware,authRequest("write", "users"), this.createNewUser)
         app.get("/users",...middleware,authRequest("read", "users"), this.listUsers);
+        app.delete("/users/:userID", middleware, authRequest("write", "users"), this.deleteUser)
+        app.put("/users/:userID", ...middleware,authRequest("write", "users"), this.updateUser)
 
         app.get("/users/:userID/keys", middleware, authRequest("read", "users"), this.keysForUser)
         app.post("/users/:userID/keys", middleware, authRequest("write", "users"), this.generateKeyPair)
@@ -107,6 +109,33 @@ export default class UserRoutes {
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
+    }
+
+    private static deleteUser(req: Request, res: Response, next: NextFunction) {
+        UserStorage.Instance.PermanentlyDelete(req.params.userID)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.sendStatus(200)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static updateUser(req: Request, res: Response, next: NextFunction) {
+        const user = req.user as UserT;
+        UserStorage.Instance.Update(req.params.userID, user.id!, req.body)
+            .then((updated) => {
+                if (updated.isError && updated.error) {
+                    res.status(updated.error.errorCode).json(updated);
+                    return
+                }
+                res.status(200).json(updated)
+            })
+            .catch((updated) => res.status(500).send(updated))
     }
 
     private static assignRole(req: Request, res: Response, next: NextFunction) {
