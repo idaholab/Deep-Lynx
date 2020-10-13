@@ -24,6 +24,7 @@ import {FileT} from "../types/fileT";
 import TypeMappingFilter from "../data_storage/import/type_mapping_filter";
 const Busboy = require('busboy');
 const fileUpload = require('express-fileupload')
+const csv=require('csvtojson')
 
 // This contains all routes pertaining to DataSources and type mappings.
 export default class DataSourceRoutes {
@@ -38,7 +39,7 @@ export default class DataSourceRoutes {
         app.delete("/containers/:id/import/datasources/:sourceID/active",...middleware, authInContainer("read", "data"),this.setInactive);
 
         app.get("/containers/:id/import/datasources/:sourceID/imports",...middleware, authInContainer("read", "data"),this.listDataSourcesImports);
-        app.post("/containers/:id/import/datasources/:sourceID/imports",...middleware, fileUpload({limits:{fileSize: 50 * 1024 *1024}}), authInContainer("write", "data"),this.createManualJsonImport);
+        app.post("/containers/:id/import/datasources/:sourceID/imports",...middleware, fileUpload({limits:{fileSize: 50 * 6024 * 6024}}), authInContainer("write", "data"),this.createManualImport);
 
         app.delete("/containers/:id/import/imports/:importID",...middleware, authInContainer("write", "data"),this.deleteImport);
         app.get("/containers/:id/import/imports/:importID/data",...middleware, authInContainer("read", "data"),this.listDataForImport);
@@ -251,8 +252,7 @@ export default class DataSourceRoutes {
     }
 
     // creeateManualImport will accept either a file or a raw JSON body
-    // TODO: set a file size limit that corresponds to the single column data limit of postgres
-    private static createManualJsonImport(req: Request, res: Response, next: NextFunction) {
+    private static createManualImport(req: Request, res: Response, next: NextFunction) {
         if(Object.keys(req.body).length !== 0) {
             ManualJsonImport(req.user as UserT, req.params.sourceID, req.body)
                 .then((result) => {
@@ -265,7 +265,8 @@ export default class DataSourceRoutes {
                 })
                 .catch((err) => res.status(404).send(err))
                 .finally(() => next())
-        } else {
+            // @ts-ignore
+        } else if(req.files.import.mimetype === "application/json" ) {
             // @ts-ignore
             ManualJsonImport(req.user as UserT, req.params.sourceID, JSON.parse(req.files.import.data))
                 .then((result) => {
@@ -278,6 +279,27 @@ export default class DataSourceRoutes {
                 })
                 .catch((err) => res.status(404).send(err))
                 .finally(() => next())
+        }
+        // @ts-ignore - we have to handle microsoft's excel csv type, as when you save a csv file using excel the mimetype is different than text/csv
+        else if(req.files.import.mimetype === "text/csv" || req.files.import.mimetype === "application/vnd.ms-excel") {
+            // @ts-ignore
+           csv().fromString(req.files.import.data.toString())
+               .then((json: any) => {
+                   ManualJsonImport(req.user as UserT, req.params.sourceID, json)
+                       .then((result) => {
+                           if (result.isError && result.error) {
+                               res.status(result.error.errorCode).json(result);
+                               return
+                           }
+
+                           res.status(200).json(result)
+                       })
+                       .catch((err) => res.status(404).send(err))
+                       .finally(() => next())
+               })
+        } else {
+            res.sendStatus(500)
+            next()
         }
     }
 
