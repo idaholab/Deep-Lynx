@@ -51,7 +51,7 @@ export default class MetatypeRoutes {
             let filter = new MetatypeFilter()
             filter = filter.where().containerID("eq", req.params.id)
 
-            if(req.query.name as string !== "") {
+            if(typeof req.query.name !== "undefined" && req.query.name as string !== "") {
                 filter = filter.and().name("like", `%${req.query.name}%`)
             }
 
