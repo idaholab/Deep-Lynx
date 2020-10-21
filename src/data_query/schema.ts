@@ -109,8 +109,8 @@ input PropertyFilter {
 
   relationship: MetatypeRelationship
 
-  origin: Node
-  destination: Node
+  origin_node: Node
+  destination_node: Node
   }
 
   type File {

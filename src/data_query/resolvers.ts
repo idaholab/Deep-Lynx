@@ -371,8 +371,8 @@ async function EdgeResolver(nodeID: string, direction: "incoming" | "outgoing"):
                 properties: PropertyResolver(edge.properties),
                 raw_properties: JSON.stringify(edge.properties),
                 relationship: MetatypeRelationshipByPairResolver(edge.relationship_pair_id),
-                destination: NodeResolverByID(edge.destination_node_id!, edge.container_id!),
-                origin: NodeResolverByID(edge.origin_node_id!, edge.container_id!),
+                destination_node: NodeResolverByID(edge.destination_node_id!, edge.container_id!),
+                origin_node: NodeResolverByID(edge.origin_node_id!, edge.container_id!),
                 created_at: createdAt,
                 modified_at: modifiedAt
             })
