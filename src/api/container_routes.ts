@@ -13,8 +13,8 @@ const exportStorage = ExportStorage.Instance;
 // as it was not large enough to pull into its own functionality.
 export default class ContainerRoutes {
     public static mount(app: Application, middleware:any[]) {
-        app.post("/containers", ...middleware, authRequest("write", "containers"), this.createContainer);
-        app.put("/containers",...middleware,authRequest("write", "containers"), this.batchUpdate);
+        app.post("/containers", ...middleware,this.createContainer);
+        app.put("/containers",...middleware,authRequest("write", "containers"),this.batchUpdate);
         app.get("/containers/:id",...middleware, authRequest("read", "containers"),this.retrieveContainer);
 
         // we don't auth this request as the actual handler will only ever show containers
