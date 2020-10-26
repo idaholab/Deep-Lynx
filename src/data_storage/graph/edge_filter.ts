@@ -9,6 +9,8 @@ export default class EdgeFilter extends Filter {
 
         // we must include the joins for the relationship and relationship pair table
         // in order to be able to filter by relationship name
+        this._rawQuery = []
+        this._rawQuery.push(`SELECT edges.* FROM ${EdgeStorage.tableName}`)
         this._rawQuery.push(`LEFT JOIN metatype_relationship_pairs ON edges.relationship_pair_id = metatype_relationship_pairs.id`)
         this._rawQuery.push(`LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id`)
     }
@@ -71,6 +73,9 @@ export default class EdgeFilter extends Filter {
     async all(limit?: number, offset?:number): Promise<Result<EdgeT[]>> {
         const results = await super.findAll<EdgeT>(limit, offset);
 
+        // reset the query
+        this._rawQuery = []
+        this._rawQuery.push(`SELECT edges.* FROM ${EdgeStorage.tableName}`)
         this._rawQuery.push(`LEFT JOIN metatype_relationship_pairs ON edges.relationship_pair_id = metatype_relationship_pairs.id`)
         this._rawQuery.push(`LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id`)
 
