@@ -16,6 +16,7 @@ export type FileUploadResponse = {
     filename: string
     filepath: string
     size: number // size in KB
+    md5hash: string // hex encoded md5 hash
     metadata: {[key:string]: any} // adapter specific metadata if needed
     adapter_name: string
 }

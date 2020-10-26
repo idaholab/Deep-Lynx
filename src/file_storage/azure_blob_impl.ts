@@ -3,6 +3,7 @@ import Result from "../result";
 import {Readable} from "stream";
 import {BlobServiceClient, ContainerClient, RestError} from "@azure/storage-blob";
 import Logger from "../logger";
+const digestStream = require('digest-stream')
 
 export default class AzureBlobImpl implements FileStorage {
     private _BlobServiceClient: BlobServiceClient
@@ -28,31 +29,41 @@ export default class AzureBlobImpl implements FileStorage {
         const blobClient = this._ContainerClient.getBlockBlobClient(`${filepath}${filename}`);
 
         if(stream) {
+            let md5hash: string = "";
+            let dataLength: number = 0;
+
+            // pipe through this man in the middle to gain the md5 hash and file size
+            const dstream = digestStream('md5', 'hex', (resultDigest: string , length: number) => {
+                md5hash = resultDigest;
+                dataLength = length;
+            });
+
+            const newStream = stream.pipe(dstream) // md5hash and length calculated as it passes through
+
+
+
             // buffer size and max concurrency are set to their default values
             // we only have to set them manually because we need access to the
             // final parameter which are the upload options.
             const uploadResult = await blobClient.uploadStream(
-                stream,
+                newStream,
                 8000,
-                5, {blobHTTPHeaders:{
+                5, {
+                    blobHTTPHeaders:{
                     blobContentType: contentType,
-                    blobContentEncoding: encoding
-                }})
+                    blobContentEncoding: encoding,
+                },})
 
             if(uploadResult._response.status !== 201) {
                 Logger.error(`error uploading file to azure blob storage ${uploadResult.errorCode}`)
                 return Promise.resolve(Result.Failure(`azure service responded with a status ${uploadResult._response.status} on upload`));
             }
 
-            // fetch the properties so we know the content size. This is the only
-            // real way of finding file size apart from creating a man in the middle
-            // pipe that gets used before the azure blob pipe upload, not ideal
-            const props = await blobClient.getProperties()
-
             return Promise.resolve(Result.Success({
                 filepath,
                 filename,
-                size: (props.contentLength) ? props.contentLength / 1000 : 0 ,
+                size: dataLength / 1000,
+                md5hash,
                 metadata: {},
                 adapter_name: this.name()
             }))

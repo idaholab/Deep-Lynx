@@ -47,6 +47,7 @@ export default class MockFileStorageImpl implements FileStorage {
                                 filepath: uploadPath,
                                 filename: fileName,
                                 size: 0,
+                                md5hash: "",
                                 metadata: {},
                                 adapter_name: 'mock'
                             }));
@@ -68,6 +69,7 @@ export default class MockFileStorageImpl implements FileStorage {
                             filepath: uploadPath,
                             filename: fileName,
                             size: 0,
+                            md5hash: "",
                             metadata: {},
                             adapter_name: 'mock'
                         }));

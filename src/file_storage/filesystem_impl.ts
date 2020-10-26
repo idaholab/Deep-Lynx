@@ -3,6 +3,7 @@ import Result from "../result";
 import {Readable} from "stream";
 import * as fs from "fs";
 import Logger from "../logger";
+const digestStream = require('digest-stream')
 
 export default class Filesystem implements FileStorage {
     private _directory: string
@@ -42,14 +43,22 @@ export default class Filesystem implements FileStorage {
            Logger.error(`error saving file to filesystem ${err}`)
         })
 
-        await stream?.pipe(writeStream)
+        let md5hash: string = "";
+        let dataLength: number = 0;
 
-        const stats = fs.statSync(`${this._directory}${filepath}${filename}`)
+        // pipe through this man in the middle to gain the md5 hash and file size
+        const dstream = digestStream('md5', 'hex', (resultDigest: string, length: number) => {
+            md5hash = resultDigest;
+            dataLength = length;
+        });
+
+        await stream?.pipe(dstream).pipe(writeStream)
 
         return Promise.resolve(Result.Success({
             filename,
             filepath: `${this._directory}${filepath}`,
-            size: stats.size,
+            size: dataLength / 1000,
+            md5hash,
             adapter_name: this.name()
         } as FileUploadResponse));
     }

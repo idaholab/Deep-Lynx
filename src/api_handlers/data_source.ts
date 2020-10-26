@@ -138,10 +138,11 @@ export async function DataSourceUploadFile(containerID: string, dataSourceID: st
     const file = {
         file_name: filename,
         file_size: result.value.size,
+        md5hash: result.value.md5hash,
         adapter_file_path: result.value.filepath,
         adapter: provider.name(),
         metadata: result.value.metadata,
-    }
+    } as FileT
 
     return FileStorage.Instance.Create(userID, containerID, dataSourceID, file)
 }

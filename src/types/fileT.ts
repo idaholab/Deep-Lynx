@@ -4,6 +4,7 @@ import {recordMetaT} from "./recordMetaT";
 const fileRequired = t.type({
     file_name: t.string,
     file_size: t.number,
+    md5hash: t.string,
     adapter_file_path: t.string,
     adapter: t.keyof({
         'aws_s3': null,

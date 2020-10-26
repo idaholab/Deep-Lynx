@@ -121,8 +121,8 @@ export default class FileStorage extends PostgresStorage{
     // queries more easily.
     private static createStatement(file: FileT): QueryConfig[] {
         return [{
-           text:`INSERT INTO files(id,container_id,file_name,file_size,adapter_file_path,adapter,metadata,data_source_id,created_by,modified_by) VALUES($1, $2, $3, $4,$5,$6,$7,$8,$9,$10)`,
-           values: [file.id,file.container_id,file.file_name,file.file_size,file.adapter_file_path,file.adapter,JSON.stringify(file.metadata),file.data_source_id,file.created_by,file.modified_by]
+           text:`INSERT INTO files(id,container_id,file_name,file_size,adapter_file_path,adapter,metadata,data_source_id,created_by,modified_by,md5hash) VALUES($1, $2, $3, $4,$5,$6,$7,$8,$9,$10,$11)`,
+           values: [file.id,file.container_id,file.file_name,file.file_size,file.adapter_file_path,file.adapter,JSON.stringify(file.metadata),file.data_source_id,file.created_by,file.modified_by, file.md5hash]
             }
           ]
     }
