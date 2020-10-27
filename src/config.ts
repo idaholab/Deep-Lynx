@@ -9,6 +9,7 @@ export class Config {
   private static instance: Config;
 
   private _root_address: string;
+  private readonly _email_address: string;
   private readonly _is_windows: boolean;
 
   private readonly _mongo_source_uri : string;
@@ -48,12 +49,23 @@ export class Config {
   private readonly _data_source_processing_interval: number;
   private readonly _data_source_processing_batch_size: number;
 
+  private readonly _smtp_username: string;
+  private readonly _smtp_password: string;
+  private readonly _smtp_host: string;
+  private readonly _smtp_port: number;
+  private readonly _smtp_tls: boolean = true;
+  private readonly _smtp_client_id: string;
+  private readonly _smtp_client_secret: string;
+  private readonly _smtp_refresh_token: string;
+  private readonly _smtp_access_token: string;
+
   private constructor() {
     // Either assign a sane default of the env var is missing, or create your
     // own checks on process.env. There is most likely a more elegant way but
     // I like including sane defaults in the app itself vs. an env-sample file
 
     this._root_address = process.env.ROOT_ADDRESS || "http://localhost:8090"
+    this._email_address = process.env.EMAIL_ADDRESS || "do+not+reply@deeplynx.org"
 
     // we could simply have whatever needs to know if its windows access the platform
     // part of process, but I'd rather keep all configuration and accessing of process
@@ -95,10 +107,24 @@ export class Config {
 
     this._data_source_processing_interval = (process.env.DATA_SOURCE_PROCESSING_INTERVAL) ? parseInt(process.env.DATA_SOURCE_PROCESSING_INTERVAL!, 10) : 10000
     this._data_source_processing_batch_size = (process.env.DATA_SOURCE_PROCESSING_BATCH_SIZE) ? parseInt(process.env.DATA_SOURCE_PROCESSING_BATCH_SIZE!, 10) : 1000
+
+    this._smtp_username = process.env.SMTP_USERNAME || ""
+    this._smtp_password = process.env.SMTP_PASSWORD || ""
+    this._smtp_host = process.env.SMTP_HOST || ""
+    this._smtp_port = (process.env.SMTP_PORT) ? parseInt(process.env.SMTP_PORT, 10) : 25;
+    this._smtp_tls = process.env.SMTP_TLS === "true"
+    this._smtp_client_id= process.env.SMTP_CLIENT_ID || ""
+    this._smtp_client_secret = process.env.SMTP_CLIENT_SECRET || ""
+    this._smtp_refresh_token = process.env.SMTP_REFRESH_TOKEN || ""
+    this._smtp_access_token = process.env.SMTP_ACCESS_TOKEN || ""
   }
 
   get root_address(): string {
     return this._root_address;
+  }
+
+  get email_address(): string {
+    return this._email_address;
   }
 
   get is_windows(): boolean {
@@ -212,6 +238,42 @@ export class Config {
 
   get saml_adfs_public_cert_path(): string | undefined {
     return this._saml_adfs_public_cert_path
+  }
+
+  get smtp_username(): string {
+    return this._smtp_username
+  }
+
+  get smtp_password(): string {
+    return this._smtp_password
+  }
+
+  get smtp_host(): string {
+    return this._smtp_host
+  }
+
+  get smtp_tls(): boolean {
+    return this._smtp_tls
+  }
+
+  get smtp_port(): number{
+    return this._smtp_port
+  }
+
+  get smtp_client_id(): string {
+    return this._smtp_client_id
+  }
+
+  get smtp_client_secret(): string {
+    return this._smtp_client_secret
+  }
+
+  get smtp_refresh_token(): string {
+    return this._smtp_refresh_token
+  }
+
+  get smtp_access_token(): string {
+    return this._smtp_access_token
   }
 
   get auth_config_file(): string {
