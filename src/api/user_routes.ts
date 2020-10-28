@@ -21,6 +21,8 @@ export default class UserRoutes {
         app.delete("/users/:userID", middleware, authRequest("write", "users"), this.deleteUser)
         app.put("/users/:userID", ...middleware,authRequest("write", "users"), this.updateUser)
 
+        app.get("/users/validate", this.validateEmail)
+
         app.get("/users/:userID/keys", middleware, authRequest("read", "users"), this.keysForUser)
         app.post("/users/:userID/keys", middleware, authRequest("write", "users"), this.generateKeyPair)
         app.delete("/users/:userID/keys/:keyID", middleware, authRequest("write", "users"), this.deleteKeyPair)
@@ -46,6 +48,24 @@ export default class UserRoutes {
                 }
 
                 res.status(201).json(result)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    // this should return 200 no matter what user id/token combination you send into it
+    // this is by design - so that users can't brute force know either a user ID or token
+    // and so that a user clicking the validation email link twice is met with no error
+    private static validateEmail(req: Request, res: Response, next: NextFunction) {
+        // @ts-ignore
+        UserStorage.Instance.ValidateEmail(req.query.id, req.query.token)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.sendStatus(200)
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())

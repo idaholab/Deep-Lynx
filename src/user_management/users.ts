@@ -10,6 +10,8 @@ import Config from "../config";
 import Logger from "./../logger";
 import bcrypt from "bcrypt"
 import KeyPairStorage from "../data_storage/user_management/keypair_storage";
+import {Emailer} from "../services/email/email";
+import {ValidateEmailTemplate} from "../services/email/templates/validate_email";
 
 export async function CreateDefaultSuperUser(): Promise<Result<UserT>>{
     // if the super user exists, don't recreate
@@ -61,7 +63,23 @@ export async function CreateNewUser(user: UserT, payload: any ): Promise<Result<
                 bcrypt.hash(up.password, 14)
                     .then(hashed => {
                         up.password = hashed
-                        resolve(UserStorage.Instance.Create(user.id!, up))
+                        UserStorage.Instance.Create(user.id!, up)
+                            .then(user => {
+                                if(user.isError) {
+                                    resolve(new Promise(r=> r(Result.Pass(user))))
+                                    return;
+                                }
+
+                                // you don't need to worry about checking to see if email is enabled
+                                // the emailer itself will do that and send the email only if required
+                                if(Config.email_validation_enforced) {
+                                    Emailer.Instance.send(user.value.email,
+                                        'Validate Deep Lynx Email Address',
+                                        ValidateEmailTemplate(user.value.id!,user.value.email_validation_token!))
+                                }
+
+                                resolve(new Promise(r=> r(user)))
+                            })
                     })
                     .catch(e => resolve(Result.Failure(e)))
             }

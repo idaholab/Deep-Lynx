@@ -17,6 +17,10 @@ export const userOptional = t.partial({
     password: t.string,
     admin: t.boolean,
     active: t.boolean,
+    reset_required: t.boolean,
+    reset_token: t.string,
+    email_valid: t.boolean,
+    email_validation_token: t.string,
     permissions: t.array(t.array(t.string))
 });
 
