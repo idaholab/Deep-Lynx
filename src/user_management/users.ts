@@ -12,6 +12,7 @@ import bcrypt from "bcrypt"
 import KeyPairStorage from "../data_storage/user_management/keypair_storage";
 import {Emailer} from "../services/email/email";
 import {ValidateEmailTemplate} from "../services/email/templates/validate_email";
+import {ResetPasswordEmailTemplate} from "../services/email/templates/reset_password";
 
 export async function CreateDefaultSuperUser(): Promise<Result<UserT>>{
     // if the super user exists, don't recreate
@@ -87,6 +88,33 @@ export async function CreateNewUser(user: UserT, payload: any ): Promise<Result<
 
         pipe(newUserPayloadT.decode(payload), fold(onDecodeError(resolve), onSuccess(resolve)))
     })
+}
+
+// InitiateResetPassword will always return true, even if an error occurs. This is
+// so that someone can't use this endpoint to intuit if an email has been registered
+export async function InitiateResetPassword(email: string): Promise<Result<boolean>> {
+    const user = await UserStorage.Instance.RetrieveByEmail(email)
+    if(user.isError) return new Promise(resolve => resolve(Result.Success(true)))
+
+    const reset = await UserStorage.Instance.SetResetToken(user.value.id!)
+    if(reset.isError) {
+        Logger.error(`unable to set reset password token for user ${reset.error}`)
+        return new Promise(resolve => resolve(Result.Success(true)))
+    }
+
+    const resetUser = await UserStorage.Instance.RetrieveByEmail(email)
+    if(resetUser.isError) {
+        Logger.error(`unable to retrieve user ${resetUser.error}`)
+        return new Promise(resolve => resolve(Result.Success(true)))
+    }
+
+    const sentEmail = await Emailer.Instance.send(resetUser.value.email, 'Reset Password Deep Lynx', ResetPasswordEmailTemplate(resetUser.value.reset_token!));
+    if(sentEmail.isError) {
+        Logger.error(`unable to send password reset email ${sentEmail.error}`)
+        return new Promise(resolve => resolve(Result.Success(true)))
+    }
+
+    return new Promise(resolve => resolve(Result.Success(true)))
 }
 
 export async function RetrieveUser(user: UserT | any, userID: string): Promise<Result<UserT>> {

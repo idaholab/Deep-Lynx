@@ -64,6 +64,10 @@ export default class UserStorage extends PostgresStorage{
         return super.retrieve<UserT>(UserStorage.retrieveStatement(id))
     }
 
+    public async SetResetToken(id: string): Promise<Result<boolean>> {
+        return super.run(UserStorage.resetTokenStatement(id, await uidgen.generate()))
+    }
+
     public RetrieveByEmail(email: string): Promise<Result<UserT>> {
         return super.retrieve<UserT>(UserStorage.retrieveByEmailStatement(email))
     }
@@ -171,6 +175,13 @@ export default class UserStorage extends PostgresStorage{
         return {
             text:`DELETE FROM users WHERE id = $1`,
             values: [userID]
+        }
+    }
+
+    private static resetTokenStatement(userID: string, token: string): QueryConfig {
+        return {
+            text: 'UPDATE users SET reset_token = $2, reset_token_issued = NOW() WHERE id = $1',
+            values: [userID, token]
         }
     }
 

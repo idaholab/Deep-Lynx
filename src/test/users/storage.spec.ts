@@ -24,7 +24,7 @@ describe('A User', async() => {
         let user = await storage.Create("test suite", (
             {
                 identity_provider_id: faker.random.uuid(),
-                identity_provider: "basic",
+                identity_provider: "username_password",
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ["superuser"],
@@ -43,7 +43,7 @@ describe('A User', async() => {
         let user = await storage.Create("test suite", (
             {
                 identity_provider_id: faker.random.uuid(),
-                identity_provider: "basic",
+                identity_provider: "username_password",
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ["superuser"],
@@ -61,13 +61,37 @@ describe('A User', async() => {
         return storage.PermanentlyDelete(user.value.id!)
     });
 
+    it('can have reset token set', async()=> {
+        let storage = UserStorage.Instance;
+
+        let user = await storage.Create("test suite", (
+            {
+                identity_provider_id: faker.random.uuid(),
+                identity_provider: "username_password",
+                display_name: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"],
+                admin: false,
+            } as UserT));
+
+        expect(user.isError).false;
+        expect(user.value).not.empty;
+
+        let reset = await storage.SetResetToken(user.value.id!)
+
+        expect(reset.isError).false;
+        expect(reset.value).true;
+
+     //   return storage.PermanentlyDelete(user.value.id!)
+    });
+
     it('can be retrieved from  storage', async()=> {
         let storage = UserStorage.Instance;
 
         let user = await storage.Create("test suite", (
             {
                 identity_provider_id: faker.random.uuid(),
-                identity_provider: "basic",
+                identity_provider: "username_password",
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ["superuser"],
@@ -90,7 +114,7 @@ describe('A User', async() => {
         let user = await storage.Create("test suite", (
             {
                 identity_provider_id: faker.random.uuid(),
-                identity_provider: "basic",
+                identity_provider: "username_password",
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ["superuser"],
@@ -113,7 +137,7 @@ describe('A User', async() => {
         let user = await storage.Create("test suite", (
             {
                 identity_provider_id: faker.random.uuid(),
-                identity_provider: "basic",
+                identity_provider: "username_password",
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ["superuser"],
