@@ -184,7 +184,7 @@
 					"response": []
 				}
 			],
-			"description": "Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. All data is separated by containers.",
+			"description": "Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. ",
 			"auth": {
 				"type": "noauth"
 			},
@@ -222,7 +222,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    nodes(where: {\r\n        AND: [\r\n            {properties: [\r\n            {key: \"notRequired\" value:\"false\" operator:\"like\"}\r\n            ]}\r\n            ]\r\n    }) {\r\n        id\r\n        metatype{id}\r\n        archived\r\n    }\r\n}"
+							"raw": "{\r\n    nodes {\r\n        id\r\n        metatype{id}\r\n        archived\r\n    }\r\n}"
 						},
 						"url": {
 							"raw": "{{baseURL}}/containers/:container-id/query",
@@ -1693,7 +1693,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"name\": \"Relationship Pair Test\",\n\t\"description\": \"Relationship Pair Test description\",\n\t\"origin_metatype_id\": \"566e3862-6853-45af-8a45-3050576dfb9a\",\n\t\"destination_metatype_id\": \"8bcc0b06-bb44-4176-a581-aa68eafca7f3\",\n\t\"relationship_id\": \"885e3fca-5066-4be8-a720-63b3c4744e97\",\n\t\"relationship_type\": \"many:many\"\n}",
+									"raw": "{\n\t\"name\": \"Relationship Pair Test\",\n\t\"description\": \"Relationship Pair Test description\",\n\t\"origin_metatype_id\": \"566e3862-6853-45af-8a45-3050576dfb9a\",\n\t\"destination_metatype_id\": \"8bcc0b06-bb44-4176-a581-aa68eafca7f3\",\n\t\"metatype_relationship_id\": \"885e3fca-5066-4be8-a720-63b3c4744e97\",\n\t\"relationship_type\": \"many:many\"\n}",
 									"options": {
 										"raw": {}
 									}
@@ -1792,46 +1792,6 @@
 									]
 								},
 								"description": "List all Type Relationship Pairs for current container."
-							},
-							"response": []
-						},
-						{
-							"name": "Update Type Relationship Pair",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n\t\"name\": \"Relationship Pair Test\",\n\t\"description\": \"Relationship Pair Test description\",\n\t\"origin_metatype_id\": \"566e3862-6853-45af-8a45-3050576dfb9a\",\n\t\"destination_metatype_id\": \"8bcc0b06-bb44-4176-a581-aa68eafca7f3\",\n\t\"relationship_id\": \"885e3fca-5066-4be8-a720-63b3c4744e97\",\n\t\"relationship_type\": \"many:many\"\n}"
-								},
-								"url": {
-									"raw": "{{baseURL}}/containers/:container-id/metatype_relationship_pairs/:pair-id",
-									"host": [
-										"{{baseURL}}"
-									],
-									"path": [
-										"containers",
-										":container-id",
-										"metatype_relationship_pairs",
-										":pair-id"
-									],
-									"variable": [
-										{
-											"key": "container-id",
-											"value": ""
-										},
-										{
-											"key": "pair-id",
-											"value": ""
-										}
-									]
-								}
 							},
 							"response": []
 						},
@@ -2189,12 +2149,12 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "",
+									"value": "9151cb2c-7349-4e3d-9b26-263d742eed3a",
 									"type": "string"
 								},
 								{
 									"key": "data-source-id",
-									"value": "",
+									"value": "ca372bc5-7b51-4ef0-9afa-b86adbf8f9aa",
 									"type": "string"
 								}
 							]
@@ -2983,37 +2943,19 @@
 					"response": []
 				},
 				{
-					"name": "Delete User",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseURL}}/users/:user-id",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"users",
-								":user-id"
-							],
-							"variable": [
-								{
-									"key": "user-id",
-									"value": ""
-								}
-							]
-						}
+					"name": "Validate Email",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
 					},
-					"response": []
-				},
-				{
-					"name": "Update User",
 					"request": {
-						"method": "PUT",
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"identity_provider\": \"username_password\",\n    \"display_name\": \"Test User\",\n    \"email\": \"test@test.com\",\n    \"password\": \"admin\"\n}",
+							"raw": "",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -3021,21 +2963,88 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseURL}}/users/:user-id",
+							"raw": "{{baseURL}}/users/validate?id=&token=",
 							"host": [
 								"{{baseURL}}"
 							],
 							"path": [
 								"users",
-								":user-id"
+								"validate"
 							],
-							"variable": [
+							"query": [
 								{
-									"key": "user-id",
+									"key": "id",
+									"value": ""
+								},
+								{
+									"key": "token",
 									"value": ""
 								}
 							]
-						}
+						},
+						"description": "Accepts two query parameters - id and token. If that combination matches a user then the email is marked as valid in the system."
+					},
+					"response": []
+				},
+				{
+					"name": "Request Password Reset",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/users/reset-password?email=",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"users",
+								"reset-password"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": ""
+								}
+							]
+						},
+						"description": "Accepts a user email as a query param. Will always return 200 even if the email does not exist. This is by design, so that people can't use this endpoint to validate whether or not an email is part of Deep Lynx."
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"\",\r\n    \"token\": \"\",\r\n    \"new_password\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{baseURL}}/users/reset-password",
+						"description": "Resets a user's password to the provide payload if the user requested the reset less than 4 hours ago."
 					},
 					"response": []
 				}

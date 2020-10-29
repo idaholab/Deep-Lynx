@@ -1,6 +1,12 @@
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
-import {NewUserPayloadT, newUserPayloadT, UserT} from "../types/user_management/userT";
+import {
+    NewUserPayloadT,
+    newUserPayloadT,
+    resetPasswordPayload,
+    ResetPasswordPayloadT,
+    UserT
+} from "../types/user_management/userT";
 import Result, {ErrorUnauthorized} from "../result";
 import UserStorage from "../data_storage/user_management/user_storage";
 import Authorization from "./authorization/authorization";
@@ -87,6 +93,24 @@ export async function CreateNewUser(user: UserT, payload: any ): Promise<Result<
         }
 
         pipe(newUserPayloadT.decode(payload), fold(onDecodeError(resolve), onSuccess(resolve)))
+    })
+}
+
+// ResetPassword will always return 200 as long as the payload is of a valid shape
+// and there are no database errors. This is done so that an outside user cannot use
+// this endpoint to intuit usernames and tokens.
+export async function ResetPassword(payload: any): Promise<Result<boolean>> {
+    return new Promise(resolve => {
+        const onSuccess = (res: (r: any) => void): (r: ResetPasswordPayloadT) => void => {
+            return async (rp: ResetPasswordPayloadT) => {
+                bcrypt.hash(rp.new_password, 14)
+                    .then(hashed => {
+                        resolve(UserStorage.Instance.ResetPassword(rp.token, rp.email, hashed))
+                    })
+            }
+        }
+
+        pipe(resetPasswordPayload.decode(payload), fold(onDecodeError(resolve), onSuccess(resolve)))
     })
 }
 

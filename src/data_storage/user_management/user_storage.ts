@@ -68,6 +68,10 @@ export default class UserStorage extends PostgresStorage{
         return super.run(UserStorage.resetTokenStatement(id, await uidgen.generate()))
     }
 
+    public async ResetPassword(resetToken: string, email: string, newPassword: string): Promise<Result<boolean>> {
+        return super.run(UserStorage.resetPasswordStatement(resetToken, email, newPassword))
+    }
+
     public RetrieveByEmail(email: string): Promise<Result<UserT>> {
         return super.retrieve<UserT>(UserStorage.retrieveByEmailStatement(email))
     }
@@ -182,6 +186,14 @@ export default class UserStorage extends PostgresStorage{
         return {
             text: 'UPDATE users SET reset_token = $2, reset_token_issued = NOW() WHERE id = $1',
             values: [userID, token]
+        }
+    }
+
+    // this will only work if the reset token has been issued less than 4 hours ago
+    private static resetPasswordStatement(resetToken: string, email: string,  newPassword: string): QueryConfig {
+        return {
+            text: `UPDATE users SET password = $2, reset_token = '' WHERE reset_token = $1 AND email = $3 AND reset_token_issued > NOW() - INTERVAL '4 hours'`,
+            values: [resetToken, newPassword, email]
         }
     }
 

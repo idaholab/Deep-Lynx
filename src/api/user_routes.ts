@@ -1,7 +1,7 @@
 import {Request, Response, NextFunction, Application} from "express"
 import {
     AssignUserRole,
-    CreateNewUser, InitiateResetPassword,
+    CreateNewUser, InitiateResetPassword, ResetPassword,
     RetrieveUser,
     RetrieveUserRoles
 } from "../user_management/users";
@@ -22,7 +22,8 @@ export default class UserRoutes {
         app.put("/users/:userID", ...middleware,authRequest("write", "users"), this.updateUser)
 
         app.get("/users/validate", this.validateEmail)
-        app.get("/users/reset-password", this.resetPassword)
+        app.get("/users/reset-password", this.initiatePasswordReset)
+        app.post("/users/reset-password", this.resetPassword)
 
         app.get("/users/:userID/keys", middleware, authRequest("read", "users"), this.keysForUser)
         app.post("/users/:userID/keys", middleware, authRequest("write", "users"), this.generateKeyPair)
@@ -72,9 +73,24 @@ export default class UserRoutes {
             .finally(() => next())
     }
 
-    private static resetPassword(req: Request, res: Response, next: NextFunction) {
+    private static initiatePasswordReset(req: Request, res: Response, next: NextFunction) {
         // @ts-ignore
         InitiateResetPassword(req.query.email)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.sendStatus(200)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static resetPassword(req: Request, res: Response, next: NextFunction) {
+        // @ts-ignore
+        ResetPassword(req.body)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
