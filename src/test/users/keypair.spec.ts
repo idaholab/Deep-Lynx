@@ -25,7 +25,7 @@ describe('A KeyPair', async() => {
         let user = await storage.Create("test suite", (
             {
                 identity_provider_id: faker.random.uuid(),
-                identity_provider: "basic",
+                identity_provider: "username_password",
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
@@ -47,7 +47,7 @@ describe('A KeyPair', async() => {
         let user = await storage.Create("test suite", (
             {
                 identity_provider_id: faker.random.uuid(),
-                identity_provider: "basic",
+                identity_provider: "username_password",
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),

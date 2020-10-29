@@ -1,8 +1,10 @@
 import Result from "../../result"
 import PostgresStorage from "../postgresStorage";
-import {QueryConfig} from "pg";
+import {Query, QueryConfig} from "pg";
 import PostgresAdapter from "../adapters/postgres/postgres";
 import {userT, UserT} from "../../types/user_management/userT";
+const UIDGenerator = require('uid-generator');
+const uidgen = new UIDGenerator();
 
 /*
 * TypeStorage encompasses all logic dealing with the manipulation of the Metatype
@@ -35,6 +37,7 @@ export default class UserStorage extends PostgresStorage{
                 u.active = true;
                 u.created_by = userID;
                 u.modified_by = userID;
+                u.email_validation_token = await uidgen.generate()
 
                 if(!u.admin) u.admin = false;
 
@@ -61,6 +64,14 @@ export default class UserStorage extends PostgresStorage{
         return super.retrieve<UserT>(UserStorage.retrieveStatement(id))
     }
 
+    public async SetResetToken(id: string): Promise<Result<boolean>> {
+        return super.run(UserStorage.resetTokenStatement(id, await uidgen.generate()))
+    }
+
+    public async ResetPassword(resetToken: string, email: string, newPassword: string): Promise<Result<boolean>> {
+        return super.run(UserStorage.resetPasswordStatement(resetToken, email, newPassword))
+    }
+
     public RetrieveByEmail(email: string): Promise<Result<UserT>> {
         return super.retrieve<UserT>(UserStorage.retrieveByEmailStatement(email))
     }
@@ -75,6 +86,10 @@ export default class UserStorage extends PostgresStorage{
 
     public ListFromIDs(ids: string[]): Promise<Result<UserT[]>> {
         return super.rows<UserT>(UserStorage.listFromIDsStatement(ids))
+    }
+
+    public ValidateEmail(id: string, validationToken: string): Promise<Result<boolean>> {
+        return super.run(UserStorage.validateEmailStatement(id, validationToken))
     }
 
     // Update partially updates the User. This function will allow you to
@@ -127,8 +142,8 @@ export default class UserStorage extends PostgresStorage{
     // queries more easily.
     private static createStatement(user: UserT): QueryConfig {
         return {
-            text:`INSERT INTO users(id,identity_provider_id,identity_provider,display_name,email,active,admin,password,created_by,modified_by) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-            values: [user.id, user.identity_provider_id, user.identity_provider, user.display_name, user.email, user.active,user.admin, user.password, user.created_by,user.modified_by]
+            text:`INSERT INTO users(id,identity_provider_id,identity_provider,display_name,email,active,admin,password,created_by,modified_by,email_validation_token) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+            values: [user.id, user.identity_provider_id, user.identity_provider, user.display_name, user.email, user.active,user.admin, user.password, user.created_by,user.modified_by, user.email_validation_token]
         }
     }
 
@@ -167,9 +182,31 @@ export default class UserStorage extends PostgresStorage{
         }
     }
 
+    private static resetTokenStatement(userID: string, token: string): QueryConfig {
+        return {
+            text: 'UPDATE users SET reset_token = $2, reset_token_issued = NOW() WHERE id = $1',
+            values: [userID, token]
+        }
+    }
+
+    // this will only work if the reset token has been issued less than 4 hours ago
+    private static resetPasswordStatement(resetToken: string, email: string,  newPassword: string): QueryConfig {
+        return {
+            text: `UPDATE users SET password = $2, reset_token = '' WHERE reset_token = $1 AND email = $3 AND reset_token_issued > NOW() - INTERVAL '4 hours'`,
+            values: [resetToken, newPassword, email]
+        }
+    }
+
     private static listStatement(): QueryConfig {
         return {
             text: `SELECT * FROM users`,
+        }
+    }
+
+    private static validateEmailStatement(id: string, token: string): QueryConfig {
+        return {
+            text: `UPDATE users SET email_valid = true WHERE email_validation_token = $1 AND id = $2`,
+            values: [token, id]
         }
     }
 

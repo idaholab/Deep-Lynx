@@ -10,6 +10,12 @@ export class Config {
 
   private _root_address: string;
   private readonly _email_address: string;
+  private readonly _email_enabled: boolean = true;
+
+  private readonly _email_validation_url: string;
+  private readonly _email_validation_enforced: boolean;
+  private readonly _reset_password_url: string
+
   private readonly _is_windows: boolean;
 
   private readonly _mongo_source_uri : string;
@@ -49,6 +55,7 @@ export class Config {
   private readonly _data_source_processing_interval: number;
   private readonly _data_source_processing_batch_size: number;
 
+
   private readonly _smtp_username: string;
   private readonly _smtp_password: string;
   private readonly _smtp_host: string;
@@ -66,6 +73,11 @@ export class Config {
 
     this._root_address = process.env.ROOT_ADDRESS || "http://localhost:8090"
     this._email_address = process.env.EMAIL_ADDRESS || "do+not+reply@deeplynx.org"
+    this._email_enabled = process.env.EMAIL_ENABLED === "true"
+
+    this._email_validation_url = process.env.EMAIL_VALIDATION_URL || ""
+    this._email_validation_enforced = process.env.EMAIL_VALIDATION_ENFORCED === "true"
+    this._reset_password_url = process.env.PASSWORD_RESET_URL || ""
 
     // we could simply have whatever needs to know if its windows access the platform
     // part of process, but I'd rather keep all configuration and accessing of process
@@ -125,6 +137,22 @@ export class Config {
 
   get email_address(): string {
     return this._email_address;
+  }
+
+  get email_enabled(): boolean {
+    return this._email_enabled;
+  }
+
+  get email_validation_url(): string {
+    return this._email_validation_url
+  }
+
+  get email_validation_enforced(): boolean {
+    return this._email_validation_enforced
+  }
+
+  get reset_password_url(): string {
+    return this._reset_password_url
   }
 
   get is_windows(): boolean {

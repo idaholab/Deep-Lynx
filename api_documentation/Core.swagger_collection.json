@@ -263,7 +263,7 @@
             "required": true,
             "description": "",
             "schema": {
-              "example": "{\r\n    nodes(where: {\r\n        AND: [\r\n            {properties: [\r\n            {key: \"notRequired\" value:\"false\" operator:\"like\"}\r\n            ]}\r\n            ]\r\n    }) {\r\n        id\r\n        metatype{id}\r\n        archived\r\n    }\r\n}",
+              "example": "{\r\n    nodes {\r\n        id\r\n        metatype{id}\r\n        archived\r\n    }\r\n}",
               "type": "string"
             }
           }
@@ -1442,7 +1442,7 @@
         }
       }
     },
-    "/containers/{id}/metatypes_relationships/{relationship-id}/keys": {
+    "/containers/{id}/metatype_relationships/{relationship-id}/keys": {
       "get": {
         "description": "Retrieves all keys for a Type Relationship.",
         "summary": "List Type Relationship Keys",
@@ -2606,6 +2606,103 @@
         }
       }
     },
+    "/users/validate": {
+      "get": {
+        "description": "Accepts two query parameters - id and token. If that combination matches a user then the email is marked as valid in the system.",
+        "summary": "Validate Email",
+        "tags": [
+          "Users"
+        ],
+        "operationId": "ValidateEmail",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/users/reset-password": {
+      "get": {
+        "description": "Accepts a user email as a query param. Will always return 200 even if the email does not exist. This is by design, so that people can't use this endpoint to validate whether or not an email is part of Deep Lynx.",
+        "summary": "Request Password Reset",
+        "tags": [
+          "Users"
+        ],
+        "operationId": "RequestPasswordReset",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "security": []
+      },
+      "post": {
+        "description": "Resets a user's password to the provide payload if the user requested the reset less than 4 hours ago.",
+        "summary": "Reset Password",
+        "tags": [
+          "Users"
+        ],
+        "operationId": "ResetPassword",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ResetPasswordRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
     "/containers/{container-id}/import/datasources/{source-id}/mappings": {
       "post": {
         "description": "Creates a new type mapping in storage",
@@ -2895,6 +2992,163 @@
             "in": "path",
             "required": true,
             "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/containers/{container-id}/import/imports/{import-id}/data": {
+      "get": {
+        "summary": "List Import's Data",
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ListImport'sData",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "import-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/containers/{container-id}/import/imports/{import-id}": {
+      "delete": {
+        "description": "Delete import will delete an import ONLY IF the import has not been processed.",
+        "summary": "Delete Import",
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "DeleteImport",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "import-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/containers/{container-id}/import/imports/{import-id}/data/{data-id}": {
+      "get": {
+        "description": "Retrieve a single piece of data from an import.",
+        "summary": "Get Import Data",
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "GetImportData",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "import-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "data-id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete a single piece of data from an import.",
+        "summary": "Delete Import Data",
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "DeleteImportData",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "import-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "data-id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
             "description": ""
           }
         ],
@@ -3798,6 +4052,31 @@
         "role_name"
       ]
     },
+    "ResetPasswordRequest": {
+      "title": "ResetPasswordRequest",
+      "example": {
+        "email": "",
+        "token": "",
+        "new_password": ""
+      },
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        },
+        "new_password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "email",
+        "token",
+        "new_password"
+      ]
+    },
     "CreateDataTypeMappingRequest": {
       "title": "CreateDataTypeMappingRequest",
       "example": {
@@ -3988,7 +4267,7 @@
   "tags": [
     {
       "name": "Containers",
-      "description": "Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. All data is separated by containers."
+      "description": "Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. "
     },
     {
       "name": "Data Query",
@@ -4032,6 +4311,9 @@
     {
       "name": "Data Type Mappings",
       "description": "These are mappings for taking unknown payloads and mapping them to known data classes and structures prior to storage."
+    },
+    {
+      "name": "Imports"
     },
     {
       "name": "Misc",

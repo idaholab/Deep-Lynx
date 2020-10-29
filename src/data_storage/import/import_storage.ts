@@ -3,7 +3,6 @@ import Result from "../../result";
 import {QueryConfig} from "pg";
 import {ImportT} from "../../types/import/importT";
 import uuid from "uuid";
-import * as t from "io-ts";
 
 export default class ImportStorage extends PostgresStorage {
     private static instance: ImportStorage;

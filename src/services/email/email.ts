@@ -51,7 +51,12 @@ export class Emailer {
     }
 
     public send(to: string, subject: string, template: string): Promise<Result<boolean>> {
-        return new Promise(resolve => {
+       if(!Config.email_enabled) {
+           Logger.debug(`email not enabled, sending email with subject ${subject} aborted`)
+           return new Promise(resolve => resolve(Result.Failure("email not enabled")))
+       }
+
+       return new Promise(resolve => {
             this._mail.sendMail({
                 from: Config.email_address,
                 to,

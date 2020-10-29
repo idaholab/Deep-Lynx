@@ -70,7 +70,7 @@ export async function ManualJsonImport(user:UserT, dataSourceID: string, payload
     if(dataSource.value.adapter_type !== "manual") return new Promise(resolve => resolve(Result.Failure('cannot run manual import for non-manual data source')))
     if(!Array.isArray(payload)) return new Promise(resolve => resolve(Result.Failure("payload must be an array of JSON objects")))
 
-    const newImport = await ImportStorage.Instance.InitiateImport(dataSourceID, user.id!, "test")
+    const newImport = await ImportStorage.Instance.InitiateImport(dataSourceID, user.id!, "manual upload")
 
     for(const data of payload) {
         const inserted = await DataStagingStorage.Instance.Create(dataSourceID, newImport.value, data)

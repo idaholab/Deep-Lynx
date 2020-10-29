@@ -1,7 +1,7 @@
 import {Request, Response, NextFunction, Application} from "express"
 import {
     AssignUserRole,
-    CreateNewUser,
+    CreateNewUser, InitiateResetPassword, ResetPassword,
     RetrieveUser,
     RetrieveUserRoles
 } from "../user_management/users";
@@ -16,10 +16,14 @@ import {UsersForContainer} from "../api_handlers/user";
 export default class UserRoutes {
     public static mount(app: Application, middleware: any[]) {
         // TODO: endpoint for user creation that immediately assigns the user to a container
-        app.post("/users", ...middleware,authRequest("write", "users"), this.createNewUser)
+        app.post("/users", ...middleware, this.createNewUser)
         app.get("/users",...middleware,authRequest("read", "users"), this.listUsers);
         app.delete("/users/:userID", middleware, authRequest("write", "users"), this.deleteUser)
         app.put("/users/:userID", ...middleware,authRequest("write", "users"), this.updateUser)
+
+        app.get("/users/validate", this.validateEmail)
+        app.get("/users/reset-password", this.initiatePasswordReset)
+        app.post("/users/reset-password", this.resetPassword)
 
         app.get("/users/:userID/keys", middleware, authRequest("read", "users"), this.keysForUser)
         app.post("/users/:userID/keys", middleware, authRequest("write", "users"), this.generateKeyPair)
@@ -46,6 +50,54 @@ export default class UserRoutes {
                 }
 
                 res.status(201).json(result)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    // this should return 200 no matter what user id/token combination you send into it
+    // this is by design - so that users can't brute force know either a user ID or token
+    // and so that a user clicking the validation email link twice is met with no error
+    private static validateEmail(req: Request, res: Response, next: NextFunction) {
+        // @ts-ignore
+        UserStorage.Instance.ValidateEmail(req.query.id, req.query.token)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.sendStatus(200)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static initiatePasswordReset(req: Request, res: Response, next: NextFunction) {
+        // @ts-ignore
+        InitiateResetPassword(req.query.email)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.sendStatus(200)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static resetPassword(req: Request, res: Response, next: NextFunction) {
+        // @ts-ignore
+        ResetPassword(req.body)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.sendStatus(200)
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())

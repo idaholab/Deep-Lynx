@@ -4,7 +4,6 @@ import {recordMetaT} from "../recordMetaT";
 export const userRequired = t.type({
     identity_provider: t.keyof({
         saml_adfs: null,
-        basic: null,
         username_password: null,
     }),
     display_name: t.string,
@@ -17,6 +16,10 @@ export const userOptional = t.partial({
     password: t.string,
     admin: t.boolean,
     active: t.boolean,
+    reset_required: t.boolean,
+    reset_token: t.string,
+    email_valid: t.boolean,
+    email_validation_token: t.string,
     permissions: t.array(t.array(t.string))
 });
 
@@ -29,16 +32,23 @@ export const newUserPayloadT = t.type({
     password: t.string
 })
 
+export const resetPasswordPayload = t.type({
+    email: t.string,
+    token: t.string,
+    new_password: t.string
+})
+
 export const userT = t.exact(t.intersection([userRequired, userOptional, recordMetaT]));
 export type UserT = t.TypeOf<typeof userT>
 export type NewUserPayloadT = t.TypeOf<typeof newUserPayloadT>
+export type ResetPasswordPayloadT = t.TypeOf<typeof resetPasswordPayload>
 
 // SuperUser should be used for methods like Basic Authentication where no user
 // is registered but you still need access to functionality behind access control
 export function SuperUser(): UserT {
     return {
        id: "superuser",
-       identity_provider: "basic",
+       identity_provider: "username_password",
        identity_provider_id: "",
        display_name: "Admin",
        email: "",
