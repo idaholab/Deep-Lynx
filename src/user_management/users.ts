@@ -132,7 +132,7 @@ export async function InitiateResetPassword(email: string): Promise<Result<boole
         return new Promise(resolve => resolve(Result.Success(true)))
     }
 
-    const sentEmail = await Emailer.Instance.send(resetUser.value.email, 'Reset Password Deep Lynx', ResetPasswordEmailTemplate(resetUser.value.reset_token!));
+    const sentEmail = await Emailer.Instance.send(resetUser.value.email, 'Reset Password Deep Lynx', ResetPasswordEmailTemplate(resetUser.value.email, resetUser.value.reset_token!));
     if(sentEmail.isError) {
         Logger.error(`unable to send password reset email ${sentEmail.error}`)
         return new Promise(resolve => resolve(Result.Success(true)))
