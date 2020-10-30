@@ -106,7 +106,19 @@ export default class ContainerRoutes {
     private static archiveContainer(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT;
 
-        storage.Archive(req.params.id, user.id!)
+        if(req.query.permanent) {
+            storage.PermanentlyDelete(req.params.id)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+                res.sendStatus(200)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+        } else {
+            storage.Archive(req.params.id, user.id!)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -117,6 +129,7 @@ export default class ContainerRoutes {
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
         }
+    }
 
     private static exportDataFromContainer(req: Request, res: Response, next: NextFunction) {
         NewDataExport(req.user as UserT,req.params.id, req.body)

@@ -210,7 +210,7 @@
         }
       },
       "delete": {
-        "description": "Archives a Container. This is preferred over deletion as deletion has a cascading effect on the deleted type's keys, relationships, and relationship keys. When in doubt, archive over delete. We'd rather have tombstones than cremating the type.",
+        "description": "Archive or delete a Container. Accepts a single query parameter - permanent. If this query parameter is provided (with any value), the container will be permanently deleted, forcing a cascade to all dependent objects in the database. Generally we prefer to archive rather than delete.",
         "summary": "Archive",
         "tags": [
           "Containers"
@@ -227,6 +227,14 @@
             "required": true,
             "type": "string",
             "description": ""
+          },
+          {
+            "name": "permanent",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "string",
+            "description": "If supplied, the container will be permanently deleted"
           }
         ],
         "responses": {
