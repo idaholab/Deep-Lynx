@@ -16,7 +16,7 @@ import {UsersForContainer} from "../api_handlers/user";
 export default class UserRoutes {
     public static mount(app: Application, middleware: any[]) {
         // TODO: endpoint for user creation that immediately assigns the user to a container
-        app.post("/users", ...middleware, this.createNewUser)
+        app.post("/users", this.createNewUser)
         app.get("/users",...middleware,authRequest("read", "users"), this.listUsers);
         app.delete("/users/:userID", middleware, authRequest("write", "users"), this.deleteUser)
         app.put("/users/:userID", ...middleware,authRequest("write", "users"), this.updateUser)
@@ -148,7 +148,7 @@ export default class UserRoutes {
     }
 
     private static createNewUser(req: Request, res: Response, next: NextFunction) {
-        CreateNewUser(req.user as UserT, req.body)
+        CreateNewUser(req.body)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
