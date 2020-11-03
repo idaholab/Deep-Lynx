@@ -180,7 +180,7 @@ export class Router {
         passport.authenticate('local', (err, user, info) => {
           if (err) {return next(err)}
 
-          if(!user) {return resp.redirect('/health')}
+          if(!user) {return resp.redirect(req.body.redirect + `?error=Unable to login user`)}
 
           // fetch set of permissions per resource for the user before returning
           RetrieveResourcePermissions((user as UserT).id!)
