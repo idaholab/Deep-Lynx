@@ -178,9 +178,9 @@ export class Router {
     // method.
     this.app.post('/login', (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         passport.authenticate('local', (err, user, info) => {
-          if (err) {return next(err)}
+          if (err) {return resp.redirect(req.body.redirect + `?error=Unable to login - check username and password`)}
 
-          if(!user) {return resp.redirect(req.body.redirect + `?error=Unable to login user`)}
+          if(!user) {return resp.redirect(req.body.redirect + `?error=Unable to login - check username and password`)}
 
           // fetch set of permissions per resource for the user before returning
           RetrieveResourcePermissions((user as UserT).id!)
@@ -191,7 +191,7 @@ export class Router {
               })
 
         })(req, resp, next)}, (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        res.redirect('/health');
+        res.redirect(req.body.redirect);
     })
 
 
