@@ -5,7 +5,7 @@ import {
     RetrieveUser,
     RetrieveUserRoles
 } from "../user_management/users";
-import {authInContainer, authRequest} from "./middleware";
+import {authInContainer, authRequest, authUser} from "./middleware";
 import UserStorage from "../data_storage/user_management/user_storage";
 import {UserT} from "../types/user_management/userT";
 import KeyPairStorage from "../data_storage/user_management/keypair_storage";
@@ -16,7 +16,7 @@ import {UsersForContainer} from "../api_handlers/user";
 export default class UserRoutes {
     public static mount(app: Application, middleware: any[]) {
         // TODO: endpoint for user creation that immediately assigns the user to a container
-        app.post("/users", ...middleware, this.createNewUser)
+        app.post("/users", this.createNewUser)
         app.get("/users",...middleware,authRequest("read", "users"), this.listUsers);
         app.delete("/users/:userID", middleware, authRequest("write", "users"), this.deleteUser)
         app.put("/users/:userID", ...middleware,authRequest("write", "users"), this.updateUser)
@@ -25,9 +25,9 @@ export default class UserRoutes {
         app.get("/users/reset-password", this.initiatePasswordReset)
         app.post("/users/reset-password", this.resetPassword)
 
-        app.get("/users/:userID/keys", middleware, authRequest("read", "users"), this.keysForUser)
-        app.post("/users/:userID/keys", middleware, authRequest("write", "users"), this.generateKeyPair)
-        app.delete("/users/:userID/keys/:keyID", middleware, authRequest("write", "users"), this.deleteKeyPair)
+        app.get("/users/:id/keys", middleware, authUser(), this.keysForUser)
+        app.post("/users/:id/keys", middleware, authUser(), this.generateKeyPair)
+        app.delete("/users/:id/keys/:keyID", middleware, authUser(), this.deleteKeyPair)
 
         // this endpoint will return all users of the application, not users who have permissions in the container
         // we use the container to make sure the requester has permissions to view all users, but this could be
@@ -104,7 +104,7 @@ export default class UserRoutes {
     }
 
     private static keysForUser(req: Request, res: Response, next: NextFunction) {
-        KeyPairStorage.Instance.KeysForUser(req.params.userID)
+        KeyPairStorage.Instance.KeysForUser(req.params.id)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -118,7 +118,7 @@ export default class UserRoutes {
     }
 
     private static generateKeyPair(req: Request, res: Response, next: NextFunction) {
-        KeyPairStorage.Instance.Create(req.params.userID)
+        KeyPairStorage.Instance.Create(req.params.id)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -134,7 +134,7 @@ export default class UserRoutes {
     }
 
     private static deleteKeyPair(req: Request, res: Response, next: NextFunction) {
-        KeyPairStorage.Instance.PermanentlyDelete(req.params.userID, req.params.keyID)
+        KeyPairStorage.Instance.PermanentlyDelete(req.params.id, req.params.keyID)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -148,7 +148,7 @@ export default class UserRoutes {
     }
 
     private static createNewUser(req: Request, res: Response, next: NextFunction) {
-        CreateNewUser(req.user as UserT, req.body)
+        CreateNewUser(req.body)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);

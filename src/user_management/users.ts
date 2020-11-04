@@ -57,10 +57,7 @@ export async function CreateDefaultSuperUser(): Promise<Result<UserT>>{
     return new Promise(resolve => resolve(Result.Success(newUser.value)))
 }
 
-export async function CreateNewUser(user: UserT, payload: any ): Promise<Result<UserT>> {
-    const authed = await Authorization.AuthUser(user, 'write', 'users');
-    if(!authed) return Promise.resolve(Result.Error(ErrorUnauthorized));
-
+export async function CreateNewUser(payload: any ): Promise<Result<UserT>> {
     return new Promise(resolve => {
         const onSuccess = (res: (r:any) => void): (u: NewUserPayloadT) => void => {
             return async (up: NewUserPayloadT) => {
@@ -70,7 +67,7 @@ export async function CreateNewUser(user: UserT, payload: any ): Promise<Result<
                 bcrypt.hash(up.password, 14)
                     .then(hashed => {
                         up.password = hashed
-                        UserStorage.Instance.Create(user.id!, up)
+                        UserStorage.Instance.Create('user registration', up)
                             .then(user => {
                                 if(user.isError) {
                                     resolve(new Promise(r=> r(Result.Pass(user))))

@@ -89,6 +89,19 @@ export function authRequest( action: "read" | "write", resource: string, domainP
     }
 }
 
+
+// authUser is used to manage user authorization against themselves, id refers to the user ID
+export function authUser() {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        const user = req.user as UserT
+
+        if(req.params.id === user.id) next()
+        else {
+            resp.status(401).send('unauthorized')
+        }
+    }
+}
+
 // authDomain assumes the request paramater 'id' refers to the current domain of the user
 export function authInContainer(action: "read" | "write", resource: string) {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {

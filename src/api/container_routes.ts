@@ -15,14 +15,14 @@ export default class ContainerRoutes {
     public static mount(app: Application, middleware:any[]) {
         app.post("/containers", ...middleware,this.createContainer);
         app.put("/containers",...middleware,authRequest("write", "containers"),this.batchUpdate);
-        app.get("/containers/:id",...middleware, authRequest("read", "containers"),this.retrieveContainer);
 
         // we don't auth this request as the actual handler will only ever show containers
         // to which the user has access
         app.get("/containers",...middleware,this.listContainers);
 
-        app.put("/containers/:id",...middleware, authRequest("write", "containers"),this.updateContainer);
-        app.delete("/containers/:id",...middleware, authRequest("write", "containers"),this.archiveContainer);
+        app.get("/containers/:id",...middleware, authInContainer("read", "data"),this.retrieveContainer);
+        app.put("/containers/:id",...middleware, authInContainer("write", "data"),this.updateContainer);
+        app.delete("/containers/:id",...middleware, authInContainer("write", "data"),this.archiveContainer);
 
         app.post("/containers/:id/data/export",...middleware, authInContainer("write", "data"),this.exportDataFromContainer);
         app.get("/containers/:id/data/export/:exportID",...middleware, authInContainer("read", "data"),this.getExport);
