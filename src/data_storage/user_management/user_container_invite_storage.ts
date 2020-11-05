@@ -57,8 +57,8 @@ export default class UserContainerInviteStorage extends PostgresStorage{
         return super.decodeAndValidate<UserContainerInviteT>(userContainerInviteT, onValidateSuccess, input)
     }
 
-    public InvitesByUser(userID: string): Promise<Result<UserContainerInviteT[]>> {
-        return super.rows<UserContainerInviteT>(UserContainerInviteStorage.listForUserStatement(userID))
+    public InvitesByUser(userID: string, containerID: string): Promise<Result<UserContainerInviteT[]>> {
+        return super.rows<UserContainerInviteT>(UserContainerInviteStorage.listForUserStatement(userID, containerID))
     }
 
     public RetrieveByTokenAndEmail(token: string, email: string): Promise<Result<UserContainerInviteT>> {
@@ -88,10 +88,10 @@ export default class UserContainerInviteStorage extends PostgresStorage{
         }
     }
 
-    private static listForUserStatement(userID: string): QueryConfig {
+    private static listForUserStatement(userID: string, containerID: string): QueryConfig {
         return {
-            text: `SELECT * FROM user_container_invites WHERE origin_user = $1`,
-            values: [userID]
+            text: `SELECT * FROM user_container_invites WHERE origin_user = $1 AND container_id = $2`,
+            values: [userID, containerID]
         }
     }
 

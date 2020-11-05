@@ -11,6 +11,7 @@ import UserStorage from "../data_storage/user_management/user_storage";
 import {UserT} from "../types/user_management/userT";
 import KeyPairStorage from "../data_storage/user_management/keypair_storage";
 import {UsersForContainer} from "../api_handlers/user";
+import UserContainerInviteStorage from "../data_storage/user_management/user_container_invite_storage";
 
 // These routes pertain to User management. Currently user creation is reserved
 // for SAML authentication routes. You cannot manually create a user as of June 2020.
@@ -41,7 +42,7 @@ export default class UserRoutes {
         app.get("/containers/:id/users/:userID/roles", ...middleware, authInContainer("read", "users"), this.listUserRoles)
 
         app.post("/containers/:id/users/invite", ...middleware, authInContainer("write", "users"), this.inviteUserToContainer)
-
+        app.get("/containers/:id/users/invite", ...middleware, authInContainer("write", "users"), this.listInvitedUsers)
     }
 
     private static retrieveUser(req: Request, res: Response, next: NextFunction) {
@@ -86,6 +87,21 @@ export default class UserRoutes {
                 }
 
                 res.sendStatus(200)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static listInvitedUsers(req: Request, res: Response, next: NextFunction) {
+        const user = req.user as UserT
+        UserContainerInviteStorage.Instance.InvitesByUser(req.params.id, user.id!)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(200).json(result)
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())

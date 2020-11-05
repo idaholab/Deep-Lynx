@@ -59,7 +59,7 @@ describe('A User Container Invite can', async() => {
 
         expect(invite.isError).false
 
-        const invites = await storage.InvitesByUser(userID)
+        const invites = await storage.InvitesByUser(userID, containerID)
 
         expect(invites.isError).false
         expect(invites.value).not.empty

@@ -54,6 +54,7 @@ describe('A File can', async() => {
         let file = await storage.Create("test suite",containerID, dataSourceID, {
             file_name: faker.name.findName(),
             file_size: 200,
+            md5hash: "",
             adapter_file_path: faker.name.findName(),
             adapter: "filesystem",
         })
@@ -71,6 +72,7 @@ describe('A File can', async() => {
         let file = await storage.Create("test suite", containerID, dataSourceID, {
             file_name: faker.name.findName(),
             file_size: 200,
+            md5hash: "",
             adapter_file_path: faker.name.findName(),
             adapter: "filesystem",
         })
@@ -88,6 +90,7 @@ describe('A File can', async() => {
         let file = await storage.Create("test suite", containerID, dataSourceID, {
             file_name: faker.name.findName(),
             file_size: 200,
+            md5hash: "",
             adapter_file_path: faker.name.findName(),
             adapter: "filesystem",
         })
