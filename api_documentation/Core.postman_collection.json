@@ -232,6 +232,32 @@
 						"description": "An optional query param \"dryrun\" may be included with a value of \"true\" in order to return a HTML formatted string explaining the name and description of the container along with the number of metatypes, metatype relationships, and metatype keys to be created. This request uses a form-data body which requires a field \"name\". A \"description\" may also be provided. If the ontology to be imported is being referenced via url, provide the url via a \"path\" field. Otherwise a local file may be provided. A file takes precedence over a \"path\" value if both are provided."
 					},
 					"response": []
+				},
+				{
+					"name": "Repair Permissions",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/permissions",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"permissions"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Repairs a container's permission set"
+					},
+					"response": []
 				}
 			],
 			"description": "Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. ",

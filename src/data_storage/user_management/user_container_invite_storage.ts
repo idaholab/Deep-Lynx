@@ -104,7 +104,7 @@ export default class UserContainerInviteStorage extends PostgresStorage{
 
     private static listForEmailStatement(email: string): QueryConfig {
         return {
-            text: `SELECT user_container_invites.*, containers.name FROM user_container_invites LEFT JOIN containers ON containers.id = user_container_invites.container_id  WHERE email = $1 AND NOT accepted`,
+            text: `SELECT user_container_invites.*, containers.name as container_name FROM user_container_invites LEFT JOIN containers ON containers.id = user_container_invites.container_id  WHERE email = $1 AND NOT accepted`,
             values: [email]
         }
     }
