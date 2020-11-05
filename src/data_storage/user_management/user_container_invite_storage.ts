@@ -1,7 +1,6 @@
 import Result from "../../result"
 import PostgresStorage from "../postgresStorage";
-import {Query, QueryConfig} from "pg";
-import PostgresAdapter from "../adapters/postgres/postgres";
+import {QueryConfig} from "pg";
 import {userContainerInviteT, UserContainerInviteT} from "../../types/user_management/userContainerInviteT";
 
 const UIDGenerator = require('uid-generator');
@@ -61,8 +60,16 @@ export default class UserContainerInviteStorage extends PostgresStorage{
         return super.rows<UserContainerInviteT>(UserContainerInviteStorage.listForUserStatement(userID, containerID))
     }
 
+    public InvitesForEmail(email: string): Promise<Result<UserContainerInviteT[]>> {
+        return super.rows<UserContainerInviteT>(UserContainerInviteStorage.listForEmailStatement(email))
+    }
+
     public RetrieveByTokenAndEmail(token: string, email: string): Promise<Result<UserContainerInviteT>> {
         return super.retrieve<UserContainerInviteT>(UserContainerInviteStorage.retrieveByTokenAndEmailStatement(token, email))
+    }
+
+    public MarkAccepted(token: string, email: string): Promise<Result<boolean>> {
+        return super.runAsTransaction(UserContainerInviteStorage.markAcceptedStatement(token, email))
     }
 
     public PermanentlyDelete(id: number): Promise<Result<boolean>> {
@@ -90,14 +97,28 @@ export default class UserContainerInviteStorage extends PostgresStorage{
 
     private static listForUserStatement(userID: string, containerID: string): QueryConfig {
         return {
-            text: `SELECT * FROM user_container_invites WHERE origin_user = $1 AND container_id = $2`,
+            text: `SELECT * FROM user_container_invites WHERE origin_user = $1 AND container_id = $2 AND NOT accepted`,
             values: [userID, containerID]
+        }
+    }
+
+    private static listForEmailStatement(email: string): QueryConfig {
+        return {
+            text: `SELECT user_container_invites.*, containers.name FROM user_container_invites LEFT JOIN containers ON containers.id = user_container_invites.container_id  WHERE email = $1 AND NOT accepted`,
+            values: [email]
         }
     }
 
     private static retrieveByTokenAndEmailStatement(token: string, email: string): QueryConfig {
         return {
             text: `SELECT * FROM user_container_invites WHERE token = $1 AND email = $2`,
+            values: [token, email]
+        }
+    }
+
+    private static markAcceptedStatement(token: string, email: string): QueryConfig {
+        return {
+            text: `UPDATE user_container_invites SET accepted = true WHERE token = $1 and email = $2`,
             values: [token, email]
         }
     }

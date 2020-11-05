@@ -9,8 +9,12 @@ export const userContainerInviteOptional = t.partial({
     id: t.number,
     origin_user: t.string,
     token: t.string,
+    accepted: t.boolean,
     container_id: t.string,
-    issued: t.union([DateFromISOString, t.string])
+    issued: t.union([DateFromISOString, t.string]),
+
+    // composite types
+    container_name: t.string
 })
 
 export const userContainerInviteT = t.exact(t.intersection([userContainerInviteRequired, userContainerInviteOptional]))

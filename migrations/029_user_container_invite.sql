@@ -1,5 +1,6 @@
 CREATE TABLE user_container_invites (
     id SERIAL PRIMARY KEY,
+    accepted boolean NOT NULL DEFAULT FALSE,
     origin_user uuid REFERENCES users(id) ON DELETE SET NULL,
     email text NOT NULL,
     token text NOT NULL,

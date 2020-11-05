@@ -26,6 +26,7 @@ export default class UserRoutes {
         app.get("/users/reset-password", this.initiatePasswordReset)
         app.post("/users/reset-password", this.resetPassword)
         app.get("/users/invite", ...middleware, this.acceptContainerInvite)
+        app.get("/users/invites", ...middleware, this.listOutstandingInvites)
 
         app.get("/users/:id/keys", middleware, authUser(), this.keysForUser)
         app.post("/users/:id/keys", middleware, authUser(), this.generateKeyPair)
@@ -106,6 +107,22 @@ export default class UserRoutes {
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
     }
+
+    private static listOutstandingInvites(req: Request, res: Response, next: NextFunction) {
+        const user = req.user as UserT
+        UserContainerInviteStorage.Instance.InvitesForEmail(user.email)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(200).json(result)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
 
     private static initiatePasswordReset(req: Request, res: Response, next: NextFunction) {
         // @ts-ignore
