@@ -42,6 +42,7 @@ export class Authorization {
                 domain = "all"
             }
 
+            await this.e.loadPolicy()
             return await this.e.enforce(user.id, domain, resource, action)
         }
 
@@ -51,7 +52,6 @@ export class Authorization {
     async AssignRole(userID:string, role:string, domain?:string): Promise<boolean> {
         if(!domain) domain = "all";
 
-        // TODO: currently we remove roles prior to new role assigment, streamline this somehow
         await this.DeleteAllRoles(userID, domain)
 
         return this.e.addRoleForUser(userID, role, domain)

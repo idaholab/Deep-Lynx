@@ -116,6 +116,10 @@ export async function ListContainers(user: UserT | undefined): Promise<Result<Co
        if(set[2]) containerIDs.push((set[2]))
    })
 
+   if(containerIDs.length === 0) {
+        return new Promise(resolve => resolve(Result.Success([])))
+    }
+
 
    return ContainerStorage.Instance.ListFromIDS(containerIDs)
 }
