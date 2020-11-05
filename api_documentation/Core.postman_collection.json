@@ -182,6 +182,62 @@
 						"description": "Archives a Container. This is preferred over deletion as deletion has a cascading effect on the deleted type's keys, relationships, and relationship keys. When in doubt, archive over delete. We'd rather have tombstones than cremating the type."
 					},
 					"response": []
+				},
+				{
+					"name": "Import",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "",
+									"type": "file",
+									"src": "/Users/browjm2/Developer/de-lynx-admin-gui/diamond.owl"
+								},
+								{
+									"key": "name",
+									"value": "DIAMOND",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "obo:IAO_0000115",
+									"type": "text"
+								},
+								{
+									"key": "path",
+									"value": "https://raw.githubusercontent.com/idaholab/DIAMOND/master/diamond.owl",
+									"type": "text"
+								}
+							],
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/import",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								"import"
+							],
+							"query": [
+								{
+									"key": "dryrun",
+									"value": "true",
+									"disabled": true
+								}
+							]
+						},
+						"description": "An optional query param \"dryrun\" may be included with a value of \"true\" in order to return a HTML formatted string explaining the name and description of the container along with the number of metatypes, metatype relationships, and metatype keys to be created. This request uses a form-data body which requires a field \"name\". A \"description\" may also be provided. If the ontology to be imported is being referenced via url, provide the url via a \"path\" field. Otherwise a local file may be provided. A file takes precedence over a \"path\" value if both are provided."
+					},
+					"response": []
 				}
 			],
 			"description": "Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. ",

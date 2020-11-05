@@ -210,7 +210,7 @@
         }
       },
       "delete": {
-        "description": "Archives a Container. This is preferred over deletion as deletion has a cascading effect on the deleted type's keys, relationships, and relationship keys. When in doubt, archive over delete. We'd rather have tombstones than cremating the type.",
+        "description": "Archive or delete a Container. Accepts a single query parameter - permanent. If this query parameter is provided (with any value), the container will be permanently deleted, forcing a cascade to all dependent objects in the database. Generally we prefer to archive rather than delete.",
         "summary": "Archive",
         "tags": [
           "Containers"
@@ -222,8 +222,61 @@
         ],
         "parameters": [
           {
+            "name": "permanent",
+            "in": "query",
+            "required": true,
+            "type": "boolean",
+            "description": ""
+          },
+          {
             "name": "container-id",
             "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/containers/import": {
+      "post": {
+        "description": "An optional query param \"dryrun\" may be included with a value of \"true\" in order to return a HTML formatted string explaining the name and description of the container along with the number of metatypes, metatype relationships, and metatype keys to be created. This request uses a form-data body which requires a field \"name\". A \"description\" may also be provided. If the ontology to be imported is being referenced via url, provide the url via a \"path\" field. Otherwise a local file may be provided. A file takes precedence over a \"path\" value if both are provided.",
+        "summary": "Import",
+        "tags": [
+          "Containers"
+        ],
+        "operationId": "Import",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "formData",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "description",
+            "in": "formData",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "path",
+            "in": "formData",
             "required": true,
             "type": "string",
             "description": ""
@@ -2692,36 +2745,6 @@
             "schema": {
               "$ref": "#/definitions/ResetPasswordRequest"
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "headers": {}
-          }
-        },
-        "security": []
-      }
-    },
-    "/containers/{container-id}/users/invite": {
-      "post": {
-        "description": "Create a new user using the username_password identity type.",
-        "summary": "Invite User to Container",
-        "tags": [
-          "Users"
-        ],
-        "operationId": "InviteUsertoContainer",
-        "deprecated": false,
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "container-id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": ""
           }
         ],
         "responses": {
