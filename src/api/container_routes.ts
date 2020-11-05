@@ -5,9 +5,14 @@ import {NewDataExport, StartExport, StopExport} from "../data_exporting/exporter
 import {UserT} from "../types/user_management/userT";
 import ExportStorage from "../data_storage/export/export_storage";
 import {authRequest, authInContainer} from "./middleware";
+import ContainerImport from "../data_storage/import/container_import";
+import { ContainerImportT } from "../types/import/containerImportT";
+const Busboy = require('busboy');
+const Buffer = require('buffer').Buffer;
 
 const storage = ContainerStorage.Instance;
 const exportStorage = ExportStorage.Instance;
+const containerImport = ContainerImport.Instance;
 
 // This contains all routes pertaining to container management. This also contains routes for the export functionality
 // as it was not large enough to pull into its own functionality.
@@ -23,6 +28,8 @@ export default class ContainerRoutes {
         app.get("/containers/:id",...middleware, authInContainer("read", "data"),this.retrieveContainer);
         app.put("/containers/:id",...middleware, authInContainer("write", "data"),this.updateContainer);
         app.delete("/containers/:id",...middleware, authInContainer("write", "data"),this.archiveContainer);
+
+        app.post("/containers/import",...middleware, authInContainer("write", "containers"),this.importContainer)
 
         app.post("/containers/:id/data/export",...middleware, authInContainer("write", "data"),this.exportDataFromContainer);
         app.get("/containers/:id/data/export/:exportID",...middleware, authInContainer("read", "data"),this.getExport);
@@ -106,7 +113,7 @@ export default class ContainerRoutes {
     private static archiveContainer(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT;
 
-        if(req.query.permanent) {
+        if(req.query.permanent == 'true') {
             storage.PermanentlyDelete(req.params.id)
             .then((result) => {
                 if (result.isError && result.error) {
@@ -129,6 +136,45 @@ export default class ContainerRoutes {
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
         }
+    }
+
+    private static importContainer(req: Request, res: Response, next: NextFunction) {
+        const streamChunks: Buffer[] = []
+        let fileBuffer: Buffer = Buffer.alloc(0)
+        const input: {[key: string]: any} = {}
+        const busboy = new Busboy({headers: req.headers})
+        const user = req.user as UserT
+
+        // if a file has been provided, create a buffer from it
+        busboy.on('file', async (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
+            file.on('data', function(data) {
+                streamChunks.push(data)
+            });
+            file.on('end', function() {
+                fileBuffer = Buffer.concat(streamChunks)
+            });
+        })
+
+        // create a ContainerImportT type from the input fields
+        busboy.on('field', (fieldName: string, value: any, fieldNameTruncated: boolean, encoding: string, mimetype:string) => {
+            input[fieldName] = value
+        })
+
+        busboy.on('finish', () => {
+            containerImport.ImportOntology(user, input as ContainerImportT, fileBuffer, req.query.dryrun === 'true')
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(201).json(result)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+        })
+
+        return req.pipe(busboy)
     }
 
     private static exportDataFromContainer(req: Request, res: Response, next: NextFunction) {
