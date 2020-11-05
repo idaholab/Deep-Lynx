@@ -1,5 +1,6 @@
 import {Request, Response, NextFunction, Application} from "express"
 import {
+    AcceptContainerInvite,
     AssignUserRole,
     CreateNewUser, InitiateResetPassword, InviteUserToContainer, ResetPassword,
     RetrieveUser,
@@ -15,7 +16,6 @@ import {UsersForContainer} from "../api_handlers/user";
 // for SAML authentication routes. You cannot manually create a user as of June 2020.
 export default class UserRoutes {
     public static mount(app: Application, middleware: any[]) {
-        // TODO: endpoint for user creation that immediately assigns the user to a container
         app.post("/users", this.createNewUser)
         app.get("/users",...middleware,authRequest("read", "users"), this.listUsers);
         app.delete("/users/:userID", middleware, authRequest("write", "users"), this.deleteUser)
@@ -24,6 +24,7 @@ export default class UserRoutes {
         app.get("/users/validate", this.validateEmail)
         app.get("/users/reset-password", this.initiatePasswordReset)
         app.post("/users/reset-password", this.resetPassword)
+        app.get("/users/invite", ...middleware, this.acceptContainerInvite)
 
         app.get("/users/:id/keys", middleware, authUser(), this.keysForUser)
         app.post("/users/:id/keys", middleware, authUser(), this.generateKeyPair)
@@ -66,6 +67,21 @@ export default class UserRoutes {
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.sendStatus(200)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static acceptContainerInvite(req: Request, res: Response, next: NextFunction) {
+        // @ts-ignore
+        AcceptContainerInvite(req.user as UserT, req.query.token)
+            .then((result) => {
+                if (!result) {
+                    res.sendStatus(500)
                     return
                 }
 

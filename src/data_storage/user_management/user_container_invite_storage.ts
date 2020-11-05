@@ -61,6 +61,10 @@ export default class UserContainerInviteStorage extends PostgresStorage{
         return super.rows<UserContainerInviteT>(UserContainerInviteStorage.listForUserStatement(userID))
     }
 
+    public RetrieveByTokenAndEmail(token: string, email: string): Promise<Result<UserContainerInviteT>> {
+        return super.retrieve<UserContainerInviteT>(UserContainerInviteStorage.retrieveByTokenAndEmailStatement(token, email))
+    }
+
     public PermanentlyDelete(id: number): Promise<Result<boolean>> {
         return super.run(UserContainerInviteStorage.deleteStatement(id))
     }
@@ -88,6 +92,13 @@ export default class UserContainerInviteStorage extends PostgresStorage{
         return {
             text: `SELECT * FROM user_container_invites WHERE origin_user = $1`,
             values: [userID]
+        }
+    }
+
+    private static retrieveByTokenAndEmailStatement(token: string, email: string): QueryConfig {
+        return {
+            text: `SELECT * FROM user_container_invites WHERE token = $1 AND email = $2`,
+            values: [token, email]
         }
     }
 }

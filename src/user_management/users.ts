@@ -110,6 +110,21 @@ export async function InviteUserToContainer(originUser: UserT, containerID:strin
         )
 }
 
+export async function AcceptContainerInvite(user: UserT, inviteToken: string): Promise<boolean> {
+    const invite = await UserContainerInviteStorage.Instance.RetrieveByTokenAndEmail(inviteToken, user.email)
+
+    if(invite.isError) {
+        Logger.error(`unable to retrieve user container invite ${invite.error}`)
+        return new Promise(resolve => resolve(false))
+    }
+
+    // we default the user to the lowest role in the container they're accepting an invite to
+    // we do this to avoid bad actors abusing invites to gain admin access to a container
+    // we also enforce the match of email to the original invite so that someone can't
+    // hijack another's email invitation
+    return Authorization.AssignRole(user.id!, 'user', invite.value.container_id)
+}
+
 // ResetPassword will always return 200 as long as the payload is of a valid shape
 // and there are no database errors. This is done so that an outside user cannot use
 // this endpoint to intuit usernames and tokens.
