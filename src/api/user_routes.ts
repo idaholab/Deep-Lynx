@@ -1,7 +1,7 @@
 import {Request, Response, NextFunction, Application} from "express"
 import {
     AssignUserRole,
-    CreateNewUser, InitiateResetPassword, ResetPassword,
+    CreateNewUser, InitiateResetPassword, InviteUserToContainer, ResetPassword,
     RetrieveUser,
     RetrieveUserRoles
 } from "../user_management/users";
@@ -38,6 +38,8 @@ export default class UserRoutes {
         app.get("/containers/:id/users/:userID", ...middleware,authInContainer("read", "users"), this.retrieveUser);
         app.post("/containers/:id/users/roles", ...middleware, authInContainer("write", "users"), this.assignRole);
         app.get("/containers/:id/users/:userID/roles", ...middleware, authInContainer("read", "users"), this.listUserRoles)
+
+        app.post("/containers/:id/users/invite", ...middleware, authInContainer("write", "users"), this.inviteUserToContainer)
 
     }
 
@@ -248,6 +250,21 @@ export default class UserRoutes {
                 res.status(200).json(result)
             })
             .catch((err) => res.status(404).send(err))
+            .finally(() => next())
+    }
+
+    private static inviteUserToContainer(req: Request, res: Response, next: NextFunction) {
+        // @ts-ignore
+        InviteUserToContainer(req.user as UserT, req.params.id, req.body)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.sendStatus(200)
+            })
+            .catch(() => res.status(500).send('unable to invite user to container')) // overwrite the error message because we don't need to broadcast issues with our email service
             .finally(() => next())
     }
 }

@@ -2,7 +2,6 @@ import express from "express"
 import Config from "../../config"
 import passport from "passport"
 import passportJWT, {ExtractJwt} from "passport-jwt"
-import * as fs from "fs";
 
 const JwtStrategy = passportJWT.Strategy;
 

@@ -210,7 +210,7 @@
         }
       },
       "delete": {
-        "description": "Archive or delete a Container. Accepts a single query parameter - permanent. If this query parameter is provided (with any value), the container will be permanently deleted, forcing a cascade to all dependent objects in the database. Generally we prefer to archive rather than delete.",
+        "description": "Archives a Container. This is preferred over deletion as deletion has a cascading effect on the deleted type's keys, relationships, and relationship keys. When in doubt, archive over delete. We'd rather have tombstones than cremating the type.",
         "summary": "Archive",
         "tags": [
           "Containers"
@@ -227,14 +227,6 @@
             "required": true,
             "type": "string",
             "description": ""
-          },
-          {
-            "name": "permanent",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "string",
-            "description": "If supplied, the container will be permanently deleted"
           }
         ],
         "responses": {
@@ -2700,6 +2692,36 @@
             "schema": {
               "$ref": "#/definitions/ResetPasswordRequest"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/containers/{container-id}/users/invite": {
+      "post": {
+        "description": "Create a new user using the username_password identity type.",
+        "summary": "Invite User to Container",
+        "tags": [
+          "Users"
+        ],
+        "operationId": "InviteUsertoContainer",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
           }
         ],
         "responses": {

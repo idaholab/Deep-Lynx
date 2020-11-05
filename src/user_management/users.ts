@@ -19,6 +19,9 @@ import KeyPairStorage from "../data_storage/user_management/keypair_storage";
 import {Emailer} from "../services/email/email";
 import {ValidateEmailTemplate} from "../services/email/templates/validate_email";
 import {ResetPasswordEmailTemplate} from "../services/email/templates/reset_password";
+import {ContainerInviteEmailTemplate} from "../services/email/templates/container_invite";
+import UserContainerInviteStorage from "../data_storage/user_management/user_container_invite_storage";
+import ContainerStorage from "../data_storage/container_storage";
 
 export async function CreateDefaultSuperUser(): Promise<Result<UserT>>{
     // if the super user exists, don't recreate
@@ -91,6 +94,20 @@ export async function CreateNewUser(payload: any ): Promise<Result<UserT>> {
 
         pipe(newUserPayloadT.decode(payload), fold(onDecodeError(resolve), onSuccess(resolve)))
     })
+}
+
+export async function InviteUserToContainer(originUser: UserT, containerID:string, payload: any): Promise<Result<boolean>> {
+    const invite = await UserContainerInviteStorage.Instance.Create(originUser.id!, containerID, payload)
+
+    if(invite.isError) return new Promise(resolve => resolve(Result.Pass(invite)))
+
+    const container = await ContainerStorage.Instance.Retrieve(invite.value.container_id!)
+    if(container.isError) return new Promise(resolve => resolve(Result.Pass(container)))
+
+    return Emailer.Instance.send(invite.value.email,
+        'Invitation to Deep Lynx Container',
+        ContainerInviteEmailTemplate(invite.value.token!, container.value.name)
+        )
 }
 
 // ResetPassword will always return 200 as long as the payload is of a valid shape
