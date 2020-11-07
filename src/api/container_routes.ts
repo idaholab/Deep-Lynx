@@ -1,6 +1,6 @@
 import {Request, Response, NextFunction, Application} from "express"
 import ContainerStorage from "../data_storage/container_storage";
-import {CreateContainer, ListContainers} from "../api_handlers/container";
+import {CreateContainer, ListContainers, RepairContainerPermissions} from "../api_handlers/container";
 import {NewDataExport, StartExport, StopExport} from "../data_exporting/exporter";
 import {UserT} from "../types/user_management/userT";
 import ExportStorage from "../data_storage/export/export_storage";
@@ -36,6 +36,8 @@ export default class ContainerRoutes {
         app.post("/containers/:id/data/export/:exportID",...middleware, authInContainer("write", "data"),this.startExport);
         app.put("/containers/:id/data/export/:exportID",...middleware, authInContainer("write", "data"),this.stopExport);
         app.delete("/containers/:id/data/export/:exportID",...middleware, authInContainer("write", "data"),this.deleteExport);
+
+        app.post("/containers/:id/permissions", ...middleware, authRequest("write", "containers"), this.repairPermissions)
     }
 
     private static createContainer(req: Request, res: Response, next: NextFunction) {
@@ -113,7 +115,7 @@ export default class ContainerRoutes {
     private static archiveContainer(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT;
 
-        if(req.query.permanent == 'true') {
+        if(req.query.permanent === 'true') {
             storage.PermanentlyDelete(req.params.id)
             .then((result) => {
                 if (result.isError && result.error) {
@@ -147,10 +149,10 @@ export default class ContainerRoutes {
 
         // if a file has been provided, create a buffer from it
         busboy.on('file', async (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
-            file.on('data', function(data) {
+            file.on('data', (data) => {
                 streamChunks.push(data)
             });
-            file.on('end', function() {
+            file.on('end', () => {
                 fileBuffer = Buffer.concat(streamChunks)
             });
         })
@@ -244,6 +246,18 @@ export default class ContainerRoutes {
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
+    }
+
+    private static repairPermissions(req: Request, res: Response, next: NextFunction) {
+        RepairContainerPermissions(req.params.id)
+            .then((updated) => {
+                if (!updated) {
+                    res.sendStatus(500);
+                    return
+                }
+                res.status(200).json(updated)
+            })
+            .catch((updated) => res.status(500).send(updated))
     }
 }
 

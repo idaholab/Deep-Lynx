@@ -14,7 +14,8 @@ export class Config {
 
   private readonly _email_validation_url: string;
   private readonly _email_validation_enforced: boolean;
-  private readonly _reset_password_url: string
+  private readonly _reset_password_url: string;
+  private readonly _container_invite_url: string;
 
   private readonly _is_windows: boolean;
 
@@ -78,6 +79,7 @@ export class Config {
     this._email_validation_url = process.env.EMAIL_VALIDATION_URL || ""
     this._email_validation_enforced = process.env.EMAIL_VALIDATION_ENFORCED === "true"
     this._reset_password_url = process.env.PASSWORD_RESET_URL || ""
+    this._container_invite_url = process.env.CONTAINER_INVITE_URL || ""
 
     // we could simply have whatever needs to know if its windows access the platform
     // part of process, but I'd rather keep all configuration and accessing of process
@@ -153,6 +155,10 @@ export class Config {
 
   get reset_password_url(): string {
     return this._reset_password_url
+  }
+
+  get container_invite_url(): string {
+    return this._container_invite_url
   }
 
   get is_windows(): boolean {

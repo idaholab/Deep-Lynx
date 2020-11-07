@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "b0245026-1d76-44d5-9766-87d2824a30d8",
+		"_postman_id": "b45541e5-0d3a-42f9-8eb7-c361c0a845f4",
 		"name": "Deep Lynx",
 		"description": "The construction of megaprojects has consistently demonstrated challenges for project managers in regard to meeting cost, schedule, and performance requirements. Megaproject construction challenges are common place within megaprojects with many active projects in the United States failing to meet cost and schedule efforts by significant margins. Currently, engineering teams operate in siloed tools and disparate teams where connections across design, procurement, and construction systems are translated manually or over brittle point-to-point integrations. The manual nature of data exchange increases the risk of silent errors in the reactor design, with each silent error cascading across the design. These cascading errors lead to uncontrollable risk during construction, resulting in significant delays and cost overruns. Deep Lynx allows for an integrated platform during design and operations of mega projects.\n\nThe Deep Lynx Core API delivers a few main features.\n\n1. Core provides a set of methods and endpoints for manipulating data in an object oriented database. This allows use to store complex datatypes as records and then to compile them into actual, modifiable objects at run-time. Users can store taxonomies or ontologies in a readable format.\n\n2. Core provides methods for storing and retrieving data in a graph database. This data is structured and validated against the aformentioned object oriented database before storage.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
@@ -66,10 +66,8 @@
 							],
 							"variable": [
 								{
-									"id": "a48e8407-11ef-4800-9400-e22bd6eb5cd2",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -117,10 +115,8 @@
 							],
 							"variable": [
 								{
-									"id": "4eb75a2c-8065-4311-9030-aa0ada1f9a38",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -170,22 +166,14 @@
 								"containers",
 								":container-id"
 							],
-							"query": [
-								{
-									"key": "permanent",
-									"value": "true"
-								}
-							],
 							"variable": [
 								{
-									"id": "ae6760f8-e98b-4c8c-b9fe-4349e0d3e1e0",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
-						"description": "Archive or delete a Container. Accepts a single query parameter - permanent. If this query parameter is provided (with any value), the container will be permanently deleted, forcing a cascade to all dependent objects in the database. Generally we prefer to archive rather than delete."
+						"description": "Archives a Container. This is preferred over deletion as deletion has a cascading effect on the deleted type's keys, relationships, and relationship keys. When in doubt, archive over delete. We'd rather have tombstones than cremating the type."
 					},
 					"response": []
 				},
@@ -244,6 +232,32 @@
 						"description": "An optional query param \"dryrun\" may be included with a value of \"true\" in order to return a HTML formatted string explaining the name and description of the container along with the number of metatypes, metatype relationships, and metatype keys to be created. This request uses a form-data body which requires a field \"name\". A \"description\" may also be provided. If the ontology to be imported is being referenced via url, provide the url via a \"path\" field. Otherwise a local file may be provided. A file takes precedence over a \"path\" value if both are provided."
 					},
 					"response": []
+				},
+				{
+					"name": "Repair Permissions",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/permissions",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"permissions"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Repairs a container's permission set"
+					},
+					"response": []
 				}
 			],
 			"description": "Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. ",
@@ -254,7 +268,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "079fa592-1e40-4bc7-99b5-2b763cd3de36",
+						"id": "4426dac7-1edf-4632-86d8-f42604dad73a",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -264,7 +278,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "716305b8-a9ea-4b3f-8018-bedeb654517b",
+						"id": "648106ce-d792-42e4-8ba5-c11f11ce9d1b",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -299,7 +313,6 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"type": "string",
 									"value": ""
 								}
 							]
@@ -330,7 +343,6 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"type": "string",
 									"value": "c807a9f9-148d-4bb6-afae-cb8dff71c0b9"
 								}
 							]
@@ -345,7 +357,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "0f884057-e643-48f6-98aa-717e147142d0",
+						"id": "19fc150c-6dda-476f-8202-c7a7f648f2bf",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -355,7 +367,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "fad87d99-7b9c-4ccb-8567-88112279e7d5",
+						"id": "830db5cd-1247-445c-afe3-d84e15a79889",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -759,8 +771,7 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -786,16 +797,12 @@
 									],
 									"variable": [
 										{
-											"id": "5c14ed86-43df-4f55-93c6-2f28e9319def",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "54364cf5-3a16-4844-b1d1-b440aecabd4b",
 											"key": "type-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -835,8 +842,7 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -876,16 +882,12 @@
 									],
 									"variable": [
 										{
-											"id": "292c22a2-7496-4f0a-ae34-5bd5444e7c66",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "9896bafb-cbfc-43a9-9733-8df708e372ff",
 											"key": "type-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -911,16 +913,12 @@
 									],
 									"variable": [
 										{
-											"id": "069d7d76-3c38-4041-b625-6f589c6f7721",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "06e801ad-987f-49b0-872c-ed20a11c04b8",
 											"key": "type-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -934,7 +932,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "a5b1537d-bbb0-4d92-9672-d653a60cd2c6",
+								"id": "2b8551c4-b8ca-4ae9-a0b1-77d8e56ea72d",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -944,7 +942,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "6bca5a1d-aaaf-493c-9ffb-e47fa3081b1f",
+								"id": "dc698913-35c8-4f8e-ae03-9bdb0983d343",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -991,16 +989,12 @@
 									],
 									"variable": [
 										{
-											"id": "4fe94880-bc0e-4b49-8827-b44685f343b1",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "680b2c30-2b72-4dee-949d-8013592e6fa2",
 											"key": "type-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1027,16 +1021,12 @@
 									],
 									"variable": [
 										{
-											"id": "6248d51e-b083-4476-b0aa-21fb33794ef9",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "3b8dec78-f99e-475f-8a8d-30023b8b715d",
 											"key": "type-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1064,22 +1054,16 @@
 									],
 									"variable": [
 										{
-											"id": "a47bf9e0-1973-4cc1-8ed3-374cdaa96d9a",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "e2c14bd2-c79f-4826-8fbd-827d79c1608c",
 											"key": "type-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "a306b5e5-a941-450b-a61e-dbf18b9b4852",
 											"key": "key-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1121,22 +1105,16 @@
 									],
 									"variable": [
 										{
-											"id": "991c289c-c5a1-4715-a94d-5478026d6f74",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "3220304e-92d5-42e7-b97e-2816b6789b1a",
 											"key": "type-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "263a7d58-e36c-4224-87bf-9d4513dfea65",
 											"key": "key-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1164,22 +1142,16 @@
 									],
 									"variable": [
 										{
-											"id": "5c651866-1325-4463-a2d6-87a031ff48d5",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "357dc572-394b-44e3-9492-24e5cc68c886",
 											"key": "type-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "32925317-1a16-48bb-863b-d929425a3f3f",
 											"key": "key-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1193,7 +1165,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "1754e90f-efda-4485-9576-f3922edf1e95",
+								"id": "e51472ac-9b0e-4e82-b828-0aacd600e988",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1203,7 +1175,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "d20ab176-a932-4f1a-921c-8a497cf878eb",
+								"id": "b0d4dd6f-a64a-455c-8cef-4ad0fbc8ec73",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1219,7 +1191,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "1f5c5d5e-0d27-494c-9442-8f26619c2722",
+						"id": "5619db2b-1910-4b3f-b26b-9e31877e676b",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1229,7 +1201,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "488ff35b-7772-484e-8988-b856596445ce",
+						"id": "15a06679-249a-4c97-9e6a-66a96e27abde",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1276,10 +1248,8 @@
 									],
 									"variable": [
 										{
-											"id": "ce09e7fd-4a0f-46ec-b6cb-a78d4fb7afbf",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1305,16 +1275,12 @@
 									],
 									"variable": [
 										{
-											"id": "f5da9984-4f66-4a42-a5a8-a8709b4b48ae",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "8b08d9ee-5d98-40c1-ba12-ceff6c7fcfe1",
 											"key": "relationship-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1349,10 +1315,8 @@
 									],
 									"variable": [
 										{
-											"id": "c94d1322-26fc-4aa2-a295-2e46679056b8",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1392,16 +1356,12 @@
 									],
 									"variable": [
 										{
-											"id": "a72c16d3-defc-43b2-a3cc-1e992e899790",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "cb9ef595-cd1f-4789-8dbd-e122c1a8781d",
 											"key": "relationship-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								}
@@ -1426,16 +1386,12 @@
 									],
 									"variable": [
 										{
-											"id": "1317fcbc-da6f-496b-89ec-90a77c21dca5",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "a05ef9b1-46d2-4d39-a849-40f97339f803",
 											"key": "relationship-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1448,7 +1404,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "53d73c71-6c27-48f2-abfa-a8681a998323",
+								"id": "ff8367fc-3bb7-4d89-9887-009f56bb00f5",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1458,7 +1414,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "794d12e7-29d6-43f0-9aa2-307c71d295bb",
+								"id": "64386a8d-2709-458f-b827-f5f3c39855db",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1505,16 +1461,12 @@
 									],
 									"variable": [
 										{
-											"id": "851a1c0a-8657-41a7-a871-42155b34a3b3",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "b11efc2a-72a6-4a78-8d5e-77d2d2d31cb3",
 											"key": "relationship-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1542,22 +1494,16 @@
 									],
 									"variable": [
 										{
-											"id": "a80ab3ef-9cb1-4a25-adfb-a2480cbf9c0e",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "3c65e288-c2fa-4b3d-be50-5ffa22a17b16",
 											"key": "relationship-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "5eef63de-61b6-4f36-8e1c-8cdfcc32ecb5",
 											"key": "key-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1594,16 +1540,12 @@
 									],
 									"variable": [
 										{
-											"id": "3812a051-7285-4e25-9cca-a06159c47dd9",
 											"key": "id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "40f5ffc3-74e4-4af2-a57f-ab2ea626392a",
 											"key": "relationship-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1645,22 +1587,16 @@
 									],
 									"variable": [
 										{
-											"id": "9d20512d-ebea-40ad-b04d-4787a6e40c08",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "5979e787-8171-4666-851a-d248018db7f5",
 											"key": "relationship-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "17a6d541-fabd-453f-b8a4-8f5e2c3b7f5d",
 											"key": "key-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1688,22 +1624,16 @@
 									],
 									"variable": [
 										{
-											"id": "7f8dc008-f846-4e96-b940-a69003b93550",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "9989a609-3382-4377-a29f-40d7475d8ef3",
 											"key": "relationship-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "9b7084af-110b-42ff-b9ce-c65689ecc4fc",
 											"key": "key-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1717,7 +1647,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "df1a6cec-0438-445e-8cb8-c9acf20a9b3a",
+								"id": "bbad1381-3cb6-4c58-8166-a285dca7858b",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1727,7 +1657,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "44c25e63-1e00-41ca-b798-bf2fe7a95ab9",
+								"id": "b8ec24fe-cdb1-4565-a56e-77a7b0f3f85b",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1773,10 +1703,8 @@
 									],
 									"variable": [
 										{
-											"id": "5d2e4db9-4130-42f8-8360-e9893d1aadab",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1802,16 +1730,12 @@
 									],
 									"variable": [
 										{
-											"id": "c8e178c7-a823-4c85-9d25-92bfedb89ab0",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "31a2f820-f64b-4496-b89a-8858f217b8a2",
 											"key": "pair-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1846,10 +1770,8 @@
 									],
 									"variable": [
 										{
-											"id": "7e54a6e0-b7f6-4da0-9fc3-aa77b2cf022d",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1875,16 +1797,12 @@
 									],
 									"variable": [
 										{
-											"id": "86242bee-fbcd-4bda-833d-5bf323c3f0ed",
 											"key": "container-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										},
 										{
-											"id": "9cfbdac3-24fd-46fa-bf8d-535ceef4419b",
 											"key": "pair-id",
-											"value": "",
-											"type": "string"
+											"value": ""
 										}
 									]
 								},
@@ -1898,7 +1816,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "e906fd5c-8b9a-4fe2-bc35-d8bcfd4c6790",
+								"id": "d460e745-efd4-49d3-8606-6773cae29266",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1908,7 +1826,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "26e82fab-a31c-4456-a797-8adb892a3005",
+								"id": "4f1053b4-0d40-402c-97da-483203a727f9",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1925,7 +1843,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "d2ae2168-2df8-482f-a48c-50f438773243",
+						"id": "1bc8d23f-05ab-4c36-9b95-da85cc5bed06",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1935,7 +1853,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "5f884b69-d39e-4c89-b2cb-8f8287a0180a",
+						"id": "5e4c540d-82ef-4486-9d2f-559bc2cff94a",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1975,10 +1893,8 @@
 							],
 							"variable": [
 								{
-									"id": "c8f98829-b62b-4b20-b2c8-4e8cb7129fe6",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -2016,13 +1932,11 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
 									"key": "dataSourceID",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -2060,12 +1974,10 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"type": "string",
 									"value": ""
 								},
 								{
 									"key": "dataSourceID",
-									"type": "string",
 									"value": ""
 								}
 							]
@@ -2106,7 +2018,6 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"type": "string",
 									"value": ""
 								},
 								{
@@ -2150,7 +2061,6 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"type": "string",
 									"value": ""
 								},
 								{
@@ -2182,8 +2092,7 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						}
@@ -2211,13 +2120,11 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "9151cb2c-7349-4e3d-9b26-263d742eed3a",
-									"type": "string"
+									"value": "9151cb2c-7349-4e3d-9b26-263d742eed3a"
 								},
 								{
 									"key": "data-source-id",
-									"value": "ca372bc5-7b51-4ef0-9afa-b86adbf8f9aa",
-									"type": "string"
+									"value": "ca372bc5-7b51-4ef0-9afa-b86adbf8f9aa"
 								}
 							]
 						}
@@ -2242,10 +2149,8 @@
 							],
 							"variable": [
 								{
-									"id": "d51379fb-b2b8-4890-8b0c-71fa07edebec",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						}
@@ -2271,16 +2176,12 @@
 							],
 							"variable": [
 								{
-									"id": "c56b1a99-6158-43b2-b7ac-cb3c8a00975f",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
-									"id": "c20564f2-cca7-473f-be82-c12bdbb868a9",
 									"key": "id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -2316,16 +2217,12 @@
 							],
 							"variable": [
 								{
-									"id": "729670c5-bd60-4540-925c-a3d4424d2f6e",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
-									"id": "8e5ec5d9-434d-42d9-955e-05dbb52ac366",
 									"key": "id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -2352,16 +2249,12 @@
 							],
 							"variable": [
 								{
-									"id": "049c5b7c-8c43-4bc8-bb22-56039f03966d",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
-									"id": "7e11f8a4-fab0-46b7-ae4e-eda36cba55e5",
 									"key": "id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -2389,16 +2282,12 @@
 							],
 							"variable": [
 								{
-									"id": "f19dbcd5-b33b-4ebb-a375-9b3ef4e27698",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
-									"id": "fc7d74b8-693d-407f-8fbd-120f0e958b46",
 									"key": "id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -2426,16 +2315,12 @@
 							],
 							"variable": [
 								{
-									"id": "aab7360d-2652-4a1b-a978-37b2841f25a5",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
-									"id": "784e03fa-bc28-442c-9d2b-45aad2188420",
 									"key": "id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -2449,7 +2334,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "215ce222-748b-492a-b004-baca74e82546",
+						"id": "e78430ed-9f0a-4ac8-b172-af46a5ed9a9a",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -2459,7 +2344,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "f0ac35d6-3536-4c5d-8bb4-e8c381b7f675",
+						"id": "d79825fc-938e-4a00-9064-dca12f3a1269",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -2504,10 +2389,8 @@
 							],
 							"variable": [
 								{
-									"id": "10acab20-acad-4491-a69e-2381bb0303f5",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -2534,16 +2417,12 @@
 							],
 							"variable": [
 								{
-									"id": "5e55c61f-538d-4b58-9662-bd61dfb13fd7",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
-									"id": "3a792fde-26bd-4872-8c9a-5520908980a4",
 									"key": "export-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -2584,16 +2463,12 @@
 							],
 							"variable": [
 								{
-									"id": "72f556a0-c4aa-4347-85c8-4b2b19c5b359",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
-									"id": "0585d016-c747-4aa7-9c56-ea6bb8cdb1e9",
 									"key": "export-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -2634,16 +2509,12 @@
 							],
 							"variable": [
 								{
-									"id": "46c307c8-aafc-4322-bbef-e898c7ef5b11",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
-									"id": "ae6c0e64-6f4b-4850-bcea-1918bc4bfd9f",
 									"key": "export-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -2670,16 +2541,12 @@
 							],
 							"variable": [
 								{
-									"id": "e7a949d8-d63a-4d49-a249-c9ccefe28b1f",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
-									"id": "d1d02f89-845d-4c9c-9c42-97b5e71263e6",
 									"key": "export-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -2693,7 +2560,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "4a2fc0ef-6c5d-406c-bcf7-c9c5b0efc661",
+						"id": "328591c9-c976-4d3d-8a71-cc67c6872588",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -2703,7 +2570,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "7dab1ca7-00b4-437d-b2d0-7a2bcb16333d",
+						"id": "34e27bb5-2f6f-45cb-a2f4-c1fca14c9728",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -2876,12 +2743,10 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"type": "string",
 									"value": ""
 								},
 								{
 									"key": "user-id",
-									"type": "string",
 									"value": ""
 								}
 							]
@@ -2918,7 +2783,6 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"type": "string",
 									"value": ""
 								}
 							]
@@ -2947,12 +2811,10 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"type": "string",
 									"value": ""
 								},
 								{
 									"key": "user_id",
-									"type": "string",
 									"value": ""
 								}
 							]
@@ -3109,6 +2971,87 @@
 						"description": "Resets a user's password to the provide payload if the user requested the reset less than 4 hours ago."
 					},
 					"response": []
+				},
+				{
+					"name": "Invite User to Container",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/users/invite",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"users",
+								"invite"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Create a new user using the username_password identity type."
+					},
+					"response": []
+				},
+				{
+					"name": "List Invited Users for Container",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/users/invite",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"users",
+								"invite"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"value": ""
+								}
+							]
+						},
+						"description": "List all invitations to container."
+					},
+					"response": []
 				}
 			],
 			"description": "These endpoints have to do with user functionality. As of 3/26/2020 there are no methods for creating new users - other than enabling and use SAML-ADFS authentication methods. Unless using this method, either request/build a feature or use Basic Authentication configuration.",
@@ -3116,7 +3059,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "034489e1-6ff9-4b26-baab-1a1afd73cef5",
+						"id": "d5261086-cd69-479d-b61b-79c57912a38f",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -3126,7 +3069,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "74857e33-d666-4ece-87d1-e943481d0d94",
+						"id": "2649bf73-f636-44aa-9ad5-17ba955b4a06",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -3176,13 +3119,11 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
 									"key": "source-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -3227,22 +3168,16 @@
 							],
 							"variable": [
 								{
-									"id": "3beb7e52-6f22-4bf5-ba4f-83ee399ae995",
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
-									"id": "d02d2540-ec3c-4ff7-9575-7521f0dad2c3",
 									"key": "source-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
-									"id": "074230ce-c708-466e-9915-7ded842a92a7",
 									"key": "mappingID",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -3291,18 +3226,15 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
 									"key": "source-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
 									"key": "mappingID",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -3351,18 +3283,15 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
 									"key": "source-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
 									"key": "mappingID",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -3392,13 +3321,11 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
 									"key": "id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -3429,13 +3356,11 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
 									"key": "id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -3481,18 +3406,15 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
 									"key": "source-id",
-									"value": "",
-									"type": "string"
+									"value": ""
 								},
 								{
 									"key": "mappingID",
-									"value": "",
-									"type": "string"
+									"value": ""
 								}
 							]
 						},
@@ -3528,7 +3450,6 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"type": "string",
 									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
 								},
 								{
@@ -3561,7 +3482,6 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"type": "string",
 									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
 								},
 								{
@@ -3596,7 +3516,6 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"type": "string",
 									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
 								},
 								{
@@ -3635,7 +3554,6 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"type": "string",
 									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
 								},
 								{
@@ -3721,7 +3639,7 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "e51fcea8-e597-4682-a5ad-c339e2fad3cb",
+				"id": "814ecdd4-822a-4318-a4fa-1854b4f3956f",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -3731,7 +3649,7 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "028c0934-a9de-45f4-860e-b7185159793a",
+				"id": "e806b176-08cc-47a9-ba2d-d103311f8c20",
 				"type": "text/javascript",
 				"exec": [
 					""

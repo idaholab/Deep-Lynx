@@ -1,7 +1,8 @@
 import {Request, Response, NextFunction, Application} from "express"
 import {
+    AcceptContainerInvite,
     AssignUserRole,
-    CreateNewUser, InitiateResetPassword, ResetPassword,
+    CreateNewUser, InitiateResetPassword, InviteUserToContainer, ResetPassword,
     RetrieveUser,
     RetrieveUserRoles
 } from "../user_management/users";
@@ -10,12 +11,12 @@ import UserStorage from "../data_storage/user_management/user_storage";
 import {UserT} from "../types/user_management/userT";
 import KeyPairStorage from "../data_storage/user_management/keypair_storage";
 import {UsersForContainer} from "../api_handlers/user";
+import UserContainerInviteStorage from "../data_storage/user_management/user_container_invite_storage";
 
 // These routes pertain to User management. Currently user creation is reserved
 // for SAML authentication routes. You cannot manually create a user as of June 2020.
 export default class UserRoutes {
     public static mount(app: Application, middleware: any[]) {
-        // TODO: endpoint for user creation that immediately assigns the user to a container
         app.post("/users", this.createNewUser)
         app.get("/users",...middleware,authRequest("read", "users"), this.listUsers);
         app.delete("/users/:userID", middleware, authRequest("write", "users"), this.deleteUser)
@@ -24,6 +25,8 @@ export default class UserRoutes {
         app.get("/users/validate", this.validateEmail)
         app.get("/users/reset-password", this.initiatePasswordReset)
         app.post("/users/reset-password", this.resetPassword)
+        app.get("/users/invite", ...middleware, this.acceptContainerInvite)
+        app.get("/users/invites", ...middleware, this.listOutstandingInvites)
 
         app.get("/users/:id/keys", middleware, authUser(), this.keysForUser)
         app.post("/users/:id/keys", middleware, authUser(), this.generateKeyPair)
@@ -39,6 +42,8 @@ export default class UserRoutes {
         app.post("/containers/:id/users/roles", ...middleware, authInContainer("write", "users"), this.assignRole);
         app.get("/containers/:id/users/:userID/roles", ...middleware, authInContainer("read", "users"), this.listUserRoles)
 
+        app.post("/containers/:id/users/invite", ...middleware, authInContainer("write", "users"), this.inviteUserToContainer)
+        app.get("/containers/:id/users/invite", ...middleware, authInContainer("write", "users"), this.listInvitedUsers)
     }
 
     private static retrieveUser(req: Request, res: Response, next: NextFunction) {
@@ -72,6 +77,52 @@ export default class UserRoutes {
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
     }
+
+    private static acceptContainerInvite(req: Request, res: Response, next: NextFunction) {
+        // @ts-ignore
+        AcceptContainerInvite(req.user as UserT, req.query.token)
+            .then((result) => {
+                if (!result) {
+                    res.sendStatus(500)
+                    return
+                }
+
+                res.sendStatus(200)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static listInvitedUsers(req: Request, res: Response, next: NextFunction) {
+        const user = req.user as UserT
+        UserContainerInviteStorage.Instance.InvitesByUser(req.params.id, user.id!)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(200).json(result)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static listOutstandingInvites(req: Request, res: Response, next: NextFunction) {
+        const user = req.user as UserT
+        UserContainerInviteStorage.Instance.InvitesForEmail(user.email)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(200).json(result)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
 
     private static initiatePasswordReset(req: Request, res: Response, next: NextFunction) {
         // @ts-ignore
@@ -248,6 +299,21 @@ export default class UserRoutes {
                 res.status(200).json(result)
             })
             .catch((err) => res.status(404).send(err))
+            .finally(() => next())
+    }
+
+    private static inviteUserToContainer(req: Request, res: Response, next: NextFunction) {
+        // @ts-ignore
+        InviteUserToContainer(req.user as UserT, req.params.id, req.body)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.sendStatus(200)
+            })
+            .catch(() => res.status(500).send('unable to invite user to container')) // overwrite the error message because we don't need to broadcast issues with our email service
             .finally(() => next())
     }
 }

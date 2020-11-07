@@ -9,7 +9,8 @@
         "forin": false,
         "max-classes-per-file": false,
         "no-var-requires": false,
-        "no-shadowed-variable": false
+        "no-shadowed-variable": false,
+        "no-unused-expression": false
     },
     "rulesDirectory": []
 }

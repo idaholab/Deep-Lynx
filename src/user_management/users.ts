@@ -19,6 +19,9 @@ import KeyPairStorage from "../data_storage/user_management/keypair_storage";
 import {Emailer} from "../services/email/email";
 import {ValidateEmailTemplate} from "../services/email/templates/validate_email";
 import {ResetPasswordEmailTemplate} from "../services/email/templates/reset_password";
+import {ContainerInviteEmailTemplate} from "../services/email/templates/container_invite";
+import UserContainerInviteStorage from "../data_storage/user_management/user_container_invite_storage";
+import ContainerStorage from "../data_storage/container_storage";
 
 export async function CreateDefaultSuperUser(): Promise<Result<UserT>>{
     // if the super user exists, don't recreate
@@ -91,6 +94,42 @@ export async function CreateNewUser(payload: any ): Promise<Result<UserT>> {
 
         pipe(newUserPayloadT.decode(payload), fold(onDecodeError(resolve), onSuccess(resolve)))
     })
+}
+
+export async function InviteUserToContainer(originUser: UserT, containerID:string, payload: any): Promise<Result<boolean>> {
+    const invite = await UserContainerInviteStorage.Instance.Create(originUser.id!, containerID, payload)
+
+    if(invite.isError) return new Promise(resolve => resolve(Result.Pass(invite)))
+
+    const container = await ContainerStorage.Instance.Retrieve(invite.value.container_id!)
+    if(container.isError) return new Promise(resolve => resolve(Result.Pass(container)))
+
+    return Emailer.Instance.send(invite.value.email,
+        'Invitation to Deep Lynx Container',
+        ContainerInviteEmailTemplate(invite.value.token!, container.value.name)
+        )
+}
+
+export async function AcceptContainerInvite(user: UserT, inviteToken: string): Promise<Result<boolean>> {
+    const invite = await UserContainerInviteStorage.Instance.RetrieveByTokenAndEmail(inviteToken, user.email)
+
+    if(invite.isError) {
+        Logger.error(`unable to retrieve user container invite ${invite.error}`)
+        return new Promise(resolve => resolve(Result.Pass(invite)))
+    }
+
+    // we default the user to the lowest role in the container they're accepting an invite to
+    // we do this to avoid bad actors abusing invites to gain admin access to a container
+    // we also enforce the match of email to the original invite so that someone can't
+    // hijack another's email invitation
+    const assigned = await Authorization.AssignRole(user.id!, 'user', invite.value.container_id)
+
+    if(!assigned) {
+        Logger.error(`unable to assign user role`)
+        return new Promise(resolve => resolve(Result.Failure('unable to assign user role ')))
+    }
+
+    return UserContainerInviteStorage.Instance.MarkAccepted(inviteToken, user.email)
 }
 
 // ResetPassword will always return 200 as long as the payload is of a valid shape
