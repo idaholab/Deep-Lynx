@@ -17,6 +17,7 @@ import Config from "../config";
 import {SetSamlAdfs} from "../user_management/authentication/saml/saml-adfs";
 import {SuperUser, UserT} from "../types/user_management/userT";
 import UserRoutes from "./user_routes";
+import OAuthRoutes from "./oauth_routes";
 import DataSourceRoutes from "./data_source_routes";
 import {SetJWTAuthMethod} from "../user_management/authentication/jwt";
 import jwt from "jsonwebtoken"
@@ -64,6 +65,7 @@ export class Router {
 
     // Mount application controllers, middleware is passed in as an array of functions
     UserRoutes.mount(this.app, [authenticateRoute()]);
+    OAuthRoutes.mount(this.app, []) // we don't mount the authenticateRoute here because the majority of these endpoints don't need it
     ContainerRoutes.mount(this.app, [authenticateRoute()]);
     DataSourceRoutes.mount(this.app, [authenticateRoute()]);
     MetatypeRoutes.mount(this.app, [authenticateRoute()]);

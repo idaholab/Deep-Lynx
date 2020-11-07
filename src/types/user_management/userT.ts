@@ -1,5 +1,6 @@
 import * as t from 'io-ts'
 import {recordMetaT} from "../recordMetaT";
+import uuid from "uuid";
 
 export const userRequired = t.type({
     identity_provider: t.keyof({
@@ -47,7 +48,7 @@ export type ResetPasswordPayloadT = t.TypeOf<typeof resetPasswordPayload>
 // is registered but you still need access to functionality behind access control
 export function SuperUser(): UserT {
     return {
-       id: "superuser",
+       id: uuid.v4(),
        identity_provider: "username_password",
        identity_provider_id: "",
        display_name: "Admin",

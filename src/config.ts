@@ -19,6 +19,8 @@ export class Config {
 
   private readonly _is_windows: boolean;
 
+  private readonly _cache_provider: string;
+
   private readonly _mongo_source_uri : string;
   private readonly _mongo_source_db : string;
 
@@ -85,6 +87,8 @@ export class Config {
     // part of process, but I'd rather keep all configuration and accessing of process
     // here in the config file.
     this._is_windows = process.platform === 'win32'
+
+    this._cache_provider = process.env.CACHE_PROVIDER || "memory"
 
     this._mongo_source_uri= process.env.MONGO_SOURCE_URI || "localhost:8081";
     this._mongo_source_db = process.env.MONGO_SOURCE_DB || "inl-core-m";
@@ -163,6 +167,10 @@ export class Config {
 
   get is_windows(): boolean {
     return this._is_windows;
+  }
+
+  get cache_provider(): string {
+    return this._cache_provider
   }
 
   get server_port(): string {
