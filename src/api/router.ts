@@ -17,7 +17,6 @@ import Config from "../config";
 import {SetSamlAdfs} from "../user_management/authentication/saml/saml-adfs";
 import {SuperUser, UserT} from "../types/user_management/userT";
 import UserRoutes from "./user_routes";
-import OAuthRoutes from "./oauth_routes";
 import DataSourceRoutes from "./data_source_routes";
 import {SetJWTAuthMethod} from "../user_management/authentication/jwt";
 import jwt from "jsonwebtoken"
@@ -26,10 +25,12 @@ import KeyPairStorage from "../data_storage/user_management/keypair_storage";
 import {RetrieveResourcePermissions} from "../user_management/users";
 import QueryRoutes from "./query_routes";
 import GraphRoutes from "./graph_routes";
+import OAuthRoutes from "./oauth_routes";
 
 const BasicStrategy = passportHttp.BasicStrategy;
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
+const exphbs = require('express-handlebars')
 
 // Router is a self contained set of routes and middleware that the main express.js
 // application should call. It should be called only once.
@@ -53,6 +54,12 @@ export class Router {
     // DO NOT REMOVE - this is required for some auth methods to work correctly
     this.app.use(express.urlencoded({ extended: false }));
 
+    // templating engine
+
+    this.app.engine('.hbs', exphbs({extname: '.hbs'}))
+    this.app.set('view engine', '.hbs')
+    this.app.set('views', Config.template_dir)
+
     // single, raw endpoint for a health check
     this.app.get("/health", (req: express.Request, res: express.Response, next: express.NextFunction) => {
       res.sendStatus(200);
@@ -65,7 +72,6 @@ export class Router {
 
     // Mount application controllers, middleware is passed in as an array of functions
     UserRoutes.mount(this.app, [authenticateRoute()]);
-    OAuthRoutes.mount(this.app, []) // we don't mount the authenticateRoute here because the majority of these endpoints don't need it
     ContainerRoutes.mount(this.app, [authenticateRoute()]);
     DataSourceRoutes.mount(this.app, [authenticateRoute()]);
     MetatypeRoutes.mount(this.app, [authenticateRoute()]);
@@ -75,6 +81,10 @@ export class Router {
     MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute()]);
     QueryRoutes.mount(this.app, [authenticateRoute()]);
     GraphRoutes.mount(this.app, [authenticateRoute()]);
+
+    // OAuth and Identity Provider routes - these are the only routes that serve up
+    // webpage. WE ALSO MOUNT THE '/' ENDPOINT HERE
+    OAuthRoutes.mount(this.app, [])
 
     this.mountPostMiddleware()
   }

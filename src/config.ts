@@ -17,6 +17,8 @@ export class Config {
   private readonly _reset_password_url: string;
   private readonly _container_invite_url: string;
 
+  private readonly _template_dir: string;
+
   private readonly _is_windows: boolean;
 
   private readonly _cache_provider: string;
@@ -96,6 +98,8 @@ export class Config {
     this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || "";
     this._db_name = process.env.DB_NAME || "deep_lynx";
 
+    this._template_dir = process.env.TEMPLATE_DIR || "./dist/api/views"
+
     this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
     this._encryption_key_secret = process.env.ENCRYPTION_KEY_SECRET || ""
 
@@ -139,6 +143,10 @@ export class Config {
 
   get root_address(): string {
     return this._root_address;
+  }
+
+  get template_dir(): string {
+    return this._template_dir;
   }
 
   get email_address(): string {
