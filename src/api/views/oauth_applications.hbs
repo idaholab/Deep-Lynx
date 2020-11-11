@@ -1,0 +1,17 @@
+<h1>OAUTH APPLICATIONS</h1>
+
+
+NEW APPLICATION
+<form action="/oauth/applications" method="post">
+
+    <div class="container">
+        <label for="username"><b>Name</b></label>
+        <input type="text" placeholder="Enter Username" name="name" required>
+
+        <label for="psw"><b>Password</b></label>
+        <input type="text" placeholder="Enter Password" name="description" required>
+        <input type="hidden" name="_csrf" value="{{{_csrfToken}}}" />
+        <button type="submit">Login</button>
+
+    </div>
+</form>

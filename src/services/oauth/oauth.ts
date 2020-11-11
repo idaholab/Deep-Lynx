@@ -53,6 +53,10 @@ export class OAuth {
 
         return (Object.keys(r).length > 0) ? r as OAuthAuthorizationRequestT : undefined
     }
+
+    FromToken(token: string): OAuthAuthorizationRequestT | undefined {
+        return Cache.get<OAuthAuthorizationRequestT>(token)
+    }
 }
 
 

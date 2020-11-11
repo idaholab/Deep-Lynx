@@ -1,1 +1,14 @@
 <h1>AUTHORIZE PAGE</h1>
+{{{_error}}}
+<form action="/oauth/authorize" method="post">
+
+    <div class="container">
+
+        <button type="submit">Login</button>
+
+        <input type="hidden" name="_csrf" value="{{{_csrfToken}}}" />
+        <input type="hidden" name="application_id" value="{{{application_id}}}" />
+        <input type="hidden" name="token" value="{{{token}}}" />
+
+    </div>
+</form>
