@@ -1,5 +1,5 @@
 CREATE TABLE oauth_applications (
-    id uuid NOT NULL,
+    id uuid NOT NULL UNIQUE,
     owner_id uuid REFERENCES users(id) ON DELETE CASCADE,
     name text,
     description text,
@@ -13,3 +13,8 @@ CREATE TABLE oauth_applications (
 );
 
 CREATE UNIQUE INDEX client_id ON oauth_applications(client_id text_ops);
+
+CREATE TABLE oauth_application_approvals (
+    oauth_application_id uuid REFERENCES oauth_applications(id) ON DELETE CASCADE,
+    user_id uuid REFERENCES users(id) ON DELETE CASCADE
+)

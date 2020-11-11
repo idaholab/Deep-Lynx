@@ -80,6 +80,22 @@ export default class OAuthApplicationStorage extends PostgresStorage{
         return super.rows<OauthApplicationT>(OAuthApplicationStorage.listForUserStatement(userID))
     }
 
+    // marks an application approved for user
+    public MarkApplicationApproved(applicationID: string, userID: string): Promise<Result<boolean>> {
+        return super.run(OAuthApplicationStorage.markApplicationApprovedStatement(applicationID, userID))
+    }
+
+    // checks to see if application is approved for user
+    public async ApplicationIsApproved(applicationID: string, userID: string): Promise<Result<boolean>> {
+        const records = await super.count(OAuthApplicationStorage.countApplicationApprovalsStatement(applicationID, userID))
+
+        if(records.isError || records.value <= 0) {
+            return new Promise(resolve => resolve(Result.Success(false)))
+        }
+
+        return new Promise(resolve => resolve(Result.Success(true)))
+    }
+
     // Update partially updates the OAuth Application. This function will allow you to
     // rewrite foreign keys - this is by design. The storage layer is dumb, whatever
     // uses the storage layer should be what enforces user privileges etc.
@@ -156,6 +172,21 @@ export default class OAuthApplicationStorage extends PostgresStorage{
         return {
             text: `SELECT * FROM oauth_applications WHERE owner_id = $1`,
             values: [ownerID]
+        }
+    }
+
+    // oauth_application_approvals
+    private static markApplicationApprovedStatement(applicationID: string, userID: string): QueryConfig {
+        return {
+            text: `INSERT INTO oauth_application_approvals(oauth_application_id, user_id) VALUES($1, $2)`,
+            values: [applicationID, userID]
+        }
+    }
+
+    private static countApplicationApprovalsStatement(applicationID: string, userID: string): QueryConfig {
+        return {
+            text: `SELECT COUNT(*) FROM oauth_application_approvals WHERE oauth_application_id = $1 AND user_id =$2`,
+            values: [applicationID, userID]
         }
     }
 }

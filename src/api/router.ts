@@ -26,6 +26,8 @@ import {RetrieveResourcePermissions} from "../user_management/users";
 import QueryRoutes from "./query_routes";
 import GraphRoutes from "./graph_routes";
 import OAuthRoutes from "./oauth_routes";
+import UserStorage from "../data_storage/user_management/user_storage";
+import result from "../result";
 
 const BasicStrategy = passportHttp.BasicStrategy;
 const session = require('express-session');
@@ -84,7 +86,7 @@ export class Router {
 
     // OAuth and Identity Provider routes - these are the only routes that serve up
     // webpage. WE ALSO MOUNT THE '/' ENDPOINT HERE
-    OAuthRoutes.mount(this.app, [])
+    OAuthRoutes.mount(this.app)
 
     this.mountPostMiddleware()
   }
@@ -109,7 +111,7 @@ export class Router {
         tableName : 'session'   // Use another table-name than the default "session" one
       }),
       secret: Config.session_secret,
-      resave: true,
+      resave: false,
       saveUninitialized: true,
         secure: true,
       cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 days
@@ -134,14 +136,7 @@ export class Router {
         }
     ));
 
-    passport.serializeUser((user: UserT, done) => {
-      user.password = ""
-      done(null, user);
-    });
-    passport.deserializeUser((user: UserT, done) => {
-      user.password = ""
-      done(null, user);
-    });
+
 
     // SetSaml will initialize and assign the saml auth strategy
     SetSamlAdfs(this.app);
@@ -150,6 +145,20 @@ export class Router {
     // Once a user has authed against one of the accepted auth methods - the application using the API must
     // use a JWT for each subsequent request
     SetJWTAuthMethod(this.app)
+
+    passport.serializeUser((user: UserT, done) => {
+          user.password = ""
+          done(null, user.id);
+      });
+
+    passport.deserializeUser((user: string, done) => {
+          UserStorage.Instance.Retrieve(user)
+              .then(result => {
+                  if(result.isError) done("unable to retrieve user", null)
+
+                  done(null, result.value)
+              })
+      });
 
     // finalize passport.js usage
     this.app.use(passport.initialize());
@@ -184,27 +193,6 @@ export class Router {
           res.redirect('/health');
         }
     );
-
-    // this route is for authentication with a username/password combination. At time of writing (June 2020) you must
-    // provide the redirect form field in order to let deep lynx know where to send the user after authing with this
-    // method.
-    this.app.post('/login', (req: express.Request, resp: express.Response, next: express.NextFunction) => {
-        passport.authenticate('local', (err, user, info) => {
-          if (err) {return resp.redirect(req.body.redirect + `?error=Unable to login - check username and password`)}
-
-          if(!user) {return resp.redirect(req.body.redirect + `?error=Unable to login - check username and password`)}
-
-          // fetch set of permissions per resource for the user before returning
-          RetrieveResourcePermissions((user as UserT).id!)
-              .then((permissions: string[][]) => {
-                  user.permissions = permissions
-                  const token = jwt.sign(user, Config.encryption_key_secret, {expiresIn: '1000m'})
-                  return resp.redirect(req.body.redirect + `?jwt=${token}`)
-              })
-
-        })(req, resp, next)}, (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        res.redirect(req.body.redirect);
-    })
 
 
     // this route will take an API KeyPair and return a JWT token encapsulating the user to which the supplied

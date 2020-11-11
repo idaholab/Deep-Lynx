@@ -10,6 +10,7 @@ const oauthAuthorizationRequestRequired = t.type({
 
 const oauthAuthorizationRequestOptional = t.partial({
     user_id: t.string,
+    client_secret: t.string,
     code_challenge: t.string,
     code_challenge_method: t.keyof({
       "plain": null,

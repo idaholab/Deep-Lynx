@@ -1,1 +1,19 @@
-<h1>WORKS</h1>
+<h1>LOGIN</h1>
+<form action="/oauth/login" method="post">
+
+    <div class="container">
+        <label for="username"><b>Username</b></label>
+        <input type="text" placeholder="Enter Username" name="username" required>
+
+        <label for="psw"><b>Password</b></label>
+        <input type="password" placeholder="Enter Password" name="password" required>
+        <input type="hidden" name="_csrf" value="{{{_csrfToken}}}" />
+        <button type="submit">Login</button>
+
+        {{#if oauthRequest}}
+            {{#each oauthRequest}}
+                <input type="hidden" name="{{@key}}" value="{{this}}" />
+            {{/each}}
+        {{/if}}
+    </div>
+</form>

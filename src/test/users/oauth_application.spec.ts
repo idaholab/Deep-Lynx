@@ -68,4 +68,26 @@ describe('A OAuth Application can', async() => {
 
         return storage.PermanentlyDelete(application.value.id!)
     })
+
+    it('can be marked approved for user', async() => {
+        const storage = OAuthApplicationStorage.Instance
+
+        const application = await storage.Create(userID, {
+            name: faker.name.firstName(),
+            description: faker.random.alphaNumeric()
+        })
+
+        expect(application.isError).false
+
+        const approved = await storage.MarkApplicationApproved(application.value.id!, userID)
+
+        expect(approved.isError).false
+
+        const isApproved = await storage.ApplicationIsApproved(application.value.id!, userID)
+
+        expect(isApproved.isError).false
+        expect(isApproved.value).true
+
+        return storage.PermanentlyDelete(application.value.id!)
+    })
 })
