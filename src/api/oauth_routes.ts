@@ -3,6 +3,7 @@ import {UserT} from "../types/user_management/userT";
 import OAuthApplicationStorage from "../data_storage/user_management/oauth_application_storage";
 import {LocalAuthMiddleware} from "../user_management/authentication/local";
 import {OAuth} from "../services/oauth/oauth";
+import {OAuthTokenExchangeT} from "../types/user_management/oauth";
 
 const csurf = require('csurf')
 const buildUrl = require('build-url')
@@ -23,6 +24,7 @@ export default class OAuthRoutes {
 
         app.get("/oauth/authorize", csurf(), LocalAuthMiddleware, this.authorizePage)
         app.post("/oauth/authorize", csurf(), LocalAuthMiddleware, this.authorize)
+        app.post("/oauth/exchange", this.tokenExchange)
 
         // profile management
         app.get("/oauth/profile",csurf(), LocalAuthMiddleware, this.profile)
@@ -36,7 +38,7 @@ export default class OAuthRoutes {
     private static authorizePage(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT
         const oauth = new OAuth()
-        const request = oauth.FromRequest(req)
+        const request = oauth.AuthorizationFromRequest(req)
 
         if(!request) {
             res.render('authorize', {_error: "Missing authorization request parameters"})
@@ -60,14 +62,14 @@ export default class OAuthRoutes {
                                     res.render('authorize', {
                                         // @ts-ignore
                                         _csrfToken: req.csrfToken(),
-                                        token,
+                                        token: token.value,
                                         application_id: application.value.id,
                                     })
 
                                     return;
                                 }
 
-                                res.redirect(request.redirect_uri + `?token=${token}`)
+                                res.redirect(request.redirect_uri + `?token=${token.value}`)
                                 return
 
                             })
@@ -89,7 +91,7 @@ export default class OAuthRoutes {
                 }
 
                 // fetch the request so that we can do the redirect
-                const oauthRequest = oauth.FromToken(req.body.token)
+                const oauthRequest = oauth.AuthorizationFromToken(req.body.token)
                 if(!oauthRequest) {
                     res.render('authorize', {_error:"Invalid token"})
                     return
@@ -107,7 +109,7 @@ export default class OAuthRoutes {
         return res.render('register', {
             // @ts-ignore
             _csrfToken: req.csrfToken(),
-            oauthRequest: oauth.FromRequest(req)
+            oauthRequest: oauth.AuthorizationFromRequest(req)
         })
     }
 
@@ -117,14 +119,14 @@ export default class OAuthRoutes {
         return res.render('login', {
             // @ts-ignore
             _csrfToken: req.csrfToken(),
-            oauthRequest: oauth.FromRequest(req),
+            oauthRequest: oauth.AuthorizationFromRequest(req),
             registerLink: buildUrl('/oauth/register', {queryParams: req.query})
         })
     }
 
     private static login(req: Request, res: Response, next: NextFunction) {
         const oauth = new OAuth()
-        const request = oauth.FromRequest(req)
+        const request = oauth.AuthorizationFromRequest(req)
 
         // if they've logged in following an auth request redirect to the authorize page vs. the profile page
         if(request) {
@@ -245,5 +247,22 @@ export default class OAuthRoutes {
 
             })
             .catch((err) => res.redirect(buildUrl('/oauth/applications', {queryParams: {error: err}})))
+    }
+
+
+    private static tokenExchange(req: Request, res: Response, next: NextFunction) {
+        const oauth = new OAuth()
+
+        oauth.AuthorizationCodeExchange(req.body as OAuthTokenExchangeT)
+            .then(result => {
+                if(result.isError) {
+                    res.status(result.error?.errorCode!).json(result.error)
+                    return
+                }
+
+                return res.status(200).json(result)
+            })
+            .catch(e => res.status(500).json(e))
+            .finally(() => next())
     }
 }

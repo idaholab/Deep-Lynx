@@ -30,7 +30,7 @@ export  function SetLocalAuthMethod(app: express.Application) {
 
 export function LocalAuthMiddleware(req: express.Request, resp: express.Response, next: express.NextFunction): any {
     const oauth = new OAuth()
-    const oauthRequest = oauth.FromRequest(req)
+    const oauthRequest = oauth.AuthorizationFromRequest(req)
 
     if(req.isAuthenticated()) {
         next()

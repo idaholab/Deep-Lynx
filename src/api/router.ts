@@ -27,7 +27,6 @@ import QueryRoutes from "./query_routes";
 import GraphRoutes from "./graph_routes";
 import OAuthRoutes from "./oauth_routes";
 import UserStorage from "../data_storage/user_management/user_storage";
-import result from "../result";
 
 const BasicStrategy = passportHttp.BasicStrategy;
 const session = require('express-session');

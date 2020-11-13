@@ -81,6 +81,7 @@
     "@types/passport-jwt": "^3.0.3",
     "@types/passport-local": "^1.0.33",
     "axios": "^0.19.2",
+    "base64url": "^3.0.1",
     "bcrypt": "^5.0.0",
     "body-parser": "^1.19.0",
     "buffer": "^6.0.1",
