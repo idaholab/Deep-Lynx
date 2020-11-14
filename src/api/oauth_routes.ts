@@ -4,6 +4,9 @@ import OAuthApplicationStorage from "../data_storage/user_management/oauth_appli
 import {LocalAuthMiddleware} from "../user_management/authentication/local";
 import {OAuth} from "../services/oauth/oauth";
 import {OAuthTokenExchangeT} from "../types/user_management/oauth";
+import UserStorage from "../data_storage/user_management/user_storage";
+import {CreateNewUser, InitiateResetPassword, ResetPassword} from "../user_management/users";
+import KeyPairStorage from "../data_storage/user_management/keypair_storage";
 
 const csurf = require('csurf')
 const buildUrl = require('build-url')
@@ -21,18 +24,85 @@ export default class OAuthRoutes {
         app.post("/oauth/login", csurf(),  LocalAuthMiddleware, this.login)
 
         app.get("/oauth/register", csurf(), this.registerPage)
+        app.post("/oauth/register", csurf(), this.createNewUser)
 
         app.get("/oauth/authorize", csurf(), LocalAuthMiddleware, this.authorizePage)
         app.post("/oauth/authorize", csurf(), LocalAuthMiddleware, this.authorize)
         app.post("/oauth/exchange", this.tokenExchange)
 
-        // profile management
+        // profile management and email validation/reset password
         app.get("/oauth/profile",csurf(), LocalAuthMiddleware, this.profile)
+        app.post("/oauth/profile/keys", csurf(), LocalAuthMiddleware, this.generateKeyPair)
+        app.delete("/oauth/profile/keys/:keyID", csurf(), LocalAuthMiddleware, this.deleteKeyPair)
+
+        app.get("/validate-email", this.validateEmail)
+
+        app.get("/reset-password", this.resetPasswordPage)
+        app.post("/reset-password", this.initiatePasswordReset)
+        app.post("/reset-password/reset", this.resetPassword)
     }
 
     private static profile(req: Request, res: Response, next: NextFunction) {
-        // @ts-ignore
-        return res.render('profile', {_csrfToken: req.csrfToken()})
+        // profile must include a user's keys
+        KeyPairStorage.Instance.KeysForUser(req.params.id)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.render('profile', {_error: "Unable to fetch user's API keys"})
+                    return
+                }
+
+                // @ts-ignore
+                res.render('profile', {
+                    // @ts-ignore
+                    _csrfToken: req.csrfToken(),
+                    user: req.user,
+                    apiKeys: result.value,
+                    _success: req.query.success,
+                    _error: req.query.error,
+                    api_key: req.query.newKey,
+                    api_secret: req.query.newSecret
+                })
+                return
+            })
+            .catch((err) => res.render('profile', {_error: err}))
+    }
+
+    private static generateKeyPair(req: Request, res: Response, next: NextFunction) {
+        const user = req.user as UserT
+
+        KeyPairStorage.Instance.Create(user.id!)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.redirect(buildUrl('/oauth/profile', {queryParams: {error: "Unable to generate key pair"}}))
+                    return
+                }
+
+                delete result.value.secret; // we don't want to show the hashed value on return
+
+                res.redirect(buildUrl('/oauth/profile', {queryParams: {
+                    success: "Successfully generated key pair",
+                    newKey: result.value.key,
+                    newSecret: result.value.secret_raw
+                }}))
+                return
+            })
+            .catch((err) => res.redirect(buildUrl('/oauth/profile', {queryParams: {error: err}})))
+    }
+
+    private static deleteKeyPair(req: Request, res: Response, next: NextFunction) {
+        const user = req.user as UserT
+
+        KeyPairStorage.Instance.PermanentlyDelete(user.id!, req.params.keyID)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.redirect(buildUrl('/oauth/profile', {queryParams: {error: "Unable to delete key pair"}}))
+                    return
+                }
+
+                res.redirect(buildUrl('/oauth/profile', {queryParams: {success: "Deleted key pair successfully"}}))
+                return
+            })
+            .catch((err) => res.redirect(buildUrl('/oauth/profile', {queryParams: {error: err}})))
     }
 
     private static authorizePage(req: Request, res: Response, next: NextFunction) {
@@ -109,8 +179,26 @@ export default class OAuthRoutes {
         return res.render('register', {
             // @ts-ignore
             _csrfToken: req.csrfToken(),
-            oauthRequest: oauth.AuthorizationFromRequest(req)
+            oauthRequest: oauth.AuthorizationFromRequest(req),
+            _success: req.query.success,
+            _error: req.query.error
         })
+    }
+
+    private static createNewUser(req: Request, res: Response) {
+        CreateNewUser(req.body)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.redirect(buildUrl('/oauth/register', {queryParams: {error: "Unable to create a new user"}}))
+                    return
+                }
+
+                delete result.value.password;
+
+                res.redirect('/oauth/profile')
+                return
+            })
+            .catch((err) => res.redirect(buildUrl('/oauth/register', {queryParams: {error: err}})))
     }
 
     private static loginPage(req: Request, res: Response, next: NextFunction) {
@@ -264,5 +352,61 @@ export default class OAuthRoutes {
             })
             .catch(e => res.status(500).json(e))
             .finally(() => next())
+    }
+
+
+    private static validateEmail(req: Request, res: Response, next: NextFunction) {
+        // @ts-ignore
+        UserStorage.Instance.ValidateEmail(req.query.id, req.query.token)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.render('email_validate', {_error: result.error})
+                    return
+                }
+
+                res.render('email_validate', {_success: "Successfully Validated Email"})
+                return
+            })
+            .catch((err) => res.render('email_validate', {_error: err}))
+    }
+
+    private static resetPasswordPage(req: Request, res: Response) {
+        res.render('reset_password', {_success: req.query.success, _error: req.query.error})
+        return
+    }
+
+    private static initiatePasswordReset(req: Request, res: Response) {
+        // @ts-ignore
+        InitiateResetPassword(req.query.email)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.redirect(buildUrl('/reset-password', {queryParams: {error: result.error}}))
+                    return
+                }
+
+                res.redirect(buildUrl('/reset-password', {queryParams: {
+                    success: "Password reset initiated successfully.",
+                    // @ts-ignore
+                    _csrfToken: req.csrfToken()
+                }}))
+                return
+            })
+            .catch((err) => res.redirect(buildUrl('/reset-password', {queryParams: {error: err}})))
+    }
+
+    // the actual password reset will redirect users back to the login page with a successful user flash
+    private static resetPassword(req: Request, res: Response) {
+        // @ts-ignore
+        ResetPassword(req.body)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.redirect(buildUrl('/oauth/login', {queryParams: {error: result.error}}))
+                    return
+                }
+
+                res.redirect(buildUrl('/oauth/login', {queryParams: {success: "Password r"}}))
+                return
+            })
+            .catch((err) => res.redirect(buildUrl('/oauth/login', {queryParams: {error: err}})))
     }
 }
