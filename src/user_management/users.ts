@@ -159,7 +159,7 @@ export async function InitiateResetPassword(email: string): Promise<Result<boole
     const reset = await UserStorage.Instance.SetResetToken(user.value.id!)
     if(reset.isError) {
         Logger.error(`unable to set reset password token for user ${reset.error}`)
-        return new Promise(resolve => resolve(Result.Success(true)))
+        return new Promise(resolve => resolve(Result.Pass(reset)))
     }
 
     const resetUser = await UserStorage.Instance.RetrieveByEmail(email)

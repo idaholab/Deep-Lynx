@@ -18,6 +18,7 @@ export class Config {
   private readonly _container_invite_url: string;
 
   private readonly _template_dir: string;
+  private readonly _asset_dir: string;
 
   private readonly _is_windows: boolean;
 
@@ -99,6 +100,7 @@ export class Config {
     this._db_name = process.env.DB_NAME || "deep_lynx";
 
     this._template_dir = process.env.TEMPLATE_DIR || "./dist/api/views"
+    this._asset_dir = process.env.ASSET_DIR || "./dist/assets"
 
     this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
     this._encryption_key_secret = process.env.ENCRYPTION_KEY_SECRET || ""
@@ -149,6 +151,10 @@ export class Config {
     return this._template_dir;
   }
 
+  get asset_dir(): string {
+    return this._asset_dir;
+  }
+
   get email_address(): string {
     return this._email_address;
   }
@@ -157,16 +163,8 @@ export class Config {
     return this._email_enabled;
   }
 
-  get email_validation_url(): string {
-    return this._email_validation_url
-  }
-
   get email_validation_enforced(): boolean {
     return this._email_validation_enforced
-  }
-
-  get reset_password_url(): string {
-    return this._reset_password_url
   }
 
   get container_invite_url(): string {

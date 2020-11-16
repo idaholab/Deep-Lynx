@@ -1,3 +1,26 @@
-<h1>EMAIL VALIDATION</h1>
-{{{ _error}}}
-{{{ _success }}}
+<div id="dialog" class="card d-flex flex-column shadow">
+    <div class="row no-gutters flex-fill fill d-flex">
+        <div class="col-md-5">
+            <div id="color-background" class="pa-0 container h-100 d-flex">
+                <div class="align-self-center justify-content-center mx-auto my-5">
+                    <h1 class="login-title text-center text-white mb-4">Deep Lynx</h1>
+                    <img src="img/data-white.png" class="card-img img-fluid" alt="Deep Lynx Logo">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card-body">
+                {{#if _error}}
+                    <div class="alert alert-danger" role="alert">
+                        {{{_error}}}
+                    </div>
+                {{/if}}
+                {{#if _success}}
+                        <h1>{{{ _success }}}</h1>
+                {{/if}}
+
+                <a href="/oauth/profile" class="btn btn-lg btn-custom mb-2 btn-block" role="button">Return</a>
+            </div>
+        </div>
+    </div>
+</div>

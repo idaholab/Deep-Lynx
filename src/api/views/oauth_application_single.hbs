@@ -1,0 +1,48 @@
+<div id="dialog" class="card d-flex flex-column shadow">
+    <div class="row no-gutters flex-fill fill d-flex">
+        <div class="col-md-2">
+            <div id="color-background" class="pa-0 container h-100 d-flex">
+                <div class="align-self-center justify-content-center mx-auto my-5">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card-body">
+                {{#if _error}}
+                    <div class="alert alert-danger" role="alert">
+                        {{{_error}}}
+                    </div>
+                {{/if}}
+                {{#if _success}}
+                    <div class="alert alert-primary" role="alert">
+                        {{{_success}}}
+                        <br>
+                        This is the only time you will see your application's secret. Please write it down.
+                        <br>
+                        <br>
+                        Key: {{{application_id}}}
+                        <br>
+                        Secret: {{{application_secret}}}
+                    </div>
+                {{/if}}
+                <h3>
+                    OAuth Application: {{{application.name}}}
+                </h3>
+                <small class="text-muted">{{{application.description}}}</small>
+
+                <p><strong>ApplicationID: </strong> {{{application.id}}}</p>
+
+
+                <form class="mb-3" action="/oauth/applications/{{{application.id}}}?_method=DELETE" method="post">
+                    <input type="hidden" name="_csrf" value="{{{_csrfToken}}}" />
+                    <div class="w-100 px-4">
+                        <button type="submit" class="btn btn-lg btn-danger mb-2 btn-block">Delete Application</button>
+                    </div>
+                </form>
+                <div class="w-100 d-flex">
+                    <a class="login-link" href="/oauth/applications">Return to List</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

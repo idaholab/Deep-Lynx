@@ -39,7 +39,7 @@ export const resetPasswordPayload = t.type({
     new_password: t.string
 })
 
-export const userT = t.exact(t.intersection([userRequired, userOptional, recordMetaT]));
+export const userT = t.intersection([userRequired, userOptional, recordMetaT]);
 export type UserT = t.TypeOf<typeof userT>
 export type NewUserPayloadT = t.TypeOf<typeof newUserPayloadT>
 export type ResetPasswordPayloadT = t.TypeOf<typeof resetPasswordPayload>

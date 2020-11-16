@@ -32,6 +32,7 @@ const BasicStrategy = passportHttp.BasicStrategy;
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const exphbs = require('express-handlebars')
+const methodOverride = require('method-override')
 
 // Router is a self contained set of routes and middleware that the main express.js
 // application should call. It should be called only once.
@@ -55,11 +56,7 @@ export class Router {
     // DO NOT REMOVE - this is required for some auth methods to work correctly
     this.app.use(express.urlencoded({ extended: false }));
 
-    // templating engine
 
-    this.app.engine('.hbs', exphbs({extname: '.hbs'}))
-    this.app.set('view engine', '.hbs')
-    this.app.set('views', Config.template_dir)
 
     // single, raw endpoint for a health check
     this.app.get("/health", (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -91,20 +88,30 @@ export class Router {
   }
 
   private mountPreMiddleware() {
-    this.app.use([this.perfMiddleware.Pre()]); // performance middleware
-    this.app.use(helmet()); // helmet contains a bunch of pre-built http protections
+      this.app.use(methodOverride('_method'))
+
+      // templating engine
+      this.app.engine('.hbs', exphbs({extname: '.hbs'}))
+      this.app.set('view engine', '.hbs')
+      this.app.set('views', Config.template_dir)
+
+      // assets
+      this.app.use(express.static(Config.asset_dir))
+
+      this.app.use([this.perfMiddleware.Pre()]); // performance middleware
+      this.app.use(helmet()); // helmet contains a bunch of pre-built http protections
 
     // TODO: change before attempting to deploy this application to production
-    this.app.use(cors({
+      this.app.use(cors({
       origin: '*'
     }))
 
-    this.app.use(express.json());
+      this.app.use(express.json());
 
     // basic session storage to postgres - keep in mind that this is currently
     // not used. It's here to facilitate future extension of the application and
     // as an example.
-    this.app.use(session({
+      this.app.use(session({
       store: new pgSession({
         pool : PostgresAdapter.Instance.Pool,                // Connection pool
         tableName : 'session'   // Use another table-name than the default "session" one
@@ -116,10 +123,10 @@ export class Router {
       cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 days
     }));
 
-    this.app.use(offsetLimitReplacer())
+      this.app.use(offsetLimitReplacer())
 
     // we call mount auth here because we depend on the session functionality
-    this.mountAuthMiddleware()
+      this.mountAuthMiddleware()
   }
 
   private mountAuthMiddleware(): void {

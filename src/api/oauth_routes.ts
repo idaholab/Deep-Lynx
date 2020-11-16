@@ -14,14 +14,17 @@ const buildUrl = require('build-url')
 export default class OAuthRoutes {
     public static mount(app: Application) {
         // OAuth application management
+        app.get("/oauth/applications/create", csurf(), LocalAuthMiddleware, this.createOAuthApplicationPage)
         app.post("/oauth/applications", csurf(), LocalAuthMiddleware, this.createOAuthApplication)
         app.get("/oauth/applications", csurf(), LocalAuthMiddleware, this.listOAuthApplications)
+        app.get("/oauth/applications/:applicationID", csurf(), LocalAuthMiddleware, this.oauthApplicationPage)
         app.put("/oauth/applications/:applicationID", csurf(), LocalAuthMiddleware, this.updateOAuthApplication )
         app.delete("/oauth/applications/:applicationID", csurf(), LocalAuthMiddleware, this.deleteOAuthApplication)
 
         // login, register and authorize
-        app.get("/oauth/login", csurf(), this.loginPage)
-        app.post("/oauth/login", csurf(),  LocalAuthMiddleware, this.login)
+        app.get("/", csurf(), this.loginPage)
+        app.get("/logout", this.logout)
+        app.post("/", csurf(),  LocalAuthMiddleware, this.login)
 
         app.get("/oauth/register", csurf(), this.registerPage)
         app.post("/oauth/register", csurf(), this.createNewUser)
@@ -37,14 +40,15 @@ export default class OAuthRoutes {
 
         app.get("/validate-email", this.validateEmail)
 
-        app.get("/reset-password", this.resetPasswordPage)
-        app.post("/reset-password", this.initiatePasswordReset)
-        app.post("/reset-password/reset", this.resetPassword)
+        app.get("/reset-password",csurf(), this.resetPasswordPage)
+        app.post("/reset-password", csurf(), this.initiatePasswordReset)
+        app.post("/reset-password/reset",csurf(), this.resetPassword)
     }
 
     private static profile(req: Request, res: Response, next: NextFunction) {
+        const user = req.user as UserT
         // profile must include a user's keys
-        KeyPairStorage.Instance.KeysForUser(req.params.id)
+        KeyPairStorage.Instance.KeysForUser(user.id!)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.render('profile', {_error: "Unable to fetch user's API keys"})
@@ -65,6 +69,32 @@ export default class OAuthRoutes {
                 return
             })
             .catch((err) => res.render('profile', {_error: err}))
+    }
+
+    private static createOAuthApplicationPage(req: Request, res: Response) {
+        res.render('oauth_application_create', {
+            _error: req.query.error,
+            // @ts-ignore
+            _csrfToken: req.csrfToken()
+        })
+        return
+    }
+
+    private static oauthApplicationPage(req: Request, res: Response) {
+        OAuthApplicationStorage.Instance.Retrieve(req.params.applicationID)
+            .then(application => {
+                if(application.isError) {
+                    res.redirect(buildUrl('/oauth/applications', {queryParams: {error: application.error}}))
+                    return
+                }
+                res.render('oauth_application_single', {
+                    // @ts-ignore
+                    _csrfToken: req.csrfToken(),
+                    application: application.value
+                })
+
+                return
+            })
     }
 
     private static generateKeyPair(req: Request, res: Response, next: NextFunction) {
@@ -111,7 +141,7 @@ export default class OAuthRoutes {
         const request = oauth.AuthorizationFromRequest(req)
 
         if(!request) {
-            res.render('authorize', {_error: "Missing authorization request parameters"})
+            res.redirect(buildUrl("/", {queryParams: {error: "Missing authorization request parameters"}}))
             return
         }
 
@@ -121,7 +151,7 @@ export default class OAuthRoutes {
                 OAuthApplicationStorage.Instance.Retrieve(request!.client_id)
                     .then((application) => {
                         if(application.isError) {
-                            res.render('authorize', {_error: "Unable to retrieve OAuth client"})
+                            res.redirect(buildUrl("/", {queryParams: {error: "Unable to retrieve OAuth application"}}))
                             return
                         }
 
@@ -134,6 +164,8 @@ export default class OAuthRoutes {
                                         _csrfToken: req.csrfToken(),
                                         token: token.value,
                                         application_id: application.value.id,
+                                        application_name: application.value.name,
+                                        user_email: user.email
                                     })
 
                                     return;
@@ -186,6 +218,9 @@ export default class OAuthRoutes {
     }
 
     private static createNewUser(req: Request, res: Response) {
+        const oauth = new OAuth()
+        const oauthRequest = oauth.AuthorizationFromRequest(req)
+
         CreateNewUser(req.body)
             .then((result) => {
                 if (result.isError && result.error) {
@@ -195,21 +230,39 @@ export default class OAuthRoutes {
 
                 delete result.value.password;
 
-                res.redirect('/oauth/profile')
+                if(oauthRequest) {
+                    req.login(result.value, () => {
+                        res.redirect(buildUrl('/oauth/authorize', {queryParams: oauthRequest}))
+                    })
+                    return
+                }
+
+                req.login(result.value, () => {
+                    res.redirect('/oauth/profile')
+                })
                 return
             })
             .catch((err) => res.redirect(buildUrl('/oauth/register', {queryParams: {error: err}})))
     }
 
     private static loginPage(req: Request, res: Response, next: NextFunction) {
+        req.logout() // in case a previous user logged into a session
         const oauth = new OAuth()
+        const oauthRequest = oauth.AuthorizationFromRequest(req)
 
         return res.render('login', {
             // @ts-ignore
             _csrfToken: req.csrfToken(),
-            oauthRequest: oauth.AuthorizationFromRequest(req),
-            registerLink: buildUrl('/oauth/register', {queryParams: req.query})
+            oauthRequest,
+            registerLink: buildUrl('/oauth/register', {queryParams: req.query}),
+            _success: req.query.success,
+            _error: req.query.error
         })
+    }
+
+    private static logout(req: Request, res: Response, next: NextFunction) {
+        req.logout()
+        return res.redirect("/")
     }
 
     private static login(req: Request, res: Response, next: NextFunction) {
@@ -239,6 +292,7 @@ export default class OAuthRoutes {
                 res.redirect(buildUrl('/oauth/applications', {queryParams:
                         {
                             success: "Successfully created OAuth application",
+                            application_name: result.value.name,
                             application_id: result.value.id,
                             application_secret: result.value.client_secret_raw
                         }
@@ -371,13 +425,22 @@ export default class OAuthRoutes {
     }
 
     private static resetPasswordPage(req: Request, res: Response) {
-        res.render('reset_password', {_success: req.query.success, _error: req.query.error})
+        // if this is the final step in a password reset, verify that the issue time isn't 4 hours in the past
+
+        res.render('reset_password', {
+            _success: req.query.success,
+            _error: req.query.error,
+            email: req.query.email,
+            token: req.query.token,
+            // @ts-ignore
+            _csrfToken: req.csrfToken()
+        })
         return
     }
 
     private static initiatePasswordReset(req: Request, res: Response) {
         // @ts-ignore
-        InitiateResetPassword(req.query.email)
+        InitiateResetPassword(req.body.email)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.redirect(buildUrl('/reset-password', {queryParams: {error: result.error}}))
@@ -387,7 +450,6 @@ export default class OAuthRoutes {
                 res.redirect(buildUrl('/reset-password', {queryParams: {
                     success: "Password reset initiated successfully.",
                     // @ts-ignore
-                    _csrfToken: req.csrfToken()
                 }}))
                 return
             })
@@ -400,13 +462,13 @@ export default class OAuthRoutes {
         ResetPassword(req.body)
             .then((result) => {
                 if (result.isError && result.error) {
-                    res.redirect(buildUrl('/oauth/login', {queryParams: {error: result.error}}))
+                    res.redirect(buildUrl('/', {queryParams: {error: result.error}}))
                     return
                 }
 
-                res.redirect(buildUrl('/oauth/login', {queryParams: {success: "Password r"}}))
+                res.redirect(buildUrl('/', {queryParams: {success: "Password reset successfully"}}))
                 return
             })
-            .catch((err) => res.redirect(buildUrl('/oauth/login', {queryParams: {error: err}})))
+            .catch((err) => res.redirect(buildUrl('/', {queryParams: {error: err}})))
     }
 }

@@ -1,17 +1,60 @@
-<h1>OAUTH APPLICATIONS</h1>
+<div id="dialog" class="card d-flex flex-column shadow">
+    <div class="row no-gutters flex-fill fill d-flex">
+        <div class="col-md-2">
+            <div id="color-background" class="pa-0 container h-100 d-flex">
+                <div class="align-self-center justify-content-center mx-auto my-5">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card-body">
+                {{#if _error}}
+                    <div class="alert alert-danger" role="alert">
+                        {{{_error}}}
+                    </div>
+                {{/if}}
+                {{#if _success}}
+                    <div class="alert alert-primary" role="alert">
+                        {{{_success}}}
+                        {{#if application_id}}
+                            <br>
+                            This is the only time you will see your application's secret. Please write it down.
+                            <br>
+                            <br>
+                            Key: {{{application_id}}}
+                            <br>
+                            Secret: {{{application_secret}}}
+                        {{/if}}
+                    </div>
+                {{/if}}
+                <h3>
+                   OAuth Application List
+                </h3>
+                <small class="text-muted">This is a list of all your registered OAuth applications.</small>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Description</th>
+                        <th scope="col"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{#each applications}}
+                        <tr>
+                            <th scope="row">{{this.name}}</th>
+                            <td>{{this.description}}</td>
+                            <td><a href="/oauth/applications/{{this.id}}" class="btn btn-custom mb-2 btn-block" role="button">View</a> </td>
+                        </tr>
+                    {{/each}}
+                    </tbody>
+                </table>
 
-
-NEW APPLICATION
-<form action="/oauth/applications" method="post">
-
-    <div class="container">
-        <label for="username"><b>Name</b></label>
-        <input type="text" placeholder="Enter Username" name="name" required>
-
-        <label for="psw"><b>Password</b></label>
-        <input type="text" placeholder="Enter Password" name="description" required>
-        <input type="hidden" name="_csrf" value="{{{_csrfToken}}}" />
-        <button type="submit">Login</button>
-
+                <a href="/oauth/applications/create" class="btn btn-lg btn-custom mb-2 btn-block" role="button">Create New</a>
+                <div class="w-100 d-flex">
+                    <a class="login-link" href="/oauth/profile">Return to Profile</a>
+                </div>
+            </div>
+        </div>
     </div>
-</form>
+</div>
