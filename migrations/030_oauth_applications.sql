@@ -9,10 +9,9 @@ CREATE TABLE oauth_applications (
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     modified_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by character varying(255) NOT NULL,
-    modified_by character varying(255) NOT NULL
+    modified_by character varying(255) NOT NULL,
+    UNIQUE (id,client_id)
 );
-
-CREATE UNIQUE INDEX client_id ON oauth_applications(client_id text_ops);
 
 CREATE TABLE oauth_application_approvals (
     oauth_application_id uuid REFERENCES oauth_applications(id) ON DELETE CASCADE,

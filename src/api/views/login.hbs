@@ -45,16 +45,16 @@
                         <hr class="w-100" />
                         <span class="px-2">or</span>
                     </div>
-                    <!--
-                    <div class="w-100 px-4">
-                        <button type="submit" class="btn btn-lg btn-custom mb-2 btn-block">
-                            <svg style="width:22px; height:22px; padding-right:2px;" viewBox="0 0 24 24">
-                                <path fill="currentColor" d="M3,12V6.75L9,5.43V11.91L3,12M20,3V11.75L10,11.9V5.21L20,3M3,13L9,13.09V19.9L3,18.75V13M20,13.25V22L10,20.09V13.1L20,13.25Z" />
-                            </svg>
-                            Login with Windows
-                        </button>
-                    </div>
-                    -->
+                    {{#if saml_enabled}}
+                        <div class="w-100 px-4">
+                            <a href="{{{loginWithWindowsLink}}}" class="btn btn-custom mb-2 btn-block" role="button">
+                                <svg style="width:22px; height:22px; padding-right:2px;" viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M3,12V6.75L9,5.43V11.91L3,12M20,3V11.75L10,11.9V5.21L20,3M3,13L9,13.09V19.9L3,18.75V13M20,13.25V22L10,20.09V13.1L20,13.25Z" />
+                                </svg>
+                                Login with Windows
+                            </a>
+                        </div>
+                    {{/if}}
                 </form>
                 <div class="w-100 d-flex">
                     <a class="login-link" href="{{{registerLink}}}">Need an Account?</a>

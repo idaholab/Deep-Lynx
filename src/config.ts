@@ -49,6 +49,7 @@ export class Config {
   private readonly _superuser_email: string;
   private readonly _superuser_password: string;
 
+  private readonly _saml_enabled: boolean;
   private readonly _saml_adfs_entry_point: string;
   private readonly _saml_adfs_issuer: string;
   private readonly _saml_adfs_callback: string;
@@ -123,9 +124,10 @@ export class Config {
 
     this._saml_adfs_entry_point = process.env.SAML_ADFS_ENTRY_POINT || "";
     this._saml_adfs_issuer = process.env.SAML_ADFS_ISSUER || "";
-    this._saml_adfs_callback = process.env.SAML_ADFS_CALLBACK || "http://localhost:8090/login";
+    this._saml_adfs_callback = process.env.SAML_ADFS_CALLBACK || "http://localhost:8090/oauth/saml";
     this._saml_adfs_private_cert_path = process.env.SAML_ADFS_PRIVATE_CERT_PATH
     this._saml_adfs_public_cert_path = process.env.SAML_ADFS_PUBLIC_CERT_PATH
+    this._saml_enabled = process.env.SAML_ENABLED === "true"
     this._auth_config_file = process.env.AUTH_CONFIG_FILE_PATH || path.resolve(__dirname, '../src/user_management/authorization/auth_model.conf');
     this._auth_token_expiry = process.env.AUTH_TOKEN_EXPIRY || "24h"
 
@@ -265,6 +267,10 @@ export class Config {
 
   get auth_strategy(): string {
     return this._auth_strategy
+  }
+
+  get saml_enabled(): boolean {
+    return this._saml_enabled
   }
 
   get saml_adfs_entry_point(): string {

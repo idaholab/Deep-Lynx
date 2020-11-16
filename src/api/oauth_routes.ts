@@ -3,11 +3,21 @@ import {UserT} from "../types/user_management/userT";
 import OAuthApplicationStorage from "../data_storage/user_management/oauth_application_storage";
 import {LocalAuthMiddleware} from "../user_management/authentication/local";
 import {OAuth} from "../services/oauth/oauth";
-import {OAuthTokenExchangeT} from "../types/user_management/oauth";
+import {OAuthAuthorizationRequestT, OAuthTokenExchangeT} from "../types/user_management/oauth";
 import UserStorage from "../data_storage/user_management/user_storage";
-import {CreateNewUser, InitiateResetPassword, ResetPassword} from "../user_management/users";
+import {
+    CreateNewUser,
+    InitiateResetPassword,
+    ResetPassword,
+    RetrieveResourcePermissions
+} from "../user_management/users";
 import KeyPairStorage from "../data_storage/user_management/keypair_storage";
+import Config from "../config"
+import Cache from "../services/cache/cache"
 
+import passport from "passport";
+import jwt from "jsonwebtoken";
+import uuid from "uuid"
 const csurf = require('csurf')
 const buildUrl = require('build-url')
 
@@ -26,12 +36,17 @@ export default class OAuthRoutes {
         app.get("/logout", this.logout)
         app.post("/", csurf(),  LocalAuthMiddleware, this.login)
 
+        // saml specific
+        app.get("/login-saml", this.loginSaml)
+        app.post("/oauth/saml", this.saml)
+
         app.get("/oauth/register", csurf(), this.registerPage)
         app.post("/oauth/register", csurf(), this.createNewUser)
 
         app.get("/oauth/authorize", csurf(), LocalAuthMiddleware, this.authorizePage)
         app.post("/oauth/authorize", csurf(), LocalAuthMiddleware, this.authorize)
         app.post("/oauth/exchange", this.tokenExchange)
+        app.get("/oauth/token", this.getToken)
 
         // profile management and email validation/reset password
         app.get("/oauth/profile",csurf(), LocalAuthMiddleware, this.profile)
@@ -148,7 +163,7 @@ export default class OAuthRoutes {
         oauth.MakeAuthorizationRequest(user.id!, request)
             .then(token => {
                 // fetch the oauth application details
-                OAuthApplicationStorage.Instance.Retrieve(request!.client_id)
+                OAuthApplicationStorage.Instance.RetrieveByClientID(request!.client_id)
                     .then((application) => {
                         if(application.isError) {
                             res.redirect(buildUrl("/", {queryParams: {error: "Unable to retrieve OAuth application"}}))
@@ -255,9 +270,50 @@ export default class OAuthRoutes {
             _csrfToken: req.csrfToken(),
             oauthRequest,
             registerLink: buildUrl('/oauth/register', {queryParams: req.query}),
+            loginWithWindowsLink: buildUrl('/login-saml', {queryParams: req.query}),
             _success: req.query.success,
-            _error: req.query.error
+            _error: req.query.error,
+            saml_enabled: Config.saml_enabled
         })
+    }
+
+    private static loginSaml(req: Request, res:Response) {
+        const oauth = new OAuth()
+        const oauthRequest = oauth.AuthorizationFromRequest(req)
+
+        // if this login is part of an OAuth request flow, we must save it in cache
+        // so that we can restore it as part of the redirect
+        if(oauthRequest) {
+            const token = Buffer.from(uuid.v4()).toString('base64')
+            Cache.set(token, oauthRequest , 60 * 10)
+            req.query.RelayState = token
+        }
+
+        passport.authenticate('saml', { failureRedirect: '/unauthorized', failureFlash: true })(req, res)
+    }
+
+    private static saml(req: Request, res: Response, next: NextFunction) {
+        passport.authenticate('saml', (err, user, info) => {
+            if(err) {
+                res.redirect(buildUrl('/', {queryParams: {error: `${err}`}}))
+                return
+            }
+
+            if(!user) {return res.redirect('/')}
+
+            req.logIn(user, () => {
+                if(req.body.RelayState) {
+                    const oauthRequest = Cache.get<OAuthAuthorizationRequestT>(req.body.RelayState as string)
+                    if(oauthRequest) {
+                        res.redirect(buildUrl("/oauth/authorize", {queryParams: oauthRequest}))
+                        return
+                    }
+                }
+
+                res.redirect('/oauth/profile')
+                return
+            })
+        })(req, res, next)
     }
 
     private static logout(req: Request, res: Response, next: NextFunction) {
@@ -408,6 +464,46 @@ export default class OAuthRoutes {
             .finally(() => next())
     }
 
+    // this route will take an API KeyPair and return a JWT token encapsulating the user to which the supplied
+    // KeyPair belongs
+    private static getToken(req: Request, res: Response, next: NextFunction) {
+        const key = req.header("x-api-key");
+        const secret = req.header("x-api-secret");
+
+        if(key && secret) {
+            KeyPairStorage.Instance.ValidateKeyPair(key, secret)
+                .then(valid => {
+                    if(!valid) {
+                        res.status(401).send('unauthorized');
+                        return
+                    }
+
+                    KeyPairStorage.Instance.UserForKeyPair(key)
+                        .then(user => {
+                            if(user.isError) {
+                                // even though its an error with the user, we don't want
+                                // to give that away, keep them thinking its an error
+                                // with credentials
+                                res.status(401);
+                                return;
+                            }
+
+                            // fetch set of permissions per resource for the user before returning
+                            RetrieveResourcePermissions(user.value.id!)
+                                .then(permissions => {
+                                    user.value.permissions = permissions
+
+                                    const token = jwt.sign(user.value, Config.encryption_key_secret, {expiresIn: '1000m'})
+                                    res.status(200).json(token)
+                                    return
+                                })
+                        })
+                })
+        } else {
+            res.status(401).send('unauthorized');
+            return
+        }
+    }
 
     private static validateEmail(req: Request, res: Response, next: NextFunction) {
         // @ts-ignore

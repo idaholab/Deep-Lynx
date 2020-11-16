@@ -3,6 +3,11 @@ const cors = require('cors')
 import helmet from "helmet"
 import passport from "passport"
 import passportHttp from "passport-http"
+const BasicStrategy = passportHttp.BasicStrategy;
+const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
+const exphbs = require('express-handlebars')
+const methodOverride = require('method-override')
 
 import { Server } from "./server"
 import { PerformanceMiddleware, authenticateRoute, offsetLimitReplacer } from "./middleware";
@@ -19,20 +24,11 @@ import {SuperUser, UserT} from "../types/user_management/userT";
 import UserRoutes from "./user_routes";
 import DataSourceRoutes from "./data_source_routes";
 import {SetJWTAuthMethod} from "../user_management/authentication/jwt";
-import jwt from "jsonwebtoken"
 import {SetLocalAuthMethod} from "../user_management/authentication/local";
-import KeyPairStorage from "../data_storage/user_management/keypair_storage";
-import {RetrieveResourcePermissions} from "../user_management/users";
 import QueryRoutes from "./query_routes";
 import GraphRoutes from "./graph_routes";
 import OAuthRoutes from "./oauth_routes";
 import UserStorage from "../data_storage/user_management/user_storage";
-
-const BasicStrategy = passportHttp.BasicStrategy;
-const session = require('express-session');
-const pgSession = require('connect-pg-simple')(session);
-const exphbs = require('express-handlebars')
-const methodOverride = require('method-override')
 
 // Router is a self contained set of routes and middleware that the main express.js
 // application should call. It should be called only once.
@@ -169,81 +165,7 @@ export class Router {
     // finalize passport.js usage
     this.app.use(passport.initialize());
     this.app.use(passport.session());
-
-    // set login/logout pages for SAML
-    this.app.post('/login-saml',(req: express.Request, resp: express.Response, next: express.NextFunction) => {
-      passport.authenticate('saml', (err, user, info) => {
-        if(err) { return next(err)}
-
-        if(!user) {return resp.redirect('/')}
-
-        // fetch set of permissions per resource for the user before returning
-        RetrieveResourcePermissions((user as UserT).id!)
-            .then((permissions: string[][]) => {
-                const token = jwt.sign(user, Config.encryption_key_secret, {expiresIn: '1000m'})
-
-                return resp.redirect(req.body.RelayState + `?jwt=${token}`)
-            })
-
-      })(req, resp, next)},(req: express.Request, res: express.Response, next: express.NextFunction) => {
-          res.redirect('/health');
-        }
-    );
-
-    // this route should be called with the "redirect" query parameter so that deep lynx knows where to send the user
-    // after they've been authenticated with the SAML method
-    this.app.get('/login-saml',(req: express.Request, resp: express.Response, next: express.NextFunction) => {
-      req.query.RelayState = req.query.redirect
-      passport.authenticate('saml', { failureRedirect: '/unauthorized', failureFlash: true })(req, resp, next)
-      }, (req: express.Request, res: express.Response) => {
-          res.redirect('/health');
-        }
-    );
-
-
-    // this route will take an API KeyPair and return a JWT token encapsulating the user to which the supplied
-    // KeyPair belongs
-    this.app.get("/login-token", (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        const key = req.header("x-api-key");
-        const secret = req.header("x-api-secret");
-
-        if(key && secret) {
-          KeyPairStorage.Instance.ValidateKeyPair(key, secret)
-              .then(valid => {
-                if(!valid) {
-                  res.status(401).send('unauthorized');
-                  return
-                }
-
-                KeyPairStorage.Instance.UserForKeyPair(key)
-                    .then(user => {
-                      if(user.isError) {
-                        // even though its an error with the user, we don't want
-                        // to give that away, keep them thinking its an error
-                        // with credentials
-                        res.status(401);
-                        return;
-                      }
-
-                      // fetch set of permissions per resource for the user before returning
-                      RetrieveResourcePermissions(user.value.id!)
-                          .then(permissions => {
-                              user.value.permissions = permissions
-
-                              const token = jwt.sign(user.value, Config.encryption_key_secret, {expiresIn: '1000m'})
-                              res.status(200).json(token)
-                              return
-                          })
-                    })
-              })
-        } else {
-          res.status(401).send('unauthorized');
-          return
-        }
-
-    })
   }
-
 
   private mountPostMiddleware() {
     this.app.use([this.perfMiddleware.Post()])

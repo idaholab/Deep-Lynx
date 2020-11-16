@@ -72,6 +72,10 @@ export default class OAuthApplicationStorage extends PostgresStorage{
         return super.retrieve<OauthApplicationT>(OAuthApplicationStorage.retrieveStatement(id))
     }
 
+    public RetrieveByClientID(clientID: string): Promise<Result<OauthApplicationT>> {
+        return super.retrieve<OauthApplicationT>(OAuthApplicationStorage.retrieveByClientIDStatement(clientID))
+    }
+
     public List(): Promise<Result<OauthApplicationT[]>> {
         return super.rows<OauthApplicationT>(OAuthApplicationStorage.listStatement())
     }
@@ -154,6 +158,12 @@ export default class OAuthApplicationStorage extends PostgresStorage{
         }
     }
 
+    private static retrieveByClientIDStatement(clientID:string): QueryConfig {
+        return {
+            text:`SELECT * FROM oauth_applications WHERE client_id = $1`,
+            values: [clientID]
+        }
+    }
 
     private static deleteStatement(userID: string): QueryConfig {
         return {
