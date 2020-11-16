@@ -238,7 +238,7 @@ export default class OAuthRoutes {
                 }
 
                 req.login(result.value, () => {
-                    res.redirect('/oauth/profile')
+                    res.redirect(buildUrl('/oauth/profile', {queryParams: {success: "Successfully created account"}}))
                 })
                 return
             })
@@ -447,7 +447,7 @@ export default class OAuthRoutes {
                     return
                 }
 
-                res.redirect(buildUrl('/reset-password', {queryParams: {
+                res.redirect(buildUrl('/', {queryParams: {
                     success: "Password reset initiated successfully.",
                     // @ts-ignore
                 }}))
