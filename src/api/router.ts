@@ -65,6 +65,7 @@ export class Router {
     this.mountPreMiddleware();
 
     // Mount application controllers, middleware is passed in as an array of functions
+    UserRoutes.mount(this.app, [authenticateRoute()]);
     ContainerRoutes.mount(this.app, [authenticateRoute()]);
     DataSourceRoutes.mount(this.app, [authenticateRoute()]);
     MetatypeRoutes.mount(this.app, [authenticateRoute()]);
@@ -77,7 +78,6 @@ export class Router {
 
     // OAuth and Identity Provider routes - these are the only routes that serve up
     // webpages. WE ALSO MOUNT THE '/' ENDPOINT HERE
-    UserRoutes.mount(this.app, [authenticateRoute()]);
     OAuthRoutes.mount(this.app)
 
     this.mountPostMiddleware()

@@ -349,7 +349,7 @@ export default class OAuthRoutes {
                         {
                             success: "Successfully created OAuth application",
                             application_name: result.value.name,
-                            application_id: result.value.id,
+                            application_id: result.value.client_id,
                             application_secret: result.value.client_secret_raw
                         }
                 }))
