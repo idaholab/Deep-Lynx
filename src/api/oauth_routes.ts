@@ -469,6 +469,7 @@ export default class OAuthRoutes {
     private static getToken(req: Request, res: Response, next: NextFunction) {
         const key = req.header("x-api-key");
         const secret = req.header("x-api-secret");
+        const expiry = req.header("x-api-expiry")
 
         if(key && secret) {
             KeyPairStorage.Instance.ValidateKeyPair(key, secret)
@@ -493,7 +494,7 @@ export default class OAuthRoutes {
                                 .then(permissions => {
                                     user.value.permissions = permissions
 
-                                    const token = jwt.sign(user.value, Config.encryption_key_secret, {expiresIn: '1000m'})
+                                    const token = jwt.sign(user.value, Config.encryption_key_secret, {expiresIn: expiry})
                                     res.status(200).json(token)
                                     return
                                 })

@@ -71,7 +71,7 @@ export class OAuth {
         }
 
         // with all verification done generate and return a valid JWT
-        const token = jwt.sign(user.value, Config.encryption_key_secret, {expiresIn: '1000m'})
+        const token = jwt.sign(user.value, Config.encryption_key_secret, {expiresIn: '720m'})
 
         return new Promise(resolve => resolve(Result.Success(token)))
     }
