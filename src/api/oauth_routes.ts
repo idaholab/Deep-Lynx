@@ -214,7 +214,7 @@ export default class OAuthRoutes {
                     return
                 }
 
-                res.redirect(oauthRequest.redirect_uri + `?token=${req.body.token}`)
+                res.redirect(oauthRequest.redirect_uri + `?token=${req.body.token}&state=${oauthRequest.state}`)
 
             })
     }
