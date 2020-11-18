@@ -59,7 +59,7 @@ export class OAuth {
                 if(hash !== decodeURIComponent(originalReq.code_challenge!)) return new Promise(resolve => resolve(Result.Failure('PKCE code challenge does not match')))
 
             } else {
-                if(exchangeReq.code_verifier !== originalReq.code_challenge) return new Promise(resolve => resolve(Result.Failure('PKCE code challenge does not match')))
+                if(exchangeReq.code_verifier !== decodeURIComponent(originalReq.code_challenge!)) return new Promise(resolve => resolve(Result.Failure('PKCE code challenge does not match')))
             }
         } else { // if we're not doing PKCE there must be a client secret present
             const application = await OAuthApplicationStorage.Instance.Retrieve(exchangeReq.client_id)

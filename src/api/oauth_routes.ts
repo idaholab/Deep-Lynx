@@ -186,11 +186,10 @@ export default class OAuthRoutes {
                                     return;
                                 }
 
-                                res.redirect(request.redirect_uri + `?token=${token.value}`)
+                                res.redirect(buildUrl(request.redirect_uri, {queryParams: {token: token.value, state: request.state}}))
                                 return
 
                             })
-                        return
                     })
             })
     }
@@ -214,7 +213,7 @@ export default class OAuthRoutes {
                     return
                 }
 
-                res.redirect(oauthRequest.redirect_uri + `?token=${req.body.token}&state=${oauthRequest.state}`)
+                res.redirect(buildUrl(oauthRequest.redirect_uri, {queryParams: {token: req.body.token, state: oauthRequest.state}}))
 
             })
     }
