@@ -24,11 +24,6 @@
             this.$client.listContainers()
                 .then(containers => {
                     this.containers = containers
-
-                    // TODO: remove before we go live
-                    if(this.containers.length > 0) {
-                    //    this.$store.commit('setActiveContainer', containers[0])
-                    }
                 })
                 .catch(e => this.errorMessage = e)
         }
