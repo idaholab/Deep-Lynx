@@ -1,0 +1,66 @@
+<div id="dialog" class="card d-flex flex-column shadow">
+    <div class="row no-gutters flex-fill fill d-flex">
+        <div class="col-md-5">
+            <div id="color-background" class="pa-0 container h-100 d-flex">
+                <div class="align-self-center justify-content-center mx-auto my-5">
+                    <h1 class="login-title text-center text-white mb-4">Deep Lynx</h1>
+                    <img src="img/data-white.png" class="card-img img-fluid" alt="Deep Lynx Logo">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card-body">
+                {{#if _error}}
+                    <div class="alert alert-danger" role="alert">
+                        {{{_error}}}
+                    </div>
+                {{/if}}
+                {{#if _success}}
+                    <div class="alert alert-primary" role="alert">
+                        {{{_success}}}
+                    </div>
+                {{/if}}
+                <h2 class="text-center my-4">Login</h2>
+                <form class="mb-5" action="/" method="post">
+                    <input type="hidden" name="_csrf" value="{{{_csrfToken}}}" />
+                    {{#if oauthRequest}}
+                        {{#each oauthRequest}}
+                            <input type="hidden" name="{{@key}}" value="{{this}}" />
+                        {{/each}}
+                    {{/if}}
+                    <div class="mb-5">
+                        <div class="form-group">
+                            <label for="email">Email address</label>
+                            <input type="email" class="form-control" id="email" name="username" placeholder="name@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                    </div>
+                    <div class="w-100 px-4">
+                        <button type="submit" class="btn btn-lg btn-custom mb-2 btn-block">Login</button>
+                    </div>
+                    <div class="row my-3 mx-0 justify-content-center align-items-center divider-container">
+                        <hr class="w-100" />
+                        <span class="px-2">or</span>
+                    </div>
+                    {{#if saml_enabled}}
+                        <div class="w-100 px-4">
+                            <a href="{{{loginWithWindowsLink}}}" class="btn btn-custom mb-2 btn-block" role="button">
+                                <svg style="width:22px; height:22px; padding-right:2px;" viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M3,12V6.75L9,5.43V11.91L3,12M20,3V11.75L10,11.9V5.21L20,3M3,13L9,13.09V19.9L3,18.75V13M20,13.25V22L10,20.09V13.1L20,13.25Z" />
+                                </svg>
+                                Login with Windows
+                            </a>
+                        </div>
+                    {{/if}}
+                </form>
+                <div class="w-100 d-flex">
+                    <a class="login-link" href="{{{registerLink}}}">Need an Account?</a>
+                    <a class="login-link ml-auto" href="/reset-password">Forgot Password?</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -17,20 +17,12 @@ import UserContainerInviteStorage from "../data_storage/user_management/user_con
 // for SAML authentication routes. You cannot manually create a user as of June 2020.
 export default class UserRoutes {
     public static mount(app: Application, middleware: any[]) {
-        app.post("/users", this.createNewUser)
         app.get("/users",...middleware,authRequest("read", "users"), this.listUsers);
         app.delete("/users/:userID", middleware, authRequest("write", "users"), this.deleteUser)
         app.put("/users/:userID", ...middleware,authRequest("write", "users"), this.updateUser)
 
-        app.get("/users/validate", this.validateEmail)
-        app.get("/users/reset-password", this.initiatePasswordReset)
-        app.post("/users/reset-password", this.resetPassword)
         app.get("/users/invite", ...middleware, this.acceptContainerInvite)
         app.get("/users/invites", ...middleware, this.listOutstandingInvites)
-
-        app.get("/users/:id/keys", middleware, authUser(), this.keysForUser)
-        app.post("/users/:id/keys", middleware, authUser(), this.generateKeyPair)
-        app.delete("/users/:id/keys/:keyID", middleware, authUser(), this.deleteKeyPair)
 
         // this endpoint will return all users of the application, not users who have permissions in the container
         // we use the container to make sure the requester has permissions to view all users, but this could be
@@ -55,24 +47,6 @@ export default class UserRoutes {
                 }
 
                 res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
-    }
-
-    // this should return 200 no matter what user id/token combination you send into it
-    // this is by design - so that users can't brute force know either a user ID or token
-    // and so that a user clicking the validation email link twice is met with no error
-    private static validateEmail(req: Request, res: Response, next: NextFunction) {
-        // @ts-ignore
-        UserStorage.Instance.ValidateEmail(req.query.id, req.query.token)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.sendStatus(200)
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
@@ -123,37 +97,6 @@ export default class UserRoutes {
             .finally(() => next())
     }
 
-
-    private static initiatePasswordReset(req: Request, res: Response, next: NextFunction) {
-        // @ts-ignore
-        InitiateResetPassword(req.query.email)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.sendStatus(200)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
-    }
-
-    private static resetPassword(req: Request, res: Response, next: NextFunction) {
-        // @ts-ignore
-        ResetPassword(req.body)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.sendStatus(200)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
-    }
-
     private static keysForUser(req: Request, res: Response, next: NextFunction) {
         KeyPairStorage.Instance.KeysForUser(req.params.id)
             .then((result) => {
@@ -163,52 +106,6 @@ export default class UserRoutes {
                 }
 
                 res.status(200).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
-    }
-
-    private static generateKeyPair(req: Request, res: Response, next: NextFunction) {
-        KeyPairStorage.Instance.Create(req.params.id)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                delete result.value.secret; // we don't want to show the hashed value on return
-
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
-    }
-
-    private static deleteKeyPair(req: Request, res: Response, next: NextFunction) {
-        KeyPairStorage.Instance.PermanentlyDelete(req.params.id, req.params.keyID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.sendStatus(200)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
-    }
-
-    private static createNewUser(req: Request, res: Response, next: NextFunction) {
-        CreateNewUser(req.body)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                delete result.value.password;
-
-                res.status(201).json(result)
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
@@ -316,4 +213,5 @@ export default class UserRoutes {
             .catch(() => res.status(500).send('unable to invite user to container')) // overwrite the error message because we don't need to broadcast issues with our email service
             .finally(() => next())
     }
+
 }

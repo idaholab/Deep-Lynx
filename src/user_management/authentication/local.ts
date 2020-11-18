@@ -4,6 +4,8 @@ import {Strategy} from "passport-local"
 import UserStorage from "../../data_storage/user_management/user_storage";
 import bcrypt from "bcrypt";
 import Logger from "./../../logger"
+import {OAuth} from "../../services/oauth/oauth";
+const buildUrl = require('build-url');
 
 export  function SetLocalAuthMethod(app: express.Application) {
     passport.use(new Strategy({passReqToCallback: true},(req, username, password, done) => {
@@ -25,3 +27,31 @@ export  function SetLocalAuthMethod(app: express.Application) {
            })
     }))
 }
+
+export function LocalAuthMiddleware(req: express.Request, resp: express.Response, next: express.NextFunction): any {
+    const oauth = new OAuth()
+    const oauthRequest = oauth.AuthorizationFromRequest(req)
+
+    if(req.isAuthenticated()) {
+        next()
+        return
+    }
+
+    passport.authenticate('local', (err, user, info) => {
+        if (err) { return resp.redirect(buildUrl('/', {queryParams: {error:`${err}`}})); }
+        if (!user) {
+            return resp.redirect( buildUrl('/', {queryParams: req.query}));
+        }
+        req.logIn(user, (err) => {
+            if (err) { return resp.redirect(buildUrl('/', {queryParams: {error:err.toString()}})); }
+
+            if(oauthRequest) {
+                return resp.redirect(buildUrl('/oauth/authorize', {queryParams: oauthRequest}))
+            }
+
+            return resp.redirect('/oauth/profile');
+        });
+    })(req, resp, next);
+}
+
+

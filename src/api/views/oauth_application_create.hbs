@@ -1,0 +1,50 @@
+<div id="dialog" class="card d-flex flex-column shadow">
+    <div class="row no-gutters flex-fill fill d-flex">
+        <div class="col-md-2">
+            <div id="color-background" class="pa-0 container h-100 d-flex">
+                <div class="align-self-center justify-content-center mx-auto my-5">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card-body">
+                {{#if _error}}
+                    <div class="alert alert-danger" role="alert">
+                        {{{_error}}}
+                    </div>
+                {{/if}}
+                {{#if _success}}
+                    <div class="alert alert-" role="alert">
+                        {{{_error}}}
+                    </div>
+                {{/if}}
+                <h3>
+                    Create Application
+                </h3>
+                <small class="text-muted">Create a new application entry for your Deep Lynx enabled integration. After creation you will be presented with your application key and secret pair, for integration with Deep Lynx's OAuth2 compliant system.</small>
+                <form class="mb-3" action="/oauth/applications" method="post" oninput='confirmpassword.setCustomValidity(confirmpassword.value != password.value ? "Passwords do not match." : "")'>
+                    <input type="hidden" name="_csrf" value="{{{_csrfToken}}}" />
+
+                    <div class="mb-5">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" class="form-control" id="name" name="name" placeholder="Name" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+
+                    </div>
+                    <div class="w-100 px-4">
+                        <button type="submit" class="btn btn-lg btn-custom mb-2 btn-block">Create</button>
+                    </div>
+                </form>
+
+                <div class="w-100 d-flex">
+                    <a class="login-link" href="/oauth/applications">Return to List</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

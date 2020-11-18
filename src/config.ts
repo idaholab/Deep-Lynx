@@ -17,7 +17,12 @@ export class Config {
   private readonly _reset_password_url: string;
   private readonly _container_invite_url: string;
 
+  private readonly _template_dir: string;
+  private readonly _asset_dir: string;
+
   private readonly _is_windows: boolean;
+
+  private readonly _cache_provider: string;
 
   private readonly _mongo_source_uri : string;
   private readonly _mongo_source_db : string;
@@ -44,6 +49,7 @@ export class Config {
   private readonly _superuser_email: string;
   private readonly _superuser_password: string;
 
+  private readonly _saml_enabled: boolean;
   private readonly _saml_adfs_entry_point: string;
   private readonly _saml_adfs_issuer: string;
   private readonly _saml_adfs_callback: string;
@@ -86,11 +92,16 @@ export class Config {
     // here in the config file.
     this._is_windows = process.platform === 'win32'
 
+    this._cache_provider = process.env.CACHE_PROVIDER || "memory"
+
     this._mongo_source_uri= process.env.MONGO_SOURCE_URI || "localhost:8081";
     this._mongo_source_db = process.env.MONGO_SOURCE_DB || "inl-core-m";
 
     this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || "";
     this._db_name = process.env.DB_NAME || "deep_lynx";
+
+    this._template_dir = process.env.TEMPLATE_DIR || "./dist/api/views"
+    this._asset_dir = process.env.ASSET_DIR || "./dist/assets"
 
     this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
     this._encryption_key_secret = process.env.ENCRYPTION_KEY_SECRET || ""
@@ -113,9 +124,10 @@ export class Config {
 
     this._saml_adfs_entry_point = process.env.SAML_ADFS_ENTRY_POINT || "";
     this._saml_adfs_issuer = process.env.SAML_ADFS_ISSUER || "";
-    this._saml_adfs_callback = process.env.SAML_ADFS_CALLBACK || "http://localhost:8090/login";
+    this._saml_adfs_callback = process.env.SAML_ADFS_CALLBACK || "http://localhost:8090/oauth/saml";
     this._saml_adfs_private_cert_path = process.env.SAML_ADFS_PRIVATE_CERT_PATH
     this._saml_adfs_public_cert_path = process.env.SAML_ADFS_PUBLIC_CERT_PATH
+    this._saml_enabled = process.env.SAML_ENABLED === "true"
     this._auth_config_file = process.env.AUTH_CONFIG_FILE_PATH || path.resolve(__dirname, '../src/user_management/authorization/auth_model.conf');
     this._auth_token_expiry = process.env.AUTH_TOKEN_EXPIRY || "24h"
 
@@ -137,6 +149,14 @@ export class Config {
     return this._root_address;
   }
 
+  get template_dir(): string {
+    return this._template_dir;
+  }
+
+  get asset_dir(): string {
+    return this._asset_dir;
+  }
+
   get email_address(): string {
     return this._email_address;
   }
@@ -145,16 +165,8 @@ export class Config {
     return this._email_enabled;
   }
 
-  get email_validation_url(): string {
-    return this._email_validation_url
-  }
-
   get email_validation_enforced(): boolean {
     return this._email_validation_enforced
-  }
-
-  get reset_password_url(): string {
-    return this._reset_password_url
   }
 
   get container_invite_url(): string {
@@ -163,6 +175,10 @@ export class Config {
 
   get is_windows(): boolean {
     return this._is_windows;
+  }
+
+  get cache_provider(): string {
+    return this._cache_provider
   }
 
   get server_port(): string {
@@ -251,6 +267,10 @@ export class Config {
 
   get auth_strategy(): string {
     return this._auth_strategy
+  }
+
+  get saml_enabled(): boolean {
+    return this._saml_enabled
   }
 
   get saml_adfs_entry_point(): string {
