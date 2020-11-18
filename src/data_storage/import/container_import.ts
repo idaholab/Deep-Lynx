@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig } from "axios";
 import ContainerStorage from "../../data_storage/container_storage";
+import {CreateContainer} from "../../api_handlers/container";
 import MetatypeRelationshipStorage from "../../data_storage/metatype_relationship_storage"
 import MetatypeStorage from "../../data_storage/metatype_storage"
 import MetatypeRelationshipPairStorage from "../../data_storage/metatype_relationship_pair_storage"
@@ -290,7 +291,7 @@ export default class ContainerImport {
           name: name,
           description: ontology_description
         };
-        const containers = await containerStorage.Create(user.id!, data)
+        const containers = await CreateContainer(user, data)
         if (containers.isError) return resolve(Result.SilentFailure(containers.error!.error));
 
         const containerID = containers.value[0].id!;

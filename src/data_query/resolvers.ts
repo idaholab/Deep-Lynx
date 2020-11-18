@@ -393,7 +393,7 @@ function PropertyResolver(properties: any): PropertyQL[]{
     for(const key of keys){
         output.push({
             key,
-            value: JSON.stringify(properties[key]),
+            value: properties[key],
             type: typeof properties[key]
         } as PropertyQL)
     }
