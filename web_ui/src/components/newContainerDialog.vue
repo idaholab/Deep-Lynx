@@ -29,6 +29,23 @@
                                         :label="$t('containers.description')"
                                         required
                                 ></v-textarea>
+                              <v-file-input @change="addFile">
+                                <template v-slot:label>
+                                  .owl File <small>(optional)</small>
+                                </template>
+                                <template v-slot:append-outer><info-tooltip :message="$t('containers.owlFileHelp')"></info-tooltip> </template>
+                              </v-file-input>
+                              <v-row class="my-8 mx-0" align="center">
+                                <v-divider></v-divider>
+                                <span class="px-2">or</span>
+                                <v-divider></v-divider>
+                              </v-row>
+                              <v-text-field v-model="owlFilePath">
+                                <template v-slot:label>
+                                  URL to .owl File <small>(optional)</small>
+                                </template>
+                                <template slot="append-outer"><info-tooltip :message="$t('containers.owlUrlHelp')"></info-tooltip> </template>
+                              </v-text-field>
                             </v-form>
                         </v-col>
                     </v-row>
@@ -38,7 +55,9 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="blue darken-1" text @click="clearNew" >{{$t("home.cancel")}}</v-btn>
-                <v-btn color="blue darken-1" text @click="createContainer" >{{$t("home.save")}}</v-btn>
+              <v-btn color="blue darken-1" text @click="createContainer" ><span v-if="!loading">{{$t("home.save")}}</span>
+                <span v-if="loading"><v-progress-circular indeterminate></v-progress-circular></span>
+              </v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -46,12 +65,22 @@
 
 <script lang="ts">
    import {Component, Vue} from 'vue-property-decorator'
+   import InfoTooltip from "@/components/infoTooltip.vue";
 
-    @Component
+    @Component({components: {
+      InfoTooltip
+      }})
     export default class NewContainerDialog extends Vue {
         errorMessage = ""
+        loading = false
         dialog = false
         newContainer = {name: null, description:null}
+        owlFilePath = ""
+        owlFile: File | null = null
+
+        addFile(file: File) {
+          this.owlFile = file
+        }
 
         clearNew() {
             this.newContainer = {name: null, description: null}
@@ -59,16 +88,37 @@
         }
 
         createContainer() {
+          this.loading = true
+
+          if(this.owlFile || this.owlFilePath !== "") {
+            this.$client.containerFromImport(this.newContainer, this.owlFile, this.owlFilePath)
+                .then((container) => {
+                  this.loading = false
+                  this.clearNew()
+                  this.$emit("containerCreated", container)
+
+                  this.dialog = false
+                  this.errorMessage = ""
+                })
+                .catch(e => {
+                  this.loading = false
+                  this.errorMessage = e
+                })
+          } else {
             this.$client.createContainer(this.newContainer)
                 .then((container) => {
-                    this.clearNew()
-                    this.$emit("containerCreated", container)
+                  this.loading = false
+                  this.clearNew()
+                  this.$emit("containerCreated", container)
 
-                    this.dialog = false
-                    this.errorMessage = ""
+                  this.dialog = false
+                  this.errorMessage = ""
                 })
-                .catch(e => this.errorMessage = e)
-
+                .catch(e => {
+                  this.loading = false
+                  this.errorMessage = e
+                })
+          }
         }
     }
 </script>

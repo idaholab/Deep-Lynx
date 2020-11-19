@@ -317,6 +317,11 @@ export default class OAuthRoutes {
 
     private static logout(req: Request, res: Response, next: NextFunction) {
         req.logout()
+
+        if(req.query.redirect_uri) {
+            return res.redirect(req.query.redirect_uri as string)
+        }
+
         return res.redirect("/")
     }
 

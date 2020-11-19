@@ -110,9 +110,11 @@ export default {
      title: "Manage Containers",
      name: "Name",
      description: "Description",
-     newContainer: "New Container",
+     newContainer: "Create New Container",
      actions: "Actions",
-     formTitle: "Create New Container"
+     formTitle: "Create New Container",
+     owlUrlHelp: "A URL to an .owl file - used to auto-populate the ontology",
+     owlFileHelp: "An .owl file - used to auto-populate the ontology"
     },
     containerSelect: {
       continue: "Continue",

@@ -19,6 +19,7 @@ const containerImport = ContainerImport.Instance;
 export default class ContainerRoutes {
     public static mount(app: Application, middleware:any[]) {
         app.post("/containers", ...middleware,this.createContainer);
+        app.post("/containers/import",...middleware,this.importContainer)
         app.put("/containers",...middleware,authRequest("write", "containers"),this.batchUpdate);
 
         // we don't auth this request as the actual handler will only ever show containers
@@ -29,7 +30,6 @@ export default class ContainerRoutes {
         app.put("/containers/:id",...middleware, authInContainer("write", "data"),this.updateContainer);
         app.delete("/containers/:id",...middleware, authInContainer("write", "data"),this.archiveContainer);
 
-        app.post("/containers/import",...middleware, authInContainer("write", "containers"),this.importContainer)
 
         app.post("/containers/:id/data/export",...middleware, authInContainer("write", "data"),this.exportDataFromContainer);
         app.get("/containers/:id/data/export/:exportID",...middleware, authInContainer("read", "data"),this.getExport);
@@ -260,4 +260,3 @@ export default class ContainerRoutes {
             .catch((updated) => res.status(500).send(updated))
     }
 }
-

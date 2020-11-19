@@ -60,11 +60,17 @@
 
 
       get loginURL(): string {
-          const code_challenge = btoa(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15))
-          const state = btoa(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15))
+        let state = localStorage.getItem('state')
+        let code_challenge = localStorage.getItem('code_challenge')
 
-        localStorage.setItem("state", state)
-        localStorage.setItem("code_challenge", code_challenge)
+        if(!state || !code_challenge) {
+         code_challenge = btoa(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15))
+         state = btoa(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15))
+
+          localStorage.setItem("state", state)
+          localStorage.setItem("code_challenge", code_challenge)
+        }
+
 
         return buildURL(`${Config.deepLynxApiUri}/oauth/authorize`,
               {
