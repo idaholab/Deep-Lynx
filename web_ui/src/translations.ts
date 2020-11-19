@@ -110,7 +110,7 @@ export default {
      title: "Manage Containers",
      name: "Name",
      description: "Description",
-     newContainer: "Create New Container",
+     newContainerButton: "Create New Container",
      actions: "Actions",
      formTitle: "Create New Container",
      owlUrlHelp: "A URL to an .owl file - used to auto-populate the ontology",

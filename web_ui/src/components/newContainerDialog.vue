@@ -1,7 +1,7 @@
 <template>
     <v-dialog v-model="dialog" max-width="500px" @click:outside="clearNew">
         <template v-slot:activator="{ on }">
-            <v-btn color="primary" dark class="mb-2" v-on="on">{{$t("containers.newContainer")}}</v-btn>
+            <v-btn color="primary" dark class="mb-2" v-on="on">{{$t("containers.newContainerButton")}}</v-btn>
         </template>
         <v-card>
             <v-card-title>
