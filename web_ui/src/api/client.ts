@@ -52,6 +52,44 @@ export class Client {
       return this.post<ContainerT>("/containers", container)
    }
 
+   // like create container but instead uses a multipart form with a potential
+   // file upload, taking .owl files and creating a container with all its supporting
+   // metatypes etc.
+   async containerFromImport(container: ContainerT | any, owlFile: File | null, owlFilePath: string): Promise<string> {
+      const config: {[key: string]: any} = {}
+      config.headers = {"Access-Control-Allow-Origin": "*"}
+
+      if(this.config?.auth_method === "token") {
+         config.headers = {"Authorization": `Bearer ${RetrieveJWT()}`}
+      }
+
+      if(this.config?.auth_method === "basic") {
+         config.auth = {username: this.config.username, password: this.config.password}
+      }
+
+      const formData = new FormData()
+      formData.append('name', container.name)
+      formData.append('description', container.description)
+
+      if(owlFile) {
+         formData.append('file', owlFile)
+      }
+
+      if(owlFilePath !== "") {
+         formData.append('path', owlFilePath)
+      }
+
+      const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: `containers/import`}), formData, config)
+
+      return new Promise((resolve, reject) => {
+         if(resp.status < 200 || resp.status > 299) reject(resp.status)
+
+         if(resp.data.isError) reject(resp.data.error)
+
+         resolve(resp.data.value)
+      })
+   }
+
    deleteContainer(containerID: string): Promise<boolean> {
       return this.delete(`/containers/${containerID}`)
    }
@@ -271,18 +309,6 @@ export class Client {
 
    retrieveUserRoles(containerID: string, userID: string): Promise<string[]> {
       return this.get<string[]>(`/containers/${containerID}/users/${userID}/roles`)
-   }
-
-   retrieveUserKeys(userID: string): Promise<KeyPairT[]> {
-      return this.get<KeyPairT[]>(`/users/${userID}/keys`)
-   }
-
-   generateUserKey(userID: string): Promise<KeyPairT> {
-      return this.post<KeyPairT>(`/users/${userID}/keys`, {})
-   }
-
-   deleteUserKey(userID: string, keyID: string): Promise<boolean> {
-      return this.delete(`/users/${userID}/keys/${keyID}`)
    }
 
    private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {

@@ -116,23 +116,23 @@ export default class ContainerImport {
   private async parseOntology(user: UserT, json: any, name: string, description: string, dryrun: boolean): Promise<Result<string>> {
     return new Promise<Result<string>>(async (resolve) => {
       json = json["rdf:RDF"]
-      let ontology_head = json["owl:Ontology"];
-      let annotation_properties = json["owl:AnnotationProperty"];
-      let object_properties = json["owl:ObjectProperty"];
-      let datatype_properties = json["owl:DatatypeProperty"];
-      let classes = json["owl:Class"];
-      let contributor = ontology_head["dc:contributor"];
+      const ontology_head = json["owl:Ontology"];
+      const annotation_properties = json["owl:AnnotationProperty"];
+      const object_properties = json["owl:ObjectProperty"];
+      const datatype_properties = json["owl:DatatypeProperty"];
+      const classes = json["owl:Class"];
+      const contributor = ontology_head["dc:contributor"];
 
       // Declare an intersection type to add needed fields to MetatypeT
-      type MetatypeExtendT = MetatypeT & 
+      type MetatypeExtendT = MetatypeT &
         {
-          db_id?: string, 
+          db_id?: string,
           parent_id?: string,
           properties: {[key: string]: any}
         }
-      
+
       type PropertyT = {
-        value: string, 
+        value: string,
         target: string,
         property_type: string,
         restriction_type: string,
@@ -140,32 +140,32 @@ export default class ContainerImport {
       }
 
       let class_count = 0;
-      let class_list: MetatypeExtendT[] = [];
-      let class_map = new Map();
-      let relationship_map = new Map();
-      let data_property_map = new Map();
+      const class_list: MetatypeExtendT[] = [];
+      const class_map = new Map();
+      const relationship_map = new Map();
+      const data_property_map = new Map();
 
       for (let i = 0; i < classes.length; i++) {
-        let class_id = classes[i]["_attributes"]["rdf:about"]
-        let class_label = classes[i]["rdfs:label"]["_text"];
+        const class_id = classes[i]._attributes["rdf:about"]
+        let class_label = classes[i]["rdfs:label"]._text;
         // if language has not been set, rdfs:label has a single string property rather than an object
         if (typeof class_label == "undefined") {
           class_label = classes[i]["rdfs:label"];
         }
 
         let parent_id;
-        let properties = [];
+        const properties = [];
         if (typeof classes[i]["rdfs:subClassOf"][0] == "undefined") {
-          parent_id = classes[i]["rdfs:subClassOf"]["_attributes"]["rdf:resource"];
+          parent_id = classes[i]["rdfs:subClassOf"]._attributes["rdf:resource"];
         } else { // if no other properties, subClassOf is not an array
-          parent_id = classes[i]["rdfs:subClassOf"][0]["_attributes"]["rdf:resource"];
+          parent_id = classes[i]["rdfs:subClassOf"][0]._attributes["rdf:resource"];
           // loop through properties
           // if someValuesFrom -> rdf:resource != "http://www*" then assume its a relationship, otherwise static property
           let j;
           // start at 1 since 0 is the parent ID property
           for (j = 1; j < classes[i]["rdfs:subClassOf"].length; j++) {
-            let property = classes[i]["rdfs:subClassOf"][j]["owl:Restriction"];
-            let on_property = property["owl:onProperty"]["_attributes"]["rdf:resource"];
+            const property = classes[i]["rdfs:subClassOf"][j]["owl:Restriction"];
+            const on_property = property["owl:onProperty"]._attributes["rdf:resource"];
             // object or datatype referenced will either be someValuesFrom or qualifiedCardinality and onDataRange
             let data_range;
             let property_type;
@@ -178,13 +178,13 @@ export default class ContainerImport {
                 : property["owl:maxQualifiedCardinality"] ? "max"
                   : property["owl:minQualifiedCardinality"] ? "min"
                     : 'unknown restriction type';
-              cardinality_quantity = property["owl:qualifiedCardinality"] ? property["owl:qualifiedCardinality"]["_text"]
-                : property["owl:maxQualifiedCardinality"] ? property["owl:maxQualifiedCardinality"]["_text"]
-                  : property["owl:minQualifiedCardinality"] ? property["owl:minQualifiedCardinality"]["_text"]
+              cardinality_quantity = property["owl:qualifiedCardinality"] ? property["owl:qualifiedCardinality"]._text
+                : property["owl:maxQualifiedCardinality"] ? property["owl:maxQualifiedCardinality"]._text
+                  : property["owl:minQualifiedCardinality"] ? property["owl:minQualifiedCardinality"]._text
                     : 'unknown cardinality value';
               // Primitive type and class cardinality
-              data_range = property["owl:onDataRange"] ? property["owl:onDataRange"]["_attributes"]["rdf:resource"].split("#")[1]
-                : property["owl:onClass"] ? property["owl:onClass"]["_attributes"]["rdf:resource"]
+              data_range = property["owl:onDataRange"] ? property["owl:onDataRange"]._attributes["rdf:resource"].split("#")[1]
+                : property["owl:onClass"] ? property["owl:onClass"]._attributes["rdf:resource"]
                   : 'unknown data range';
 
               target = data_range; // This contains the class or datatype with a cardinality
@@ -199,7 +199,7 @@ export default class ContainerImport {
                 property_type = 'primitive';
               }
             } else {
-              target = property["owl:someValuesFrom"]["_attributes"]["rdf:resource"];
+              target = property["owl:someValuesFrom"]._attributes["rdf:resource"];
               if (target.match(/http:\/\/www/)) {
                 property_type = 'primitive';
                 target = target.split("#")[1];
@@ -208,14 +208,14 @@ export default class ContainerImport {
                 property_type = 'relationship';
               }
             }
-            let property_obj = { value: on_property, target: target, property_type: property_type, restriction_type: restriction_type, cardinality_quantity: cardinality_quantity };
+            const property_obj = { value: on_property, target, property_type, restriction_type, cardinality_quantity };
             properties.push(property_obj);
           }
         }
 
         let class_description = "";
         if (typeof classes[i]["obo:IAO_0000115"] != "undefined") {
-          class_description = classes[i]["obo:IAO_0000115"]["_text"] ? classes[i]["obo:IAO_0000115"]["_text"] : classes[i]["obo:IAO_0000115"];
+          class_description = classes[i]["obo:IAO_0000115"]._text ? classes[i]["obo:IAO_0000115"]._text : classes[i]["obo:IAO_0000115"];
         }
 
         // Search for and remove troublesome characters from class descriptions
@@ -224,19 +224,19 @@ export default class ContainerImport {
           class_description = class_description.replace('’', "");
         }
 
-        let this_class = { id: class_id, name: class_label, parent_id: parent_id, description: class_description, properties: properties };
+        const this_class = { id: class_id, name: class_label, parent_id, description: class_description, properties };
         class_list.push(this_class);
         class_count++;
       }
 
       // Relationships
       for (let i = 0; i < object_properties.length; i++) {
-        let relationship = object_properties[i];
-        let relationship_id = relationship["_attributes"]["rdf:about"];
-        let relationship_name = relationship["rdfs:label"]["_text"] ? relationship["rdfs:label"]["_text"] : relationship["rdfs:label"];
+        const relationship = object_properties[i];
+        const relationship_id = relationship._attributes["rdf:about"];
+        const relationship_name = relationship["rdfs:label"]._text ? relationship["rdfs:label"]._text : relationship["rdfs:label"];
         let relationship_description = "";
         if (typeof relationship["obo:IAO_0000115"] != "undefined") {
-          relationship_description = relationship["obo:IAO_0000115"]["_text"] ? relationship["obo:IAO_0000115"]["_text"] : relationship["obo:IAO_0000115"];
+          relationship_description = relationship["obo:IAO_0000115"]._text ? relationship["obo:IAO_0000115"]._text : relationship["obo:IAO_0000115"];
         }
         relationship_map.set(relationship_id, { name: relationship_name, description: relationship_description });
       }
@@ -245,12 +245,12 @@ export default class ContainerImport {
 
       // Datatype Properties
       for (let i = 0; i < datatype_properties.length; i++) {
-        let data_property = datatype_properties[i];
-        let dp_id = data_property["_attributes"]["rdf:about"];
-        let dp_name = data_property["rdfs:label"]["_text"] ? data_property["rdfs:label"]["_text"] : data_property["rdfs:label"];
+        const data_property = datatype_properties[i];
+        const dp_id = data_property._attributes["rdf:about"];
+        const dp_name = data_property["rdfs:label"]._text ? data_property["rdfs:label"]._text : data_property["rdfs:label"];
         let dp_description = "";
         if (typeof data_property["obo:IAO_0000115"] != "undefined") {
-          dp_description = data_property["obo:IAO_0000115"]["_text"] ? data_property["obo:IAO_0000115"]["_text"] : data_property["obo:IAO_0000115"];
+          dp_description = data_property["obo:IAO_0000115"]._text ? data_property["obo:IAO_0000115"]._text : data_property["obo:IAO_0000115"];
         }
         let dp_enum_range = null;
         if (typeof data_property["rdfs:range"] != "undefined") {
@@ -259,11 +259,11 @@ export default class ContainerImport {
           if (dp_enum_range != null) {
             // Add the first enum value
             let current_option = dp_enum_range["owl:oneOf"]["rdf:Description"];
-            let options = [current_option["rdf:first"]["_text"]]
+            const options = [current_option["rdf:first"]._text]
             // Loop through the remaining enum values
             while (typeof current_option["rdf:rest"]["rdf:Description"] != "undefined") {
               current_option = current_option["rdf:rest"]["rdf:Description"];
-              options.push(current_option["rdf:first"]["_text"])
+              options.push(current_option["rdf:first"]._text)
             }
             dp_enum_range = options;
           }
@@ -273,7 +273,7 @@ export default class ContainerImport {
 
       let ontology_description = description || "";
       if (ontology_head[description]) {
-        ontology_description = ontology_head[description]["_text"] ? ontology_head[description]["_text"] : description;
+        ontology_description = ontology_head[description]._text ? ontology_head[description]._text : description;
       }
 
       if (dryrun) {
@@ -288,7 +288,7 @@ export default class ContainerImport {
         // Issue API commands to create container, items, and relationships
         // Create the container
         const data = {
-          name: name,
+          name,
           description: ontology_description
         };
         const containers = await CreateContainer(user, data)
@@ -297,7 +297,7 @@ export default class ContainerImport {
         const containerID = containers.value[0].id!;
 
         // Create relationships
-        let relationship_promises: Promise<Result<MetatypeRelationshipT[]>>[] = [];
+        const relationship_promises: Promise<Result<MetatypeRelationshipT[]>>[] = [];
         relationship_map.forEach(async function (value, key, map) {
           const data = {
             name: value.name,
@@ -327,11 +327,11 @@ export default class ContainerImport {
         }
 
         // Create metatypes (classes)
-        let class_promises: Promise<Result<MetatypeT[]>>[] = [];
+        const class_promises: Promise<Result<MetatypeT[]>>[] = [];
         class_list.forEach(async function (this_class: MetatypeExtendT) {
           const data = {
-            name: this_class["name"],
-            description: this_class["description"]
+            name: this_class.name,
+            description: this_class.description
           };
           class_promises.push(metatypeStorage.Create(containerID, user.id!, data))
         });
@@ -358,7 +358,7 @@ export default class ContainerImport {
           }
         }
 
-        let property_promises: Promise<Result<MetatypeKeyT[] | MetatypeRelationshipPairT[]>>[] = [];
+        const property_promises: Promise<Result<MetatypeKeyT[] | MetatypeRelationshipPairT[]>>[] = [];
         // Add metatype keys (properties) and relationship pairs
         class_list.forEach(async function (this_class: MetatypeExtendT) {
           // Add relationship to parent class
@@ -366,7 +366,7 @@ export default class ContainerImport {
           // Don't add parent relationship for root entity
           if (!this_class.parent_id!.match(/owl#Thing/)) {
             const data = {
-              name: this_class["name"] + ' : child of : ' + class_map.get(this_class.parent_id).name,
+              name: this_class.name + ' : child of : ' + class_map.get(this_class.parent_id).name,
               description: relationship.description,
               origin_metatype_id: this_class.db_id,
               destination_metatype_id: class_map.get(this_class.parent_id).db_id,
@@ -402,15 +402,15 @@ export default class ContainerImport {
               }
               const data = {
                 metatype_id: this_class.db_id,
-                name: this_class["name"] + ' : ' + data_prop.name,
+                name: this_class.name + ' : ' + data_prop.name,
                 required: false,
                 property_name: data_prop.name,
                 description: data_prop.description,
                 data_type: property.target,
                 validation: {
                   regex: "",
-                  min: min,
-                  max: max
+                  min,
+                  max
                 },
                 options: property_options,
                 defaultValue: ""
@@ -419,7 +419,7 @@ export default class ContainerImport {
             } else if (property.property_type == 'relationship') {
               const relationship = relationship_map.get(property.value);
               const data = {
-                name: this_class["name"] + ' : ' + relationship.name + ' : ' + class_map.get(property.target).name,
+                name: this_class.name + ' : ' + relationship.name + ' : ' + class_map.get(property.target).name,
                 description: relationship.description,
                 origin_metatype_id: this_class.db_id,
                 destination_metatype_id: class_map.get(property.target).db_id,
@@ -444,8 +444,8 @@ export default class ContainerImport {
             return
           }
         }
-        
-        resolve(Result.Success('Ontology creation is complete! Container ID: ' + containerID))
+
+        resolve(Result.Success(containerID))
       }
     })
       .catch<Result<string>>((e: string) => {

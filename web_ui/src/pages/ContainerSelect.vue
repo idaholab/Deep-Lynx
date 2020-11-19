@@ -20,10 +20,6 @@
                                     <p>Please choose an initial container to get started.</p>
                                     <v-form>
                                         <container-select @containerSelected="containerSelected"></container-select>
-
-                                        <div class="px-11 mt-4">
-                                            <v-btn large block color="primary" :disabled="!selectedContainer" @click="toContainerHome">{{$t('containerSelect.continue')}}</v-btn>
-                                        </div>
                                     </v-form>
                                   <v-row v-if="outstandingInvites.length > 0" class="my-8 mx-0" align="center">
                                     <v-divider></v-divider>
@@ -40,7 +36,16 @@
                                     </div>
                                   </v-row>
 
-                                  <v-btn style="margin-top: 25px;" large block @click="logout">{{$t('containerSelect.logout')}}</v-btn>
+                                  <v-row class="my-8 mx-0" align="center">
+                                    <v-divider></v-divider>
+                                    <span class="px-2">or</span>
+                                    <v-divider></v-divider>
+                                  </v-row>
+                                  <v-row class="px-11 mt-4" align="center" justify="center">
+                                    <new-container-dialog @containerCreated="newContainer"></new-container-dialog>
+                                  </v-row>
+
+                                  <logout></logout>
                                 </div>
                             </v-container>
                         </v-col>
@@ -65,14 +70,17 @@
 
 <script lang="ts">
     import {Component, Vue} from 'vue-property-decorator'
-    import Config from '@/config'
     import LanguageSelect from '@/components/languageSelect.vue'
     import {ContainerT, UserContainerInviteT} from "@/api/types";
     import ContainerSelect from "@/components/containerSelect.vue"
+    import NewContainerDialog from "@/components/newContainerDialog.vue";
+    import Logout from "@/components/logout.vue";
 
     @Component({components: {
             LanguageSelect,
-            ContainerSelect
+            ContainerSelect,
+            NewContainerDialog,
+            Logout
         }})
     export default class ContainerSelection extends Vue {
         errorMessage = ""
@@ -89,21 +97,22 @@
 
       containerSelected(container: ContainerT) {
           this.selectedContainer = container
+          this.toContainerHome()
       }
 
       toContainerHome() {
           // @ts-ignore
-          this.$router.push({name: 'Home', params: {containerID: this.selectedContainer?.id}})
+          this.$router.push({name: 'Home', params: {containerID: this.selectedContainer?.id!}})
+      }
+
+      newContainer(containerID: string) {
+        this.$router.push({name: 'Home', params: {containerID: containerID}})
       }
 
       acceptInvite(token: string, containerName: string) {
           this.$router.push({name: 'ContainerInvite', query: {token, containerName}})
       }
 
-      logout() {
-          this.$auth.Logout()
-          this.$router.go(0)
-      }
     }
 </script>
 
