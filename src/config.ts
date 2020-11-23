@@ -9,6 +9,7 @@ export class Config {
   private static instance: Config;
 
   private _root_address: string;
+  private _project_dir: string;
   private readonly _email_address: string;
   private readonly _email_enabled: boolean = true;
 
@@ -78,6 +79,7 @@ export class Config {
     // own checks on process.env. There is most likely a more elegant way but
     // I like including sane defaults in the app itself vs. an env-sample file
 
+    this._project_dir = process.env.PROJECT_DIR || "./dist"
     this._root_address = process.env.ROOT_ADDRESS || "http://localhost:8090"
     this._email_address = process.env.EMAIL_ADDRESS || "do+not+reply@deeplynx.org"
     this._email_enabled = process.env.EMAIL_ENABLED === "true"
@@ -147,6 +149,10 @@ export class Config {
 
   get root_address(): string {
     return this._root_address;
+  }
+
+  get project_dir(): string {
+    return this._project_dir
   }
 
   get template_dir(): string {

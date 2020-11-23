@@ -207,8 +207,10 @@ function delay(ms: number) {
 // have their data processing loops started. This will only start active data sources. Its up to
 // the individual data sources to handle restarting their processing loops on switching to active.
 export async function StartDataProcessing(): Promise<Result<boolean>> {
+    Logger.info('starting data processing')
     let timeLastRan = new Date()
     let i = 0
+
 
     while(true) {
         // run type mapping set stored procedure - this will assign type mappings if some exist for data currently

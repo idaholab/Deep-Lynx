@@ -10,7 +10,8 @@
         "max-classes-per-file": false,
         "no-var-requires": false,
         "no-shadowed-variable": false,
-        "no-unused-expression": false
+        "no-unused-expression": false,
+        "no-console": false
     },
     "rulesDirectory": []
 }
