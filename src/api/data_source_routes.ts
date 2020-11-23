@@ -50,14 +50,6 @@ export default class DataSourceRoutes {
         app.post('/containers/:id/import/datasources/:sourceID/files', ...middleware, authInContainer("write", "data"), this.uploadFile)
         app.get('/containers/:id/files/:fileID', ...middleware, authInContainer("read", "data"), this.getFile)
         app.get('/containers/:id/files/:fileID/download', ...middleware, authInContainer("read", "data"), this.downloadFile)
-
-        app.post('/containers/:id/import/datasources/:sourceID/mappings', ...middleware, authInContainer("write", "data"), this.createTypeMapping)
-        app.get('/containers/:id/import/datasources/:sourceID/mappings/', ...middleware, authInContainer("read", "data"), this.listTypeMapping)
-        app.get('/containers/:id/import/datasources/:sourceID/mappings/unmapped/data', ...middleware, authInContainer("read", "data"), this.getUnmappedData)
-        app.get('/containers/:id/import/datasources/:sourceID/mappings/unmapped/count', ...middleware, authInContainer("read", "data"), this.countUnmappedData)
-        app.put('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.updateTypeMapping)
-        app.get('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.retrieveTypeMapping)
-        app.delete('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.deleteTypeMapping)
     }
 
     private static createDataSource(req: Request, res: Response, next: NextFunction) {
@@ -142,36 +134,6 @@ export default class DataSourceRoutes {
             .catch((err) => {
                 res.status(404).send(err)
             })
-            .finally(() => next())
-    }
-
-    // getUnmappedData should return a single data_staging record so that a user can have
-    // an example payload upon which to build a type mapping
-    private static getUnmappedData(req: Request, res: Response, next: NextFunction) {
-        DataStagingStorage.Instance.ListUnprocessedByDataSource(req.params.sourceID, 0, 1)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(200).json(result)
-            })
-            .catch((err) => res.status(404).send(err))
-            .finally(() => next())
-    }
-
-    private static countUnmappedData(req: Request, res: Response, next: NextFunction) {
-        DataStagingStorage.Instance.CountUnprocessedByDataSource(req.params.sourceID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(200).json(result)
-            })
-            .catch((err) => res.status(404).send(err))
             .finally(() => next())
     }
 
@@ -354,83 +316,6 @@ export default class DataSourceRoutes {
                 res.status(200).json(updated)
             })
             .catch((updated:any) => res.status(500).send(updated))
-    }
-
-    private static createTypeMapping(req: Request, res: Response, next: NextFunction) {
-        TypeMappingStorage.Instance.Create(req.params.id, req.params.sourceID, (req.user as UserT).id!, req.body)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
-    }
-
-    private static updateTypeMapping(req: Request, res: Response, next: NextFunction) {
-        TypeMappingStorage.Instance.Update(req.params.mappingID, (req.user as UserT).id!, req.body)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
-    }
-
-    private static retrieveTypeMapping(req: Request, res: Response, next: NextFunction) {
-        TypeMappingStorage.Instance.Retrieve(req.params.mappingID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(200).json(result)
-            })
-            .catch((err) => res.status(404).send(err))
-            .finally(() => next())
-    }
-
-    private static listTypeMapping(req: Request, res: Response, next: NextFunction) {
-        let filter = new TypeMappingFilter()
-        filter = filter.where().containerID("eq", req.params.id)
-
-        if(typeof req.query.metatypeID  !== "undefined" && req.query.metatypeID !== "") {
-            filter = filter.and().metatype_id("eq", `%${req.query.metatypeID}%`)
-        }
-
-        // @ts-ignore
-        filter.all(+req.query.limit, +req.query.offset)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(200).json(result)
-            })
-            .catch((err) => res.status(404).send(err))
-            .finally(() => next())
-    }
-
-    private static deleteTypeMapping(req: Request, res: Response, next: NextFunction) {
-        TypeMappingStorage.Instance.PermanentlyDelete(req.params.mappingID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-                res.sendStatus(200)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
     }
 
     private static getFile(req: Request, res: Response, next: NextFunction) {
