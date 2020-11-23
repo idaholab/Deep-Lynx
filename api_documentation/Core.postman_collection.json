@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "b45541e5-0d3a-42f9-8eb7-c361c0a845f4",
+		"_postman_id": "077a41f7-3c91-47fb-b34f-868a61e1954d",
 		"name": "Deep Lynx",
 		"description": "The construction of megaprojects has consistently demonstrated challenges for project managers in regard to meeting cost, schedule, and performance requirements. Megaproject construction challenges are common place within megaprojects with many active projects in the United States failing to meet cost and schedule efforts by significant margins. Currently, engineering teams operate in siloed tools and disparate teams where connections across design, procurement, and construction systems are translated manually or over brittle point-to-point integrations. The manual nature of data exchange increases the risk of silent errors in the reactor design, with each silent error cascading across the design. These cascading errors lead to uncontrollable risk during construction, resulting in significant delays and cost overruns. Deep Lynx allows for an integrated platform during design and operations of mega projects.\n\nThe Deep Lynx Core API delivers a few main features.\n\n1. Core provides a set of methods and endpoints for manipulating data in an object oriented database. This allows use to store complex datatypes as records and then to compile them into actual, modifiable objects at run-time. Users can store taxonomies or ontologies in a readable format.\n\n2. Core provides methods for storing and retrieving data in a graph database. This data is structured and validated against the aformentioned object oriented database before storage.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
@@ -268,7 +268,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "4426dac7-1edf-4632-86d8-f42604dad73a",
+						"id": "cc6348d9-d22c-4a90-93a9-e00bd506b19c",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -278,7 +278,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "648106ce-d792-42e4-8ba5-c11f11ce9d1b",
+						"id": "d021593e-bb07-4763-a55b-688e9393d874",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -357,7 +357,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "19fc150c-6dda-476f-8202-c7a7f648f2bf",
+						"id": "a5b416dc-af80-4814-acf0-cbaaa0f229bf",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -367,7 +367,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "830db5cd-1247-445c-afe3-d84e15a79889",
+						"id": "e436263d-705b-4af6-8769-92aebf2d464d",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -932,7 +932,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "2b8551c4-b8ca-4ae9-a0b1-77d8e56ea72d",
+								"id": "2d994e09-10b1-49fd-a871-5a17684964e6",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -942,7 +942,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "dc698913-35c8-4f8e-ae03-9bdb0983d343",
+								"id": "1280360a-8cdd-49f8-a937-900fd522f2a9",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1165,7 +1165,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "e51472ac-9b0e-4e82-b828-0aacd600e988",
+								"id": "8e93c339-0e25-4437-8354-8d3e75ebbd32",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1175,7 +1175,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "b0d4dd6f-a64a-455c-8cef-4ad0fbc8ec73",
+								"id": "65aaf775-e323-4a80-9c29-76118204e18d",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1191,7 +1191,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "5619db2b-1910-4b3f-b26b-9e31877e676b",
+						"id": "a3e3e73d-9e09-418b-bbbf-4da3618de564",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1201,7 +1201,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "15a06679-249a-4c97-9e6a-66a96e27abde",
+						"id": "3ac58882-2e86-421a-a5db-a239e8beeaa8",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1404,7 +1404,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "ff8367fc-3bb7-4d89-9887-009f56bb00f5",
+								"id": "1f76f323-36fb-4e2e-bfc1-47ad7c48c811",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1414,7 +1414,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "64386a8d-2709-458f-b827-f5f3c39855db",
+								"id": "057a5b66-0a5d-4ace-959d-00480cb2b580",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1647,7 +1647,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "bbad1381-3cb6-4c58-8166-a285dca7858b",
+								"id": "bf5f0cea-3b96-4871-9a58-054eb5ca90cf",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1657,7 +1657,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "b8ec24fe-cdb1-4565-a56e-77a7b0f3f85b",
+								"id": "0dadbb5a-761c-482e-aa43-dfcbbc5e2a57",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1816,7 +1816,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "d460e745-efd4-49d3-8606-6773cae29266",
+								"id": "fc21e7f8-188c-490f-9ea0-e3131156b3ad",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1826,7 +1826,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "4f1053b4-0d40-402c-97da-483203a727f9",
+								"id": "f87637c1-e3ae-4909-8d1b-f2cb28bf230d",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1843,7 +1843,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "1bc8d23f-05ab-4c36-9b95-da85cc5bed06",
+						"id": "3b549d27-40ed-453d-818a-716e666772c9",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1853,7 +1853,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "5e4c540d-82ef-4486-9d2f-559bc2cff94a",
+						"id": "7513d9a3-807b-4b70-a022-4a743937b8e3",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -2132,32 +2132,6 @@
 					"response": []
 				},
 				{
-					"name": "Count Unmapped Data",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseURL}}/containers/:container-id/import/datasources",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"containers",
-								":container-id",
-								"import",
-								"datasources"
-							],
-							"variable": [
-								{
-									"key": "container-id",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "Get Data Source",
 					"request": {
 						"method": "GET",
@@ -2334,7 +2308,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "e78430ed-9f0a-4ac8-b172-af46a5ed9a9a",
+						"id": "7feb30a7-b5ed-451e-88ba-a9c13ac3163d",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -2344,7 +2318,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "d79825fc-938e-4a00-9064-dca12f3a1269",
+						"id": "35fc69a9-0557-4841-af84-60d092122945",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -2560,7 +2534,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "328591c9-c976-4d3d-8a71-cc67c6872588",
+						"id": "32996788-7c68-4e4f-bcf0-d7454f5ddd35",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -2570,7 +2544,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "34e27bb5-2f6f-45cb-a2f4-c1fca14c9728",
+						"id": "2f9c0fdb-66bd-422e-8cf9-62ec7d668f88",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -3059,7 +3033,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "d5261086-cd69-479d-b61b-79c57912a38f",
+						"id": "b8f9e557-4a6e-4e8c-8ae9-79e01e54ad40",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -3069,7 +3043,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "2649bf73-f636-44aa-9ad5-17ba955b4a06",
+						"id": "8bd1825b-19d0-4c3a-93db-c32fa3eecea4",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -3081,348 +3055,7 @@
 		},
 		{
 			"name": "Data Type Mappings",
-			"item": [
-				{
-					"name": "Create Data Type Mapping",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"type_key\": \"type\",\n    \"type_value\": \"EQUIPMENT\",\n    \"unique_identifier_key\": \"id\",\n    \"metatype_id\": \"\",\n    \"keys\": [\n        {\n            \"key\": \"RADIUS\",\n            \"metatype_key_id\": \"\"\n        }\n    ],\n    \"example_payload\": {\n        \"RADIUS\": 0.1\n    }\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:source-id/mappings",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"containers",
-								":container-id",
-								"import",
-								"datasources",
-								":source-id",
-								"mappings"
-							],
-							"variable": [
-								{
-									"key": "container-id",
-									"value": ""
-								},
-								{
-									"key": "source-id",
-									"value": ""
-								}
-							]
-						},
-						"description": "Creates a new type mapping in storage"
-					},
-					"response": []
-				},
-				{
-					"name": "Update Data Type Mapping",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"type_key\": \"type\",\n    \"type_value\": \"EQUIPMENT\",\n    \"unique_identifier_key\": \"id\",\n    \"metatype_id\": \"\",\n    \"keys\": [\n        {\n            \"key\": \"RADIUS\",\n            \"metatype_key_id\": \"\"\n        }\n    ],\n    \"example_payload\": {\n        \"RADIUS\": 0.1\n    }\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:source-id/mappings/:mappingID",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"containers",
-								":container-id",
-								"import",
-								"datasources",
-								":source-id",
-								"mappings",
-								":mappingID"
-							],
-							"variable": [
-								{
-									"key": "container-id",
-									"value": ""
-								},
-								{
-									"key": "source-id",
-									"value": ""
-								},
-								{
-									"key": "mappingID",
-									"value": ""
-								}
-							]
-						},
-						"description": "Updates a type mapping in storage."
-					},
-					"response": []
-				},
-				{
-					"name": "Get Data Type Mapping",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"type_key\": \"type\",\n    \"type_value\": \"EQUIPMENT\",\n    \"unique_identifier_key\": \"id\",\n    \"metatype_id\": \"\",\n    \"keys\": [\n        {\n            \"key\": \"RADIUS\",\n            \"metatype_key_id\": \"\"\n        }\n    ],\n    \"example_payload\": {\n        \"RADIUS\": 0.1\n    }\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:source-id/mappings/:mappingID",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"containers",
-								":container-id",
-								"import",
-								"datasources",
-								":source-id",
-								"mappings",
-								":mappingID"
-							],
-							"variable": [
-								{
-									"key": "container-id",
-									"value": ""
-								},
-								{
-									"key": "source-id",
-									"value": ""
-								},
-								{
-									"key": "mappingID",
-									"value": ""
-								}
-							]
-						},
-						"description": "Retrieve a type mapping from storage."
-					},
-					"response": []
-				},
-				{
-					"name": "List Type Mappings",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"type_key\": \"type\",\n    \"type_value\": \"EQUIPMENT\",\n    \"unique_identifier_key\": \"id\",\n    \"metatype_id\": \"\",\n    \"keys\": [\n        {\n            \"key\": \"RADIUS\",\n            \"metatype_key_id\": \"\"\n        }\n    ],\n    \"example_payload\": {\n        \"RADIUS\": 0.1\n    }\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:source-id/mappings/:mappingID",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"containers",
-								":container-id",
-								"import",
-								"datasources",
-								":source-id",
-								"mappings",
-								":mappingID"
-							],
-							"variable": [
-								{
-									"key": "container-id",
-									"value": ""
-								},
-								{
-									"key": "source-id",
-									"value": ""
-								},
-								{
-									"key": "mappingID",
-									"value": ""
-								}
-							]
-						},
-						"description": "Lists type mappings from storage"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Unmapped Data",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:id/mappings/unmapped",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"containers",
-								":container-id",
-								"import",
-								"datasources",
-								":id",
-								"mappings",
-								"unmapped"
-							],
-							"variable": [
-								{
-									"key": "container-id",
-									"value": ""
-								},
-								{
-									"key": "id",
-									"value": ""
-								}
-							]
-						},
-						"description": "Retrieve a single unmapped payload for a data source. Use this endpoint as a foundation to build a type mapping off of. This return value will allow you to create a type mapping, and should be saved as the \"example_payload\" for any type mapping created as a result of this return."
-					},
-					"response": []
-				},
-				{
-					"name": "Count Unmapped Data",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:id/mappings/unmapped/count",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"containers",
-								":container-id",
-								"import",
-								"datasources",
-								":id",
-								"mappings",
-								"unmapped",
-								"count"
-							],
-							"variable": [
-								{
-									"key": "container-id",
-									"value": ""
-								},
-								{
-									"key": "id",
-									"value": ""
-								}
-							]
-						},
-						"description": "Retrieve a single unmapped payload for a data source. Use this endpoint as a foundation to build a type mapping off of. This return value will allow you to create a type mapping, and should be saved as the \"example_payload\" for any type mapping created as a result of this return."
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Data Type Mapping",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"type_key\": \"type\",\n    \"type_value\": \"EQUIPMENT\",\n    \"unique_identifier_key\": \"id\",\n    \"metatype_id\": \"\",\n    \"keys\": [\n        {\n            \"key\": \"RADIUS\",\n            \"metatype_key_id\": \"\"\n        }\n    ],\n    \"example_payload\": {\n        \"RADIUS\": 0.1\n    }\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:source-id/mappings/:mappingID",
-							"host": [
-								"{{baseURL}}"
-							],
-							"path": [
-								"containers",
-								":container-id",
-								"import",
-								"datasources",
-								":source-id",
-								"mappings",
-								":mappingID"
-							],
-							"variable": [
-								{
-									"key": "container-id",
-									"value": ""
-								},
-								{
-									"key": "source-id",
-									"value": ""
-								},
-								{
-									"key": "mappingID",
-									"value": ""
-								}
-							]
-						},
-						"description": "Permanently removes type mapping from storage."
-					},
-					"response": []
-				}
-			],
+			"item": [],
 			"description": "These are mappings for taking unknown payloads and mapping them to known data classes and structures prior to storage.",
 			"protocolProfileBehavior": {}
 		},
@@ -3639,7 +3272,7 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "814ecdd4-822a-4318-a4fa-1854b4f3956f",
+				"id": "931bf200-0a68-4a27-97fc-3b15cb7a6c78",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -3649,7 +3282,7 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "e806b176-08cc-47a9-ba2d-d103311f8c20",
+				"id": "38b07fe6-4ec9-4028-a3fa-55c68d15e323",
 				"type": "text/javascript",
 				"exec": [
 					""
