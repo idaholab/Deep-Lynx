@@ -46,10 +46,7 @@ export default class DataStagingStorage extends PostgresStorage {
         })
     }
 
-    public async ListForTypeMapping(typeMapping: TypeMappingT): Promise<Result<DataStagingT[]>> {
-        return super.rows<DataStagingT>(DataStagingStorage.ListMatchedForTypeMappingStatement(typeMapping))
-    }
-
+    // TODO: Set unmapped as mappings without transformations
     public async CountUnmappedData(importID: string): Promise<Result<number>> {
         return super.count(DataStagingStorage.countUnmappedForImportStatement(importID))
     }
@@ -116,28 +113,6 @@ export default class DataStagingStorage extends PostgresStorage {
         return super.run(DataStagingStorage.deleteStatement(id))
     }
 
-    private static ListMatchedForTypeMappingStatement(tm: TypeMappingT): QueryConfig {
-        if (tm.metatype_relationship_pair_id) {
-            return {
-                text: `SELECT * FROM data_staging
-                    WHERE data_source_id = $1
-                    AND data_staging.data::jsonb->> '${tm.relationship_type_key}' = $2
-                    AND data_staging.data::jsonb ? '${tm.unique_identifier_key}'
-                    AND data_staging.data::jsonb ? '${tm.origin_key}'
-                    AND data_staging.data::jsonb ? '${tm.destination_key}'`,
-                values: [tm.data_source_id, tm.relationship_type_value]
-            }
-        }
-
-        return {
-            text: `SELECT * FROM data_staging
-                    WHERE data_source_id = $1
-                    AND data_staging.data::jsonb->> '${tm.type_key}' = $2
-                    AND data_staging.data::jsonb ? '${tm.unique_identifier_key}'`,
-            values: [tm.data_source_id, tm.type_value]
-        }
-
-    }
 
     public SetErrors(id:number, errors: string[]): Promise<Result<boolean>> {
         return super.runAsTransaction(DataStagingStorage.setErrorsStatement(id, errors))

@@ -60,6 +60,7 @@ export class DataSourceProcessor {
         // an import must have all its data mapped to existing types prior to insertion. This is done so that we can
         // handle a set of relationships and data at the same time - as well as insuring that data is processed in the
         // order its received.
+        // TODO: this must be set to count Transformations of the type mappings, if no transformations for an attached type mapping, then error out
         const unmappedData = await ds.CountUnmappedData(dataImportID)
         if(unmappedData.isError || unmappedData.value > 0) {
             await ImportStorage.Instance.SetStatus(dataImportID,"ready",  "import has unmapped data, resolve by creating type mappings")
@@ -217,8 +218,7 @@ export async function StartDataProcessing(): Promise<Result<boolean>> {
 
 
     while(true) {
-        // run type mapping set stored procedure - this will assign type mappings if some exist for data currently
-        TypeMappingStorage.Instance.SetAllTypeMappings()
+        // TODO: Type mapping assignment loop
 
         let dataSources: DataSourceT[] = []
 
