@@ -108,6 +108,7 @@
     "minimist": "^1.2.5",
     "mongodb": "^3.6.2",
     "node-cache": "^5.1.2",
+    "node-forge": "^0.10.0",
     "nodemailer": "^6.4.14",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
