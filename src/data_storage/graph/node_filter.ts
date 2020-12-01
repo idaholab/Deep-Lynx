@@ -43,6 +43,11 @@ export default class NodeFilter extends Filter {
         return this
     }
 
+    importDataID(operator: string, value: any) {
+        super.query("import_data_id", operator, value)
+        return this
+    }
+
     property(key: string, operator: string, value: any) {
         super.queryJsonb(key, "properties", operator, value)
         return this

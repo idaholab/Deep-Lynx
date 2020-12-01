@@ -28,6 +28,7 @@ function generateSchema(): string {
     created_at: String
     modified_at: String
     graph: String
+    import_data_id: String
     incoming_edges(where: EdgeWhere): [Edge]
     outgoing_edges(where: EdgeWhere): [Edge]
   }
@@ -46,6 +47,7 @@ input NodeFilter {
     metatype_name: String
     metatype_id: String
     properties: [PropertyFilter]
+    import_data_id: String
 }
 
 input FileWhere {

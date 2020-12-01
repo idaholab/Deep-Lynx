@@ -393,7 +393,7 @@ function PropertyResolver(properties: any): PropertyQL[]{
     for(const key of keys){
         output.push({
             key,
-            value: properties[key],
+            value: JSON.stringify(properties[key]),
             type: typeof properties[key]
         } as PropertyQL)
     }
@@ -507,6 +507,17 @@ function buildNodeFilter(f: NodeFilter, fql: NodeFilterQL): NodeFilter {
                     }
                 }
 
+                break;
+            }
+
+            case "import_data_id": {
+                let values: string[];
+                values = (fql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for import_data_id")
+                }
+
+                f.importDataID(values[0], values[1])
                 break;
             }
         }

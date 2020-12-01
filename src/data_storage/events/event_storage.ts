@@ -1,11 +1,10 @@
-import {EventT, EventsT} from "../types/events/eventT";
-import {EventTypeT} from "../types/events/eventTypeT";
-import {RegisteredEventT, RegisteredEventsT, registeredEventsT} from "../types/events/registered_eventT";
-import Result from "../result"
-import PostgresStorage from "./postgresStorage";
+import {RegisteredEventT, RegisteredEventsT, registeredEventsT} from "../../types/events/registered_eventT";
+import Result from "../../result"
+import PostgresStorage from "../postgresStorage";
 import {QueryConfig} from "pg";
 import * as t from "io-ts";
-import PostgresAdapter from "./adapters/postgres/postgres";
+import PostgresAdapter from "../adapters/postgres/postgres";
+import Logger from "../../logger";
 
 /*
 * EventStorage interacts with registered events in the database to
@@ -24,7 +23,7 @@ export default class EventStorage extends PostgresStorage{
         return EventStorage.instance
     }
 
-    public async Create(containerID: string, userID:string, input:any | RegisteredEventsT): Promise<Result<RegisteredEventsT>> {
+    public async Create(userID:string, input:any | RegisteredEventsT): Promise<Result<RegisteredEventsT>> {
         const onValidateSuccess = ( resolve: (r:any) => void): (c: RegisteredEventsT)=> void => {
             return async (re:RegisteredEventsT) => {
                 const queries: QueryConfig[] = [];
@@ -60,9 +59,17 @@ export default class EventStorage extends PostgresStorage{
         return super.retrieve<RegisteredEventT>(EventStorage.retrieveStatement(id))
     }
 
-   public List(offset: number, limit:number): Promise<Result<RegisteredEventT[]>> {
-        return super.rows<RegisteredEventT>(EventStorage.listStatement(offset, limit))
-   }
+    public List(): Promise<Result<RegisteredEventT[]>> {
+        return super.rows<RegisteredEventT>(EventStorage.listStatement())
+    }
+
+    public ListByDataSource(eventType: string, dataSourceID: string): Promise<Result<RegisteredEventT[]>> {
+        return super.rows<RegisteredEventT>(EventStorage.datasourceSearchStatement(dataSourceID, eventType))
+    }
+
+    public ListByContainer(eventType: string, containerID: string): Promise<Result<RegisteredEventT[]>> {
+        return super.rows<RegisteredEventT>(EventStorage.containerSearchStatement(containerID, eventType))
+    }
 
     public async Update(id: string, userID:string, updatedField: {[key:string]: any}): Promise<Result<boolean>> {
         const toUpdate = await this.Retrieve(id);
@@ -101,8 +108,12 @@ export default class EventStorage extends PostgresStorage{
         return super.run(EventStorage.deleteStatement(id))
     }
 
-    public Archive(id: string, userID: string): Promise<Result<boolean>> {
-        return super.run(EventStorage.archiveStatement(id, userID))
+    public SetActive(id: string, userID: string): Promise<Result<boolean>> {
+        return super.run(EventStorage.setActiveStatement(id, userID))
+    }
+
+    public SetInActive(id: string, userID: string): Promise<Result<boolean>> {
+      return super.run(EventStorage.setInactiveStatement(id, userID))
     }
 
     private static createStatement(registeredEvent: RegisteredEventT): QueryConfig {
@@ -113,23 +124,23 @@ export default class EventStorage extends PostgresStorage{
         }
     }
 
-    private static retrieveStatement(metatypeID:string): QueryConfig {
+    private static retrieveStatement(id:string): QueryConfig {
         return {
-            text:`SELECT * FROM registered_events WHERE id = $1 AND NOT ARCHIVED`,
-            values: [metatypeID]
+            text:`SELECT * FROM registered_events WHERE id = $1`,
+            values: [id]
         }
     }
 
-    private static archiveStatement(id: string, userID: string): QueryConfig {
+    private static setInactiveStatement(id: string, userID: string): QueryConfig {
         return {
-            text:`UPDATE registered_events SET archived = true, modified_by = $2 WHERE id = $1`,
+            text:`UPDATE registered_events SET active = false, modified_by = $2 WHERE id = $1`,
             values: [id, userID]
         }
     }
 
-    private static unArchiveStatement(id: string, userID: string): QueryConfig {
+    private static setActiveStatement(id: string, userID: string): QueryConfig {
       return {
-          text:`UPDATE registered_events SET archived = false, modified_by = $2 WHERE id = $1`,
+          text:`UPDATE registered_events SET active = true, modified_by = $2 WHERE id = $1`,
           values: [id, userID]
       }
     }
@@ -141,23 +152,23 @@ export default class EventStorage extends PostgresStorage{
         }
     }
 
-    private static listStatement(offset:number, limit:number): QueryConfig {
+    private static listStatement(): QueryConfig {
         return {
-            text: `SELECT * FROM registered_events WHERE NOT archived OFFSET $2 LIMIT $3`,
-            values: [offset, limit]
+            text: `SELECT * FROM registered_events`,
+            values: []
         }
     }
 
-    private static datasourceSearchStatement(dataSourceID: string, eventType: EventTypeT): QueryConfig {
-        return {
-            text: `SELECT * FROM registered_events WHERE data_source_id = $1 AND event_type = $2 AND NOT archived'`,
+    private static datasourceSearchStatement(dataSourceID: string, eventType: string): QueryConfig {
+      return {
+            text: `SELECT * FROM registered_events WHERE data_source_id = $1 AND event_type = $2 AND active`,
             values: [dataSourceID, eventType],
         }
     }
 
-    private static containerSearchStatement(containerID: string, eventType: EventTypeT): QueryConfig {
+    private static containerSearchStatement(containerID: string, eventType: string): QueryConfig {
       return {
-          text: `SELECT * FROM registered_events WHERE container_id = $1 AND event_type = $2 AND NOT archived'`,
+          text: `SELECT * FROM registered_events WHERE container_id = $1 AND event_type = $2 AND active`,
           values: [containerID, eventType],
       }
   }

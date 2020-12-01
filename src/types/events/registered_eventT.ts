@@ -11,7 +11,7 @@ const registeredEventOptional = t.partial({
     id: t.string,
     data_source_id: t.string,
     container_id: t.string,
-    archived: t.boolean,
+    active: t.boolean,
 });
 
 export const registeredEventT = t.exact(t.intersection([registeredEventRequired, eventTypeT, registeredEventOptional, recordMetaT]));

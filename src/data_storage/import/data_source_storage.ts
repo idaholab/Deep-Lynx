@@ -3,6 +3,8 @@ import PostgresStorage from "../postgresStorage";
 import {QueryConfig} from "pg";
 import PostgresAdapter from "../adapters/postgres/postgres";
 import {dataSourceT, DataSourceT} from "../../types/import/dataSourceT";
+import {QueueProcessor} from "../../event_system/events";
+import {EventT} from "../../types/events/eventT";
 
 /*
 * ImportAdapterStorage encompasses all logic dealing with the manipulation of the Import Adapter
@@ -39,6 +41,14 @@ export default class DataSourceStorage extends PostgresStorage{
                             resolve(r);
                             return
                         }
+
+                        const event: EventT = {
+                            source_id: containerID,
+                            source_type: "container",
+                            type: "data source created",
+                            data: ia.id!
+                        }
+                        QueueProcessor.Instance.addEvents([event])
 
                         resolve(Result.Success(dataSourceT.encode(ia)))
                     })
@@ -77,6 +87,14 @@ export default class DataSourceStorage extends PostgresStorage{
                 values
             })
                 .then(() => {
+                    const event: EventT = {
+                        source_id: toUpdate.value.container_id!,
+                        source_type: "container",
+                        type: "data source modified",
+                        data: id
+                    }
+                    QueueProcessor.Instance.addEvents([event])
+
                     resolve(Result.Success(true))
                 })
                 .catch(e => resolve(Result.Failure(e)))

@@ -63,6 +63,9 @@ export class Config {
   private readonly _data_source_processing_interval: number;
   private readonly _data_source_processing_batch_size: number;
 
+  private readonly _queue_system: string;
+  private readonly _queue_poll_interval: number;
+  private readonly _queue_table_name: string;
 
   private readonly _smtp_username: string;
   private readonly _smtp_password: string;
@@ -135,6 +138,10 @@ export class Config {
 
     this._data_source_processing_interval = (process.env.DATA_SOURCE_PROCESSING_INTERVAL) ? parseInt(process.env.DATA_SOURCE_PROCESSING_INTERVAL!, 10) : 10000
     this._data_source_processing_batch_size = (process.env.DATA_SOURCE_PROCESSING_BATCH_SIZE) ? parseInt(process.env.DATA_SOURCE_PROCESSING_BATCH_SIZE!, 10) : 1000
+
+    this._queue_system = process.env.QUEUE_SYSTEM || "database";
+    this._queue_poll_interval = (process.env.QUEUE_POLL_INTERVAL) ? parseInt(process.env.QUEUE_POLL_INTERVAL!, 10) : 1000
+    this._queue_table_name= process.env.QUEUE_TABLE_NAME|| "queue_tasks";
 
     this._smtp_username = process.env.SMTP_USERNAME || ""
     this._smtp_password = process.env.SMTP_PASSWORD || ""
@@ -233,6 +240,18 @@ export class Config {
 
   get data_source_batch_size(): number {
     return this._data_source_processing_batch_size;
+  }
+
+  get queue_system(): string {
+    return this._queue_system;
+  }
+
+  get queue_poll_interval(): number {
+    return this._queue_poll_interval;
+  }
+
+  get queue_table_name(): string {
+    return this._queue_table_name;
   }
 
   get session_secret(): string {

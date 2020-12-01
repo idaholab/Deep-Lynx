@@ -3,7 +3,10 @@ import {eventTypeT} from "./eventTypeT";
 
 const eventRequired = t.type({
     source_id: t.string,
-    source_type: t.string,
+    source_type: t.keyof({
+        'data source': null,
+        'container': null,
+    }),
 });
 
 const eventOptional = t.partial({

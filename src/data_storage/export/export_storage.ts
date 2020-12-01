@@ -3,6 +3,8 @@ import PostgresStorage from "../postgresStorage";
 import {QueryConfig} from "pg";
 import {exportT, ExportT} from "../../types/export/exportT";
 import PostgresAdapter from "../adapters/postgres/postgres";
+import {QueueProcessor} from "../../event_system/events";
+import {EventT} from "../../types/events/eventT";
 
 /*
 * ExportStorage encompasses all logic dealing with the manipulation of the Export
@@ -40,6 +42,13 @@ export default class ExportStorage extends PostgresStorage{
                             resolve(r);
                             return
                         }
+
+                        const event: EventT = {
+                            source_id: containerID,
+                            source_type: "container",
+                            type: "data exported"
+                        }
+                        QueueProcessor.Instance.addEvents([event])
 
                         resolve(Result.Success(exportT.encode(es)))
                     })

@@ -10,7 +10,7 @@ export const eventTypeT = t.type({
       'file modified': null,
       'data source created': null,
       'data source modified': null,
-      'data export': null,
+      'data exported': null,
     })
 });
 

@@ -102,18 +102,22 @@ export class DataSourceProcessor {
                }
 
                 if(nodeT.is(transformedPayload.value)) {
-                    transformedPayload.value.import_data_id = row.id
+                    transformedPayload.value.data_staging_id = row.id
+                    transformedPayload.value.import_data_id = row.import_id
                     nodesToInsert.push(transformedPayload.value)
                 }
 
                 if(edgeT.is(transformedPayload.value)) {
-                    transformedPayload.value.import_data_id = row.id
+                    transformedPayload.value.data_staging_id = row.id
+                    transformedPayload.value.import_data_id = row.import_id
                     edgesToInsert.push(transformedPayload.value)
                 }
 
                 if(transformedPayload.value instanceof Array) {
-                    transformedPayload.value[0].import_data_id = row.id
-                    transformedPayload.value[1].import_data_id = row.id
+                    transformedPayload.value[0].data_staging_id = row.id
+                    transformedPayload.value[1].data_staging_id = row.id
+                    transformedPayload.value[0].import_data_id = row.import_id
+                    transformedPayload.value[1].import_data_id = row.import_id
                     nodesToInsert.push(transformedPayload.value[0])
                     edgesToInsert.push(transformedPayload.value[1])
                 }
@@ -135,7 +139,7 @@ export class DataSourceProcessor {
                     await GraphStorage.Instance.rollbackTransaction(transaction.value)
 
                     // update the individual data row which failed
-                    await DataStagingStorage.Instance.SetErrors(node.import_data_id!, [`error attempting to insert nodes ${insertedNodes.error?.error}`] )
+                    await DataStagingStorage.Instance.SetErrors(node.data_staging_id!, [`error attempting to insert nodes ${insertedNodes.error?.error}`] )
 
                     return new Promise(resolve => resolve(Result.Failure(`error attempting to insert nodes ${insertedNodes.error?.error}`)))
                 }
@@ -146,7 +150,7 @@ export class DataSourceProcessor {
                     await GraphStorage.Instance.rollbackTransaction(transaction.value)
 
                     // update the individual data row which failed
-                    await DataStagingStorage.Instance.SetErrors(node.import_data_id!, [`error attempting to insert nodes ${inserted.error?.error}`] )
+                    await DataStagingStorage.Instance.SetErrors(node.data_staging_id!, [`error attempting to insert nodes ${inserted.error?.error}`] )
 
                     return new Promise(resolve => resolve(Result.Failure(`error attempting to insert nodes ${inserted.error?.error}`)))
 
@@ -165,7 +169,7 @@ export class DataSourceProcessor {
                     await GraphStorage.Instance.rollbackTransaction(transaction.value)
 
                     // update the individual data row which failed
-                    await DataStagingStorage.Instance.SetErrors(edge.import_data_id!, [`error attempting to insert nodes ${insertedEdges.error?.error}`] )
+                    await DataStagingStorage.Instance.SetErrors(edge.data_staging_id!, [`error attempting to insert nodes ${insertedEdges.error?.error}`] )
 
                     return new Promise(resolve => resolve(Result.Failure(`error attempting to insert edges ${insertedEdges.error?.error}`)))
                 }
@@ -176,7 +180,7 @@ export class DataSourceProcessor {
                     await GraphStorage.Instance.rollbackTransaction(transaction.value)
 
                     // update the individual data row which failed
-                    await DataStagingStorage.Instance.SetErrors(edge.import_data_id!, [`error attempting to insert nodes ${inserted.error?.error}`] )
+                    await DataStagingStorage.Instance.SetErrors(edge.data_staging_id!, [`error attempting to insert nodes ${inserted.error?.error}`] )
 
                     return new Promise(resolve => resolve(Result.Failure(`error attempting to insert edges ${inserted.error?.error}`)))
 

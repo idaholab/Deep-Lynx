@@ -60,6 +60,7 @@ export type NodeFilterQL = {
     metatype_name: string
     metatype_id: string
     properties: PropertyFilterQL[]
+    import_data_id: string
 }
 
 export type EdgeWhereQL = {
