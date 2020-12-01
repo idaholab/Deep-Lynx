@@ -4,7 +4,7 @@ import {eventTypeT} from "./eventTypeT";
 const eventRequired = t.type({
     source_id: t.string,
     source_type: t.keyof({
-        'data source': null,
+        'data_source': null,
         'container': null,
     }),
 });

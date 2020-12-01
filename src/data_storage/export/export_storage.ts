@@ -3,7 +3,7 @@ import PostgresStorage from "../postgresStorage";
 import {QueryConfig} from "pg";
 import {exportT, ExportT} from "../../types/export/exportT";
 import PostgresAdapter from "../adapters/postgres/postgres";
-import {QueueProcessor} from "../../event_system/events";
+import {QueueProcessor} from "../../services/event_system/events";
 import {EventT} from "../../types/events/eventT";
 
 /*
@@ -42,13 +42,6 @@ export default class ExportStorage extends PostgresStorage{
                             resolve(r);
                             return
                         }
-
-                        const event: EventT = {
-                            source_id: containerID,
-                            source_type: "container",
-                            type: "data exported"
-                        }
-                        QueueProcessor.Instance.addEvents([event])
 
                         resolve(Result.Success(exportT.encode(es)))
                     })
@@ -114,7 +107,13 @@ export default class ExportStorage extends PostgresStorage{
         return super.run(ExportStorage.setProcessingStatement(id))
     }
 
-    public SetCompleted(id: string): Promise<Result<boolean>> {
+    public async SetCompleted(id: string): Promise<Result<boolean>> {
+        const completeExport = await this.Retrieve(id)
+        QueueProcessor.Instance.emit([{
+            source_id: completeExport.value.container_id,
+            source_type: "container",
+            type: "data_exported"
+        } as EventT])
         return super.run(ExportStorage.setCompletedStatement(id))
     }
 

@@ -3,7 +3,7 @@ import Result from "../../result";
 import {QueryConfig} from "pg";
 import {ImportT} from "../../types/import/importT";
 import uuid from "uuid";
-import {QueueProcessor} from "../../event_system/events";
+import {QueueProcessor} from "../../services/event_system/events";
 import {EventT} from "../../types/events/eventT";
 
 export default class ImportStorage extends PostgresStorage {
@@ -36,15 +36,17 @@ export default class ImportStorage extends PostgresStorage {
     }
 
     public async SetStatus(importID: string, status: "ready" | "processing" | "error" | "stopped" | "completed", message?: string): Promise<Result<boolean>> {
-        if (status === "completed") {
+        if (status === "completed" || status === "stopped" || status === "error") {
             const completeImport = await this.Retrieve(importID)
-            const event: EventT = {
+            QueueProcessor.Instance.emit([{
                 source_id: completeImport.value.data_source_id,
-                source_type: "data source",
-                type: "data ingested",
-                data: importID
-            }
-            QueueProcessor.Instance.addEvents([event])
+                source_type: "data_source",
+                type: "data_ingested",
+                data: {
+                    import_id: importID,
+                    status
+                }
+            } as EventT])
         }
         return super.runAsTransaction(ImportStorage.setStatusStatement(importID, status, message))
     }

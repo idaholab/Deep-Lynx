@@ -3,7 +3,7 @@ import PostgresStorage from "../postgresStorage";
 import {QueryConfig} from "pg";
 import PostgresAdapter from "../adapters/postgres/postgres";
 import {dataSourceT, DataSourceT} from "../../types/import/dataSourceT";
-import {QueueProcessor} from "../../event_system/events";
+import {QueueProcessor} from "../../services/event_system/events";
 import {EventT} from "../../types/events/eventT";
 
 /*
@@ -42,13 +42,12 @@ export default class DataSourceStorage extends PostgresStorage{
                             return
                         }
 
-                        const event: EventT = {
+                        QueueProcessor.Instance.emit([{
                             source_id: containerID,
                             source_type: "container",
-                            type: "data source created",
+                            type: "data_source_created",
                             data: ia.id!
-                        }
-                        QueueProcessor.Instance.addEvents([event])
+                        } as EventT])
 
                         resolve(Result.Success(dataSourceT.encode(ia)))
                     })
@@ -87,13 +86,12 @@ export default class DataSourceStorage extends PostgresStorage{
                 values
             })
                 .then(() => {
-                    const event: EventT = {
+                    QueueProcessor.Instance.emit([{
                         source_id: toUpdate.value.container_id!,
                         source_type: "container",
-                        type: "data source modified",
+                        type: "data_source_modified",
                         data: id
-                    }
-                    QueueProcessor.Instance.addEvents([event])
+                    } as EventT])
 
                     resolve(Result.Success(true))
                 })

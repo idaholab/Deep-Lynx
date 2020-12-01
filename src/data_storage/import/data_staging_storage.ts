@@ -10,7 +10,7 @@ import Result from "../../result";
 import {Query, QueryConfig} from "pg";
 import {TypeMappingT} from "../../types/import/typeMappingT";
 import PostgresAdapter from "../adapters/postgres/postgres";
-import {QueueProcessor} from "../../event_system/events";
+import {QueueProcessor} from "../../services/event_system/events";
 import {EventT} from "../../types/events/eventT";
 
 export default class DataStagingStorage extends PostgresStorage {
@@ -34,12 +34,11 @@ export default class DataStagingStorage extends PostgresStorage {
         return new Promise((resolve) => {
             PostgresAdapter.Instance.Pool.query(DataStagingStorage.createStatement(dataSourceID, importID, data))
                 .then(() => {
-                    const event: EventT = {
+                    QueueProcessor.Instance.emit([{
                         source_id: dataSourceID,
-                        source_type: "data source",
-                        type: "data imported"
-                    }
-                    QueueProcessor.Instance.addEvents([event])
+                        source_type: "data_source",
+                        type: "data_imported"
+                    }])
 
                     resolve(Result.Success(true))
                 })

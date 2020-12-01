@@ -46,5 +46,5 @@ describe('Registered Event Creation', async() => {
 const payload: RegisteredEventT = {
     "app_name": "Daisy",
     "app_url": "yellow",
-    "type": "data ingested"
+    "type": "data_ingested"
 };

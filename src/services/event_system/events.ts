@@ -1,15 +1,14 @@
 import Queue = require('better-queue')
-import { StoreOptions } from "better-queue"
 import { ConnectionStringParser } from "connection-string-parser";
-import { EventT, EventsT } from "../types/events/eventT";
-import { RegisteredEventT, RegisteredEventsT } from "../types/events/registered_eventT";
-import { TaskT, TasksT } from "../types/events/taskT";
-import EventStorage from "../data_storage/events/event_storage";
-import QueueStorage from "../data_storage/events/queue_storage";
-import Result from "../result";
-import Logger from "../logger";
+import { EventT, EventsT } from "../../types/events/eventT";
+import { RegisteredEventT, RegisteredEventsT } from "../../types/events/registered_eventT";
+import { TaskT, TasksT } from "../../types/events/taskT";
+import EventStorage from "../../data_storage/events/event_storage";
+import QueueStorage from "../../data_storage/events/queue_storage";
+import Result from "../../result";
+import Logger from "../../logger";
 import axios, { AxiosResponse } from "axios";
-import Config from "../config";
+import Config from "../../config";
 
 export class QueueProcessor {
 
@@ -30,7 +29,7 @@ export class QueueProcessor {
     store: this.store
   });
 
-  public addEvents(events: EventsT) {
+  public emit(events: EventsT) {
     if (Config.queue_system === 'database') {
       this.messageQueue.push(events)
     } else {
@@ -45,16 +44,29 @@ export async function StartQueue(): Promise<Result<boolean>> {
   // process the tasks stored in the database queue. Each task may have multiple events
   if (Config.queue_system === 'database') {
     while (true) {
+
       const tasks: TaskT[] = await QueueStorage.Instance.List();
+
       for (const task of tasks) {
+
         const events: EventT[] = task.task;
+
         for (const event of events) {
+
           let registeredEvents: RegisteredEventsT;
-          if (event.source_type === 'data source') {
-            registeredEvents = (await EventStorage.Instance.ListByDataSource(event.type, event.source_id)).value
+
+          if (event.source_type === 'data_source') {
+            const regResult = await EventStorage.Instance.ListByDataSource(event.type, event.source_id)
+            if (regResult.isError) Logger.debug(`error listing registered events for event type ${event.type} and ID ${event.source_id}`)
+
+            registeredEvents = regResult.value
           } else {
-            registeredEvents = (await EventStorage.Instance.ListByContainer(event.type, event.source_id)).value
+            const regResult = await EventStorage.Instance.ListByContainer(event.type, event.source_id)
+            if (regResult.isError) Logger.debug(`error listing registered events for event type ${event.type} and ID ${event.source_id}`)
+
+            registeredEvents = regResult.value
           }
+
           for (const rEvent of registeredEvents) {
             await axios.post(rEvent.app_url, event.data)
               .then(() => {

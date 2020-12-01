@@ -3,7 +3,7 @@ import Result from "../result"
 import PostgresStorage from "./postgresStorage";
 import { QueryConfig} from "pg";
 import PostgresAdapter from "./adapters/postgres/postgres";
-import {QueueProcessor} from "../event_system/events";
+import {QueueProcessor} from "../services/event_system/events";
 import {EventT} from "../types/events/eventT";
 
 /*
@@ -52,13 +52,12 @@ export default class FileStorage extends PostgresStorage{
                               return
                           }
 
-                          const event: EventT = {
+                          QueueProcessor.Instance.emit([{
                             source_id: dataSourceID,
-                            source_type: "data source",
-                            type: "file created",
+                            source_type: "data_source",
+                            type: "file_created",
                             data: cs.id
-                          }
-                          QueueProcessor.Instance.addEvents([event])
+                          } as EventT])
 
                           resolve(Result.Success(fileT.encode(cs)))
                        })
@@ -106,13 +105,12 @@ export default class FileStorage extends PostgresStorage{
                 values
             })
                 .then(() => {
-                    const event: EventT = {
+                    QueueProcessor.Instance.emit([{
                         source_id: toUpdate.value.data_source_id!,
-                        source_type: "data source",
-                        type: "file modified",
+                        source_type: "data_source",
+                        type: "file_modified",
                         data: id
-                    }
-                    QueueProcessor.Instance.addEvents([event])
+                    } as EventT])
 
                     resolve(Result.Success(true))
                 })
