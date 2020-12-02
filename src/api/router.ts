@@ -29,6 +29,7 @@ import QueryRoutes from "./query_routes";
 import GraphRoutes from "./graph_routes";
 import OAuthRoutes from "./oauth_routes";
 import UserStorage from "../data_storage/user_management/user_storage";
+import EventRoutes from "./event_routes";
 
 // Router is a self contained set of routes and middleware that the main express.js
 // application should call. It should be called only once.
@@ -75,6 +76,7 @@ export class Router {
     MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute()]);
     QueryRoutes.mount(this.app, [authenticateRoute()]);
     GraphRoutes.mount(this.app, [authenticateRoute()]);
+    EventRoutes.mount(this.app, [authenticateRoute()]);
 
     // OAuth and Identity Provider routes - these are the only routes that serve up
     // webpages. WE ALSO MOUNT THE '/' ENDPOINT HERE

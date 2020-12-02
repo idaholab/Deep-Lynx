@@ -3,6 +3,8 @@ import Result from "../result"
 import PostgresStorage from "./postgresStorage";
 import { QueryConfig} from "pg";
 import PostgresAdapter from "./adapters/postgres/postgres";
+import {QueueProcessor} from "../services/event_system/events";
+import {EventT} from "../types/events/eventT";
 
 /*
 * FileStore encompasses all logic dealing with the manipulation of the
@@ -50,6 +52,13 @@ export default class FileStorage extends PostgresStorage{
                               return
                           }
 
+                          QueueProcessor.Instance.emit([{
+                            source_id: dataSourceID,
+                            source_type: "data_source",
+                            type: "file_created",
+                            data: cs.id
+                          } as EventT])
+
                           resolve(Result.Success(fileT.encode(cs)))
                        })
                }
@@ -96,6 +105,13 @@ export default class FileStorage extends PostgresStorage{
                 values
             })
                 .then(() => {
+                    QueueProcessor.Instance.emit([{
+                        source_id: toUpdate.value.data_source_id!,
+                        source_type: "data_source",
+                        type: "file_modified",
+                        data: id
+                    } as EventT])
+
                     resolve(Result.Success(true))
                 })
                 .catch(e => resolve(Result.Failure(e)))

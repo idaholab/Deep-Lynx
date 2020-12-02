@@ -83,6 +83,7 @@ describe('Using a GraphQL Query on nodes we', async() => {
                 created_at
                 modified_at
                 graph
+                import_data_id
                 incoming_edges {id}
                 outgoing_edges {id}
             }

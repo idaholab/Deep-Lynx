@@ -50,6 +50,18 @@ storage.boot()
                 console.log(data.toString().trim())
         })
 
+        // Start Event System
+        const eventSystem = spawn('node', [`${Config.project_dir}/event_system.js`])
+
+        // we want the stdout and stderr output of the function to combine logging
+        eventSystem.stdout.on('data', (data: any) => {
+               console.log(data.toString().trim())
+        })
+
+        eventSystem.stderr.on('data', (data: any) => {
+                console.log(data.toString().trim())
+        })
+
         // if enabled, create an initial SuperUser for easier system management
         // if SAML is configured, the initial SAML user will be assigned admin status
         if(Config.initial_super_user) {

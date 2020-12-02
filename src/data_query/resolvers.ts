@@ -509,6 +509,17 @@ function buildNodeFilter(f: NodeFilter, fql: NodeFilterQL): NodeFilter {
 
                 break;
             }
+
+            case "import_data_id": {
+                let values: string[];
+                values = (fql[k] as string).split(" ");
+                if(values.length < 2) {
+                    throw Error("malformed query for import_data_id")
+                }
+
+                f.importDataID(values[0], values[1])
+                break;
+            }
         }
     })
 

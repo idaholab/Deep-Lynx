@@ -210,7 +210,7 @@
         }
       },
       "delete": {
-        "description": "Archive or delete a Container. Accepts a single query parameter - permanent. If this query parameter is provided (with any value), the container will be permanently deleted, forcing a cascade to all dependent objects in the database. Generally we prefer to archive rather than delete.",
+        "description": "Archives a Container. This is preferred over deletion as deletion has a cascading effect on the deleted type's keys, relationships, and relationship keys. When in doubt, archive over delete. We'd rather have tombstones than cremating the type.",
         "summary": "Archive",
         "tags": [
           "Containers"
@@ -221,13 +221,6 @@
           "application/json"
         ],
         "parameters": [
-          {
-            "name": "permanent",
-            "in": "query",
-            "required": true,
-            "type": "boolean",
-            "description": ""
-          },
           {
             "name": "container-id",
             "in": "path",
@@ -277,6 +270,35 @@
           {
             "name": "path",
             "in": "formData",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/containers/{container-id}/permissions": {
+      "post": {
+        "description": "Repairs a container's permission set",
+        "summary": "Repair Permissions",
+        "tags": [
+          "Containers"
+        ],
+        "operationId": "RepairPermissions",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container-id",
+            "in": "path",
             "required": true,
             "type": "string",
             "description": ""
@@ -2756,6 +2778,64 @@
         "security": []
       }
     },
+    "/containers/{container-id}/users/invite": {
+      "post": {
+        "description": "Create a new user using the username_password identity type.",
+        "summary": "Invite User to Container",
+        "tags": [
+          "Users"
+        ],
+        "operationId": "InviteUsertoContainer",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "security": []
+      },
+      "get": {
+        "description": "List all invitations to container.",
+        "summary": "List Invited Users for Container",
+        "tags": [
+          "Users"
+        ],
+        "operationId": "ListInvitedUsersforContainer",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
     "/containers/{container-id}/import/datasources/{source-id}/mappings": {
       "post": {
         "description": "Creates a new type mapping in storage",
@@ -3202,6 +3282,119 @@
             "required": true,
             "type": "integer",
             "format": "int32",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/events": {
+      "post": {
+        "description": "Create new registered event. An app_name, app_url, and type must be provided. Either a container_id or data_source_id must also be provided.",
+        "summary": "Create Registered Event",
+        "tags": [
+          "Events"
+        ],
+        "operationId": "CreateRegisteredEvent",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CreateRegisteredEventRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      },
+      "get": {
+        "description": "Lists all registered events",
+        "summary": "List Registered Events",
+        "tags": [
+          "Events"
+        ],
+        "operationId": "ListRegisteredEvents",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/events/{id}": {
+      "put": {
+        "description": "Update a registered event. If the \"active\" query paramter is provided with a value of true or false, the event will be activated/deactivated.",
+        "summary": "Update Registered Event",
+        "tags": [
+          "Events"
+        ],
+        "operationId": "UpdateRegisteredEvent",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "active",
+            "in": "query",
+            "required": true,
+            "type": "boolean",
+            "description": ""
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      },
+      "get": {
+        "description": "Retrieve a registered event",
+        "summary": "Get Registered Event",
+        "tags": [
+          "Events"
+        ],
+        "operationId": "GetRegisteredEvent",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
             "description": ""
           }
         ],
@@ -4315,6 +4508,36 @@
         "keys",
         "example_payload"
       ]
+    },
+    "CreateRegisteredEventRequest": {
+      "title": "CreateRegisteredEventRequest",
+      "example": {
+        "app_name": "test app",
+        "app_url": "http://localhost:8099/test",
+        "container_id": "6d1a2895-a689-4760-a515-a3a3b49ae882",
+        "type": "data source created"
+      },
+      "type": "object",
+      "properties": {
+        "app_name": {
+          "type": "string"
+        },
+        "app_url": {
+          "type": "string"
+        },
+        "container_id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "app_name",
+        "app_url",
+        "container_id",
+        "type"
+      ]
     }
   },
   "tags": [
@@ -4367,6 +4590,9 @@
     },
     {
       "name": "Imports"
+    },
+    {
+      "name": "Events"
     },
     {
       "name": "Misc",
