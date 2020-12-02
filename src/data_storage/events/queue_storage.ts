@@ -9,7 +9,7 @@ import Config from "../../config"
 * QueueStorage interacts with tasks in the database queue
 */
 export default class QueueStorage extends PostgresStorage{
-    public static tableName = Config.queue_table_name;
+    public static tableName = "queue_tasks";
 
     private static instance: QueueStorage;
 
