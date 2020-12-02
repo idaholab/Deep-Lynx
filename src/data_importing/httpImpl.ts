@@ -5,7 +5,7 @@ import {
     HttpConfigT,
 } from "../types/import/httpConfigT";
 
-import {onDecodeError} from "../utilities";
+import {objectToShapeHash, onDecodeError} from "../utilities";
 import Logger from "../logger"
 import Config from "../config";
 import {DataSourceT} from "../types/import/dataSourceT";
@@ -18,6 +18,8 @@ import NodeRSA from "node-rsa";
 import * as fs from "fs";
 import axios, {AxiosResponse} from "axios"
 import DataStagingStorage from "../data_storage/import/data_staging_storage";
+import {TypeMappingT} from "../types/import/typeMappingT";
+import TypeMappingStorage from "../data_storage/import/type_mapping_storage";
 
 // HttpImpl is a data source which polls and HTTP source for data every x seconds
 // this implementation allows the user to query both basic authentication and
@@ -250,7 +252,25 @@ export class HttpImpl implements DataSource {
                     }
 
                     for(const data of resp.data) {
-                        const inserted = await DataStagingStorage.Instance.Create(this.dataSourceT.id!, importRecord.value, data)
+                        const shapeHash = objectToShapeHash(data)
+
+                        let mapping: TypeMappingT
+
+                        const retrieved = await TypeMappingStorage.Instance.RetrieveByShapeHash(this.dataSourceT.id!, shapeHash)
+                        if(retrieved.isError) {
+                            const newMapping = await TypeMappingStorage.Instance.Create(this.dataSourceT.container_id!, this.dataSourceT.id!, shapeHash, data)
+
+                            if(newMapping.isError) {
+                                Logger.error(`unable to create new type mapping for imported data ${newMapping.error}`)
+                                continue
+                            }
+
+                            mapping = newMapping.value
+                        } else {
+                            mapping = retrieved.value
+                        }
+
+                        const inserted = await DataStagingStorage.Instance.Create(this.dataSourceT.id!, importRecord.value, mapping.id, data)
                         if(inserted.isError) {
                             Logger.error(`error inserting data for import ${inserted}`)
                         }

@@ -26,7 +26,7 @@
                         <v-list-item-title>{{$t("Dashboard")}}</v-list-item-title>
                     </v-list-item-content>
                 </v-list-item>
-                <v-list-group :value="false" dense :disabled="$store.state.activeContainer === undefined">
+                <v-list-group :value="false" dense>
                     <template v-slot:activator>
                         <v-list-item-title>{{$t("home.taxonomy")}}</v-list-item-title>
                     </template>
@@ -63,7 +63,7 @@
 
                 </v-list-group>
 
-                <v-list-group :value="false" dense :disabled="$store.state.activeContainer === undefined">
+                <v-list-group :value="false" dense>
                     <template v-slot:activator>
                         <v-list-item-title>{{$t("home.data")}}</v-list-item-title>
                     </template>
@@ -182,7 +182,7 @@
 
         <v-content style="padding: 64px 0px 36px 36px">
             <v-container>
-                <component v-bind:is="currentMainComponent" :containerID="$store.getters.activeContainerID"></component>
+                <component v-bind:is="currentMainComponent" :containerID="containerID"></component>
             </v-container>
         </v-content>
     </div>
@@ -228,6 +228,7 @@
         }})
 	export default class Home extends Vue {
       @Prop(String) readonly containerID: string | undefined
+      @Prop(String) readonly view: string | undefined
 
         errorMessage = ""
         drawer = null
@@ -242,6 +243,10 @@
           this.$client.retrieveContainer(this.containerID!)
           .then(container => {
             this.container = container
+
+            if(this.view) {
+              this.setActiveComponent(this.view)
+            }
           })
           .catch(e => this.errorMessage = e)
         }

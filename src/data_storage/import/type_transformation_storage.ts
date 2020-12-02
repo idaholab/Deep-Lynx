@@ -23,7 +23,7 @@ export default class TypeTransformationStorage extends PostgresStorage{
     }
 
     // Create accepts a single object
-    public async Create(typeMappingID :string, userID:string, input:any | TypeTransformationT): Promise<Result<TypeTransformationT>> {
+    public async Create(typeMappingID:string, userID:string, input:any | TypeTransformationT): Promise<Result<TypeTransformationT>> {
         // onValidateSuccess is a callback that happens after the input has been
         // validated and confirmed to be of the Container(s) type
         const onValidateSuccess = ( resolve: (r:any) => void): (t: TypeTransformationT)=> void => {
@@ -105,7 +105,7 @@ export default class TypeTransformationStorage extends PostgresStorage{
     private static createStatement(tt: TypeTransformationT): QueryConfig {
         return {
             text:`INSERT INTO data_type_mapping_transformations(id,keys,type_mapping_id,conditions,metatype_id, metatype_relationship_pair_id,origin_id_key,destination_id_key,unique_identifier_key,on_conflict,created_by,modified_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
-            values: [tt.id,JSON.stringify(tt.keys),tt.type_mapping_id,tt.conditions,tt.metatype_id,tt.metatype_relationship_pair_id,tt.origin_id_key,tt.destination_id_key,tt.unique_identifier_key,tt.on_conflict,tt.created_by,tt.modified_by]
+            values: [tt.id,JSON.stringify(tt.keys),tt.type_mapping_id,JSON.stringify(tt.conditions),tt.metatype_id,tt.metatype_relationship_pair_id,tt.origin_id_key,tt.destination_id_key,tt.unique_identifier_key,tt.on_conflict,tt.created_by,tt.modified_by]
         }
     }
 

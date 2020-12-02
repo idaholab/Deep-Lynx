@@ -3,16 +3,20 @@ import {AxiosResponse} from "axios";
 import {
    AssignRolePayloadT,
    ContainerT,
-   DataSourceT, ImportDataT,
+   DataSourceT,
+   ImportDataT,
    ImportT,
    MetatypeKeyT,
    MetatypeT,
-   TypeMappingPayloadT,
    TypeMappingT,
    MetatypeRelationshipT,
    MetatypeRelationshipKeyT,
    MetatypeRelationshipPairT,
-   ResetPasswordPayloadT, NewUserPayloadT, UserContainerInviteT,
+   ResetPasswordPayloadT,
+   NewUserPayloadT,
+   UserContainerInviteT,
+   TypeMappingTransformationPayloadT,
+   TypeMappingTransformationT,
 } from "@/api/types";
 import {RetrieveJWT} from "@/auth/authentication_service";
 import {KeyPairT, UserT} from "@/auth/types";
@@ -105,22 +109,6 @@ export class Client {
       return this.getNoData(`/users/reset-password`, query)
    }
 
-   resetPassword(email: string, token: string, newPassword: string): Promise<boolean> {
-      return this.postNoData(`/users/reset-password`, {
-         email,
-         token,
-         new_password: newPassword
-      } as ResetPasswordPayloadT)
-   }
-
-   validateEmail(userID: string, token: string): Promise<boolean> {
-      const query: {[key: string]: any} = {}
-      query.id = userID
-      query.token = token
-
-      return this.getNoData(`/users/validate`, query)
-   }
-
    listMetatypes(containerID: string, {name, limit, offset}: {name?: string; limit?: number; offset?: number}): Promise<MetatypeT[]> {
       const query: {[key: string]: any} = {}
 
@@ -204,8 +192,8 @@ export class Client {
       return this.post<DataSourceT>(`/containers/${containerID}/import/datasources`, dataSource)
    }
 
-   createTypeMapping(containerID: string, dataSourceID: string, mapping: TypeMappingPayloadT): Promise<TypeMappingT> {
-      return this.post<TypeMappingT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings`, mapping)
+   createTypeMappingTransformation(containerID: string, dataSourceID: string, typeMappingID: string, transformation: TypeMappingTransformationPayloadT): Promise<TypeMappingTransformationPayloadT> {
+      return this.post<TypeMappingTransformationT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations`, transformation )
    }
 
    dataSourceJSONFileImport(containerID: string, dataSourceID: string, file: File): Promise<boolean> {
@@ -228,9 +216,6 @@ export class Client {
       return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/active`)
    }
 
-   deleteTypeMapping(containerID: string, dataSourceID: string, typeMappingID: string): Promise<boolean> {
-      return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`)
-   }
 
    countUnmappedData(containerID: string, dataSouceID: string): Promise<number> {
       return this.get<number>(`/containers/${containerID}/import/datasources/${dataSouceID}/mappings/unmapped/count`)
@@ -244,12 +229,22 @@ export class Client {
       return this.get<ImportT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`)
    }
 
-   listImportData(containerID: string, importID: string, limit: number, offset: number): Promise<ImportDataT[]> {
+   listImportData(containerID: string, importID: string, limit: number, offset: number, sortBy?: string, sortDesc?: boolean): Promise<ImportDataT[]> {
       const query: {[key: string]: any} = {}
 
       query.limit = limit
       query.offset = offset
+      if(sortBy) query.sortBy = sortBy
+      if(sortDesc) query.sortDesc = sortDesc
+
       return this.get<ImportDataT[]>(`/containers/${containerID}/import/imports/${importID}/data`, query)
+   }
+
+   countImportData(containerID: string, importID: string): Promise<number> {
+      const query: {[key: string]: any} = {}
+
+      query.count = true
+      return this.get<number>(`/containers/${containerID}/import/imports/${importID}/data`, query)
    }
 
    deleteImport(containerID: string, importID: string): Promise<boolean> {
@@ -258,15 +253,6 @@ export class Client {
 
    deleteImportData(containerID: string, importID: string, dataID: number): Promise<boolean> {
       return this.delete(`/containers/${containerID}/import/imports/${importID}/data/${dataID}`)
-   }
-
-   createNewUser(displayName: string, email: string, password: string): Promise<UserT> {
-      return this.post<UserT>("/users", {
-         display_name: displayName,
-         email,
-         password,
-         identity_provider: "username_password"
-      } as NewUserPayloadT)
    }
 
    inviteUserToContainer(containerID: string, email: string): Promise<boolean> {
@@ -309,6 +295,10 @@ export class Client {
 
    retrieveUserRoles(containerID: string, userID: string): Promise<string[]> {
       return this.get<string[]>(`/containers/${containerID}/users/${userID}/roles`)
+   }
+
+   retrieveTypeMapping(containerID: string, dataSourceID: string, typeMappingID: string): Promise<TypeMappingT> {
+      return this.get<TypeMappingT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`)
    }
 
    private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {

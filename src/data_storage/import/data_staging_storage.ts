@@ -30,9 +30,9 @@ export default class DataStagingStorage extends PostgresStorage {
         super();
     }
 
-    public async Create(dataSourceID: string, importID:string, data: any ): Promise<Result<boolean>> {
+    public async Create(dataSourceID: string, importID:string, typeMappingID: string, data: any): Promise<Result<boolean>> {
         return new Promise((resolve) => {
-            PostgresAdapter.Instance.Pool.query(DataStagingStorage.createStatement(dataSourceID, importID, data))
+            PostgresAdapter.Instance.Pool.query(DataStagingStorage.createStatement(dataSourceID, importID, typeMappingID, data))
                 .then(() => {
                     QueueProcessor.Instance.emit([{
                         source_id: dataSourceID,
@@ -60,7 +60,18 @@ export default class DataStagingStorage extends PostgresStorage {
     }
 
     public async List(importID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
+        if(limit === -1) { // allow return all with a negative number
+            return super.rows<DataStagingT>(DataStagingStorage.listAllStatement(importID))
+        }
         return super.rows<DataStagingT>(DataStagingStorage.listStatement(importID, offset, limit))
+    }
+
+    public async ListAndSort(importID: string, offset:number, limit:number, sortBy:string, sortDesc: boolean): Promise<Result<DataStagingT[]>>{
+        if(sortDesc) {
+            return super.rows<DataStagingT>(DataStagingStorage.listSortStatementDesc(importID, offset, limit,sortBy))
+        }
+
+        return super.rows<DataStagingT>(DataStagingStorage.listSortStatementAsc(importID, offset, limit,sortBy))
     }
 
     public async ListUnprocessed(importID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
@@ -118,10 +129,10 @@ export default class DataStagingStorage extends PostgresStorage {
         return super.runAsTransaction(DataStagingStorage.setErrorsStatement(id, errors))
     }
 
-    private static createStatement(dataSourceID: string, importID:string, data: any): QueryConfig {
+    private static createStatement(dataSourceID: string, importID:string, typeMappingID: string, data: any): QueryConfig {
         return {
-            text: `INSERT INTO data_staging(data_source_id,import_id,data) VALUES($1,$2,$3)`,
-            values: [dataSourceID, importID, data]
+            text: `INSERT INTO data_staging(data_source_id,import_id,data,mapping_id) VALUES($1,$2,$3,$4)`,
+            values: [dataSourceID, importID, data, typeMappingID]
         }
     }
 
@@ -135,6 +146,27 @@ export default class DataStagingStorage extends PostgresStorage {
     private static listStatement(importID: string, offset: number, limit: number): QueryConfig {
         return {
             text: `SELECT * FROM data_staging WHERE import_id = $1 OFFSET $2 LIMIT $3`,
+            values: [importID, offset, limit]
+        }
+    }
+
+    private static listAllStatement(importID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM data_staging WHERE import_id = $1`,
+            values: [importID]
+        }
+    }
+
+    private static listSortStatementAsc(importID: string, offset: number, limit: number,sortBy: string): QueryConfig {
+        return {
+            text: `SELECT * FROM data_staging WHERE import_id = $1 ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
+            values: [importID, offset, limit]
+        }
+    }
+
+    private static listSortStatementDesc(importID: string, offset: number, limit: number, sortBy: string): QueryConfig {
+        return {
+            text: `SELECT * FROM data_staging WHERE import_id = $1 ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
             values: [importID, offset, limit]
         }
     }

@@ -73,7 +73,7 @@ describe('A Data Type Mapping', async() => {
 
         const shapeHash = objectToShapeHash(test_raw_payload)
 
-        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash)
+        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash, test_raw_payload)
 
         expect(mapping.isError).false
 
@@ -109,7 +109,7 @@ describe('A Data Type Mapping', async() => {
 
         const shapeHash = objectToShapeHash(test_raw_payload)
 
-        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash)
+        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash, test_raw_payload)
 
         expect(mapping.isError).false
 
@@ -147,7 +147,7 @@ describe('A Data Type Mapping', async() => {
 
         const shapeHash = objectToShapeHash(test_raw_payload)
 
-        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash)
+        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash,test_raw_payload)
         expect(mapping.isError).false
 
         let set = await mappingStorage.SetActive(mapping.value.id)
@@ -187,7 +187,7 @@ describe('A Data Type Mapping', async() => {
 
         const shapeHash = objectToShapeHash(test_raw_payload)
 
-        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash)
+        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash,test_raw_payload)
 
         expect(mapping.isError).false
 
@@ -230,7 +230,7 @@ describe('A Data Type Mapping', async() => {
 
         const shapeHash = objectToShapeHash(test_raw_payload)
 
-        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash)
+        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash, test_raw_payload)
 
         expect(mapping.isError).false
 
@@ -292,11 +292,16 @@ describe('A Data Type Mapping Transformation', async() => {
 
         const shapeHash = objectToShapeHash(test_raw_payload)
 
-        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash)
+        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash,test_raw_payload)
         expect(mapping.isError).false
 
         let transformation = await TypeTransformationStorage.Instance.Create(mapping.value.id, "test suite", {
             metatype_id: metatype.value[0].id,
+            conditions: [{
+               key: "RADIUS",
+               operator: "eq",
+               value: "CIRCLE"
+            }],
             keys: [{
                 key: "RADIUS",
                 metatype_key_id: keys.value[0].id
@@ -308,6 +313,7 @@ describe('A Data Type Mapping Transformation', async() => {
 
         return storage.PermanentlyDelete(exp.value.id!)
     });
+
     it('can be retrieved from storage', async()=> {
         let storage = DataSourceStorage.Instance;
         let metatypeStorage = MetatypeStorage.Instance;
@@ -336,7 +342,7 @@ describe('A Data Type Mapping Transformation', async() => {
 
         const shapeHash = objectToShapeHash(test_raw_payload)
 
-        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash)
+        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash,test_raw_payload)
         expect(mapping.isError).false
 
         let transformation = await TypeTransformationStorage.Instance.Create(mapping.value.id, "test suite", {
@@ -384,7 +390,7 @@ describe('A Data Type Mapping Transformation', async() => {
 
         const shapeHash = objectToShapeHash(test_raw_payload)
 
-        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash)
+        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash,test_raw_payload)
         expect(mapping.isError).false
 
         let transformation = await TypeTransformationStorage.Instance.Create(mapping.value.id, "test suite", {

@@ -61,7 +61,7 @@
         <v-card>
           <v-toolbar
               dark
-              color="primary"
+              color="warning"
           >
             <v-btn
                 icon
@@ -80,17 +80,19 @@
               :headers="importDataHeaders"
               :items="importData"
               class="elevation-1"
+              :server-items-length="importDataCount"
+              :options.sync="options"
+              :loading="importLoading"
+              :items-per-page="100"
+              :footer-props="{
+                'items-per-page-options':[25,50,100],
+              }"
           >
             <template v-slot:top>
             </template>
             <template v-slot:item.typeMappings="{ item }">
               <!-- TODO: Create a type mapping connection component here - give the user the option to create a type mapping using this data -->
-              <div v-if="item.mapping_id">
-                has mapping
-              </div>
-              <div v-else>
-                <v-btn @click="createTypeMapping(item)">{{$t('dataImports.createTypeMapping')}}</v-btn>
-              </div>
+                <v-btn @click="editTypeMapping(item)" color="warning">{{$t('dataImports.editTypeMapping')}}</v-btn>
             </template>
             <template v-slot:item.actions="{ item }">
               <v-icon
@@ -137,10 +139,10 @@
       >
         <v-card>
           <v-card-title class="headline grey lighten-2">
-            {{$t('dataImports.createTypeMapping')}}
+            {{$t('dataImports.editTypeMapping')}}
           </v-card-title>
           <div v-if="selectedDataSource !== null && mappingDialog">
-            <data-type-mapping :dataSourceID="selectedDataSource.id" :containerID="containerID" :payload="importDataMapping" @mappingCreated="mappingDialog = false"></data-type-mapping>
+            <data-type-mapping :dataSourceID="selectedDataSource.id" :containerID="containerID" :payload="importDataMapping" :typeMappingID="importDataMapping.mapping_id" @mappingCreated="mappingDialog = false"></data-type-mapping>
           </div>
         </v-card>
       </v-dialog>
@@ -149,154 +151,186 @@
 </template>
 
 <script lang="ts">
-    import {Component, Prop, Vue} from 'vue-property-decorator'
-    import {DataSourceT, ImportDataT, ImportT} from "@/api/types";
-    import ImportDataDialog from "@/components/importDataDialog.vue";
-    import DataTypeMapping from "@/components/dataTypeMapping.vue"
+import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
+import {DataSourceT, ImportDataT, ImportT} from "@/api/types";
+import ImportDataDialog from "@/components/importDataDialog.vue";
+import DataTypeMapping from "@/components/dataTypeMapping.vue"
+import NewTransformationDialog from "@/components/newTransformationDialog.vue";
 
-    @Component({filters: {
-            pretty: function(value: any) {
-                return JSON.stringify(JSON.parse(value), null, 2);
-            }
-        },
-    components: {
+
+@Component({filters: {
+        pretty: function(value: any) {
+            return JSON.stringify(JSON.parse(value), null, 2);
+        }
+      },
+      components: {
         ImportDataDialog,
-        DataTypeMapping
-    }})
-    export default class DataImports extends Vue {
-        @Prop({required: true})
-        readonly containerID!: string;
-
-
-        errorMessage = ""
-        dataErrorMessage = ""
-        dialog = false
-        dataDialog = false
-        mappingDialog = false
-        selectedData: {[key: string]: any} | null = null
-        selectedDataSource: DataSourceT | null = null
-        selectedImport: ImportT | null = null
-        dataSources: DataSourceT[] = []
-        imports: ImportT[] = []
-        importData: ImportDataT[] = []
-        importDataMapping: ImportDataT | null = null
-        successMessage = ""
-        dataSuccessMessage = ""
-
-        headers = [{
-                text: "Created At",
-                value: "created_at",
-            },
-            {
-                text: "Status",
-                value: "status",
-            },
-            {
-             text: "Message",
-             value: "status_message"
-            },
-            { text: "View/Edit",  value: 'actions', sortable: false },]
-
-        importDataHeaders = [{
-          text: "ID",
-          value: "id",
-        },
-        {
-          text: "Inserted At",
-          value: "inserted_at",
-        },
-        {
-          text: "Errors",
-          value: "errors"
-        }, {
-          text: "Type Mapping",
-          value: 'typeMappings'
-          },
-        {  text: "View/Delete Data", value: 'actions', sortable: false },]
-
-
-
-      setDataSource(dataSource: any) {
-            this.selectedDataSource = dataSource
-            this.listImports()
-        }
-
-        listImports() {
-            if(this.selectedDataSource) {
-                this.$client.listImports(this.containerID, this.selectedDataSource.id)
-                    .then(imports => {
-                        this.imports = imports
-                    })
-                    .catch(e => console.log(e))
-            }
-        }
-
-        mounted() {
-          this.$client.listDataSources(this.containerID)
-              .then(dataSources => {
-                this.dataSources = dataSources
-              })
-              .catch(e => console.log(e))
-        }
-
-        deleteItem(importT: ImportT) {
-          this.$client.deleteImport(this.containerID, importT.id)
-              .then(()=> {
-                this.listImports()
-                this.successMessage = this.$t('dataImports.successfullyDeleted') as string
-              })
-              .catch((e: any) => this.errorMessage = e)
+        DataTypeMapping,
+        NewTransformationDialog
       }
+})
+export default class DataImports extends Vue {
+    @Prop({required: true})
+    readonly containerID!: string;
 
-      viewItem(importT: ImportT) {
-        this.importData = []
-        this.selectedImport = importT
-        this.$client.listImportData(this.containerID, importT.id, 1000, 0)
+
+    errorMessage = ""
+    dataErrorMessage = ""
+    dialog = false
+    dataDialog = false
+    mappingDialog = false
+    selectedData: {[key: string]: any} | null = null
+    selectedDataSource: DataSourceT | null = null
+    selectedImport: ImportT | null = null
+    dataSources: DataSourceT[] = []
+    imports: ImportT[] = []
+    importData: ImportDataT[] = []
+    importDataMapping: ImportDataT | null = null
+    successMessage = ""
+    dataSuccessMessage = ""
+    options: {
+      sortDesc: boolean[];
+      sortBy: string[];
+      page: number;
+      itemsPerPage: number;
+    } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 100}
+
+    importDataCount = 0
+    importLoading = false
+
+    headers = [{
+            text: "Created At",
+            value: "created_at",
+        },
+        {
+          text: "% Processed",
+          value: "percentage_processed"
+        },
+        {
+            text: "Status",
+            value: "status",
+        },
+        {
+         text: "Message",
+         value: "status_message"
+        },
+        { text: "View/Edit",  value: 'actions', sortable: false }]
+
+    importDataHeaders = [{
+      text: "ID",
+      value: "id",
+    },
+    {
+      text: "Processed At",
+      value: "inserted_at",
+    },
+    {
+      text: "Errors",
+      value: "errors"
+    }, {
+      text: "Type Mapping",
+      value: 'typeMappings'
+      },
+    {  text: "View/Delete Data", value: 'actions', sortable: false },]
+
+
+  @Watch('options')
+  handler() {
+      this.loadImportData()
+  }
+
+  setDataSource(dataSource: any) {
+        this.selectedDataSource = dataSource
+        this.listImports()
+    }
+
+    listImports() {
+        if(this.selectedDataSource) {
+            this.$client.listImports(this.containerID, this.selectedDataSource.id)
+                .then(imports => {
+                    this.imports = imports
+                })
+                .catch(e => console.log(e))
+        }
+    }
+
+    mounted() {
+      this.$client.listDataSources(this.containerID)
+          .then(dataSources => {
+            this.dataSources = dataSources
+          })
+          .catch(e => console.log(e))
+    }
+
+    deleteItem(importT: ImportT) {
+      this.$client.deleteImport(this.containerID, importT.id)
+          .then(()=> {
+            this.listImports()
+            this.successMessage = this.$t('dataImports.successfullyDeleted') as string
+          })
+          .catch((e: any) => this.errorMessage = e)
+  }
+
+  viewItem(importT: ImportT) {
+    this.selectedImport = importT
+    this.loadImportData()
+
+    this.$client.countImportData(this.containerID, importT.id)
+    .then((count) => {
+      this.importDataCount = count
+      this.dialog = true
+    })
+    .catch((e: any) => this.errorMessage = e)
+  }
+
+  loadImportData() {
+    this.importLoading = true
+    this.importData = []
+
+    const {page, itemsPerPage, sortBy, sortDesc } = this.options;
+    let sortParam: string | undefined
+    let sortDescParam: boolean | undefined
+
+    const pageNumber = page - 1;
+    if(sortBy && sortBy.length >= 1) sortParam = sortBy[0]
+    console.log(sortDesc)
+    if(sortDesc) sortDescParam = sortDesc[0]
+
+    this.$client.listImportData(this.containerID, this.selectedImport!.id, itemsPerPage, itemsPerPage * pageNumber, sortParam, sortDescParam)
         .then((results) => {
           this.importData = results
-          this.dialog = true
+          this.importLoading = false
+
         })
         .catch((e: any) => this.errorMessage = e)
 
-      }
+  }
 
-      viewImportData(importData: ImportDataT) {
-          this.selectedData = importData.data
-          this.dataDialog = true
-      }
+  viewImportData(importData: ImportDataT) {
+      this.selectedData = importData.data
+      this.dataDialog = true
+  }
 
-      createTypeMapping(importData: ImportDataT) {
-          this.importDataMapping = importData
-          this.mappingDialog = true
-      }
+  editTypeMapping(importData: ImportDataT) {
+      this.importDataMapping = importData
+      this.mappingDialog = true
+  }
 
-      mappingCreated() {
-        this.mappingDialog = false
-        this.successMessage = "Type mapping successfully created, mapping may take up to a minute to be applied."
-
-
-        this.$client.listImportData(this.containerID, this.selectedImport!.id, 1000, 0)
-            .then((results) => {
-              this.importData = results
-            })
-            .catch((e: any) => this.dataErrorMessage= e)
-      }
-
-      deleteImportData(importData: ImportDataT) {
-        if(importData.inserted_at) {
-          this.dataErrorMessage= "Unable to delete data that has already been inserted"
-          return
-        }
-
-        this.$client.deleteImportData(this.containerID, importData.import_id, importData.id)
-            .then(() => {
-              this.$client.listImportData(this.containerID, importData.import_id, 1000, 0)
-                  .then((results) => {
-                    this.importData = results
-                  })
-                  .catch((e: any) => this.dataErrorMessage= e)
-            })
-            .catch((e: any) => this.dataErrorMessage= e)
-      }
+  deleteImportData(importData: ImportDataT) {
+    if(importData.inserted_at) {
+      this.dataErrorMessage= "Unable to delete data that has already been inserted"
+      return
     }
+
+    this.$client.deleteImportData(this.containerID, importData.import_id, importData.id)
+        .then(() => {
+          this.$client.listImportData(this.containerID, importData.import_id, 1000, 0)
+              .then((results) => {
+                this.importData = results
+              })
+              .catch((e: any) => this.dataErrorMessage= e)
+        })
+        .catch((e: any) => this.dataErrorMessage= e)
+  }
+}
 </script>

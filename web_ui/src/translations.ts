@@ -74,7 +74,15 @@ export default {
       mix: "Metatype & Relationship",
       originKey: "Parent Key",
       destinationKey: "Child Key",
-      originDestinationKeyHelp: "By selecting a Parent Key you determine that this record is a child of the value of that Parent Key, opposite is true of selecting a Child Key."
+      originDestinationKeyHelp: "By selecting a Parent Key you determine that this record is a child of the value of that Parent Key, opposite is true of selecting a Child Key.",
+      active:"Enable Type Mapping",
+      transformationsTableTitle: "Transformations",
+      typeMappingHelp: "The Type Mapping record and Transformation records are the workhorses of the type mapping system. A Type Mapping contains information as to which container and data source the type mapping belongs, a shape hash which is used to determine which objects to apply the type mapping to, and information denoting status. A Transformation belongs to a Type Mapping, and a Type Mapping can have as many Transformations as it wants. These are the individual actions that Deep Lynx should perform on an object matching a certain Type Mapping. Transformations are applied to an object to produce either a node or edge record, ready to be inserted into the Deep Lynx database."
+    },
+    typeTransformation: {
+      newTransformationButton:"Create New Transformation",
+      formTitle: "New Transformation",
+      currentDataSet: "Current Data Set"
     },
     login: {
       username: "Email",
@@ -168,7 +176,7 @@ export default {
       dataView: "Import Data",
       importTableTitle: "Import Data",
       viewData: "Raw Data",
-      createTypeMapping: "Create Type Mapping"
+      editTypeMapping: "Type Mapping"
     },
     containerInvite: {
       button: "Invite User to Container",

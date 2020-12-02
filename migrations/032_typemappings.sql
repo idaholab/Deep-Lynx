@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS data_type_mappings (
     shape_hash text NOT NULL,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     modified_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    sample_payload jsonb,
     UNIQUE(container_id, data_source_id, shape_hash)
 );
 
@@ -19,7 +20,7 @@ CREATE TABLE IF NOT EXISTS data_type_mapping_transformations (
     type_mapping_id uuid REFERENCES data_type_mappings(id) ON DELETE CASCADE,
     metatype_id uuid REFERENCES metatypes(id) ON DELETE CASCADE,
     metatype_relationship_pair_id uuid REFERENCES metatype_relationship_pairs(id) ON DELETE CASCADE,
-    conditions text[],
+    conditions jsonb,
     keys jsonb,
     origin_id_key text,
     destination_id_key text,

@@ -1,8 +1,7 @@
 import Result from "../../result"
 import PostgresStorage from "../postgresStorage";
 import {QueryConfig} from "pg";
-import PostgresAdapter from "../adapters/postgres/postgres";
-import {TypeMappingT, typeMappingT} from "../../types/import/typeMappingT";
+import {TypeMappingT} from "../../types/import/typeMappingT";
 
 /*
 * ImportAdapterStorage encompasses all logic dealing with the manipulation of the Import Adapter
@@ -21,9 +20,10 @@ export default class TypeMappingStorage extends PostgresStorage{
         return TypeMappingStorage.instance
     }
 
-    public async Create(containerID:string, dataSourceID:string, shapeHash: string): Promise<Result<TypeMappingT>> {
+    public async Create(containerID:string, dataSourceID:string, shapeHash: string, samplePayload: any): Promise<Result<TypeMappingT>> {
         const t = {
             id: super.generateUUID(),
+            sample_payload: samplePayload,
             container_id: containerID,
             data_source_id: dataSourceID,
             shape_hash: shapeHash,
@@ -41,6 +41,12 @@ export default class TypeMappingStorage extends PostgresStorage{
 
     public Retrieve(id: string): Promise<Result<TypeMappingT>> {
         return super.retrieve<TypeMappingT>(TypeMappingStorage.retrieveStatement(id))
+    }
+
+    // since the combination shape hash, data source, and container are a unique set
+    // we can confidently request a single object
+    public RetrieveByShapeHash(dataSourceID: string, shapeHash: string): Promise<Result<TypeMappingT>> {
+        return super.retrieve<TypeMappingT>(TypeMappingStorage.retrieveByShapeHashStatement(dataSourceID, shapeHash))
     }
 
     public List(containerID: string, offset: number, limit: number): Promise<Result<TypeMappingT[]>> {
@@ -69,8 +75,8 @@ export default class TypeMappingStorage extends PostgresStorage{
     // queries more easily.
     private static createStatement(imp: TypeMappingT): QueryConfig {
         return {
-            text:`INSERT INTO data_type_mappings(id,container_id,data_source_id,shape_hash,active) VALUES($1,$2,$3,$4,$5)`,
-            values: [imp.id,imp.container_id,imp.data_source_id,imp.shape_hash,imp.active]
+            text:`INSERT INTO data_type_mappings(id,container_id,data_source_id,shape_hash,active,sample_payload) VALUES($1,$2,$3,$4,$5,$6)`,
+            values: [imp.id,imp.container_id,imp.data_source_id,imp.shape_hash,imp.active, imp.sample_payload]
         }
     }
 
@@ -78,6 +84,13 @@ export default class TypeMappingStorage extends PostgresStorage{
         return {
             text:`SELECT * FROM data_type_mappings WHERE id = $1`,
             values: [exportID]
+        }
+    }
+
+    private static retrieveByShapeHashStatement(dataSourceID: string, shapeHash: string): QueryConfig {
+        return {
+            text:`SELECT * FROM data_type_mappings WHERE data_source_id = $1 AND shape_hash = $2`,
+            values: [dataSourceID, shapeHash]
         }
     }
 

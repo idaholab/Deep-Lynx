@@ -151,13 +151,5 @@ import DataTypeMapping from "@/components/dataTypeMapping.vue"
             }
         }
 
-      deleteItem(typeMapping: TypeMappingT) {
-        this.$client.deleteTypeMapping(this.containerID, this.selectedDataSource?.id!, typeMapping.id)
-            .then(()=> {
-              this.refreshTypeMappings()
-              this.successMessage = this.$t('dataMapping.successfullyDeleted') as string
-            })
-            .catch((e: any) => this.errorMessage = e)
-      }
     }
 </script>

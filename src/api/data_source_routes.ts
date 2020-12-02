@@ -10,7 +10,6 @@ import {
 } from "../api_handlers/data_source";
 import DataSourceStorage from "../data_storage/import/data_source_storage";
 import ImportStorage from "../data_storage/import/import_storage";
-import TypeMappingStorage from "../data_storage/import/type_mapping_storage";
 import DataStagingStorage from "../data_storage/import/data_staging_storage";
 import {Readable} from "stream";
 import FileDataStorage from "../data_storage/file_storage";
@@ -21,7 +20,8 @@ import Filesystem from "../file_storage/filesystem_impl";
 import MockFileStorageImpl from "../file_storage/mock_impl";
 import Result from "../result";
 import {FileT} from "../types/fileT";
-import TypeMappingFilter from "../data_storage/import/type_mapping_filter";
+import TypeMappingStorage from "../data_storage/import/type_mapping_storage";
+import TypeTransformationStorage from "../data_storage/import/type_transformation_storage";
 const Busboy = require('busboy');
 const fileUpload = require('express-fileupload')
 const csv=require('csvtojson')
@@ -50,6 +50,11 @@ export default class DataSourceRoutes {
         app.post('/containers/:id/import/datasources/:sourceID/files', ...middleware, authInContainer("write", "data"), this.uploadFile)
         app.get('/containers/:id/files/:fileID', ...middleware, authInContainer("read", "data"), this.getFile)
         app.get('/containers/:id/files/:fileID/download', ...middleware, authInContainer("read", "data"), this.downloadFile)
+
+        // type mapping and transformation routes
+        app.get('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.retrieveTypeMapping)
+        app.get('/containers/:id/import/datasources/:sourceID/mappings/:mappingID/transformations', ...middleware, authInContainer("write", "data"), this.retrieveTypeMappingTransformations)
+        app.post('/containers/:id/import/datasources/:sourceID/mappings/:mappingID/transformations', ...middleware, authInContainer("write", "data"), this.createTypeTransformation)
     }
 
     private static createDataSource(req: Request, res: Response, next: NextFunction) {
@@ -199,18 +204,46 @@ export default class DataSourceRoutes {
     }
 
     private static listDataForImport(req: Request, res: Response, next: NextFunction) {
-        // @ts-ignore
-        DataStagingStorage.Instance.List(req.params.importID, +req.query.offset, +req.query.limit)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
+        if(req.query.sortBy) {
+            // @ts-ignore
+            DataStagingStorage.Instance.ListAndSort(req.params.importID, +req.query.offset, +req.query.limit, req.query.sortBy, req.query.sortDesc === 'true')
+                .then((result:any) => {
+                    if (result.isError && result.error) {
+                        res.status(result.error.errorCode).json(result);
+                        return
+                    }
 
-                res.status(200).json(result)
-            })
-            .catch((err) => res.status(404).send(err))
-            .finally(() => next())
+                    res.status(200).json(result)
+                })
+                .catch((err:any) => res.status(404).send(err))
+                .finally(() => next())
+        } else if(req.query.count) {
+            DataStagingStorage.Instance.Count(req.params.importID)
+                .then((result) => {
+                    if (result.isError && result.error) {
+                        res.status(result.error.errorCode).json(result);
+                        return
+                    }
+
+                    res.status(200).json(result)
+                })
+                .catch((err) => res.status(404).send(err))
+                .finally(() => next())
+        } else {
+            // @ts-ignore
+            DataStagingStorage.Instance.List(req.params.importID, +req.query.offset, +req.query.limit)
+                .then((result) => {
+                    if (result.isError && result.error) {
+                        res.status(result.error.errorCode).json(result);
+                        return
+                    }
+
+                    res.status(200).json(result)
+                })
+                .catch((err) => res.status(404).send(err))
+                .finally(() => next())
+        }
+
     }
 
     // creeateManualImport will accept either a file or a raw JSON body
@@ -434,6 +467,49 @@ export default class DataSourceRoutes {
         })
 
         return req.pipe(busboy)
+    }
+
+    private static retrieveTypeMapping(req: Request, res: Response, next: NextFunction) {
+        TypeMappingStorage.Instance.Retrieve(req.params.mappingID)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(200).json(result)
+            })
+            .catch((err) => res.status(404).send(err))
+            .finally(() => next())
+    }
+
+    private static retrieveTypeMappingTransformations(req: Request, res: Response, next: NextFunction) {
+        TypeTransformationStorage.Instance.ListForTypeMapping(req.params.mappingID)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(200).json(result)
+            })
+            .catch((err) => res.status(404).send(err))
+            .finally(() => next())
+    }
+
+    private static createTypeTransformation(req: Request, res: Response, next: NextFunction) {
+        const user = req.user as UserT
+        TypeTransformationStorage.Instance.Create(req.params.mappingID, user.id!, req.body)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(201).json(result)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
     }
 }
 

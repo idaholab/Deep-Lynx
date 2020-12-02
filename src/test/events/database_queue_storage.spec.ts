@@ -11,6 +11,8 @@ import DataStagingStorage from "../../data_storage/import/data_staging_storage";
 import ImportStorage from "../../data_storage/import/import_storage";
 import ExportStorage from "../../data_storage/export/export_storage";
 import FileStorage from "../../data_storage/file_storage";
+import {objectToShapeHash} from "../../utilities";
+import TypeMappingStorage from "../../data_storage/import/type_mapping_storage";
 
 describe('Database Queue Event Creation', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -70,7 +72,15 @@ describe('Database Queue Event Creation', async() => {
         const importStorage = ImportStorage.Instance
 
         let imports = await importStorage.InitiateImport(dataSourceID, "test suite", "test")
-        await dsStorage.Create(dataSourceID, imports.value, test_raw_payload)
+
+
+        const shapeHash = objectToShapeHash(test_raw_payload)
+
+        let mapping = await TypeMappingStorage.Instance.Create(containerID, dataSourceID,shapeHash, test_raw_payload)
+
+        expect(mapping.isError).false
+
+        await dsStorage.Create(dataSourceID, imports.value, mapping.value.id, test_raw_payload)
 
         let task = await storage.List();
         expect(task).not.empty;
@@ -102,7 +112,7 @@ describe('Database Queue Event Creation', async() => {
         const storage = QueueStorage.Instance;
         const eStorage = ExportStorage.Instance;
 
-        const dataExport = await eStorage.Create(containerID, "test suite", 
+        const dataExport = await eStorage.Create(containerID, "test suite",
             {container_id: containerID, adapter:"gremlin", config: {}})
 
         expect(dataExport.isError).false;
