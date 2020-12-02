@@ -1,15 +1,11 @@
 import express from "express"
-import passportSaml from "passport-saml"
 import passport from "passport";
 import * as fs from "fs";
-
 import {UserT} from "../../../types/user_management/userT";
 import Config from "../../../config"
 import UserStorage from "../../../data_storage/user_management/user_storage";
 import Result from "../../../result";
-
-
-const SamlStrategy = passportSaml.Strategy;
+const SamlStrategy = require('passport-saml').Strategy
 
 export function SetSamlAdfs(app: express.Application) {
     // do not set the auth strategy if we don't have a public/private key pair.

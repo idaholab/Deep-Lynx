@@ -106,7 +106,7 @@ function makeStore() {
     username: connectionObject.username!,
     password: connectionObject.password!,
     dbname: connectionObject.endpoint!,
-    tableName: Config.queue_table_name
+    tableName: "queue_tasks"
   };
 
   return store;

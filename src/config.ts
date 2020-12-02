@@ -65,7 +65,6 @@ export class Config {
 
   private readonly _queue_system: string;
   private readonly _queue_poll_interval: number;
-  private readonly _queue_table_name: string;
 
   private readonly _smtp_username: string;
   private readonly _smtp_password: string;
@@ -141,7 +140,6 @@ export class Config {
 
     this._queue_system = process.env.QUEUE_SYSTEM || "database";
     this._queue_poll_interval = (process.env.QUEUE_POLL_INTERVAL) ? parseInt(process.env.QUEUE_POLL_INTERVAL!, 10) : 1000
-    this._queue_table_name= process.env.QUEUE_TABLE_NAME|| "queue_tasks";
 
     this._smtp_username = process.env.SMTP_USERNAME || ""
     this._smtp_password = process.env.SMTP_PASSWORD || ""
@@ -248,10 +246,6 @@ export class Config {
 
   get queue_poll_interval(): number {
     return this._queue_poll_interval;
-  }
-
-  get queue_table_name(): string {
-    return this._queue_table_name;
   }
 
   get session_secret(): string {
