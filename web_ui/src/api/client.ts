@@ -12,14 +12,12 @@ import {
    MetatypeRelationshipT,
    MetatypeRelationshipKeyT,
    MetatypeRelationshipPairT,
-   ResetPasswordPayloadT,
-   NewUserPayloadT,
    UserContainerInviteT,
    TypeMappingTransformationPayloadT,
    TypeMappingTransformationT,
 } from "@/api/types";
 import {RetrieveJWT} from "@/auth/authentication_service";
-import {KeyPairT, UserT} from "@/auth/types";
+import {UserT} from "@/auth/types";
 import buildURL from 'build-url'
 const axios = require('axios').default;
 
@@ -221,10 +219,6 @@ export class Client {
       return this.get<number>(`/containers/${containerID}/import/datasources/${dataSouceID}/mappings/unmapped/count`)
    }
 
-   getUnmappedData(containerID: string, dataSourceID: string): Promise<{[key: string]: any}> {
-       return this.get<{[key: string]: any}>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/unmapped/data`)
-   }
-
    listImports(containerID: string, dataSourceID: string): Promise<ImportT[]> {
       return this.get<ImportT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`)
    }
@@ -299,6 +293,18 @@ export class Client {
 
    retrieveTypeMapping(containerID: string, dataSourceID: string, typeMappingID: string): Promise<TypeMappingT> {
       return this.get<TypeMappingT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`)
+   }
+
+   updateTypeMapping(containerID: string, dataSourceID: string, typeMappingID: string, mapping: TypeMappingT): Promise<boolean> {
+      return this.putNoData(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`, mapping)
+   }
+
+   retrieveTransformations(containerID: string, dataSourceID: string, typeMappingID: string): Promise<TypeMappingTransformationT[]> {
+      return this.get<TypeMappingTransformationT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations`)
+   }
+
+   deleteTransformation(containerID: string, dataSourceID: string, typeMappingID: string, tranformationID: string): Promise<boolean> {
+      return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations/${tranformationID}`)
    }
 
    private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {
@@ -497,6 +503,27 @@ export class Client {
          if(resp.data.isError) reject(resp.data.value)
 
          resolve(resp.data.value as T)
+      })
+   }
+
+   private async putNoData(uri: string, data: any): Promise<boolean> {
+      const config: {[key: string]: any} = {}
+      config.headers = {"Access-Control-Allow-Origin": "*"}
+
+      if(this.config?.auth_method === "token") {
+         config.headers = {"Authorization": `Bearer ${RetrieveJWT()}`}
+      }
+
+      if(this.config?.auth_method === "basic") {
+         config.auth = {username: this.config.username, password: this.config.password}
+      }
+
+      const resp: AxiosResponse = await axios.put(buildURL(this.config?.rootURL!, {path: uri}), data, config)
+
+      return new Promise((resolve, reject) => {
+         if(resp.status < 200 || resp.status > 299) reject(resp.status)
+
+         resolve(true)
       })
    }
 }

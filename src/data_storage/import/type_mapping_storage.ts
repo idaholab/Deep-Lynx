@@ -2,6 +2,9 @@ import Result from "../../result"
 import PostgresStorage from "../postgresStorage";
 import {QueryConfig} from "pg";
 import {TypeMappingT} from "../../types/import/typeMappingT";
+import PostgresAdapter from "../adapters/postgres/postgres";
+import {QueueProcessor} from "../../services/event_system/events";
+import {EventT} from "../../types/events/eventT";
 
 /*
 * ImportAdapterStorage encompasses all logic dealing with the manipulation of the Import Adapter
@@ -37,6 +40,38 @@ export default class TypeMappingStorage extends PostgresStorage{
         }
 
         return new Promise(resolve => resolve(Result.Success(t as TypeMappingT)))
+    }
+
+    // Update partially updates the exports. This function will allow you to
+    // rewrite foreign keys - this is by design. The storage layer is dumb, whatever
+    // uses the storage layer should be what enforces user privileges etc.
+    public async Update(id: string, userID: string, updatedField: {[key:string]: any}): Promise<Result<boolean>> {
+        const toUpdate = await this.Retrieve(id);
+
+        if(toUpdate.isError) {
+            return new Promise(resolve => resolve(Result.Failure(toUpdate.error!.error)))
+        }
+
+        const updateStatement:string[] = [];
+        const values:string[] = [];
+        let i = 1;
+
+        Object.keys(updatedField).map(k => {
+            updateStatement.push(`${k} = $${i}`);
+            values.push(updatedField[k]);
+            i++
+        });
+
+        return new Promise(resolve => {
+            PostgresAdapter.Instance.Pool.query({
+                text: `UPDATE data_type_mappings SET ${updateStatement.join(",")} WHERE id = '${id}'`,
+                values
+            })
+                .then(() => {
+                    resolve(Result.Success(true))
+                })
+                .catch(e => resolve(Result.Failure(e)))
+        })
     }
 
     public Retrieve(id: string): Promise<Result<TypeMappingT>> {
@@ -76,7 +111,7 @@ export default class TypeMappingStorage extends PostgresStorage{
     private static createStatement(imp: TypeMappingT): QueryConfig {
         return {
             text:`INSERT INTO data_type_mappings(id,container_id,data_source_id,shape_hash,active,sample_payload) VALUES($1,$2,$3,$4,$5,$6)`,
-            values: [imp.id,imp.container_id,imp.data_source_id,imp.shape_hash,imp.active, imp.sample_payload]
+            values: [imp.id,imp.container_id,imp.data_source_id,imp.shape_hash,imp.active, JSON.stringify(imp.sample_payload)]
         }
     }
 

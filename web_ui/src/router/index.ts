@@ -22,7 +22,7 @@ const routes = [
   },
   {
     path: '/containers/:containerID/:view',
-    name: 'Home',
+    name: 'Home View',
     component: Home,
     props: true
   },

@@ -150,6 +150,7 @@ export type TypeMappingT = {
     container_id: string;
     active: boolean;
     shape_hash: string;
+    sample_payload: object;
     created_at: string;
     modified_at: string;
 }

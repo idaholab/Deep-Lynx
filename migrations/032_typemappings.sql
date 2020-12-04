@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS data_type_mapping_transformations (
     origin_id_key text,
     destination_id_key text,
     unique_identifier_key text,
+    root_array text,
     on_conflict on_conflict_type,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     modified_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

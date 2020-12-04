@@ -104,14 +104,20 @@ export default class TypeTransformationStorage extends PostgresStorage{
     // queries more easily.
     private static createStatement(tt: TypeTransformationT): QueryConfig {
         return {
-            text:`INSERT INTO data_type_mapping_transformations(id,keys,type_mapping_id,conditions,metatype_id, metatype_relationship_pair_id,origin_id_key,destination_id_key,unique_identifier_key,on_conflict,created_by,modified_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
-            values: [tt.id,JSON.stringify(tt.keys),tt.type_mapping_id,JSON.stringify(tt.conditions),tt.metatype_id,tt.metatype_relationship_pair_id,tt.origin_id_key,tt.destination_id_key,tt.unique_identifier_key,tt.on_conflict,tt.created_by,tt.modified_by]
+            text:`INSERT INTO data_type_mapping_transformations(id,keys,type_mapping_id,conditions,metatype_id, metatype_relationship_pair_id,origin_id_key,destination_id_key,unique_identifier_key,on_conflict,created_by,modified_by,root_array) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+            values: [tt.id,JSON.stringify(tt.keys),tt.type_mapping_id,JSON.stringify(tt.conditions),tt.metatype_id,tt.metatype_relationship_pair_id,tt.origin_id_key,tt.destination_id_key,tt.unique_identifier_key,tt.on_conflict,tt.created_by,tt.modified_by,tt.root_array]
         }
     }
 
     private static retrieveStatement(transformationID:string): QueryConfig {
         return {
-            text:`SELECT * FROM data_type_mapping_transformations WHERE id = $1`,
+            text:`SELECT data_type_mapping_transformations.*,
+                         metatypes.name as metatype_name,
+                         metatype_relationship_pairs.name as metatype_relationship_pair_name
+                  FROM data_type_mapping_transformations
+                  LEFT JOIN metatypes ON data_type_mapping_transformations.metatype_id = metatypes.id
+                  LEFT JOIN metatype_relationship_pairs ON data_type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id
+                  WHERE id = $1`,
             values: [transformationID]
         }
     }
@@ -125,7 +131,13 @@ export default class TypeTransformationStorage extends PostgresStorage{
 
     private static listByMapping(typeMappingID: string): QueryConfig {
         return {
-            text: `SELECT * FROM data_type_mapping_transformations WHERE type_mapping_id = $1`,
+            text: `SELECT data_type_mapping_transformations.*,
+                          metatypes.name as metatype_name,
+                          metatype_relationship_pairs.name as metatype_relationship_pair_name
+                    FROM data_type_mapping_transformations
+                    LEFT JOIN metatypes ON data_type_mapping_transformations.metatype_id = metatypes.id
+                    LEFT JOIN metatype_relationship_pairs ON data_type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id
+                    WHERE type_mapping_id = $1`,
             values: [typeMappingID]
         }
     }

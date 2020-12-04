@@ -155,7 +155,7 @@ import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import {DataSourceT, ImportDataT, ImportT} from "@/api/types";
 import ImportDataDialog from "@/components/importDataDialog.vue";
 import DataTypeMapping from "@/components/dataTypeMapping.vue"
-import NewTransformationDialog from "@/components/newTransformationDialog.vue";
+import TransformationDialog from "@/components/transformationDialog.vue";
 
 
 @Component({filters: {
@@ -166,7 +166,7 @@ import NewTransformationDialog from "@/components/newTransformationDialog.vue";
       components: {
         ImportDataDialog,
         DataTypeMapping,
-        NewTransformationDialog
+        TransformationDialog
       }
 })
 export default class DataImports extends Vue {
@@ -293,7 +293,6 @@ export default class DataImports extends Vue {
 
     const pageNumber = page - 1;
     if(sortBy && sortBy.length >= 1) sortParam = sortBy[0]
-    console.log(sortDesc)
     if(sortDesc) sortDescParam = sortDesc[0]
 
     this.$client.listImportData(this.containerID, this.selectedImport!.id, itemsPerPage, itemsPerPage * pageNumber, sortParam, sortDescParam)

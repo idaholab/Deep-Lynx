@@ -7,7 +7,16 @@ import {DateFromISOString} from "io-ts-types/DateFromISOString";
 const keyMapping = t.partial({
     key: t.string,
     metatype_key_id: t.string,
-    metatype_relationship_key_id: t.string
+    metatype_relationship_key_id: t.string,
+    value: t.unknown,
+    value_type:  t.union([
+        t.literal('number'),
+        t.literal('date'),
+        t.literal('string'),
+        t.literal('boolean'),
+        t.literal('enumeration'),
+        t.literal('file')
+    ]),
 })
 
 export const typeMappingT = t.type({
@@ -53,6 +62,7 @@ const typeTransformationOptional = t.partial({
     metatype_relationship_pair_id: t.string,
     origin_id_key: t.string,
     destination_id_key: t.string,
+    root_array: t.string, // allows the user to specify that this transformation be applied to all objects in an array
 
     unique_identifier_key: t.string,
     on_conflict: t.keyof({

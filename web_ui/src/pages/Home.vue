@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div v-if="container">
       <error-banner :message="errorMessage"></error-banner>
       <v-navigation-drawer
             v-model="drawer"
@@ -180,11 +180,11 @@
             <language-select class="pt-2" style="max-width:125px;"></language-select>
         </v-app-bar>
 
-        <v-content style="padding: 64px 0px 36px 36px">
+        <v-main style="padding: 64px 0px 36px 36px">
             <v-container>
                 <component v-bind:is="currentMainComponent" :containerID="containerID"></component>
             </v-container>
-        </v-content>
+        </v-main>
     </div>
 </template>
 

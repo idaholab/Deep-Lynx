@@ -28,24 +28,24 @@ const csv=require('csvtojson')
 
 // This contains all routes pertaining to DataSources and type mappings.
 export default class DataSourceRoutes {
-    public static mount(app: Application, middleware:any[]) {
-        app.post("/containers/:id/import/datasources",...middleware, authInContainer("write", "data"),this.createDataSource);
-        app.get("/containers/:id/import/datasources",...middleware, authInContainer("read", "data"),this.listDataSources);
-        app.get("/containers/:id/import/datasources/:sourceID",...middleware, authInContainer("read", "data"),this.retrieveDataSource);
-        app.put("/containers/:id/import/datasources/:sourceID",...middleware, authInContainer("read", "data"),this.setConfiguration);
-        app.delete("/containers/:id/import/datasources/:sourceID",...middleware, authInContainer("read", "data"),this.deleteDataSource);
+    public static mount(app: Application, middleware: any[]) {
+        app.post("/containers/:id/import/datasources", ...middleware, authInContainer("write", "data"), this.createDataSource);
+        app.get("/containers/:id/import/datasources", ...middleware, authInContainer("read", "data"), this.listDataSources);
+        app.get("/containers/:id/import/datasources/:sourceID", ...middleware, authInContainer("read", "data"), this.retrieveDataSource);
+        app.put("/containers/:id/import/datasources/:sourceID", ...middleware, authInContainer("read", "data"), this.setConfiguration);
+        app.delete("/containers/:id/import/datasources/:sourceID", ...middleware, authInContainer("read", "data"), this.deleteDataSource);
 
-        app.post("/containers/:id/import/datasources/:sourceID/active",...middleware, authInContainer("read", "data"),this.setActive);
-        app.delete("/containers/:id/import/datasources/:sourceID/active",...middleware, authInContainer("read", "data"),this.setInactive);
+        app.post("/containers/:id/import/datasources/:sourceID/active", ...middleware, authInContainer("read", "data"), this.setActive);
+        app.delete("/containers/:id/import/datasources/:sourceID/active", ...middleware, authInContainer("read", "data"), this.setInactive);
 
-        app.get("/containers/:id/import/datasources/:sourceID/imports",...middleware, authInContainer("read", "data"),this.listDataSourcesImports);
-        app.post("/containers/:id/import/datasources/:sourceID/imports",...middleware, fileUpload({limits:{fileSize: 50 * 6024 * 6024}}), authInContainer("write", "data"),this.createManualImport);
+        app.get("/containers/:id/import/datasources/:sourceID/imports", ...middleware, authInContainer("read", "data"), this.listDataSourcesImports);
+        app.post("/containers/:id/import/datasources/:sourceID/imports", ...middleware, fileUpload({limits: {fileSize: 50 * 6024 * 6024}}), authInContainer("write", "data"), this.createManualImport);
 
-        app.delete("/containers/:id/import/imports/:importID",...middleware, authInContainer("write", "data"),this.deleteImport);
-        app.get("/containers/:id/import/imports/:importID/data",...middleware, authInContainer("read", "data"),this.listDataForImport);
-        app.get("/containers/:id/import/imports/:importID/data/:dataID",...middleware, authInContainer("read", "data"),this.getImportData);
-        app.put("/containers/:id/import/imports/:importID/data/:dataID",...middleware, authInContainer("write", "data"),this.updateImportData);
-        app.delete("/containers/:id/import/imports/:importID/data/:dataID",...middleware, authInContainer("write", "data"),this.deleteImportData);
+        app.delete("/containers/:id/import/imports/:importID", ...middleware, authInContainer("write", "data"), this.deleteImport);
+        app.get("/containers/:id/import/imports/:importID/data", ...middleware, authInContainer("read", "data"), this.listDataForImport);
+        app.get("/containers/:id/import/imports/:importID/data/:dataID", ...middleware, authInContainer("read", "data"), this.getImportData);
+        app.put("/containers/:id/import/imports/:importID/data/:dataID", ...middleware, authInContainer("write", "data"), this.updateImportData);
+        app.delete("/containers/:id/import/imports/:importID/data/:dataID", ...middleware, authInContainer("write", "data"), this.deleteImportData);
 
         app.post('/containers/:id/import/datasources/:sourceID/files', ...middleware, authInContainer("write", "data"), this.uploadFile)
         app.get('/containers/:id/files/:fileID', ...middleware, authInContainer("read", "data"), this.getFile)
@@ -53,12 +53,14 @@ export default class DataSourceRoutes {
 
         // type mapping and transformation routes
         app.get('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.retrieveTypeMapping)
+        app.put('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.updateMapping)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/:mappingID/transformations', ...middleware, authInContainer("write", "data"), this.retrieveTypeMappingTransformations)
         app.post('/containers/:id/import/datasources/:sourceID/mappings/:mappingID/transformations', ...middleware, authInContainer("write", "data"), this.createTypeTransformation)
+        app.delete('/containers/:id/import/datasources/:sourceID/mappings/:mappingID/transformations/:transformationID', ...middleware, authInContainer("write", "data"), this.deleteTypeTransformation)
     }
 
     private static createDataSource(req: Request, res: Response, next: NextFunction) {
-        NewDataSource(req.user as UserT,req.params.id, req.body)
+        NewDataSource(req.user as UserT, req.params.id, req.body)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -72,7 +74,7 @@ export default class DataSourceRoutes {
     }
 
     private static setConfiguration(req: Request, res: Response, next: NextFunction) {
-        SetDataSourceConfiguration(req.user as UserT,req.params.sourceID, req.body)
+        SetDataSourceConfiguration(req.user as UserT, req.params.sourceID, req.body)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -95,7 +97,7 @@ export default class DataSourceRoutes {
 
                 // TODO: slightly hacky, might be a better way of doing this.
                 // this is needed to remove encrypted data from the return
-                if(result.value.config) {
+                if (result.value.config) {
                     // @ts-ignore
                     delete result.value.config.token
                     // @ts-ignore
@@ -150,10 +152,10 @@ export default class DataSourceRoutes {
                     return
                 }
 
-                for(const i in result.value) {
+                for (const i in result.value) {
                     // TODO: slightly hacky, might be a better way of doing this.
                     // this is needed to remove encrypted data from the return
-                    if(result.value[i].config) {
+                    if (result.value[i].config) {
                         // @ts-ignore
                         delete result.value[i].config.token
                         // @ts-ignore
@@ -204,10 +206,10 @@ export default class DataSourceRoutes {
     }
 
     private static listDataForImport(req: Request, res: Response, next: NextFunction) {
-        if(req.query.sortBy) {
+        if (req.query.sortBy) {
             // @ts-ignore
             DataStagingStorage.Instance.ListAndSort(req.params.importID, +req.query.offset, +req.query.limit, req.query.sortBy, req.query.sortDesc === 'true')
-                .then((result:any) => {
+                .then((result: any) => {
                     if (result.isError && result.error) {
                         res.status(result.error.errorCode).json(result);
                         return
@@ -215,9 +217,9 @@ export default class DataSourceRoutes {
 
                     res.status(200).json(result)
                 })
-                .catch((err:any) => res.status(404).send(err))
+                .catch((err: any) => res.status(404).send(err))
                 .finally(() => next())
-        } else if(req.query.count) {
+        } else if (req.query.count) {
             DataStagingStorage.Instance.Count(req.params.importID)
                 .then((result) => {
                     if (result.isError && result.error) {
@@ -248,7 +250,7 @@ export default class DataSourceRoutes {
 
     // creeateManualImport will accept either a file or a raw JSON body
     private static createManualImport(req: Request, res: Response, next: NextFunction) {
-        if(Object.keys(req.body).length !== 0) {
+        if (Object.keys(req.body).length !== 0) {
             ManualJsonImport(req.user as UserT, req.params.sourceID, req.body)
                 .then((result) => {
                     if (result.isError && result.error) {
@@ -261,7 +263,7 @@ export default class DataSourceRoutes {
                 .catch((err) => res.status(404).send(err))
                 .finally(() => next())
             // @ts-ignore
-        } else if(req.files.import.mimetype === "application/json" ) {
+        } else if (req.files.import.mimetype === "application/json") {
             // @ts-ignore
             ManualJsonImport(req.user as UserT, req.params.sourceID, JSON.parse(req.files.import.data))
                 .then((result) => {
@@ -276,22 +278,22 @@ export default class DataSourceRoutes {
                 .finally(() => next())
         }
         // @ts-ignore - we have to handle microsoft's excel csv type, as when you save a csv file using excel the mimetype is different than text/csv
-        else if(req.files.import.mimetype === "text/csv" || req.files.import.mimetype === "application/vnd.ms-excel") {
+        else if (req.files.import.mimetype === "text/csv" || req.files.import.mimetype === "application/vnd.ms-excel") {
             // @ts-ignore
-           csv().fromString(req.files.import.data.toString())
-               .then((json: any) => {
-                   ManualJsonImport(req.user as UserT, req.params.sourceID, json)
-                       .then((result) => {
-                           if (result.isError && result.error) {
-                               res.status(result.error.errorCode).json(result);
-                               return
-                           }
+            csv().fromString(req.files.import.data.toString())
+                .then((json: any) => {
+                    ManualJsonImport(req.user as UserT, req.params.sourceID, json)
+                        .then((result) => {
+                            if (result.isError && result.error) {
+                                res.status(result.error.errorCode).json(result);
+                                return
+                            }
 
-                           res.status(200).json(result)
-                       })
-                       .catch((err) => res.status(404).send(err))
-                       .finally(() => next())
-               })
+                            res.status(200).json(result)
+                        })
+                        .catch((err) => res.status(404).send(err))
+                        .finally(() => next())
+                })
         } else {
             res.sendStatus(500)
             next()
@@ -348,7 +350,7 @@ export default class DataSourceRoutes {
                 }
                 res.status(200).json(updated)
             })
-            .catch((updated:any) => res.status(500).send(updated))
+            .catch((updated: any) => res.status(500).send(updated))
     }
 
     private static getFile(req: Request, res: Response, next: NextFunction) {
@@ -368,14 +370,14 @@ export default class DataSourceRoutes {
     private static downloadFile(req: Request, res: Response, next: NextFunction) {
         FileDataStorage.Instance.DomainRetrieve(req.params.fileID, req.params.id)
             .then(file => {
-                if(file.isError) {
-                   res.status(500).send(file.error)
-                   return
+                if (file.isError) {
+                    res.status(500).send(file.error)
+                    return
                 }
 
                 let fileStorageInstance: FileStorage
 
-                switch(file.value.adapter) {
+                switch (file.value.adapter) {
                     case "azure_blob": {
                         fileStorageInstance = new AzureBlobImpl(Config.azure_blob_connection_string, Config.azure_blob_container_name)
 
@@ -411,9 +413,9 @@ export default class DataSourceRoutes {
 
     private static async uploadFile(req: Request, res: Response, next: NextFunction) {
         const fileNames: string[] = []
-        const files:  Promise<Result<FileT>>[] = []
+        const files: Promise<Result<FileT>>[] = []
         const busboy = new Busboy({headers: req.headers})
-        const metadata: {[key: string]: any} = {}
+        const metadata: { [key: string]: any } = {}
         let metadataFieldCount = 0;
 
         // upload the file to the relevant file storage provider, saving the file name
@@ -428,7 +430,7 @@ export default class DataSourceRoutes {
 
         // hold on to the field data, we consider this metadata and will create
         // a record to be ingested by deep lynx once the busboy finishes parsing
-        busboy.on('field', (fieldName: string, value: any, fieldNameTruncated: boolean, encoding: string, mimetype:string) => {
+        busboy.on('field', (fieldName: string, value: any, fieldNameTruncated: boolean, encoding: string, mimetype: string) => {
             metadata[fieldName] = value
             metadataFieldCount++
         })
@@ -437,7 +439,7 @@ export default class DataSourceRoutes {
             // if there is no additional metadata we do not not create information
             // to be processed by Deep Lynx, simply store the file and make it available
             // via the normal file querying channels
-            if(metadataFieldCount === 0) {
+            if (metadataFieldCount === 0) {
                 Promise.all(files)
                     .then((results) => {
                         res.status(200).json(results)
@@ -447,7 +449,7 @@ export default class DataSourceRoutes {
             } else {
                 // update the passed meta information with the file name deep lynx
                 // has stored it under
-                for(const i in fileNames) metadata[`deep-lynx-file-${i}`] = fileNames[i]
+                for (const i in fileNames) metadata[`deep-lynx-file-${i}`] = fileNames[i]
                 const user = req.user as UserT
 
                 // create an "import" with a single object, the metadata and file information
@@ -500,6 +502,36 @@ export default class DataSourceRoutes {
     private static createTypeTransformation(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT
         TypeTransformationStorage.Instance.Create(req.params.mappingID, user.id!, req.body)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(201).json(result)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static deleteTypeTransformation(req: Request, res: Response, next: NextFunction) {
+        TypeTransformationStorage.Instance.PermanentlyDelete(req.params.transformationID)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(201).json(result)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static updateMapping(req: Request, res: Response, next: NextFunction) {
+        const user = req.user as UserT
+
+        TypeMappingStorage.Instance.Update(req.params.mappingID, user.id!, req.body)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);

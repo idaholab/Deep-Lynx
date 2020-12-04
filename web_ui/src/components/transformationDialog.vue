@@ -1,7 +1,8 @@
 <template>
     <v-dialog v-model="dialog" @click:outside="reset">
         <template v-slot:activator="{ on }">
-            <v-btn color="primary" dark class="mb-2" v-on="on">{{$t("typeTransformation.newTransformationButton")}}</v-btn>
+          <v-btn v-if="!transformation" color="primary" dark class="mb-2" v-on="on">{{$t("dataMapping.newTransformationButton")}}</v-btn>
+          <v-btn v-if="transformation" color="primary" dark class="mb-2" v-on="on">{{$t("dataMapping.editTransformationButton")}}</v-btn>
         </template>
         <v-card>
             <v-card-title>
@@ -12,13 +13,25 @@
             <v-card-text>
               <v-row>
                 <v-col :cols="6" >
-                  <h2>Create New Transformation</h2>
+                  <h2>{{$t("dataMapping.createNewTransformation")}}</h2>
                   <v-divider></v-divider>
-                  <h3 style="padding-top: 10px">Conditions <info-tooltip :message="$t('dataMapping.uniqueKeyHelp')"></info-tooltip></h3>
+                    <v-row v-if="payloadArrayKeys.length > 0">
+                      <v-col :cols="6">
+                        <v-select
+                            :items="payloadArrayKeys"
+                            v-model="rootArray"
+                        >
+
+                          <template v-slot:label>{{$t('dataMapping.rootArray')}} <small>{{$t('dataMapping.optional')}}</small></template>
+                          <template slot="append-outer"><info-tooltip :message="$t('dataMapping.rootArrayHelp')"></info-tooltip> </template>
+                        </v-select>
+                      </v-col>
+                    </v-row>
+                  <h3 style="padding-top: 10px">{{$t("dataMapping.conditions")}} <small>{{$t("dataMapping.optional")}}</small> <info-tooltip :message="$t('dataMapping.conditionsHelp')"></info-tooltip></h3>
                   <v-data-table
                       :single-expand="true"
                       :expanded.sync="expanded"
-                      :headers="conditionsHeader"
+                      :headers="conditionsHeader()"
                       :items="conditions"
                       item-key="value"
                       show-expand
@@ -33,9 +46,9 @@
                      </template>
                      <template v-slot:expanded-item="{headers, item}">
                        <td :colspan="headers.length">
-                         <h3>Subexpressions</h3>
+                         <h3>{{$t("dataMapping.subexpressions")}} <small>{{$t("dataMapping.optional")}}</small> <info-tooltip :message="$t('dataMapping.subexpressionsHelp')"></info-tooltip></h3>
                           <v-data-table
-                              :headers="subexpressionHeader"
+                              :headers="subexpressionHeader()"
                               :items="item.subexpressions"
                               :hide-default-footer="true"
                           >
@@ -55,11 +68,11 @@
                                    :items="expressions"
                                    :rules="[v => !!v || 'Select one']"
                                    v-model="subexpressionExpression"
-                                   label="Expression"
+                                   :label="$t('dataMapping.expression')"
                                    required
                                >
 
-                                 <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueKeyHelp')"></info-tooltip> </template>
+                                 <template slot="append-outer"><info-tooltip :message="$t('dataMapping.expressionHelp')"></info-tooltip> </template>
                                </v-select>
                              </v-col>
                              <v-col :cols="3">
@@ -67,11 +80,11 @@
                                    :items="payloadKeys"
                                    :rules="[v => !!v || 'Select one']"
                                    v-model="subexpressionKey"
-                                   label="Key"
+                                   :label="$t('dataMapping.key')"
                                    required
                                >
 
-                                 <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueKeyHelp')"></info-tooltip> </template>
+                                 <template slot="append-outer"><info-tooltip :message="$t('dataMapping.keyHelp')"></info-tooltip> </template>
                                </v-select>
                              </v-col>
                              <v-col :cols="3">
@@ -80,18 +93,18 @@
                                    :rules="[v => !!v || 'Select one']"
                                    v-model="subexpressionOperator"
                                    :return-object="true"
-                                   label="Operator"
+                                   :label="$t('dataMapping.operator')"
                                    required
                                >
 
-                                 <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueKeyHelp')"></info-tooltip> </template>
+                                 <template slot="append-outer"><info-tooltip :message="$t('dataMapping.operatorHelp')"></info-tooltip> </template>
                                </v-select>
                              </v-col>
                              <v-col :cols="3">
                                <v-text-field
                                    v-model="subexpressionValue"
                                    :disabled="subexpressionOperator && !subexpressionOperator.requiresValue"
-                                   label="Value">
+                                   :label="$t('dataMapping.value')">
 
                                </v-text-field>
                                <v-btn :disabled="!subexpressionFormValid" @click="addSubexpression(item)">Add</v-btn>
@@ -110,11 +123,11 @@
                             :items="payloadKeys"
                             v-model="conditionKey"
                             :rules="[v => !!v || 'Select one']"
-                            label="Key"
+                            :label="$t('dataMapping.key')"
                             required
                         >
 
-                          <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueKeyHelp')"></info-tooltip> </template>
+                          <template slot="append-outer"><info-tooltip :message="$t('dataMapping.keyHelp')"></info-tooltip> </template>
                         </v-select>
                       </v-col>
                       <v-col :cols="4">
@@ -123,21 +136,21 @@
                             v-model="conditionOperator"
                             :return-object="true"
                             :rules="[v => !!v || 'Select one']"
-                            label="Operator"
+                            :label="$t('dataMapping.operator')"
                             required
                         >
 
-                          <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueKeyHelp')"></info-tooltip> </template>
+                          <template slot="append-outer"><info-tooltip :message="$t('dataMapping.operatorHelp')"></info-tooltip> </template>
                         </v-select>
                       </v-col>
                       <v-col :cols="4">
                         <v-text-field
                           v-model="conditionValue"
                           :disabled="conditionOperator && !conditionOperator.requiresValue"
-                          label="Value">
+                          :label="$t('dataMapping.value')">
 
                         </v-text-field>
-                        <v-btn :disabled="!conditionFormValid" @click="addCondition">Add Condition</v-btn>
+                        <v-btn :disabled="!conditionFormValid" @click="addCondition">{{$t("dataMapping.addCondition")}}</v-btn>
                       </v-col>
                     </v-row>
 
@@ -147,28 +160,7 @@
                       ref="mainForm"
                       v-model="mainFormValid"
                   >
-                    <v-row>
-                      <v-col>
-                        <v-select
-                            :items="payloadKeys"
-                            v-model="uniqueIdentifierKey"
-                        >
-                          <template v-slot:label>{{$t('dataMapping.uniqueIdentifierKey')}} <small>optional</small></template>
 
-                        </v-select>
-                      </v-col>
-                      <v-col>
-                        <v-select
-                            :items="onConflictOptions"
-                            v-model="onConflict"
-                            :label="$t('dataMapping.onConflict')"
-                            :disabled="!uniqueIdentifierKey"
-                        >
-
-                          <template slot="append-outer"><info-tooltip :message="$t('dataMapping.originDestinationKeyHelp')"></info-tooltip> </template>
-                        </v-select>
-                      </v-col>
-                    </v-row>
                     <v-select
                         :items="payloadTypes()"
                         v-model="payloadType"
@@ -195,32 +187,86 @@
                       </v-autocomplete>
 
                       <div v-if="selectedMetatype !== null">
+                        <v-row>
+                          <v-col>
+                            <v-select
+                                v-if="!rootArray"
+                                :items="payloadKeys"
+                                v-model="uniqueIdentifierKey"
+                                clearable
+                            >
+
+                              <template v-slot:label>{{$t('dataMapping.uniqueIdentifierKey')}} <small>{{$t('dataMapping.optional')}}</small></template>
+                              <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueIdentifierHelp')"></info-tooltip> </template>
+                            </v-select>
+                            <v-select
+                                v-if="rootArray"
+                                :items="rootArrayKeys"
+                                v-model="uniqueIdentifierKey"
+                                clearable
+                            >
+                              <template v-slot:label>{{$t('dataMapping.rootArrayUniqueIdentifierKey')}} <small>{{$t('dataMapping.optional')}}</small></template>
+                              <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueIdentifierHelp')"></info-tooltip> </template>
+                            </v-select>
+                          </v-col>
+                          <v-col>
+                            <v-select
+                                :items="onConflictOptions"
+                                v-model="onConflict"
+                                :label="$t('dataMapping.onConflict')"
+                                :disabled="!uniqueIdentifierKey"
+                                clearable
+                            >
+
+                              <template slot="append-outer"><info-tooltip :message="$t('dataMapping.onConflictHelp')"></info-tooltip> </template>
+                            </v-select>
+                          </v-col>
+
+                        </v-row>
                         <br>
+
+                        <v-row v-if="keysLoading">
+                          <v-col :cols="12">
+                            <v-progress-linear
+                                indeterminate
+                                color="orange"
+                            ></v-progress-linear>
+                          </v-col>
+                        </v-row>
+
                         <h4 v-if="selectedMetatypeKeys.length > 0">{{$t('dataMapping.metatypePropertyMapping')}}<info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip> </h4>
                         <div v-for="key in selectedMetatypeKeys" :key="key.id">
-                          <div v-if="key.required">
-                            <v-select
-                                :items="payloadKeys"
-                                @input="selectPropertyKey($event, key)"
-                                :rules="[v => !!v || 'Item is required']"
-                                :required="key.required"
-                            >
-
-                              <template v-if="key.description !== ''" slot="append-outer"><info-tooltip :message="key.description"></info-tooltip> </template>
-                              <template v-slot:label>{{key.name}} <small style="color:red">required</small></template>
-                            </v-select>
-                          </div>
-                          <div v-else>
-                            <v-select
-                                :items="payloadKeys"
-                                :label="key.name"
-                                @input="selectPropertyKey($event, key)"
-                            >
-
-                              <template v-if="key.description !== ''" slot="append-outer"><info-tooltip :message="key.description"></info-tooltip> </template>
-                            </v-select>
-                          </div>
-
+                          <v-row>
+                            <v-col :cols="6">
+                              <h4>{{key.name}} <info-tooltip :message="key.description"></info-tooltip></h4>
+                              <v-select
+                                  :items="payloadKeys"
+                                  label="map payload key"
+                                  @input="selectPropertyKey($event, key)"
+                                  clearable
+                                  :disabled="isValueMapped(key)"
+                              >
+                                <template v-slot:append-outer>{{$t("dataMapping.or")}}</template>
+                                <template v-slot:label>{{$t('dataMapping.mapPayloadKey')}} <small style="color:red" v-if="key.required">{{$t("dataMapping.required")}}</small></template>
+                              </v-select>
+                            </v-col>
+                            <v-col :cols="6">
+                              <h4 style="color:white">{{key.name}} x</h4>
+                                  <v-text-field
+                                      v-if="key.data_type !== 'boolean'"
+                                      :label="$t('dataMapping.constantValue')"
+                                      @input="selectPropertyKey($event, key, true)"
+                                      :disabled="isKeyMapped(key, true)"
+                                  />
+                                  <v-select
+                                      v-if="key.data_type == 'boolean'"
+                                      :label="$t('dataMapping.constantValue')"
+                                      :items="['true', 'false']"
+                                      @input="selectPropertyKey($event, key, true)"
+                                      :disabled="isKeyMapped(key, true)"
+                                    />
+                            </v-col>
+                          </v-row>
                         </div>
                       </div>
 
@@ -249,7 +295,6 @@
 
                       </v-autocomplete>
 
-
                       <v-row>
                         <v-col>
                           <v-select
@@ -260,7 +305,7 @@
                               required
                           >
 
-                            <template slot="append-outer">AND</template>
+                            <template slot="append-outer">${{$t('dataMapping.and')}}</template>
                           </v-select>
                         </v-col>
                         <v-col>
@@ -281,30 +326,35 @@
                       <br>
                       <h4 v-if="selectedMetatypeRelationshipPairKeys.length > 0">{{$t('dataMapping.metatypeRelationshipPropertyMapping')}}<info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip> </h4>
                       <div v-for="key in selectedMetatypeRelationshipPairKeys" :key="key.id">
-                          <div v-if="key.required">
+                        <v-row>
+                          <v-col :cols="6">
                             <v-select
                                 :items="payloadKeys"
                                 @input="selectRelationshipPropertyKey($event, key)"
-                                :rules="[v => !!v || 'Item is required']"
-                                :required="key.required"
+                                :disabled="isRelationshipValueMapped(key)"
                             >
 
-                              <template v-if="key.description !== ''" slot="append-outer"><info-tooltip :message="key.description"></info-tooltip> </template>
-                              <template v-slot:label>{{key.name}} <small style="color:red">required</small></template>
+                              <template v-slot:append-outer>{{$t('dataMapping.or')}}</template>
+                              <template v-slot:label>{{$t("dataMapping.mapPayloadKey")}} <small style="color:red" v-if="key.required">{{$t('dataMapping.required')}}</small></template>
                             </v-select>
-                          </div>
-                          <div v-else>
+                          </v-col>
+                          <v-col :cols="6">
+                            <h4 style="color:white">{{key.name}} x</h4>
+                            <v-text-field
+                                v-if="key.data_type !== 'boolean'"
+                                :label="$t('dataMapping.constantValue')"
+                                @input="selectRelationshipPropertyKey($event, key, true)"
+                                :disabled="isRelationshipKeyMapped(key, true)"
+                            />
                             <v-select
-                                :items="payloadKeys"
-                                :label="key.name"
-                                @input="selectRelationshipPropertyKey($event, key)"
-                            >
-
-                              <template v-if="key.description !== ''" slot="append-outer"><info-tooltip :message="key.description"></info-tooltip> </template>
-                            </v-select>
-                          </div>
-
-                          <template v-if="key.description !== ''" slot="append-outer"><info-tooltip :message="key.description"></info-tooltip> </template>
+                                v-if="key.data_type == 'boolean'"
+                                :label="$t('dataMapping.constantValue')"
+                                :items="['true', 'false']"
+                                @input="selectRelationshipPropertyKey($event, key, true)"
+                                :disabled="isRelationshipKeyMapped(key)"
+                            />
+                          </v-col>
+                        </v-row>
                       </div>
 
 
@@ -314,13 +364,13 @@
                         @click="createTransformation()"
                         color="success"
                         class="mr-4"
-                        :disabled="isMainFormValid()"
+                        :disabled="!isMainFormValid && !requiredKeysMapped"
                     >
                       <v-progress-circular
                           indeterminate
                           v-if="loading"
                       ></v-progress-circular>
-                      <span v-if="!loading">Create</span>
+                      <span v-if="!loading">{{$t("dataMapping.create")}}</span>
                     </v-btn>
 
                     <v-btn
@@ -329,7 +379,7 @@
                         class="mr-4"
                         v-if="!loading"
                     >
-                      Reset
+                      {{$t("dataMapping.reset")}}
                     </v-btn>
 
                   </v-form>
@@ -340,7 +390,7 @@
                   <v-textarea
                       filled
                       name="input-7-4"
-                      :value="unmapped.data | pretty"
+                      :value="payload | pretty"
                       :rows="50"
                   ></v-textarea>
                 </v-col>
@@ -355,12 +405,14 @@
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
  import InfoTooltip from "@/components/infoTooltip.vue";
 import {
-  ImportDataT,
   MetatypeKeyT,
   MetatypeRelationshipKeyT,
   MetatypeRelationshipPairT,
   MetatypeT,
-  TypeMappingTransformationCondition, TypeMappingTransformationPayloadT, TypeMappingTransformationSubexpression
+  TypeMappingTransformationCondition,
+  TypeMappingTransformationPayloadT,
+  TypeMappingTransformationSubexpression,
+  TypeMappingTransformationT
 } from "@/api/types";
 
   @Component({
@@ -372,9 +424,9 @@ import {
     components: {
       InfoTooltip
     }})
-  export default class NewTransformationDialog extends Vue {
+  export default class TransformationDialog extends Vue {
     @Prop({required: true})
-    readonly unmapped!: ImportDataT | null
+    readonly payload!: object;
 
     @Prop({required: true})
     readonly dataSourceID!: string;
@@ -385,15 +437,20 @@ import {
     @Prop({required: true})
     readonly typeMappingID!: string
 
+    @Prop({required: false})
+    readonly transformation: TypeMappingTransformationT | null = null
+
     errorMessage = ""
     search = ""
     expanded = []
     loading = false
+    keysLoading = false
     dialog = false
     payloadType = ""
     conditionFormValid = false
     subexpressionFormValid = false
     mainFormValid = false
+    requiredKeysMapped = true
 
     metatypes: MetatypeT[] = []
 
@@ -408,6 +465,9 @@ import {
     subexpressionValue = ""
 
     payloadKeys: any = null
+    payloadArrayKeys: any = []
+    rootArray: any = null
+    rootArrayKeys: any = null
 
     operators = [
       {text: "eq", value: "eq", requiresValue: true},
@@ -432,35 +492,39 @@ import {
     onConflict: any = null
     propertyMapping: {[key: string]: any}[] = []
 
-    conditionsHeader = [{
-      text: "Key",
-      value: "key"
-    },{
-      text: "Operator",
-      value: "operator",
-    },{
-      text: "Value",
-      value: "value"
-    },
-    {text: "Actions", value: "actions", sortable: false}
-    ]
+    conditionsHeader() {
+     return  [{
+       text: this.$t('dataMapping.key'),
+       value: "key"
+     },{
+       text: this.$t('dataMapping.operator'),
+       value: "operator",
+     },{
+       text: this.$t('dataMapping.value'),
+       value: "value"
+     },
+       {text: this.$t('dataMapping.actions'), value: "actions", sortable: false}
+     ]
+    }
 
-    subexpressionHeader = [
-    {
-     text: "Expression",
-     value: "expression"
-    },{
-      text: "Key",
-      value: "key"
-    },{
-      text: "Operator",
-      value: "operator",
-    },{
-      text: "Value",
-      value: "value"
-    },
-      {text: "Actions", value: "actions", sortable: false}
-    ]
+    subexpressionHeader() {
+     return  [
+       {
+         text: this.$t('dataMapping.expression'),
+         value: "expression"
+       },{
+         text: this.$t('dataMapping.key'),
+         value: "key"
+       },{
+         text: this.$t('dataMapping.operator'),
+         value: "operator",
+       },{
+         text: this.$t('dataMapping.value'),
+         value: "value"
+       },
+       {text: this.$t('dataMapping.actions'), value: "actions", sortable: false}
+     ]
+    }
 
     reset() {
       const mainForm: any = this.$refs.mainForm
@@ -478,6 +542,40 @@ import {
       this.selectedMetatypeKeys = []
     }
 
+    // returns whether or not all required keys of the selected metatype or metatype relationship have been mapped
+    @Watch('propertyMapping', {immediate: true})
+    areRequiredKeysMapped() {
+      if(this.selectedMetatype) {
+        let unmappedKeys = 0
+
+        for(const key of this.selectedMetatypeKeys) {
+          if(key.required) {
+           if(!this.propertyMapping.find(prop => prop.metatype_key_id === key.id)) {
+              unmappedKeys++
+           }
+          }
+        }
+
+        this.requiredKeysMapped = unmappedKeys === 0
+        return
+      }
+
+      if(this.selectedRelationshipPair) {
+        let unmappedKeys = 0
+
+        for(const key of this.selectedMetatypeRelationshipPairKeys) {
+          if(key.required) {
+            if(!this.propertyMapping.find(prop => prop.metatype_relationship_key_id === key.id)) {
+              unmappedKeys++
+            }
+          }
+        }
+
+        this.requiredKeysMapped = unmappedKeys === 0
+        return
+      }
+    }
+
 
     @Watch('search', {immediate: true})
     onSearchChange(newVal: string) {
@@ -490,6 +588,8 @@ import {
 
     @Watch('relationshipPairSearch', {immediate: true})
     onRelationshipSearchChange(newVal: string) {
+      if(newVal === "") return
+
       this.$client.listMetatypeRelationshipPairs(this.containerID, {
         name: newVal,
         limit: 1000,
@@ -506,7 +606,10 @@ import {
 
     @Watch('selectedMetatype', {immediate: true})
     onMetatypeChange(newMetatype: MetatypeT) {
+      if(!newMetatype) return;
+
       this.selectedMetatypeKeys = []
+      this.keysLoading = true
 
       this.$client.listMetatypeRelationshipPairs(this.containerID, {
         name: undefined,
@@ -522,23 +625,56 @@ import {
           .catch(e => this.errorMessage = e)
 
       this.$client.listMetatypeKeys(this.containerID, newMetatype.id)
-          .then(keys => this.selectedMetatypeKeys = keys)
+          .then(keys => {
+            this.selectedMetatypeKeys = keys
+            this.keysLoading = false
+            this.areRequiredKeysMapped()
+          })
           .catch(e => this.errorMessage = e)
     }
 
     @Watch('selectedRelationshipPair', {immediate: true})
     onMetatypeRelationshipChange(newPair: MetatypeRelationshipPairT) {
       if(!newPair) return;
+      this.keysLoading = true
 
       this.$client.listMetatypeRelationshipKeys(this.containerID, newPair.relationship_id)
-          .then(keys => this.selectedMetatypeRelationshipPairKeys = keys)
+          .then(keys => {
+            this.selectedMetatypeRelationshipPairKeys = keys
+            this.areRequiredKeysMapped()
+            this.keysLoading = false
+          })
           .catch(e => this.errorMessage = e)
     }
 
-    mounted() {
-      this.payloadKeys = []
+    @Watch('rootArray', {immediate: true})
+    onRootArrayChange() {
+      const flattened = this.flatten(this.payload)
+      this.payloadKeys = Object.keys(flattened)
 
-      this.payloadKeys = Object.keys(this.flatten(this.unmapped!.data))
+      if(this.rootArray){
+        const rootArrayKeys = Object.keys(flattened[this.rootArray][0])
+        this.rootArrayKeys = []
+        rootArrayKeys.map(k => {
+          this.payloadKeys.push(`${this.rootArray}.[].${k}`)
+          this.rootArrayKeys.push(`${this.rootArray}.[].${k}`)
+        })
+      }
+    }
+
+    @Watch('payload', {immediate: true})
+    onPayloadChange() {
+      this.payloadKeys = []
+      this.payloadArrayKeys = []
+
+      const flattened = this.flatten(this.payload)
+      this.payloadKeys = Object.keys(flattened)
+
+      Object.keys(flattened).map(k => {
+        if(Array.isArray(flattened[k]) && typeof flattened[k][0] === "object") {
+          this.payloadArrayKeys.push(k)
+        }
+      })
     }
 
     createTransformation() {
@@ -558,12 +694,14 @@ import {
       payload.keys = this.propertyMapping
       if(this.uniqueIdentifierKey) payload.unique_identifier_key = this.uniqueIdentifierKey
       if(this.onConflict) payload.on_conflict = this.onConflict
+      if(this.rootArray) payload.root_array = this.rootArray
 
       this.$client.createTypeMappingTransformation(this.containerID, this.dataSourceID, this.typeMappingID, payload as TypeMappingTransformationPayloadT)
-      .then(() => {
+      .then((transformation) => {
         this.loading = false
         this.reset()
         this.dialog = false
+        this.$emit("transformationCreated", transformation)
       })
       .catch((e) => this.errorMessage = e)
     }
@@ -578,7 +716,69 @@ import {
       }]
     }
 
-    selectPropertyKey(key: string, metatypeKey: MetatypeKeyT) {
+    isKeyMapped(key: MetatypeKeyT) {
+      const mapped = this.propertyMapping.find(prop => prop.metatype_key_id === key.id)
+      if(!mapped) return false
+
+      if(mapped.key) return true
+
+      return false
+    }
+
+    isValueMapped(key: MetatypeKeyT) {
+      const mapped = this.propertyMapping.find(prop => prop.metatype_key_id === key.id)
+      if(!mapped) return false
+
+      if(mapped.value) return true
+
+      return false
+    }
+
+    isRelationshipKeyMapped(key: MetatypeRelationshipKeyT) {
+      const mapped = this.propertyMapping.find(prop => prop.metatype_relationship_key_id === key.id)
+      if(!mapped) return false
+
+      if(mapped.key) return true
+
+      return false
+    }
+
+    isRelationshipValueMapped(key: MetatypeRelationshipKeyT) {
+      const mapped = this.propertyMapping.find(prop => prop.metatype_relationship_key_id === key.id)
+      if(!mapped) return false
+
+      if(mapped.value) return true
+
+      return false
+    }
+
+    selectPropertyKey(key: string, metatypeKey: MetatypeKeyT, value?: boolean) {
+      if(!key) {
+        this.propertyMapping = this.propertyMapping.filter(prop => {return prop.metatype_key_id !== metatypeKey.id})
+        return
+      }
+
+      if(value) {
+        if(this.propertyMapping.length <= 0) {
+          this.propertyMapping.push({
+            value: key,
+            value_type: metatypeKey.data_type,
+            metatype_key_id: metatypeKey.id
+          })
+
+          return
+        }
+
+        this.propertyMapping = this.propertyMapping.filter(prop => {return prop.metatype_key_id !== metatypeKey.id})
+
+        this.propertyMapping.push({
+          value:key,
+          value_type: metatypeKey.data_type,
+          metatype_key_id: metatypeKey.id
+        })
+        return
+      }
+
       if(this.propertyMapping.length <= 0) {
         this.propertyMapping.push({
           key: key,
@@ -596,7 +796,33 @@ import {
       })
     }
 
-    selectRelationshipPropertyKey(key: string, metatypeRelationshipKey: MetatypeRelationshipKeyT) {
+    selectRelationshipPropertyKey(key: string, metatypeRelationshipKey: MetatypeRelationshipKeyT, value?: boolean) {
+      if(!key) {
+        this.propertyMapping = this.propertyMapping.filter(prop => {return prop.metatype_relationship_key_id !== metatypeRelationshipKey.id})
+        return
+      }
+
+      if(value) {
+        if(this.propertyMapping.length <= 0) {
+          this.propertyMapping.push({
+            value: key,
+            metatype_relationship_key_id: metatypeRelationshipKey.id
+          })
+
+          return
+        }
+
+        this.propertyMapping = this.propertyMapping.filter(prop => {return prop.metatype_relationship_key_id !== metatypeRelationshipKey.id})
+
+        this.propertyMapping.push({
+          value:key,
+          metatype_relationship_key_id: metatypeRelationshipKey.id
+        })
+
+        return
+      }
+
+
       if(this.propertyMapping.length <= 0) {
         this.propertyMapping.push({
           key: key,
@@ -651,18 +877,18 @@ import {
     }
 
     deleteSubexpression(condition: TypeMappingTransformationCondition, subexpression: TypeMappingTransformationSubexpression){
-      console.log(condition)
-      console.log(subexpression)
       condition.subexpressions = condition.subexpressions.filter(s => s !== subexpression)
     }
 
-    isMainFormValid() {
+    get isMainFormValid() {
      if(!this.uniqueIdentifierKey) {
        return !this.mainFormValid
       }
 
      return !(this.uniqueIdentifierKey && this.onConflict && this.mainFormValid)
     }
+
+
 
     // we need all the keys in a given data payload, this
     // handles retrieving the nested keys and will go as deep
@@ -675,11 +901,8 @@ import {
         if (Object(cur) !== cur) {
           result[prop] = cur;
         } else if (Array.isArray(cur)) {
-          const l = 0
           for(let i=0, l=cur.length; i<l; i++)
-            recurse(cur[i], prop + "[" + i + "]");
-          if (l == 0)
-            result[prop] = [];
+            result[prop] = cur
         } else {
           let isEmpty = true;
           for (const p in cur) {
