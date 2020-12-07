@@ -295,17 +295,17 @@
 
                       </v-autocomplete>
 
-                      <v-row>
+                      <v-row v-if="this.selectedRelationshipPair">
                         <v-col>
                           <v-select
                               :items="payloadKeys"
                               v-model="origin_key"
                               :rules="[v => !!v || 'Item is required']"
-                              :label="$t('dataMapping.originKey')"
                               required
                           >
 
-                            <template slot="append-outer">${{$t('dataMapping.and')}}</template>
+                            <template v-slot:label>{{$t('dataMapping.originKey')}} <small style="color:red">{{$t('dataMapping.required')}}</small></template>
+                            <template slot="append-outer">{{$t('dataMapping.and')}}</template>
                           </v-select>
                         </v-col>
                         <v-col>
@@ -313,11 +313,25 @@
                               :items="payloadKeys"
                               v-model="destination_key"
                               :rules="[v => !!v || 'Item is required']"
-                              :label="$t('dataMapping.destinationKey')"
                               required
                           >
 
+                            <template v-slot:label>{{$t('dataMapping.destinationKey')}} <small style="color:red">{{$t('dataMapping.required')}}</small></template>
                             <template slot="append-outer"><info-tooltip :message="$t('dataMapping.originDestinationKeyHelp')"></info-tooltip> </template>
+                          </v-select>
+                        </v-col>
+                      </v-row>
+                      <v-row v-if="this.selectedRelationshipPair">
+                        <v-col>
+                          <v-select
+                              :items="onConflictOptions"
+                              v-model="onConflict"
+                              :rules="[v => !!v || 'Item is required']"
+                              clearable
+                          >
+
+                            <template v-slot:label>{{$t('dataMapping.onConflict')}} <small style="color:red">{{$t('dataMapping.required')}}</small></template>
+                            <template slot="append-outer"><info-tooltip :message="$t('dataMapping.onConflictHelp')"></info-tooltip> </template>
                           </v-select>
                         </v-col>
                       </v-row>
@@ -345,11 +359,13 @@
                                 :label="$t('dataMapping.constantValue')"
                                 @input="selectRelationshipPropertyKey($event, key, true)"
                                 :disabled="isRelationshipKeyMapped(key, true)"
+                                clearable
                             />
                             <v-select
                                 v-if="key.data_type == 'boolean'"
                                 :label="$t('dataMapping.constantValue')"
                                 :items="['true', 'false']"
+                                clearable
                                 @input="selectRelationshipPropertyKey($event, key, true)"
                                 :disabled="isRelationshipKeyMapped(key)"
                             />
@@ -364,7 +380,7 @@
                         @click="createTransformation()"
                         color="success"
                         class="mr-4"
-                        :disabled="!isMainFormValid && !requiredKeysMapped"
+                        :disabled="!isMainFormValid"
                     >
                       <v-progress-circular
                           indeterminate
@@ -606,7 +622,10 @@ import {
 
     @Watch('selectedMetatype', {immediate: true})
     onMetatypeChange(newMetatype: MetatypeT) {
-      if(!newMetatype) return;
+      if(!newMetatype) {
+        this.selectedMetatype = null
+        return
+      }
 
       this.selectedMetatypeKeys = []
       this.keysLoading = true
@@ -635,7 +654,11 @@ import {
 
     @Watch('selectedRelationshipPair', {immediate: true})
     onMetatypeRelationshipChange(newPair: MetatypeRelationshipPairT) {
-      if(!newPair) return;
+      if(!newPair) {
+        this.selectedRelationshipPair = null
+        return
+      }
+
       this.keysLoading = true
 
       this.$client.listMetatypeRelationshipKeys(this.containerID, newPair.relationship_id)
@@ -881,14 +904,20 @@ import {
     }
 
     get isMainFormValid() {
-     if(!this.uniqueIdentifierKey) {
-       return !this.mainFormValid
+      if(!this.requiredKeysMapped) {
+        return false
       }
 
-     return !(this.uniqueIdentifierKey && this.onConflict && this.mainFormValid)
+      if(!this.selectedMetatype && !this.selectedRelationshipPair) {
+        return false
+      }
+
+      if(!this.uniqueIdentifierKey) {
+       return this.mainFormValid
+       }
+
+      return (this.uniqueIdentifierKey && this.onConflict && this.mainFormValid)
     }
-
-
 
     // we need all the keys in a given data payload, this
     // handles retrieving the nested keys and will go as deep
@@ -903,6 +932,7 @@ import {
         } else if (Array.isArray(cur)) {
           for(let i=0, l=cur.length; i<l; i++)
             result[prop] = cur
+          recurse(cur[0], prop+".[]");
         } else {
           let isEmpty = true;
           for (const p in cur) {
