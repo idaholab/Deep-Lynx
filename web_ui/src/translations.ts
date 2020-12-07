@@ -103,6 +103,7 @@ export default {
       payloadKey: "Payload's Key",
       samplePayload: "Sample Payload",
       metatype: "Metatype",
+      onConflict: "On Conflict",
       metatypeRelationship: "Relationship",
       mix: "Metatype & Relationship",
       originKey: "Parent ID Key",

@@ -192,21 +192,50 @@ export default class DataSourceRoutes {
 
     private static listDataSourcesImports(req: Request, res: Response, next: NextFunction) {
         // @ts-ignore
-        ImportStorage.Instance.List(req.params.sourceID, +req.query.offset, +req.query.limit)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
+        if(req.query.sortBy) {
+            // @ts-ignore
+            ImportStorage.Instance.ListAndSort(req.params.sourceID, +req.query.offset, +req.query.limit, req.query.sortBy, req.query.sortDesc === 'true')
+                .then((result) => {
+                    if (result.isError && result.error) {
+                        res.status(result.error.errorCode).json(result);
+                        return
+                    }
 
-                res.status(200).json(result)
-            })
-            .catch((err) => res.status(404).send(err))
-            .finally(() => next())
+                    res.status(200).json(result)
+                })
+                .catch((err) => res.status(404).send(err))
+                .finally(() => next())
+        } else if(req.query.count) {
+            // @ts-ignore
+            ImportStorage.Instance.Count()
+                .then((result) => {
+                    if (result.isError && result.error) {
+                        res.status(result.error.errorCode).json(result);
+                        return
+                    }
+
+                    res.status(200).json(result)
+                })
+                .catch((err) => res.status(404).send(err))
+                .finally(() => next())
+        } else {
+            // @ts-ignore
+            ImportStorage.Instance.List(req.params.sourceID, +req.query.offset, +req.query.limit)
+                .then((result) => {
+                    if (result.isError && result.error) {
+                        res.status(result.error.errorCode).json(result);
+                        return
+                    }
+
+                    res.status(200).json(result)
+                })
+                .catch((err) => res.status(404).send(err))
+                .finally(() => next())
+        }
     }
 
     private static listDataForImport(req: Request, res: Response, next: NextFunction) {
-        if (req.query.sortBy) {
+      if (req.query.sortBy) {
             // @ts-ignore
             DataStagingStorage.Instance.ListAndSort(req.params.importID, +req.query.offset, +req.query.limit, req.query.sortBy, req.query.sortDesc === 'true')
                 .then((result: any) => {

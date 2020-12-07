@@ -118,6 +118,9 @@ export type ImportT = {
     reference: string;
     created_by: string;
     modified_by: string;
+
+    total_records: number;
+    records_inserted: number;
 }
 
 export type AssignRolePayloadT = {

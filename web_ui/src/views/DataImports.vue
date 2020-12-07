@@ -18,6 +18,13 @@
         <v-data-table
                 :headers="headers"
                 :items="imports"
+                :server-items-length="importCount"
+                :options.sync="listOptions"
+                :loading="importsLoading"
+                :items-per-page="100"
+                :footer-props="{
+                  'items-per-page-options': [25, 50, 100]
+                }"
                 class="elevation-1"
         >
             <template v-slot:top>
@@ -32,6 +39,9 @@
               <v-col>
                 <h2>{{$t('dataImports.tableTitle')}}</h2>
               </v-col>
+            </template>
+            <template v-slot:item.percentage_processed="{ item }">
+              {{ (item.records_inserted / item.total_records) * 100 }}%
             </template>
             <template v-slot:item.actions="{ item }">
                 <v-icon
@@ -188,6 +198,12 @@ export default class DataImports extends Vue {
     importDataMapping: ImportDataT | null = null
     successMessage = ""
     dataSuccessMessage = ""
+    listOptions: {
+      sortDesc: boolean[];
+      sortBy: string[];
+      page: number;
+      itemsPerPage: number;
+    } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 100}
     options: {
       sortDesc: boolean[];
       sortBy: string[];
@@ -195,6 +211,8 @@ export default class DataImports extends Vue {
       itemsPerPage: number;
     } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 100}
 
+    importCount = 0
+    importsLoading = false
     importDataCount = 0
     importLoading = false
 
@@ -212,7 +230,8 @@ export default class DataImports extends Vue {
         },
         {
          text: "Message",
-         value: "status_message"
+         value: "status_message",
+         sortable: false
         },
         { text: "View/Edit",  value: 'actions', sortable: false }]
 
@@ -235,22 +254,46 @@ export default class DataImports extends Vue {
 
 
   @Watch('options')
-  handler() {
+  onOptionChange() {
       this.loadImportData()
+  }
+
+  @Watch('listOptions')
+  onListOptionsChange() {
+    this.listImports()
   }
 
   setDataSource(dataSource: any) {
         this.selectedDataSource = dataSource
         this.listImports()
-    }
+
+        this.$client.countImports(this.containerID, dataSource.id)
+          .then(importCount => {
+            this.importCount = importCount
+          })
+          .catch(e => this.errorMessage = e)
+  }
 
     listImports() {
         if(this.selectedDataSource) {
-            this.$client.listImports(this.containerID, this.selectedDataSource.id)
-                .then(imports => {
-                    this.imports = imports
-                })
-                .catch(e => console.log(e))
+          this.importsLoading = true
+          this.imports = []
+
+          const {page, itemsPerPage, sortBy, sortDesc } = this.listOptions;
+          let sortParam: string | undefined
+          let sortDescParam: boolean | undefined
+
+          const pageNumber = page - 1;
+          if(sortBy && sortBy.length >= 1) sortParam = sortBy[0]
+          if(sortBy && sortBy.length >= 1 && sortBy[0] === 'percentage_processed') sortParam = 'records_inserted'
+          if(sortDesc) sortDescParam = sortDesc[0]
+
+          this.$client.listImports(this.containerID, this.selectedDataSource.id, itemsPerPage, itemsPerPage * pageNumber, sortParam, sortDescParam)
+              .then(imports => {
+                  this.imports = imports
+                  this.importsLoading = false
+              })
+              .catch(e => this.errorMessage = e)
         }
     }
 

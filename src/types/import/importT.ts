@@ -2,7 +2,7 @@ import * as t from 'io-ts'
 import {DateFromISOString} from "io-ts-types/lib/DateFromISOString";
 import {recordMetaT} from "../recordMetaT";
 
-const importLogRequired = t.type({
+const importRequired = t.type({
     id:t.string,
     data_source_id:t.string,
     modified_at: t.union([DateFromISOString, t.string]),
@@ -18,10 +18,14 @@ const importLogRequired = t.type({
     })
 });
 
-const importLogOptional = t.partial({
-    reference: t.string
+const importOptional = t.partial({
+    reference: t.string,
+
+    // composite properties
+    total_records: t.number,
+    records_inserted: t.number
 })
 
-export const importT = t.intersection([importLogRequired, importLogOptional, recordMetaT]);
+export const importT = t.intersection([importRequired, importOptional, recordMetaT]);
 
 export type ImportT = t.TypeOf<typeof importT>

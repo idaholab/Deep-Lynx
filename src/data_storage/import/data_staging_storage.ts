@@ -7,11 +7,9 @@
 import PostgresStorage from "../postgresStorage";
 import {DataStagingT} from "../../types/import/dataStagingT";
 import Result from "../../result";
-import {Query, QueryConfig} from "pg";
-import {TypeMappingT} from "../../types/import/typeMappingT";
+import {QueryConfig} from "pg";
 import PostgresAdapter from "../adapters/postgres/postgres";
 import {QueueProcessor} from "../../services/event_system/events";
-import {EventT} from "../../types/events/eventT";
 
 export default class DataStagingStorage extends PostgresStorage {
     public static tableName = "data_staging";
@@ -123,7 +121,6 @@ export default class DataStagingStorage extends PostgresStorage {
     public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
         return super.run(DataStagingStorage.deleteStatement(id))
     }
-
 
     public SetErrors(id:number, errors: string[]): Promise<Result<boolean>> {
         return super.runAsTransaction(DataStagingStorage.setErrorsStatement(id, errors))

@@ -219,8 +219,22 @@ export class Client {
       return this.get<number>(`/containers/${containerID}/import/datasources/${dataSouceID}/mappings/unmapped/count`)
    }
 
-   listImports(containerID: string, dataSourceID: string): Promise<ImportT[]> {
-      return this.get<ImportT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`)
+   listImports(containerID: string, dataSourceID: string, limit: number, offset: number, sortBy?: string, sortDesc?: boolean): Promise<ImportT[]> {
+      const query: {[key: string]: any} = {}
+
+      query.limit = limit
+      query.offset = offset
+      if(sortBy) query.sortBy = sortBy
+      if(sortDesc) query.sortDesc = sortDesc
+
+      return this.get<ImportT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`, query)
+   }
+
+   countImports(containerID: string, dataSourceID: string): Promise<number> {
+      const query: {[key: string]: any} = {}
+
+      query.count = true
+      return this.get<number>(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`, query)
    }
 
    listImportData(containerID: string, importID: string, limit: number, offset: number, sortBy?: string, sortDesc?: boolean): Promise<ImportDataT[]> {
