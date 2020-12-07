@@ -142,6 +142,10 @@ export class Client {
       return this.post<MetatypeT>(`/containers/${containerID}/metatypes`, metatype)
    }
 
+   retrieveMetatype(containerID: string, metatypeID: string): Promise<MetatypeT> {
+      return this.get<MetatypeT>(`/containers/${containerID}/metatypes/${metatypeID}`)
+   }
+
    updateMetatype(containerID: string, metatypeID: string, metatype: any): Promise<MetatypeT> {
       return this.put<MetatypeT>(`/containers/${containerID}/metatypes/${metatypeID}`, metatype)
    }
@@ -160,6 +164,14 @@ export class Client {
 
    createMetatypeRelationship(containerID: string, metatypeRelationship: any): Promise<MetatypeRelationshipT> {
       return this.post<MetatypeRelationshipT>(`/containers/${containerID}/metatype_relationships`, metatypeRelationship)
+   }
+
+   retrieveMetatypeRelationship(containerID: string, metatypeRelationshipID: string): Promise<MetatypeRelationshipT> {
+      return this.get<MetatypeRelationshipT>(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}`)
+   }
+
+   retrieveMetatypeRelationshipPair(containerID: string, metatypeRelationshipPairID: string): Promise<MetatypeRelationshipPairT> {
+      return this.get<MetatypeRelationshipPairT>(`/containers/${containerID}/metatype_relationship_pairs/${metatypeRelationshipPairID}`)
    }
 
    updateMetatypeRelationship(containerID: string, metatypeRelationshipID: string, metatypeRelationship: any): Promise<MetatypeRelationshipT> {
@@ -192,6 +204,10 @@ export class Client {
 
    createTypeMappingTransformation(containerID: string, dataSourceID: string, typeMappingID: string, transformation: TypeMappingTransformationPayloadT): Promise<TypeMappingTransformationPayloadT> {
       return this.post<TypeMappingTransformationT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations`, transformation )
+   }
+
+   updateTypeMappingTransformation(containerID: string, dataSourceID: string, typeMappingID: string, transformationID: string, transformation: TypeMappingTransformationPayloadT): Promise<TypeMappingTransformationPayloadT> {
+      return this.put<TypeMappingTransformationT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations/${transformationID}`, transformation )
    }
 
    dataSourceJSONFileImport(containerID: string, dataSourceID: string, file: File): Promise<boolean> {

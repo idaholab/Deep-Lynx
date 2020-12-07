@@ -34,13 +34,15 @@
                 ></v-checkbox>
               </template>
               <template v-slot:item.actions="{ item }">
-                <v-icon
-                    small
-                    class="mr-2"
-                    @click="viewItem(item)"
-                >
-                  mdi-eye
-                </v-icon>
+                <transformation-dialog
+                    :payload="unmappedData"
+                    :typeMappingID="typeMappingID"
+                    :containerID="containerID"
+                    :dataSourceID="dataSourceID"
+                    :icon="true"
+                    :transformation="item"
+                    @transformationUpdated="refreshTransformations()"
+                />
                 <v-icon
                     small
                     @click="deleteTransformation(item)"

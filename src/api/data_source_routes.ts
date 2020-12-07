@@ -56,6 +56,7 @@ export default class DataSourceRoutes {
         app.put('/containers/:id/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.updateMapping)
         app.get('/containers/:id/import/datasources/:sourceID/mappings/:mappingID/transformations', ...middleware, authInContainer("write", "data"), this.retrieveTypeMappingTransformations)
         app.post('/containers/:id/import/datasources/:sourceID/mappings/:mappingID/transformations', ...middleware, authInContainer("write", "data"), this.createTypeTransformation)
+        app.put('/containers/:id/import/datasources/:sourceID/mappings/:mappingID/transformations/:transformationID', ...middleware, authInContainer("write", "data"), this.updateTypeTransformation)
         app.delete('/containers/:id/import/datasources/:sourceID/mappings/:mappingID/transformations/:transformationID', ...middleware, authInContainer("write", "data"), this.deleteTypeTransformation)
     }
 
@@ -531,6 +532,21 @@ export default class DataSourceRoutes {
     private static createTypeTransformation(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT
         TypeTransformationStorage.Instance.Create(req.params.mappingID, user.id!, req.body)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.status(201).json(result)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
+    }
+
+    private static updateTypeTransformation(req: Request, res: Response, next: NextFunction) {
+        const user = req.user as UserT
+        TypeTransformationStorage.Instance.Update(req.params.transformationID, user.id!, req.body)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);

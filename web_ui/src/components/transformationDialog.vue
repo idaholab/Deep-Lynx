@@ -1,19 +1,22 @@
 <template>
     <v-dialog v-model="dialog" @click:outside="reset">
         <template v-slot:activator="{ on }">
-          <v-btn v-if="!transformation" color="primary" dark class="mb-2" v-on="on">{{$t("dataMapping.newTransformationButton")}}</v-btn>
-          <v-btn v-if="transformation" color="primary" dark class="mb-2" v-on="on">{{$t("dataMapping.editTransformationButton")}}</v-btn>
+          <v-icon
+              v-if="icon"
+              small
+              class="mr-2"
+              v-on="on"
+              @click="editReset()"
+          >mdi-eye</v-icon>
+          <v-btn v-if="!transformation && !icon" color="primary" dark class="mb-2" v-on="on">{{$t("dataMapping.newTransformationButton")}}</v-btn>
         </template>
         <v-card>
-            <v-card-title>
-                <span class="headline">{{$t("typeTransformation.formTitle")}}</span>
-            </v-card-title>
-
             <error-banner :message="errorMessage"></error-banner>
             <v-card-text>
               <v-row>
                 <v-col :cols="6" >
-                  <h2>{{$t("dataMapping.createNewTransformation")}}</h2>
+                  <h2 v-if="!transformation">{{$t("dataMapping.createNewTransformation")}}</h2>
+                  <h2 v-if="transformation">{{$t("dataMapping.editTransformation")}}</h2>
                   <v-divider></v-divider>
                     <v-row v-if="payloadArrayKeys.length > 0">
                       <v-col :cols="6">
@@ -244,7 +247,9 @@
                                   label="map payload key"
                                   @input="selectPropertyKey($event, key)"
                                   clearable
+                                  eager
                                   :disabled="isValueMapped(key)"
+                                  :value="propertyKey(key)"
                               >
                                 <template v-slot:append-outer>{{$t("dataMapping.or")}}</template>
                                 <template v-slot:label>{{$t('dataMapping.mapPayloadKey')}} <small style="color:red" v-if="key.required">{{$t("dataMapping.required")}}</small></template>
@@ -257,6 +262,7 @@
                                       :label="$t('dataMapping.constantValue')"
                                       @input="selectPropertyKey($event, key, true)"
                                       :disabled="isKeyMapped(key, true)"
+                                      :value="propertyKeyValue(key)"
                                   />
                                   <v-select
                                       v-if="key.data_type == 'boolean'"
@@ -264,6 +270,7 @@
                                       :items="['true', 'false']"
                                       @input="selectPropertyKey($event, key, true)"
                                       :disabled="isKeyMapped(key, true)"
+                                      :value="propertyKeyValue(key)"
                                     />
                             </v-col>
                           </v-row>
@@ -346,6 +353,7 @@
                                 :items="payloadKeys"
                                 @input="selectRelationshipPropertyKey($event, key)"
                                 :disabled="isRelationshipValueMapped(key)"
+                                :value="relationshipPropertyKey(key)"
                             >
 
                               <template v-slot:append-outer>{{$t('dataMapping.or')}}</template>
@@ -359,6 +367,7 @@
                                 :label="$t('dataMapping.constantValue')"
                                 @input="selectRelationshipPropertyKey($event, key, true)"
                                 :disabled="isRelationshipKeyMapped(key, true)"
+                                :value="relationshipPropertyKeyValue(key)"
                                 clearable
                             />
                             <v-select
@@ -368,6 +377,7 @@
                                 clearable
                                 @input="selectRelationshipPropertyKey($event, key, true)"
                                 :disabled="isRelationshipKeyMapped(key)"
+                                :value="relationshipPropertyKeyValue(key)"
                             />
                           </v-col>
                         </v-row>
@@ -377,6 +387,7 @@
                     </div>
 
                     <v-btn
+                        v-if="!transformation"
                         @click="createTransformation()"
                         color="success"
                         class="mr-4"
@@ -390,10 +401,33 @@
                     </v-btn>
 
                     <v-btn
+                        v-if="transformation"
+                        @click="editTransformation()"
+                        color="success"
+                        class="mr-4"
+                        :disabled="!isMainFormValid"
+                    >
+                      <v-progress-circular
+                          indeterminate
+                          v-if="loading"
+                      ></v-progress-circular>
+                      <span v-if="!loading">{{$t("dataMapping.edit")}}</span>
+                    </v-btn>
+
+                    <v-btn
                         @click="reset()"
                         color="error"
                         class="mr-4"
-                        v-if="!loading"
+                        v-if="!loading && !transformation"
+                    >
+                      {{$t("dataMapping.reset")}}
+                    </v-btn>
+
+                    <v-btn
+                        @click="editReset()"
+                        color="error"
+                        class="mr-4"
+                        v-if="!loading && transformation"
                     >
                       {{$t("dataMapping.reset")}}
                     </v-btn>
@@ -454,7 +488,10 @@ import {
     readonly typeMappingID!: string
 
     @Prop({required: false})
-    readonly transformation: TypeMappingTransformationT | null = null
+    readonly transformation!: TypeMappingTransformationT | null
+
+    @Prop({required: false})
+    readonly icon!: boolean
 
     errorMessage = ""
     search = ""
@@ -558,6 +595,41 @@ import {
       this.selectedMetatypeKeys = []
     }
 
+    editReset() {
+      if(this.transformation?.metatype_id){
+        this.$client.retrieveMetatype(this.containerID, this.transformation?.metatype_id!)
+        .then((metatype) => {
+          this.rootArray = this.transformation?.root_array
+          if(Array.isArray(this.transformation?.conditions)) this.conditions = this.transformation?.conditions as Array<TypeMappingTransformationCondition>
+          this.payloadType = 'metatype'
+          this.selectedMetatype = metatype
+          this.uniqueIdentifierKey = this.transformation?.unique_identifier_key
+          this.onConflict = this.transformation?.on_conflict
+
+          if(Array.isArray(this.transformation?.keys)) this.propertyMapping = this.transformation?.keys as Array<{[key: string]: any}>
+        })
+        .catch(e => this.errorMessage = e)
+      }
+
+      if(this.transformation?.metatype_relationship_pair_id) {
+        this.$client.retrieveMetatypeRelationshipPair(this.containerID, this.transformation?.metatype_relationship_pair_id!)
+            .then((pair) => {
+              this.rootArray = this.transformation?.root_array
+              if(Array.isArray(this.transformation?.conditions)) this.conditions = this.transformation?.conditions as Array<TypeMappingTransformationCondition>
+              this.payloadType = 'metatype-relationship'
+              this.selectedRelationshipPair = pair
+
+              this.uniqueIdentifierKey = this.transformation?.unique_identifier_key
+              this.onConflict = this.transformation?.on_conflict
+              this.origin_key = this.transformation?.origin_id_key
+              this.destination_key = this.transformation?.destination_id_key
+
+              if(Array.isArray(this.transformation?.keys)) this.propertyMapping = this.transformation?.keys as Array<{[key: string]: any}>
+            })
+            .catch(e => this.errorMessage = e)
+      }
+    }
+
     // returns whether or not all required keys of the selected metatype or metatype relationship have been mapped
     @Watch('propertyMapping', {immediate: true})
     areRequiredKeysMapped() {
@@ -626,6 +698,10 @@ import {
         this.selectedMetatype = null
         return
       }
+
+      this.selectedRelationshipPair = null
+      this.origin_key = ""
+      this.destination_key = ""
 
       this.selectedMetatypeKeys = []
       this.keysLoading = true
@@ -729,6 +805,32 @@ import {
       .catch((e) => this.errorMessage = e)
     }
 
+    editTransformation() {
+      this.loading = true
+      const payload: {[key: string]: any} = {}
+
+      // include either the metatype or metatype relationship pair id, not both
+      payload.metatype_id = (this.selectedMetatype?.id) ? this.selectedMetatype.id : ""
+      payload.metatype_relationship_pair_id = (this.selectedRelationshipPair?.id) ? this.selectedRelationshipPair.id : ""
+      payload.origin_id_key = this.origin_key
+      payload.destination_id_key = this.destination_key
+
+      payload.conditions = this.conditions
+      payload.keys = this.propertyMapping
+      if(this.uniqueIdentifierKey) payload.unique_identifier_key = this.uniqueIdentifierKey
+      if(this.onConflict) payload.on_conflict = this.onConflict
+      if(this.rootArray) payload.root_array = this.rootArray
+
+      this.$client.updateTypeMappingTransformation(this.containerID, this.dataSourceID, this.typeMappingID,this.transformation?.id!, payload as TypeMappingTransformationPayloadT)
+          .then((transformation) => {
+            this.loading = false
+            this.reset()
+            this.dialog = false
+            this.$emit("transformationUpdated", transformation)
+          })
+          .catch((e) => this.errorMessage = e)
+    }
+
     payloadTypes() {
       return [{
         name: this.$t("dataMapping.metatype"),
@@ -773,6 +875,46 @@ import {
       if(mapped.value) return true
 
       return false
+    }
+
+    propertyKey(metatypeKey: MetatypeKeyT) {
+      const found = this.propertyMapping.find(k => k.metatype_key_id === metatypeKey.id)
+
+      if(found) {
+        return found.key
+      }
+
+      return null
+    }
+
+    propertyKeyValue(metatypeKey: MetatypeKeyT) {
+      const found = this.propertyMapping.find(k => k.metatype_key_id === metatypeKey.id)
+
+      if(found) {
+        return found.value
+      }
+
+      return null
+    }
+
+    relationshipPropertyKey(key: MetatypeRelationshipKeyT) {
+      const found = this.propertyMapping.find(k => k.metatype_relationship_key_id === key.id)
+
+      if(found) {
+        return found.key
+      }
+
+      return null
+    }
+
+    relationshipPropertyKeyValue(key: MetatypeRelationshipKeyT) {
+      const found = this.propertyMapping.find(k => k.metatype_relationship_key_id === key.id)
+
+      if(found) {
+        return found.value
+      }
+
+      return null
     }
 
     selectPropertyKey(key: string, metatypeKey: MetatypeKeyT, value?: boolean) {

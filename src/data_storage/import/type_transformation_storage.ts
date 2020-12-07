@@ -49,40 +49,30 @@ export default class TypeTransformationStorage extends PostgresStorage{
         return super.decodeAndValidate<TypeTransformationT>(typeTransformationT, onValidateSuccess, input)
     }
 
-    // Update partially updates the exports. This function will allow you to
-    // rewrite foreign keys - this is by design. The storage layer is dumb, whatever
-    // uses the storage layer should be what enforces user privileges etc.
-    public async Update(id: string, userID: string, updatedField: {[key:string]: any}): Promise<Result<boolean>> {
-        const toUpdate = await this.Retrieve(id);
+    public async Update(transformationID:string, userID:string, input:any | TypeTransformationT): Promise<Result<TypeTransformationT>> {
+        // onValidateSuccess is a callback that happens after the input has been
+        // validated and confirmed to be of the Container(s) type
+        const onValidateSuccess = ( resolve: (r:any) => void): (t: TypeTransformationT)=> void => {
+            return async (tt:TypeTransformationT) => {
+                tt.modified_by = userID;
 
-        if(toUpdate.isError) {
-            return new Promise(resolve => resolve(Result.Failure(toUpdate.error!.error)))
-        }
+                if(tt.metatype_id === "") tt.metatype_id = undefined
+                if(tt.metatype_relationship_pair_id === "") tt.metatype_relationship_pair_id = undefined
 
-        const updateStatement:string[] = [];
-        const values:string[] = [];
-        let i = 1;
 
-        Object.keys(updatedField).map(k => {
-            updateStatement.push(`${k} = $${i}`);
-            values.push(updatedField[k]);
-            i++
-        });
+                super.runAsTransaction(TypeTransformationStorage.updateStatement(transformationID, tt))
+                    .then((r) => {
+                        if(r.isError) {
+                            resolve(r);
+                            return
+                        }
 
-        updateStatement.push(`modified_by = $${i}`);
-        values.push(userID);
+                        resolve(Result.Success(typeTransformationT.encode(tt)))
+                    })
+            }
+        };
 
-        return new Promise(resolve => {
-            PostgresAdapter.Instance.Pool.query({
-                text: `UPDATE data_type_mapping_transformations SET ${updateStatement.join(",")} WHERE id = '${id}'`,
-                values
-            })
-                .then(() => {
-                    resolve(Result.Success(true))
-                })
-                .catch(e => resolve(Result.Failure(e)))
-        })
-
+        return super.decodeAndValidate<TypeTransformationT>(typeTransformationT, onValidateSuccess, input)
     }
 
     public Retrieve(id: string): Promise<Result<TypeTransformationT>> {
@@ -109,6 +99,13 @@ export default class TypeTransformationStorage extends PostgresStorage{
         }
     }
 
+    private static updateStatement(id: string, tt: TypeTransformationT): QueryConfig {
+        return {
+            text:`UPDATE data_type_mapping_transformations SET keys = $1, conditions = $2,metatype_id = $3, metatype_relationship_pair_id = $4, origin_id_key = $5, destination_id_key = $6, unique_identifier_key = $7, on_conflict = $8, modified_by = $9, root_array = $10 WHERE id = $11  `,
+            values: [JSON.stringify(tt.keys),JSON.stringify(tt.conditions),tt.metatype_id,tt.metatype_relationship_pair_id,tt.origin_id_key,tt.destination_id_key,tt.unique_identifier_key,tt.on_conflict,tt.modified_by,tt.root_array, id]
+        }
+    }
+
     private static retrieveStatement(transformationID:string): QueryConfig {
         return {
             text:`SELECT data_type_mapping_transformations.*,
@@ -117,7 +114,7 @@ export default class TypeTransformationStorage extends PostgresStorage{
                   FROM data_type_mapping_transformations
                   LEFT JOIN metatypes ON data_type_mapping_transformations.metatype_id = metatypes.id
                   LEFT JOIN metatype_relationship_pairs ON data_type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id
-                  WHERE id = $1`,
+                  WHERE data_type_mapping_transformations.id = $1`,
             values: [transformationID]
         }
     }

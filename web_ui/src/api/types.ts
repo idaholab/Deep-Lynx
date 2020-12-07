@@ -180,6 +180,7 @@ export type TypeMappingTransformationCondition = {
 
 export type TypeMappingTransformationT = {
     id: string;
+    root_array: string;
     type_mapping_id: string;
     conditions?: TypeMappingTransformationCondition[];
     metatype_id?: string;

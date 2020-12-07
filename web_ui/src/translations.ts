@@ -88,6 +88,7 @@ export default {
       mapPayloadKey: "map payload key",
       required: "required",
       create: "Create",
+      edit: "Edit",
       reset: "Reset",
       samplePayloadHelp: "This is an example of the data this transformation will be applied to.",
       constantValue: "constant value",
