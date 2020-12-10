@@ -62,7 +62,7 @@
             </v-col>
           </v-col>
           <v-col :cols="4">
-            <h2>Current Data Set</h2>
+            <h2>{{$t('dataMapping.currentDataSet')}}</h2>
             <v-textarea
                 filled
                 name="input-7-4"
@@ -106,7 +106,7 @@
         readonly typeMappingID!: string
 
         @Prop({required: false})
-        readonly payload!: ImportDataT | null
+        readonly import!: ImportDataT | null
 
         errorMessage = ""
         typeMapping: TypeMappingT | null = null
@@ -147,9 +147,9 @@
           .then((typeMapping) =>{
             this.typeMapping = typeMapping
 
-            if(this.payload) {
-              if(this.payload!.data) {
-                this.unmappedData = this.payload!.data
+            if(this.import) {
+              if(this.import!.data) {
+                this.unmappedData = this.import!.data
               }
             } else {
               this.unmappedData = this.typeMapping.sample_payload

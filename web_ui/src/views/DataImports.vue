@@ -16,7 +16,7 @@
         <v-card v-if="(selectedDataSource !== null)">
 
         <v-data-table
-                :headers="headers"
+                :headers="headers()"
                 :items="imports"
                 :server-items-length="importCount"
                 :options.sync="listOptions"
@@ -87,7 +87,7 @@
           <error-banner :message="dataErrorMessage"></error-banner>
           <success-banner :message="dataSuccessMessage"></success-banner>
           <v-data-table
-              :headers="importDataHeaders"
+              :headers="importDataHeaders()"
               :items="importData"
               class="elevation-1"
               :server-items-length="importDataCount"
@@ -95,7 +95,7 @@
               :loading="importLoading"
               :items-per-page="100"
               :footer-props="{
-                'items-per-page-options':[25,50,100],
+                'items-per-page-options':[25,50,100]
               }"
           >
             <template v-slot:top>
@@ -152,7 +152,7 @@
             {{$t('dataImports.editTypeMapping')}}
           </v-card-title>
           <div v-if="selectedDataSource !== null && mappingDialog">
-            <data-type-mapping :dataSourceID="selectedDataSource.id" :containerID="containerID" :payload="importDataMapping" :typeMappingID="importDataMapping.mapping_id" @mappingCreated="mappingDialog = false"></data-type-mapping>
+            <data-type-mapping :dataSourceID="selectedDataSource.id" :containerID="containerID" :import="importDataMapping" :typeMappingID="importDataMapping.mapping_id" @mappingCreated="mappingDialog = false"></data-type-mapping>
           </div>
         </v-card>
       </v-dialog>
@@ -165,7 +165,6 @@ import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import {DataSourceT, ImportDataT, ImportT} from "@/api/types";
 import ImportDataDialog from "@/components/importDataDialog.vue";
 import DataTypeMapping from "@/components/dataTypeMapping.vue"
-import TransformationDialog from "@/components/transformationDialog.vue";
 
 
 @Component({filters: {
@@ -176,7 +175,6 @@ import TransformationDialog from "@/components/transformationDialog.vue";
       components: {
         ImportDataDialog,
         DataTypeMapping,
-        TransformationDialog
       }
 })
 export default class DataImports extends Vue {
@@ -216,41 +214,45 @@ export default class DataImports extends Vue {
     importDataCount = 0
     importLoading = false
 
-    headers = [{
-            text: "Created At",
-            value: "created_at",
-        },
-        {
-          text: "% Processed",
-          value: "percentage_processed"
-        },
-        {
-            text: "Status",
-            value: "status",
-        },
-        {
-         text: "Message",
+    headers() {
+     return  [{
+       text: this.$t('dataImports.createdAt'),
+         value: "created_at",
+       },
+       {
+         text: this.$t('dataImports.percentageProcessed'),
+         value: "percentage_processed"
+       },
+       {
+         text: this.$t('dataImports.status'),
+         value: "status",
+       },
+       {
+         text: this.$t('dataImports.message'),
          value: "status_message",
          sortable: false
-        },
-        { text: "View/Edit",  value: 'actions', sortable: false }]
+       },
+       { text: this.$t('dataImports.viewEditData'),  value: 'actions', sortable: false }]
+    }
 
-    importDataHeaders = [{
-      text: "ID",
-      value: "id",
-    },
-    {
-      text: "Processed At",
-      value: "inserted_at",
-    },
-    {
-      text: "Errors",
-      value: "errors"
-    }, {
-      text: "Type Mapping",
-      value: 'typeMappings'
-      },
-    {  text: "View/Delete Data", value: 'actions', sortable: false },]
+    importDataHeaders() {
+      return  [{
+          text: this.$t('dataImports.id'),
+          value: "id",
+        },
+        {
+          text: this.$t('dataImports.processedAt'),
+          value: "inserted_at",
+        },
+        {
+          text: this.$t('dataImports.errors'),
+          value: "errors"
+        }, {
+          text: this.$t('dataImports.typeMapping'),
+          value: 'typeMappings'
+        },
+        {  text: this.$t('dataImports.viewDeleteData'), value: 'actions', sortable: false },]
+    }
 
 
   @Watch('options')
@@ -288,12 +290,17 @@ export default class DataImports extends Vue {
           if(sortBy && sortBy.length >= 1 && sortBy[0] === 'percentage_processed') sortParam = 'records_inserted'
           if(sortDesc) sortDescParam = sortDesc[0]
 
-          this.$client.listImports(this.containerID, this.selectedDataSource.id, itemsPerPage, itemsPerPage * pageNumber, sortParam, sortDescParam)
-              .then(imports => {
-                  this.imports = imports
-                  this.importsLoading = false
-              })
-              .catch(e => this.errorMessage = e)
+          this.$client.listImports(this.containerID, this.selectedDataSource.id,{
+            limit: itemsPerPage,
+            offset: itemsPerPage * pageNumber,
+            sortBy: sortParam,
+            sortDesc: sortDescParam
+          })
+          .then(imports => {
+              this.imports = imports
+              this.importsLoading = false
+          })
+          .catch(e => this.errorMessage = e)
         }
     }
 
@@ -338,7 +345,12 @@ export default class DataImports extends Vue {
     if(sortBy && sortBy.length >= 1) sortParam = sortBy[0]
     if(sortDesc) sortDescParam = sortDesc[0]
 
-    this.$client.listImportData(this.containerID, this.selectedImport!.id, itemsPerPage, itemsPerPage * pageNumber, sortParam, sortDescParam)
+    this.$client.listImportData(this.containerID, this.selectedImport!.id,{
+      limit: itemsPerPage,
+      offset: itemsPerPage * pageNumber,
+      sortBy: sortParam,
+      sortDesc: sortDescParam
+    })
         .then((results) => {
           this.importData = results
           this.importLoading = false
@@ -366,11 +378,7 @@ export default class DataImports extends Vue {
 
     this.$client.deleteImportData(this.containerID, importData.import_id, importData.id)
         .then(() => {
-          this.$client.listImportData(this.containerID, importData.import_id, 1000, 0)
-              .then((results) => {
-                this.importData = results
-              })
-              .catch((e: any) => this.dataErrorMessage= e)
+          this.loadImportData()
         })
         .catch((e: any) => this.dataErrorMessage= e)
   }

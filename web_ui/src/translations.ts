@@ -16,8 +16,8 @@ export default {
       dataSourcesDescription: "Configure Data Import Sources",
       dataExplorer: "Explorer",
       dataExplorerDescription: "Interactive Data Explorer",
-      dataMapping: "Metatype Mapping",
-      dataMappingDescription: "Manage Metatype to Data Mappings",
+      dataMapping: "Type Mapping",
+      dataMappingDescription: "Manage Data Mappings",
       dataExport: "Export",
       dataExportDescription: "Manage Data Export",
       settings: "Settings",
@@ -94,10 +94,11 @@ export default {
       constantValue: "constant value",
       selectDataSource: "Select Data Source",
       currentMappings: "Current Mappings",
-      pendingMapping: "Needs Mapped",
+      needsTransformations: "Needs Transformations",
       dataType: "Data Type",
       chooseMetatype: "Choose Metatype",
       typeToSearch: "Type to Search Available Metatypes",
+      typeToSearchRelationships: "Type to Search Available Metatype Relationship Pairs",
       typeKey: "Type Key",
       uniqueIdentifierKey: "Unique Identifier Key",
       propertyMapping: "Property Mapping",
@@ -112,7 +113,14 @@ export default {
       originDestinationKeyHelp: "By selecting a Parent Key you determine that this record is a child of the value of that Parent Key, opposite is true of selecting a Child Key.",
       active:"Enable Type Mapping",
       transformationsTableTitle: "Transformations",
-      typeMappingHelp: "The Type Mapping record and Transformation records are the workhorses of the type mapping system. A Type Mapping contains information as to which container and data source the type mapping belongs, a shape hash which is used to determine which objects to apply the type mapping to, and information denoting status. A Transformation belongs to a Type Mapping, and a Type Mapping can have as many Transformations as it wants. These are the individual actions that Deep Lynx should perform on an object matching a certain Type Mapping. Transformations are applied to an object to produce either a node or edge record, ready to be inserted into the Deep Lynx database."
+      typeMappingHelp: "The Type Mapping record and Transformation records are the workhorses of the type mapping system. A Type Mapping contains information as to which container and data source the type mapping belongs, a shape hash which is used to determine which objects to apply the type mapping to, and information denoting status. A Transformation belongs to a Type Mapping, and a Type Mapping can have as many Transformations as it wants. These are the individual actions that Deep Lynx should perform on an object matching a certain Type Mapping. Transformations are applied to an object to produce either a node or edge record, ready to be inserted into the Deep Lynx database.",
+      currentDataSet: "Current Data Set",
+      chooseResultingMetatype: "Choose Resulting Metatype",
+      chooseResultingRelationship: "Choose Resulting Metatype Relationship Pair",
+      typeToSearchRelationship:"Type to Search Available Metatype Relationship Pairs",
+      enabled: "Enabled",
+      createdAt: "Created At",
+      resultingTypes: "Resulting Metatype/Metatype Relationship"
     },
     typeTransformation: {
       newTransformationButton:"Create New Transformation",
@@ -211,7 +219,17 @@ export default {
       dataView: "Import Data",
       importTableTitle: "Import Data",
       viewData: "Raw Data",
-      editTypeMapping: "Type Mapping"
+      editTypeMapping: "Type Mapping",
+      createdAt: "Created At",
+      percentageProcessed: "% Processed",
+      status: "Status",
+      message: "Message",
+      viewEditData: "View/Edit",
+      id: "ID",
+      processedAt:"Processed At",
+      errors: "Errors",
+      typeMapping: "Type Mapping",
+      viewDeleteData: "View/Delete"
     },
     containerInvite: {
       button: "Invite User to Container",
@@ -223,7 +241,6 @@ export default {
       acceptTitle: "Accept Invitation to Join Container",
       acceptDescription: "By clicking the button below you are accepting an invitation to be a part of the container ",
       loginToAccept: "Login to Accept Invitation"
-
     }
   },
   es: {

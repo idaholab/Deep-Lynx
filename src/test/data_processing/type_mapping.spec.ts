@@ -191,7 +191,7 @@ describe('A Data Type Mapping', async() => {
 
         expect(mapping.isError).false
 
-        let fetched = await mappingStorage.List(containerID, 0, 100)
+        let fetched = await mappingStorage.List(containerID, exp.value.id!, 0, 100)
         expect(fetched.isError).false
         expect(fetched.value).not.empty
 

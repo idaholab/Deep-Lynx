@@ -68,7 +68,17 @@ export default class MetatypeRelationshipPairFilter extends Filter {
         return this
     }
 
-    all(limit?: number, offset?:number): Promise<Result<MetatypeRelationshipPairT[]>> {
-        return super.findAll<MetatypeRelationshipPairT>(limit, offset)
+    async all(limit?: number, offset?: number): Promise<Result<MetatypeRelationshipPairT[]>> {
+        const result = await super.findAll<MetatypeRelationshipPairT>(limit, offset)
+
+        // reset the query
+        this._rawQuery = [
+            `SELECT metatype_relationship_pairs.*, origin.name as origin_metatype_name , destination.name AS destination_metatype_name, relationships.name AS relationship_pair_name FROM ${MetatypeRelationshipPairStorage.tablename}`,
+            `LEFT JOIN metatypes origin ON metatype_relationship_pairs.origin_metatype_id = origin.id`,
+            `LEFT JOIN metatypes destination ON metatype_relationship_pairs.destination_metatype_id = destination.id`,
+            `LEFT JOIN metatype_relationships relationships ON metatype_relationship_pairs.relationship_id = relationships.id`,
+        ]
+
+        return new Promise(resolve => resolve(result))
     }
 }

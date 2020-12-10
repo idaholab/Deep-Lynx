@@ -57,19 +57,12 @@ export default class DataStagingStorage extends PostgresStorage {
         return super.retrieve<DataStagingT>(DataStagingStorage.retrieveStatement(id))
     }
 
-    public async List(importID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
-        if(limit === -1) { // allow return all with a negative number
+    public async List(importID: string, offset:number, limit:number, sortBy?:string, sortDesc?: boolean): Promise<Result<DataStagingT[]>>{
+        if(limit === -1) {
             return super.rows<DataStagingT>(DataStagingStorage.listAllStatement(importID))
         }
-        return super.rows<DataStagingT>(DataStagingStorage.listStatement(importID, offset, limit))
-    }
 
-    public async ListAndSort(importID: string, offset:number, limit:number, sortBy:string, sortDesc: boolean): Promise<Result<DataStagingT[]>>{
-        if(sortDesc) {
-            return super.rows<DataStagingT>(DataStagingStorage.listSortStatementDesc(importID, offset, limit,sortBy))
-        }
-
-        return super.rows<DataStagingT>(DataStagingStorage.listSortStatementAsc(importID, offset, limit,sortBy))
+        return super.rows<DataStagingT>(DataStagingStorage.listStatement(importID, offset, limit,sortBy, sortDesc))
     }
 
     public async ListUnprocessed(importID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
@@ -140,10 +133,22 @@ export default class DataStagingStorage extends PostgresStorage {
         }
     }
 
-    private static listStatement(importID: string, offset: number, limit: number): QueryConfig {
-        return {
-            text: `SELECT * FROM data_staging WHERE import_id = $1 OFFSET $2 LIMIT $3`,
-            values: [importID, offset, limit]
+    private static listStatement(importID: string, offset: number, limit: number, sortBy?: string, sortDesc?:boolean): QueryConfig {
+        if(sortDesc) {
+            return {
+                text: `SELECT * FROM data_staging WHERE import_id = $1 ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
+                values: [importID, offset, limit]
+            }
+        } else if(sortBy) {
+            return {
+                text: `SELECT * FROM data_staging WHERE import_id = $1 ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
+                values: [importID, offset, limit]
+            }
+        } else {
+            return {
+                text: `SELECT * FROM data_staging WHERE import_id = $1 OFFSET $2 LIMIT $3`,
+                values: [importID, offset, limit]
+            }
         }
     }
 
@@ -151,20 +156,6 @@ export default class DataStagingStorage extends PostgresStorage {
         return {
             text: `SELECT * FROM data_staging WHERE import_id = $1`,
             values: [importID]
-        }
-    }
-
-    private static listSortStatementAsc(importID: string, offset: number, limit: number,sortBy: string): QueryConfig {
-        return {
-            text: `SELECT * FROM data_staging WHERE import_id = $1 ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
-            values: [importID, offset, limit]
-        }
-    }
-
-    private static listSortStatementDesc(importID: string, offset: number, limit: number, sortBy: string): QueryConfig {
-        return {
-            text: `SELECT * FROM data_staging WHERE import_id = $1 ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
-            values: [importID, offset, limit]
         }
     }
 

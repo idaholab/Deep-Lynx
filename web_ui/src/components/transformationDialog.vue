@@ -177,7 +177,6 @@
                           :items="metatypes"
                           v-model="selectedMetatype"
                           :search-input.sync="search"
-                          color="white"
                           :single-line="false"
                           item-text="name"
                           :label="$t('dataMapping.chooseMetatype')"
@@ -287,7 +286,6 @@
                           :items="relationshipPairs"
                           v-model="selectedRelationshipPair"
                           :search-input.sync="relationshipPairSearch"
-                          color="white"
                           :single-line="false"
                           item-text="name"
                           :label="$t('dataMapping.chooseRelationship')"
@@ -684,7 +682,6 @@ import {
         offset: 0,
         originID: undefined,
         destinationID: undefined,
-        metatypeID: (this.selectedMetatype) ? this.selectedMetatype?.id! : undefined
       })
           .then(pairs => {
             this.relationshipPairs = pairs

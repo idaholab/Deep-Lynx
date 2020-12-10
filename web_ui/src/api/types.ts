@@ -41,6 +41,7 @@ export type MetatypeRelationshipPairT = {
     destination_metatype_id: string;
     relationship_id: string;
     relationship_type: "many:many" | "one:one" | "one:many" | "many:one";
+    relationship_pair_name?: string;
     created_at: string;
     modified_at: string;
     created_by: string;
@@ -156,6 +157,7 @@ export type TypeMappingT = {
     sample_payload: object;
     created_at: string;
     modified_at: string;
+    transformations: TypeMappingTransformationT[];
 }
 
 export type TypeMappingTransformationKeyMapping = {

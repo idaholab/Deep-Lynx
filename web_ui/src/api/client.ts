@@ -130,13 +130,6 @@ export class Client {
       return this.get<MetatypeRelationshipPairT[]>(`/containers/${containerID}/metatype_relationship_pairs`, query)
    }
 
-   listTypeMappings(containerID: string, datasourceID: string, {metatypeID, limit, offset}: {metatypeID?: string; limit?: number; offset?: number}): Promise<TypeMappingT[]> {
-      if(!metatypeID){
-         metatypeID = ""
-      }
-
-      return this.get<TypeMappingT[]>(`/containers/${containerID}/import/datasources/${datasourceID}/mappings?limit=${limit}&offset=${offset}&metatypeID=${metatypeID}`)
-   }
 
    createMetatype(containerID: string, metatype: any): Promise<MetatypeT> {
       return this.post<MetatypeT>(`/containers/${containerID}/metatypes`, metatype)
@@ -235,7 +228,7 @@ export class Client {
       return this.get<number>(`/containers/${containerID}/import/datasources/${dataSouceID}/mappings/unmapped/count`)
    }
 
-   listImports(containerID: string, dataSourceID: string, limit: number, offset: number, sortBy?: string, sortDesc?: boolean): Promise<ImportT[]> {
+   listImports(containerID: string, dataSourceID: string, {limit, offset, sortBy, sortDesc}: {limit: number; offset: number; sortBy?: string; sortDesc?: boolean}): Promise<ImportT[]> {
       const query: {[key: string]: any} = {}
 
       query.limit = limit
@@ -253,7 +246,7 @@ export class Client {
       return this.get<number>(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`, query)
    }
 
-   listImportData(containerID: string, importID: string, limit: number, offset: number, sortBy?: string, sortDesc?: boolean): Promise<ImportDataT[]> {
+   listImportData(containerID: string, importID: string, {limit, offset, sortBy, sortDesc}: {limit: number; offset: number; sortBy?: string; sortDesc?: boolean}): Promise<ImportDataT[]> {
       const query: {[key: string]: any} = {}
 
       query.limit = limit
@@ -325,6 +318,10 @@ export class Client {
       return this.get<TypeMappingT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`)
    }
 
+   deleteTypeMapping(containerID: string, dataSourceID: string, typeMappingID: string): Promise<boolean> {
+      return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`)
+   }
+
    updateTypeMapping(containerID: string, dataSourceID: string, typeMappingID: string, mapping: TypeMappingT): Promise<boolean> {
       return this.putNoData(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`, mapping)
    }
@@ -336,6 +333,31 @@ export class Client {
    deleteTransformation(containerID: string, dataSourceID: string, typeMappingID: string, tranformationID: string): Promise<boolean> {
       return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations/${tranformationID}`)
    }
+
+
+   listTypeMappings(containerID: string, dataSourceID: string, {limit, offset, sortBy, sortDesc, resultingMetatypeName, resultingMetatypeRelationshipName, noTransformations}: {limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; resultingMetatypeName?: string | undefined; resultingMetatypeRelationshipName?: string | undefined; noTransformations?: boolean}): Promise<TypeMappingT[]> {
+      const query: {[key: string]: any} = {}
+
+      if(limit) query.limit = limit
+      if(offset) query.offset = offset
+      if(sortBy) query.sortBy = sortBy
+      if(sortDesc) query.sortDesc = sortDesc
+      if(resultingMetatypeName) query.resultingMetatypeName = resultingMetatypeName
+      if(resultingMetatypeRelationshipName) query.resultingMetatypeRelationshipName = resultingMetatypeRelationshipName
+
+
+      return this.get<TypeMappingT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings`, query)
+   }
+
+   countTypeMappings(containerID: string, dataSourceID: string, needsTransformations?: boolean): Promise<number> {
+      const query: {[key: string]: any} = {}
+
+      if(needsTransformations) query.needsTransformations = true
+      query.count = true
+
+      return this.get<number>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings`, query)
+   }
+
 
    private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {
       const config: {[key: string]: any} = {}
