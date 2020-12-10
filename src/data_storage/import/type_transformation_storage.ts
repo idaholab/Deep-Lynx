@@ -6,7 +6,7 @@ import {dataSourceT, DataSourceT} from "../../types/import/dataSourceT";
 import {typeTransformationT, TypeTransformationT} from "../../types/import/typeMappingT";
 
 /*
-* ImportAdapterStorage encompasses all logic dealing with the manipulation of the Import Adapter
+* TypeTransformationStorage encompasses all logic dealing with the manipulation of the Import Adapter
 * class in a data storage layer.
 */
 export default class TypeTransformationStorage extends PostgresStorage{
