@@ -1,7 +1,6 @@
 import express from "express"
 import passport from "passport";
 import * as fs from "fs";
-
 import {UserT} from "../../../types/user_management/userT";
 import Config from "../../../config"
 import UserStorage from "../../../data_storage/user_management/user_storage";

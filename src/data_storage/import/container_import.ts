@@ -72,7 +72,7 @@ export default class ContainerImport {
   }
 
   public async ImportOntology(user: UserT | any, input: ContainerImportT, file: Buffer, dryrun: boolean): Promise<Result<string>> {
-    if (file.length == 0) {
+    if (file.length === 0) {
       const axiosConfig: AxiosRequestConfig = {
         headers: {
           "Content-Type": "application/xml;charset=UTF-8"
@@ -116,12 +116,12 @@ export default class ContainerImport {
   private async parseOntology(user: UserT, json: any, name: string, description: string, dryrun: boolean): Promise<Result<string>> {
     return new Promise<Result<string>>(async (resolve) => {
       json = json["rdf:RDF"]
-      const ontology_head = json["owl:Ontology"];
-      const annotation_properties = json["owl:AnnotationProperty"];
-      const object_properties = json["owl:ObjectProperty"];
-      const datatype_properties = json["owl:DatatypeProperty"];
+      const ontologyHead = json["owl:Ontology"];
+      const annotationProperties = json["owl:AnnotationProperty"];
+      const objectProperties = json["owl:ObjectProperty"];
+      const datatypeProperties = json["owl:DatatypeProperty"];
       const classes = json["owl:Class"];
-      const contributor = ontology_head["dc:contributor"];
+      const contributor = ontologyHead["dc:contributor"];
 
       // Declare an intersection type to add needed fields to MetatypeT
       type MetatypeExtendT = MetatypeT &
@@ -139,157 +139,156 @@ export default class ContainerImport {
         cardinality_quantity: string
       }
 
-      let class_count = 0;
-      const class_list: MetatypeExtendT[] = [];
-      const class_map = new Map();
-      const relationship_map = new Map();
-      const data_property_map = new Map();
+      let classCount = 0;
+      const classList: MetatypeExtendT[] = [];
+      const classMap = new Map();
+      const relationshipMap = new Map();
+      const dataPropertyMap = new Map();
 
-      for (let i = 0; i < classes.length; i++) {
-        const class_id = classes[i]._attributes["rdf:about"]
-        let class_label = classes[i]["rdfs:label"]._text;
+      for (const selectedClass of classes) {
+        const classID = selectedClass._attributes["rdf:about"]
+        let classLabel = selectedClass["rdfs:label"]._text;
         // if language has not been set, rdfs:label has a single string property rather than an object
-        if (typeof class_label == "undefined") {
-          class_label = classes[i]["rdfs:label"];
+        if (typeof classLabel === "undefined") {
+          classLabel = selectedClass["rdfs:label"];
         }
 
-        let parent_id;
-        const properties = [];
-        if (typeof classes[i]["rdfs:subClassOf"][0] == "undefined") {
-          parent_id = classes[i]["rdfs:subClassOf"]._attributes["rdf:resource"];
+        let parentID;
+        const properties: {[key: string]: PropertyT} = {};
+        if (typeof selectedClass["rdfs:subClassOf"][0] === "undefined") {
+          parentID = selectedClass["rdfs:subClassOf"]._attributes["rdf:resource"];
         } else { // if no other properties, subClassOf is not an array
-          parent_id = classes[i]["rdfs:subClassOf"][0]._attributes["rdf:resource"];
+          parentID = selectedClass["rdfs:subClassOf"][0]._attributes["rdf:resource"];
           // loop through properties
-          // if someValuesFrom -> rdf:resource != "http://www*" then assume its a relationship, otherwise static property
+          // if someValuesFrom -> rdf:resource !== "http://www*" then assume its a relationship, otherwise static property
           let j;
           // start at 1 since 0 is the parent ID property
-          for (j = 1; j < classes[i]["rdfs:subClassOf"].length; j++) {
-            const property = classes[i]["rdfs:subClassOf"][j]["owl:Restriction"];
-            const on_property = property["owl:onProperty"]._attributes["rdf:resource"];
+          for (j = 1; j < selectedClass["rdfs:subClassOf"].length; j++) {
+            const property = selectedClass["rdfs:subClassOf"][j]["owl:Restriction"];
+            const onProperty = property["owl:onProperty"]._attributes["rdf:resource"];
             // object or datatype referenced will either be someValuesFrom or qualifiedCardinality and onDataRange
-            let data_range;
-            let property_type;
-            let restriction_type = 'some';
+            let dataRange;
+            let propertyType;
+            let restrictionType = 'some';
             let target = 'none';
-            let cardinality_quantity = 'none';
+            let cardinalityQuantity = 'none';
 
-            if (typeof property["owl:someValuesFrom"] == "undefined") {
-              restriction_type = property["owl:qualifiedCardinality"] ? "exact"
+            if (typeof property["owl:someValuesFrom"] === "undefined") {
+              restrictionType = property["owl:qualifiedCardinality"] ? "exact"
                 : property["owl:maxQualifiedCardinality"] ? "max"
                   : property["owl:minQualifiedCardinality"] ? "min"
                     : 'unknown restriction type';
-              cardinality_quantity = property["owl:qualifiedCardinality"] ? property["owl:qualifiedCardinality"]._text
+              cardinalityQuantity = property["owl:qualifiedCardinality"] ? property["owl:qualifiedCardinality"]._text
                 : property["owl:maxQualifiedCardinality"] ? property["owl:maxQualifiedCardinality"]._text
                   : property["owl:minQualifiedCardinality"] ? property["owl:minQualifiedCardinality"]._text
                     : 'unknown cardinality value';
               // Primitive type and class cardinality
-              data_range = property["owl:onDataRange"] ? property["owl:onDataRange"]._attributes["rdf:resource"].split("#")[1]
+              dataRange = property["owl:onDataRange"] ? property["owl:onDataRange"]._attributes["rdf:resource"].split("#")[1]
                 : property["owl:onClass"] ? property["owl:onClass"]._attributes["rdf:resource"]
                   : 'unknown data range';
 
-              target = data_range; // This contains the class or datatype with a cardinality
+              target = dataRange; // This contains the class or datatype with a cardinality
               target = this.ValidateTarget(target);
 
               // Determine if primitive or relationship property
               const regex = new RegExp('[1-9:-]');
               if (regex.test(target)) {
                 // The target is an identifier for another class
-                property_type = 'relationship';
+                propertyType = 'relationship';
               } else {
-                property_type = 'primitive';
+                propertyType = 'primitive';
               }
             } else {
               target = property["owl:someValuesFrom"]._attributes["rdf:resource"];
               if (target.match(/http:\/\/www/)) {
-                property_type = 'primitive';
+                propertyType = 'primitive';
                 target = target.split("#")[1];
                 target = this.ValidateTarget(target);
               } else {
-                property_type = 'relationship';
+                propertyType = 'relationship';
               }
             }
-            const property_obj = { value: on_property, target, property_type, restriction_type, cardinality_quantity };
-            properties.push(property_obj);
+            const propertyObj = { value: onProperty, target, property_type: propertyType, restriction_type: restrictionType, cardinality_quantity: cardinalityQuantity };
+            const propKey = propertyObj.value + propertyObj.target;
+            properties[propKey] = propertyObj;
           }
         }
 
-        let class_description = "";
-        if (typeof classes[i]["obo:IAO_0000115"] != "undefined") {
-          class_description = classes[i]["obo:IAO_0000115"]._text ? classes[i]["obo:IAO_0000115"]._text : classes[i]["obo:IAO_0000115"];
+        let classDescription = "";
+        if (typeof selectedClass["obo:IAO_0000115"] !== "undefined") {
+          classDescription = selectedClass["obo:IAO_0000115"]._text ? selectedClass["obo:IAO_0000115"]._text : selectedClass["obo:IAO_0000115"];
         }
 
         // Search for and remove troublesome characters from class descriptions
         const regex = new RegExp('[’]');
-        if (regex.test(class_description)) {
-          class_description = class_description.replace('’', "");
+        if (regex.test(classDescription)) {
+          classDescription = classDescription.replace('’', "");
         }
 
-        const this_class = { id: class_id, name: class_label, parent_id, description: class_description, properties };
-        class_list.push(this_class);
-        class_count++;
+        const thisClass = { id: classID, name: classLabel, parent_id: parentID, description: classDescription, properties };
+        classList.push(thisClass);
+        classCount++;
       }
 
       // Relationships
-      for (let i = 0; i < object_properties.length; i++) {
-        const relationship = object_properties[i];
-        const relationship_id = relationship._attributes["rdf:about"];
-        const relationship_name = relationship["rdfs:label"]._text ? relationship["rdfs:label"]._text : relationship["rdfs:label"];
-        let relationship_description = "";
-        if (typeof relationship["obo:IAO_0000115"] != "undefined") {
-          relationship_description = relationship["obo:IAO_0000115"]._text ? relationship["obo:IAO_0000115"]._text : relationship["obo:IAO_0000115"];
+      for (const relationship of objectProperties) {
+        const relationshipID = relationship._attributes["rdf:about"];
+        const relationshipName = relationship["rdfs:label"]._text ? relationship["rdfs:label"]._text : relationship["rdfs:label"];
+        let relationshipDescription = "";
+        if (typeof relationship["obo:IAO_0000115"] !== "undefined") {
+          relationshipDescription = relationship["obo:IAO_0000115"]._text ? relationship["obo:IAO_0000115"]._text : relationship["obo:IAO_0000115"];
         }
-        relationship_map.set(relationship_id, { name: relationship_name, description: relationship_description });
+        relationshipMap.set(relationshipID, { name: relationshipName, description: relationshipDescription });
       }
       // Add inheritance relationship to relationship map
-      relationship_map.set('inheritance', { name: 'inheritance', description: 'Identifies the parent of the entity.' })
+      relationshipMap.set('inheritance', { name: 'inheritance', description: 'Identifies the parent of the entity.' })
 
       // Datatype Properties
-      for (let i = 0; i < datatype_properties.length; i++) {
-        const data_property = datatype_properties[i];
-        const dp_id = data_property._attributes["rdf:about"];
-        const dp_name = data_property["rdfs:label"]._text ? data_property["rdfs:label"]._text : data_property["rdfs:label"];
-        let dp_description = "";
-        if (typeof data_property["obo:IAO_0000115"] != "undefined") {
-          dp_description = data_property["obo:IAO_0000115"]._text ? data_property["obo:IAO_0000115"]._text : data_property["obo:IAO_0000115"];
+      for (const dataProperty of datatypeProperties) {
+        const dpID = dataProperty._attributes["rdf:about"];
+        const dpName = dataProperty["rdfs:label"]._text ? dataProperty["rdfs:label"]._text : dataProperty["rdfs:label"];
+        let dpDescription = "";
+        if (typeof dataProperty["obo:IAO_0000115"] !== "undefined") {
+          dpDescription = dataProperty["obo:IAO_0000115"]._text ? dataProperty["obo:IAO_0000115"]._text : dataProperty["obo:IAO_0000115"];
         }
-        let dp_enum_range = null;
-        if (typeof data_property["rdfs:range"] != "undefined") {
-          dp_enum_range = data_property["rdfs:range"]["rdfs:Datatype"] ? data_property["rdfs:range"]["rdfs:Datatype"] : null;
+        let dpEnumRange = null;
+        if (typeof dataProperty["rdfs:range"] !== "undefined") {
+          dpEnumRange = dataProperty["rdfs:range"]["rdfs:Datatype"] ? dataProperty["rdfs:range"]["rdfs:Datatype"] : null;
 
-          if (dp_enum_range != null) {
+          if (dpEnumRange !== null) {
             // Add the first enum value
-            let current_option = dp_enum_range["owl:oneOf"]["rdf:Description"];
-            const options = [current_option["rdf:first"]._text]
+            let currentOption = dpEnumRange["owl:oneOf"]["rdf:Description"];
+            const options = [currentOption["rdf:first"]._text]
             // Loop through the remaining enum values
-            while (typeof current_option["rdf:rest"]["rdf:Description"] != "undefined") {
-              current_option = current_option["rdf:rest"]["rdf:Description"];
-              options.push(current_option["rdf:first"]._text)
+            while (typeof currentOption["rdf:rest"]["rdf:Description"] !== "undefined") {
+              currentOption = currentOption["rdf:rest"]["rdf:Description"];
+              options.push(currentOption["rdf:first"]._text)
             }
-            dp_enum_range = options;
+            dpEnumRange = options;
           }
         }
-        data_property_map.set(dp_id, { name: dp_name, description: dp_description, dp_enum: dp_enum_range });
+        dataPropertyMap.set(dpID, { name: dpName, description: dpDescription, dp_enum: dpEnumRange });
       }
 
-      let ontology_description = description || "";
-      if (ontology_head[description]) {
-        ontology_description = ontology_head[description]._text ? ontology_head[description]._text : description;
+      let ontologyDescription = description || "";
+      if (ontologyHead[description]) {
+        ontologyDescription = ontologyHead[description]._text ? ontologyHead[description]._text : description;
       }
 
       if (dryrun) {
         let explainString = "<b>Ontology Extractor - Explain Plan</b><br/>";
         explainString += "Container name: " + name + "<br/>";
-        explainString += "Container description: " + ontology_description + "<br/>";
-        explainString += "# of classes/types: " + class_count + "<br/>";
-        explainString += '# of data properties: ' + data_property_map.size + "<br/>";
-        explainString += "# of relationships: " + relationship_map.size + "<br/>";
+        explainString += "Container description: " + ontologyDescription + "<br/>";
+        explainString += "# of classes/types: " + classCount + "<br/>";
+        explainString += '# of data properties: ' + dataPropertyMap.size + "<br/>";
+        explainString += "# of relationships: " + relationshipMap.size + "<br/>";
         resolve(Result.Success(explainString));
       } else {
         // Issue API commands to create container, items, and relationships
         // Create the container
         const data = {
           name,
-          description: ontology_description
+          description: ontologyDescription
         };
         const containers = await CreateContainer(user, data)
         if (containers.isError) return resolve(Result.SilentFailure(containers.error!.error));
@@ -297,148 +296,164 @@ export default class ContainerImport {
         const containerID = containers.value[0].id!;
 
         // Create relationships
-        const relationship_promises: Promise<Result<MetatypeRelationshipT[]>>[] = [];
-        relationship_map.forEach(async function (value, key, map) {
+        const relationshipPromises: Promise<Result<MetatypeRelationshipT[]>>[] = [];
+        relationshipMap.forEach(async (value, key, map) => {
           const data = {
             name: value.name,
             description: value.description
           };
-          relationship_promises.push(metatypeRelationshipStorage.Create(containerID, user.id!, data))
+          relationshipPromises.push(metatypeRelationshipStorage.Create(containerID, user.id!, data))
         });
-        const relationshipResult: Result<MetatypeRelationshipT[]>[] = await Promise.all(relationship_promises)
-        let rel_count = 0;
-        for (const [key, value] of relationship_map) {
-          if (relationshipResult[rel_count].isError) {
+        const relationshipResult: Result<MetatypeRelationshipT[]>[] = await Promise.all(relationshipPromises)
+        let relCount = 0;
+        for (const [key, value] of relationshipMap) {
+          if (relationshipResult[relCount].isError) {
             const rollback = await this.rollbackOntology(containerID)
               .then((result) => {
-                return result + " " + relationshipResult[rel_count].error?.error
+                return result + " " + relationshipResult[relCount].error?.error
               })
               .catch((err: string) => {
-                return err + " " + relationshipResult[rel_count].error?.error
+                return err + " " + relationshipResult[relCount].error?.error
               })
             resolve(Result.SilentFailure(rollback))
             return
           } else {
-            const datum = relationshipResult[rel_count].value[0];
+            const datum = relationshipResult[relCount].value[0];
             value.db_id = datum.id;
-            relationship_map.set(key, value);
-            rel_count++;
+            relationshipMap.set(key, value);
+            relCount++;
           }
         }
 
         // Create metatypes (classes)
-        const class_promises: Promise<Result<MetatypeT[]>>[] = [];
-        class_list.forEach(async function (this_class: MetatypeExtendT) {
+        const classPromises: Promise<Result<MetatypeT[]>>[] = [];
+        classList.forEach(async (thisClass: MetatypeExtendT) => {
           const data = {
-            name: this_class.name,
-            description: this_class.description
+            name: thisClass.name,
+            description: thisClass.description
           };
-          class_promises.push(metatypeStorage.Create(containerID, user.id!, data))
+          classPromises.push(metatypeStorage.Create(containerID, user.id!, data))
         });
-        const classResult: Result<MetatypeT[]>[] = await Promise.all(class_promises)
-        let class_count = 0;
-        for (let i = 0; i < class_list.length; i++) {
-          if (classResult[class_count].isError) {
+        const classResult: Result<MetatypeT[]>[] = await Promise.all(classPromises)
+        let classCount = 0;
+        for (const selectedClass of classList) {
+          if (classResult[classCount].isError) {
             const rollback = await this.rollbackOntology(containerID)
               .then((result) => {
-                return result + " " + classResult[class_count].error?.error
+                return result + " " + classResult[classCount].error?.error
               })
               .catch((err: string) => {
-                return err + " " + classResult[class_count].error?.error
+                return err + " " + classResult[classCount].error?.error
               })
             resolve(Result.SilentFailure(rollback))
             return
           } else {
-            const this_class = class_list[i]
-            const datum = classResult[class_count].value[0];
-            this_class.db_id = datum.id;
-            class_list[class_count] = this_class;
-            class_map.set(this_class.id, this_class)
-            class_count++;
+            const datum = classResult[classCount].value[0];
+            selectedClass.db_id = datum.id;
+            classList[classCount] = selectedClass;
+            classMap.set(selectedClass.id, selectedClass)
+            classCount++;
           }
         }
 
-        const property_promises: Promise<Result<MetatypeKeyT[] | MetatypeRelationshipPairT[]>>[] = [];
+        const propertyPromises: Promise<Result<MetatypeKeyT[] | MetatypeRelationshipPairT[]>>[] = [];
         // Add metatype keys (properties) and relationship pairs
-        class_list.forEach(async function (this_class: MetatypeExtendT) {
+        classList.forEach(async (thisClass: MetatypeExtendT) => {
           // Add relationship to parent class
-          const relationship = relationship_map.get('inheritance');
+          const relationship = relationshipMap.get('inheritance');
           // Don't add parent relationship for root entity
-          if (!this_class.parent_id!.match(/owl#Thing/)) {
+          if (!thisClass.parent_id!.match(/owl#Thing/)) {
             const data = {
-              name: this_class.name + ' : child of : ' + class_map.get(this_class.parent_id).name,
+              name: thisClass.name + ' : child of : ' + classMap.get(thisClass.parent_id).name,
               description: relationship.description,
-              origin_metatype_id: this_class.db_id,
-              destination_metatype_id: class_map.get(this_class.parent_id).db_id,
+              origin_metatype_id: thisClass.db_id,
+              destination_metatype_id: classMap.get(thisClass.parent_id).db_id,
               relationship_id: relationship.db_id,
               relationship_type: "many:one"
             };
-            property_promises.push(metatypeRelationshipPairStorage.Create(containerID, user.id!, data))
+            propertyPromises.push(metatypeRelationshipPairStorage.Create(containerID, user.id!, data))
+
+            // Add inherited properties and relationships (flatten ontology)
+            let parent = classMap.get(thisClass.parent_id)
+            // Loop until root class (below owl#Thing) is reached
+            while (!parent.parent_id.match(/owl#Thing/)) {
+              thisClass.properties = {
+                ...thisClass.properties,
+                ...parent.properties
+              }
+              parent = classMap.get(parent.parent_id)
+            }
+            // Add root class properties
+            thisClass.properties = {
+              ...thisClass.properties,
+              ...parent.properties
+            }
           }
 
           // Add primitive properties and other relationships
-          this_class.properties.forEach(async function (property: PropertyT) {
-            if (property.property_type == 'primitive') {
-              const data_prop = data_property_map.get(property.value);
-              let property_options = [""];
-              if (data_prop.dp_enum != null) {
-                property_options = data_prop.dp_enum;
+          for (const propertyName in thisClass.properties) {
+            const property = thisClass.properties[propertyName];
+            if (property.property_type === 'primitive') {
+              const dataProp = dataPropertyMap.get(property.value);
+              let propertyOptions = [""];
+              if (dataProp.dp_enum !== null) {
+                propertyOptions = dataProp.dp_enum;
               }
               // Leave 0 for unbounded and 'some' restriction type
               let min = 0;
               let max = 0;
-              const cardinality_quantity = parseInt(property.cardinality_quantity);
+              const cardinalityQuantity = parseInt(property.cardinality_quantity, 10);
               switch (property.restriction_type) {
                 case 'exact':
-                  min = cardinality_quantity;
-                  max = cardinality_quantity;
+                  min = cardinalityQuantity;
+                  max = cardinalityQuantity;
                   break;
                 case 'min':
-                  min = cardinality_quantity;
+                  min = cardinalityQuantity;
                   break;
                 case 'max':
-                  max = cardinality_quantity;
+                  max = cardinalityQuantity;
                   break;
               }
               const data = {
-                metatype_id: this_class.db_id,
-                name: this_class.name + ' : ' + data_prop.name,
+                metatype_id: thisClass.db_id,
+                name: thisClass.name + ' : ' + dataProp.name,
                 required: false,
-                property_name: data_prop.name,
-                description: data_prop.description,
+                property_name: dataProp.name,
+                description: dataProp.description,
                 data_type: property.target,
                 validation: {
                   regex: "",
                   min,
                   max
                 },
-                options: property_options,
+                options: propertyOptions,
                 defaultValue: ""
               };
-              property_promises.push(metatypeKeyStorage.Create(data.metatype_id!, user.id!, data));
-            } else if (property.property_type == 'relationship') {
-              const relationship = relationship_map.get(property.value);
+              propertyPromises.push(metatypeKeyStorage.Create(data.metatype_id!, user.id!, data));
+            } else if (property.property_type === 'relationship') {
+              const relationship = relationshipMap.get(property.value);
               const data = {
-                name: this_class.name + ' : ' + relationship.name + ' : ' + class_map.get(property.target).name,
+                name: thisClass.name + ' : ' + relationship.name + ' : ' + classMap.get(property.target).name,
                 description: relationship.description,
-                origin_metatype_id: this_class.db_id,
-                destination_metatype_id: class_map.get(property.target).db_id,
+                origin_metatype_id: thisClass.db_id,
+                destination_metatype_id: classMap.get(property.target).db_id,
                 relationship_id: relationship.db_id,
                 relationship_type: "many:many"
               };
-              property_promises.push(metatypeRelationshipPairStorage.Create(containerID, user.id!, data))
+              propertyPromises.push(metatypeRelationshipPairStorage.Create(containerID, user.id!, data))
             }
-          })
+          }
         })
-        const propertyResult: Result<MetatypeKeyT[] | MetatypeRelationshipPairT[]>[] = await Promise.all(property_promises)
-        for (let i = 0; i < propertyResult.length; i++) {
-          if (propertyResult[i].isError) {
+        const propertyResults: Result<MetatypeKeyT[] | MetatypeRelationshipPairT[]>[] = await Promise.all(propertyPromises)
+        for (const propResult of propertyResults) {
+          if (propResult.isError) {
             const rollback = await this.rollbackOntology(containerID)
               .then((result) => {
-                return result + " " + propertyResult[i].error?.error
+                return result + " " + propResult.error?.error
               })
               .catch((err: string) => {
-                return err + " " + propertyResult[i].error?.error
+                return err + " " + propResult.error?.error
               })
             resolve(Result.SilentFailure(rollback))
             return
