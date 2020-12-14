@@ -23,6 +23,7 @@
                         <v-select
                             :items="payloadArrayKeys"
                             v-model="rootArray"
+                            clearable
                         >
 
                           <template v-slot:label>{{$t('dataMapping.rootArray')}} <small>{{$t('dataMapping.optional')}}</small></template>
