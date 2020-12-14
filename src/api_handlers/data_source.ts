@@ -8,7 +8,7 @@ import {HttpImpl} from "../data_importing/httpImpl";
 import DataSourceStorage from "../data_storage/import/data_source_storage";
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
-import {onDecodeError} from "../utilities";
+import {objectToShapeHash, onDecodeError} from "../utilities";
 import ImportStorage from "../data_storage/import/import_storage";
 import {DataSource} from "../data_importing/data_source"
 import {Readable} from "stream";
@@ -17,6 +17,8 @@ import FileStorageProvider, {FileUploadResponse} from "../file_storage/file_stor
 import FileStorage from "../data_storage/file_storage";
 import Logger from "../logger";
 import DataStagingStorage from "../data_storage/import/data_staging_storage";
+import TypeMappingStorage from "../data_storage/import/type_mapping_storage";
+import {TypeMappingT} from "../types/import/typeMappingT";
 
 
 
@@ -73,7 +75,25 @@ export async function ManualJsonImport(user:UserT, dataSourceID: string, payload
     const newImport = await ImportStorage.Instance.InitiateImport(dataSourceID, user.id!, "manual upload")
 
     for(const data of payload) {
-        const inserted = await DataStagingStorage.Instance.Create(dataSourceID, newImport.value, data)
+        const shapeHash = objectToShapeHash(data)
+
+        let mapping: TypeMappingT
+
+        const retrieved = await TypeMappingStorage.Instance.RetrieveByShapeHash(dataSourceID, shapeHash)
+        if(retrieved.isError) {
+            const newMapping = await TypeMappingStorage.Instance.Create(dataSource.value.container_id!, dataSourceID, shapeHash, data)
+
+            if(newMapping.isError) {
+                Logger.error(`unable to create new type mapping for imported data ${newMapping.error}`)
+                continue
+            }
+
+            mapping = newMapping.value
+        } else {
+            mapping = retrieved.value
+        }
+
+        const inserted = await DataStagingStorage.Instance.Create(dataSourceID, newImport.value, mapping.id, data)
         if(inserted.isError) Logger.error(`unable to insert data for import ${inserted.error}`)
     }
 

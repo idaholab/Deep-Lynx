@@ -5,15 +5,16 @@ import {TypeMappingT} from "../../types/import/typeMappingT";
 
 export default class TypeMappingFilter extends Filter {
     constructor() {
-        // have to call super, but we immediately redo it
         super(TypeMappingStorage.tableName);
 
-        // in order to select the metatype_name we must redo the initial query to accept
-        // a LEFT JOIN
+        // in order to search based on the name of resulting metatype/metatype relationships
+        // we must create a series of joins
         this._rawQuery = [
-            `SELECT data_type_mappings.*, metatypes.name as metatype_name, metatype_relationship_pairs.name AS metatype_relationship_pair_name FROM ${TypeMappingStorage.tableName}`,
-            `LEFT JOIN metatypes ON data_type_mappings.metatype_id = metatypes.id`,
-            `LEFT JOIN metatype_relationship_pairs ON data_type_mappings.metatype_relationship_pair_id = metatype_relationship_pairs.id`
+            'SELECT DISTINCT ON (data_type_mappings.id) data_type_mappings.*, metatypes.name as resulting_metatype_name, metatype_relationships.name as resulting_metatype_relationship_name FROM data_type_mappings',
+            'LEFT JOIN data_type_mapping_transformations ON data_type_mappings.id = data_type_mapping_transformations.type_mapping_id',
+            'LEFT JOIN metatypes ON data_type_mapping_transformations.metatype_id = metatypes.id',
+            'LEFT JOIN metatype_relationship_pairs on data_type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id',
+            'LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id '
         ]
     }
 
@@ -27,12 +28,33 @@ export default class TypeMappingFilter extends Filter {
         return this
     }
 
-    metatype_id(operator: string, value: any) {
-        super.query("data_type_mappings.metatype_id", operator, value)
+    dataSourceID(operator: string, value: any) {
+        super.query("data_type_mappings.data_source_id", operator, value)
+        return this
+    }
+
+    resultingMetatypeName(operator: string, value: any) {
+        super.query("metatypes.name", operator, value)
+        return this
+    }
+
+    resultingMetatypeRelationshipName(operator: string, value: any) {
+        super.query("metatype_relationships.name", operator, value)
         return this
     }
 
     all(limit?: number, offset?:number): Promise<Result<TypeMappingT[]>> {
-        return super.findAll<TypeMappingT>(limit, offset)
+        const results = super.findAll<TypeMappingT>(limit, offset)
+
+        // reset the query
+        this._rawQuery = [
+            'SELECT DISTINCT ON (data_type_mappings.id) data_type_mappings.*, metatypes.name as resulting_metatype_name, metatype_relationships.name as resulting_metatype_relationship_name FROM data_type_mappings',
+            'LEFT JOIN data_type_mapping_transformations ON data_type_mappings.id = data_type_mapping_transformations.type_mapping_id',
+            'LEFT JOIN metatypes ON data_type_mapping_transformations.metatype_id = metatypes.id',
+            'LEFT JOIN metatype_relationship_pairs on data_type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id',
+            'LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id '
+        ]
+
+        return new Promise(resolve => resolve(results))
     }
 }

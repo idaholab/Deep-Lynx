@@ -1,8 +1,8 @@
 import Result from "../../result"
 import PostgresStorage from "../postgresStorage";
 import {QueryConfig} from "pg";
+import {TypeMappingT} from "../../types/import/typeMappingT";
 import PostgresAdapter from "../adapters/postgres/postgres";
-import {TypeMappingT, typeMappingT} from "../../types/import/typeMappingT";
 
 /*
 * ImportAdapterStorage encompasses all logic dealing with the manipulation of the Import Adapter
@@ -21,32 +21,23 @@ export default class TypeMappingStorage extends PostgresStorage{
         return TypeMappingStorage.instance
     }
 
-    // Create accepts a single object
-    public async Create(containerID:string, dataSourceID:string, userID:string, input:any | TypeMappingT): Promise<Result<TypeMappingT>> {
-        // onValidateSuccess is a callback that happens after the input has been
-        // validated and confirmed to be of the Container(s) type
-        const onValidateSuccess = ( resolve: (r:any) => void): (tm: TypeMappingT)=> void => {
-            return async (t:TypeMappingT) => {
-                t.id = super.generateUUID();
-                t.container_id = containerID;
-                t.data_source_id = dataSourceID;
-                t.created_by = userID;
-                t.modified_by = userID;
+    public async Create(containerID:string, dataSourceID:string, shapeHash: string, samplePayload: any): Promise<Result<TypeMappingT>> {
+        const t = {
+            id: super.generateUUID(),
+            sample_payload: samplePayload,
+            container_id: containerID,
+            data_source_id: dataSourceID,
+            shape_hash: shapeHash,
+            active: false
+        }
 
 
-                super.runAsTransaction(TypeMappingStorage.createStatement(t))
-                    .then((r) => {
-                        if(r.isError) {
-                            resolve(r);
-                            return
-                        }
+        const r = await super.runAsTransaction(TypeMappingStorage.createStatement(t as TypeMappingT))
+        if(r.isError) {
+            return new Promise(resolve => resolve(Result.Pass(r)))
+        }
 
-                        resolve(Result.Success(typeMappingT.encode(t)))
-                    })
-            }
-        };
-
-        return super.decodeAndValidate<TypeMappingT>(typeMappingT, onValidateSuccess, input)
+        return new Promise(resolve => resolve(Result.Success(t as TypeMappingT)))
     }
 
     // Update partially updates the exports. This function will allow you to
@@ -69,9 +60,6 @@ export default class TypeMappingStorage extends PostgresStorage{
             i++
         });
 
-        updateStatement.push(`modified_by = $${i}`);
-        values.push(userID);
-
         return new Promise(resolve => {
             PostgresAdapter.Instance.Pool.query({
                 text: `UPDATE data_type_mappings SET ${updateStatement.join(",")} WHERE id = '${id}'`,
@@ -82,29 +70,56 @@ export default class TypeMappingStorage extends PostgresStorage{
                 })
                 .catch(e => resolve(Result.Failure(e)))
         })
-
     }
 
     public Retrieve(id: string): Promise<Result<TypeMappingT>> {
         return super.retrieve<TypeMappingT>(TypeMappingStorage.retrieveStatement(id))
     }
 
-    // runs a stored procedure which will update data in data staging with type mappings if any match
-    public SetAllTypeMappings(): Promise<Result<boolean>> {
-        return super.run(TypeMappingStorage.setTypeMappingProcedureStatement())
+    // since the combination shape hash, data source, and container are a unique set
+    // we can confidently request a single object
+    public RetrieveByShapeHash(dataSourceID: string, shapeHash: string): Promise<Result<TypeMappingT>> {
+        return super.retrieve<TypeMappingT>(TypeMappingStorage.retrieveByShapeHashStatement(dataSourceID, shapeHash))
     }
 
-    public List(containerID: string, offset: number, limit: number): Promise<Result<TypeMappingT[]>> {
-        return super.rows<TypeMappingT>(TypeMappingStorage.listStatement(containerID, offset, limit))
+    public List(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?:string, sortDesc?: boolean): Promise<Result<TypeMappingT[]>> {
+        if(limit === -1) {
+            return super.rows<TypeMappingT>(TypeMappingStorage.listAllStatement(containerID, dataSourceID))
+        }
+
+        return super.rows<TypeMappingT>(TypeMappingStorage.listStatement(containerID, dataSourceID, offset, limit, sortBy, sortDesc))
+    }
+
+    public ListNoTransformations(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?:string, sortDesc?: boolean): Promise<Result<TypeMappingT[]>> {
+        if(limit === -1) {
+            return super.rows<TypeMappingT>(TypeMappingStorage.listAllNoTransformationsStatement(containerID, dataSourceID))
+        }
+
+        return super.rows<TypeMappingT>(TypeMappingStorage.listNoTransformationsStatement(containerID, dataSourceID, offset, limit, sortBy, sortDesc))
     }
 
     public ListByDataSource(dataSourceID: string, offset: number, limit: number): Promise<Result<TypeMappingT[]>> {
         return super.rows<TypeMappingT>(TypeMappingStorage.listByDataSourceStatement(dataSourceID, offset, limit))
     }
 
+    public SetActive(id: string): Promise<Result<boolean>> {
+        return super.runAsTransaction(TypeMappingStorage.setActiveStatement(id))
+    }
+
+    public SetInActive(id: string): Promise<Result<boolean>> {
+        return super.runAsTransaction(TypeMappingStorage.setInactiveStatement(id))
+    }
 
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
         return super.run(TypeMappingStorage.deleteStatement(id))
+    }
+
+    public async Count(dataSourceID: string): Promise<Result<number>> {
+        return super.count(TypeMappingStorage.countStatement(dataSourceID))
+    }
+
+    public async CountNoTransformation(dataSourceID: string): Promise<Result<number>> {
+        return super.count(TypeMappingStorage.countNoTransformationStatement(dataSourceID))
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -113,8 +128,8 @@ export default class TypeMappingStorage extends PostgresStorage{
     // queries more easily.
     private static createStatement(imp: TypeMappingT): QueryConfig {
         return {
-            text:`INSERT INTO data_type_mappings(id,container_id,data_source_id,type_key,type_value,unique_identifier_key,metatype_id,metatype_relationship_pair_id,origin_key,destination_key,keys,ignored_keys,example_payload,action_key,action_value,relationship_type_key, relationship_type_value,created_by,modified_by) VALUES($1, $2, $3, $4, $5, $6, $7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
-            values: [imp.id, imp.container_id,imp.data_source_id, imp.type_key, imp.type_value,imp.unique_identifier_key,imp.metatype_id,imp.metatype_relationship_pair_id, imp.origin_key, imp.destination_key,JSON.stringify(imp.keys),imp.ignored_keys,imp.example_payload,imp.action_key,imp.action_value,imp.relationship_type_key, imp.relationship_type_value, imp.created_by,imp.modified_by]
+            text:`INSERT INTO data_type_mappings(id,container_id,data_source_id,shape_hash,active,sample_payload) VALUES($1,$2,$3,$4,$5,$6)`,
+            values: [imp.id,imp.container_id,imp.data_source_id,imp.shape_hash,imp.active, JSON.stringify(imp.sample_payload)]
         }
     }
 
@@ -125,6 +140,13 @@ export default class TypeMappingStorage extends PostgresStorage{
         }
     }
 
+    private static retrieveByShapeHashStatement(dataSourceID: string, shapeHash: string): QueryConfig {
+        return {
+            text:`SELECT * FROM data_type_mappings WHERE data_source_id = $1 AND shape_hash = $2`,
+            values: [dataSourceID, shapeHash]
+        }
+    }
+
     private static deleteStatement(exportID: string): QueryConfig {
         return {
             text:`DELETE FROM data_type_mappings WHERE id = $1`,
@@ -132,10 +154,66 @@ export default class TypeMappingStorage extends PostgresStorage{
         }
     }
 
-    private static listStatement(containerID:string, offset:number, limit:number): QueryConfig {
+    private static listStatement(containerID:string, dataSourceID:string, offset:number, limit:number, sortBy?:string, sortDesc?:boolean): QueryConfig {
+        if(sortDesc && sortBy) {
+            return {
+                text: `SELECT * FROM data_type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
+                values: [containerID, offset, limit, dataSourceID]
+            }
+        } else if(sortBy) {
+            return {
+                text: `SELECT * FROM data_type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
+                values: [containerID, offset, limit, dataSourceID]
+            }
+        } else {
+            return {
+                text: `SELECT * FROM data_type_mappings WHERE container_id = $1 AND data_source_id = $4 OFFSET $2 LIMIT $3`,
+                values: [containerID, offset, limit, dataSourceID]
+            }
+        }
+    }
+
+    private static listNoTransformationsStatement(containerID:string, dataSourceID:string, offset:number, limit:number, sortBy?:string, sortDesc?:boolean): QueryConfig {
+        if(sortDesc && sortBy) {
+            return {
+                text: `SELECT * FROM data_type_mappings
+                       WHERE container_id = $1 AND data_source_id = $4
+                       AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
+                       ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
+                values: [containerID, offset, limit, dataSourceID]
+            }
+        } else if(sortBy) {
+            return {
+                text: `SELECT * FROM data_type_mappings
+                       WHERE container_id = $1 AND data_source_id = $4
+                       AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
+                       ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
+                values: [containerID, offset, limit, dataSourceID]
+            }
+        } else {
+            return {
+                text: `SELECT * FROM data_type_mappings
+                       WHERE container_id = $1 AND data_source_id = $4
+                       AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
+                       OFFSET $2 LIMIT $3`,
+                values: [containerID, offset, limit, dataSourceID]
+            }
+        }
+    }
+
+    private static listAllStatement(containerID:string, dataSourceID:string ): QueryConfig {
         return {
-            text: `SELECT * FROM data_type_mappings WHERE container_id = $1 OFFSET $2 LIMIT $3`,
-            values: [containerID, offset, limit]
+            text: `SELECT * FROM data_type_mappings WHERE container_id = $1 AND data_source_id = $2`,
+            values: [containerID, dataSourceID]
+        }
+    }
+
+    private static listAllNoTransformationsStatement(containerID:string, dataSourceID:string ): QueryConfig {
+        return {
+            text: `SELECT * FROM data_type_mappings
+                   WHERE container_id = $1 AND data_source_id = $2
+                   AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)`,
+            values: [containerID, dataSourceID]
         }
     }
 
@@ -146,9 +224,33 @@ export default class TypeMappingStorage extends PostgresStorage{
         }
     }
 
-    private static setTypeMappingProcedureStatement(): QueryConfig {
+    private static setActiveStatement(typeMappingID: string): QueryConfig {
         return {
-            text: `SELECT set_type_mapping(data_type_mappings) from data_type_mappings`
+            text: `UPDATE data_type_mappings SET active = true, modified_at = NOW() WHERE id = $1`,
+            values: [typeMappingID]
+        }
+    }
+
+    private static setInactiveStatement(typeMappingID: string): QueryConfig {
+        return {
+            text: `UPDATE data_type_mappings SET active = false, modified_at = NOW() WHERE id = $1`,
+            values: [typeMappingID]
+        }
+    }
+
+    private static countStatement(dataSourceID: string): QueryConfig {
+        return {
+            text: `SELECT COUNT(*) FROM data_type_mappings WHERE data_source_id = $1`,
+            values: [dataSourceID]
+        }
+    }
+
+    private static countNoTransformationStatement(dataSourceID: string): QueryConfig {
+        return {
+            text: `SELECT COUNT(*) FROM data_type_mappings
+                   WHERE data_source_id = $1
+                   AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id )`,
+            values: [dataSourceID]
         }
     }
 }

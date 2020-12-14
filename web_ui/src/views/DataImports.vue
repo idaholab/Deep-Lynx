@@ -16,8 +16,15 @@
         <v-card v-if="(selectedDataSource !== null)">
 
         <v-data-table
-                :headers="headers"
+                :headers="headers()"
                 :items="imports"
+                :server-items-length="importCount"
+                :options.sync="listOptions"
+                :loading="importsLoading"
+                :items-per-page="100"
+                :footer-props="{
+                  'items-per-page-options': [25, 50, 100]
+                }"
                 class="elevation-1"
         >
             <template v-slot:top>
@@ -32,6 +39,9 @@
               <v-col>
                 <h2>{{$t('dataImports.tableTitle')}}</h2>
               </v-col>
+            </template>
+            <template v-slot:item.percentage_processed="{ item }">
+              {{ (item.records_inserted / item.total_records) * 100 }}%
             </template>
             <template v-slot:item.actions="{ item }">
                 <v-icon
@@ -61,7 +71,7 @@
         <v-card>
           <v-toolbar
               dark
-              color="primary"
+              color="warning"
           >
             <v-btn
                 icon
@@ -77,20 +87,22 @@
           <error-banner :message="dataErrorMessage"></error-banner>
           <success-banner :message="dataSuccessMessage"></success-banner>
           <v-data-table
-              :headers="importDataHeaders"
+              :headers="importDataHeaders()"
               :items="importData"
               class="elevation-1"
+              :server-items-length="importDataCount"
+              :options.sync="options"
+              :loading="importLoading"
+              :items-per-page="100"
+              :footer-props="{
+                'items-per-page-options':[25,50,100]
+              }"
           >
             <template v-slot:top>
             </template>
             <template v-slot:item.typeMappings="{ item }">
               <!-- TODO: Create a type mapping connection component here - give the user the option to create a type mapping using this data -->
-              <div v-if="item.mapping_id">
-                has mapping
-              </div>
-              <div v-else>
-                <v-btn @click="createTypeMapping(item)">{{$t('dataImports.createTypeMapping')}}</v-btn>
-              </div>
+                <v-btn @click="editTypeMapping(item)" color="warning">{{$t('dataImports.editTypeMapping')}}</v-btn>
             </template>
             <template v-slot:item.actions="{ item }">
               <v-icon
@@ -137,10 +149,10 @@
       >
         <v-card>
           <v-card-title class="headline grey lighten-2">
-            {{$t('dataImports.createTypeMapping')}}
+            {{$t('dataImports.editTypeMapping')}}
           </v-card-title>
           <div v-if="selectedDataSource !== null && mappingDialog">
-            <data-type-mapping :dataSourceID="selectedDataSource.id" :containerID="containerID" :payload="importDataMapping" @mappingCreated="mappingDialog = false"></data-type-mapping>
+            <data-type-mapping :dataSourceID="selectedDataSource.id" :containerID="containerID" :import="importDataMapping" :typeMappingID="importDataMapping.mapping_id" @mappingCreated="mappingDialog = false"></data-type-mapping>
           </div>
         </v-card>
       </v-dialog>
@@ -149,154 +161,226 @@
 </template>
 
 <script lang="ts">
-    import {Component, Prop, Vue} from 'vue-property-decorator'
-    import {DataSourceT, ImportDataT, ImportT} from "@/api/types";
-    import ImportDataDialog from "@/components/importDataDialog.vue";
-    import DataTypeMapping from "@/components/dataTypeMapping.vue"
+import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
+import {DataSourceT, ImportDataT, ImportT} from "@/api/types";
+import ImportDataDialog from "@/components/importDataDialog.vue";
+import DataTypeMapping from "@/components/dataTypeMapping.vue"
 
-    @Component({filters: {
-            pretty: function(value: any) {
-                return JSON.stringify(JSON.parse(value), null, 2);
-            }
-        },
-    components: {
+
+@Component({filters: {
+        pretty: function(value: any) {
+            return JSON.stringify(JSON.parse(value), null, 2);
+        }
+      },
+      components: {
         ImportDataDialog,
-        DataTypeMapping
-    }})
-    export default class DataImports extends Vue {
-        @Prop({required: true})
-        readonly containerID!: string;
+        DataTypeMapping,
+      }
+})
+export default class DataImports extends Vue {
+    @Prop({required: true})
+    readonly containerID!: string;
 
 
-        errorMessage = ""
-        dataErrorMessage = ""
-        dialog = false
-        dataDialog = false
-        mappingDialog = false
-        selectedData: {[key: string]: any} | null = null
-        selectedDataSource: DataSourceT | null = null
-        selectedImport: ImportT | null = null
-        dataSources: DataSourceT[] = []
-        imports: ImportT[] = []
-        importData: ImportDataT[] = []
-        importDataMapping: ImportDataT | null = null
-        successMessage = ""
-        dataSuccessMessage = ""
+    errorMessage = ""
+    dataErrorMessage = ""
+    dialog = false
+    dataDialog = false
+    mappingDialog = false
+    selectedData: {[key: string]: any} | null = null
+    selectedDataSource: DataSourceT | null = null
+    selectedImport: ImportT | null = null
+    dataSources: DataSourceT[] = []
+    imports: ImportT[] = []
+    importData: ImportDataT[] = []
+    importDataMapping: ImportDataT | null = null
+    successMessage = ""
+    dataSuccessMessage = ""
+    listOptions: {
+      sortDesc: boolean[];
+      sortBy: string[];
+      page: number;
+      itemsPerPage: number;
+    } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 100}
+    options: {
+      sortDesc: boolean[];
+      sortBy: string[];
+      page: number;
+      itemsPerPage: number;
+    } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 100}
 
-        headers = [{
-                text: "Created At",
-                value: "created_at",
-            },
-            {
-                text: "Status",
-                value: "status",
-            },
-            {
-             text: "Message",
-             value: "status_message"
-            },
-            { text: "View/Edit",  value: 'actions', sortable: false },]
+    importCount = 0
+    importsLoading = false
+    importDataCount = 0
+    importLoading = false
 
-        importDataHeaders = [{
-          text: "ID",
+    headers() {
+     return  [{
+       text: this.$t('dataImports.createdAt'),
+         value: "created_at",
+       },
+       {
+         text: this.$t('dataImports.percentageProcessed'),
+         value: "percentage_processed"
+       },
+       {
+         text: this.$t('dataImports.status'),
+         value: "status",
+       },
+       {
+         text: this.$t('dataImports.message'),
+         value: "status_message",
+         sortable: false
+       },
+       { text: this.$t('dataImports.viewEditData'),  value: 'actions', sortable: false }]
+    }
+
+    importDataHeaders() {
+      return  [{
+          text: this.$t('dataImports.id'),
           value: "id",
         },
         {
-          text: "Inserted At",
+          text: this.$t('dataImports.processedAt'),
           value: "inserted_at",
         },
         {
-          text: "Errors",
+          text: this.$t('dataImports.errors'),
           value: "errors"
         }, {
-          text: "Type Mapping",
+          text: this.$t('dataImports.typeMapping'),
           value: 'typeMappings'
-          },
-        {  text: "View/Delete Data", value: 'actions', sortable: false },]
+        },
+        {  text: this.$t('dataImports.viewDeleteData'), value: 'actions', sortable: false },]
+    }
 
 
+  @Watch('options')
+  onOptionChange() {
+      this.loadImportData()
+  }
 
-      setDataSource(dataSource: any) {
-            this.selectedDataSource = dataSource
+  @Watch('listOptions')
+  onListOptionsChange() {
+    this.listImports()
+  }
+
+  setDataSource(dataSource: any) {
+        this.selectedDataSource = dataSource
+        this.listImports()
+
+        this.$client.countImports(this.containerID, dataSource.id)
+          .then(importCount => {
+            this.importCount = importCount
+          })
+          .catch(e => this.errorMessage = e)
+  }
+
+    listImports() {
+        if(this.selectedDataSource) {
+          this.importsLoading = true
+          this.imports = []
+
+          const {page, itemsPerPage, sortBy, sortDesc } = this.listOptions;
+          let sortParam: string | undefined
+          let sortDescParam: boolean | undefined
+
+          const pageNumber = page - 1;
+          if(sortBy && sortBy.length >= 1) sortParam = sortBy[0]
+          if(sortBy && sortBy.length >= 1 && sortBy[0] === 'percentage_processed') sortParam = 'records_inserted'
+          if(sortDesc) sortDescParam = sortDesc[0]
+
+          this.$client.listImports(this.containerID, this.selectedDataSource.id,{
+            limit: itemsPerPage,
+            offset: itemsPerPage * pageNumber,
+            sortBy: sortParam,
+            sortDesc: sortDescParam
+          })
+          .then(imports => {
+              this.imports = imports
+              this.importsLoading = false
+          })
+          .catch(e => this.errorMessage = e)
+        }
+    }
+
+    mounted() {
+      this.$client.listDataSources(this.containerID)
+          .then(dataSources => {
+            this.dataSources = dataSources
+          })
+          .catch(e => console.log(e))
+    }
+
+    deleteItem(importT: ImportT) {
+      this.$client.deleteImport(this.containerID, importT.id)
+          .then(()=> {
             this.listImports()
-        }
+            this.successMessage = this.$t('dataImports.successfullyDeleted') as string
+          })
+          .catch((e: any) => this.errorMessage = e)
+  }
 
-        listImports() {
-            if(this.selectedDataSource) {
-                this.$client.listImports(this.containerID, this.selectedDataSource.id)
-                    .then(imports => {
-                        this.imports = imports
-                    })
-                    .catch(e => console.log(e))
-            }
-        }
+  viewItem(importT: ImportT) {
+    this.selectedImport = importT
+    this.loadImportData()
 
-        mounted() {
-          this.$client.listDataSources(this.containerID)
-              .then(dataSources => {
-                this.dataSources = dataSources
-              })
-              .catch(e => console.log(e))
-        }
+    this.$client.countImportData(this.containerID, importT.id)
+    .then((count) => {
+      this.importDataCount = count
+      this.dialog = true
+    })
+    .catch((e: any) => this.errorMessage = e)
+  }
 
-        deleteItem(importT: ImportT) {
-          this.$client.deleteImport(this.containerID, importT.id)
-              .then(()=> {
-                this.listImports()
-                this.successMessage = this.$t('dataImports.successfullyDeleted') as string
-              })
-              .catch((e: any) => this.errorMessage = e)
-      }
+  loadImportData() {
+    this.importLoading = true
+    this.importData = []
 
-      viewItem(importT: ImportT) {
-        this.importData = []
-        this.selectedImport = importT
-        this.$client.listImportData(this.containerID, importT.id, 1000, 0)
+    const {page, itemsPerPage, sortBy, sortDesc } = this.options;
+    let sortParam: string | undefined
+    let sortDescParam: boolean | undefined
+
+    const pageNumber = page - 1;
+    if(sortBy && sortBy.length >= 1) sortParam = sortBy[0]
+    if(sortDesc) sortDescParam = sortDesc[0]
+
+    this.$client.listImportData(this.containerID, this.selectedImport!.id,{
+      limit: itemsPerPage,
+      offset: itemsPerPage * pageNumber,
+      sortBy: sortParam,
+      sortDesc: sortDescParam
+    })
         .then((results) => {
           this.importData = results
-          this.dialog = true
+          this.importLoading = false
+
         })
         .catch((e: any) => this.errorMessage = e)
 
-      }
+  }
 
-      viewImportData(importData: ImportDataT) {
-          this.selectedData = importData.data
-          this.dataDialog = true
-      }
+  viewImportData(importData: ImportDataT) {
+      this.selectedData = importData.data
+      this.dataDialog = true
+  }
 
-      createTypeMapping(importData: ImportDataT) {
-          this.importDataMapping = importData
-          this.mappingDialog = true
-      }
+  editTypeMapping(importData: ImportDataT) {
+      this.importDataMapping = importData
+      this.mappingDialog = true
+  }
 
-      mappingCreated() {
-        this.mappingDialog = false
-        this.successMessage = "Type mapping successfully created, mapping may take up to a minute to be applied."
-
-
-        this.$client.listImportData(this.containerID, this.selectedImport!.id, 1000, 0)
-            .then((results) => {
-              this.importData = results
-            })
-            .catch((e: any) => this.dataErrorMessage= e)
-      }
-
-      deleteImportData(importData: ImportDataT) {
-        if(importData.inserted_at) {
-          this.dataErrorMessage= "Unable to delete data that has already been inserted"
-          return
-        }
-
-        this.$client.deleteImportData(this.containerID, importData.import_id, importData.id)
-            .then(() => {
-              this.$client.listImportData(this.containerID, importData.import_id, 1000, 0)
-                  .then((results) => {
-                    this.importData = results
-                  })
-                  .catch((e: any) => this.dataErrorMessage= e)
-            })
-            .catch((e: any) => this.dataErrorMessage= e)
-      }
+  deleteImportData(importData: ImportDataT) {
+    if(importData.inserted_at) {
+      this.dataErrorMessage= "Unable to delete data that has already been inserted"
+      return
     }
+
+    this.$client.deleteImportData(this.containerID, importData.import_id, importData.id)
+        .then(() => {
+          this.loadImportData()
+        })
+        .catch((e: any) => this.dataErrorMessage= e)
+  }
+}
 </script>

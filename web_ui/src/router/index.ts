@@ -21,6 +21,12 @@ const routes = [
     props: true
   },
   {
+    path: '/containers/:containerID/:view',
+    name: 'Home View',
+    component: Home,
+    props: true
+  },
+  {
    path: '/container-invite',
    name: 'ContainerInvite',
    component: ContainerInvite

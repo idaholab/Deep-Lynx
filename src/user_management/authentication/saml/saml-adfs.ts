@@ -5,6 +5,8 @@ import {UserT} from "../../../types/user_management/userT";
 import Config from "../../../config"
 import UserStorage from "../../../data_storage/user_management/user_storage";
 import Result from "../../../result";
+
+
 const SamlStrategy = require('passport-saml').Strategy
 
 export function SetSamlAdfs(app: express.Application) {

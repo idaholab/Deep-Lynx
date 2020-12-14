@@ -3,19 +3,21 @@ import {AxiosResponse} from "axios";
 import {
    AssignRolePayloadT,
    ContainerT,
-   DataSourceT, ImportDataT,
+   DataSourceT,
+   ImportDataT,
    ImportT,
    MetatypeKeyT,
    MetatypeT,
-   TypeMappingPayloadT,
    TypeMappingT,
    MetatypeRelationshipT,
    MetatypeRelationshipKeyT,
    MetatypeRelationshipPairT,
-   ResetPasswordPayloadT, NewUserPayloadT, UserContainerInviteT,
+   UserContainerInviteT,
+   TypeMappingTransformationPayloadT,
+   TypeMappingTransformationT,
 } from "@/api/types";
 import {RetrieveJWT} from "@/auth/authentication_service";
-import {KeyPairT, UserT} from "@/auth/types";
+import {UserT} from "@/auth/types";
 import buildURL from 'build-url'
 const axios = require('axios').default;
 
@@ -105,22 +107,6 @@ export class Client {
       return this.getNoData(`/users/reset-password`, query)
    }
 
-   resetPassword(email: string, token: string, newPassword: string): Promise<boolean> {
-      return this.postNoData(`/users/reset-password`, {
-         email,
-         token,
-         new_password: newPassword
-      } as ResetPasswordPayloadT)
-   }
-
-   validateEmail(userID: string, token: string): Promise<boolean> {
-      const query: {[key: string]: any} = {}
-      query.id = userID
-      query.token = token
-
-      return this.getNoData(`/users/validate`, query)
-   }
-
    listMetatypes(containerID: string, {name, limit, offset}: {name?: string; limit?: number; offset?: number}): Promise<MetatypeT[]> {
       const query: {[key: string]: any} = {}
 
@@ -144,16 +130,13 @@ export class Client {
       return this.get<MetatypeRelationshipPairT[]>(`/containers/${containerID}/metatype_relationship_pairs`, query)
    }
 
-   listTypeMappings(containerID: string, datasourceID: string, {metatypeID, limit, offset}: {metatypeID?: string; limit?: number; offset?: number}): Promise<TypeMappingT[]> {
-      if(!metatypeID){
-         metatypeID = ""
-      }
-
-      return this.get<TypeMappingT[]>(`/containers/${containerID}/import/datasources/${datasourceID}/mappings?limit=${limit}&offset=${offset}&metatypeID=${metatypeID}`)
-   }
 
    createMetatype(containerID: string, metatype: any): Promise<MetatypeT> {
       return this.post<MetatypeT>(`/containers/${containerID}/metatypes`, metatype)
+   }
+
+   retrieveMetatype(containerID: string, metatypeID: string): Promise<MetatypeT> {
+      return this.get<MetatypeT>(`/containers/${containerID}/metatypes/${metatypeID}`)
    }
 
    updateMetatype(containerID: string, metatypeID: string, metatype: any): Promise<MetatypeT> {
@@ -174,6 +157,14 @@ export class Client {
 
    createMetatypeRelationship(containerID: string, metatypeRelationship: any): Promise<MetatypeRelationshipT> {
       return this.post<MetatypeRelationshipT>(`/containers/${containerID}/metatype_relationships`, metatypeRelationship)
+   }
+
+   retrieveMetatypeRelationship(containerID: string, metatypeRelationshipID: string): Promise<MetatypeRelationshipT> {
+      return this.get<MetatypeRelationshipT>(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}`)
+   }
+
+   retrieveMetatypeRelationshipPair(containerID: string, metatypeRelationshipPairID: string): Promise<MetatypeRelationshipPairT> {
+      return this.get<MetatypeRelationshipPairT>(`/containers/${containerID}/metatype_relationship_pairs/${metatypeRelationshipPairID}`)
    }
 
    updateMetatypeRelationship(containerID: string, metatypeRelationshipID: string, metatypeRelationship: any): Promise<MetatypeRelationshipT> {
@@ -204,8 +195,12 @@ export class Client {
       return this.post<DataSourceT>(`/containers/${containerID}/import/datasources`, dataSource)
    }
 
-   createTypeMapping(containerID: string, dataSourceID: string, mapping: TypeMappingPayloadT): Promise<TypeMappingT> {
-      return this.post<TypeMappingT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings`, mapping)
+   createTypeMappingTransformation(containerID: string, dataSourceID: string, typeMappingID: string, transformation: TypeMappingTransformationPayloadT): Promise<TypeMappingTransformationPayloadT> {
+      return this.post<TypeMappingTransformationT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations`, transformation )
+   }
+
+   updateTypeMappingTransformation(containerID: string, dataSourceID: string, typeMappingID: string, transformationID: string, transformation: TypeMappingTransformationPayloadT): Promise<TypeMappingTransformationPayloadT> {
+      return this.put<TypeMappingTransformationT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations/${transformationID}`, transformation )
    }
 
    dataSourceJSONFileImport(containerID: string, dataSourceID: string, file: File): Promise<boolean> {
@@ -228,28 +223,45 @@ export class Client {
       return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/active`)
    }
 
-   deleteTypeMapping(containerID: string, dataSourceID: string, typeMappingID: string): Promise<boolean> {
-      return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`)
-   }
 
    countUnmappedData(containerID: string, dataSouceID: string): Promise<number> {
       return this.get<number>(`/containers/${containerID}/import/datasources/${dataSouceID}/mappings/unmapped/count`)
    }
 
-   getUnmappedData(containerID: string, dataSourceID: string): Promise<{[key: string]: any}> {
-       return this.get<{[key: string]: any}>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/unmapped/data`)
-   }
-
-   listImports(containerID: string, dataSourceID: string): Promise<ImportT[]> {
-      return this.get<ImportT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`)
-   }
-
-   listImportData(containerID: string, importID: string, limit: number, offset: number): Promise<ImportDataT[]> {
+   listImports(containerID: string, dataSourceID: string, {limit, offset, sortBy, sortDesc}: {limit: number; offset: number; sortBy?: string; sortDesc?: boolean}): Promise<ImportT[]> {
       const query: {[key: string]: any} = {}
 
       query.limit = limit
       query.offset = offset
+      if(sortBy) query.sortBy = sortBy
+      if(sortDesc) query.sortDesc = sortDesc
+
+      return this.get<ImportT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`, query)
+   }
+
+   countImports(containerID: string, dataSourceID: string): Promise<number> {
+      const query: {[key: string]: any} = {}
+
+      query.count = true
+      return this.get<number>(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`, query)
+   }
+
+   listImportData(containerID: string, importID: string, {limit, offset, sortBy, sortDesc}: {limit: number; offset: number; sortBy?: string; sortDesc?: boolean}): Promise<ImportDataT[]> {
+      const query: {[key: string]: any} = {}
+
+      query.limit = limit
+      query.offset = offset
+      if(sortBy) query.sortBy = sortBy
+      if(sortDesc) query.sortDesc = sortDesc
+
       return this.get<ImportDataT[]>(`/containers/${containerID}/import/imports/${importID}/data`, query)
+   }
+
+   countImportData(containerID: string, importID: string): Promise<number> {
+      const query: {[key: string]: any} = {}
+
+      query.count = true
+      return this.get<number>(`/containers/${containerID}/import/imports/${importID}/data`, query)
    }
 
    deleteImport(containerID: string, importID: string): Promise<boolean> {
@@ -258,15 +270,6 @@ export class Client {
 
    deleteImportData(containerID: string, importID: string, dataID: number): Promise<boolean> {
       return this.delete(`/containers/${containerID}/import/imports/${importID}/data/${dataID}`)
-   }
-
-   createNewUser(displayName: string, email: string, password: string): Promise<UserT> {
-      return this.post<UserT>("/users", {
-         display_name: displayName,
-         email,
-         password,
-         identity_provider: "username_password"
-      } as NewUserPayloadT)
    }
 
    inviteUserToContainer(containerID: string, email: string): Promise<boolean> {
@@ -310,6 +313,51 @@ export class Client {
    retrieveUserRoles(containerID: string, userID: string): Promise<string[]> {
       return this.get<string[]>(`/containers/${containerID}/users/${userID}/roles`)
    }
+
+   retrieveTypeMapping(containerID: string, dataSourceID: string, typeMappingID: string): Promise<TypeMappingT> {
+      return this.get<TypeMappingT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`)
+   }
+
+   deleteTypeMapping(containerID: string, dataSourceID: string, typeMappingID: string): Promise<boolean> {
+      return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`)
+   }
+
+   updateTypeMapping(containerID: string, dataSourceID: string, typeMappingID: string, mapping: TypeMappingT): Promise<boolean> {
+      return this.putNoData(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`, mapping)
+   }
+
+   retrieveTransformations(containerID: string, dataSourceID: string, typeMappingID: string): Promise<TypeMappingTransformationT[]> {
+      return this.get<TypeMappingTransformationT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations`)
+   }
+
+   deleteTransformation(containerID: string, dataSourceID: string, typeMappingID: string, tranformationID: string): Promise<boolean> {
+      return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations/${tranformationID}`)
+   }
+
+
+   listTypeMappings(containerID: string, dataSourceID: string, {limit, offset, sortBy, sortDesc, resultingMetatypeName, resultingMetatypeRelationshipName, noTransformations}: {limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; resultingMetatypeName?: string | undefined; resultingMetatypeRelationshipName?: string | undefined; noTransformations?: boolean}): Promise<TypeMappingT[]> {
+      const query: {[key: string]: any} = {}
+
+      if(limit) query.limit = limit
+      if(offset) query.offset = offset
+      if(sortBy) query.sortBy = sortBy
+      if(sortDesc) query.sortDesc = sortDesc
+      if(resultingMetatypeName) query.resultingMetatypeName = resultingMetatypeName
+      if(resultingMetatypeRelationshipName) query.resultingMetatypeRelationshipName = resultingMetatypeRelationshipName
+
+
+      return this.get<TypeMappingT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings`, query)
+   }
+
+   countTypeMappings(containerID: string, dataSourceID: string, needsTransformations?: boolean): Promise<number> {
+      const query: {[key: string]: any} = {}
+
+      if(needsTransformations) query.needsTransformations = true
+      query.count = true
+
+      return this.get<number>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings`, query)
+   }
+
 
    private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {
       const config: {[key: string]: any} = {}
@@ -507,6 +555,27 @@ export class Client {
          if(resp.data.isError) reject(resp.data.value)
 
          resolve(resp.data.value as T)
+      })
+   }
+
+   private async putNoData(uri: string, data: any): Promise<boolean> {
+      const config: {[key: string]: any} = {}
+      config.headers = {"Access-Control-Allow-Origin": "*"}
+
+      if(this.config?.auth_method === "token") {
+         config.headers = {"Authorization": `Bearer ${RetrieveJWT()}`}
+      }
+
+      if(this.config?.auth_method === "basic") {
+         config.auth = {username: this.config.username, password: this.config.password}
+      }
+
+      const resp: AxiosResponse = await axios.put(buildURL(this.config?.rootURL!, {path: uri}), data, config)
+
+      return new Promise((resolve, reject) => {
+         if(resp.status < 200 || resp.status > 299) reject(resp.status)
+
+         resolve(true)
       })
    }
 }

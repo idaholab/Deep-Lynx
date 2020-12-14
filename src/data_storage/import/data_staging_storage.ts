@@ -7,11 +7,9 @@
 import PostgresStorage from "../postgresStorage";
 import {DataStagingT} from "../../types/import/dataStagingT";
 import Result from "../../result";
-import {Query, QueryConfig} from "pg";
-import {TypeMappingT} from "../../types/import/typeMappingT";
+import {QueryConfig} from "pg";
 import PostgresAdapter from "../adapters/postgres/postgres";
 import {QueueProcessor} from "../../services/event_system/events";
-import {EventT} from "../../types/events/eventT";
 
 export default class DataStagingStorage extends PostgresStorage {
     public static tableName = "data_staging";
@@ -30,9 +28,9 @@ export default class DataStagingStorage extends PostgresStorage {
         super();
     }
 
-    public async Create(dataSourceID: string, importID:string, data: any ): Promise<Result<boolean>> {
+    public async Create(dataSourceID: string, importID:string, typeMappingID: string, data: any): Promise<Result<boolean>> {
         return new Promise((resolve) => {
-            PostgresAdapter.Instance.Pool.query(DataStagingStorage.createStatement(dataSourceID, importID, data))
+            PostgresAdapter.Instance.Pool.query(DataStagingStorage.createStatement(dataSourceID, importID, typeMappingID, data))
                 .then(() => {
                     QueueProcessor.Instance.emit([{
                         source_id: dataSourceID,
@@ -46,10 +44,7 @@ export default class DataStagingStorage extends PostgresStorage {
         })
     }
 
-    public async ListForTypeMapping(typeMapping: TypeMappingT): Promise<Result<DataStagingT[]>> {
-        return super.rows<DataStagingT>(DataStagingStorage.ListMatchedForTypeMappingStatement(typeMapping))
-    }
-
+    // TODO: Set unmapped as mappings without transformations
     public async CountUnmappedData(importID: string): Promise<Result<number>> {
         return super.count(DataStagingStorage.countUnmappedForImportStatement(importID))
     }
@@ -62,8 +57,12 @@ export default class DataStagingStorage extends PostgresStorage {
         return super.retrieve<DataStagingT>(DataStagingStorage.retrieveStatement(id))
     }
 
-    public async List(importID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
-        return super.rows<DataStagingT>(DataStagingStorage.listStatement(importID, offset, limit))
+    public async List(importID: string, offset:number, limit:number, sortBy?:string, sortDesc?: boolean): Promise<Result<DataStagingT[]>>{
+        if(limit === -1) {
+            return super.rows<DataStagingT>(DataStagingStorage.listAllStatement(importID))
+        }
+
+        return super.rows<DataStagingT>(DataStagingStorage.listStatement(importID, offset, limit,sortBy, sortDesc))
     }
 
     public async ListUnprocessed(importID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
@@ -116,37 +115,14 @@ export default class DataStagingStorage extends PostgresStorage {
         return super.run(DataStagingStorage.deleteStatement(id))
     }
 
-    private static ListMatchedForTypeMappingStatement(tm: TypeMappingT): QueryConfig {
-        if (tm.metatype_relationship_pair_id) {
-            return {
-                text: `SELECT * FROM data_staging
-                    WHERE data_source_id = $1
-                    AND data_staging.data::jsonb->> '${tm.relationship_type_key}' = $2
-                    AND data_staging.data::jsonb ? '${tm.unique_identifier_key}'
-                    AND data_staging.data::jsonb ? '${tm.origin_key}'
-                    AND data_staging.data::jsonb ? '${tm.destination_key}'`,
-                values: [tm.data_source_id, tm.relationship_type_value]
-            }
-        }
-
-        return {
-            text: `SELECT * FROM data_staging
-                    WHERE data_source_id = $1
-                    AND data_staging.data::jsonb->> '${tm.type_key}' = $2
-                    AND data_staging.data::jsonb ? '${tm.unique_identifier_key}'`,
-            values: [tm.data_source_id, tm.type_value]
-        }
-
-    }
-
     public SetErrors(id:number, errors: string[]): Promise<Result<boolean>> {
         return super.runAsTransaction(DataStagingStorage.setErrorsStatement(id, errors))
     }
 
-    private static createStatement(dataSourceID: string, importID:string, data: any): QueryConfig {
+    private static createStatement(dataSourceID: string, importID:string, typeMappingID: string, data: any): QueryConfig {
         return {
-            text: `INSERT INTO data_staging(data_source_id,import_id,data) VALUES($1,$2,$3)`,
-            values: [dataSourceID, importID, data]
+            text: `INSERT INTO data_staging(data_source_id,import_id,data,mapping_id) VALUES($1,$2,$3,$4)`,
+            values: [dataSourceID, importID, data, typeMappingID]
         }
     }
 
@@ -157,10 +133,29 @@ export default class DataStagingStorage extends PostgresStorage {
         }
     }
 
-    private static listStatement(importID: string, offset: number, limit: number): QueryConfig {
+    private static listStatement(importID: string, offset: number, limit: number, sortBy?: string, sortDesc?:boolean): QueryConfig {
+        if(sortDesc) {
+            return {
+                text: `SELECT * FROM data_staging WHERE import_id = $1 ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
+                values: [importID, offset, limit]
+            }
+        } else if(sortBy) {
+            return {
+                text: `SELECT * FROM data_staging WHERE import_id = $1 ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
+                values: [importID, offset, limit]
+            }
+        } else {
+            return {
+                text: `SELECT * FROM data_staging WHERE import_id = $1 OFFSET $2 LIMIT $3`,
+                values: [importID, offset, limit]
+            }
+        }
+    }
+
+    private static listAllStatement(importID: string): QueryConfig {
         return {
-            text: `SELECT * FROM data_staging WHERE import_id = $1 OFFSET $2 LIMIT $3`,
-            values: [importID, offset, limit]
+            text: `SELECT * FROM data_staging WHERE import_id = $1`,
+            values: [importID]
         }
     }
 
