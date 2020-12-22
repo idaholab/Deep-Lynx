@@ -17,12 +17,18 @@ export function onDecodeError(resolve:((check: any) => void) ): ((e: Errors ) =>
     })
 }
 
-export function getNestedValue(key:string, payload: {[key:string]: any}): any {
+export function getNestedValue(key:string, payload: any, index?: number[]): any {
     if(key.split(".").length > 1) {
         const keys = key.split(".")
         const parent = keys.shift()
 
-        return getNestedValue(keys.join("."), payload[parent!])
+        if(Array.isArray(payload)) {
+            const currentIndex = index?.shift()
+
+            return getNestedValue(keys.join("."), payload[currentIndex!], index)
+        }
+
+        return getNestedValue(keys.join("."), payload[parent!], index)
     }
 
     return payload[key]

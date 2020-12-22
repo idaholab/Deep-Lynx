@@ -522,11 +522,15 @@ import {
     rootArrayKeys: any = null
 
     operators = [
-      {text: "eq", value: "eq", requiresValue: true},
-      {text: "neq", value: "neq", requiresValue: true},
+      {text: "==", value: "==", requiresValue: true},
+      {text: "!=", value: "!=", requiresValue: true},
       {text: "in", value: "in", requiresValue: true},
-      {text: "like", value: "like", requiresValue: true},
+      {text: "contains", value: "contains", requiresValue: true},
       {text: "exists", value: "exists", requiresValue: false},
+      {text: "<", value: "<", requiresValue: false},
+      {text: "<=", value: "<=", requiresValue: false},
+      {text: ">", value: ">", requiresValue: false},
+      {text: ">=", value: ">=", requiresValue: false},
     ]
     expressions = ["AND", "OR"]
     onConflictOptions = ["create", "update", "ignore"]
@@ -746,7 +750,7 @@ import {
 
     @Watch('rootArray', {immediate: true})
     onRootArrayChange() {
-      const flattened = this.flatten(this.payload)
+      const flattened = this.flattenWithoutArray(this.payload)
       this.payloadKeys = Object.keys(flattened)
 
       if(this.rootArray){
@@ -764,7 +768,7 @@ import {
       this.payloadKeys = []
       this.payloadArrayKeys = []
 
-      const flattened = this.flatten(this.payload)
+      const flattened = this.flattenWithoutArray(this.payload)
       this.payloadKeys = Object.keys(flattened)
 
       Object.keys(flattened).map(k => {
@@ -1071,8 +1075,30 @@ import {
           result[prop] = cur;
         } else if (Array.isArray(cur)) {
           for(let i=0, l=cur.length; i<l; i++)
-            result[prop] = cur
+          result[prop] = cur
           recurse(cur[0], prop+".[]");
+        } else {
+          let isEmpty = true;
+          for (const p in cur) {
+            isEmpty = false;
+            recurse(cur[p], prop ? prop+"."+p : p);
+          }
+          if (isEmpty && prop)
+            result[prop] = {};
+        }
+      }
+      recurse(data, "");
+      return result;
+    }
+
+    flattenWithoutArray(data: any): any {
+      const result: any = {};
+      function recurse (cur: any, prop: any): any {
+        if (Object(cur) !== cur) {
+          result[prop] = cur;
+        } else if (Array.isArray(cur)) {
+          for(let i=0, l=cur.length; i<l; i++)
+            result[prop] = cur
         } else {
           let isEmpty = true;
           for (const p in cur) {

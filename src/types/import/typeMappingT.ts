@@ -36,13 +36,31 @@ const typeTransformationConditionalSubexpression = t.type({
         "OR": null
     }),
     key: t.string,
-    operator: t.string,
+    operator: t.keyof({
+        "==": null,
+        "!=": null,
+        "in": null,
+        "contains":null,
+        ">": null,
+        ">=": null,
+        "<": null,
+        "<=": null
+    }),
     value: t.unknown
 })
 
 const typeTransformationConditionRequired = t.type({
     key: t.string,
-    operator: t.string,
+    operator: t.keyof({
+        "==": null,
+        "!=": null,
+        "in": null,
+        "contains":null,
+        ">": null,
+        ">=": null,
+        "<": null,
+        "<=": null
+    }),
     value: t.unknown
 })
 
@@ -54,10 +72,13 @@ const typeTransformationRequired = t.type({
     keys: t.array(keyMapping),
 })
 
+export const typeTransformationCondition = t.intersection([typeTransformationConditionRequired, typeTransformationConditionalOptional])
+export type TypeTransformationConditionT = t.TypeOf<typeof typeTransformationCondition>
+
 const typeTransformationOptional = t.partial({
     id: t.string,
     type_mapping_id: t.string,
-    conditions: t.array(t.intersection([typeTransformationConditionRequired, typeTransformationConditionalOptional])),
+    conditions: t.array(typeTransformationCondition),
     metatype_id: t.string, // optional because mapping could be either type or relationship
     metatype_relationship_pair_id: t.string,
     origin_id_key: t.string,
@@ -80,3 +101,4 @@ export const typeTransformationT = t.intersection([typeTransformationRequired, t
 
 export type TypeMappingT = t.TypeOf<typeof typeMappingT>
 export type TypeTransformationT = t.TypeOf<typeof typeTransformationT>
+
