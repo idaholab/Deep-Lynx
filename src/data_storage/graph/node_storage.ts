@@ -99,16 +99,8 @@ export default class NodeStorage extends PostgresStorage{
                     }
 
 
-                    // the only way we can tell if we should update this or not is through the modified_at tag. Is there
-                    // a better way to handle this? Probably. However, in the large scheme of the Type Mapping system
-                    // this was the easiest way to accomplish this goal
-                    if((ns[n].modified_at || ns[n].deleted_at) && ns[n].id) queries.push(...NodeStorage.fullUpdateStatement(ns[n]))
-                    else if((ns[n].modified_at || ns[n].deleted_at) && !ns[n].id && ns[n].original_data_id && ns[n].data_source_id) queries.push(...NodeStorage.fullUpdateByOriginalIDStatement(ns[n]))
-                    else {
-
-                        ns[n].id = super.generateUUID();
-                        queries.push(...NodeStorage.createStatement(ns[n]))
-                    }
+                    ns[n].id = super.generateUUID();
+                    queries.push(...NodeStorage.createOrUpdateStatement(ns[n]))
 
                 }
 
@@ -167,17 +159,8 @@ export default class NodeStorage extends PostgresStorage{
                     ns[n].graph_id = graphID;
                     ns[n].container_id = containerID;
 
-
-                    // the only way we can tell if we should update this or not is through the modified_at tag. Is there
-                    // a better way to handle this? Probably. However, in the large scheme of the Type Mapping system
-                    // this was the easiest way to accomplish this goal
-                    if((ns[n].modified_at || ns[n].deleted_at) && ns[n].id) queries.push(...NodeStorage.fullUpdateStatement(ns[n]))
-                    else if((ns[n].modified_at || ns[n].deleted_at) && !ns[n].id && ns[n].original_data_id && ns[n].data_source_id) queries.push(...NodeStorage.fullUpdateByOriginalIDStatement(ns[n]))
-                    else {
-
-                        ns[n].id = super.generateUUID();
-                        queries.push(...NodeStorage.createStatement(ns[n]))
-                    }
+                    ns[n].id = super.generateUUID();
+                    queries.push(...NodeStorage.createOrUpdateStatement(ns[n]))
 
                 }
 
@@ -282,14 +265,14 @@ export default class NodeStorage extends PostgresStorage{
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
-    private static createStatement(n: NodeT): QueryConfig[] {
+    private static createOrUpdateStatement(n: NodeT): QueryConfig[] {
         return [
             {
-            text:`INSERT INTO nodes(id, container_id, metatype_id, metatype_name, graph_id,properties,original_data_id,data_source_id,data_type_mapping_id,import_data_id,data_staging_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-ON CONFLICT (original_data_id, data_source_id)
+            text:`INSERT INTO nodes(id, container_id, metatype_id, metatype_name, graph_id,properties,original_data_id,data_source_id,type_mapping_transformation_id,import_data_id,data_staging_id,composite_original_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+ON CONFLICT (composite_original_id, data_source_id)
 DO
-UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, import_data_id = $10, data_staging_id = $11, modified_at = NOW()`,
-            values: [n.id, n.container_id, n.metatype_id, n.metatype_name, n.graph_id,  n.properties, n.original_data_id, n.data_source_id, n.data_type_mapping_id, n.import_data_id, n.data_staging_id]
+UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, type_mapping_transformation_id = $9, import_data_id = $10, data_staging_id = $11, composite_original_id = $12, modified_at = NOW()`,
+            values: [n.id, n.container_id, n.metatype_id, n.metatype_name, n.graph_id,  n.properties, n.original_data_id, n.data_source_id, n.type_mapping_transformation_id, n.import_data_id, n.data_staging_id, n.composite_original_id]
              }
 
         ]
@@ -320,15 +303,15 @@ UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = 
 
     private static fullUpdateStatement(n: NodeT): QueryConfig[] {
         return [{
-            text: `UPDATE nodes SET container_id = $1, graph_id = $2,properties = $3, original_data_id = $4, data_source_id = $5, data_type_mapping_id = $6, modified_at = $7, deleted_at = $8, import_data_id = $10, data_staging_id = $11 WHERE id = $9`,
-            values: [n.container_id, n.graph_id, n.properties,n.original_data_id, n.data_source_id, n.data_type_mapping_id, n.modified_at,n.deleted_at, n.id, n.import_data_id, n.data_staging_id ]
+            text: `UPDATE nodes SET container_id = $1, graph_id = $2,properties = $3, original_data_id = $4, data_source_id = $5, type_mapping_transformation_id = $6, modified_at = $7, deleted_at = $8, import_data_id = $10, data_staging_id = $11, composite_original_id = $12 WHERE id = $9`,
+            values: [n.container_id, n.graph_id, n.properties,n.original_data_id, n.data_source_id, n.type_mapping_transformation_id, n.modified_at,n.deleted_at, n.id, n.import_data_id, n.data_staging_id, n.composite_original_id]
         }]
     }
 
-    private static fullUpdateByOriginalIDStatement(n: NodeT): QueryConfig[] {
+    private static fullUpdateByCompositeOriginalIDStatement(n: NodeT): QueryConfig[] {
         return [{
-            text: `UPDATE nodes SET container_id = $1, graph_id = $2, properties = $3, original_data_id = $4, data_source_id = $5, data_type_mapping_id = $6, modified_at = $7, deleted_at = $8, import_data_id = $11, data_staging_id = $12 WHERE original_data_id = $9 AND data_source_id = $10`,
-            values: [n.container_id, n.graph_id, n.properties,n.original_data_id, n.data_source_id, n.data_type_mapping_id, n.modified_at,n.deleted_at, n.original_data_id, n.data_source_id, n.import_data_id, n.data_staging_id]
+            text: `UPDATE nodes SET container_id = $1, graph_id = $2, properties = $3, original_data_id = $4, data_source_id = $5, type_mapping_transformation_id = $6, modified_at = $7, deleted_at = $8, import_data_id = $11, data_staging_id = $12, composite_original_id = $13 WHERE composite_original_id = $13 AND data_source_id = $10`,
+            values: [n.container_id, n.graph_id, n.properties,n.original_data_id, n.data_source_id, n.type_mapping_transformation_id, n.modified_at,n.deleted_at, n.original_data_id, n.data_source_id, n.import_data_id, n.data_staging_id, n.composite_original_id]
         }]
     }
 

@@ -171,7 +171,7 @@ export default class EdgeStorage extends PostgresStorage{
                    es[e].container_id = containerID;
 
                    if((es[e].modified_at || es[e].deleted_at) && es[e].id) queries.push(...EdgeStorage.updateStatement(es[e]))
-                   else if((es[e].modified_at || es[e].deleted_at) && !es[e].id && es[e].original_data_id && es[e].data_source_id) queries.push(...EdgeStorage.updateByOriginalIDStatement(es[e]))
+                   else if((es[e].modified_at || es[e].deleted_at) && !es[e].id && es[e].original_data_id && es[e].data_source_id) queries.push(...EdgeStorage.updateByCompositeOriginalIDStatement(es[e]))
                    else {
                        es[e].id = super.generateUUID();
                        queries.push(...EdgeStorage.createStatement(es[e]))
@@ -303,7 +303,7 @@ export default class EdgeStorage extends PostgresStorage{
                 es[e].container_id = containerID;
 
                 if((es[e].modified_at || es[e].deleted_at) && es[e].id) queries.push(...EdgeStorage.updateStatement(es[e]))
-                else if((es[e].modified_at || es[e].deleted_at) && !es[e].id && es[e].original_data_id && es[e].data_source_id) queries.push(...EdgeStorage.updateByOriginalIDStatement(es[e]))
+                else if((es[e].modified_at || es[e].deleted_at) && !es[e].id && es[e].original_data_id && es[e].data_source_id) queries.push(...EdgeStorage.updateByCompositeOriginalIDStatement(es[e]))
                 else {
                     es[e].id = super.generateUUID();
                     queries.push(...EdgeStorage.createStatement(es[e]))
@@ -454,28 +454,28 @@ export default class EdgeStorage extends PostgresStorage{
         return [
             {
                 text:`
-INSERT INTO edges(id, container_id, relationship_pair_id, graph_id, origin_node_id, destination_node_id, properties,original_data_id,data_source_id,data_type_mapping_id,origin_node_original_id,destination_node_original_id,import_data_id,data_staging_id)
-VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-ON CONFLICT (original_data_id, data_source_id)
+INSERT INTO edges(id, container_id, relationship_pair_id, graph_id, origin_node_id, destination_node_id, properties,original_data_id,data_source_id,type_mapping_transformation_id,origin_node_original_id,destination_node_original_id,import_data_id,data_staging_id,composite_original_id)
+VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,$15)
+ON CONFLICT (composite_original_id, data_source_id)
 DO
-UPDATE SET container_id = $2, relationship_pair_id = $3, graph_id = $4, origin_node_id = $5, destination_node_id = $6, properties = $7, original_data_id = $8, data_source_id = $9, data_type_mapping_id = $10, origin_node_original_id = $11, destination_node_original_id = $12, import_data_id = $13, data_staging_id = $14, modified_at = NOW()
+UPDATE SET container_id = $2, relationship_pair_id = $3, graph_id = $4, origin_node_id = $5, destination_node_id = $6, properties = $7, original_data_id = $8, data_source_id = $9, type_mapping_transformation_id = $10, origin_node_original_id = $11, destination_node_original_id = $12, import_data_id = $13, data_staging_id = $14, composite_original_id = $15 modified_at = NOW()
 `,
-                values: [e.id, e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties,e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id, e.import_data_id, e.data_staging_id]
+                values: [e.id, e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties,e.original_data_id, e.data_source_id, e.type_mapping_transformation_id, e.origin_node_original_id, e.destination_node_original_id, e.import_data_id, e.data_staging_id, e.composite_original_id]
             }
         ]
     }
 
     private static updateStatement(e: EdgeT): QueryConfig[] {
         return [{
-            text: `UPDATE edges SET container_id = $1, relationship_pair_id = $2, graph_id = $3, origin_node_id = $4, destination_node_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, origin_node_original_id = $10, destination_node_original_id = $11, import_data_id = $13, data_staging_id = $14 WHERE id = $12`,
-            values: [e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties, e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id, e.id, e.import_data_id, e.data_staging_id]
+            text: `UPDATE edges SET container_id = $1, relationship_pair_id = $2, graph_id = $3, origin_node_id = $4, destination_node_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, type_mapping_transformation_id = $9, origin_node_original_id = $10, destination_node_original_id = $11, import_data_id = $13, data_staging_id = $14, composite_original_id = $15 WHERE id = $12`,
+            values: [e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties, e.original_data_id, e.data_source_id, e.type_mapping_transformation_id, e.origin_node_original_id, e.destination_node_original_id, e.id, e.import_data_id, e.data_staging_id, e.composite_original_id]
         }]
     }
 
-    private static updateByOriginalIDStatement(e: EdgeT): QueryConfig[] {
+    private static updateByCompositeOriginalIDStatement(e: EdgeT): QueryConfig[] {
         return [{
-            text: `UPDATE edges SET container_id = $1, relationship_pair_id = $2, graph_id = $3, origin_node_id = $4, destination_node_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, data_type_mapping_id = $9, origin_node_original_id = $10, destination_node_original_id = $11, import_data_id = $14, data_staging_id = $15 WHERE original_id = $12 AND data_source_id = $13`,
-            values: [e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties, e.original_data_id, e.data_source_id, e.data_type_mapping_id, e.origin_node_original_id, e.destination_node_original_id, e.original_data_id, e.data_source_id, e.import_data_id, e.data_staging_id]
+            text: `UPDATE edges SET container_id = $1, relationship_pair_id = $2, graph_id = $3, origin_node_id = $4, destination_node_id = $5, properties = $6, original_data_id = $7, data_source_id = $8, type_mapping_transformation_id = $9, origin_node_original_id = $10, destination_node_original_id = $11, import_data_id = $14, data_staging_id = $15, composite_original_id = $16 WHERE composite_original_id = $16 AND data_source_id = $13`,
+            values: [e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties, e.original_data_id, e.data_source_id, e.type_mapping_transformation_id, e.origin_node_original_id, e.destination_node_original_id, e.original_data_id, e.data_source_id, e.import_data_id, e.data_staging_id, e.composite_original_id]
         }]
     }
 

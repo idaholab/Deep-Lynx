@@ -2,36 +2,19 @@
 version: '3.8'
 
 services:
-  deep-lynx-postgres:
-    build:
-      context: .
-      dockerfile: ./Dockerfiles/PostgreSQL/Dockerfile
-    ports:
-      - 5432:5432
-    restart: always
-    volumes:
-      - ./Dockerfiles/PostgreSQL/deeplynx.conf:/etc/postgresql/postgresql.conf
-      - ./Dockerfiles/PostgreSQL/basedata:/private/var/lib/postgresql/data
-    environment:
-      - POSTGRES_PASSWORD=#{PostgresPassword}
-    tty: true
-    stdin_open: true
-    command:
-      postgres -c config_file=/etc/postgresql/postgresql.conf
-      
+
+
   core-api:
     build:
       context: .
       dockerfile: ./Dockerfiles/Application/Dockerfile
     ports:
       - '8090:8090'
-    links:
-      - deep-lynx-postgres
+
     volumes:
       - .:/srv/core_api
       - /srv/core_api/node_modules
-    depends_on:
-      - deep-lynx-postgres
+
     environment:
       - WAIT_HOSTS=deep-lynx-postgres:5432
       - WAIT_HOSTS_TIMEOUT=300

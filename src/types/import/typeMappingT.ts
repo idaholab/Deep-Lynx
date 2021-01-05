@@ -86,12 +86,6 @@ const typeTransformationOptional = t.partial({
     root_array: t.string, // allows the user to specify that this transformation be applied to all objects in an array
 
     unique_identifier_key: t.string,
-    on_conflict: t.keyof({
-        "create": null,
-        "update": null,
-        "ignore": null
-    }),
-
     // composite fields
     metatype_name: t.string,
     metatype_relationship_pair_name: t.string

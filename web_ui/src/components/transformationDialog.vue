@@ -212,19 +212,6 @@
                               <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueIdentifierHelp')"></info-tooltip> </template>
                             </v-select>
                           </v-col>
-                          <v-col>
-                            <v-select
-                                :items="onConflictOptions"
-                                v-model="onConflict"
-                                :label="$t('dataMapping.onConflict')"
-                                :disabled="!uniqueIdentifierKey"
-                                clearable
-                            >
-
-                              <template slot="append-outer"><info-tooltip :message="$t('dataMapping.onConflictHelp')"></info-tooltip> </template>
-                            </v-select>
-                          </v-col>
-
                         </v-row>
                         <br>
 
@@ -327,21 +314,6 @@
                           </v-select>
                         </v-col>
                       </v-row>
-                      <v-row v-if="this.selectedRelationshipPair">
-                        <v-col>
-                          <v-select
-                              :items="onConflictOptions"
-                              v-model="onConflict"
-                              :rules="[v => !!v || 'Item is required']"
-                              clearable
-                          >
-
-                            <template v-slot:label>{{$t('dataMapping.onConflict')}} <small style="color:red">{{$t('dataMapping.required')}}</small></template>
-                            <template slot="append-outer"><info-tooltip :message="$t('dataMapping.onConflictHelp')"></info-tooltip> </template>
-                          </v-select>
-                        </v-col>
-                      </v-row>
-
 
                       <br>
                       <h4 v-if="selectedMetatypeRelationshipPairKeys.length > 0">{{$t('dataMapping.metatypeRelationshipPropertyMapping')}}<info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip> </h4>
@@ -533,7 +505,6 @@ import {
       {text: ">=", value: ">=", requiresValue: false},
     ]
     expressions = ["AND", "OR"]
-    onConflictOptions = ["create", "update", "ignore"]
 
     relationshipPairSearch = ""
     relationshipPairs: MetatypeRelationshipPairT[] = []
@@ -545,7 +516,6 @@ import {
     origin_key: any = null
     destination_key: any = null
     uniqueIdentifierKey: any = null
-    onConflict: any = null
     propertyMapping: {[key: string]: any}[] = []
 
     conditionsHeader() {
@@ -607,7 +577,6 @@ import {
           this.payloadType = 'metatype'
           this.selectedMetatype = metatype
           this.uniqueIdentifierKey = this.transformation?.unique_identifier_key
-          this.onConflict = this.transformation?.on_conflict
 
           if(Array.isArray(this.transformation?.keys)) this.propertyMapping = this.transformation?.keys as Array<{[key: string]: any}>
         })
@@ -623,7 +592,6 @@ import {
               this.selectedRelationshipPair = pair
 
               this.uniqueIdentifierKey = this.transformation?.unique_identifier_key
-              this.onConflict = this.transformation?.on_conflict
               this.origin_key = this.transformation?.origin_id_key
               this.destination_key = this.transformation?.destination_id_key
 
@@ -794,7 +762,6 @@ import {
       payload.conditions = this.conditions
       payload.keys = this.propertyMapping
       if(this.uniqueIdentifierKey) payload.unique_identifier_key = this.uniqueIdentifierKey
-      if(this.onConflict) payload.on_conflict = this.onConflict
       if(this.rootArray) payload.root_array = this.rootArray
 
       this.$client.createTypeMappingTransformation(this.containerID, this.dataSourceID, this.typeMappingID, payload as TypeMappingTransformationPayloadT)
@@ -820,7 +787,6 @@ import {
       payload.conditions = this.conditions
       payload.keys = this.propertyMapping
       if(this.uniqueIdentifierKey) payload.unique_identifier_key = this.uniqueIdentifierKey
-      if(this.onConflict) payload.on_conflict = this.onConflict
       if(this.rootArray) payload.root_array = this.rootArray
 
       this.$client.updateTypeMappingTransformation(this.containerID, this.dataSourceID, this.typeMappingID,this.transformation?.id!, payload as TypeMappingTransformationPayloadT)
@@ -1060,7 +1026,7 @@ import {
        return this.mainFormValid
        }
 
-      return (this.uniqueIdentifierKey && this.onConflict && this.mainFormValid)
+      return (this.uniqueIdentifierKey && this.mainFormValid)
     }
 
     // we need all the keys in a given data payload, this

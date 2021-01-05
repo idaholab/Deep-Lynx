@@ -287,7 +287,7 @@ describe('A Data Type Mapping Transformation', async() => {
             metatype_id: metatype.value[0].id,
             conditions: [{
                key: "RADIUS",
-               operator: "eq",
+               operator: "==",
                value: "CIRCLE"
             }],
             keys: [{
