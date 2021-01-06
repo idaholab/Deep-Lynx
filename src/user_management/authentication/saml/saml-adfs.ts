@@ -15,10 +15,11 @@ export function SetSamlAdfs(app: express.Application) {
     // without a public/private key present the application will return an error
      if(!Config.saml_adfs_private_cert_path || !Config.saml_adfs_public_cert_path) return;
 
-     passport.serializeUser((user, done) => {
+     // @ts-ignore - as of 1/6/2021 passport.js types haven't been updated
+     passport.serializeUser((user: UserT, done: any) => {
         done(null, user);
     });
-     passport.deserializeUser((user, done) => {
+     passport.deserializeUser((user: UserT, done: any) => {
         done(null, user);
     });
 

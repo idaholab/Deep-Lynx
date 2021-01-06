@@ -150,12 +150,13 @@ export class Router {
     // use a JWT for each subsequent request
     SetJWTAuthMethod(this.app)
 
-    passport.serializeUser((user: UserT, done) => {
+    // @ts-ignore - as of 1/6/2021 passport.js types haven't been updated
+    passport.serializeUser((user: UserT, done: any) => {
           user.password = ""
           done(null, user.id);
       });
 
-    passport.deserializeUser((user: string, done) => {
+    passport.deserializeUser((user: string, done: any) => {
           UserStorage.Instance.Retrieve(user)
               .then(result => {
                   if(result.isError) done("unable to retrieve user", null)

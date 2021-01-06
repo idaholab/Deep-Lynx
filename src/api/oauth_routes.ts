@@ -122,6 +122,7 @@ export default class OAuthRoutes {
                     return
                 }
 
+                // @ts-ignore due to strictNullCheck being on
                 delete result.value.secret; // we don't want to show the hashed value on return
 
                 res.redirect(buildUrl('/oauth/profile', {queryParams: {
