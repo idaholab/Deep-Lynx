@@ -13,7 +13,6 @@ import {MetatypeKeyT} from "../../types/metatype_keyT";
 import {ApplyTransformation, ValidTransformationCondition} from "../../data_processing/type_mapping";
 import {objectToShapeHash} from "../../utilities";
 import {MetatypeT} from "../../types/metatypeT";
-import {Meta} from "express-validator";
 import {NodeT} from "../../types/graph/nodeT";
 import NodeStorage from "../../data_storage/graph/node_storage";
 import GraphStorage from "../../data_storage/graph/graph_storage";
@@ -255,14 +254,14 @@ describe('A Data Type Mapping can', async() => {
         expect((results.value as NodeT[])[0].properties).to.have.property('type', 'oil change')
         expect((results.value as NodeT[])[0].properties).to.have.property('check_engine_light_flag', true)
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[0].original_data_id).eq(1)
+        expect((results.value as NodeT[])[0].original_data_id).eq("1") // original IDs are strings
         expect((results.value as NodeT[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+1`)
 
         expect((results.value as NodeT[])[1].properties).to.have.property('id', 2)
         expect((results.value as NodeT[])[1].properties).to.have.property('type', 'tire rotation')
         expect((results.value as NodeT[])[1].properties).to.have.property('check_engine_light_flag', false)
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[1].original_data_id).eq(2)
+        expect((results.value as NodeT[])[1].original_data_id).eq("2") // original IDs are strings
         expect((results.value as NodeT[])[1].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+2`)
 
 
@@ -288,8 +287,8 @@ describe('A Data Type Mapping can', async() => {
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].price",
                 metatype_key_id: car_part_metatype_keys.find(key => key.name === "price")!.id
             }],
-            metatype_id: resultMetatypes.find(m => m.name === "Maintenance Entry")!.id,
-            unique_identifier_key: "car_maintenance.maintenance_entries.[].id",
+            metatype_id: resultMetatypes.find(m => m.name === "Part")!.id,
+            unique_identifier_key: "car_maintenance.maintenance_entries.[].parts_list.[].id",
             root_array: "car_maintenance.maintenance_entries.[].parts_list"
         } as TypeTransformationT
 

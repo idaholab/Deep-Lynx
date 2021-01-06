@@ -120,7 +120,7 @@ async function generateResults(mapping: TypeMappingT, transformation: TypeTransf
          if(k.key) {
             value = getNestedValue(k.key!, data.data, index)
          }
-         if (!value) continue;
+         if (typeof value === "undefined") continue;
 
          // separate the metatype and metatype relationship keys from each other
          // the type mapping _should_ have easily handled the combination of keys
@@ -151,7 +151,7 @@ async function generateResults(mapping: TypeMappingT, transformation: TypeTransf
       } as NodeT
 
       if(transformation.unique_identifier_key) {
-         node.original_data_id = getNestedValue(transformation.unique_identifier_key!, data.data, index)
+         node.original_data_id = `${getNestedValue(transformation.unique_identifier_key!, data.data, index)}`
          node.composite_original_id = `${mapping.container_id}+${mapping.data_source_id}+${transformation.unique_identifier_key}+${getNestedValue(transformation.unique_identifier_key!, data.data, index)}`
       }
 
