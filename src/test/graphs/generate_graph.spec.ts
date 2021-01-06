@@ -206,7 +206,7 @@ describe('A Complex Graph can be created', async() => {
 
         console.log(`Graph ID = ${graph.value.id}`)
 
-       return new Promise(resolve => resolve("all done"))
+       return Promise.resolve()
     });
 });
 
