@@ -717,7 +717,7 @@ const maintenance_entry_metatype_keys: MetatypeKeyT[] = [{
     required: true
 },{
     name: "check engine light flag",
-    property_name: "check_engine_light",
+    property_name: "check_engine_light_flag",
     description: "check engine light flag",
     data_type: "boolean",
     required: true

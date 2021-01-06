@@ -4,7 +4,10 @@ import {getNestedValue} from "../../utilities";
 
 describe('Utility functions can', async() => {
     it('fetch keys from payload using dot notation', async() => {
-        let value = getNestedValue("car_maintenance.maintenance_entries.[].id", test_payload[0], [0])
+        let value = getNestedValue("car.id", test_payload[0])
+        expect(value).eq("UUID")
+
+        value = getNestedValue("car_maintenance.maintenance_entries.[].id", test_payload[0], [0])
         expect(value).eq(1)
 
         value = getNestedValue("car_maintenance.maintenance_entries.[].id", test_payload[0], [1])
