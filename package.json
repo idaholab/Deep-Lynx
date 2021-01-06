@@ -82,7 +82,7 @@
     "@types/passport-jwt": "^3.0.3",
     "@types/passport-local": "^1.0.33",
     "@types/xml2js": "^0.4.7",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "base64url": "^3.0.1",
     "bcrypt": "^5.0.0",
     "better-queue": "^3.8.10",
