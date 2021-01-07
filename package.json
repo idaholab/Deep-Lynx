@@ -20,7 +20,7 @@
     "docker:gremlin:run": "docker pull tinkerpop/gremlin-server:latest && docker run -d -p 8182:8182 tinkerpop/gremlin-server",
     "docker:gremlin:stop": "docker stop $(docker ps -q --filter ancestor=tinkerpop/gremlin-server)",
     "watch": "nodemon",
-    "start": "tsc && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && ./dist && copyfiles -u 1 \"./src/assets/**\" ./dist && node -r dotenv/config ./dist/main.js",
+    "start": "tsc && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"./src/assets/**\" ./dist && node -r dotenv/config ./dist/main.js",
     "migrate": "tsc && node -r dotenv/config ./dist/migrate.js",
     "build:dev": "tsc && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"./src/assets/**\" ./dist",
     "test": "cross-env TS_NODE_FILES=true npm run test:raw",
