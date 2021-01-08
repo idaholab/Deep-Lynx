@@ -140,6 +140,7 @@ async function generateResults(mapping: TypeMappingT, transformation: TypeTransf
       }
    }
 
+   // create a node if metatype id is set
    if(transformation.metatype_id && !transformation.metatype_relationship_pair_id) {
       const node = {
          metatype_id: transformation.metatype_id,
@@ -156,6 +157,30 @@ async function generateResults(mapping: TypeMappingT, transformation: TypeTransf
       }
 
       return new Promise(resolve => resolve(Result.Success([node])))
+   }
+
+   // create an edge if the relationship id is set
+   if(transformation.metatype_relationship_pair_id && !transformation.metatype_id) {
+       const edge = {
+          relationship_pair_id: transformation.metatype_relationship_pair_id,
+          properties: newPayloadRelationship,
+          type_mapping_transformation_id: transformation.id,
+          data_source_id: mapping.data_source_id,
+          container_id: mapping.container_id,
+          data_staging_id: data.id,
+          origin_node_original_id: `${getNestedValue(transformation.origin_id_key!, data.data, index)}`,
+          destination_node_original_id: `${getNestedValue(transformation.destination_id_key!, data.data, index)}`,
+          origin_node_composite_original_id: `${mapping.container_id}+${mapping.data_source_id}+${transformation.origin_id_key}+${getNestedValue(transformation.origin_id_key!, data.data, index)}`,
+          destination_node_composite_original_id: `${mapping.container_id}+${mapping.data_source_id}+${transformation.destination_id_key}+${getNestedValue(transformation.destination_id_key!, data.data, index)}`
+       } as EdgeT
+
+       if(transformation.unique_identifier_key) {
+         edge.original_data_id = `${getNestedValue(transformation.unique_identifier_key!, data.data, index)}`
+         edge.composite_original_id = `${mapping.container_id}+${mapping.data_source_id}+${transformation.unique_identifier_key}+${getNestedValue(transformation.unique_identifier_key!, data.data, index)}`
+      }
+
+       return new Promise(resolve => resolve(Result.Success([edge])))
+
    }
 
    return new Promise(resolve => resolve(Result.Failure("unable to generate either node or edge")))

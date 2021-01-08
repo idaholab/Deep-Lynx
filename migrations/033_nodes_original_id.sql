@@ -9,6 +9,8 @@ ALTER TABLE edges ADD COLUMN type_mapping_transformation_id uuid REFERENCES data
 
 ALTER TABLE nodes ADD COLUMN composite_original_id text;
 ALTER TABLE edges ADD COLUMN composite_original_id text;
+ALTER TABLE edges ADD COLUMN origin_node_composite_original_id text;
+ALTER TABLE edges ADD COLUMN destination_node_composite_original_id text;
 
 CREATE UNIQUE INDEX composite_original_id_nodes ON nodes(data_source_id, composite_original_id);
 CREATE UNIQUE INDEX composite_original_id_edges ON edges(data_source_id, composite_original_id);

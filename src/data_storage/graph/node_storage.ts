@@ -245,8 +245,8 @@ export default class NodeStorage extends PostgresStorage{
         return super.retrieve<NodeT>(NodeStorage.retrieveStatement(id), client)
     }
 
-    public async RetrieveByOriginalID(originalID: string, dataSourceID: string, client?:PoolClient): Promise<Result<NodeT>> {
-        return super.retrieve<NodeT>(NodeStorage.retrieveByOriginalIDStatement(dataSourceID, originalID), client)
+    public async RetrieveByCompositeOriginalID(originalID: string, dataSourceID: string, client?:PoolClient): Promise<Result<NodeT>> {
+        return super.retrieve<NodeT>(NodeStorage.retrieveByCompositeOriginalIDStatement(dataSourceID, originalID), client)
     }
 
     public DomainRetrieve(id: string, containerID: string): Promise<Result<NodeT>> {
@@ -294,9 +294,9 @@ UPDATE  SET container_id = $2, metatype_id = $3, metatype_name = $4, graph_id = 
 
     // because the data source and data are so tightly intertwined, you must include both in order to pull a single
     // piece of data by original id
-    private static retrieveByOriginalIDStatement(dataSourceID:string, originalID: string): QueryConfig {
+    private static retrieveByCompositeOriginalIDStatement(dataSourceID:string, originalID: string): QueryConfig {
         return {
-            text: `SELECT * FROM nodes WHERE original_data_id = $1 AND data_source_id = $2 AND NOT archived`,
+            text: `SELECT * FROM nodes WHERE composite_original_id = $1 AND data_source_id = $2 AND NOT archived`,
             values: [originalID, dataSourceID]
         }
     }
