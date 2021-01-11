@@ -94,15 +94,15 @@ export default class TypeTransformationStorage extends PostgresStorage{
     // queries more easily.
     private static createStatement(tt: TypeTransformationT): QueryConfig {
         return {
-            text:`INSERT INTO data_type_mapping_transformations(id,keys,type_mapping_id,conditions,metatype_id, metatype_relationship_pair_id,origin_id_key,destination_id_key,unique_identifier_key,on_conflict,created_by,modified_by,root_array) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
-            values: [tt.id,JSON.stringify(tt.keys),tt.type_mapping_id,JSON.stringify(tt.conditions),tt.metatype_id,tt.metatype_relationship_pair_id,tt.origin_id_key,tt.destination_id_key,tt.unique_identifier_key,tt.on_conflict,tt.created_by,tt.modified_by,tt.root_array]
+            text:`INSERT INTO data_type_mapping_transformations(id,keys,type_mapping_id,conditions,metatype_id, metatype_relationship_pair_id,origin_id_key,destination_id_key,unique_identifier_key,created_by,modified_by,root_array) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+            values: [tt.id,JSON.stringify(tt.keys),tt.type_mapping_id,JSON.stringify(tt.conditions),tt.metatype_id,tt.metatype_relationship_pair_id,tt.origin_id_key,tt.destination_id_key,tt.unique_identifier_key,tt.created_by,tt.modified_by,tt.root_array]
         }
     }
 
     private static updateStatement(id: string, tt: TypeTransformationT): QueryConfig {
         return {
-            text:`UPDATE data_type_mapping_transformations SET keys = $1, conditions = $2,metatype_id = $3, metatype_relationship_pair_id = $4, origin_id_key = $5, destination_id_key = $6, unique_identifier_key = $7, on_conflict = $8, modified_by = $9, root_array = $10 WHERE id = $11  `,
-            values: [JSON.stringify(tt.keys),JSON.stringify(tt.conditions),tt.metatype_id,tt.metatype_relationship_pair_id,tt.origin_id_key,tt.destination_id_key,tt.unique_identifier_key,tt.on_conflict,tt.modified_by,tt.root_array, id]
+            text:`UPDATE data_type_mapping_transformations SET keys = $1, conditions = $2,metatype_id = $3, metatype_relationship_pair_id = $4, origin_id_key = $5, destination_id_key = $6, unique_identifier_key = $7, modified_by = $8, root_array = $9 WHERE id = $10  `,
+            values: [JSON.stringify(tt.keys),JSON.stringify(tt.conditions),tt.metatype_id,tt.metatype_relationship_pair_id,tt.origin_id_key,tt.destination_id_key,tt.unique_identifier_key,tt.modified_by,tt.root_array, id]
         }
     }
 

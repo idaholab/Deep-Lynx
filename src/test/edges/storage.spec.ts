@@ -161,12 +161,12 @@ describe('A Graph Edge can', async() => {
             metatype_id: metatype.value[0].id!,
             properties: payload,
             data_source_id: exp.value.id!,
-            original_data_id: faker.name.firstName()
+            composite_original_id: faker.name.firstName()
         },{
             metatype_id: metatype.value[1].id!,
             properties: payload,
             data_source_id: exp.value.id!,
-            original_data_id: faker.name.firstName()
+            composite_original_id: faker.name.firstName()
         }];
 
         const node = await nStorage.CreateOrUpdate(containerID, graph.value.id,  mixed);
@@ -191,8 +191,8 @@ describe('A Graph Edge can', async() => {
         let edge = await storage.CreateOrUpdate(containerID, graph.value.id,  {
             relationship_pair_id: pair.value[0].id,
             properties: payload,
-            origin_node_original_id: node.value[0].original_data_id,
-            destination_node_original_id: node.value[1].original_data_id,
+            origin_node_composite_original_id: node.value[0].composite_original_id,
+            destination_node_composite_original_id: node.value[1].composite_original_id,
             data_source_id: exp.value.id!
         } as EdgeT);
 

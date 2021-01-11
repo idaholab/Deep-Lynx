@@ -214,14 +214,14 @@ describe('Graph Node Creation', async() => {
         const mixed = {
             metatype_id: metatype.value[0].id!,
             data_source_id: dataSource.value.id!,
-            original_data_id: "test",
+            composite_original_id: "test",
             properties: payload
         } as NodeT;
 
         const node = await storage.CreateOrUpdate(containerID, graph.value.id,  mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        const fetchedNode = await storage.RetrieveByOriginalID("test", dataSource.value.id!)
+        const fetchedNode = await storage.RetrieveByCompositeOriginalID("test", dataSource.value.id!)
         expect(fetchedNode.isError).false
         expect(fetchedNode.value.data_source_id).equals(dataSource.value.id!)
 

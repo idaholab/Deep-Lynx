@@ -229,7 +229,8 @@ export default {
       processedAt:"Processed At",
       errors: "Errors",
       typeMapping: "Type Mapping",
-      viewDeleteData: "View/Delete"
+      viewDeleteData: "View/Delete",
+      successfullyDeleted: "Data Successfully Deleted"
     },
     containerInvite: {
       button: "Invite User to Container",
