@@ -213,6 +213,20 @@ export async function AssignUserRole(user: UserT | any, payload: AssignRolePaylo
    })
 }
 
+// assign a user role without first checking the assigning user's permissions
+export async function AssignUserRoleNoCheck(user: UserT | any, payload: AssignRolePayloadT | any): Promise<Result<boolean>> {
+    return new Promise(resolve => {
+        const onSuccess = (res: (r:any) => void): (p: AssignRolePayloadT)=> void => {
+            return async (pl: AssignRolePayloadT) => {
+
+                resolve(Result.Success(await Authorization.AssignRole(pl.user_id, pl.role_name, pl.container_id)))
+            }
+        };
+
+        pipe(assignRolePayloadT.decode(payload), fold(onDecodeError(resolve), onSuccess(resolve)))
+    })
+}
+
 export async function RemoveAllUserRoles(user: UserT | any, domain:string): Promise<Result<boolean>> {
    const authed = await Authorization.AuthUser(user, 'write', 'users');
    if(!authed) return Promise.resolve(Result.Error(ErrorUnauthorized));

@@ -18,6 +18,7 @@ import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import Config from "../../config";
 import base64url from "base64url";
+import {RetrieveResourcePermissions} from "../../user_management/users";
 
 export class OAuth {
     // AuthorizationRequest will make and store a request in cache for 10 minutes. It will
@@ -72,7 +73,10 @@ export class OAuth {
             if(!valid) return new Promise(resolve => resolve(Result.Failure('invalid client')))
         }
 
-        // with all verification done generate and return a valid JWT
+        // with all verification done generate and return a valid JWT after assigning user permissions
+        const permissions = await RetrieveResourcePermissions(user.value.id!)
+        user.value.permissions = permissions
+
         const token = jwt.sign(user.value, Config.encryption_key_secret, {expiresIn: '720m'})
 
         return new Promise(resolve => resolve(Result.Success(token)))
