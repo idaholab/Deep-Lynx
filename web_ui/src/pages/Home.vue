@@ -32,7 +32,7 @@
                     </template>
 
                     <v-list-item two-line link
-                                 v-if="$auth.Auth('ontology', 'read')"
+                                 v-if="$auth.Auth('ontology', 'read', containerID)"
                                  @click="setActiveComponent('metatypes')"
                                  :input-value="currentMainComponent === 'Metatypes'">
                         <v-list-item-content>
@@ -42,7 +42,7 @@
                     </v-list-item>
 
                     <v-list-item two-line link
-                                 v-if="$auth.Auth('ontology', 'read')"
+                                 v-if="$auth.Auth('ontology', 'read', containerID)"
                                  @click="setActiveComponent('metatype-relationships')"
                                  :input-value="currentMainComponent === 'MetatypeRelationships'">
                         <v-list-item-content>
@@ -52,7 +52,7 @@
                     </v-list-item>
 
                     <v-list-item two-line link
-                                 v-if="$auth.Auth('ontology', 'read')"
+                                 v-if="$auth.Auth('ontology', 'read', containerID)"
                                  @click="setActiveComponent('metatype-relationship-pairs')"
                                  :input-value="currentMainComponent === 'MetatypeRelationshipPairs'">
                         <v-list-item-content>
@@ -70,7 +70,7 @@
 
 
                     <v-list-item two-line link
-                                 v-if="$auth.Auth('data', 'write')"
+                                 v-if="$auth.Auth('data', 'write', containerID)"
                                  @click="setActiveComponent('data-sources')"
                                  :input-value="currentMainComponent === 'DataSources'">
                         <v-list-item-content>
@@ -79,7 +79,7 @@
                         </v-list-item-content>
                     </v-list-item>
                     <v-list-item two-line link
-                                 v-if="$auth.Auth('data', 'read')"
+                                 v-if="$auth.Auth('data', 'read', containerID)"
                                  @click="setActiveComponent('data-imports')"
                                  :input-value="currentMainComponent === 'DataImports'">
                         <v-list-item-content>
@@ -88,7 +88,7 @@
                         </v-list-item-content>
                     </v-list-item>
                     <v-list-item two-line link
-                                 v-if="$auth.Auth('data','write')"
+                                 v-if="$auth.Auth('data','write', containerID)"
                                  @click="setActiveComponent('data-mapping')"
                                  :input-value="currentMainComponent === 'DataMapping'">
                         <v-list-item-content>
@@ -97,7 +97,7 @@
                         </v-list-item-content>
                     </v-list-item>
                     <v-list-item two-line link
-                                 v-if="$auth.Auth('data', 'write')"
+                                 v-if="$auth.Auth('data', 'write', containerID)"
                                  @click="setActiveComponent('data-export')"
                                  :input-value="currentMainComponent === 'DataExport'">
                         <v-list-item-content>
@@ -108,12 +108,12 @@
 
                 </v-list-group>
 
-                <v-list-group :value="false" v-if="$auth.Auth('users', 'read')" dense>
+                <v-list-group :value="false" v-if="$auth.Auth('users', 'read', containerID)" dense>
                     <template v-slot:activator>
                         <v-list-item-title>{{$t("home.containerAdministration")}}</v-list-item-title>
                     </template>
                     <v-list-item two-line link
-                                 v-if="$auth.Auth('users', 'write')"
+                                 v-if="$auth.Auth('users', 'write', containerID)"
                                  @click="setActiveComponent('container-users')"
                                  :input-value="currentMainComponent === 'ContainerUsers'">
                         <v-list-item-content>

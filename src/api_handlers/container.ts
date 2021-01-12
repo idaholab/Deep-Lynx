@@ -4,7 +4,7 @@ import {ContainersT, ContainerT} from "../types/containerT";
 import ContainerStorage from "../data_storage/container_storage";
 import {Authorization} from "../user_management/authorization/authorization"
 import Logger from "../logger";
-import {AssignUserRole} from "../user_management/users";
+import {AssignUserRoleNoCheck} from "../user_management/users";
 
 // Container creation must also handle creation of policies regarding the management of said container
 // because of this, creation is pulled out into its own function vs. simply connecting the storage
@@ -74,7 +74,7 @@ export async function CreateContainer(user:UserT | any, input:any): Promise<Resu
 
     // assign the creating user Admin privileges for each container created
     for(const container of containers.value) {
-       const result = await AssignUserRole(user, {
+       const result = await AssignUserRoleNoCheck(user, {
             user_id: user.id,
             container_id: container.id,
             role_name: "admin"
