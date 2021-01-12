@@ -41,9 +41,11 @@
 
     @Component
     export default class NewDataSourceDialog extends Vue {
-        @Prop({required: true})
-        readonly dataSourceID!: string
-        readonly containerID!: string
+      @Prop({required: true})
+      readonly dataSourceID!: string
+
+      @Prop({required: true})
+      readonly containerID!: string
 
         errorMessage = ""
         dialog = false

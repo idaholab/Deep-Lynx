@@ -255,7 +255,7 @@ export class Config {
   // this will either return a reading of the .key file, or a plaintext secret
   // as determined by whether or not the environment variables were set correctly
   get encryption_key_secret(): Buffer {
-    if(this._encryption_key_path) return fs.readFileSync(this._encryption_key_path)
+    if(this._encryption_key_path && this._encryption_key_path !== "") return fs.readFileSync(this._encryption_key_path)
 
     return Buffer.from(this._encryption_key_secret, 'utf8')
   }

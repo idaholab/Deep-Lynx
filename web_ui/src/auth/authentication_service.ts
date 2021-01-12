@@ -84,15 +84,13 @@ export class Authentication {
 // on the Deep Lynx backend. This is purely for display control purposes and should always
 // be taken with a grain of salt because as of July 2020 we do not have an auto-renew on
 // JWTs in place
-    Auth(resource: string, action: string, containerID?: string): boolean {
+    Auth(resource: string, action: string, containerID: string): boolean {
         const user = localStorage.getItem('user')
 
         if(!user) return false
 
         const u: UserT = JSON.parse(user)
         if(u.admin) return true;
-
-        if(!containerID) containerID = store.getters.activeContainerID
 
         // permissions are stored as an array of strings in the format of
         // domain(containerID), resource, action. We assume that if the initial array
