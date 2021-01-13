@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX app_container_type ON registered_events(app_name, container_id, event_type) WHERE data_source_id IS NULL;
+CREATE UNIQUE INDEX app_datasource_type ON registered_events(app_name, data_source_id, event_type) WHERE container_id IS NULL;
