@@ -77,6 +77,12 @@
                                         ></v-text-field>
 
                                     </div>
+                                  <v-text-field
+                                      v-model="newDataSource.config.poll_interval"
+                                      label="Poll Interval (in seconds)"
+                                      type="number"
+                                      required
+                                  ></v-text-field>
                                 </div>
                                 <v-checkbox
                                         v-model="newDataSource.active"
