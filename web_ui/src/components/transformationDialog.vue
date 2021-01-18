@@ -19,7 +19,7 @@
                   <h2 v-if="transformation">{{$t("dataMapping.editTransformation")}}</h2>
                   <v-divider></v-divider>
                     <v-row v-if="payloadArrayKeys.length > 0">
-                      <v-col :cols="6">
+                      <v-col :cols="10">
                         <v-select
                             :items="payloadArrayKeys"
                             v-model="rootArray"
@@ -435,6 +435,7 @@ import {
   TypeMappingTransformationSubexpression,
   TypeMappingTransformationT
 } from "@/api/types";
+import {getNestedValue} from "@/utilities";
 
   @Component({
     filters: {
@@ -718,16 +719,36 @@ import {
 
     @Watch('rootArray', {immediate: true})
     onRootArrayChange() {
+      this.payloadKeys = []
+
+      // first fetch all keys that are not arrays and are the top level
       const flattened = this.flattenWithoutArray(this.payload)
-      this.payloadKeys = Object.keys(flattened)
+      Object.keys(flattened).map(k => {
+        if(!Array.isArray(flattened[k])) this.payloadKeys.push(k)
+      })
 
       if(this.rootArray){
-        const rootArrayKeys = Object.keys(flattened[this.rootArray][0])
-        this.rootArrayKeys = []
-        rootArrayKeys.map(k => {
-          this.payloadKeys.push(`${this.rootArray}.[].${k}`)
-          this.rootArrayKeys.push(`${this.rootArray}.[].${k}`)
-        })
+        // now let's split the root array key-name so that we can get each
+        // key-name for each potential layer
+        const parts = this.rootArray.split('[]')
+
+        for(let i = 0; i < parts.length; i++) {
+          const key = parts.slice(0, i+1).join('[]')
+          const cleanKey = (key.charAt(key.length -1) === ".") ? key.substr(0, key.length -1) : key
+
+          // now that we have a clean key, fetch the first value in that array payload
+          // if it's an object, push its keys into the resulting payload keys
+          const value = getNestedValue(cleanKey, this.payload, new Array(i +1).fill(0))
+
+          if(Array.isArray(value)) {
+            const keys = Object.keys(value[0])
+
+            keys.map(k => {
+              if(!Array.isArray(value[0][k])) this.payloadKeys.push(`${cleanKey}.[].${k}`)
+            })
+          }
+
+        }
       }
     }
 
@@ -737,10 +758,14 @@ import {
       this.payloadArrayKeys = []
 
       const flattened = this.flattenWithoutArray(this.payload)
-      this.payloadKeys = Object.keys(flattened)
-
       Object.keys(flattened).map(k => {
-        if(Array.isArray(flattened[k]) && typeof flattened[k][0] === "object") {
+        if(!Array.isArray(flattened[k])) this.payloadKeys.push(k)
+      })
+
+      const flattenedWithArrays = this.flatten(this.payload)
+
+      Object.keys(flattenedWithArrays).map(k => {
+        if(Array.isArray(flattenedWithArrays[k]) && typeof flattenedWithArrays[k][0] === "object") {
           this.payloadArrayKeys.push(k)
         }
       })
