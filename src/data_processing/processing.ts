@@ -10,12 +10,8 @@ import {TransformPayload} from "./type_mapping";
 import TypeMappingStorage from "../data_storage/import/type_mapping_storage";
 import NodeStorage from "../data_storage/graph/node_storage";
 import GraphStorage from "../data_storage/graph/graph_storage";
-import {QueryConfig} from "pg";
 import EdgeStorage from "../data_storage/graph/edge_storage";
 import DataSourceStorage from "../data_storage/import/data_source_storage";
-import {DataStagingT} from "../types/import/dataStagingT";
-import {structure} from "gremlin";
-import Graph = structure.Graph;
 
 // DataSourceProcessor starts an unending processing loop for a data source. This
 // loop is what takes mapped data from data_staging and inserts it into the actual
@@ -38,7 +34,7 @@ export class DataSourceProcessor {
            const active = await DataSourceStorage.Instance.IsActive(this.dataSource.id!)
            if(active.isError || !active.value) break;
 
-           const incompleteImports = await ImportStorage.Instance.ListReady(this.dataSource.id!, 0, 1)
+           const incompleteImports = await ImportStorage.Instance.ListIncompleteWithUninsertedData(this.dataSource.id!)
            if(!incompleteImports.isError) {
                for(const incompleteImport of incompleteImports.value) {
                    const processed = await this.process(incompleteImport.id)
@@ -57,17 +53,6 @@ export class DataSourceProcessor {
     public async process(dataImportID: string): Promise<Result<boolean>> {
         const ds = DataStagingStorage.Instance
 
-        // an import must have all its data mapped to existing types prior to insertion. This is done so that we can
-        // handle a set of relationships and data at the same time - as well as insuring that data is processed in the
-        // order its received.
-        // TODO: this must be set to count Transformations of the type mappings, if no transformations for an attached type mapping, then error out
-        const unmappedData = await ds.CountUnmappedData(dataImportID)
-        if(unmappedData.isError || unmappedData.value > 0) {
-            await ImportStorage.Instance.SetStatus(dataImportID,"ready",  "import has unmapped data, resolve by creating type mappings")
-
-            return new Promise(resolve => resolve(Result.SilentFailure(`data import has unmapped data, resolve by creating type mappings`)))
-        }
-
         const totalToProcess = await ds.Count(dataImportID)
         if(totalToProcess.isError) return new Promise(resolve => resolve(Result.Pass(totalToProcess)))
 
@@ -77,7 +62,7 @@ export class DataSourceProcessor {
 
         // so as to not swamp memory we process in batches, batch size determined by config.
         for(let i = 0; i < totalToProcess.value ; i++) {
-           const toProcess = await ds.ListUnprocessed(dataImportID, i * Config.data_source_batch_size, Config.data_source_batch_size)
+           const toProcess = await ds.ListUninserted(dataImportID, i * Config.data_source_batch_size, Config.data_source_batch_size)
            if(toProcess.isError) {
                 await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to fetch from data_staging ${toProcess.error?.error}`)
 
@@ -191,7 +176,7 @@ export class DataSourceProcessor {
 
         await GraphStorage.Instance.completeTransaction(transaction.value)
 
-        const setProcessed = await DataStagingStorage.Instance.SetProcessed(dataImportID)
+        const setProcessed = await DataStagingStorage.Instance.SetInserted(dataImportID)
         if(setProcessed.isError || !setProcessed.value) Logger.debug(`unable to set data import ${dataImportID} to processed`)
 
         return ImportStorage.Instance.SetStatus(dataImportID, "completed")

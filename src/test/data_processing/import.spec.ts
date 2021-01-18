@@ -6,6 +6,9 @@ import Logger from "../../logger";
 import ContainerStorage from "../../data_storage/container_storage";
 import DataSourceStorage from "../../data_storage/import/data_source_storage";
 import ImportStorage from "../../data_storage/import/import_storage";
+import {objectToShapeHash} from "../../utilities";
+import TypeMappingStorage from "../../data_storage/import/type_mapping_storage";
+import DataStagingStorage from "../../data_storage/import/data_staging_storage";
 
 describe('An Import Adapter Import', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -48,6 +51,47 @@ describe('An Import Adapter Import', async() => {
         let logs = await logStorage.List(exp.value.id!, 0, 100);
         expect(logs.isError).false;
         expect(logs.value).not.empty;
+
+        return storage.PermanentlyDelete(exp.value.id!)
+    });
+
+    // need to test if we can query imports that are incomplete with uninserted data
+    it('can be listed by incomplete and uninserted', async()=> {
+        let storage = DataSourceStorage.Instance;
+        let importStorage = ImportStorage.Instance;
+
+        let exp = await storage.Create(containerID, "test suite",
+            {
+                name: "Test Data Source",
+                active:false,
+                adapter_type:"http",
+                config: {}});
+
+        expect(exp.isError).false;
+        expect(exp.value).not.empty;
+
+        let newImport = await importStorage.InitiateImport(exp.value.id!, "test suite", "test");
+        expect(newImport.isError).false;
+
+        // mapping needs to be completed in order to get inserted
+        const shapeHash = objectToShapeHash(test_payload)
+        const mapping = await TypeMappingStorage.Instance.Create(containerID, exp.value.id!, shapeHash, test_payload)
+
+        expect(mapping.isError).false
+
+        const inserted = await DataStagingStorage.Instance.Create(exp.value.id!, newImport.value, mapping.value.id, test_payload)
+        expect(inserted.isError).false
+
+        let logs = await importStorage.ListIncompleteWithUninsertedData(exp.value.id!);
+        expect(logs.isError).false;
+        expect(logs.value).not.empty;
+
+        let set = await importStorage.SetStatus(newImport.value!, "completed")
+        expect(set.isError).false
+
+        logs = await importStorage.ListIncompleteWithUninsertedData(exp.value.id!);
+        expect(logs.isError).false;
+        expect(logs.value).empty;
 
         return storage.PermanentlyDelete(exp.value.id!)
     });
@@ -155,7 +199,7 @@ describe('An Import Adapter Import', async() => {
     });
 });
 
-const payload = [{
+const test_payload = {
     test: "test"
-}]
+}
 
