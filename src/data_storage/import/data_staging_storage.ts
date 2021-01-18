@@ -65,20 +65,20 @@ export default class DataStagingStorage extends PostgresStorage {
         return super.rows<DataStagingT>(DataStagingStorage.listStatement(importID, offset, limit,sortBy, sortDesc))
     }
 
-    public async ListUnprocessed(importID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
-        return super.rows<DataStagingT>(DataStagingStorage.listUnprocessedStatement(importID, offset, limit))
+    public async ListUninserted(importID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
+        return super.rows<DataStagingT>(DataStagingStorage.listUninsertedStatement(importID, offset, limit))
     }
 
-    public async ListUnprocessedByDataSource(dataSourceID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
-        return super.rows<DataStagingT>(DataStagingStorage.listUnprocessedByDataSourceStatement(dataSourceID, offset, limit))
+    public async ListUninsertedByDataSource(dataSourceID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
+        return super.rows<DataStagingT>(DataStagingStorage.listUninsertedByDataSourceStatement(dataSourceID, offset, limit))
     }
 
-    public async CountUnprocessedByDataSource(dataSourceID: string): Promise<Result<number>>{
-        return super.count(DataStagingStorage.countUnprocessedByDataSourceStatement(dataSourceID))
+    public async CountUninsertedByDataSource(dataSourceID: string): Promise<Result<number>>{
+        return super.count(DataStagingStorage.countUninsertedByDataSourceStatement(dataSourceID))
     }
 
-    public async SetProcessed(importID: string): Promise<Result<boolean>> {
-        return super.runAsTransaction(DataStagingStorage.setProcessedStatement(importID))
+    public async SetInserted(importID: string): Promise<Result<boolean>> {
+        return super.runAsTransaction(DataStagingStorage.setInsertedStatement(importID))
     }
 
     public async PartialUpdate(id: string, userID:string, updatedField: {[key:string]: any}): Promise<Result<boolean>> {
@@ -159,21 +159,21 @@ export default class DataStagingStorage extends PostgresStorage {
         }
     }
 
-    private static listUnprocessedStatement(importID: string, offset: number, limit: number): QueryConfig {
+    private static listUninsertedStatement(importID: string, offset: number, limit: number): QueryConfig {
         return {
             text: `SELECT * FROM data_staging WHERE import_id = $1 AND inserted_at IS NULL OFFSET $2 LIMIT $3`,
             values: [importID, offset, limit]
         }
     }
 
-    private static listUnprocessedByDataSourceStatement(dataSourceID: string, offset: number, limit: number): QueryConfig {
+    private static listUninsertedByDataSourceStatement(dataSourceID: string, offset: number, limit: number): QueryConfig {
         return {
             text: `SELECT * FROM data_staging WHERE data_source_id = $1 AND inserted_at IS NULL AND mapping_id IS NULL OFFSET $2 LIMIT $3`,
             values: [dataSourceID, offset, limit]
         }
     }
 
-    private static countUnprocessedByDataSourceStatement(dataSourceID: string): QueryConfig {
+    private static countUninsertedByDataSourceStatement(dataSourceID: string): QueryConfig {
         return {
             text: `SELECT COUNT(*) FROM data_staging WHERE data_source_id = $1 AND inserted_at IS NULL AND mapping_id IS NULL`,
             values: [dataSourceID]
@@ -194,7 +194,7 @@ export default class DataStagingStorage extends PostgresStorage {
         }
     }
 
-    private static setProcessedStatement(importID: string): QueryConfig {
+    private static setInsertedStatement(importID: string): QueryConfig {
         return {
             text: `UPDATE data_staging SET inserted_At = NOW() WHERE import_id = $1`,
             values: [importID]

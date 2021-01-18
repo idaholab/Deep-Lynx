@@ -378,6 +378,59 @@ describe('A Data Type Mapping can', async() => {
         return NodeStorage.Instance.PermanentlyDelete(inserted.value[4].id!)
     })
 
+    it('can generate parts lists entries based on conditions', async() => {
+        const maintenanceTransformation = {
+            conditions: [
+                {
+                    key: "car.name",
+                    operator: "==",
+                    value: "test car",
+                    subexpressions: [{
+                        expression: "AND",
+                        key: "car_maintenance.maintenance_entries.[].parts_list.[].id",
+                        operator: "==",
+                        value: "oil"
+                    }]
+                }
+            ],
+            keys: [{
+                key: "car_maintenance.maintenance_entries.[].parts_list.[].id",
+                metatype_key_id: car_part_metatype_keys.find(key => key.name === "id")!.id
+            },{
+                key: "car_maintenance.maintenance_entries.[].parts_list.[].name",
+                metatype_key_id: car_part_metatype_keys.find(key => key.name === "name")!.id
+            },{
+                key: "car_maintenance.maintenance_entries.[].parts_list.[].quantity",
+                metatype_key_id: car_part_metatype_keys.find(key => key.name === "quantity")!.id
+            },{
+                key: "car_maintenance.maintenance_entries.[].parts_list.[].price",
+                metatype_key_id: car_part_metatype_keys.find(key => key.name === "price")!.id
+            }],
+            metatype_id: resultMetatypes.find(m => m.name === "Part")!.id,
+            unique_identifier_key: "car_maintenance.maintenance_entries.[].parts_list.[].id",
+            root_array: "car_maintenance.maintenance_entries.[].parts_list"
+        } as TypeTransformationT
+
+        const results = await ApplyTransformation(typeMapping!, maintenanceTransformation, data!)
+
+        expect(Array.isArray(results.value)).true
+        expect(results.value.length).eq(1) // a total of two nodes should be created
+
+        expect((results.value as NodeT[])[0].properties).to.have.property('id', "oil")
+        expect((results.value as NodeT[])[0].properties).to.have.property('name', 'synthetic oil')
+        expect((results.value as NodeT[])[0].properties).to.have.property('price', 45.66)
+        expect((results.value as NodeT[])[0].properties).to.have.property('quantity', 1)
+        // validate the original and composite ID fields worked correctly
+        expect((results.value as NodeT[])[0].original_data_id).eq("oil")
+        expect((results.value as NodeT[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+oil`)
+
+        const inserted = await NodeStorage.Instance.CreateOrUpdate(containerID, graphID, results.value)
+        expect(inserted.isError).false
+
+        return NodeStorage.Instance.PermanentlyDelete(inserted.value[0].id!)
+    })
+
+
     // generally testing that our root array can indeed go more than 2 layers deep
     it('can generate component entries', async() => {
         const componentTransformation = {

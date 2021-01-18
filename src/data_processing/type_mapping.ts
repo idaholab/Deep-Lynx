@@ -95,6 +95,26 @@ async function transform(mapping: TypeMappingT, transformation: TypeTransformati
 
    // same number of arrays as indices indicate we can now build the node/edge
    if(index && index.length === arrays.length) {
+      // validate the transformation now that we've run it down into the index
+      let valid = false;
+
+      // no conditions immediately equals true
+      if(transformation.conditions && transformation.conditions.length === 0) valid = true;
+
+      if(transformation.conditions) {
+         for(const condition of transformation.conditions) {
+            const isValid = await ValidTransformationCondition(condition, data.data as {[key:string]: any}, [...index])
+
+            if(isValid) {
+               valid = true
+               break;
+            }
+         }
+      }
+
+      // we don't error out on a non-matching condition, simply pass the transformation by
+      if(!valid) return new Promise(resolve => resolve(Result.Success([])))
+
       const results = await generateResults(mapping, transformation, data, [...index])
 
       if(results.isError) {
@@ -139,6 +159,8 @@ async function generateResults(mapping: TypeMappingT, transformation: TypeTransf
          }
       }
    }
+
+
 
    // create a node if metatype id is set
    if(transformation.metatype_id && !transformation.metatype_relationship_pair_id) {
