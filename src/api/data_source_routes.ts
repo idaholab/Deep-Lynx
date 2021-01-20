@@ -361,7 +361,7 @@ export default class DataSourceRoutes {
     }
 
     private static getImportData(req: Request, res: Response, next: NextFunction) {
-        DataStagingStorage.Instance.Retrieve(req.params.dataID)
+        DataStagingStorage.Instance.Retrieve(+req.params.dataID)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -376,7 +376,7 @@ export default class DataSourceRoutes {
     private static updateImportData(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT;
 
-        DataStagingStorage.Instance.PartialUpdate(req.params.dataID, user.id!, req.body)
+        DataStagingStorage.Instance.PartialUpdate(+req.params.dataID, user.id!, req.body)
             .then((updated: Result<boolean>) => {
                 if (updated.isError && updated.error) {
                     res.status(updated.error.errorCode).json(updated);
