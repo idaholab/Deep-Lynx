@@ -70,6 +70,11 @@ export default class EdgeFilter extends Filter {
         return this
     }
 
+    importDataID(operator: string, value: any) {
+        super.query("edges.import_data_id", operator, value)
+        return this
+    }
+
     async all(limit?: number, offset?:number): Promise<Result<EdgeT[]>> {
         const results = await super.findAll<EdgeT>(limit, offset);
 

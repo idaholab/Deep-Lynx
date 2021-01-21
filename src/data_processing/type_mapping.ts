@@ -93,7 +93,7 @@ async function transform(mapping: TypeMappingT, transformation: TypeTransformati
       let valid = false;
 
       // no conditions immediately equals true
-      if(transformation.conditions && transformation.conditions.length === 0) valid = true;
+      if(!transformation.conditions || transformation.conditions.length === 0) valid = true;
 
       if(transformation.conditions) {
          for(const condition of transformation.conditions) {

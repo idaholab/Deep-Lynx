@@ -114,7 +114,7 @@ export default class DataStagingStorage extends PostgresStorage {
 
         return new Promise(resolve => {
             PostgresAdapter.Instance.Pool.query({
-                text: `UPDATE data_statging SET ${updateStatement.join(",")} WHERE id = '${id}'`,
+                text: `UPDATE data_staging SET ${updateStatement.join(",")} WHERE id = '${id}'`,
                 values
             })
                 .then(() => {
@@ -188,7 +188,7 @@ export default class DataStagingStorage extends PostgresStorage {
 
     private static listUninsertedActiveMappingStatement(importID: string, offset: number, limit: number): QueryConfig {
         return {
-            text: `SELECT *
+            text: `SELECT data_staging.*
                    FROM data_staging
                    LEFT JOIN data_type_mappings ON data_type_mappings.id = data_staging.mapping_id
                    WHERE import_id = $1
