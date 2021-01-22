@@ -17,6 +17,10 @@ export function onDecodeError(resolve:((check: any) => void) ): ((e: Errors ) =>
     })
 }
 
+// getNestedValue will return any value specified by the "key" in a given payload
+// you can also retrieve a value from an array by using the dot notation followed
+// by an array symbol [], and passing in an array of numbers to indicate the index
+// of the array to fetch
 export function getNestedValue(key:string, payload: any, index?: number[]): any {
     const copiedIndex = (index) ? [...index] : undefined
     if(key.split(".").length > 1) {

@@ -51,11 +51,15 @@ export default class ImportStorage extends PostgresStorage {
         return super.runAsTransaction(ImportStorage.setStatusStatement(importID, status, message))
     }
 
-    public async List(importAdapterID:string, offset:number, limit:number, sortBy?: string, sortDesc?: boolean): Promise<Result<ImportT[]>>{
+    public async List(dataSourceID:string, offset:number, limit:number, sortBy?: string, sortDesc?: boolean): Promise<Result<ImportT[]>>{
         if(limit === -1) {
-            return super.rows<ImportT>(ImportStorage.listAllStatement(importAdapterID))
+            return super.rows<ImportT>(ImportStorage.listAllStatement(dataSourceID))
         }
-        return super.rows<ImportT>(ImportStorage.listStatement(importAdapterID,offset,limit, sortBy, sortDesc))
+        return super.rows<ImportT>(ImportStorage.listStatement(dataSourceID,offset,limit, sortBy, sortDesc))
+    }
+
+    public async ListIncompleteWithUninsertedData(dataSourceID: string) : Promise<Result<ImportT[]>> {
+        return super.rows<ImportT>(ImportStorage.listIncompleteWithUninsertedDataStatement(dataSourceID))
     }
 
     public async Count(): Promise<Result<number>> {
@@ -63,7 +67,7 @@ export default class ImportStorage extends PostgresStorage {
     }
 
     public async ListReady(dataSourceID:string, offset:number, limit:number): Promise<Result<ImportT[]>>{
-        return super.rows<ImportT>(ImportStorage.listReady(dataSourceID,offset,limit))
+        return super.rows<ImportT>(ImportStorage.listReadyStatement(dataSourceID,offset,limit))
     }
 
     public async PermanentlyDelete(importID: string): Promise<Result<boolean>> {
@@ -106,7 +110,7 @@ export default class ImportStorage extends PostgresStorage {
         }
     }
 
-    private static listStatement(importAdapterID: string, offset?:number, limit?:number, sortBy?:string, sortDesc?: boolean): QueryConfig {
+    private static listStatement(dataSourceID: string, offset?:number, limit?:number, sortBy?:string, sortDesc?: boolean): QueryConfig {
         if(sortDesc) {
             return {
                 text: `SELECT imports.id,
@@ -124,7 +128,7 @@ export default class ImportStorage extends PostgresStorage {
                     GROUP BY imports.id
                     ORDER BY "${sortBy}" DESC
                     OFFSET $2 LIMIT $3`,
-                values: [importAdapterID, offset, limit]
+                values: [dataSourceID, offset, limit]
             }
         } else if (sortBy) {
             return {
@@ -143,7 +147,7 @@ export default class ImportStorage extends PostgresStorage {
                     GROUP BY imports.id
                     ORDER BY "${sortBy}" ASC
                     OFFSET $2 LIMIT $3`,
-                values: [importAdapterID, offset, limit]
+                values: [dataSourceID, offset, limit]
             }
         } else {
             return {
@@ -161,12 +165,12 @@ export default class ImportStorage extends PostgresStorage {
                     WHERE imports.data_source_id = $1
                     GROUP BY imports.id
                     OFFSET $2 LIMIT $3`,
-                values: [importAdapterID, offset, limit]
+                values: [dataSourceID, offset, limit]
             }
         }
     }
 
-    private static listAllStatement(importAdapterID: string): QueryConfig {
+    private static listAllStatement(dataSourceID: string): QueryConfig {
         return {
             text: `SELECT imports.id,
                           imports.data_source_id,
@@ -181,14 +185,27 @@ export default class ImportStorage extends PostgresStorage {
                             LEFT JOIN data_staging ON data_staging.import_id = imports.id
                    WHERE imports.data_source_id = $1
                    GROUP BY imports.id`,
-            values: [importAdapterID]
+            values: [dataSourceID]
         }
     }
 
-    private static listReady(importAdapterID: string, offset:number, limit:number): QueryConfig {
+    private static listReadyStatement(dataSourceID: string, offset:number, limit:number): QueryConfig {
         return {
             text: `SELECT * FROM imports WHERE data_source_id = $1 AND status = 'ready' OFFSET $2 LIMIT $3`,
-            values: [importAdapterID, offset, limit]
+            values: [dataSourceID, offset, limit]
+        }
+    }
+
+    private static listIncompleteWithUninsertedDataStatement(dataSourceID: string): QueryConfig {
+        return {
+            text: `SELECT imports.*
+            FROM imports
+            WHERE imports.status <> 'completed'
+            AND imports.data_source_id = $1
+            AND EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id AND data_staging.inserted_at IS NULL)
+            AND EXISTS(SELECT * FROM data_staging WHERE data_staging.import_id = imports.id)
+            `,
+            values: [dataSourceID]
         }
     }
 

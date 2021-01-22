@@ -44,16 +44,21 @@ export default class DataStagingStorage extends PostgresStorage {
         })
     }
 
-    // TODO: Set unmapped as mappings without transformations
-    public async CountUnmappedData(importID: string): Promise<Result<number>> {
-        return super.count(DataStagingStorage.countUnmappedForImportStatement(importID))
-    }
-
     public async Count(importID: string): Promise<Result<number>> {
         return super.count(DataStagingStorage.countImportStatement(importID))
     }
 
-    public async Retrieve(id: string): Promise<Result<DataStagingT>> {
+    public async CountUninsertedForImport(importID: string): Promise<Result<number>> {
+        return super.count(DataStagingStorage.countUninsertedByImportStatement(importID))
+    }
+
+    // returns the count of records in an import that also contain an active type mapping
+    // which contains transformations - used in the process loop
+    public async CountUninsertedActiveMapping(importID: string): Promise<Result<number>> {
+        return super.count(DataStagingStorage.countImportUninsertedActiveMappingStatement(importID))
+    }
+
+    public async Retrieve(id: number): Promise<Result<DataStagingT>> {
         return super.retrieve<DataStagingT>(DataStagingStorage.retrieveStatement(id))
     }
 
@@ -65,23 +70,32 @@ export default class DataStagingStorage extends PostgresStorage {
         return super.rows<DataStagingT>(DataStagingStorage.listStatement(importID, offset, limit,sortBy, sortDesc))
     }
 
-    public async ListUnprocessed(importID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
-        return super.rows<DataStagingT>(DataStagingStorage.listUnprocessedStatement(importID, offset, limit))
+    public async ListUninserted(importID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
+        return super.rows<DataStagingT>(DataStagingStorage.listUninsertedStatement(importID, offset, limit))
     }
 
-    public async ListUnprocessedByDataSource(dataSourceID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
-        return super.rows<DataStagingT>(DataStagingStorage.listUnprocessedByDataSourceStatement(dataSourceID, offset, limit))
+    // list uninserted records which also have an active type mapping record along with transformations
+    public async ListUninsertedActiveMapping(importID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
+        return super.rows<DataStagingT>(DataStagingStorage.listUninsertedActiveMappingStatement(importID, offset, limit))
     }
 
-    public async CountUnprocessedByDataSource(dataSourceID: string): Promise<Result<number>>{
-        return super.count(DataStagingStorage.countUnprocessedByDataSourceStatement(dataSourceID))
+    public async ListUninsertedByDataSource(dataSourceID: string, offset:number, limit:number): Promise<Result<DataStagingT[]>>{
+        return super.rows<DataStagingT>(DataStagingStorage.listUninsertedByDataSourceStatement(dataSourceID, offset, limit))
     }
 
-    public async SetProcessed(importID: string): Promise<Result<boolean>> {
-        return super.runAsTransaction(DataStagingStorage.setProcessedStatement(importID))
+    public async CountUninsertedByDataSource(dataSourceID: string): Promise<Result<number>>{
+        return super.count(DataStagingStorage.countUninsertedByDataSourceStatement(dataSourceID))
     }
 
-    public async PartialUpdate(id: string, userID:string, updatedField: {[key:string]: any}): Promise<Result<boolean>> {
+    public async SetInsertedByImport(importID: string): Promise<Result<boolean>> {
+        return super.runAsTransaction(DataStagingStorage.setInsertedByImportStatement(importID))
+    }
+
+    public async SetInserted(id: number): Promise<Result<boolean>> {
+        return super.runAsTransaction(DataStagingStorage.setInsertedStatement(id))
+    }
+
+    public async PartialUpdate(id: number, userID:string, updatedField: {[key:string]: any}): Promise<Result<boolean>> {
         const toUpdate = await this.Retrieve(id);
 
         if(toUpdate.isError) {
@@ -100,7 +114,7 @@ export default class DataStagingStorage extends PostgresStorage {
 
         return new Promise(resolve => {
             PostgresAdapter.Instance.Pool.query({
-                text: `UPDATE data_statging SET ${updateStatement.join(",")} WHERE id = '${id}'`,
+                text: `UPDATE data_staging SET ${updateStatement.join(",")} WHERE id = '${id}'`,
                 values
             })
                 .then(() => {
@@ -115,8 +129,14 @@ export default class DataStagingStorage extends PostgresStorage {
         return super.run(DataStagingStorage.deleteStatement(id))
     }
 
+    // completely overwrite the existing error set
     public SetErrors(id:number, errors: string[]): Promise<Result<boolean>> {
         return super.runAsTransaction(DataStagingStorage.setErrorsStatement(id, errors))
+    }
+
+    // add an error to an existing error set
+    public AddError(id:number, errors: string): Promise<Result<boolean>> {
+        return super.runAsTransaction(DataStagingStorage.addErrorsStatement(id, errors))
     }
 
     private static createStatement(dataSourceID: string, importID:string, typeMappingID: string, data: any): QueryConfig {
@@ -126,10 +146,10 @@ export default class DataStagingStorage extends PostgresStorage {
         }
     }
 
-    private static retrieveStatement(metatypeID:string): QueryConfig {
+    private static retrieveStatement(id: number): QueryConfig {
         return {
             text:`SELECT * FROM data_staging WHERE id = $1`,
-            values: [metatypeID]
+            values: [id]
         }
     }
 
@@ -159,32 +179,39 @@ export default class DataStagingStorage extends PostgresStorage {
         }
     }
 
-    private static listUnprocessedStatement(importID: string, offset: number, limit: number): QueryConfig {
+    private static listUninsertedStatement(importID: string, offset: number, limit: number): QueryConfig {
         return {
             text: `SELECT * FROM data_staging WHERE import_id = $1 AND inserted_at IS NULL OFFSET $2 LIMIT $3`,
             values: [importID, offset, limit]
         }
     }
 
-    private static listUnprocessedByDataSourceStatement(dataSourceID: string, offset: number, limit: number): QueryConfig {
+    private static listUninsertedActiveMappingStatement(importID: string, offset: number, limit: number): QueryConfig {
+        return {
+            text: `SELECT data_staging.*
+                   FROM data_staging
+                   LEFT JOIN data_type_mappings ON data_type_mappings.id = data_staging.mapping_id
+                   WHERE import_id = $1
+                   AND inserted_at IS NULL
+                   AND data_type_mappings.active IS TRUE
+                   AND EXISTS (SELECT * from data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_staging.mapping_id)
+                   OFFSET $2 LIMIT $3`,
+            values: [importID, offset, limit]
+        }
+    }
+
+    private static listUninsertedByDataSourceStatement(dataSourceID: string, offset: number, limit: number): QueryConfig {
         return {
             text: `SELECT * FROM data_staging WHERE data_source_id = $1 AND inserted_at IS NULL AND mapping_id IS NULL OFFSET $2 LIMIT $3`,
             values: [dataSourceID, offset, limit]
         }
     }
 
-    private static countUnprocessedByDataSourceStatement(dataSourceID: string): QueryConfig {
+    private static countUninsertedByDataSourceStatement(dataSourceID: string): QueryConfig {
         return {
             text: `SELECT COUNT(*) FROM data_staging WHERE data_source_id = $1 AND inserted_at IS NULL AND mapping_id IS NULL`,
             values: [dataSourceID]
         }
-    }
-
-    private static countUnmappedForImportStatement(importID: string): QueryConfig {
-       return {
-           text: `SELECT COUNT(*) FROM data_staging WHERE mapping_id IS NULL AND import_id = $1`,
-           values: [importID]
-       }
     }
 
     private static countImportStatement(importID: string): QueryConfig {
@@ -194,10 +221,38 @@ export default class DataStagingStorage extends PostgresStorage {
         }
     }
 
-    private static setProcessedStatement(importID: string): QueryConfig {
+    private static countUninsertedByImportStatement(importID: string): QueryConfig {
+        return {
+            text: `SELECT COUNT(*) FROM data_staging WHERE inserted_at IS NULL AND import_id = $1`,
+            values: [importID]
+        }
+    }
+
+    private static countImportUninsertedActiveMappingStatement(importID: string): QueryConfig {
+        return {
+            text: `SELECT COUNT(*)
+                   FROM data_staging
+                   LEFT JOIN data_type_mappings ON data_type_mappings.id = data_staging.mapping_id
+                   WHERE data_staging.import_id = $1
+                   AND data_staging.inserted_at IS NULL
+                   AND data_type_mappings.active IS TRUE
+                   AND EXISTS (SELECT * from data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_staging.mapping_id)
+            `,
+            values: [importID]
+        }
+    }
+
+    private static setInsertedByImportStatement(importID: string): QueryConfig {
         return {
             text: `UPDATE data_staging SET inserted_At = NOW() WHERE import_id = $1`,
             values: [importID]
+        }
+    }
+
+    private static setInsertedStatement(id: number): QueryConfig {
+        return {
+            text: `UPDATE data_staging SET inserted_At = NOW() WHERE id = $1`,
+            values: [id]
         }
     }
 
@@ -212,6 +267,13 @@ export default class DataStagingStorage extends PostgresStorage {
         return {
             text: `UPDATE data_staging SET errors = $1 WHERE id = $2`,
             values: [errors, id]
+        }
+    }
+
+    private static addErrorsStatement(id: number, error: string): QueryConfig {
+        return {
+            text: `UPDATE data_staging SET errors = array_append(errors, $1) WHERE id = $2`,
+            values: [error, id]
         }
     }
 }

@@ -83,7 +83,6 @@ export default class TypeTransformationStorage extends PostgresStorage{
         return super.rows<TypeTransformationT>(TypeTransformationStorage.listByMapping(typeMappingID))
     }
 
-
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
         return super.run(TypeTransformationStorage.deleteStatement(id))
     }
