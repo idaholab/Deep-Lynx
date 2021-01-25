@@ -150,7 +150,7 @@ export default class MetatypeStorage extends PostgresStorage{
 
     private static retrieveStatement(metatypeID:string): QueryConfig {
         return {
-            text:`SELECT * FROM metatypes WHERE id = $1 AND NOT ARCHIVED`,
+            text:`SELECT * FROM metatypes WHERE id = $1 AND NOT archived`,
             values: [metatypeID]
         }
     }

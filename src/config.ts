@@ -24,6 +24,7 @@ export class Config {
   private readonly _is_windows: boolean;
 
   private readonly _cache_provider: string;
+  private readonly _cache_redis_connection_string: string
 
   private readonly _mongo_source_uri : string;
   private readonly _mongo_source_db : string;
@@ -97,6 +98,8 @@ export class Config {
     this._is_windows = process.platform === 'win32'
 
     this._cache_provider = process.env.CACHE_PROVIDER || "memory"
+    // default to a local, non-password-protected instance of redis
+    this._cache_redis_connection_string = process.env.CACHE_REDIS_CONNECTION_STRING || "//localhost:6379"
 
     this._mongo_source_uri= process.env.MONGO_SOURCE_URI || "localhost:8081";
     this._mongo_source_db = process.env.MONGO_SOURCE_DB || "inl-core-m";
@@ -190,6 +193,10 @@ export class Config {
 
   get cache_provider(): string {
     return this._cache_provider
+  }
+
+  get redis_connection_string(): string {
+    return this._cache_redis_connection_string
   }
 
   get server_port(): string {

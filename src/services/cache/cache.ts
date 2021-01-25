@@ -1,5 +1,9 @@
 const NodeCache = require("node-cache")
+const Redis = require("ioredis")
+// @ts-ignore
+import {RedisStatic} from "ioredis";
 import Config from "../../config"
+import Logger from "../../logger"
 
 class Cache {
     public cache: CacheInterface
@@ -20,6 +24,11 @@ class Cache {
                 break;
             }
 
+            case "redis": {
+                this.cache = new RedisCacheImpl()
+                break;
+            }
+
             default: {
                 this.cache = new MemoryCacheImpl()
                 break;
@@ -29,27 +38,57 @@ class Cache {
 }
 
 export interface CacheInterface {
-    set(key: string, val: any, ttl?: number): boolean
-    get<T>(key: string): T | undefined
+    set(key: string, val: any, ttl?: number): Promise<boolean>
+    get<T>(key: string): Promise<T | undefined>
 }
 
 export class MemoryCacheImpl implements CacheInterface {
     private _cache: any
-    get<T>(key: string): T | undefined {
+    get<T>(key: string): Promise<T | undefined> {
         const value = this._cache.get(key)
 
-        if(undefined) return undefined
+        if(undefined) return new Promise(resolve => resolve(undefined))
 
-        return value
+        return new Promise(resolve => resolve(value as T))
     }
 
-    set(key: string, val: any, ttl?: number): boolean {
-        return this._cache.set(key, val, ttl)
+    set(key: string, val: any, ttl?: number): Promise<boolean> {
+        return new Promise(resolve => resolve(this._cache.set(key, val, ttl)))
     }
 
     constructor() {
         this._cache = new NodeCache()
     }
+}
+
+export class RedisCacheImpl implements CacheInterface {
+    private _redis: RedisStatic
+    async get<T>(key: string): Promise<T | undefined> {
+        const val = await this._redis.get(key)
+        return new Promise(resolve => resolve(val as T))
+    }
+
+    async set(key: string, val: any, ttl?: number): Promise<boolean> {
+        let set: string
+
+        if(ttl) {
+            set = await this._redis.set(key, val, "PX", ttl)
+        } else {
+            set = await this._redis.set(key, val)
+        }
+
+        if(set !== "OK") {
+            Logger.error(`error inserting value into redis: ${set}`)
+            return new Promise(resolve => resolve(false))
+        }
+
+        return new Promise(resolve => resolve(true))
+    }
+
+    constructor() {
+        this._redis = new Redis(Config.redis_connection_string)
+    }
+
 }
 
 export default Cache.Instance.cache
