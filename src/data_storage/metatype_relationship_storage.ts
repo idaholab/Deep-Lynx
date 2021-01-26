@@ -5,6 +5,10 @@ import {QueryConfig} from "pg";
 import * as t from "io-ts";
 import PostgresAdapter from "./adapters/postgres/postgres";
 import {MetatypeRelationshipT, MetatypeRelationshipsT} from "../types/metatype_relationshipT";
+import Logger from "../logger"
+import Cache from "../services/cache/cache"
+import Config from "../config"
+import MetatypeRelationshipKeyStorage from "./metatype_relationship_key_storage";
 
 /*
 * MetatypeRelationship Storage encompasses all logic dealing with the manipulation
@@ -62,8 +66,23 @@ export default class MetatypeRelationshipStorage extends PostgresStorage{
     }
 
 
-    public Retrieve(id: string): Promise<Result<MetatypeRelationshipT>> {
-        return super.retrieve<MetatypeT>(MetatypeRelationshipStorage.retrieveStatement(id))
+    public async Retrieve(id: string): Promise<Result<MetatypeRelationshipT>> {
+        const cached = await Cache.get<MetatypeRelationshipT>(`${MetatypeRelationshipStorage.tableName}:${id}`)
+        if(cached) {
+            return new Promise(resolve => resolve(Result.Success(cached)))
+        }
+
+        const retrieved = await super.retrieve<MetatypeT>(MetatypeRelationshipStorage.retrieveStatement(id))
+
+        if(!retrieved.isError) {
+            // don't fail out on cache set failure, log and move on
+            Cache.set(`${MetatypeRelationshipStorage.tableName}:${id}`, retrieved.value, Config.cache_default_ttl)
+                .then(set => {
+                    if(!set) Logger.error(`unable to insert metatype relationship ${id} into cache`)
+                })
+        }
+
+        return new Promise(resolve => resolve(retrieved))
     }
 
    public List(containerID: string, offset: number, limit:number): Promise<Result<MetatypeRelationshipT[]>> {
@@ -99,6 +118,11 @@ export default class MetatypeRelationshipStorage extends PostgresStorage{
                 values
             })
                 .then(() => {
+                    Cache.del(`${MetatypeRelationshipStorage.tableName}:${id}`)
+                        .then(set => {
+                            if(!set) Logger.error(`unable to remove metatype relationship ${id} from cache`)
+                        })
+
                     resolve(Result.Success(true))
                 })
                 .catch(e => resolve(Result.Failure(e)))
@@ -115,6 +139,12 @@ export default class MetatypeRelationshipStorage extends PostgresStorage{
 
                 for(const i in ms) {
                     queries.push(MetatypeRelationshipStorage.fullUpdateStatement(ms[i]))
+
+                    Cache.del(`${MetatypeRelationshipStorage.tableName}:${ms[i].id}`)
+                        .then(set => {
+                            if(!set) Logger.error(`unable to remove metatype relationship ${ms[i].id} from cache`)
+                        })
+
                 }
 
                 super.runAsTransaction(...queries)
@@ -135,11 +165,41 @@ export default class MetatypeRelationshipStorage extends PostgresStorage{
         return super.decodeAndValidate<MetatypesT>(metatypesT, onValidateSuccess, payload)
     }
 
-    public PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
+        const toDelete = await this.Retrieve(id);
+
+        if(!toDelete.isError) {
+            Cache.del(`${MetatypeRelationshipStorage.tableName}:${toDelete.value.id}`)
+                .then(set => {
+                    if(!set) Logger.error(`unable to remove metatype ${toDelete.value.id} from cache`)
+                })
+
+            // needs to remove the key listing response as well
+            Cache.del(`${MetatypeRelationshipKeyStorage.tableName}:metatypeRelationshipID:${toDelete.value.id}`)
+                .then(set => {
+                    if(!set) Logger.error(`unable to remove metatype relationship ${toDelete.value.id}'s keys from cache`)
+                })
+        }
+
         return super.run(MetatypeRelationshipStorage.deleteStatement(id))
     }
 
-    public Archive(id: string, userID: string): Promise<Result<boolean>> {
+    public async Archive(id: string, userID: string): Promise<Result<boolean>> {
+        const toDelete = await this.Retrieve(id);
+
+        if(!toDelete.isError) {
+            Cache.del(`${MetatypeRelationshipStorage.tableName}:${toDelete.value.id}`)
+                .then(set => {
+                    if(!set) Logger.error(`unable to remove metatype ${toDelete.value.id} from cache`)
+                })
+
+            // needs to remove the key listing response as well
+            Cache.del(`${MetatypeRelationshipKeyStorage.tableName}:metatypeRelationshipID:${toDelete.value.id}`)
+                .then(set => {
+                    if(!set) Logger.error(`unable to remove metatype relationship ${toDelete.value.id}'s keys from cache`)
+                })
+        }
+
         return super.run(MetatypeRelationshipStorage.archiveStatement(id, userID))
     }
 
