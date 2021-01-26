@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "aa9d8d17-6449-47e0-ae84-690e8d83c930",
+		"_postman_id": "cb90867a-d620-4ed0-a92c-e3b474864645",
 		"name": "Deep Lynx",
 		"description": "The construction of megaprojects has consistently demonstrated challenges for project managers in regard to meeting cost, schedule, and performance requirements. Megaproject construction challenges are common place within megaprojects with many active projects in the United States failing to meet cost and schedule efforts by significant margins. Currently, engineering teams operate in siloed tools and disparate teams where connections across design, procurement, and construction systems are translated manually or over brittle point-to-point integrations. The manual nature of data exchange increases the risk of silent errors in the reactor design, with each silent error cascading across the design. These cascading errors lead to uncontrollable risk during construction, resulting in significant delays and cost overruns. Deep Lynx allows for an integrated platform during design and operations of mega projects.\n\nThe Deep Lynx Core API delivers a few main features.\n\n1. Core provides a set of methods and endpoints for manipulating data in an object oriented database. This allows use to store complex datatypes as records and then to compile them into actual, modifiable objects at run-time. Users can store taxonomies or ontologies in a readable format.\n\n2. Core provides methods for storing and retrieving data in a graph database. This data is structured and validated against the aformentioned object oriented database before storage.",
-		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
@@ -26,12 +26,17 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Test Container\",\n    \"description\": \"Test Container Description\"\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n    \"name\": \"Test Container\",\n    \"description\": \"Test Container Description\"\n}"
 						},
-						"url": "{{baseURL}}/containers",
+						"url": {
+							"raw": "{{baseURL}}/containers",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers"
+							]
+						},
 						"description": "Creates a new container object. Containers are the root level object and are considered to contain both the ontology(in form of Metatypes, Metatype Keys, and MetatypeRelationships) as well as the data stored under that ontology.\n\nEndpoint will accept both a single container request object, or an array of container request objects"
 					},
 					"response": []
@@ -50,10 +55,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"description\": \"Final Test Description\"\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n\t\"description\": \"Final Test Description\"\n}"
 						},
 						"url": {
 							"raw": "{{baseURL}}/containers/:container-id",
@@ -67,7 +69,8 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -89,12 +92,17 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Test Container\",\n    \"description\": \"Test Container New Description\",\n    \"id\": \"\"\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n    \"name\": \"Test Container\",\n    \"description\": \"Test Container New Description\",\n    \"id\": \"\"\n}"
 						},
-						"url": "{{baseURL}}/containers",
+						"url": {
+							"raw": "{{baseURL}}/containers",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers"
+							]
+						},
 						"description": "Accepts an array of container objects - will attempt to update all of them in a single transaction. If the update fails, none of them will go through."
 					},
 					"response": []
@@ -116,7 +124,8 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -169,7 +178,8 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -205,12 +215,7 @@
 									"value": "https://raw.githubusercontent.com/idaholab/DIAMOND/master/diamond.owl",
 									"type": "text"
 								}
-							],
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
+							]
 						},
 						"url": {
 							"raw": "{{baseURL}}/containers/import",
@@ -251,7 +256,8 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -261,14 +267,10 @@
 				}
 			],
 			"description": "Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. ",
-			"auth": {
-				"type": "noauth"
-			},
 			"event": [
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "0c7d7b19-78f7-4db0-9c09-f04c0be8fe9a",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -278,15 +280,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "78b2e831-cf8b-4e02-aff4-bc3f09b3e8fb",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Data Query",
@@ -313,7 +313,8 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -343,7 +344,8 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "c807a9f9-148d-4bb6-afae-cb8dff71c0b9"
+									"value": "c807a9f9-148d-4bb6-afae-cb8dff71c0b9",
+									"type": "string"
 								}
 							]
 						},
@@ -357,7 +359,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "937c8dd4-4fba-4b84-a1ae-cdc83c17bf08",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -367,15 +368,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "639f429b-54a9-4ad9-b704-ce7515a181da",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Graph",
@@ -408,7 +407,8 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -448,11 +448,13 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "node_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -501,7 +503,8 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -552,11 +555,13 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "metatype_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -593,11 +598,13 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "node_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						}
@@ -632,7 +639,8 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -681,7 +689,8 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -718,11 +727,13 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "edge_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						}
@@ -730,8 +741,7 @@
 					"response": []
 				}
 			],
-			"description": "These endpoints give you the ability to add nodes and edges to the graph manually as well as perform some basic queries. For all advanced queries, please use the GraphQL query endpoint.",
-			"protocolProfileBehavior": {}
+			"description": "These endpoints give you the ability to add nodes and edges to the graph manually as well as perform some basic queries. For all advanced queries, please use the GraphQL query endpoint."
 		},
 		{
 			"name": "Metatypes",
@@ -753,10 +763,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"name\": \"Equipment\",\n\t\"description\": \"Physical piece of equipement\"\n}",
-									"options": {
-										"raw": {}
-									}
+									"raw": "{\n\t\"name\": \"Equipment\",\n\t\"description\": \"Physical piece of equipement\"\n}"
 								},
 								"url": {
 									"raw": "{{baseURL}}/containers/:container-id/metatypes",
@@ -771,7 +778,8 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -798,11 +806,13 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "type-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -842,7 +852,8 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -864,10 +875,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"name\": \"Updated Metatype Name\",\n\t\"description\": \"Final Description\"\n}",
-									"options": {
-										"raw": {}
-									}
+									"raw": "{\n\t\"name\": \"Updated Metatype Name\",\n\t\"description\": \"Final Description\"\n}"
 								},
 								"url": {
 									"raw": "{{baseURL}}/containers/:container-id/metatypes/:type-id",
@@ -883,11 +891,13 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "type-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -914,11 +924,13 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "type-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -932,7 +944,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "ff52a6f6-630f-4cb3-b7df-61b2640b1c73",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -942,16 +953,13 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "b693366f-db17-41c0-9803-dc75129cffec",
 								"type": "text/javascript",
 								"exec": [
 									""
 								]
 							}
 						}
-					],
-					"protocolProfileBehavior": {},
-					"_postman_isSubFolder": true
+					]
 				},
 				{
 					"name": "Metatype Keys",
@@ -970,10 +978,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"name\": \"File Name\",\n\t\"required\": true,\n\t\"property_name\": \"fileName\",\n\t\"description\":\"File Upload Name\",\n\t\"data_type\": \"string\",\n\t\"cardinality\": 1,\n\t\"validation\": {\n\t\t\"regex\": \"\",\n\t\t\"min\": 0,\n\t\t\"max\": 0\n\t},\n\t\"unique\": true,\n\t\"options\": [\"\"],\n\t\"defaultValue\": \"can be any type\"\n}",
-									"options": {
-										"raw": {}
-									}
+									"raw": "{\n\t\"name\": \"File Name\",\n\t\"required\": true,\n\t\"property_name\": \"fileName\",\n\t\"description\":\"File Upload Name\",\n\t\"data_type\": \"string\",\n\t\"cardinality\": 1,\n\t\"validation\": {\n\t\t\"regex\": \"\",\n\t\t\"min\": 0,\n\t\t\"max\": 0\n\t},\n\t\"unique\": true,\n\t\"options\": [\"\"],\n\t\"defaultValue\": \"can be any type\"\n}"
 								},
 								"url": {
 									"raw": "{{baseURL}}/containers/:container-id/metatypes/:type-id/keys",
@@ -990,11 +995,13 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "type-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1022,11 +1029,13 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "type-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1055,15 +1064,18 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "type-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "key-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1085,10 +1097,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"name\": \"Updated String\",\n\t\"property_name\": \"string\",\n\t\"description\": \"sting\",\n\t\"data_type\": \"string\",\n\t\"default_value\": \"optional - data structure here is dependent on dataType value\"\n}",
-									"options": {
-										"raw": {}
-									}
+									"raw": "{\n\t\"name\": \"Updated String\",\n\t\"property_name\": \"string\",\n\t\"description\": \"sting\",\n\t\"data_type\": \"string\",\n\t\"default_value\": \"optional - data structure here is dependent on dataType value\"\n}"
 								},
 								"url": {
 									"raw": "{{baseURL}}/containers/:container-id/metatypes/:type-id/keys/:key-id",
@@ -1106,15 +1115,18 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "type-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "key-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1143,15 +1155,18 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "type-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "key-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1165,7 +1180,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "a96e4202-2fa1-4024-8b89-49df7a62cfa7",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1175,23 +1189,19 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "ea5ec32a-0d84-4d9c-9df9-5b7bddd1f8a8",
 								"type": "text/javascript",
 								"exec": [
 									""
 								]
 							}
 						}
-					],
-					"protocolProfileBehavior": {},
-					"_postman_isSubFolder": true
+					]
 				}
 			],
 			"event": [
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "74cf0e74-487e-4300-a56f-48f492d734c9",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1201,15 +1211,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "d8c6d2cb-b232-43f0-8707-cbe3bd36af0e",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Metatype Relationships",
@@ -1231,10 +1239,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"name\": \"Relationhip Test\",\n\t\"description\": \"string\"\n}",
-									"options": {
-										"raw": {}
-									}
+									"raw": "{\n\t\"name\": \"Relationhip Test\",\n\t\"description\": \"string\"\n}"
 								},
 								"url": {
 									"raw": "{{baseURL}}/containers/:container-id/metatype_relationships",
@@ -1249,7 +1254,8 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1276,11 +1282,13 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "relationship-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1316,7 +1324,8 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1338,10 +1347,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"name\": \"Update Test\",\n\t\"description\": \"Final Test Description\"\n}",
-									"options": {
-										"raw": {}
-									}
+									"raw": "{\n\t\"name\": \"Update Test\",\n\t\"description\": \"Final Test Description\"\n}"
 								},
 								"url": {
 									"raw": "{{baseURL}}/containers/:container-id/metatype_relationships/:relationship-id",
@@ -1357,11 +1363,13 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "relationship-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								}
@@ -1387,11 +1395,13 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "relationship-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1404,7 +1414,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "70dc0cc0-ee0c-4b1a-b5e2-d43445a82258",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1414,16 +1423,13 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "6a71907f-8139-4eab-a045-c49679b5a0ee",
 								"type": "text/javascript",
 								"exec": [
 									""
 								]
 							}
 						}
-					],
-					"protocolProfileBehavior": {},
-					"_postman_isSubFolder": true
+					]
 				},
 				{
 					"name": "Metatype Relationship Keys",
@@ -1442,10 +1448,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"name\": \"File Name\",\n\t\"required\": true,\n\t\"property_name\": \"fileName\",\n\t\"description\":\"File Upload Name\",\n\t\"data_type\": \"string\",\n\t\"cardinality\": 1,\n\t\"validation\": {\n\t\t\"regex\": \"\",\n\t\t\"min\": 0,\n\t\t\"max\": 0\n\t},\n\t\"unique\": true,\n\t\"options\": [\"\"],\n\t\"defaultValue\": \"can be any type\"\n}",
-									"options": {
-										"raw": {}
-									}
+									"raw": "{\n\t\"name\": \"File Name\",\n\t\"required\": true,\n\t\"property_name\": \"fileName\",\n\t\"description\":\"File Upload Name\",\n\t\"data_type\": \"string\",\n\t\"cardinality\": 1,\n\t\"validation\": {\n\t\t\"regex\": \"\",\n\t\t\"min\": 0,\n\t\t\"max\": 0\n\t},\n\t\"unique\": true,\n\t\"options\": [\"\"],\n\t\"defaultValue\": \"can be any type\"\n}"
 								},
 								"url": {
 									"raw": "{{baseURL}}/containers/:container-id/metatype_relationships/:relationship-id/keys",
@@ -1462,11 +1465,13 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "relationship-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1495,15 +1500,18 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "relationship-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "key-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1541,11 +1549,13 @@
 									"variable": [
 										{
 											"key": "id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "relationship-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1567,10 +1577,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"name\": \"Updated Name\",\n\t\"description\": \"Updated Name Description\",\n\t\"data_type\": \"string\",\n\t\"default_value\": \"optional - data structure here is dependent on dataType value\"\n}",
-									"options": {
-										"raw": {}
-									}
+									"raw": "{\n\t\"name\": \"Updated Name\",\n\t\"description\": \"Updated Name Description\",\n\t\"data_type\": \"string\",\n\t\"default_value\": \"optional - data structure here is dependent on dataType value\"\n}"
 								},
 								"url": {
 									"raw": "{{baseURL}}/containers/:container-id/metatype_relationships/:relationship-id/keys/:key-id",
@@ -1588,15 +1595,18 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "relationship-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "key-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1625,15 +1635,18 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "relationship-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "key-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1647,7 +1660,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "e30e3939-fd83-4b50-9970-f804e591555d",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1657,16 +1669,13 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "d4858e9d-2b5c-40a8-97dd-6918860f4da4",
 								"type": "text/javascript",
 								"exec": [
 									""
 								]
 							}
 						}
-					],
-					"protocolProfileBehavior": {},
-					"_postman_isSubFolder": true
+					]
 				},
 				{
 					"name": "Metatype Relationship Pairs",
@@ -1685,10 +1694,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"name\": \"Relationship Pair Test\",\n\t\"description\": \"Relationship Pair Test description\",\n\t\"origin_metatype_id\": \"566e3862-6853-45af-8a45-3050576dfb9a\",\n\t\"destination_metatype_id\": \"8bcc0b06-bb44-4176-a581-aa68eafca7f3\",\n\t\"metatype_relationship_id\": \"885e3fca-5066-4be8-a720-63b3c4744e97\",\n\t\"relationship_type\": \"many:many\"\n}",
-									"options": {
-										"raw": {}
-									}
+									"raw": "{\n\t\"name\": \"Relationship Pair Test\",\n\t\"description\": \"Relationship Pair Test description\",\n\t\"origin_metatype_id\": \"566e3862-6853-45af-8a45-3050576dfb9a\",\n\t\"destination_metatype_id\": \"8bcc0b06-bb44-4176-a581-aa68eafca7f3\",\n\t\"metatype_relationship_id\": \"885e3fca-5066-4be8-a720-63b3c4744e97\",\n\t\"relationship_type\": \"many:many\"\n}"
 								},
 								"url": {
 									"raw": "{{baseURL}}/containers/:container-id/metatype_relationship_pairs/",
@@ -1704,7 +1710,8 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1731,11 +1738,13 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "pair-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1771,7 +1780,8 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1798,11 +1808,13 @@
 									"variable": [
 										{
 											"key": "container-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										},
 										{
 											"key": "pair-id",
-											"value": ""
+											"value": "",
+											"type": "string"
 										}
 									]
 								},
@@ -1816,7 +1828,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "0c3273a2-606c-486c-a028-d7c15adad2d9",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -1826,16 +1837,13 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "16da3955-3ce3-49cd-8a0b-6addd8160993",
 								"type": "text/javascript",
 								"exec": [
 									""
 								]
 							}
 						}
-					],
-					"protocolProfileBehavior": {},
-					"_postman_isSubFolder": true
+					]
 				}
 			],
 			"description": "Type Relationships are stand-alone data types, despite what the name implies. A type relationship consists of a name, description, and a set of keys, or properties. This is much like a Type itself.\n\nA Type Relationship is used to join two Types together, in a Type Relationship Pair. The pair consists of the Type Relationship and its keys(properties) and two Types. This is very similar to a triple storage method where the Type Relationship fulfills of the `verb` portion of a `noun verb noun` storage and ontology pattern.",
@@ -1843,7 +1851,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "7fa1e70d-5473-4849-9a0e-df34b0d722a3",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1853,15 +1860,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "4d325503-a89a-4f3d-b0fa-c1ebf0cd4233",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Data Sources",
@@ -1894,7 +1899,8 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -1932,11 +1938,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "dataSourceID",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -1951,12 +1959,7 @@
 						"header": [],
 						"body": {
 							"mode": "formdata",
-							"formdata": [],
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
+							"formdata": []
 						},
 						"url": {
 							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:dataSourceID/files",
@@ -1974,11 +1977,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "dataSourceID",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -1996,12 +2001,7 @@
 						"header": [],
 						"body": {
 							"mode": "formdata",
-							"formdata": [],
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
+							"formdata": []
 						},
 						"url": {
 							"raw": "{{baseURL}}/containers/:container-id/files/:file-id/download",
@@ -2018,11 +2018,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "file-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2040,12 +2042,7 @@
 						"header": [],
 						"body": {
 							"mode": "formdata",
-							"formdata": [],
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
+							"formdata": []
 						},
 						"url": {
 							"raw": "{{baseURL}}/containers/:container-id/files/:file-id",
@@ -2061,11 +2058,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "file-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2092,7 +2091,8 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						}
@@ -2120,11 +2120,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "9151cb2c-7349-4e3d-9b26-263d742eed3a"
+									"value": "9151cb2c-7349-4e3d-9b26-263d742eed3a",
+									"type": "string"
 								},
 								{
 									"key": "data-source-id",
-									"value": "ca372bc5-7b51-4ef0-9afa-b86adbf8f9aa"
+									"value": "ca372bc5-7b51-4ef0-9afa-b86adbf8f9aa",
+									"type": "string"
 								}
 							]
 						}
@@ -2150,7 +2152,8 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						}
@@ -2177,11 +2180,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2218,11 +2223,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2250,11 +2257,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2283,11 +2292,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2316,11 +2327,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2334,7 +2347,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "134b1d40-c640-4e5b-84fa-0788bba8b556",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -2344,15 +2356,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "44256a07-d3ee-495a-b6c6-8d588c5aa63a",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Data Export",
@@ -2371,10 +2381,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"adapter\": \"gremlin\",\n    \"config\": {\n        \"traversal_source\": \"g\",\n        \"graphson_v1\": false,\n        \"user\": \"\",\n        \"key\": \"\",\n        \"endpoint\": \"localhost\",\n        \"port\": \"8182\",\n        \"path\": \"/gremlin\",\n        \"writes_per_second\": 300\n    }\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n    \"adapter\": \"gremlin\",\n    \"config\": {\n        \"traversal_source\": \"g\",\n        \"graphson_v1\": false,\n        \"user\": \"\",\n        \"key\": \"\",\n        \"endpoint\": \"localhost\",\n        \"port\": \"8182\",\n        \"path\": \"/gremlin\",\n        \"writes_per_second\": 300\n    }\n}"
 						},
 						"url": {
 							"raw": "{{baseURL}}/containers/:container-id/data/export",
@@ -2390,7 +2397,8 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2418,11 +2426,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "export-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2444,10 +2454,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {}
-							}
+							"raw": ""
 						},
 						"url": {
 							"raw": "{{baseURL}}/containers/:container-id/data/export/:export-id",
@@ -2464,11 +2471,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "export-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2490,10 +2499,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"adapter\": \"gremlin\",\n\t\"config\": {\n        \"traversal_source\": \"g\",\n        \"mime_type\": \"application/vnd.gremlin-v2.0+json\",\n        \"graphson_v1\": false,\n        \"user\": \"process.env.GREMLIN_PLUGIN_USER || \"\",\n        \"key\": \"process.env.GREMLIN_PLUGIN_KEY || \"\",\n        \"endpoint\": \"process.env.GREMLIN_PLUGIN_ENDPOINT || localhost\",\n        \"port\": \"process.env.GREMLIN_PLUGIN_PORT || 8182\",\n        \"path\": \"process.env.GREMLIN_PLUGIN_ROOT_PATH || gremlin\"\n    }\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n\t\"adapter\": \"gremlin\",\n\t\"config\": {\n        \"traversal_source\": \"g\",\n        \"mime_type\": \"application/vnd.gremlin-v2.0+json\",\n        \"graphson_v1\": false,\n        \"user\": \"process.env.GREMLIN_PLUGIN_USER || \"\",\n        \"key\": \"process.env.GREMLIN_PLUGIN_KEY || \"\",\n        \"endpoint\": \"process.env.GREMLIN_PLUGIN_ENDPOINT || localhost\",\n        \"port\": \"process.env.GREMLIN_PLUGIN_PORT || 8182\",\n        \"path\": \"process.env.GREMLIN_PLUGIN_ROOT_PATH || gremlin\"\n    }\n}"
 						},
 						"url": {
 							"raw": "{{baseURL}}/containers/:container-id/data/export/:export-id",
@@ -2510,11 +2516,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "export-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2542,11 +2550,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "export-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2560,7 +2570,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "d884cdbd-4530-4b5e-9e72-6cf6a5e29e0f",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -2570,15 +2579,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "50ee25ab-4b06-4bff-87b2-a89ebbb118f7",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Users",
@@ -2597,7 +2604,15 @@
 								}
 							}
 						},
-						"url": "{{baseURL}}/users",
+						"url": {
+							"raw": "{{baseURL}}/users",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"users"
+							]
+						},
 						"description": "Create a new user using the username_password identity type."
 					},
 					"response": []
@@ -2635,7 +2650,8 @@
 							"variable": [
 								{
 									"key": "user_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2673,7 +2689,8 @@
 							"variable": [
 								{
 									"key": "user_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2712,11 +2729,13 @@
 							"variable": [
 								{
 									"key": "user_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "key_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2743,11 +2762,13 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "user-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2783,7 +2804,8 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2811,11 +2833,13 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "user_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2858,7 +2882,8 @@
 							"variable": [
 								{
 									"key": "container_id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -2967,7 +2992,16 @@
 								}
 							}
 						},
-						"url": "{{baseURL}}/users/reset-password",
+						"url": {
+							"raw": "{{baseURL}}/users/reset-password",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"users",
+								"reset-password"
+							]
+						},
 						"description": "Resets a user's password to the provide payload if the user requested the reset less than 4 hours ago."
 					},
 					"response": []
@@ -3003,7 +3037,8 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -3045,7 +3080,8 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -3059,7 +3095,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "2147fcd5-d2a2-4584-b90a-2cbd9d64c3ee",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -3069,15 +3104,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "51f027c8-a4fe-420b-905c-ad4196a2fe73",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Data Type Mappings",
@@ -3122,41 +3155,43 @@
 							"query": [
 								{
 									"key": "limit",
-									"value": null
+									"value": ""
 								},
 								{
 									"key": "offset",
-									"value": null
+									"value": ""
 								},
 								{
 									"key": "needsTransformations",
-									"value": null,
+									"value": "",
 									"description": "boolean indicating if the return should consist of only mappings that need transformations"
 								},
 								{
 									"key": "count",
-									"value": null,
+									"value": "",
 									"description": "boolean indicating if the return value should be a count only"
 								},
 								{
 									"key": "sortBy",
-									"value": null,
+									"value": "",
 									"description": "column to sort results by"
 								},
 								{
 									"key": "sortDesc",
-									"value": null,
+									"value": "",
 									"description": "boolean indicating if results should be in descending order"
 								}
 							],
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "source-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -3205,15 +3240,18 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "source-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "mapping-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -3260,15 +3298,18 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "source-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "mapping-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -3318,15 +3359,18 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "source-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "mapping-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -3374,19 +3418,23 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "source-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "mapping-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "transformation-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -3434,19 +3482,23 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "source-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "mapping-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "transformation-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -3492,15 +3544,18 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "source-id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								},
 								{
 									"key": "mappingID",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -3509,8 +3564,7 @@
 					"response": []
 				}
 			],
-			"description": "These are mappings for taking unknown payloads and mapping them to known data classes and structures prior to storage.",
-			"protocolProfileBehavior": {}
+			"description": "These are mappings for taking unknown payloads and mapping them to known data classes and structures prior to storage."
 		},
 		{
 			"name": "Imports",
@@ -3536,11 +3590,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
+									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db",
+									"type": "string"
 								},
 								{
 									"key": "import-id",
-									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7"
+									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7",
+									"type": "string"
 								}
 							]
 						}
@@ -3568,11 +3624,13 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
+									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db",
+									"type": "string"
 								},
 								{
 									"key": "import-id",
-									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7"
+									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7",
+									"type": "string"
 								}
 							]
 						},
@@ -3602,15 +3660,18 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
+									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db",
+									"type": "string"
 								},
 								{
 									"key": "import-id",
-									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7"
+									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7",
+									"type": "string"
 								},
 								{
 									"key": "data-id",
-									"value": "66"
+									"value": "66",
+									"type": "string"
 								}
 							]
 						},
@@ -3640,15 +3701,18 @@
 							"variable": [
 								{
 									"key": "container-id",
-									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db"
+									"value": "1cdabe85-78d7-4e2d-ae2e-f8521b6059db",
+									"type": "string"
 								},
 								{
 									"key": "import-id",
-									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7"
+									"value": "b64c8873-b236-4019-a691-1e11d2b9d1a7",
+									"type": "string"
 								},
 								{
 									"key": "data-id",
-									"value": "65"
+									"value": "65",
+									"type": "string"
 								}
 							]
 						},
@@ -3656,8 +3720,7 @@
 					},
 					"response": []
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Events",
@@ -3676,7 +3739,15 @@
 								}
 							}
 						},
-						"url": "{{baseURL}}/events",
+						"url": {
+							"raw": "{{baseURL}}/events",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"events"
+							]
+						},
 						"description": "Create new registered event. An app_name, app_url, and type must be provided. Either a container_id or data_source_id must also be provided."
 					},
 					"response": []
@@ -3713,7 +3784,8 @@
 							"variable": [
 								{
 									"key": "id",
-									"value": "0b5da106-2065-4530-bd11-bedc5200c224"
+									"value": "0b5da106-2065-4530-bd11-bedc5200c224",
+									"type": "string"
 								}
 							]
 						},
@@ -3738,7 +3810,15 @@
 								}
 							}
 						},
-						"url": "{{baseURL}}/events",
+						"url": {
+							"raw": "{{baseURL}}/events",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"events"
+							]
+						},
 						"description": "Lists all registered events"
 					},
 					"response": []
@@ -3772,7 +3852,8 @@
 							"variable": [
 								{
 									"key": "id",
-									"value": ""
+									"value": "",
+									"type": "string"
 								}
 							]
 						},
@@ -3780,52 +3861,37 @@
 					},
 					"response": []
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Health",
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": "{{baseURL}}/health",
+				"url": {
+					"raw": "{{baseURL}}/health",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"health"
+					]
+				},
 				"description": "Simple endpoint, returns 200 on call. Can be used for a simple Up monitor by an external service."
 			},
 			"response": []
 		},
 		{
-			"name": "Login (Local)",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "formdata",
-					"formdata": [
-						{
-							"key": "username",
-							"value": "",
-							"type": "text"
-						},
-						{
-							"key": "password",
-							"value": "",
-							"type": "text"
-						},
-						{
-							"key": "redirect",
-							"value": "",
-							"type": "text"
-						}
-					]
-				},
-				"url": "{{baseURL}}/login",
-				"description": "This endpoint will accept a form submission with three paramters - username, password and redirect. This endpoint will log a user in and then redirect them to the redirect url passed in as part of the form. This allows a SPA like site to log users in effectively."
+			"name": "OAuth - Token",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true,
+				"strictSSL": true,
+				"disabledSystemHeaders": {}
 			},
-			"response": []
-		},
-		{
-			"name": "Login (API Key/Secret)",
 			"request": {
+				"auth": {
+					"type": "noauth"
+				},
 				"method": "GET",
 				"header": [
 					{
@@ -3837,19 +3903,46 @@
 						"key": "x-api-secret",
 						"value": "",
 						"type": "text"
+					},
+					{
+						"key": "x-api-expiry",
+						"value": "10hr",
+						"type": "text"
 					}
 				],
-				"url": "{{baseURL}}/login-token",
-				"description": "Calling this endpoint with the x-api-key and x-api-secret headers will return a JWT for the user to whom the key/secert pair belongs. This exists so that a user can programmatically use Deep Lynx by making their own calls against the service instead of using the provided UI."
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "localhost:8090/oauth/token",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"oauth",
+						"token"
+					]
+				}
 			},
 			"response": []
 		}
 	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{bearer}}",
+				"type": "string"
+			}
+		]
+	},
 	"event": [
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "fe613f67-f11d-4b19-b9c6-de5d7abbb6f5",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -3859,13 +3952,11 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "055f600d-f292-4a5e-9f62-dfdf833e888b",
 				"type": "text/javascript",
 				"exec": [
 					""
 				]
 			}
 		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }
