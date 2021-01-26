@@ -39,6 +39,7 @@ class Cache {
 
 export interface CacheInterface {
     set(key: string, val: any, ttl?: number): Promise<boolean>
+    del(key: string): Promise<boolean>
     get<T>(key: string): Promise<T | undefined>
 }
 
@@ -56,6 +57,10 @@ export class MemoryCacheImpl implements CacheInterface {
         return new Promise(resolve => resolve(this._cache.set(key, val, ttl)))
     }
 
+    del(key: string): Promise<boolean> {
+        return new Promise(resolve => resolve(this._cache.del(key)))
+    }
+
     constructor() {
         this._cache = new NodeCache()
     }
@@ -65,20 +70,36 @@ export class RedisCacheImpl implements CacheInterface {
     private _redis: RedisStatic
     async get<T>(key: string): Promise<T | undefined> {
         const val = await this._redis.get(key)
-        return new Promise(resolve => resolve(val as T))
+
+        if(val === null) {
+            return new Promise(resolve => resolve(undefined))
+        }
+
+        return new Promise(resolve => resolve(JSON.parse(val) as T))
     }
 
     async set(key: string, val: any, ttl?: number): Promise<boolean> {
         let set: string
 
         if(ttl) {
-            set = await this._redis.set(key, val, "PX", ttl)
+            set = await this._redis.set(key, JSON.stringify(val), "EX", ttl)
         } else {
-            set = await this._redis.set(key, val)
+            set = await this._redis.set(key, JSON.stringify(val))
         }
 
         if(set !== "OK") {
             Logger.error(`error inserting value into redis: ${set}`)
+            return new Promise(resolve => resolve(false))
+        }
+
+        return new Promise(resolve => resolve(true))
+    }
+
+    async del(key: string): Promise<boolean> {
+        const deleted = await this._redis.del(key)
+
+        if(deleted !== 1) {
+            Logger.error(`error deleting value from redis: ${deleted}`)
             return new Promise(resolve => resolve(false))
         }
 

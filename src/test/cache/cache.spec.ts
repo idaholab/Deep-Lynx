@@ -32,6 +32,30 @@ describe('Memory Cache implementation can', async() => {
         expect(retrieved).to.include(testObject)
     });
 
+
+    it('remove an item from the cache', async()=> {
+        const cache = new MemoryCacheImpl()
+
+        const testObject = {
+            test: "test",
+            number: 1
+        }
+
+        const set = await cache.set("test object", testObject, 1000)
+        expect(set).true
+
+        let retrieved = await cache.get<any>("test object")
+
+        expect(retrieved).not.undefined
+        expect(retrieved).to.include(testObject)
+
+        const deleted = await cache.del("test object")
+        expect(deleted).true
+
+        retrieved = await cache.get<any>("test object")
+        expect(retrieved).undefined
+    });
+
 });
 
 describe('Redis cache implementation can', async() => {
@@ -48,7 +72,7 @@ describe('Redis cache implementation can', async() => {
     });
 
     it('retrieve an item from the cache', async()=> {
-        const cache = new MemoryCacheImpl()
+        const cache = new RedisCacheImpl()
 
         const testObject = {
             test: "test",
@@ -66,6 +90,30 @@ describe('Redis cache implementation can', async() => {
         const notExist = await cache.get<any>("fails")
 
         expect(notExist).undefined
+    });
+
+
+    it('remove an item from the cache', async()=> {
+        const cache = new RedisCacheImpl()
+
+        const testObject = {
+            test: "test",
+            number: 1
+        }
+
+        const set = await cache.set("test object", testObject, 1000)
+        expect(set).true
+
+        let retrieved = await cache.get<any>("test object")
+
+        expect(retrieved).not.undefined
+        expect(retrieved).to.include(testObject)
+
+        const deleted = await cache.del("test object")
+        expect(deleted).true
+
+        retrieved = await cache.get<any>("test object")
+        expect(retrieved).undefined
     });
 
 });
