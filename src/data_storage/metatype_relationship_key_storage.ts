@@ -7,6 +7,9 @@ import {
     MetatypeRelationshipKeyT, metatypeRelationshipKeysT,
     MetatypeRelationshipKeysT
 } from "../types/metatype_relationship_keyT";
+import Logger from "../logger"
+import Cache from "../services/cache/cache"
+import Config from "../config"
 
 /*
 * MetatypeRelationshipKeyStorage encompasses all logic dealing with the manipulation of the Metatype_key
@@ -44,6 +47,13 @@ export default class MetatypeRelationshipKeyStorage extends PostgresStorage{
                     ms[i].modified_by = userID;
 
                     queries.push(MetatypeRelationshipKeyStorage.createStatement(ms[i]))
+
+                    // need to clear the cache for its parent metatype relationship
+                    // an error but don't fail
+                    Cache.del(`${MetatypeRelationshipKeyStorage.tableName}:metatypeRelationshipID:${ms[i].metatype_relationship_id}`)
+                        .then(deleted => {
+                            if(!deleted) Logger.error(`unable to clear cache for metatype relationship ${ms[i].metatype_relationship_id}'s keys`)
+                        })
                 }
 
                 super.runAsTransaction(...queries)
@@ -64,12 +74,42 @@ export default class MetatypeRelationshipKeyStorage extends PostgresStorage{
         return super.decodeAndValidate<MetatypeRelationshipKeysT>(metatypeRelationshipKeysT, onValidateSuccess, payload)
     }
 
-    public Retrieve(id: string): Promise<Result<MetatypeRelationshipKeyT>> {
-        return super.retrieve<MetatypeRelationshipKeyT>(MetatypeRelationshipKeyStorage.retrieveStatement(id))
+    public async Retrieve(id: string): Promise<Result<MetatypeRelationshipKeyT>> {
+        const cached = await Cache.get<MetatypeRelationshipKeyT>(`${MetatypeRelationshipKeyStorage.tableName}:${id}`)
+        if(cached) {
+            return new Promise(resolve => resolve(Result.Success(cached)))
+        }
+
+        const retrieved = await super.retrieve<MetatypeRelationshipKeyT>(MetatypeRelationshipKeyStorage.retrieveStatement(id))
+
+        if(!retrieved.isError) {
+            // don't fail out on cache set failure, log and move on
+            Cache.set(`${MetatypeRelationshipKeyStorage.tableName}:${id}`, retrieved.value, Config.cache_default_ttl)
+                .then(set => {
+                    if(!set) Logger.error(`unable to insert metatype relationship key ${id} into cache`)
+                })
+        }
+
+        return new Promise(resolve => resolve(retrieved))
     }
 
-    public List(metatypeRelationshipID: string): Promise<Result<MetatypeRelationshipKeyT[]>> {
-        return super.rows<MetatypeRelationshipKeyT>(MetatypeRelationshipKeyStorage.listStatement(metatypeRelationshipID))
+    public async List(metatypeRelationshipID: string): Promise<Result<MetatypeRelationshipKeyT[]>> {
+        const cached = await Cache.get<MetatypeRelationshipKeyT[]>(`${MetatypeRelationshipKeyStorage.tableName}:metatypeRelationshipID:${metatypeRelationshipID}`)
+        if(cached) {
+            return new Promise(resolve => resolve(Result.Success(cached)))
+        }
+
+        const retrieved = await super.rows<MetatypeRelationshipKeyT>(MetatypeRelationshipKeyStorage.listStatement(metatypeRelationshipID))
+
+        if(!retrieved.isError) {
+            // don't fail out on cache set failure, log and move on
+            Cache.set(`${MetatypeRelationshipKeyStorage.tableName}:metatypeRelationshipID:${metatypeRelationshipID}`, retrieved.value, Config.cache_default_ttl)
+                .then(set => {
+                    if(!set) Logger.error(`unable to insert metatype relationship keys for ${metatypeRelationshipID} into cache`)
+                })
+        }
+
+        return new Promise(resolve => resolve(retrieved))
     }
 
     // Update partially updates the MetatypeRelationshipKey. This function will allow you to
@@ -101,6 +141,18 @@ export default class MetatypeRelationshipKeyStorage extends PostgresStorage{
                 values
             })
                 .then(() => {
+                    // need to clear the cache for its parent metatype relationship
+                    // an error but don't fail
+                    Cache.del(`${MetatypeRelationshipKeyStorage.tableName}:metatypeRelationshipID:${toUpdate.value.metatype_relationship_id}`)
+                        .then(deleted => {
+                            if(!deleted) Logger.error(`unable to clear cache for metatype relationship ${toUpdate.value.metatype_relationship_id}'s keys`)
+                        })
+
+                    Cache.del(`${MetatypeRelationshipKeyStorage.tableName}:${toUpdate.value.id}`)
+                        .then(deleted => {
+                            if(!deleted) Logger.error(`unable to clear cache for metatype relationship ${toUpdate.value.id}`)
+                        })
+
                     resolve(Result.Success(true))
                 })
                 .catch(e => resolve(Result.Failure(e)))
@@ -118,6 +170,19 @@ export default class MetatypeRelationshipKeyStorage extends PostgresStorage{
                     ms[i].modified_by = userID;
 
                     queries.push(MetatypeRelationshipKeyStorage.fullUpdateStatement(ms[i]))
+
+                    // need to clear the cache for its parent metatype relationship
+                    // an error but don't fail
+                    Cache.del(`${MetatypeRelationshipKeyStorage.tableName}:metatypeRelationshipID:${ms[i].metatype_relationship_id}`)
+                        .then(deleted => {
+                            if(!deleted) Logger.error(`unable to clear cache for metatype relationship ${ms[i].metatype_relationship_id}'s keys`)
+                        })
+
+                    Cache.del(`${MetatypeRelationshipKeyStorage.tableName}:${ms[i].id}`)
+                        .then(deleted => {
+                            if(!deleted) Logger.error(`unable to clear cache for metatype relationship ${ms[i].id}`)
+                        })
+
                 }
 
                 super.runAsTransaction(...queries)
@@ -138,11 +203,43 @@ export default class MetatypeRelationshipKeyStorage extends PostgresStorage{
         return super.decodeAndValidate<MetatypeRelationshipKeysT>(metatypeRelationshipKeysT, onSuccess, payload)
     }
 
-    public PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
+        const toDelete= await this.Retrieve(id);
+
+        if(!toDelete.isError) {
+            // need to clear the cache for its parent metatype relationship
+            // an error but don't fail
+            Cache.del(`${MetatypeRelationshipKeyStorage.tableName}:metatypeRelationshipID:${toDelete.value.metatype_relationship_id}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for metatype relationship ${toDelete.value.metatype_relationship_id}'s keys`)
+                })
+
+            Cache.del(`${MetatypeRelationshipKeyStorage.tableName}:${toDelete.value.id}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for metatype relationship ${toDelete.value.id}`)
+                })
+        }
+
         return super.run(MetatypeRelationshipKeyStorage.deleteStatement(id))
     }
 
-    public Archive(id: string, userID: string): Promise<Result<boolean>> {
+    public async Archive(id: string, userID: string): Promise<Result<boolean>> {
+        const toDelete= await this.Retrieve(id);
+
+        if(!toDelete.isError) {
+            // need to clear the cache for its parent metatype relationship
+            // an error but don't fail
+            Cache.del(`${MetatypeRelationshipKeyStorage.tableName}:metatypeRelationshipID:${toDelete.value.metatype_relationship_id}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for metatype relationship ${toDelete.value.metatype_relationship_id}'s keys`)
+                })
+
+            Cache.del(`${MetatypeRelationshipKeyStorage.tableName}:${toDelete.value.id}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for metatype relationship ${toDelete.value.id}`)
+                })
+        }
+
         return super.run(MetatypeRelationshipKeyStorage.archiveStatement(id, userID))
     }
 

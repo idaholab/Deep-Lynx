@@ -197,6 +197,10 @@ export class Config {
     return this._cache_provider
   }
 
+  get cache_default_ttl(): number {
+    return this._cache_default_ttl
+  }
+
   get redis_connection_string(): string {
     return this._cache_redis_connection_string
   }

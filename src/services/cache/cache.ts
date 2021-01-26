@@ -58,7 +58,13 @@ export class MemoryCacheImpl implements CacheInterface {
     }
 
     del(key: string): Promise<boolean> {
-        return new Promise(resolve => resolve(this._cache.del(key)))
+        const deleted = this._cache.del(key)
+        if(deleted !== 1 && deleted !== 0) {
+            Logger.error(`error deleting value from memory: ${deleted}`)
+            return new Promise(resolve => resolve(false))
+        }
+
+        return new Promise(resolve => resolve(true))
     }
 
     constructor() {
@@ -98,7 +104,9 @@ export class RedisCacheImpl implements CacheInterface {
     async del(key: string): Promise<boolean> {
         const deleted = await this._redis.del(key)
 
-        if(deleted !== 1) {
+        // returns 1 if deleted, 0 if key doesn't exist - we won't error out on
+        // attempting to delete a non-existent key
+        if(deleted !== 1 && deleted !== 0) {
             Logger.error(`error deleting value from redis: ${deleted}`)
             return new Promise(resolve => resolve(false))
         }

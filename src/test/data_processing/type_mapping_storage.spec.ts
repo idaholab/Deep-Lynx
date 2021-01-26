@@ -347,6 +347,10 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(retrieved.isError).false
 
 
+        // validate that the cache return also works
+        retrieved = await TypeTransformationStorage.Instance.Retrieve(transformation.value.id!)
+        expect(retrieved.isError).false
+
         return storage.PermanentlyDelete(exp.value.id!)
     });
 
@@ -392,6 +396,11 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(transformation.isError).false
 
         let retrieved = await TypeTransformationStorage.Instance.ListForTypeMapping(mapping.value.id)
+        expect(retrieved.isError).false
+        expect(retrieved.value).not.empty
+
+        // validate cache fetch works
+        retrieved = await TypeTransformationStorage.Instance.ListForTypeMapping(mapping.value.id)
         expect(retrieved.isError).false
         expect(retrieved.value).not.empty
 

@@ -3,6 +3,10 @@ import PostgresStorage from "../postgresStorage";
 import {QueryConfig} from "pg";
 import {TypeMappingT} from "../../types/import/typeMappingT";
 import PostgresAdapter from "../adapters/postgres/postgres";
+import Logger from "../../logger"
+import Cache from "../../services/cache/cache"
+import Config from "../../config"
+import TypeTransformationStorage from "./type_transformation_storage";
 
 /*
 * ImportAdapterStorage encompasses all logic dealing with the manipulation of the Import Adapter
@@ -66,20 +70,60 @@ export default class TypeMappingStorage extends PostgresStorage{
                 values
             })
                 .then(() => {
+                    // delete the cache for this individual record, and by shapehash
+                    Cache.del(`${TypeMappingStorage.tableName}:${id}`)
+                        .then(deleted => {
+                            if(!deleted) Logger.error(`unable to clear cache for type mapping ${id}`)
+                        })
+
+                    Cache.del(`${TypeMappingStorage.tableName}:dataSource:${toUpdate.value.data_source_id}:shapeHash:${toUpdate.value.shape_hash}`)
+                        .then(deleted => {
+                            if(!deleted) Logger.error(`unable to clear cache for type mapping ${id}`)
+                        })
+
                     resolve(Result.Success(true))
                 })
                 .catch(e => resolve(Result.Failure(e)))
         })
     }
 
-    public Retrieve(id: string): Promise<Result<TypeMappingT>> {
-        return super.retrieve<TypeMappingT>(TypeMappingStorage.retrieveStatement(id))
+    public async Retrieve(id: string): Promise<Result<TypeMappingT>> {
+        const cached = await Cache.get<TypeMappingT>(`${TypeMappingStorage.tableName}:${id}`)
+        if(cached) {
+            return new Promise(resolve => resolve(Result.Success(cached)))
+        }
+
+        const retrieved = await super.retrieve<TypeMappingT>(TypeMappingStorage.retrieveStatement(id))
+
+        if(!retrieved.isError) {
+            Cache.set(`${TypeMappingStorage.tableName}:${id}`, retrieved.value, Config.cache_default_ttl)
+                .then(set => {
+                    if(!set) Logger.error(`unable to retrieve type mapping ${id} from cache`)
+                })
+        }
+
+        return new Promise(resolve => resolve(retrieved))
     }
 
     // since the combination shape hash, data source, and container are a unique set
     // we can confidently request a single object
-    public RetrieveByShapeHash(dataSourceID: string, shapeHash: string): Promise<Result<TypeMappingT>> {
-        return super.retrieve<TypeMappingT>(TypeMappingStorage.retrieveByShapeHashStatement(dataSourceID, shapeHash))
+    public async RetrieveByShapeHash(dataSourceID: string, shapeHash: string): Promise<Result<TypeMappingT>> {
+        const cached = await Cache.get<TypeMappingT>(`${TypeMappingStorage.tableName}:dataSource:${dataSourceID}:shapeHash:${shapeHash}`)
+        if(cached) {
+            return new Promise(resolve => resolve(Result.Success(cached)))
+        }
+
+
+        const retrieved = await super.retrieve<TypeMappingT>(TypeMappingStorage.retrieveByShapeHashStatement(dataSourceID, shapeHash))
+
+        if(!retrieved.isError) {
+            Cache.set(`${TypeMappingStorage.tableName}:dataSource:${dataSourceID}:shapeHash:${shapeHash}`, retrieved.value, Config.cache_default_ttl)
+                .then(set => {
+                    if(!set) Logger.error(`unable to retrieve type mapping from cache by dataSource and shapeHash`)
+                })
+        }
+
+        return new Promise(resolve => resolve(retrieved))
     }
 
     public List(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?:string, sortDesc?: boolean): Promise<Result<TypeMappingT[]>> {
@@ -102,15 +146,66 @@ export default class TypeMappingStorage extends PostgresStorage{
         return super.rows<TypeMappingT>(TypeMappingStorage.listByDataSourceStatement(dataSourceID, offset, limit))
     }
 
-    public SetActive(id: string): Promise<Result<boolean>> {
+    public async SetActive(id: string): Promise<Result<boolean>> {
+        const toUpdate = await this.Retrieve(id);
+        // need to clear the cache so we get the proper active value
+
+        if(!toUpdate.isError) {
+            Cache.del(`${TypeMappingStorage.tableName}:${id}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for type mapping ${id}`)
+                })
+
+            Cache.del(`${TypeMappingStorage.tableName}:dataSource:${toUpdate.value.data_source_id}:shapeHash:${toUpdate.value.shape_hash}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for type mapping ${id}`)
+                })
+        }
+
+
         return super.runAsTransaction(TypeMappingStorage.setActiveStatement(id))
     }
 
-    public SetInActive(id: string): Promise<Result<boolean>> {
+    public async SetInActive(id: string): Promise<Result<boolean>> {
+        const toUpdate = await this.Retrieve(id);
+        // need to clear the cache so we get the proper active value
+
+        if(!toUpdate.isError) {
+            Cache.del(`${TypeMappingStorage.tableName}:${id}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for type mapping ${id}`)
+                })
+
+            Cache.del(`${TypeMappingStorage.tableName}:dataSource:${toUpdate.value.data_source_id}:shapeHash:${toUpdate.value.shape_hash}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for type mapping ${id}`)
+                })
+        }
+
         return super.runAsTransaction(TypeMappingStorage.setInactiveStatement(id))
     }
 
-    public PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
+        const toDelete= await this.Retrieve(id);
+
+        if(!toDelete.isError) {
+            Cache.del(`${TypeMappingStorage.tableName}:${id}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for type mapping ${id}`)
+                })
+
+            Cache.del(`${TypeMappingStorage.tableName}:dataSource:${toDelete.value.data_source_id}:shapeHash:${toDelete.value.shape_hash}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for type mapping ${id}`)
+                })
+
+            // must also delete the cached transformation response for this record
+            Cache.del(`${TypeTransformationStorage.tableName}:typeMappingID:${toDelete.value.id}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for type mapping ${id}'s transformations`)
+                })
+        }
+
         return super.run(TypeMappingStorage.deleteStatement(id))
     }
 
@@ -194,7 +289,7 @@ export default class TypeMappingStorage extends PostgresStorage{
             return {
                 text: `SELECT * FROM data_type_mappings
                        WHERE container_id = $1 AND data_source_id = $4
-                       AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
+                         AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
                        OFFSET $2 LIMIT $3`,
                 values: [containerID, offset, limit, dataSourceID]
             }
@@ -212,7 +307,7 @@ export default class TypeMappingStorage extends PostgresStorage{
         return {
             text: `SELECT * FROM data_type_mappings
                    WHERE container_id = $1 AND data_source_id = $2
-                   AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)`,
+                     AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)`,
             values: [containerID, dataSourceID]
         }
     }
@@ -249,7 +344,7 @@ export default class TypeMappingStorage extends PostgresStorage{
         return {
             text: `SELECT COUNT(*) FROM data_type_mappings
                    WHERE data_source_id = $1
-                   AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id )`,
+                     AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id )`,
             values: [dataSourceID]
         }
     }
