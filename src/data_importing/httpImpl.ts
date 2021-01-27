@@ -15,7 +15,6 @@ import ImportStorage from "../data_storage/import/import_storage";
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
 import NodeRSA from "node-rsa";
-import * as fs from "fs";
 import axios, {AxiosResponse} from "axios"
 import DataStagingStorage from "../data_storage/import/data_staging_storage";
 import {TypeMappingT} from "../types/import/typeMappingT";
