@@ -1,6 +1,46 @@
 /* tslint:disable */
 import {expect} from 'chai'
-import {MemoryCacheImpl, RedisCacheImpl} from "../../services/cache/cache"
+import {MemoryCacheImpl, RedisCacheImpl, StubCacheImpl} from "../../services/cache/cache"
+
+
+describe('Stub Cache implementation can', async() => {
+    it('save an item to the cache', async()=> {
+        const cache = new StubCacheImpl()
+
+        const testObject = {
+            test: "test",
+            number: 1
+        }
+
+        const set = await cache.set("test object", testObject, 1000)
+        expect(set).true
+    });
+
+    it('retrieve an item from the cache', async()=> {
+        const cache = new StubCacheImpl()
+
+        const testObject = {
+            test: "test",
+            number: 1
+        }
+
+        const set = await cache.set("test object", testObject, 1000)
+        expect(set).true
+
+        const retrieved = await cache.get<any>("test object")
+
+        expect(retrieved).undefined
+    });
+
+
+    it('remove an item from the cache', async()=> {
+        const cache = new StubCacheImpl()
+
+        const deleted = await cache.del("test object")
+        expect(deleted).true
+    });
+
+});
 
 describe('Memory Cache implementation can', async() => {
     it('save an item to the cache', async()=> {
