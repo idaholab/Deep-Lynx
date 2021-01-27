@@ -30,7 +30,7 @@ class Cache {
             }
 
             default: {
-                this.cache = new MemoryCacheImpl()
+                this.cache = new StubCacheImpl()
                 break;
             }
         }
@@ -41,6 +41,29 @@ export interface CacheInterface {
     set(key: string, val: any, ttl?: number): Promise<boolean>
     del(key: string): Promise<boolean>
     get<T>(key: string): Promise<T | undefined>
+}
+
+// stub is used when no cache is selected. This should be rare as DL should at
+// least use memory caching.
+export class StubCacheImpl implements CacheInterface {
+    private _cache: any
+    get<T>(key: string): Promise<T | undefined> {
+        return new Promise(resolve => resolve(undefined))
+    }
+
+    // default to successful so that we don't throw up errors everywhere
+    set(key: string, val: any, ttl?: number): Promise<boolean> {
+        return new Promise(resolve => resolve(true))
+    }
+
+    // default to successful so we don't throw up errors everywhere
+    del(key: string): Promise<boolean> {
+        return new Promise(resolve => resolve(true))
+    }
+
+    constructor() {
+        this._cache = new NodeCache()
+    }
 }
 
 export class MemoryCacheImpl implements CacheInterface {
