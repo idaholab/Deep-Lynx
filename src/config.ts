@@ -98,7 +98,7 @@ export class Config {
     // here in the config file.
     this._is_windows = process.platform === 'win32'
 
-    this._cache_provider = process.env.CACHE_PROVIDER || ""
+    this._cache_provider = process.env.CACHE_PROVIDER || "memory"
     this._cache_default_ttl = (process.env.CACHE_DEFAULT_TTL) ? parseInt(process.env.CACHE_DEFAULT_TTL!, 10): 21600
     // default to a local, non-password-protected instance of redis
     this._cache_redis_connection_string = process.env.CACHE_REDIS_CONNECTION_STRING || "//localhost:6379"
