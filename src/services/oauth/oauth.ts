@@ -17,6 +17,7 @@ const crypto = require('crypto');
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import Config from "../../config";
+import Logger from "../../logger"
 import base64url from "base64url";
 import {RetrieveResourcePermissions} from "../../user_management/users";
 
@@ -31,6 +32,9 @@ export class OAuth {
                    request.user_id = userID
 
                    Cache.set(token, request, 60 * 10)
+                       .then(set => {
+                           if(!set) Logger.error(`unable to store oauth token in cache ${set}`)
+                       })
 
                    res(Result.Success(token))
                }
@@ -42,7 +46,7 @@ export class OAuth {
 
     // exchanges a token for a JWT to act on behalf of the user
     async AuthorizationCodeExchange(exchangeReq: OAuthTokenExchangeT): Promise<Result<string>> {
-        const originalReq = Cache.get<OAuthAuthorizationRequestT>(exchangeReq.code)
+        const originalReq = await Cache.get<OAuthAuthorizationRequestT>(exchangeReq.code)
         if(!originalReq) return new Promise(resolve => resolve(Result.Failure('unable to retrieve original request from cache')))
 
         const user = await UserStorage.Instance.Retrieve(originalReq.user_id!)
@@ -117,7 +121,7 @@ export class OAuth {
     }
 
 
-    AuthorizationFromToken(token: string): OAuthAuthorizationRequestT | undefined {
+    AuthorizationFromToken(token: string): Promise<OAuthAuthorizationRequestT | undefined> {
         return Cache.get<OAuthAuthorizationRequestT>(token)
     }
 }
