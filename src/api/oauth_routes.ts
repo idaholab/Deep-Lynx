@@ -208,7 +208,7 @@ export default class OAuthRoutes {
                 }
 
                 // fetch the request so that we can do the redirect
-                const oauthRequest = oauth.AuthorizationFromToken(req.body.token)
+                oauth.AuthorizationFromToken(req.body.token)
                     .then(oauthRequest => {
                         if(!oauthRequest) {
                             res.render('authorize', {_error:"Invalid token"})

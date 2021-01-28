@@ -170,10 +170,10 @@
                         v-model="payloadType"
                         item-text="name"
                         :rules="[v => !!v || 'Item is required']"
-                        :label="$t('dataMapping.dataType')"
+                        :label="$t('dataMapping.resultingDataType')"
                         required
                     ></v-select>
-                    <div v-if="payloadType === 'metatype'">
+                    <div v-if="payloadType === 'record'">
                       <v-autocomplete
                           :items="metatypes"
                           v-model="selectedMetatype"
@@ -204,11 +204,11 @@
                             </v-select>
                             <v-select
                                 v-if="rootArray"
-                                :items="rootArrayKeys"
+                                :items="payloadKeys"
                                 v-model="uniqueIdentifierKey"
                                 clearable
                             >
-                              <template v-slot:label>{{$t('dataMapping.rootArrayUniqueIdentifierKey')}} <small>{{$t('dataMapping.optional')}}</small></template>
+                              <template v-slot:label>{{$t('dataMapping.uniqueIdentifierKey')}} <small>{{$t('dataMapping.optional')}}</small></template>
                               <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueIdentifierHelp')"></info-tooltip> </template>
                             </v-select>
                           </v-col>
@@ -243,7 +243,7 @@
                               </v-select>
                             </v-col>
                             <v-col :cols="6">
-                              <h4 style="color:white">{{key.name}} x</h4>
+                              <h4 style="color:white">{{key.name}}</h4>
                                   <v-text-field
                                       v-if="key.data_type !== 'boolean'"
                                       :label="$t('dataMapping.constantValue')"
@@ -268,7 +268,7 @@
                     </div>
 
                     <!-- RELATIONSHIP -->
-                    <div v-if="payloadType === 'metatype-relationship'">
+                    <div v-if="payloadType === 'relationship'">
 
                       <v-autocomplete
                           :items="relationshipPairs"
@@ -575,7 +575,7 @@ import {getNestedValue} from "@/utilities";
         .then((metatype) => {
           this.rootArray = this.transformation?.root_array
           if(Array.isArray(this.transformation?.conditions)) this.conditions = this.transformation?.conditions as Array<TypeMappingTransformationCondition>
-          this.payloadType = 'metatype'
+          this.payloadType = 'record'
           this.selectedMetatype = metatype
           this.uniqueIdentifierKey = this.transformation?.unique_identifier_key
 
@@ -589,7 +589,7 @@ import {getNestedValue} from "@/utilities";
             .then((pair) => {
               this.rootArray = this.transformation?.root_array
               if(Array.isArray(this.transformation?.conditions)) this.conditions = this.transformation?.conditions as Array<TypeMappingTransformationCondition>
-              this.payloadType = 'metatype-relationship'
+              this.payloadType = 'relationship'
               this.selectedRelationshipPair = pair
 
               this.uniqueIdentifierKey = this.transformation?.unique_identifier_key
@@ -826,11 +826,11 @@ import {getNestedValue} from "@/utilities";
 
     payloadTypes() {
       return [{
-        name: this.$t("dataMapping.metatype"),
-        value: 'metatype'
+        name: this.$t("dataMapping.record"),
+        value: 'record'
       },{
-        name: this.$t("dataMapping.metatypeRelationship"),
-        value: 'metatype-relationship'
+        name: this.$t("dataMapping.relationship"),
+        value: 'relationship'
       }]
     }
 
