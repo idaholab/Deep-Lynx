@@ -58,6 +58,8 @@ export default {
       formTitle: "New Data Source"
     },
     dataMapping: {
+      record: "Record",
+      relationship: "Relationship",
       typeMapping: "Type Mapping",
       resultingTypeName: "Resulting Metatype/Metatype Relationship",
       applicableToCurrentData: "Applicable To Sample",
@@ -95,7 +97,7 @@ export default {
       selectDataSource: "Select Data Source",
       currentMappings: "Current Mappings",
       needsTransformations: "Needs Transformations",
-      dataType: "Data Type",
+      resultingDataType: "Resulting Data Type",
       chooseMetatype: "Choose Metatype",
       typeToSearch: "Type to Search Available Metatypes",
       typeToSearchRelationships: "Type to Search Available Metatype Relationship Pairs",
