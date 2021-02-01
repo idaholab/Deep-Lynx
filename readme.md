@@ -15,7 +15,7 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 - npm ^6.x
 - Docker ^18.x - *optional* - for ease of use in development
 - Docker Compose ^1.x.x - *optional* - for ease of use in development
-- Private RSA key in either `.key` or `.pem` format. This is used for encryption of sensitive data. If you need help on generating a private key, we recommend using `openssl` to do so. Here is a [tutorial](https://www.scottbrady91.com/OpenSSL/Creating-RSA-Keys-using-OpenSSL)
+- Private RSA key. This is used for encryption of sensitive data. If you need help on generating a private key, we recommend using `openssl` to do so. Here is a [tutorial](https://www.scottbrady91.com/OpenSSL/Creating-RSA-Keys-using-OpenSSL)
 
 ***Data Source Requirements***
 
@@ -29,7 +29,7 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 2. Clone the Deep Lynx [repository](https://github.com/idaholab/Deep-Lynx)
 3. Run `npm upgrade && npm install` in your local Deep Lynx directory
 4. Copy and rename `.env-sample` to `.env`
-5. Update `.env` file. See the `readme` or comments in the file itself for details.If you are not using Docker, ensure that you update the ENCRYPTION_KEY_PATH environment variable in `.env` to reflect the absolute path of a RSA private key stored in either a `.key` or `.pem` format.
+5. Update `.env` file. See the `readme` or comments in the file itself for details.If you are not using Docker, ensure that you update the ENCRYPTION_KEY_PATH environment variable in `.env` to reflect the absolute path of a RSA private key.
 6. Run `npm run build:dev` to build the internal modules.
 7. **optional** - If you would like to use Docker rather than a dedicated PostgreSQL database, please follow these steps:
    - Ensure Docker is installed. You can find the download here: https://www.docker.com/products/docker-desktop
