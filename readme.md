@@ -15,6 +15,7 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 - npm ^6.x
 - Docker ^18.x - *optional* - for ease of use in development
 - Docker Compose ^1.x.x - *optional* - for ease of use in development
+- Private RSA key in either `.key` or `.pem` format. This is used for encryption of sensitive data. If you need help on generating a private key, we recommend using `openssl` to do so. Here is a [tutorial](https://www.scottbrady91.com/OpenSSL/Creating-RSA-Keys-using-OpenSSL)
 
 ***Data Source Requirements***
 
@@ -22,15 +23,21 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 
 **Installation**
 
-1. `npm upgrade` & `npm install`
-2. Copy and rename `.env-sample` to `.env` 
-3. Update `.env` file you **must** have the following variables set - everything else has default values you can find in `src/config.ts` or in the `.env-sample` file itself.
-    *  `CORE_DB_CONNECTION_STRING` - your PostgreSQL database connection string. Note that `de-lynx` only works with a Postgres data source
-    *  `DB_NAME` - the name of the database you would like to use. Defaults to `deep_lynx`. This must be the same name as specified in the end of the `CORE_DB_CONNECTION_STRING`.
-4. Run `npm run migrate` to automatically create the application schemas in your PostgreSQL database. Scripts are run in alphanumeric order
-5. Either use `npm run build:dev` and run the resulting `dist/main.js` file or use `npm run start` to initiate application.
-6. At some point you must provide the application with a `.key` file in order for the encryption of data source configurations and SAML authentication to work. See the scripts located in `src/authentication` for more information. Generate and provide your secret key to the application via the environment configuration.
+**Steps**
 
+1. NodeJS must be installed. You can find the download for your platform here: https://nodejs.org/en/download/ **note** - Newer versions of Node may be incompatible with some of the following commands. The most recent version tested that works fully is 13.10.1.
+2. Clone the Deep Lynx [repository](https://github.com/idaholab/Deep-Lynx)
+3. Run `npm upgrade && npm install` in your local Deep Lynx directory
+4. Copy and rename `.env-sample` to `.env`
+5. Update `.env` file. See the `readme` or comments in the file itself for details.If you are not using Docker, ensure that you update the ENCRYPTION_KEY_PATH environment variable in `.env` to reflect the absolute path of a RSA private key stored in either a `.key` or `.pem` format.
+6. Run `npm run build:dev` to build the internal modules.
+7. **optional** - If you would like to use Docker rather than a dedicated PostgreSQL database, please follow these steps:
+   - Ensure Docker is installed. You can find the download here: https://www.docker.com/products/docker-desktop
+   - Run `npm run docker:postgres:build` to create a docker image containing a Postgres data source
+   - Mac users may need to create the directory to mount to the docker container at `/private/var/lib/docker/basedata`. If this directory does not exist, please create it (you may need to use `sudo` as in `sudo mkdir /private/var/lib/docker/basedata`)
+   - Run `npm run docker:postgres:run` to run the created docker image (For Mac users, there is an alternative command `npm run mac:docker:postgres:run`)
+8. Run `npm run migrate` to create the database and schema within a PostgreSQL database configured in the `.env` file.
+9. Run `npm run watch` or `npm run start` to start the application. See the `readme` for additional details and available commands.  
 **Configuration**
 
 This application's configuration relies on environment variables of its host system. It is best to rely on your CI/CD pipeline to inject those variables into your runtime environment.
@@ -69,13 +76,11 @@ Below is a list of all `npm run` commands as listed in the `package.json` file.
 - `docker:postgres:build` Creates a docker image containing a Postgres 12 data source, along with all needed extensions.
 - `docker:postgres:run` Runs previously created Postgres.
 - `docker:postgres:clean` Stops the Postgres docker container run by the command above and deletes the container and image.
-- `gremlin:docker:up` Creates and runs a container with the TinkerGraph database and its Gremlin API endpoint exposed on port 8182.
-- `gremlin:docker:down` Stops the TinkerGraph container.
 - `watch` Runs `nodemon` using the `nodemon.json` configuration file. This runs the application and automatically rebuilds it when file changes are detected.
 - `start` Compiles and runs the application.
 - `build:dev` Compiles the application in development mode.
 - `test`: Runs all tests using the `.env` file to configure application and tests.
-- `generate:documentation` Generates HTML documentation.
+- `migrate`: Runs the database migration tool.
 
 
 ## Development

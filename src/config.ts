@@ -13,9 +13,7 @@ export class Config {
   private readonly _email_address: string;
   private readonly _email_enabled: boolean = true;
 
-  private readonly _email_validation_url: string;
   private readonly _email_validation_enforced: boolean;
-  private readonly _reset_password_url: string;
   private readonly _container_invite_url: string;
 
   private readonly _template_dir: string;
@@ -34,7 +32,6 @@ export class Config {
   private readonly _db_name: string;
   private readonly _session_secret: string;
   private readonly _encryption_key_path: string | undefined;
-  private readonly _encryption_key_secret: string // secret if no key file is present
 
   private readonly _file_storage_method: string;
   private readonly _filesystem_storage_directory: string
@@ -88,9 +85,7 @@ export class Config {
     this._email_address = process.env.EMAIL_ADDRESS || "do+not+reply@deeplynx.org"
     this._email_enabled = process.env.EMAIL_ENABLED === "true"
 
-    this._email_validation_url = process.env.EMAIL_VALIDATION_URL || ""
     this._email_validation_enforced = process.env.EMAIL_VALIDATION_ENFORCED === "true"
-    this._reset_password_url = process.env.PASSWORD_RESET_URL || ""
     this._container_invite_url = process.env.CONTAINER_INVITE_URL || ""
 
     // we could simply have whatever needs to know if its windows access the platform
@@ -113,7 +108,6 @@ export class Config {
     this._asset_dir = process.env.ASSET_DIR || "./dist/assets"
 
     this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
-    this._encryption_key_secret = process.env.ENCRYPTION_KEY_SECRET || ""
 
     this._file_storage_method = process.env.FILE_STORAGE_METHOD || "filesystem"
     this._filesystem_storage_directory = process.env.FILESYSTEM_STORAGE_DIRECTORY || ""
@@ -270,7 +264,7 @@ export class Config {
   get encryption_key_secret(): Buffer {
     if(this._encryption_key_path && this._encryption_key_path !== "") return fs.readFileSync(this._encryption_key_path)
 
-    return Buffer.from(this._encryption_key_secret, 'utf8')
+    return Buffer.from("", "utf8")
   }
 
   get encryption_key_path(): string {
