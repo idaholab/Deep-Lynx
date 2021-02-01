@@ -15,3 +15,5 @@ node_modules
 /src/user_management/authentication/saml/localhost.cert
 /src/user_management/authentication/saml/localhost.xml
 /tools/ontology_extractor/diamond.owl
+/private-key.pem
+/private-key.key
