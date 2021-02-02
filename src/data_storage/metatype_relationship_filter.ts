@@ -1,12 +1,12 @@
 import Filter from "./filter";
-import MetatypeStorage from "./metatype_storage";
 import Result from "../result";
-import {MetatypeT} from "../types/metatypeT";
+import MetatypeRelationshipStorage from "./metatype_relationship_storage";
+import {MetatypeRelationshipT} from "../types/metatype_relationshipT";
 
-export default class MetatypeFilter extends Filter {
-   constructor() {
-       super(MetatypeStorage.tableName);
-   }
+export default class MetatypeRelationshipFilter extends Filter {
+    constructor() {
+        super(MetatypeRelationshipStorage.tableName);
+    }
 
     id(operator: string, value: any) {
         super.query("id", operator, value)
@@ -34,10 +34,10 @@ export default class MetatypeFilter extends Filter {
     }
 
     count(): Promise<Result<number>> {
-       return super.count()
+        return super.count()
     }
 
-    all(limit?: number, offset?:number, sortBy?: string, sortDesc?: boolean): Promise<Result<MetatypeT[]>> {
-        return super.findAll<MetatypeT>(limit, offset, sortBy, sortDesc)
+    all(limit?: number, offset?:number, sortBy?: string, sortDesc?: boolean): Promise<Result<MetatypeRelationshipT[]>> {
+        return super.findAll<MetatypeRelationshipT>(limit, offset, sortBy, sortDesc)
     }
 }

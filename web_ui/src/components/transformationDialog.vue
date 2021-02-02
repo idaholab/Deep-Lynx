@@ -640,8 +640,8 @@ import {getNestedValue} from "@/utilities";
     @Watch('search', {immediate: true})
     onSearchChange(newVal: string) {
       this.$client.listMetatypes(this.containerID, {name: newVal})
-          .then((metatypes: MetatypeT[]) => {
-            this.metatypes = metatypes
+          .then((metatypes) => {
+            this.metatypes = metatypes as MetatypeT[]
           })
           .catch((e: any) => this.errorMessage = e)
     }

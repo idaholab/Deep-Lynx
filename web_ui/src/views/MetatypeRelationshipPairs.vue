@@ -233,19 +233,19 @@
         refreshMetatypes() {
             this.$client.listMetatypes(this.containerID, {"limit": 1000, "offset": 0})
             .then(metatypes => {
-                this.metatypes = metatypes
+                this.metatypes = metatypes as MetatypeT[]
             })
             .catch(e => console.log(e))
         }
 
         refreshMetatypeRelationships() {
-            this.$client.listMetatypeRelationships(this.containerID, 1000, 0)
+            this.$client.listMetatypeRelationships(this.containerID,  {limit: 1000, offset: 0})
             .then(metatypeRelationships => {
-                this.metatypeRelationships = metatypeRelationships
+                this.metatypeRelationships = metatypeRelationships as MetatypeRelationshipT[]
             })
             .catch(e => console.log(e))
         }
-        
+
         refreshRelationshipPairs() {
             this.$client.listMetatypeRelationshipPairs(this.containerID, {"limit": 1000, "offset": 0})
             .then(relationshipPairs => {
@@ -255,7 +255,7 @@
         }
 
         newRelationshipPair() {
-            this.$client.createMetatypeRelationshipPair(this.containerID, 
+            this.$client.createMetatypeRelationshipPair(this.containerID,
                 {"name": this.name,
                 "description": this.description,
                 "origin_metatype_id": this.originSelect,
@@ -275,8 +275,8 @@
         }
 
         editRelationship() {
-            this.$client.updateMetatypeRelationshipPair(this.containerID, this.selectedRelationshipPair.id, 
-                {"name": this.selectedRelationshipPair.name, 
+            this.$client.updateMetatypeRelationshipPair(this.containerID, this.selectedRelationshipPair.id,
+                {"name": this.selectedRelationshipPair.name,
                 "description": this.selectedRelationshipPair.description,
                 "origin_metatype_id": this.selectedRelationshipPair.origin_metatype_id,
                 "destination_metatype_id": this.selectedRelationshipPair.destination_metatype_id,

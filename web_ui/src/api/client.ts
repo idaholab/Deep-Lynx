@@ -100,24 +100,21 @@ export class Client {
       return this.put<ContainerT>(`/containers/${containerID}`, container)
    }
 
-   requestPasswordReset(email: string): Promise<boolean> {
-      const query: {[key: string]: any} = {}
-      query.email = email
-
-      return this.getNoData(`/users/reset-password`, query)
-   }
-
-   listMetatypes(containerID: string, {name, limit, offset}: {name?: string; limit?: number; offset?: number}): Promise<MetatypeT[]> {
+   listMetatypes(containerID: string, {name, description, limit, offset, sortBy, sortDesc, count}: {name?: string; description?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; count?: boolean}): Promise<MetatypeT[] | number> {
       const query: {[key: string]: any} = {}
 
       if(name) query.name = name
+      if(description) query.description = name
       if(limit) query.limit = limit
       if(offset) query.offset = offset
+      if(sortBy) query.sortBy = sortBy
+      if(sortDesc) query.sortDesc = sortDesc
+      if(count) query.count = "true"
 
       return this.get<MetatypeT[]>(`/containers/${containerID}/metatypes`, query)
    }
 
-   listMetatypeRelationshipPairs(containerID: string, {name, metatypeID, originID, destinationID, limit, offset}: {name?: string; metatypeID?: string; originID?: string; destinationID?: string; limit: number; offset: number}): Promise<MetatypeRelationshipPairT[]> {
+   listMetatypeRelationshipPairs(containerID: string, {name, metatypeID, originID, destinationID, limit, offset, sortBy, sortDesc}: {name?: string; metatypeID?: string; originID?: string; destinationID?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean}): Promise<MetatypeRelationshipPairT[]> {
       const query: {[key: string]: any} = {}
 
       if(name) query.name = name
@@ -126,6 +123,8 @@ export class Client {
       if(metatypeID) query.metatypeID = metatypeID
       if(limit) query.limit = limit
       if(offset) query.offset = offset
+      if(sortBy) query.sortBy = sortBy
+      if(sortDesc) query.sortDesc = sortDesc
 
       return this.get<MetatypeRelationshipPairT[]>(`/containers/${containerID}/metatype_relationship_pairs`, query)
    }
@@ -151,16 +150,22 @@ export class Client {
       return this.get<MetatypeKeyT[]>(`/containers/${containerID}/metatypes/${metatypeID}/keys`)
    }
 
-   listMetatypeRelationships(containerID: string, limit: number, offset: number): Promise<MetatypeRelationshipT[]> {
-      return this.get<MetatypeRelationshipT[]>(`/containers/${containerID}/metatype_relationships?limit=${limit}&offset=${offset}`)
+   listMetatypeRelationships(containerID: string, {name, description, limit, offset, sortBy, sortDesc, count}: {name?: string; description?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; count?: boolean}): Promise<MetatypeRelationshipT[] | number> {
+      const query: {[key: string]: any} = {}
+
+      if(name) query.name = name
+      if(description) query.description = name
+      if(limit) query.limit = limit
+      if(offset) query.offset = offset
+      if(sortBy) query.sortBy = sortBy
+      if(sortDesc) query.sortDesc = sortDesc
+      if(count) query.count = "true"
+
+      return this.get<MetatypeRelationshipT[]>(`/containers/${containerID}/metatype_relationships`, query)
    }
 
    createMetatypeRelationship(containerID: string, metatypeRelationship: any): Promise<MetatypeRelationshipT> {
       return this.post<MetatypeRelationshipT>(`/containers/${containerID}/metatype_relationships`, metatypeRelationship)
-   }
-
-   retrieveMetatypeRelationship(containerID: string, metatypeRelationshipID: string): Promise<MetatypeRelationshipT> {
-      return this.get<MetatypeRelationshipT>(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}`)
    }
 
    retrieveMetatypeRelationshipPair(containerID: string, metatypeRelationshipPairID: string): Promise<MetatypeRelationshipPairT> {
@@ -221,11 +226,6 @@ export class Client {
 
    deactivateDataSource(containerID: string, dataSourceID: string): Promise<boolean> {
       return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/active`)
-   }
-
-
-   countUnmappedData(containerID: string, dataSouceID: string): Promise<number> {
-      return this.get<number>(`/containers/${containerID}/import/datasources/${dataSouceID}/mappings/unmapped/count`)
    }
 
    listImports(containerID: string, dataSourceID: string, {limit, offset, sortBy, sortDesc}: {limit: number; offset: number; sortBy?: string; sortDesc?: boolean}): Promise<ImportT[]> {
@@ -335,7 +335,7 @@ export class Client {
    }
 
 
-   listTypeMappings(containerID: string, dataSourceID: string, {limit, offset, sortBy, sortDesc, resultingMetatypeName, resultingMetatypeRelationshipName, noTransformations}: {limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; resultingMetatypeName?: string | undefined; resultingMetatypeRelationshipName?: string | undefined; noTransformations?: boolean}): Promise<TypeMappingT[]> {
+   listTypeMappings(containerID: string, dataSourceID: string, {limit, offset, sortBy, sortDesc, resultingMetatypeName, resultingMetatypeRelationshipName }: {limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; resultingMetatypeName?: string | undefined; resultingMetatypeRelationshipName?: string | undefined; noTransformations?: boolean}): Promise<TypeMappingT[]> {
       const query: {[key: string]: any} = {}
 
       if(limit) query.limit = limit

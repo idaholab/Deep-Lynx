@@ -20,7 +20,7 @@ class Migrator {
                     Logger.info(`${Config.db_name} database already exists. Proceeding to migration scripts`)
                     this.init();
                 } else {
-                    Logger.error(`creation of ${Config.db_name} database failed`)
+                    Logger.error(`creation of ${Config.db_name} database failed - this is frequently caused by an incorrect connection string. Verify your CORE_DB_CONNECTION string environment variable and try again.`)
                     process.exit(-1);
                 }
             } else {
