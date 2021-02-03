@@ -401,7 +401,7 @@ import DataTypeMapping from "@/components/dataTypeMapping.vue"
           destinationID: undefined,
         })
             .then(pairs => {
-              this.relationshipPairs = pairs
+              this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
             })
             .catch(e => this.errorMessage = e)
       }

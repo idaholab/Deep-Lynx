@@ -1,5 +1,5 @@
 import Config from "../config"
-import {AxiosResponse} from "axios";
+import {AxiosRequestConfig, AxiosResponse, AxiosBasicCredentials} from "axios";
 import {
    AssignRolePayloadT,
    ContainerT,
@@ -81,7 +81,7 @@ export class Client {
          formData.append('path', owlFilePath)
       }
 
-      const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: `containers/import`}), formData, config)
+      const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: `containers/import`}), formData, config as AxiosRequestConfig)
 
       return new Promise((resolve, reject) => {
          if(resp.status < 200 || resp.status > 299) reject(resp.status)
@@ -114,10 +114,11 @@ export class Client {
       return this.get<MetatypeT[]>(`/containers/${containerID}/metatypes`, query)
    }
 
-   listMetatypeRelationshipPairs(containerID: string, {name, metatypeID, originID, destinationID, limit, offset, sortBy, sortDesc}: {name?: string; metatypeID?: string; originID?: string; destinationID?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean}): Promise<MetatypeRelationshipPairT[]> {
+   listMetatypeRelationshipPairs(containerID: string, {name, description, metatypeID, originID, destinationID, limit, offset, sortBy, sortDesc, count}: {name?: string; description?: string; metatypeID?: string; originID?: string; destinationID?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; count?: boolean}): Promise<MetatypeRelationshipPairT[] | number> {
       const query: {[key: string]: any} = {}
 
       if(name) query.name = name
+      if(description) query.description = name
       if(originID) query.originID = name
       if(destinationID) query.destinationID = name
       if(metatypeID) query.metatypeID = metatypeID
@@ -125,6 +126,7 @@ export class Client {
       if(offset) query.offset = offset
       if(sortBy) query.sortBy = sortBy
       if(sortDesc) query.sortDesc = sortDesc
+      if(count) query.count = count
 
       return this.get<MetatypeRelationshipPairT[]>(`/containers/${containerID}/metatype_relationship_pairs`, query)
    }
@@ -360,7 +362,7 @@ export class Client {
 
 
    private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -368,7 +370,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       let url: string
@@ -393,7 +395,7 @@ export class Client {
 
    // getNoData will return true if the response code falls between 200-299
    private async getNoData(uri: string, queryParams?: {[key: string]: any}): Promise<boolean> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -401,7 +403,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       let url: string
@@ -425,7 +427,7 @@ export class Client {
    }
 
    private async delete(uri: string): Promise<boolean> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -433,7 +435,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       const resp: AxiosResponse = await axios.delete(`${this.config?.rootURL}${uri}`, config)
@@ -447,7 +449,7 @@ export class Client {
    }
 
    private async post<T>(uri: string, data: any): Promise<T> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -455,7 +457,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), data, config)
@@ -470,7 +472,7 @@ export class Client {
    }
 
    private async postNoData(uri: string, data: any): Promise<boolean> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -478,7 +480,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), data, config)
@@ -491,7 +493,7 @@ export class Client {
    }
 
    private async postNoPayload(uri: string): Promise<boolean> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -499,7 +501,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), {}, config)
@@ -512,7 +514,7 @@ export class Client {
    }
 
    private async postFile(uri: string, inputName: string, file: File): Promise<boolean> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*", "Content-Type": 'multipart/form-data'}
 
       if(this.config?.auth_method === "token") {
@@ -520,7 +522,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       const formData = new FormData()
@@ -536,7 +538,7 @@ export class Client {
    }
 
    private async put<T>(uri: string,data: any): Promise<T> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -544,7 +546,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       const resp: AxiosResponse = await axios.put(`${this.config?.rootURL}${uri}`, data, config)
@@ -559,7 +561,7 @@ export class Client {
    }
 
    private async putNoData(uri: string, data: any): Promise<boolean> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -567,7 +569,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       const resp: AxiosResponse = await axios.put(buildURL(this.config?.rootURL!, {path: uri}), data, config)
