@@ -103,4 +103,23 @@ describe('A Metatype Key', async() => {
 
         return mStorage.PermanentlyDelete(metatype.value[0].id!)
     })
+
+    it('can be batch updated', async()=> {
+        let storage = MetatypeKeyStorage.Instance;
+        let mStorage = MetatypeStorage.Instance;
+
+        let metatype = await mStorage.Create(containerID, "test suite",
+            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+
+        expect(metatype.isError).false;
+        expect(metatype.value).not.empty;
+
+        let keys = await storage.Create(metatype.value[0].id!, "test suite", test_keys);
+        expect(keys.isError).false;
+
+        let updateKeys = await storage.BatchUpdate(keys.value, "test suite");
+        expect(updateKeys.isError).false;
+
+        return mStorage.PermanentlyDelete(metatype.value[0].id!)
+    });
 });

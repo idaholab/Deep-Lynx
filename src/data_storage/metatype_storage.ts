@@ -65,6 +65,10 @@ export default class MetatypeStorage extends PostgresStorage{
             return super.rows<MetatypeT>(MetatypeStorage.searchStatement(containerID, name))
         }
 
+        if(limit === -1) {
+            return super.rows<MetatypeT>(MetatypeStorage.listAllStatement(containerID))
+        }
+
         return super.rows<MetatypeT>(MetatypeStorage.listStatement(containerID, offset, limit))
    }
 
@@ -173,6 +177,13 @@ export default class MetatypeStorage extends PostgresStorage{
         return {
             text: `SELECT * FROM metatypes WHERE container_id = $1 AND NOT archived OFFSET $2 LIMIT $3`,
             values: [containerID, offset, limit]
+        }
+    }
+
+    private static listAllStatement(containerID:string): QueryConfig {
+        return {
+            text: `SELECT * FROM metatypes WHERE container_id = $1 AND NOT archived`,
+            values: [containerID]
         }
     }
 

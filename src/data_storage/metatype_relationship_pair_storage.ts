@@ -139,6 +139,9 @@ export default class MetatypeRelationshipPairStorage extends PostgresStorage{
     }
 
     public async List(containerID: string, offset: number, limit:number): Promise<Result<MetatypeRelationshipPairT[]>> {
+        if(limit === -1) {
+            return super.rows<MetatypeRelationshipPairT>(MetatypeRelationshipPairStorage.listAllStatement(containerID))
+        }
         return super.rows<MetatypeRelationshipPairT>(MetatypeRelationshipPairStorage.listStatement(containerID, offset, limit))
     }
 
@@ -176,7 +179,7 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
         return {
             text:`
 UPDATE metatype_relationship_pairs
-SET name = $1, description = $2, relationshipType = $3, origin_metatype_id = $4, destination_metatype_id = $5
+SET name = $1, description = $2, relationship_type = $3, origin_metatype_id = $4, destination_metatype_id = $5
 WHERE id = $6`,
             values: [pair.name, pair.description,
                 pair.relationship_type,
@@ -225,6 +228,13 @@ WHERE id = $6`,
         return {
             text: `SELECT * FROM metatype_relationship_pairs WHERE container_id = $1 AND NOT archived OFFSET $2 LIMIT $3`,
             values: [containerID, offset, limit]
+        }
+    }
+
+    private static listAllStatement(containerID:string): QueryConfig {
+        return {
+            text: `SELECT * FROM metatype_relationship_pairs WHERE container_id = $1 AND NOT archived`,
+            values: [containerID]
         }
     }
 }

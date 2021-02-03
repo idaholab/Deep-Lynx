@@ -131,7 +131,7 @@ export default class MetatypeKeyStorage extends PostgresStorage{
         // allows us to accept an array of input if needed
         const payload = (t.array(t.unknown).is(input)) ? input : [input];
 
-        return super.decodeAndValidate<MetatypeKeysT>(metatypesT, onValidateSuccess, payload)
+        return super.decodeAndValidate<MetatypeKeysT>(metatypeKeysT, onValidateSuccess, payload)
     }
 
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
