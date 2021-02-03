@@ -31,7 +31,7 @@ export async function NewDataSource(user:UserT, containerID:string, input: any):
             return async (im: DataSourceT) => {
                 switch(im.adapter_type) {
                     case "http": {
-                        const http = await HttpImpl.New(containerID, user.id!, im.name, im.config);
+                        const http = await HttpImpl.New(containerID, user.id!, im.name, im.config, im.active);
                         if(http.isError) resolve(Result.Pass(http));
 
                         // we set this polling now, the Poll function will check to make
@@ -39,12 +39,6 @@ export async function NewDataSource(user:UserT, containerID:string, input: any):
                         http.value.Poll()
 
                         resolve(Result.Success(http.value.dataSourceT))
-                        break;
-                    }
-
-                    case "aveva": {
-                        const source = await DataSourceStorage.Instance.Create(containerID, user.id!, im)
-                        resolve(source)
                         break;
                     }
 

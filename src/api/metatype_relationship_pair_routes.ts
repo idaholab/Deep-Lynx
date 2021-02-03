@@ -71,19 +71,34 @@ export default class MetatypeRelationshipPairRoutes {
             filter = filter.and().archived("eq", false)
         }
 
-        // @ts-ignore
-        filter.all(+req.query.limit, +req.query.offset)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-                res.status(200).json(result)
-            })
-            .catch((err) => {
-                res.status(404).send(err)
-            })
-            .finally(() => next())
+        if(req.query.count !== undefined && req.query.count === "true") {
+            filter.count()
+                .then((result) => {
+                    if (result.isError && result.error) {
+                        res.status(result.error.errorCode).json(result);
+                        return
+                    }
+                    res.status(200).json(result)
+                })
+                .catch((err) => {
+                    res.status(404).send(err)
+                })
+                .finally(() => next())
+        } else {
+            // @ts-ignore
+            filter.all(+req.query.limit, +req.query.offset)
+                .then((result) => {
+                    if (result.isError && result.error) {
+                        res.status(result.error.errorCode).json(result);
+                        return
+                    }
+                    res.status(200).json(result)
+                })
+                .catch((err) => {
+                    res.status(404).send(err)
+                })
+                .finally(() => next())
+        }
     }
 
     private static updateMetatypeRelationshipPair(req: Request, res: Response, next: NextFunction) {

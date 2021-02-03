@@ -45,13 +45,33 @@ export default {
       metatypes: "Metatypes",
       search: "Search",
       create: "Create",
-      formTitle: "New Metatype"
+      formTitle: "New Metatype",
+      name: "Name",
+      description: "Description",
+      actions: "Actions",
+      searchName: "Search Name",
+      searchDescription: "Search Description"
     },
     metatypeRelationships: {
-      formTitle: "New Relationship"
+      metatypeRelationships: "Metatype Relationships",
+      formTitle: "New Relationship",
+      newRelationship: "New Relationship",
+      name: "Name",
+      description: "Description",
+      actions: "Actions",
+      searchName: "Search Name",
+      searchDescription: "Search Description"
     },
     metatypeRelationshipPairs: {
-      formTitle: "New Relationship Pair"
+      formTitle: "New Relationship Pair",
+      name: "Name",
+      description: "Description",
+      actions: "Actions",
+      searchName: "Search Name",
+      searchDescription: "Search Description",
+      originMetatype: "Search Origin Metatype",
+      destinationMetatype: "Search Destination Metatype",
+      relationship: "Search Relationship"
     },
     dataSources: {
       create: "Create",

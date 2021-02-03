@@ -195,6 +195,10 @@ export default class MetatypeRelationshipPairStorage extends PostgresStorage{
         return super.run(MetatypeRelationshipPairStorage.deleteStatement(pairID))
     }
 
+    public async Count(containerID: string): Promise<Result<number>> {
+        return super.count(MetatypeRelationshipPairStorage.countStatement(containerID))
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -270,6 +274,13 @@ WHERE id = $6`,
         return {
             text: `SELECT * FROM metatype_relationship_pairs WHERE container_id = $1 AND NOT archived OFFSET $2 LIMIT $3`,
             values: [containerID, offset, limit]
+        }
+    }
+
+    private static countStatement(containerID: string): QueryConfig {
+        return {
+            text: `SELECT COUNT(*) FROM metatype_relationship_pairs WHERE NOT archived AND container_id = $1`,
+            values: [containerID]
         }
     }
 }

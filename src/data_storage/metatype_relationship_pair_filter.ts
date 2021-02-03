@@ -67,6 +67,10 @@ export default class MetatypeRelationshipPairFilter extends Filter {
         return this
     }
 
+    count(): Promise<Result<number>> {
+        return super.count()
+    }
+
     async all(limit?: number, offset?: number): Promise<Result<MetatypeRelationshipPairT[]>> {
         const result = await super.findAll<MetatypeRelationshipPairT>(limit, offset)
 

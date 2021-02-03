@@ -1,7 +1,6 @@
 import Result from "../result"
 import {metatypeKeysT, MetatypeKeysT, MetatypeKeyT} from "../types/metatype_keyT";
 import PostgresStorage from "./postgresStorage";
-import {metatypesT} from "../types/metatypeT";
 import {QueryConfig} from "pg";
 import * as t from "io-ts";
 import PostgresAdapter from "./adapters/postgres/postgres";
@@ -195,7 +194,7 @@ export default class MetatypeKeyStorage extends PostgresStorage{
         // allows us to accept an array of input if needed
         const payload = (t.array(t.unknown).is(input)) ? input : [input];
 
-        return super.decodeAndValidate<MetatypeKeysT>(metatypesT, onValidateSuccess, payload)
+        return super.decodeAndValidate<MetatypeKeysT>(metatypeKeysT, onValidateSuccess, payload)
     }
 
     public async PermanentlyDelete(id: string): Promise<Result<boolean>> {

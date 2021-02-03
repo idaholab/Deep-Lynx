@@ -197,6 +197,10 @@ export default class MetatypeStorage extends PostgresStorage{
         return super.run(MetatypeStorage.archiveStatement(id, userID))
     }
 
+    public async Count(containerID: string): Promise<Result<number>> {
+        return super.count(MetatypeStorage.countStatement(containerID))
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -247,6 +251,13 @@ export default class MetatypeStorage extends PostgresStorage{
         return {
             text:`UPDATE metatypes SET name = $1, description = $2 WHERE id = $3`,
             values: [metatype.name, metatype.description, metatype.id]
+        }
+    }
+
+    private static countStatement(containerID: string): QueryConfig {
+        return {
+            text: `SELECT COUNT(*) FROM metatypes WHERE NOT archived AND container_id = $1`,
+            values: [containerID]
         }
     }
 }
