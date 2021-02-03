@@ -16,7 +16,7 @@ describe('An HTTP Data Source', async() => {
             Logger.debug("skipping HTTP data source tests");
             this.skip()
         }
-       
+
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
            Logger.debug("skipping export tests, no storage layer");
            this.skip()
@@ -43,7 +43,7 @@ describe('An HTTP Data Source', async() => {
                 auth_method:"basic",
                 username: "test",
                 password: "test"
-        });
+        }, true);
 
         expect(http.isError).false;
 
@@ -89,7 +89,7 @@ describe('An HTTP Data Source', async() => {
             data_type:"json",
             username: "test",
             password: "test"
-        });
+        }, true);
 
         expect(http.isError).false;
 
