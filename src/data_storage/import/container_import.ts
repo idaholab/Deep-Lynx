@@ -312,7 +312,7 @@ export default class ContainerImport {
           containerID = containers.value[0].id!;
         }
 
-        let allRelationshipPairNames: string[] = [];
+        const allRelationshipPairNames: string[] = [];
 
         // prepare inheritance relationship pairs
         classListMap.forEach(async (thisClass: MetatypeExtendT) => {
@@ -429,7 +429,7 @@ export default class ContainerImport {
 
               const edges = (await edgeStorage.ListByRelationshipPairID(relationshipPair.id!, 0, 10)).value
               if (edges.length > 0) {
-                resolve(Result.Failure(`Attempting to remove metatype relationship pair ${relationshipPair.name}. 
+                resolve(Result.Failure(`Attempting to remove metatype relationship pair ${relationshipPair.name}.
                   This relationship pair has associated data, please delete the data before container update.`));
               } else {
                 // no associated data, remove relationship pair
@@ -453,7 +453,7 @@ export default class ContainerImport {
           for (const relationship of oldMetatypeRelationships) {
 
             if (!relationshipMap.has(relationship.name)) {
-              // ontological assumption: if metatypes and metatype relationship pairs are examined first, 
+              // ontological assumption: if metatypes and metatype relationship pairs are examined first,
               // we don't need to dig into them again for metatype relationships
               // any edges instantiated from relationship pairs that depend on the relationship would have already been found
               Logger.info(`Removing relationship ${relationship.name}`)
@@ -578,7 +578,7 @@ export default class ContainerImport {
 
             const relationshipName = thisClass.name + ' : child of : ' + classIDMap.get(thisClass.parent_id).name
 
-            let data: MetatypeRelationshipPairT = {
+            const data: MetatypeRelationshipPairT = {
               name: relationshipName,
               description: relationship.description,
               origin_metatype_id: thisClass.db_id!,
@@ -631,7 +631,7 @@ export default class ContainerImport {
               }
 
               const keyName = thisClass.name + ' : ' + dataProp.name
-              let data: MetatypeKeyT = {
+              const data: MetatypeKeyT = {
                 metatype_id: thisClass.db_id,
                 name: keyName,
                 required: false,
@@ -659,7 +659,7 @@ export default class ContainerImport {
               const relationship = relationshipIDMap.get(property.value);
               const relationshipID = relationshipMap.get(relationship.name).db_id
               const relationshipName = thisClass.name + ' : ' + relationship.name + ' : ' + classIDMap.get(property.target).name
-              let data: MetatypeRelationshipPairT = {
+              const data: MetatypeRelationshipPairT = {
                 name: relationshipName,
                 description: relationship.description,
                 origin_metatype_id: thisClass.db_id!,
