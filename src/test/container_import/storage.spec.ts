@@ -11,19 +11,19 @@ import MetatypeStorage from '../../data_storage/metatype_storage';
 import MetatypeRelationshipPairStorage from '../../data_storage/metatype_relationship_pair_storage';
 import EdgeStorage from '../../data_storage/graph/edge_storage';
 import { UserT } from '../../types/user_management/userT';
-import { Authorization } from '../../user_management/authorization/authorization';
 const Buffer = require('buffer').Buffer;
 
 describe('A Container Import', async() => {
+    
+    before(async function() {​​​​​​​​
+        if (process.env.CORE_DB_CONNECTION_STRING === "") {​​​​​​​​
+            Logger.debug("skipping container import tests, no storage layer");
+            this.skip()
+        }​​​​​​​​
+        await PostgresAdapter.Instance.init()
+        return Promise.resolve()
+    }​​​​​​​​);
 
-    before(function() {
-       if (process.env.CORE_DB_CONNECTION_STRING === "") {
-           Logger.debug("skipping container import tests, no storage layer");
-           this.skip()
-       }
-
-        return PostgresAdapter.Instance.init()
-    });
 
     it('can create a container from a valid ontology file', async()=> {
         let containerImport = ContainerImport.Instance;
@@ -251,7 +251,6 @@ describe('A Container Import', async() => {
         // using Action, Document, and Equipment classes/metatypes and caused by/causes relationships
         let containerImport = ContainerImport.Instance;
         let storage = ContainerStorage.Instance;
-        let authorization = Authorization.Instance.e;
 
         let fileBuffer: Buffer = Buffer.alloc(0)
         let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
