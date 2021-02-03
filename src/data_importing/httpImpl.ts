@@ -15,7 +15,6 @@ import ImportStorage from "../data_storage/import/import_storage";
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
 import NodeRSA from "node-rsa";
-import * as fs from "fs";
 import axios, {AxiosResponse} from "axios"
 import DataStagingStorage from "../data_storage/import/data_staging_storage";
 import {TypeMappingT} from "../types/import/typeMappingT";
@@ -66,10 +65,10 @@ export class HttpImpl implements DataSource {
        this.config = config
     }
 
-    public static async New(containerID: string, userID: string, name:string, config: any | HttpConfigT): Promise<Result<HttpImpl>> {
+    public static async New(containerID: string, userID: string, name:string, config: any | HttpConfigT, active: boolean): Promise<Result<HttpImpl>> {
         if(!httpConfigT.is(config)) return new Promise(resolve => resolve(Result.Failure('unable to validate configuration')));
 
-        const importAdapterStorage = DataSourceStorage.Instance;
+        const dataSourceStorage = DataSourceStorage.Instance;
         const instance = new HttpImpl(config);
 
         // encrypt credentials prior to storage
@@ -84,15 +83,15 @@ export class HttpImpl implements DataSource {
             config.token = key.encryptPrivate(config.token!, "base64");
         }
 
-        const importAdapterRecord = await importAdapterStorage.Create(containerID, userID, {
+        const dataSourceRecord = await dataSourceStorage.Create(containerID, userID, {
             config,
             adapter_type:"http",
             name,
-            active: false,
+            active
        });
 
         return new Promise(resolve => {
-           if(importAdapterRecord.isError) resolve(Result.Pass(importAdapterRecord));
+           if(dataSourceRecord.isError) resolve(Result.Pass(dataSourceRecord));
 
            // wipe the values so that outside code doesn't have access to even
            // the unencrypted data.
@@ -100,8 +99,8 @@ export class HttpImpl implements DataSource {
            config.password = "";
            config.token = "";
 
-           importAdapterRecord.value.config = config;
-           instance.dataSourceT = importAdapterRecord.value; // persist encrypted record to the instance
+           dataSourceRecord.value.config = config;
+           instance.dataSourceT = dataSourceRecord.value; // persist encrypted record to the instance
 
            resolve(Result.Success(instance))
         })

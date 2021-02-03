@@ -45,19 +45,41 @@ export default {
       metatypes: "Metatypes",
       search: "Search",
       create: "Create",
-      formTitle: "New Metatype"
+      formTitle: "New Metatype",
+      name: "Name",
+      description: "Description",
+      actions: "Actions",
+      searchName: "Search Name",
+      searchDescription: "Search Description"
     },
     metatypeRelationships: {
-      formTitle: "New Relationship"
+      metatypeRelationships: "Metatype Relationships",
+      formTitle: "New Relationship",
+      newRelationship: "New Relationship",
+      name: "Name",
+      description: "Description",
+      actions: "Actions",
+      searchName: "Search Name",
+      searchDescription: "Search Description"
     },
     metatypeRelationshipPairs: {
-      formTitle: "New Relationship Pair"
+      formTitle: "New Relationship Pair",
+      name: "Name",
+      description: "Description",
+      actions: "Actions",
+      searchName: "Search Name",
+      searchDescription: "Search Description",
+      originMetatype: "Search Origin Metatype",
+      destinationMetatype: "Search Destination Metatype",
+      relationship: "Search Relationship"
     },
     dataSources: {
       create: "Create",
       formTitle: "New Data Source"
     },
     dataMapping: {
+      record: "Record",
+      relationship: "Relationship",
       typeMapping: "Type Mapping",
       resultingTypeName: "Resulting Metatype/Metatype Relationship",
       applicableToCurrentData: "Applicable To Sample",
@@ -95,7 +117,7 @@ export default {
       selectDataSource: "Select Data Source",
       currentMappings: "Current Mappings",
       needsTransformations: "Needs Transformations",
-      dataType: "Data Type",
+      resultingDataType: "Resulting Data Type",
       chooseMetatype: "Choose Metatype",
       typeToSearch: "Type to Search Available Metatypes",
       typeToSearchRelationships: "Type to Search Available Metatype Relationship Pairs",

@@ -1,9 +1,10 @@
 import Result from "../../result"
 import PostgresStorage from "../postgresStorage";
 import {QueryConfig} from "pg";
-import PostgresAdapter from "../adapters/postgres/postgres";
-import {dataSourceT, DataSourceT} from "../../types/import/dataSourceT";
 import {typeTransformationT, TypeTransformationT} from "../../types/import/typeMappingT";
+import Logger from "../../logger"
+import Cache from "../../services/cache/cache"
+import Config from "../../config"
 
 /*
 * TypeTransformationStorage encompasses all logic dealing with the manipulation of the Import Adapter
@@ -33,6 +34,12 @@ export default class TypeTransformationStorage extends PostgresStorage{
                 tt.created_by = userID;
                 tt.modified_by = userID;
 
+                // need to clear the cache for its parent type mapping list
+                // an error but don't fail
+                Cache.del(`${TypeTransformationStorage.tableName}:typeMappingID:${typeMappingID}`)
+                    .then(deleted => {
+                        if(!deleted) Logger.error(`unable to clear cache for type mapping ${typeMappingID}'s transformations`)
+                    })
 
                 super.runAsTransaction(TypeTransformationStorage.createStatement(tt))
                     .then((r) => {
@@ -59,6 +66,17 @@ export default class TypeTransformationStorage extends PostgresStorage{
                 if(tt.metatype_id === "") tt.metatype_id = undefined
                 if(tt.metatype_relationship_pair_id === "") tt.metatype_relationship_pair_id = undefined
 
+                // need to clear the cache for its parent type mapping list and record
+                // an error but don't fail
+                Cache.del(`${TypeTransformationStorage.tableName}:typeMappingID:${tt.type_mapping_id}`)
+                    .then(deleted => {
+                        if(!deleted) Logger.error(`unable to clear cache for type mapping ${tt.type_mapping_id}'s transformations`)
+                    })
+
+                Cache.del(`${TypeTransformationStorage.tableName}:${tt.id}`)
+                    .then(deleted => {
+                        if(!deleted) Logger.error(`unable to clear cache for type mapping ${tt.type_mapping_id}'s transformations`)
+                    })
 
                 super.runAsTransaction(TypeTransformationStorage.updateStatement(transformationID, tt))
                     .then((r) => {
@@ -75,15 +93,60 @@ export default class TypeTransformationStorage extends PostgresStorage{
         return super.decodeAndValidate<TypeTransformationT>(typeTransformationT, onValidateSuccess, input)
     }
 
-    public Retrieve(id: string): Promise<Result<TypeTransformationT>> {
-        return super.retrieve<TypeTransformationT>(TypeTransformationStorage.retrieveStatement(id))
+    public async Retrieve(id: string): Promise<Result<TypeTransformationT>> {
+        const cached = await Cache.get<TypeTransformationT>(`${TypeTransformationStorage.tableName}:${id}`)
+        if(cached) {
+            return new Promise(resolve => resolve(Result.Success(cached)))
+        }
+
+        const retrieved = await super.retrieve<TypeTransformationT>(TypeTransformationStorage.retrieveStatement(id))
+
+        if(!retrieved.isError) {
+            // don't fail out on cache set failure, log and move on
+            Cache.set(`${TypeTransformationStorage.tableName}:${id}`, retrieved.value, Config.cache_default_ttl)
+                .then(set => {
+                    if(!set) Logger.error(`unable to insert type transformation ${id} into cache`)
+                })
+        }
+
+        return new Promise(resolve => resolve(retrieved))
     }
 
-    public ListForTypeMapping(typeMappingID: string): Promise<Result<TypeTransformationT[]>> {
-        return super.rows<TypeTransformationT>(TypeTransformationStorage.listByMapping(typeMappingID))
+    public async ListForTypeMapping(typeMappingID: string): Promise<Result<TypeTransformationT[]>> {
+        const cached = await Cache.get<TypeTransformationT[]>(`${TypeTransformationStorage.tableName}:typeMappingID:${typeMappingID}`)
+        if(cached) {
+            return new Promise(resolve => resolve(Result.Success(cached)))
+        }
+
+        const retrieved = await super.rows<TypeTransformationT>(TypeTransformationStorage.listByMapping(typeMappingID))
+
+        if(!retrieved.isError) {
+            // don't fail out on cache set failure, log and move on
+            Cache.set(`${TypeTransformationStorage.tableName}:typeMappingID:${typeMappingID}`, retrieved.value, Config.cache_default_ttl)
+                .then(set => {
+                    if(!set) Logger.error(`unable to insert list of type transformations for mapping ${typeMappingID} into cache`)
+                })
+        }
+
+        return new Promise(resolve => resolve(retrieved))
     }
 
-    public PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
+        const retrieved = await this.Retrieve(id)
+        if(!retrieved.isError){
+            // need to clear the cache for its parent type mapping list and record
+            // an error but don't fail
+            Cache.del(`${TypeTransformationStorage.tableName}:typeMappingID:${retrieved.value.type_mapping_id}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for type mapping ${retrieved.value.type_mapping_id}'s transformations`)
+                })
+
+            Cache.del(`${TypeTransformationStorage.tableName}:${retrieved.value.id}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for type mapping ${retrieved.value.type_mapping_id}'s transformations`)
+                })
+        }
+
         return super.run(TypeTransformationStorage.deleteStatement(id))
     }
 

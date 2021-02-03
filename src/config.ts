@@ -13,9 +13,7 @@ export class Config {
   private readonly _email_address: string;
   private readonly _email_enabled: boolean = true;
 
-  private readonly _email_validation_url: string;
   private readonly _email_validation_enforced: boolean;
-  private readonly _reset_password_url: string;
   private readonly _container_invite_url: string;
 
   private readonly _template_dir: string;
@@ -24,6 +22,8 @@ export class Config {
   private readonly _is_windows: boolean;
 
   private readonly _cache_provider: string;
+  private readonly _cache_default_ttl: number;
+  private readonly _cache_redis_connection_string: string
 
   private readonly _mongo_source_uri : string;
   private readonly _mongo_source_db : string;
@@ -32,7 +32,6 @@ export class Config {
   private readonly _db_name: string;
   private readonly _session_secret: string;
   private readonly _encryption_key_path: string | undefined;
-  private readonly _encryption_key_secret: string // secret if no key file is present
 
   private readonly _file_storage_method: string;
   private readonly _filesystem_storage_directory: string
@@ -86,9 +85,7 @@ export class Config {
     this._email_address = process.env.EMAIL_ADDRESS || "do+not+reply@deeplynx.org"
     this._email_enabled = process.env.EMAIL_ENABLED === "true"
 
-    this._email_validation_url = process.env.EMAIL_VALIDATION_URL || ""
     this._email_validation_enforced = process.env.EMAIL_VALIDATION_ENFORCED === "true"
-    this._reset_password_url = process.env.PASSWORD_RESET_URL || ""
     this._container_invite_url = process.env.CONTAINER_INVITE_URL || ""
 
     // we could simply have whatever needs to know if its windows access the platform
@@ -97,6 +94,9 @@ export class Config {
     this._is_windows = process.platform === 'win32'
 
     this._cache_provider = process.env.CACHE_PROVIDER || "memory"
+    this._cache_default_ttl = (process.env.CACHE_DEFAULT_TTL) ? parseInt(process.env.CACHE_DEFAULT_TTL!, 10): 21600
+    // default to a local, non-password-protected instance of redis
+    this._cache_redis_connection_string = process.env.CACHE_REDIS_CONNECTION_STRING || "//localhost:6379"
 
     this._mongo_source_uri= process.env.MONGO_SOURCE_URI || "localhost:8081";
     this._mongo_source_db = process.env.MONGO_SOURCE_DB || "inl-core-m";
@@ -108,7 +108,6 @@ export class Config {
     this._asset_dir = process.env.ASSET_DIR || "./dist/assets"
 
     this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
-    this._encryption_key_secret = process.env.ENCRYPTION_KEY_SECRET || ""
 
     this._file_storage_method = process.env.FILE_STORAGE_METHOD || "filesystem"
     this._filesystem_storage_directory = process.env.FILESYSTEM_STORAGE_DIRECTORY || ""
@@ -192,6 +191,14 @@ export class Config {
     return this._cache_provider
   }
 
+  get cache_default_ttl(): number {
+    return this._cache_default_ttl
+  }
+
+  get redis_connection_string(): string {
+    return this._cache_redis_connection_string
+  }
+
   get server_port(): string {
     return this._server_port;
   }
@@ -257,7 +264,7 @@ export class Config {
   get encryption_key_secret(): Buffer {
     if(this._encryption_key_path && this._encryption_key_path !== "") return fs.readFileSync(this._encryption_key_path)
 
-    return Buffer.from(this._encryption_key_secret, 'utf8')
+    return Buffer.from("", "utf8")
   }
 
   get encryption_key_path(): string {

@@ -28,6 +28,7 @@ services:
     links:
       - deep-lynx-postgres
     volumes:
+      - {replace with your ssh key directory}:/home/node/.ssh:ro
       - .:/srv/core_api
       - /srv/core_api/node_modules
     depends_on:
@@ -37,4 +38,47 @@ services:
       - WAIT_HOSTS_TIMEOUT=300
       - WAIT_SLEEP_INTERVAL=30
       - WAIT_HOST_CONNECT_TIMEOUT=30
+      - SERVER_PORT=8090
+      - ROOT_ADDRESS=http://core-api:8090
+      - PROJECT_DIR=./dist
+      - CACHE_PROVIDER=memory
+      - CACHE_DEFAULT_TTL=21600
+      - CACHE_REDIS_CONNECTION_STRING=
+      - EMAIL_ADDRESS=do+not+reply@deeplynx.org
+      - EMAIL_ENABLED=true
+      - EMAIL_VALIDATION_ENFORCED=false
+      - CONTAINER_INVITE_URL=
+      - LOG_LEVEL=debug
+      - CORE_DB_CONNECTION_STRING=postgresql://postgres:deeplynxcore@deep-lynx-postgres/deep_lynx
+      - DB_NAME=deep_lynx
+      - ENCRYPTION_KEY_PATH=~/.ssh/id_rsa
+      - FILE_STORAGE_METHOD=filesystem
+      - FILESYSTEM_STORAGE_DIRECTORY=
+      - AZURE_BLOB_CONNECTION_STRING=
+      - AZURE_BLOB_CONTAINER_NAME=
+      - DATA_SOURCE_PROCESSING_INTERVAL=1000
+      - DATA_SOURCE_PROCESSING_BATCH_SIZE=1000
+      - QUEUE_SYSTEM=database
+      - QUEUE_POLL_INTERVAL=1000
+      - INTIAL_SUPERUSER=false
+      - SUPERUSER_EMAIL=
+      - SUPERUSER_PASSWORD
+      - AUTH_STRATEGY=token
+      - BASIC_USER=
+      - BASIC_PASSWORD=
+      - SAML_ADFS_ENTRY_POINT=
+      - SAML_ADFS_ISSUER=
+      - SAML_ADFS_CALLBACK=
+      - SAML_ADFS_PRIVATE_CERT_PATH=
+      - SAML_ADFS_PUBLIC_CERT_PATH=
+      - SMTP_USERNAME=
+      - SMTP_PASSWORD=
+      - SMTP_HOST=
+      - SMTP_PORT=25
+      - SMTP_TLS=true
+      - SMTP_CLIENT_ID=
+      - SMTP_CLIENT_SECRET=
+      - SMTP_REFRESH_TOKEN=
+      - SMTP_ACCESS_TOKEN=
+      - SESSION_SECRET=
     command: bash -c "npm run migrate && npm run start"

@@ -1,10 +1,12 @@
 import Result from "../result"
 import {metatypeKeysT, MetatypeKeysT, MetatypeKeyT} from "../types/metatype_keyT";
 import PostgresStorage from "./postgresStorage";
-import {MetatypeT, metatypesT, MetatypesT} from "../types/metatypeT";
 import {QueryConfig} from "pg";
 import * as t from "io-ts";
 import PostgresAdapter from "./adapters/postgres/postgres";
+import Logger from "../logger"
+import Cache from "../services/cache/cache"
+import Config from "../config"
 
 /*
 * MetatypeKeyStorage encompasses all logic dealing with the manipulation of the
@@ -40,7 +42,16 @@ export default class MetatypeKeyStorage extends PostgresStorage{
                     ms[i].modified_by = userID;
 
                     queries.push(MetatypeKeyStorage.createStatement(ms[i]))
+
+
+                    // need to clear the cache for its parent metatype
+                    // an error but don't fail
+                    Cache.del(`${MetatypeKeyStorage.tableName}:metatypeID:${ms[i].metatype_id}`)
+                        .then(deleted => {
+                            if(!deleted) Logger.error(`unable to clear cache for metatype ${ms[i].metatype_id}'s keys`)
+                        })
                 }
+
 
                 super.runAsTransaction(...queries)
                     .then((r) => {
@@ -60,12 +71,42 @@ export default class MetatypeKeyStorage extends PostgresStorage{
         return super.decodeAndValidate<MetatypeKeysT>(metatypeKeysT, onSuccess, payload)
     }
 
-    public Retrieve(id: string): Promise<Result<MetatypeKeyT>> {
-        return super.retrieve<MetatypeKeyT>(MetatypeKeyStorage.retrieveStatement(id))
+    public async Retrieve(id: string): Promise<Result<MetatypeKeyT>> {
+        const cached = await Cache.get<MetatypeKeyT>(`${MetatypeKeyStorage.tableName}:${id}`)
+        if(cached) {
+            return new Promise(resolve => resolve(Result.Success(cached)))
+        }
+
+        const retrieved = await super.retrieve<MetatypeKeyT>(MetatypeKeyStorage.retrieveStatement(id))
+
+        if(!retrieved.isError) {
+            // don't fail out on cache set failure, log and move on
+            Cache.set(`${MetatypeKeyStorage.tableName}:${id}`, retrieved.value, Config.cache_default_ttl)
+                .then(set => {
+                    if(!set) Logger.error(`unable to insert metatype key ${id} into cache`)
+                })
+        }
+
+        return new Promise(resolve => resolve(retrieved))
     }
 
-    public List(metatypeID: string): Promise<Result<MetatypeKeyT[]>> {
-        return super.rows<MetatypeKeyT>(MetatypeKeyStorage.listStatement(metatypeID))
+    public async List(metatypeID: string): Promise<Result<MetatypeKeyT[]>> {
+        const cached = await Cache.get<MetatypeKeyT[]>(`${MetatypeKeyStorage.tableName}:metatypeID:${metatypeID}`)
+        if(cached) {
+            return new Promise(resolve => resolve(Result.Success(cached)))
+        }
+
+        const retrieved = await super.rows<MetatypeKeyT>(MetatypeKeyStorage.listStatement(metatypeID))
+
+        if(!retrieved.isError) {
+            // don't fail out on cache set failure, log and move on
+            Cache.set(`${MetatypeKeyStorage.tableName}:metatypeID:${metatypeID}`, retrieved.value, Config.cache_default_ttl)
+                .then(set => {
+                    if(!set) Logger.error(`unable to insert metatype keys for metatype ${metatypeID} into cache`)
+                })
+        }
+
+        return new Promise(resolve => resolve(retrieved))
     }
 
     // Update partially updates the MetatypeKey. This function will allow you to
@@ -97,6 +138,17 @@ export default class MetatypeKeyStorage extends PostgresStorage{
                 values
             })
                 .then(() => {
+                    // need to clear the cache for its parent metatype
+                    Cache.del(`${MetatypeKeyStorage.tableName}:metatypeID:${toUpdate.value.metatype_id}`)
+                        .then(deleted => {
+                            if(!deleted) Logger.error(`unable to clear cache for metatype ${toUpdate.value.metatype_id}'s keys`)
+                        })
+
+                    Cache.del(`${MetatypeKeyStorage.tableName}:${id}`)
+                        .then(deleted => {
+                            if(!deleted) Logger.error(`unable to clear cache for metatype key ${id}`)
+                        })
+
                     resolve(Result.Success(true))
                 })
                 .catch(e => resolve(Result.Failure(e)))
@@ -114,6 +166,17 @@ export default class MetatypeKeyStorage extends PostgresStorage{
                     ms[i].modified_by = userID;
 
                     queries.push(MetatypeKeyStorage.fullUpdateStatement(ms[i]))
+
+                    // need to clear the cache for its parent metatype
+                    Cache.del(`${MetatypeKeyStorage.tableName}:metatypeID:${ms[i].metatype_id}`)
+                        .then(deleted => {
+                            if(!deleted) Logger.error(`unable to clear cache for metatype ${ms[i].metatype_id}'s keys`)
+                        })
+
+                    Cache.del(`${MetatypeKeyStorage.tableName}:${ms[i].id}`)
+                        .then(deleted => {
+                            if(!deleted) Logger.error(`unable to clear cache for metatype key ${ms[i].id}`)
+                        })
                 }
 
                 super.runAsTransaction(...queries)
@@ -134,11 +197,41 @@ export default class MetatypeKeyStorage extends PostgresStorage{
         return super.decodeAndValidate<MetatypeKeysT>(metatypeKeysT, onValidateSuccess, payload)
     }
 
-    public PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
+        const toDelete = await this.Retrieve(id);
+
+        if(!toDelete.isError) {
+            // need to clear the cache for its parent metatype
+            Cache.del(`${MetatypeKeyStorage.tableName}:metatypeID:${toDelete.value.metatype_id}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for metatype ${toDelete.value.metatype_id}'s keys`)
+                })
+
+            Cache.del(`${MetatypeKeyStorage.tableName}:${id}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for metatype key ${id}`)
+                })
+        }
+
         return super.run(MetatypeKeyStorage.deleteStatement(id))
     }
 
-    public Archive(id: string, userID: string): Promise<Result<boolean>> {
+    public async Archive(id: string, userID: string): Promise<Result<boolean>> {
+        const toDelete = await this.Retrieve(id);
+
+        if(!toDelete.isError) {
+            // need to clear the cache for its parent metatype
+            Cache.del(`${MetatypeKeyStorage.tableName}:metatypeID:${toDelete.value.metatype_id}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for metatype ${toDelete.value.metatype_id}'s keys`)
+                })
+
+            Cache.del(`${MetatypeKeyStorage.tableName}:${id}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for metatype key ${id}`)
+                })
+        }
+
         return super.run(MetatypeKeyStorage.archiveStatement(id, userID))
     }
 

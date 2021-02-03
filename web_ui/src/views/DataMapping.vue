@@ -383,8 +383,8 @@ import DataTypeMapping from "@/components/dataTypeMapping.vue"
         if(newVal === "") return;
 
         this.$client.listMetatypes(this.containerID, {name: newVal})
-            .then((metatypes: MetatypeT[]) => {
-              this.metatypes = metatypes
+            .then((metatypes) => {
+              this.metatypes = metatypes as MetatypeT[]
             })
             .catch((e: any) => this.errorMessage = e)
       }
@@ -401,7 +401,7 @@ import DataTypeMapping from "@/components/dataTypeMapping.vue"
           destinationID: undefined,
         })
             .then(pairs => {
-              this.relationshipPairs = pairs
+              this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
             })
             .catch(e => this.errorMessage = e)
       }

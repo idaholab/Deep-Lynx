@@ -124,8 +124,16 @@ export default abstract class Filter {
         return this
     }
 
-    findAll<T>(limit?: number, offset?: number): Promise<Result<T[]>> {
+    findAll<T>(limit?: number, offset?: number, sortBy?: string, sortDesc?: boolean): Promise<Result<T[]>> {
         const storage = new PostgresStorage()
+
+        if(sortBy) {
+            if(sortDesc) {
+                this._rawQuery.push(`ORDER BY "${sortBy}" DESC`)
+            } else {
+                this._rawQuery.push(`ORDER BY "${sortBy}" ASC`)
+            }
+        }
 
         if(offset) {
             this._values.push(offset)
@@ -147,5 +155,23 @@ export default abstract class Filter {
         this._values = []
 
         return storage.rows<T>(query)
+    }
+
+    count(): Promise<Result<number>> {
+        const storage = new PostgresStorage()
+
+        // modify the original query to be count
+        this._rawQuery[0] = `SELECT COUNT(*) FROM ${this._tableName}`
+
+        const query = {
+            text: this._rawQuery.join(" "),
+            values: this._values
+        }
+
+        // reset the filter
+        this._rawQuery = [`SELECT * FROM ${this._tableName}`]
+        this._values = []
+
+        return storage.count(query)
     }
 }

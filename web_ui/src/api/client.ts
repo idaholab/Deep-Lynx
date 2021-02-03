@@ -1,5 +1,5 @@
 import Config from "../config"
-import {AxiosResponse} from "axios";
+import {AxiosRequestConfig, AxiosResponse, AxiosBasicCredentials} from "axios";
 import {
    AssignRolePayloadT,
    ContainerT,
@@ -81,7 +81,7 @@ export class Client {
          formData.append('path', owlFilePath)
       }
 
-      const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: `containers/import`}), formData, config)
+      const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: `containers/import`}), formData, config as AxiosRequestConfig)
 
       return new Promise((resolve, reject) => {
          if(resp.status < 200 || resp.status > 299) reject(resp.status)
@@ -100,32 +100,33 @@ export class Client {
       return this.put<ContainerT>(`/containers/${containerID}`, container)
    }
 
-   requestPasswordReset(email: string): Promise<boolean> {
-      const query: {[key: string]: any} = {}
-      query.email = email
-
-      return this.getNoData(`/users/reset-password`, query)
-   }
-
-   listMetatypes(containerID: string, {name, limit, offset}: {name?: string; limit?: number; offset?: number}): Promise<MetatypeT[]> {
+   listMetatypes(containerID: string, {name, description, limit, offset, sortBy, sortDesc, count}: {name?: string; description?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; count?: boolean}): Promise<MetatypeT[] | number> {
       const query: {[key: string]: any} = {}
 
       if(name) query.name = name
+      if(description) query.description = name
       if(limit) query.limit = limit
       if(offset) query.offset = offset
+      if(sortBy) query.sortBy = sortBy
+      if(sortDesc) query.sortDesc = sortDesc
+      if(count) query.count = "true"
 
       return this.get<MetatypeT[]>(`/containers/${containerID}/metatypes`, query)
    }
 
-   listMetatypeRelationshipPairs(containerID: string, {name, metatypeID, originID, destinationID, limit, offset}: {name?: string; metatypeID?: string; originID?: string; destinationID?: string; limit: number; offset: number}): Promise<MetatypeRelationshipPairT[]> {
+   listMetatypeRelationshipPairs(containerID: string, {name, description, metatypeID, originID, destinationID, limit, offset, sortBy, sortDesc, count}: {name?: string; description?: string; metatypeID?: string; originID?: string; destinationID?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; count?: boolean}): Promise<MetatypeRelationshipPairT[] | number> {
       const query: {[key: string]: any} = {}
 
       if(name) query.name = name
+      if(description) query.description = name
       if(originID) query.originID = name
       if(destinationID) query.destinationID = name
       if(metatypeID) query.metatypeID = metatypeID
       if(limit) query.limit = limit
       if(offset) query.offset = offset
+      if(sortBy) query.sortBy = sortBy
+      if(sortDesc) query.sortDesc = sortDesc
+      if(count) query.count = count
 
       return this.get<MetatypeRelationshipPairT[]>(`/containers/${containerID}/metatype_relationship_pairs`, query)
    }
@@ -151,16 +152,26 @@ export class Client {
       return this.get<MetatypeKeyT[]>(`/containers/${containerID}/metatypes/${metatypeID}/keys`)
    }
 
-   listMetatypeRelationships(containerID: string, limit: number, offset: number): Promise<MetatypeRelationshipT[]> {
-      return this.get<MetatypeRelationshipT[]>(`/containers/${containerID}/metatype_relationships?limit=${limit}&offset=${offset}`)
-   }
+   listMetatypeRelationships(containerID: string, {name, description, limit, offset, sortBy, sortDesc, count}: {name?: string; description?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; count?: boolean}): Promise<MetatypeRelationshipT[] | number> {
+      const query: {[key: string]: any} = {}
 
-   createMetatypeRelationship(containerID: string, metatypeRelationship: any): Promise<MetatypeRelationshipT> {
-      return this.post<MetatypeRelationshipT>(`/containers/${containerID}/metatype_relationships`, metatypeRelationship)
+      if(name) query.name = name
+      if(description) query.description = name
+      if(limit) query.limit = limit
+      if(offset) query.offset = offset
+      if(sortBy) query.sortBy = sortBy
+      if(sortDesc) query.sortDesc = sortDesc
+      if(count) query.count = "true"
+
+      return this.get<MetatypeRelationshipT[]>(`/containers/${containerID}/metatype_relationships`, query)
    }
 
    retrieveMetatypeRelationship(containerID: string, metatypeRelationshipID: string): Promise<MetatypeRelationshipT> {
       return this.get<MetatypeRelationshipT>(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}`)
+   }
+
+   createMetatypeRelationship(containerID: string, metatypeRelationship: any): Promise<MetatypeRelationshipT> {
+      return this.post<MetatypeRelationshipT>(`/containers/${containerID}/metatype_relationships`, metatypeRelationship)
    }
 
    retrieveMetatypeRelationshipPair(containerID: string, metatypeRelationshipPairID: string): Promise<MetatypeRelationshipPairT> {
@@ -221,11 +232,6 @@ export class Client {
 
    deactivateDataSource(containerID: string, dataSourceID: string): Promise<boolean> {
       return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/active`)
-   }
-
-
-   countUnmappedData(containerID: string, dataSouceID: string): Promise<number> {
-      return this.get<number>(`/containers/${containerID}/import/datasources/${dataSouceID}/mappings/unmapped/count`)
    }
 
    listImports(containerID: string, dataSourceID: string, {limit, offset, sortBy, sortDesc}: {limit: number; offset: number; sortBy?: string; sortDesc?: boolean}): Promise<ImportT[]> {
@@ -335,7 +341,7 @@ export class Client {
    }
 
 
-   listTypeMappings(containerID: string, dataSourceID: string, {limit, offset, sortBy, sortDesc, resultingMetatypeName, resultingMetatypeRelationshipName, noTransformations}: {limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; resultingMetatypeName?: string | undefined; resultingMetatypeRelationshipName?: string | undefined; noTransformations?: boolean}): Promise<TypeMappingT[]> {
+   listTypeMappings(containerID: string, dataSourceID: string, {limit, offset, sortBy, sortDesc, resultingMetatypeName, resultingMetatypeRelationshipName, noTransformations }: {limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; resultingMetatypeName?: string | undefined; resultingMetatypeRelationshipName?: string | undefined; noTransformations?: boolean}): Promise<TypeMappingT[]> {
       const query: {[key: string]: any} = {}
 
       if(limit) query.limit = limit
@@ -344,6 +350,7 @@ export class Client {
       if(sortDesc) query.sortDesc = sortDesc
       if(resultingMetatypeName) query.resultingMetatypeName = resultingMetatypeName
       if(resultingMetatypeRelationshipName) query.resultingMetatypeRelationshipName = resultingMetatypeRelationshipName
+      if(noTransformations) query.noTransformations = "true"
 
 
       return this.get<TypeMappingT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings`, query)
@@ -360,7 +367,7 @@ export class Client {
 
 
    private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -368,7 +375,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       let url: string
@@ -393,7 +400,7 @@ export class Client {
 
    // getNoData will return true if the response code falls between 200-299
    private async getNoData(uri: string, queryParams?: {[key: string]: any}): Promise<boolean> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -401,7 +408,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       let url: string
@@ -425,7 +432,7 @@ export class Client {
    }
 
    private async delete(uri: string): Promise<boolean> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -433,7 +440,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       const resp: AxiosResponse = await axios.delete(`${this.config?.rootURL}${uri}`, config)
@@ -447,7 +454,7 @@ export class Client {
    }
 
    private async post<T>(uri: string, data: any): Promise<T> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -455,7 +462,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), data, config)
@@ -470,7 +477,7 @@ export class Client {
    }
 
    private async postNoData(uri: string, data: any): Promise<boolean> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -478,7 +485,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), data, config)
@@ -491,7 +498,7 @@ export class Client {
    }
 
    private async postNoPayload(uri: string): Promise<boolean> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -499,7 +506,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), {}, config)
@@ -512,7 +519,7 @@ export class Client {
    }
 
    private async postFile(uri: string, inputName: string, file: File): Promise<boolean> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*", "Content-Type": 'multipart/form-data'}
 
       if(this.config?.auth_method === "token") {
@@ -520,7 +527,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       const formData = new FormData()
@@ -536,7 +543,7 @@ export class Client {
    }
 
    private async put<T>(uri: string,data: any): Promise<T> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -544,7 +551,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       const resp: AxiosResponse = await axios.put(`${this.config?.rootURL}${uri}`, data, config)
@@ -559,7 +566,7 @@ export class Client {
    }
 
    private async putNoData(uri: string, data: any): Promise<boolean> {
-      const config: {[key: string]: any} = {}
+      const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
       if(this.config?.auth_method === "token") {
@@ -567,7 +574,7 @@ export class Client {
       }
 
       if(this.config?.auth_method === "basic") {
-         config.auth = {username: this.config.username, password: this.config.password}
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
       const resp: AxiosResponse = await axios.put(buildURL(this.config?.rootURL!, {path: uri}), data, config)

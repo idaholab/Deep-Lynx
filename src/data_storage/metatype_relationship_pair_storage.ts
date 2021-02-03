@@ -7,13 +7,16 @@ import PostgresStorage from "./postgresStorage";
 import {QueryConfig} from "pg";
 import * as t from "io-ts";
 import PostgresAdapter from "./adapters/postgres/postgres";
+import Logger from "../logger"
+import Cache from "../services/cache/cache"
+import Config from "../config"
 
 /*
 * MetatypeRelationship Pair encompasses all logic dealing with the manipulation
 * of a relationship pair between Metatypes
 */
 export default class MetatypeRelationshipPairStorage extends PostgresStorage{
-    public static tablename = "metatype_relationship_pairs";
+    public static tableName = "metatype_relationship_pairs";
 
     private static instance: MetatypeRelationshipPairStorage;
 
@@ -64,7 +67,21 @@ export default class MetatypeRelationshipPairStorage extends PostgresStorage{
     }
 
     public async Retrieve(id:string): Promise<Result<MetatypeRelationshipPairT>>{
-        return super.retrieve<MetatypeRelationshipPairT>(MetatypeRelationshipPairStorage.retrieveStatement(id))
+        const cached = await Cache.get<MetatypeRelationshipPairT>(`${MetatypeRelationshipPairStorage.tableName}:${id}`)
+        if(cached) {
+            return new Promise(resolve => resolve(Result.Success(cached)))
+        }
+
+        const retrieved = await super.retrieve<MetatypeRelationshipPairT>(MetatypeRelationshipPairStorage.retrieveStatement(id))
+
+        if(!retrieved.isError) {
+            Cache.set(`${MetatypeRelationshipPairStorage.tableName}:${id}`, retrieved.value, Config.cache_default_ttl)
+                .then(set => {
+                    if(!set) Logger.error(`unable to insert metatype relationship pair ${id} into cache`)
+                })
+        }
+
+        return new Promise(resolve => resolve(retrieved))
     }
 
     public async RetrieveByMetatypes(origin:string, destination:string): Promise<Result<MetatypeRelationshipPairT>> {
@@ -102,6 +119,11 @@ export default class MetatypeRelationshipPairStorage extends PostgresStorage{
                 values
             })
                 .then(() => {
+                    Cache.del(`${MetatypeRelationshipPairStorage.tableName}:${id}`)
+                        .then(deleted => {
+                            if(!deleted) Logger.error(`unable to clear cache for metatype relationship pair ${id}`)
+                        })
+
                     resolve(Result.Success(true))
                 })
                 .catch(e => resolve(Result.Failure(e)))
@@ -118,6 +140,11 @@ export default class MetatypeRelationshipPairStorage extends PostgresStorage{
 
                 for(const i in ps) {
                     queries.push(MetatypeRelationshipPairStorage.fullUpdateStatement(ps[i]))
+
+                    Cache.del(`${MetatypeRelationshipPairStorage.tableName}:${ps[i].id}`)
+                        .then(deleted => {
+                            if(!deleted) Logger.error(`unable to clear cache for metatype relationship pair ${ps[i].id}`)
+                        })
                 }
 
                 super.runAsTransaction(...queries)
@@ -146,11 +173,33 @@ export default class MetatypeRelationshipPairStorage extends PostgresStorage{
     }
 
     public async Archive(pairID: string, userID: string): Promise<Result<boolean>> {
+        const toDelete = await this.Retrieve(pairID);
+
+        if(!toDelete.isError) {
+            Cache.del(`${MetatypeRelationshipPairStorage.tableName}:${pairID}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for metatype relationship pair ${pairID}`)
+                })
+        }
+
         return super.run(MetatypeRelationshipPairStorage.archiveStatement(pairID, userID))
     }
 
     public async Delete(pairID: string): Promise<Result<boolean>> {
+        const toDelete = await this.Retrieve(pairID);
+
+        if(!toDelete.isError) {
+            Cache.del(`${MetatypeRelationshipPairStorage.tableName}:${pairID}`)
+                .then(deleted => {
+                    if(!deleted) Logger.error(`unable to clear cache for metatype relationship pair ${pairID}`)
+                })
+        }
+
         return super.run(MetatypeRelationshipPairStorage.deleteStatement(pairID))
+    }
+
+    public async Count(containerID: string): Promise<Result<number>> {
+        return super.count(MetatypeRelationshipPairStorage.countStatement(containerID))
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -234,6 +283,13 @@ WHERE id = $6`,
     private static listAllStatement(containerID:string): QueryConfig {
         return {
             text: `SELECT * FROM metatype_relationship_pairs WHERE container_id = $1 AND NOT archived`,
+            values: [containerID]
+        }
+    }
+    
+    private static countStatement(containerID: string): QueryConfig {
+        return {
+            text: `SELECT COUNT(*) FROM metatype_relationship_pairs WHERE NOT archived AND container_id = $1`,
             values: [containerID]
         }
     }

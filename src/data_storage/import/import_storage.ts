@@ -1,6 +1,6 @@
 import PostgresStorage from "../postgresStorage";
 import Result from "../../result";
-import {Query, QueryConfig} from "pg";
+import {QueryConfig} from "pg";
 import {ImportT} from "../../types/import/importT";
 import uuid from "uuid";
 import {QueueProcessor} from "../../services/event_system/events";
