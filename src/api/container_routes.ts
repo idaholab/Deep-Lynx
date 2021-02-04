@@ -9,6 +9,7 @@ import ContainerImport from "../data_storage/import/container_import";
 import { ContainerImportT } from "../types/import/containerImportT";
 const Busboy = require('busboy');
 const Buffer = require('buffer').Buffer;
+const path = require('path')
 
 const storage = ContainerStorage.Instance;
 const exportStorage = ExportStorage.Instance;
@@ -150,6 +151,12 @@ export default class ContainerRoutes {
 
         // if a file has been provided, create a buffer from it
         busboy.on('file', async (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
+            const ext = path.extname(filename)
+            if (ext !== '.owl') {
+                res.status(500).send('Unsupported filetype supplied. Please provide a .owl file')
+                return
+            }
+
             file.on('data', (data) => {
                 streamChunks.push(data)
             });
@@ -189,6 +196,12 @@ export default class ContainerRoutes {
 
         // if a file has been provided, create a buffer from it
         busboy.on('file', async (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
+            const ext = path.extname(filename)
+            if (ext !== '.owl') {
+                res.status(500).send('Unsupported filetype supplied. Please provide a .owl file')
+                return
+            }
+
             file.on('data', (data) => {
                 streamChunks.push(data)
             });

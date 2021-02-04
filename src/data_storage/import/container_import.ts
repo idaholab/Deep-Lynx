@@ -643,8 +643,7 @@ export default class ContainerImport {
                   min,
                   max
                 },
-                options: propertyOptions,
-                default_value: ""
+                options: propertyOptions
               };
 
               if (thisClass.updateKeyNames.includes(keyName)) {

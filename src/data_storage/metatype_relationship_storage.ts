@@ -87,9 +87,9 @@ export default class MetatypeRelationshipStorage extends PostgresStorage{
 
    public List(containerID: string, offset: number, limit:number): Promise<Result<MetatypeRelationshipT[]>> {
         if(limit === -1) {
-            return super.rows<MetatypeT>(MetatypeRelationshipStorage.listAllStatement(containerID))
+            return super.rows<MetatypeRelationshipT>(MetatypeRelationshipStorage.listAllStatement(containerID))
         }
-        return super.rows<MetatypeT>(MetatypeRelationshipStorage.listStatement(containerID, offset, limit))
+        return super.rows<MetatypeRelationshipT>(MetatypeRelationshipStorage.listStatement(containerID, offset, limit))
    }
 
     // Update partially updates the MetatypeRelationship. This function will allow you to
