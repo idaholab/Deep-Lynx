@@ -4,7 +4,7 @@ import PostgresStorage from "./postgresStorage";
 import {QueryConfig} from "pg";
 import * as t from "io-ts";
 import PostgresAdapter from "./adapters/postgres/postgres";
-import {MetatypeRelationshipT, MetatypeRelationshipsT} from "../types/metatype_relationshipT";
+import {MetatypeRelationshipT, MetatypeRelationshipsT, metatypeRelationshipsT} from "../types/metatype_relationshipT";
 import Logger from "../logger"
 import Cache from "../services/cache/cache"
 import Config from "../config"
@@ -62,7 +62,7 @@ export default class MetatypeRelationshipStorage extends PostgresStorage{
         // allows us to accept an array of input if needed
         const payload = (t.array(t.unknown).is(input)) ? input : [input];
 
-        return super.decodeAndValidate<MetatypesT>(metatypesT, onValidateSuccess, payload)
+        return super.decodeAndValidate<MetatypeRelationshipsT>(metatypeRelationshipsT, onValidateSuccess, payload)
     }
 
 
@@ -86,7 +86,10 @@ export default class MetatypeRelationshipStorage extends PostgresStorage{
     }
 
    public List(containerID: string, offset: number, limit:number): Promise<Result<MetatypeRelationshipT[]>> {
-        return super.rows<MetatypeT>(MetatypeRelationshipStorage.listStatement(containerID, offset, limit))
+        if(limit === -1) {
+            return super.rows<MetatypeRelationshipT>(MetatypeRelationshipStorage.listAllStatement(containerID))
+        }
+        return super.rows<MetatypeRelationshipT>(MetatypeRelationshipStorage.listStatement(containerID, offset, limit))
    }
 
     // Update partially updates the MetatypeRelationship. This function will allow you to
@@ -162,7 +165,7 @@ export default class MetatypeRelationshipStorage extends PostgresStorage{
         // allows us to accept an array of input if needed
         const payload = (t.array(t.unknown).is(input)) ? input : [input];
 
-        return super.decodeAndValidate<MetatypesT>(metatypesT, onValidateSuccess, payload)
+        return super.decodeAndValidate<MetatypeRelationshipsT>(metatypeRelationshipsT, onValidateSuccess, payload)
     }
 
     public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
@@ -244,6 +247,13 @@ export default class MetatypeRelationshipStorage extends PostgresStorage{
         return {
             text: `SELECT * FROM metatype_relationships WHERE container_id = $1 AND NOT archived OFFSET $2 LIMIT $3`,
             values: [containerID, offset, limit]
+        }
+    }
+
+    private static listAllStatement(containerID:string): QueryConfig {
+        return {
+            text: `SELECT * FROM metatype_relationships WHERE container_id = $1 AND NOT archived`,
+            values: [containerID]
         }
     }
 

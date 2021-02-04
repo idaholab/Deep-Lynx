@@ -8,6 +8,7 @@
   },
   "host": "example.com",
   "basePath": "/",
+  "securityDefinitions": {},
   "schemes": [
     "http"
   ],
@@ -75,6 +76,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "Content-Type",
             "in": "header",
             "required": true,
@@ -110,6 +118,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "offset",
             "in": "query",
@@ -151,6 +166,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -195,6 +217,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -221,6 +250,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -254,6 +290,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "name",
             "in": "formData",
             "required": true,
@@ -283,6 +326,58 @@
         }
       }
     },
+    "/containers/import/{id}": {
+      "put": {
+        "summary": "Update Import",
+        "tags": [
+          "Containers"
+        ],
+        "operationId": "UpdateImport",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "name",
+            "in": "formData",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "description",
+            "in": "formData",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
     "/containers/{container-id}/permissions": {
       "post": {
         "description": "Repairs a container's permission set",
@@ -296,6 +391,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -325,6 +427,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -365,6 +474,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container_id",
             "in": "path",
             "required": true,
@@ -400,6 +516,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "limit",
             "in": "query",
@@ -446,6 +569,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container_id",
             "in": "path",
             "required": true,
@@ -478,6 +608,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container_id",
             "in": "path",
@@ -523,6 +660,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "limit",
             "in": "query",
@@ -576,6 +720,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "limit",
             "in": "query",
             "required": true,
@@ -619,6 +770,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container_id",
             "in": "path",
@@ -668,6 +826,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -710,6 +875,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "limit",
             "in": "query",
@@ -763,6 +935,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -799,6 +978,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -850,6 +1036,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -888,6 +1081,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -939,6 +1139,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -974,6 +1181,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -1018,6 +1232,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -1076,6 +1297,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -1122,6 +1350,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -1164,6 +1399,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "offset",
             "in": "query",
@@ -1210,6 +1452,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -1245,6 +1494,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -1296,6 +1552,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -1334,6 +1597,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -1387,6 +1657,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -1430,6 +1707,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -1488,6 +1772,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -1530,6 +1821,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "offset",
             "in": "query",
@@ -1586,6 +1884,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -1628,6 +1933,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "limit",
             "in": "query",
@@ -1674,6 +1986,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -1707,6 +2026,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -1744,6 +2070,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -1780,6 +2113,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -1808,6 +2148,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -1862,6 +2209,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -1897,6 +2251,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -1934,6 +2295,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -1968,6 +2336,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -2005,6 +2380,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -2038,6 +2420,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -2082,6 +2471,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -2118,6 +2514,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -2151,6 +2554,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -2190,6 +2600,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -2236,6 +2653,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -2272,6 +2696,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -2316,6 +2747,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -2368,6 +2806,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -2403,6 +2848,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "Body",
             "in": "body",
@@ -2530,6 +2982,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container_id",
             "in": "path",
             "required": true,
@@ -2565,6 +3024,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "limit",
             "in": "query",
@@ -2611,6 +3077,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container_id",
             "in": "path",
             "required": true,
@@ -2649,6 +3122,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container_id",
             "in": "path",
@@ -2837,13 +3317,13 @@
       }
     },
     "/containers/{container-id}/import/datasources/{source-id}/mappings": {
-      "post": {
-        "description": "Creates a new type mapping in storage",
-        "summary": "Create Data Type Mapping",
+      "get": {
+        "description": "Lists type mappings from storage",
+        "summary": "List Type Mappings",
         "tags": [
           "Data Type Mappings"
         ],
-        "operationId": "CreateDataTypeMapping",
+        "operationId": "ListTypeMappings",
         "deprecated": false,
         "produces": [
           "application/json"
@@ -2852,6 +3332,55 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "needsTransformations",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "description": "boolean indicating if the return should consist of only mappings that need transformations"
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "description": "boolean indicating if the return value should be a count only"
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "description": "column to sort results by"
+          },
+          {
+            "name": "sortDesc",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "description": "boolean indicating if results should be in descending order"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -2872,15 +3401,6 @@
             "required": true,
             "type": "string",
             "description": ""
-          },
-          {
-            "name": "Body",
-            "in": "body",
-            "required": true,
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/CreateDataTypeMappingRequest"
-            }
           }
         ],
         "responses": {
@@ -2891,67 +3411,7 @@
         }
       }
     },
-    "/containers/{container-id}/import/datasources/{source-id}/mappings/{mappingID}": {
-      "put": {
-        "description": "Updates a type mapping in storage.",
-        "summary": "Update Data Type Mapping",
-        "tags": [
-          "Data Type Mappings"
-        ],
-        "operationId": "UpdateDataTypeMapping",
-        "deprecated": false,
-        "produces": [
-          "application/json"
-        ],
-        "consumes": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "container-id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "source-id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "mappingID",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "Content-Type",
-            "in": "header",
-            "required": true,
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "Body",
-            "in": "body",
-            "required": true,
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/UpdateDataTypeMappingRequest"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "headers": {}
-          }
-        }
-      },
+    "/containers/{container-id}/import/datasources/{source-id}/mappings/{mapping-id}": {
       "get": {
         "description": "Retrieve a type mapping from storage.",
         "summary": "Get Data Type Mapping",
@@ -2968,6 +3428,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -2982,7 +3449,7 @@
             "description": ""
           },
           {
-            "name": "mappingID",
+            "name": "mapping-id",
             "in": "path",
             "required": true,
             "type": "string",
@@ -3002,7 +3469,277 @@
             "headers": {}
           }
         }
+      }
+    },
+    "/containers/{container-id}/import/datasources/{source-id}/mappings/{mapping-id}/transformations": {
+      "post": {
+        "description": "Retrieve a type mapping from storage.",
+        "summary": "Create Type Mapping's Transformations",
+        "tags": [
+          "Data Type Mappings"
+        ],
+        "operationId": "CreateTypeMapping'sTransformations",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "source-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "mapping-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CreateTypeMapping%27sTransformationsRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
       },
+      "get": {
+        "description": "Retrieve a type mapping from storage.",
+        "summary": "Get Type Mapping's Transformations",
+        "tags": [
+          "Data Type Mappings"
+        ],
+        "operationId": "GetTypeMapping'sTransformations",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "source-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "mapping-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/containers/{container-id}/import/datasources/{source-id}/mappings/{mapping-id}/transformations/{transformation-id}": {
+      "put": {
+        "description": "Retrieve a type mapping from storage.",
+        "summary": "Edit Type Mapping's Transformations",
+        "tags": [
+          "Data Type Mappings"
+        ],
+        "operationId": "EditTypeMapping'sTransformations",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "source-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "mapping-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "transformation-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/EditTypeMapping%27sTransformationsRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      },
+      "delete": {
+        "description": "Retrieve a type mapping from storage.",
+        "summary": "Delete Type Mapping's Transformations",
+        "tags": [
+          "Data Type Mappings"
+        ],
+        "operationId": "DeleteTypeMapping'sTransformations",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "source-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "mapping-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "transformation-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
+    "/containers/{container-id}/import/datasources/{source-id}/mappings/{mappingID}": {
       "delete": {
         "description": "Permanently removes type mapping from storage.",
         "summary": "Delete Data Type Mapping",
@@ -3018,6 +3755,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -3064,78 +3808,6 @@
         }
       }
     },
-    "/containers/{container-id}/import/datasources/{id}/mappings/unmapped": {
-      "get": {
-        "description": "Retrieve a single unmapped payload for a data source. Use this endpoint as a foundation to build a type mapping off of. This return value will allow you to create a type mapping, and should be saved as the \"example_payload\" for any type mapping created as a result of this return.",
-        "summary": "Get Unmapped Data",
-        "tags": [
-          "Data Type Mappings"
-        ],
-        "operationId": "GetUnmappedData",
-        "deprecated": false,
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "container-id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": ""
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "headers": {}
-          }
-        }
-      }
-    },
-    "/containers/{container-id}/import/datasources/{id}/mappings/unmapped/count": {
-      "get": {
-        "description": "Retrieve a single unmapped payload for a data source. Use this endpoint as a foundation to build a type mapping off of. This return value will allow you to create a type mapping, and should be saved as the \"example_payload\" for any type mapping created as a result of this return.",
-        "summary": "Count Unmapped Data",
-        "tags": [
-          "Data Type Mappings"
-        ],
-        "operationId": "GetCountUnmappedData",
-        "deprecated": false,
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "container-id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": ""
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "headers": {}
-          }
-        }
-      }
-    },
     "/containers/{container-id}/import/imports/{import-id}/data": {
       "get": {
         "summary": "List Import's Data",
@@ -3148,6 +3820,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -3185,6 +3864,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "container-id",
             "in": "path",
             "required": true,
@@ -3220,6 +3906,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -3262,6 +3955,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "container-id",
             "in": "path",
@@ -3307,6 +4007,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "Body",
             "in": "body",
             "required": true,
@@ -3334,7 +4041,15 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -3356,6 +4071,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
           {
             "name": "active",
             "in": "query",
@@ -3391,6 +4113,13 @@
         ],
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
             "name": "id",
             "in": "path",
             "required": true,
@@ -3418,51 +4147,13 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "headers": {}
-          }
-        }
-      }
-    },
-    "/login": {
-      "post": {
-        "description": "This endpoint will accept a form submission with three paramters - username, password and redirect. This endpoint will log a user in and then redirect them to the redirect url passed in as part of the form. This allows a SPA like site to log users in effectively.",
-        "summary": "Login (Local)",
-        "tags": [
-          "Misc"
-        ],
-        "operationId": "Login(Local)",
-        "deprecated": false,
-        "produces": [
-          "application/json"
-        ],
-        "consumes": [
-          "application/x-www-form-urlencoded"
-        ],
         "parameters": [
           {
-            "name": "username",
-            "in": "formData",
-            "required": true,
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "password",
-            "in": "formData",
-            "required": true,
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "redirect",
-            "in": "formData",
-            "required": true,
-            "type": "string",
-            "description": ""
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
           }
         ],
         "responses": {
@@ -3473,14 +4164,13 @@
         }
       }
     },
-    "/login-token": {
+    "/token": {
       "get": {
-        "description": "Calling this endpoint with the x-api-key and x-api-secret headers will return a JWT for the user to whom the key/secert pair belongs. This exists so that a user can programmatically use Deep Lynx by making their own calls against the service instead of using the provided UI.",
-        "summary": "Login (API Key/Secret)",
+        "summary": "OAuth - Token",
         "tags": [
           "Misc"
         ],
-        "operationId": "Login(APIKey/Secret)",
+        "operationId": "OAuth-Token",
         "deprecated": false,
         "produces": [
           "application/json"
@@ -3499,6 +4189,13 @@
             "required": true,
             "type": "string",
             "description": ""
+          },
+          {
+            "name": "x-api-expiry",
+            "in": "header",
+            "required": true,
+            "type": "string",
+            "description": ""
           }
         ],
         "responses": {
@@ -3506,7 +4203,8 @@
             "description": "",
             "headers": {}
           }
-        }
+        },
+        "security": []
       }
     }
   },
@@ -4323,54 +5021,71 @@
         "new_password"
       ]
     },
-    "CreateDataTypeMappingRequest": {
-      "title": "CreateDataTypeMappingRequest",
+    "CreateTypeMapping'sTransformationsRequest": {
+      "title": "CreateTypeMapping'sTransformationsRequest",
       "example": {
-        "type_key": "type",
-        "type_value": "EQUIPMENT",
-        "unique_identifier_key": "id",
         "metatype_id": "",
+        "conditions": [
+          {
+            "key": "RADIUS",
+            "operator": "eq",
+            "value": "CIRCLE"
+          }
+        ],
         "keys": [
           {
             "key": "RADIUS",
             "metatype_key_id": ""
           }
-        ],
-        "example_payload": {
-          "RADIUS": 0.1
-        }
+        ]
       },
       "type": "object",
       "properties": {
-        "type_key": {
-          "type": "string"
-        },
-        "type_value": {
-          "type": "string"
-        },
-        "unique_identifier_key": {
-          "type": "string"
-        },
         "metatype_id": {
           "type": "string"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Condition"
+          }
         },
         "keys": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/Key"
           }
-        },
-        "example_payload": {
-          "$ref": "#/definitions/ExamplePayload"
         }
       },
       "required": [
-        "type_key",
-        "type_value",
-        "unique_identifier_key",
         "metatype_id",
-        "keys",
-        "example_payload"
+        "conditions",
+        "keys"
+      ]
+    },
+    "Condition": {
+      "title": "Condition",
+      "example": {
+        "key": "RADIUS",
+        "operator": "eq",
+        "value": "CIRCLE"
+      },
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "operator": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "operator",
+        "value"
       ]
     },
     "Key": {
@@ -4393,70 +5108,46 @@
         "metatype_key_id"
       ]
     },
-    "ExamplePayload": {
-      "title": "ExamplePayload",
+    "EditTypeMapping'sTransformationsRequest": {
+      "title": "EditTypeMapping'sTransformationsRequest",
       "example": {
-        "RADIUS": 0.1
-      },
-      "type": "object",
-      "properties": {
-        "RADIUS": {
-          "type": "number",
-          "format": "double"
-        }
-      },
-      "required": [
-        "RADIUS"
-      ]
-    },
-    "UpdateDataTypeMappingRequest": {
-      "title": "UpdateDataTypeMappingRequest",
-      "example": {
-        "type_key": "type",
-        "type_value": "EQUIPMENT",
-        "unique_identifier_key": "id",
         "metatype_id": "",
+        "conditions": [
+          {
+            "key": "RADIUS",
+            "operator": "eq",
+            "value": "CIRCLE"
+          }
+        ],
         "keys": [
           {
             "key": "RADIUS",
             "metatype_key_id": ""
           }
-        ],
-        "example_payload": {
-          "RADIUS": 0.1
-        }
+        ]
       },
       "type": "object",
       "properties": {
-        "type_key": {
-          "type": "string"
-        },
-        "type_value": {
-          "type": "string"
-        },
-        "unique_identifier_key": {
-          "type": "string"
-        },
         "metatype_id": {
           "type": "string"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Condition"
+          }
         },
         "keys": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/Key"
           }
-        },
-        "example_payload": {
-          "$ref": "#/definitions/ExamplePayload"
         }
       },
       "required": [
-        "type_key",
-        "type_value",
-        "unique_identifier_key",
         "metatype_id",
-        "keys",
-        "example_payload"
+        "conditions",
+        "keys"
       ]
     },
     "DeleteDataTypeMappingRequest": {
@@ -4507,6 +5198,22 @@
         "metatype_id",
         "keys",
         "example_payload"
+      ]
+    },
+    "ExamplePayload": {
+      "title": "ExamplePayload",
+      "example": {
+        "RADIUS": 0.1
+      },
+      "type": "object",
+      "properties": {
+        "RADIUS": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "required": [
+        "RADIUS"
       ]
     },
     "CreateRegisteredEventRequest": {

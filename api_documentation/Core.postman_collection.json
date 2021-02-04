@@ -239,6 +239,57 @@
 					"response": []
 				},
 				{
+					"name": "Update Import",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "",
+									"type": "file",
+									"src": "/Users/browjm2/OneDrive - Idaho National Laboratory/Developer/DIAMOND/diamond.owl"
+								},
+								{
+									"key": "name",
+									"value": "DIAMOND",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "obo:IAO_0000115",
+									"type": "text"
+								},
+								{
+									"key": "path",
+									"value": "https://raw.githubusercontent.com/idaholab/DIAMOND/master/diamond.owl",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/import/:id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								"import",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Repair Permissions",
 					"request": {
 						"method": "POST",

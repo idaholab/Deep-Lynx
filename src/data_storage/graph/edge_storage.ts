@@ -331,6 +331,10 @@ export default class EdgeStorage extends PostgresStorage{
         return super.rows<EdgeT>(EdgeStorage.listStatement(containerID, offset, limit))
     }
 
+    public async ListByRelationshipPairID(id: string, offset: number, limit:number): Promise<Result<EdgeT[]>> {
+        return super.rows<EdgeT>(EdgeStorage.listByRelationshipPairIDStatement(id, offset, limit))
+    }
+
     public async RetriveByOriginAndDestination(originID: string, destinationID: string): Promise<Result<EdgeT[]>> {
         return super.rows<EdgeT>(EdgeStorage.retrieveByOriginAndDestinationStatement(originID, destinationID))
     }
@@ -543,6 +547,13 @@ UPDATE SET container_id = $2, relationship_pair_id = $3, graph_id = $4, origin_n
         return {
             text:`DELETE FROM edges WHERE id = $1`,
             values: [edgeID]
+        }
+    }
+
+    private static listByRelationshipPairIDStatement(relationshipPairID: string, offset:number, limit:number): QueryConfig {
+        return {
+            text: `SELECT * FROM edges WHERE relationship_pair_id = $1 AND NOT archived OFFSET $2 LIMIT $3`,
+            values: [relationshipPairID, offset, limit]
         }
     }
 }
