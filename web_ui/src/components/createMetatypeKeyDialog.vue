@@ -1,20 +1,20 @@
 <template>
-  <v-dialog v-model="dialog" @click:outside="dialog = false; reset()" max-width="60%">
+  <v-dialog v-model="dialog" @click:outside="dialog = false" max-width="60%">
     <template v-slot:activator="{ on }">
       <v-icon
           v-if="icon"
           small
           class="mr-2"
           v-on="on"
-      >mdi-card-plus</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("createMetatype.createMetatype")}}</v-btn>
+      >mdi-pencil</v-icon>
+      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("createMetatypeKey.newKey")}}</v-btn>
     </template>
 
     <v-card>
       <v-card-text>
         <v-container>
           <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('createMetatype.newMetatype')}}</span>
+          <span class="headline">{{$t('createMetatypeKey.newKey')}}</span>
           <v-row>
             <v-col :cols="12">
 
@@ -23,15 +23,102 @@
                   v-model="formValid"
               >
                 <v-text-field
-                    v-model="name"
-                    :label="$t('createMetatype.name')"
-                    required
-                ></v-text-field>
-                <v-textarea
-                    v-model="description"
-                    :label="$t('createMetatype.description')"
-                ></v-textarea>
+                    v-model="metatypeKey.name"
+                    :rules="[v => !!v || $t('createMetatypeKey.nameRequired')]"
+                >
+                  <template v-slot:label>{{$t('createMetatypeKey.name')}} <small style="color:red" >{{$t("createMetatypeKey.requiredSmall")}}</small></template>
+                </v-text-field>
 
+                <v-text-field
+                    v-model="metatypeKey.property_name"
+                    :rules="[v => !!v || $t('createMetatypeKey.propertyNameRequired')]"
+                    required
+                >
+                  <template v-slot:label>{{$t('createMetatypeKey.propertyName')}} <small style="color:red" >{{$t("createMetatypeKey.requiredSmall")}}</small></template>
+                </v-text-field>
+                <v-select
+                    v-model="metatypeKey.data_type"
+                    :items="dataTypes"
+                    @change="metatypeKey.default_value = undefined"
+                    :rules="[v => !!v || $t('createMetatypeKey.dataTypeRequired')]"
+                    required
+                >
+                  <template v-slot:label>{{$t('createMetatypeKey.dataType')}} <small style="color:red" >{{$t("createMetatypeKey.requiredSmall")}}</small></template>
+                </v-select>
+                <v-checkbox
+                    v-model="metatypeKey.required"
+                >
+                  <template v-slot:label>{{$t('createMetatypeKey.required')}} <small style="color:#ff0000" >{{$t("createMetatypeKey.requiredSmall")}}</small></template>
+                </v-checkbox>
+                <v-textarea
+                    v-model="metatypeKey.description"
+                    :rows="2"
+                    :rules="[v => !!v || $t('createMetatypeKey.descriptionRequired')]"
+                >
+                  <template v-slot:label>{{$t('createMetatypeKey.description')}} <small style="color:#ff0000" >{{$t("createMetatypeKey.requiredSmall")}}</small></template>
+                </v-textarea>
+
+                <h3>{{$t('createMetatypeKey.validation')}}</h3>
+                <v-text-field
+                    v-model="metatypeKey.validation.regex"
+                    :label="$t('createMetatypeKey.regex')"
+                >
+                  <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeKey.regexHelp')"></info-tooltip></template>
+                </v-text-field>
+                <v-text-field
+                    v-model="metatypeKey.validation.max"
+                    :disabled="metatypeKey.validation.regex === ''"
+                    type="number"
+                    :label="$t('createMetatypeKey.max')"
+                >
+                  <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeKey.maxHelp')"></info-tooltip></template>
+                </v-text-field>
+                <v-text-field
+                    v-model="metatypeKey.validation.min"
+                    :disabled="metatypeKey.validation.regex === ''"
+                    type="number"
+                    :label="$t('createMetatypeKey.min')"
+                >
+                  <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeKey.minHelp')"></info-tooltip></template>
+                </v-text-field>
+
+
+
+                <!-- default value and options should be comboboxes when set to enumeration -->
+                <div v-if="metatypeKey.data_type === 'enumeration'" >
+                  <v-combobox
+                      v-model="metatypeKey.default_value"
+                      multiple
+                      chips
+                  ></v-combobox>
+                </div>
+
+                <div v-if="metatypeKey.data_type !== 'enumeration'" >
+                  <v-text-field
+                      v-if="metatypeKey.data_type === 'number'"
+                      v-model="metatypeKey.default_value"
+                      type="number"
+                      :label="$t('createMetatypeKey.defaultValue')"
+                  ></v-text-field>
+                  <v-checkbox
+                      v-else-if="metatypeKey.data_type === 'boolean'"
+                      v-model="metatypeKey.default_value"
+                      :label="$t('createMetatypeKey.defaultValue')"
+                  >
+                  </v-checkbox>
+                  <v-text-field
+                      v-else
+                      v-model="metatypeKey.default_value"
+                      :label="$t('createMetatypeKey.defaultValue')"
+                  ></v-text-field>
+                </div>
+
+                <v-combobox
+                    v-model="metatypeKey.options"
+                    :label="$t('createMetatypeKey.options')"
+                    multiple
+                    chips
+                ></v-combobox>
               </v-form>
             </v-col>
           </v-row>
@@ -40,51 +127,50 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false; reset()" >{{$t("createMetatype.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" :disabled="!formValid" text @click="createMetatype()">{{$t("createMetatype.save")}}</v-btn>
+        <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("createMetatypeKey.cancel")}}</v-btn>
+        <v-btn color="blue darken-1" :disabled="!formValid" text @click="createMetatypeKey()">{{$t("createMetatypeKey.create")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
+import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
+import {MetatypeKeyT, MetatypeT} from "../api/types";
 
 @Component
 export default class CreateMetatypeKeyDialog extends Vue {
   @Prop({required: true})
-  containerID!: string;
+  metatype!: MetatypeT;
 
   @Prop({required: false})
   readonly icon!: boolean
 
   errorMessage = ""
   dialog = false
-  name = ""
-  description = ""
   formValid = false
+  metatypeKey: MetatypeKeyT = {validation: {}, required: false} as MetatypeKeyT
+  dataTypes = ["number", "date", "string", "boolean", "enumeration", "file"]
 
-  createMetatype() {
-    this.$client.createMetatype(this.containerID, this.name, this.description)
-        .then(result => {
-          if(!result) {
-            this.errorMessage = this.$t('createMetatype.errorCreatingAPI') as string
-          } else {
-            this.dialog = false
-            // emit only the first object in the result array, as we're only creating
-            // a single metatype
-            this.$emit('metatypeCreated', result[0])
-            this.reset()
-          }
-        })
-        .catch(e => this.errorMessage = this.$t('createMetatype.errorCreatingAPI') as string + e)
+  @Watch('dialog', {immediate: true})
+  onDialogChange() {
+    if(this.dialog) this.metatypeKey = {validation: {}, required: false} as MetatypeKeyT
   }
 
-  reset() {
-    this.name = ""
-    this.description = ""
+  createMetatypeKey() {
+    if(this.metatypeKey) {
+      this.$client.createMetatypeKey(this.metatype.container_id, this.metatype.id, this.metatypeKey)
+          .then(result => {
+            if(!result) {
+              this.errorMessage = this.$t('createMetatypeKey.errorCreatingAPI') as string
+            } else {
+              this.dialog = false
+              this.$emit('metatypeKeyCreated', result[0])
+            }
+          })
+          .catch(e => this.errorMessage = this.$t('createMetatypeKey.errorCreatingAPI') as string + e)
+    }
   }
 
 }
-
 </script>

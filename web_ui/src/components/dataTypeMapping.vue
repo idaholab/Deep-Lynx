@@ -77,8 +77,7 @@
 </template>
 
 <script lang="ts">
-    // TODO SET ACTIVE/INACTIVE TYPE MAPPING
-    import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
+    import {Component, Prop, Vue} from 'vue-property-decorator'
     import {
       ImportDataT,
       TypeMappingT, TypeMappingTransformationT

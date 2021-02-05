@@ -15,6 +15,12 @@
       <template v-slot:top>
         <error-banner :message="errorMessage"></error-banner>
         <success-banner :message="successMessage"></success-banner>
+        <v-alert type="success" v-if="createdRelationship">
+          {{$t('metatypeRelationships.metatypeSuccessfullyCreated')}} -
+          <span>
+            <edit-metatype-relationship-dialog :metatypeRelationship="createdRelationship"></edit-metatype-relationship-dialog>
+          </span>
+        </v-alert>
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t('metatypeRelationships.metatypeRelationships')}}</v-toolbar-title>
           <v-divider
@@ -23,47 +29,7 @@
               vertical
           ></v-divider>
           <v-spacer></v-spacer>
-          <v-dialog v-model="dialog" max-width="500px">
-            <template v-slot:activator="{ on }">
-              <v-btn color="primary" dark class="mb-2" v-on="on">{{$t('metatypeRelationships.newRelationship')}}</v-btn>
-            </template>
-            <v-card>
-              <v-card-title>
-                <span class="headline">{{$t("metatypeRelationships.formTitle")}}</span>
-              </v-card-title>
-
-              <v-card-text>
-                <v-container>
-                  <v-row>
-                    <v-col :cols="12">
-
-                      <v-form
-                          ref="form"
-                          v-model="valid"
-                          lazy-validation
-                      >
-                        <v-text-field
-                            v-model="name"
-                            label="Name"
-                            required
-                        ></v-text-field>
-                        <v-textarea
-                            v-model="description"
-                            label="Description"
-                        ></v-textarea>
-                      </v-form>
-                    </v-col>
-                  </v-row>
-                </v-container>
-              </v-card-text>
-
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("home.cancel")}}</v-btn>
-                <v-btn color="blue darken-1" text @click="newMetatypeRelationship()">{{$t("home.save")}}</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
+          <create-metatype-relationship-dialog :containerID="containerID" @metatypeRelationshipCreated="recentlyCreatedRelationship"></create-metatype-relationship-dialog>
         </v-toolbar>
         <v-row>
           <v-col :cols="6">
@@ -75,13 +41,7 @@
         </v-row>
       </template>
       <template v-slot:[`item.actions`]="{ item }">
-        <v-icon
-            small
-            class="mr-2"
-            @click="enableMetatypeRelationshipEdit(item)"
-        >
-          mdi-pencil
-        </v-icon>
+        <edit-metatype-relationship-dialog :metatypeRelationship="item" :icon="true" @metatypeRelationshipEdited="loadMetatypeRelationships"></edit-metatype-relationship-dialog>
         <v-icon
             small
             @click="deleteRelationship(item)"
@@ -90,77 +50,29 @@
         </v-icon>
       </template>
     </v-data-table>
-    <v-dialog v-model="editDialog" max-width="500px">
-
-      <v-card>
-        <v-card-title>
-          <span class="headline">Edit {{selectedRelationship.name}}</span>
-        </v-card-title>
-
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col :cols="12">
-
-                <v-form
-                    ref="form"
-                    v-model="valid"
-                    lazy-validation
-                >
-                  <v-text-field
-                      v-model="selectedRelationship.name"
-                      label="Name"
-                      required
-                  ></v-text-field>
-                  <v-textarea
-                      v-model="selectedRelationship.description"
-                      label="Description"
-                  ></v-textarea>
-
-                </v-form>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="editDialog = false" >{{$t("home.cancel")}}</v-btn>
-          <v-btn color="blue darken-1" text @click="editMetatypeRelationship()">{{$t("home.save")}}</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </div>
 </template>
 
 <script lang="ts">
 import {MetatypeRelationshipT} from '@/api/types';
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
+import EditMetatypeRelationshipDialog from "@/components/editMetatypeRelationshipDialog.vue";
+import CreateMetatypeRelationshipDialog from "@/components/createMetatypeRelationshipDialog.vue";
 
-@Component
+@Component({components: {
+    EditMetatypeRelationshipDialog,
+    CreateMetatypeRelationshipDialog
+  }})
 export default class MetatypeRelationships extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
 
   errorMessage = ""
   successMessage = ""
-  dialog= false
-  editDialog= false
-  valid = null
   loading = false
   metatypeRelationships: MetatypeRelationshipT[] = []
+  createdRelationship: MetatypeRelationshipT | null = null
   metatypeRelationshipCount = 0
-  selectedRelationship: MetatypeRelationshipT = {
-    id: "",
-    container_id: this.containerID,
-    name: "",
-    properties: [],
-    description: "",
-    created_at: "",
-    modified_at: "",
-    created_by: "",
-    modified_by: ""
-  }
   name = ""
   description = ""
   options: {
@@ -239,32 +151,17 @@ export default class MetatypeRelationships extends Vue {
         .catch((e: any) => this.errorMessage = e)
   }
 
-
-  newMetatypeRelationship() {
-    this.$client.createMetatypeRelationship(this.containerID, {"name": this.name, "description": this.description})
-    this.loadMetatypeRelationships()
-    this.dialog = false
-    this.name = ""
-    this.description = ""
-  }
-
-  enableMetatypeRelationshipEdit(item: any) {
-    this.editDialog = true
-    this.selectedRelationship = item
-  }
-
-  editMetatypeRelationship() {
-    this.$client.updateMetatypeRelationship(this.containerID, this.selectedRelationship.id,
-        {"name": this.selectedRelationship.name, "description": this.selectedRelationship.description})
-    this.editDialog = false
-  }
-
   deleteRelationship(item: any) {
     this.$client.deleteMetatypeRelationship(this.containerID, item.id)
         .then(() => {
           this.loadMetatypeRelationships()
         })
         .catch(e => console.log(e))
+  }
+
+  recentlyCreatedRelationship(relationship: MetatypeRelationshipT) {
+    this.createdRelationship = relationship
+    this.loadMetatypeRelationships()
   }
 }
 </script>

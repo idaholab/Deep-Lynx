@@ -34,7 +34,7 @@
                     :rules="[v => !!v || $t('editMetatypeKey.propertyNameRequired')]"
                     required
                 >
-                  <template v-slot:label>{{$t('editMetatypeKey.property_name')}} <small style="color:red" >{{$t("editMetatypeKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeKey.propertyName')}} <small style="color:red" >{{$t("editMetatypeKey.requiredSmall")}}</small></template>
                 </v-text-field>
                 <v-select
                     v-model="selectedMetatypeKey.data_type"
@@ -115,10 +115,10 @@
 
                 <v-combobox
                     v-model="selectedMetatypeKey.options"
+                    :label="$t('editMetatypeKey.options')"
                     multiple
                     chips
                 ></v-combobox>
-
               </v-form>
             </v-col>
           </v-row>
@@ -127,8 +127,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("editMetatypeKeyKey.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" :disabled="!formValid" text @click="editMetatypeKey()">{{$t("editMetatypeKeyKey.save")}}</v-btn>
+        <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("editMetatypeKey.cancel")}}</v-btn>
+        <v-btn color="blue darken-1" :disabled="!formValid" text @click="editMetatypeKey()">{{$t("editMetatypeKey.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -167,9 +167,6 @@ export default class EditMetatypeKeyDialog extends Vue {
 
   editMetatypeKey() {
     if(this.selectedMetatypeKey) {
-     // before we send it off, we need to remove the modified_by, created_by etc.
-
-
       this.$client.updateMetatypeKey(this.metatype.container_id,this.metatype.id, this.selectedMetatypeKey?.id!, this.selectedMetatypeKey)
           .then(result => {
             if(!result) {
@@ -182,8 +179,5 @@ export default class EditMetatypeKeyDialog extends Vue {
           .catch(e => this.errorMessage = this.$t('editMetatypeKey.errorUpdatingAPI') as string + e)
     }
   }
-
-
 }
-
 </script>

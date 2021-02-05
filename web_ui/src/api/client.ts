@@ -152,6 +152,10 @@ export class Client {
       return this.get<MetatypeKeyT[]>(`/containers/${containerID}/metatypes/${metatypeID}/keys`)
    }
 
+   createMetatypeKey(containerID: string, metatypeID: string, key: MetatypeKeyT): Promise<MetatypeKeyT[]> {
+      return this.post<MetatypeKeyT[]>(`/containers/${containerID}/metatypes/${metatypeID}/keys`, key)
+   }
+
    deleteMetatypeKey(containerID: string, metatypeID: string, keyID: string): Promise<boolean> {
       return this.delete(`/containers/${containerID}/metatypes/${metatypeID}/keys/${keyID}`)
    }
@@ -178,16 +182,16 @@ export class Client {
       return this.get<MetatypeRelationshipT>(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}`)
    }
 
-   createMetatypeRelationship(containerID: string, metatypeRelationship: any): Promise<MetatypeRelationshipT> {
-      return this.post<MetatypeRelationshipT>(`/containers/${containerID}/metatype_relationships`, metatypeRelationship)
+   createMetatypeRelationship(containerID: string, name: string, description: string): Promise<MetatypeRelationshipT[]> {
+      return this.post<MetatypeRelationshipT[]>(`/containers/${containerID}/metatype_relationships`, {name, description})
    }
 
    retrieveMetatypeRelationshipPair(containerID: string, metatypeRelationshipPairID: string): Promise<MetatypeRelationshipPairT> {
       return this.get<MetatypeRelationshipPairT>(`/containers/${containerID}/metatype_relationship_pairs/${metatypeRelationshipPairID}`)
    }
 
-   updateMetatypeRelationship(containerID: string, metatypeRelationshipID: string, metatypeRelationship: any): Promise<MetatypeRelationshipT> {
-      return this.put<MetatypeRelationshipT>(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}`, metatypeRelationship)
+   updateMetatypeRelationship(containerID: string, metatypeRelationshipID: string, metatypeRelationship: any): Promise<boolean> {
+      return this.put<boolean>(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}`, metatypeRelationship)
    }
 
    deleteMetatypeRelationship(containerID: string, metatypeRelationshipID: string): Promise<boolean> {
@@ -208,6 +212,18 @@ export class Client {
 
    listMetatypeRelationshipKeys(containerID: string, relationshipID: string): Promise<MetatypeRelationshipKeyT[]> {
       return this.get<MetatypeRelationshipKeyT[]>(`/containers/${containerID}/metatype_relationships/${relationshipID}/keys`)
+   }
+
+   deleteMetatypeRelationshipKey(containerID: string, metatypeRelationshipID: string, keyID: string): Promise<boolean> {
+      return this.delete(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}/keys/${keyID}`)
+   }
+
+   createMetatypeRelationshipKey(containerID: string, metatypeRelationshipID: string, key: MetatypeRelationshipKeyT): Promise<MetatypeRelationshipKeyT[]> {
+      return this.post<MetatypeRelationshipKeyT[]>(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}/keys`, key)
+   }
+
+   updateMetatypeRelationshipKey(containerID: string, metatypeRelationshipID: string, keyID: string, key: MetatypeRelationshipKeyT): Promise<boolean> {
+      return this.put<boolean>(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}/keys/${keyID}`, key)
    }
 
    createDataSource(containerID: string, dataSource: any): Promise<DataSourceT> {

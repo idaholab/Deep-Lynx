@@ -161,6 +161,7 @@ export default class Metatypes extends Vue {
 
   recentlyCreatedMetatype(metatype: MetatypeT) {
     this.createdMetatype = metatype
+    this.loadMetatypes()
   }
 }
 </script>

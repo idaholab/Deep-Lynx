@@ -37,7 +37,7 @@
             <v-col :cols="12" v-if="keysLoading">
               <v-progress-linear indeterminate></v-progress-linear>
             </v-col>
-            <v-col :cols="12" v-if="selectedMetatype.properties && selectedMetatype.properties.length > 0">
+            <v-col :cols="12">
               <v-data-table
                   :headers="headers()"
                   :items="selectedMetatype.properties"
@@ -57,7 +57,7 @@
                         vertical
                     ></v-divider>
                     <v-spacer></v-spacer>
-                    <!-- create metatype key here -->
+                    <create-metatype-key-dialog :metatype="metatype" @metatypeKeyCreated="loadKeys()"></create-metatype-key-dialog>
                   </v-toolbar>
                 </template>
                 <template v-slot:[`item.actions`]="{ item }">
