@@ -344,9 +344,8 @@ export default class ContainerImport {
 
             if (property.property_type === 'primitive') {
               const dataProp = dataPropertyMap.get(property.value);
-              const propName = thisClass.name + ' : ' + dataProp.name
 
-              thisClass.keys.push(propName)
+              thisClass.keys.push(dataProp.name)
             } else if (property.property_type === 'relationship') {
               // use relationshipIDMap for accessing relationships by ID
               const relationship = relationshipIDMap.get(property.value);
@@ -606,7 +605,7 @@ export default class ContainerImport {
 
             if (property.property_type === 'primitive') {
               const dataProp = dataPropertyMap.get(property.value);
-              let propertyOptions = [""];
+              let propertyOptions = [];
 
               if (dataProp.dp_enum !== null) {
                 propertyOptions = dataProp.dp_enum;
@@ -630,12 +629,12 @@ export default class ContainerImport {
                   break;
               }
 
-              const keyName = thisClass.name + ' : ' + dataProp.name
+              const propName = dataProp.name.split(" ").join('_')
               const data: MetatypeKeyT = {
                 metatype_id: thisClass.db_id,
-                name: keyName,
+                name: dataProp.name,
                 required: false,
-                property_name: dataProp.name,
+                property_name: propName,
                 description: dataProp.description,
                 data_type: property.target,
                 validation: {
@@ -643,11 +642,11 @@ export default class ContainerImport {
                   min,
                   max
                 },
-                options: propertyOptions
+                options: (propertyOptions.length > 0) ? propertyOptions : undefined
               };
 
-              if (thisClass.updateKeyNames.includes(keyName)) {
-                const originalKeyData = thisClass.updateKeys.get(keyName)
+              if (thisClass.updateKeyNames.includes(dataProp.name)) {
+                const originalKeyData = thisClass.updateKeys.get(dataProp.name)
                 data.id = originalKeyData.id
                 updateKeys.push(data)
               } else {
