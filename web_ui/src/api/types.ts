@@ -57,13 +57,11 @@ export type MetatypeKeyT= {
     description: string;
     data_type: "number" | "date" | "string" | "boolean" | "enumeration" | "file";
     archived: boolean;
-    cardinality: number | undefined;
     validation: {
         regex: string;
         min: number;
         max: number;
     } | undefined;
-    unique: boolean;
     options: string[] | undefined;
     default_value: string | boolean | number | any[] | undefined;
     created_at: string;

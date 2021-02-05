@@ -50,7 +50,31 @@ export default {
       description: "Description",
       actions: "Actions",
       searchName: "Search Name",
-      searchDescription: "Search Description"
+      searchDescription: "Search Description",
+      metatypeSuccessfullyCreated: "Metatype created successfully"
+    },
+    editMetatype: {
+      editMetatype: "Edit Metatype",
+      edit: "Edit",
+      name: "Name",
+      description: "Description",
+      save: "Save",
+      cancel: "Cancel",
+      errorUpdatingAPI: "Error communicating with Deep Lynx:",
+      keys: "Properties",
+      keyName: "Name",
+      keyDescription: "Description",
+      keyType: "Data Type",
+      keyActions: "Actions"
+    },
+    createMetatype: {
+      createMetatype: "Create Metatype",
+      newMetatype: "New Metatype",
+      name: "Name",
+      description: "Description",
+      save: "Save",
+      cancel: "Cancel",
+      errorCreatingAPI: "Error communicating with Deep Lynx:"
     },
     metatypeRelationships: {
       metatypeRelationships: "Metatype Relationships",

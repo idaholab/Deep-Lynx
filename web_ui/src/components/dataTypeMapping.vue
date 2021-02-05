@@ -83,7 +83,6 @@
       ImportDataT,
       TypeMappingT, TypeMappingTransformationT
     } from "../api/types";
-    import InfoTooltip from "@/components/infoTooltip.vue";
     import TransformationDialog from "@/components/transformationDialog.vue";
 
     @Component({
@@ -92,7 +91,7 @@
                 return JSON.stringify(value, null, 2)
             }
         },
-        components: {TransformationDialog, InfoTooltip}
+        components: {TransformationDialog}
     })
     export default class DataTypeMapping extends Vue {
 

@@ -12,6 +12,7 @@ import ClientPlugin  from "@/api/client";
 import Config from "@/config";
 import ErrorBanner from "@/components/errorBanner.vue";
 import SuccessBanner from "@/components/successBanner.vue";
+import InfoTooltip from "@/components/infoTooltip.vue";
 
 Vue.config.productionTip = false;
 Vue.use(ElementUI);
@@ -36,6 +37,7 @@ Vue.use(AuthPlugin)
 // register our error handling banner for use across the whole app
 Vue.component('error-banner', ErrorBanner)
 Vue.component('success-banner', SuccessBanner)
+Vue.component('info-tooltip', InfoTooltip)
 
 new Vue({
   i18n,

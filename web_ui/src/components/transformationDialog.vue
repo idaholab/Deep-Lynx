@@ -424,7 +424,6 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
-import InfoTooltip from "@/components/infoTooltip.vue";
 import {
   MetatypeKeyT,
   MetatypeRelationshipKeyT,
@@ -442,9 +441,6 @@ import {getNestedValue} from "@/utilities";
     pretty: function(value: any) {
       return JSON.stringify(value, null, 2)
     }
-  },
-  components: {
-    InfoTooltip
   }})
 export default class TransformationDialog extends Vue {
   @Prop({required: true})

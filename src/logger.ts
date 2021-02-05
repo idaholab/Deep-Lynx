@@ -39,6 +39,7 @@ export class Winston implements Logger {
   private constructor() {
     this.logger = winston.createLogger({
       level: Config.log_level,
+      silent: Config.log_level === 'silent',
       transports: [
         new winston.transports.Console({
           format: winston.format.combine(

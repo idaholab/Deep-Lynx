@@ -65,11 +65,8 @@
 
 <script lang="ts">
    import {Component, Vue} from 'vue-property-decorator'
-   import InfoTooltip from "@/components/infoTooltip.vue";
 
-    @Component({components: {
-      InfoTooltip
-      }})
+    @Component
     export default class NewContainerDialog extends Vue {
         errorMessage = ""
         loading = false
