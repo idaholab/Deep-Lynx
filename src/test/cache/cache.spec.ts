@@ -1,6 +1,7 @@
 /* tslint:disable */
 import {expect} from 'chai'
 import {MemoryCacheImpl, RedisCacheImpl} from "../../services/cache/cache"
+import Logger from "../../logger";
 
 describe('Memory Cache implementation can', async() => {
     it('save an item to the cache', async()=> {
@@ -59,6 +60,14 @@ describe('Memory Cache implementation can', async() => {
 });
 
 describe('Redis cache implementation can', async() => {
+    before(function() {
+        if (process.env.CACHE_REDIS_CONNECTION_STRING=== "") {
+            Logger.debug("skipping redis tests, no redis instance configured");
+            this.skip()
+        }
+    });
+
+
     it('save an item to the cache', async()=> {
         const cache = new RedisCacheImpl()
 

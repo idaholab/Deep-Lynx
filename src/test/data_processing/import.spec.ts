@@ -39,7 +39,7 @@ describe('A data import', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 config: {}});
 
         expect(exp.isError).false;
@@ -64,7 +64,7 @@ describe('A data import', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 config: {}});
 
         expect(exp.isError).false;
@@ -103,8 +103,8 @@ describe('A data import', async() => {
         let exp = await storage.Create(containerID, "test suite",
             {
                 name: "Test Data Source",
-                active:false,
-                adapter_type:"http",
+                active:true,
+                adapter_type:"manual",
                 config: {}});
 
         expect(exp.isError).false;
@@ -156,7 +156,7 @@ describe('A data import', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 config: {}});
 
         expect(exp.isError).false;
@@ -189,7 +189,7 @@ describe('A data import', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 config: {}});
 
         expect(exp.isError).false;
@@ -222,7 +222,7 @@ describe('A data import', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 config: {}});
 
         expect(exp.isError).false;

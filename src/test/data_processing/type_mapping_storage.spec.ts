@@ -52,7 +52,7 @@ describe('A Data Type Mapping', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 data_format: "json",
                 config: {}});
 
@@ -88,7 +88,7 @@ describe('A Data Type Mapping', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 data_format: "json",
                 config: {}});
 
@@ -126,7 +126,7 @@ describe('A Data Type Mapping', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 data_format: "json",
                 config: {}});
 
@@ -166,7 +166,7 @@ describe('A Data Type Mapping', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 data_format: "json",
                 config: {}});
 
@@ -209,7 +209,7 @@ describe('A Data Type Mapping', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 data_format: "json",
                 config: {}});
 
@@ -271,7 +271,7 @@ describe('A Data Type Mapping Transformation', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 data_format: "json",
                 config: {}});
 
@@ -321,7 +321,7 @@ describe('A Data Type Mapping Transformation', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 data_format: "json",
                 config: {}});
 
@@ -373,7 +373,7 @@ describe('A Data Type Mapping Transformation', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 data_format: "json",
                 config: {}});
 
