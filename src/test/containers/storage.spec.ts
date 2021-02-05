@@ -7,13 +7,15 @@ import Logger from "../../logger";
 
 describe('A Container', async() => {
 
-    before(function() {
-       if (process.env.CORE_DB_CONNECTION_STRING === "") {
-           Logger.debug("skipping container tests, no storage layer");
-           this.skip()
-       }
+    before(async function() {
+        if (process.env.CORE_DB_CONNECTION_STRING === "") {
+            Logger.debug("skipping container tests, no storage layer");
+            this.skip()
+        }
 
-        return PostgresAdapter.Instance.init()
+        await PostgresAdapter.Instance.init()
+
+        return Promise.resolve()
     });
 
     it('can be saved to storage', async()=> {

@@ -34,9 +34,8 @@ describe('A Data Source', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
-                data_format: "json",
-                config: {}});
+                adapter_type:"manual",
+                data_format: "json"});
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -51,9 +50,8 @@ describe('A Data Source', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
-                data_format: "json",
-                config: {}});
+                adapter_type:"manual",
+                data_format: "json"});
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -72,7 +70,7 @@ describe('A Data Source', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 data_format: "json",
                 poll_interval:2,
                 config: {}});
@@ -99,7 +97,7 @@ describe('A Data Source', async() => {
             {
                 name: "Test Data Source",
                 active:true ,
-                adapter_type:"http",
+                adapter_type:"manual",
                 data_format: "json",
                 poll_interval:2,
                 config: {}});
@@ -137,7 +135,7 @@ describe('A Data Source', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 data_format: "json",
                 config: {}});
 

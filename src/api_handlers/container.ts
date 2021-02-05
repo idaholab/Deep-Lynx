@@ -2,7 +2,7 @@ import Result from "../result";
 import {UserT} from "../types/user_management/userT";
 import {ContainersT, ContainerT} from "../types/containerT";
 import ContainerStorage from "../data_storage/container_storage";
-import {Authorization} from "../user_management/authorization/authorization"
+import Authorization  from "../user_management/authorization/authorization"
 import Logger from "../logger";
 import {AssignUserRoleNoCheck} from "../user_management/users";
 
@@ -11,7 +11,7 @@ import {AssignUserRoleNoCheck} from "../user_management/users";
 // layer to the api.
 export async function CreateContainer(user:UserT | any, input:any): Promise<Result<ContainersT>> {
     const storage = ContainerStorage.Instance;
-    const e = Authorization.Instance.e;
+    const e = await Authorization.enforcer()
 
     const containers = await storage.Create((user as UserT).id!, input);
     if(containers.isError) return Promise.resolve(containers);
@@ -74,13 +74,13 @@ export async function CreateContainer(user:UserT | any, input:any): Promise<Resu
 
     // assign the creating user Admin privileges for each container created
     for(const container of containers.value) {
-       const result = await AssignUserRoleNoCheck(user, {
+        const result = await AssignUserRoleNoCheck(user, {
             user_id: user.id,
             container_id: container.id,
             role_name: "admin"
         })
 
-       if(result.isError) {
+        if(result.isError) {
             Logger.error(`unable to assign role to user for newly created container ${result.error}`)
         }
     }
@@ -92,11 +92,11 @@ export async function CreateContainer(user:UserT | any, input:any): Promise<Resu
 // access to. Admin will return all containers
 export async function ListContainers(user: UserT | undefined): Promise<Result<ContainerT[]>>{
     // casbin enforcer
-   const e = Authorization.Instance.e;
+    const e = await Authorization.enforcer()
 
-   if(!user || user.admin) {
-       return ContainerStorage.Instance.List()
-   }
+    if(!user || user.admin) {
+        return ContainerStorage.Instance.List()
+    }
 
     // using the casbin filtered grouping function, fetch all permission sets for
     // user. Those permissions sets will contain all domains, or containers, a user
@@ -106,25 +106,25 @@ export async function ListContainers(user: UserT | undefined): Promise<Result<Co
     // grouping policies follow the pattern of user id, role, domain id. In this
     // case we are fetching all grouping policies(permission sets) with a given
     // userID
-   const permissionSets = await e.getFilteredGroupingPolicy(0, user.id!)
+    const permissionSets = await e.getFilteredGroupingPolicy(0, user.id!)
 
-   const containerIDs: string[] = [];
+    const containerIDs: string[] = [];
 
-   // extract the container id, the third argument, from each returned set
-   permissionSets.map(set => {
-       if(set[2]) containerIDs.push((set[2]))
-   })
+    // extract the container id, the third argument, from each returned set
+    permissionSets.map(set => {
+        if(set[2]) containerIDs.push((set[2]))
+    })
 
-   if(containerIDs.length === 0) {
+    if(containerIDs.length === 0) {
         return new Promise(resolve => resolve(Result.Success([])))
     }
 
 
-   return ContainerStorage.Instance.ListFromIDS(containerIDs)
+    return ContainerStorage.Instance.ListFromIDS(containerIDs)
 }
 
 export async function RepairContainerPermissions(containerID: string): Promise<boolean> {
-    const e = Authorization.Instance.e;
+    const e = await Authorization.enforcer()
 
     const containerUserRead = await e.addPolicy('user', containerID, 'containers', 'read');
     if(!containerUserRead) Logger.error(`unable to add editor policy to new container`);

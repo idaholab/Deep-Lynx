@@ -165,7 +165,7 @@ describe('A Data Type Mapping can', async() => {
             {
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
+                adapter_type:"manual",
                 data_format: "json",
                 config: {}});
 

@@ -204,8 +204,6 @@ describe('A Complex Graph can be created', async() => {
 
         expect(edge8.isError, "edge 8").false;
 
-        console.log(`Graph ID = ${graph.value.id}`)
-
        return Promise.resolve()
     });
 });

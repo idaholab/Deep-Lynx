@@ -7,34 +7,27 @@ import {isUserT, UserT} from "../../types/user_management/userT";
 // Authorization in Deep Lynx uses the https://casbin.org/ library. Please use
 // their documentation when attempting to make changes to the authorization layer.
 export class Authorization {
-    private static instance: Authorization;
-    public e!: Enforcer;
-
-    static get Instance(): Authorization {
-        if(!Authorization.instance) {
-            Authorization.instance = new Authorization();
-            Authorization.instance.init()
-        }
-
-
-        return Authorization.instance
-    }
+    private e!: Enforcer;
 
     // In order to store the casbin configuration and policy files we use the
     // TypeORM ORM adapter. PLEASE only use it here.
-    public async init() {
-        const a = await TypeORMAdapter.newAdapter({
-            type: 'postgres',
-            url: Config.core_db_connection_string,
-        });
+    public async enforcer(): Promise<Enforcer> {
+        if(!this.e) {
+            const a = await TypeORMAdapter.newAdapter({
+                type: 'postgres',
+                url: Config.core_db_connection_string,
+            });
 
-        const e = await newEnforcer(Config.auth_config_file, a);
+            const e = await newEnforcer(Config.auth_config_file, a);
 
-        this.e = e
+            this.e = e
+        }
+
+        return new Promise(resolve => resolve(this.e))
     }
 
-
     async AuthUser(user: UserT | any, action: "write" | "read", resource:string, domain?: string): Promise<boolean>{
+        await this.enforcer() // insure it's connected
         if(isUserT(user)){
             if(user.admin) return true;
 
@@ -50,6 +43,7 @@ export class Authorization {
     }
 
     async AssignRole(userID:string, role:string, domain?:string): Promise<boolean> {
+        await this.enforcer() // insure it's connected
         if(!domain) domain = "all";
 
         await this.DeleteAllRoles(userID, domain)
@@ -58,12 +52,14 @@ export class Authorization {
     }
 
     async RolesForUser(userID: string, domainID: string): Promise<string[]> {
+        await this.enforcer() // insure it's connected
         return this.e.getRolesForUser(userID, domainID)
     }
 
     // permissions for user returns an array of strings with the following format
     // containerID, resource, allowed action
     async PermissionsForUser(userID: string): Promise<string[][]> {
+        await this.enforcer() // insure it's connected
         const permissionReturn: string[][] = []
 
         // retrieves the containers in which the user has a role - response is an array of strings with the format
@@ -82,6 +78,7 @@ export class Authorization {
     }
 
     async DeleteAllRoles(userID:string, domain?:string): Promise<boolean> {
+        await this.enforcer() // insure it's connected
         if(!domain) domain = "all";
 
         await this.e.deleteRolesForUser(userID, domain)
@@ -92,4 +89,5 @@ export class Authorization {
     }
 }
 
-export default Authorization.Instance
+export default new Authorization()
+
