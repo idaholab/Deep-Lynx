@@ -90,6 +90,8 @@
                       v-model="selectedMetatypeKey.default_value"
                       multiple
                       chips
+                      clearable
+                      deletable-chips
                   ></v-combobox>
                 </div>
 
@@ -117,7 +119,9 @@
                     v-model="selectedMetatypeKey.options"
                     :label="$t('editMetatypeKey.options')"
                     multiple
+                    clearable
                     chips
+                    deletable-chips
                 ></v-combobox>
               </v-form>
             </v-col>

@@ -89,6 +89,8 @@
                   <v-combobox
                       v-model="selectedMetatypeRelationshipKey.default_value"
                       multiple
+                      clearable
+                      deletable-chips
                       chips
                   ></v-combobox>
                 </div>
@@ -117,6 +119,8 @@
                     v-model="selectedMetatypeRelationshipKey.options"
                     :label="$t('editMetatypeRelationshipKey.options')"
                     multiple
+                    clearable
+                    deletable-chips
                     chips
                 ></v-combobox>
               </v-form>

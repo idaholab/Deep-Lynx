@@ -133,14 +133,7 @@ export default class MetatypeRelationshipKeyStorage extends PostgresStorage{
 
             // we must stringify the default value as it could be something other
             // than a string, we store it as a string in the DB for ease of use
-            if(k === 'default_value') {
-                updateStatement.push(`${k} = $${i}`);
-                values.push(JSON.stringify(updatedField[k]));
-                i++
-                return
-            }
-
-            if(k === 'options') {
+            if(k === 'default_value' || k === 'options') {
                 updateStatement.push(`${k} = $${i}`);
                 values.push(JSON.stringify(updatedField[k]));
                 i++
