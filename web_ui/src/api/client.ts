@@ -198,12 +198,12 @@ export class Client {
       return this.delete(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}`)
    }
 
-   createMetatypeRelationshipPair(containerID: string, metatypeRelationshipPair: any): Promise<MetatypeRelationshipPairT> {
-      return this.post<MetatypeRelationshipPairT>(`/containers/${containerID}/metatype_relationship_pairs`, metatypeRelationshipPair)
+   createMetatypeRelationshipPair(containerID: string, metatypeRelationshipPair: any): Promise<MetatypeRelationshipPairT[]> {
+      return this.post<MetatypeRelationshipPairT[]>(`/containers/${containerID}/metatype_relationship_pairs`, metatypeRelationshipPair)
    }
 
-   updateMetatypeRelationshipPair(containerID: string, metatypeRelationshipPairID: string, metatypeRelationshipPair: any): Promise<MetatypeRelationshipPairT> {
-      return this.put<MetatypeRelationshipPairT>(`/containers/${containerID}/metatype_relationship_pairs/${metatypeRelationshipPairID}`, metatypeRelationshipPair)
+   updateMetatypeRelationshipPair(containerID: string, metatypeRelationshipPairID: string, metatypeRelationshipPair: any): Promise<boolean> {
+      return this.put<boolean>(`/containers/${containerID}/metatype_relationship_pairs/${metatypeRelationshipPairID}`, metatypeRelationshipPair)
    }
 
    deleteMetatypeRelationshipPair(containerID: string, metatypeRelationshipPairID: string): Promise<boolean> {

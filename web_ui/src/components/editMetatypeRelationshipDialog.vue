@@ -61,7 +61,7 @@
                   </v-toolbar>
                 </template>
                 <template v-slot:[`item.actions`]="{ item }">
-                 <edit-metatype-relationship-key-dialog metatypeRelationshipKey="item" :metatypeRelationship="metatypeRelationship" :icon="true" @metatypeKeyEdited="loadKeys()"></edit-metatype-relationship-key-dialog>
+                 <edit-metatype-relationship-key-dialog :metatypeRelationshipKey="item" :metatypeRelationship="metatypeRelationship" :icon="true" @metatypeKeyEdited="loadKeys()"></edit-metatype-relationship-key-dialog>
                   <v-icon
                       small
                       @click="deleteKey(item)"

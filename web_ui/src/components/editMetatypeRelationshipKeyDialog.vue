@@ -58,31 +58,31 @@
                   <template v-slot:label>{{$t('editMetatypeRelationshipKey.description')}} <small style="color:#ff0000" >{{$t("editMetatypeRelationshipKey.requiredSmall")}}</small></template>
                 </v-textarea>
 
-                <h3>{{$t('editMetatypeRelationshipKey.validation')}}</h3>
-                <v-text-field
-                    v-model="selectedMetatypeRelationshipKey.validation.regex"
-                    :label="$t('editMetatypeRelationshipKey.regex')"
-                >
-                  <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeRelationshipKey.regexHelp')"></info-tooltip></template>
-                </v-text-field>
-                <v-text-field
-                    v-model="selectedMetatypeRelationshipKey.validation.max"
-                    :disabled="selectedMetatypeRelationshipKey.validation.regex === ''"
-                    type="number"
-                    :label="$t('editMetatypeRelationshipKey.max')"
-                >
-                  <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeRelationshipKey.maxHelp')"></info-tooltip></template>
-                </v-text-field>
-                <v-text-field
-                    v-model="selectedMetatypeRelationshipKey.validation.min"
-                    :disabled="selectedMetatypeRelationshipKey.validation.regex === ''"
-                    type="number"
-                    :label="$t('editMetatypeRelationshipKey.min')"
-                >
-                  <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeRelationshipKey.minHelp')"></info-tooltip></template>
-                </v-text-field>
-
-
+                <div v-if="selectedMetatypeRelationshipKey.validation">
+                  <h3>{{$t('editMetatypeRelationshipKey.validation')}}</h3>
+                  <v-text-field
+                      v-model="selectedMetatypeRelationshipKey.validation.regex"
+                      :label="$t('editMetatypeRelationshipKey.regex')"
+                  >
+                    <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeRelationshipKey.regexHelp')"></info-tooltip></template>
+                  </v-text-field>
+                  <v-text-field
+                      v-model.number="selectedMetatypeRelationshipKey.validation.max"
+                      :disabled="selectedMetatypeRelationshipKey.validation.regex === ''"
+                      type="number"
+                      :label="$t('editMetatypeRelationshipKey.max')"
+                  >
+                    <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeRelationshipKey.maxHelp')"></info-tooltip></template>
+                  </v-text-field>
+                  <v-text-field
+                      v-model.number="selectedMetatypeRelationshipKey.validation.min"
+                      :disabled="selectedMetatypeRelationshipKey.validation.regex === ''"
+                      type="number"
+                      :label="$t('editMetatypeRelationshipKey.min')"
+                  >
+                    <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeRelationshipKey.minHelp')"></info-tooltip></template>
+                  </v-text-field>
+                </div>
 
                 <!-- default value and options should be comboboxes when set to enumeration -->
                 <div v-if="selectedMetatypeRelationshipKey.data_type === 'enumeration'" >
@@ -160,8 +160,8 @@ export default class EditMetatypeRelationshipKeyDialog extends Vue {
     if(this.dialog){
       this.selectedMetatypeRelationshipKey = JSON.parse(JSON.stringify(this.metatypeRelationshipKey))
 
-      if(!this.selectedMetatypeRelationshipKey!.validation) {
-        this.selectedMetatypeRelationshipKey?.validation = {}
+      if(this.selectedMetatypeRelationshipKey && !this.selectedMetatypeRelationshipKey.validation) {
+        this.selectedMetatypeRelationshipKey.validation = {regex: "", min: 0, max: 0}
       }
     }
   }
@@ -169,6 +169,10 @@ export default class EditMetatypeRelationshipKeyDialog extends Vue {
   mounted() {
     // have to do this to avoid mutating properties
     this.selectedMetatypeRelationshipKey = JSON.parse(JSON.stringify(this.metatypeRelationshipKey))
+
+    if(this.selectedMetatypeRelationshipKey && !this.selectedMetatypeRelationshipKey.validation) {
+      this.selectedMetatypeRelationshipKey.validation = {regex: "", min: 0, max: 0}
+    }
   }
 
   editMetatypeKey() {

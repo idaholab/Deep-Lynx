@@ -66,7 +66,7 @@
                   <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.regexHelp')"></info-tooltip></template>
                 </v-text-field>
                 <v-text-field
-                    v-model="selectedMetatypeKey.validation.max"
+                    v-model.number="selectedMetatypeKey.validation.max"
                     :disabled="selectedMetatypeKey.validation.regex === ''"
                     type="number"
                     :label="$t('editMetatypeKey.max')"
@@ -74,7 +74,7 @@
                   <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.maxHelp')"></info-tooltip></template>
                 </v-text-field>
                 <v-text-field
-                    v-model="selectedMetatypeKey.validation.min"
+                    v-model.number="selectedMetatypeKey.validation.min"
                     :disabled="selectedMetatypeKey.validation.regex === ''"
                     type="number"
                     :label="$t('editMetatypeKey.min')"
@@ -158,11 +158,19 @@ export default class EditMetatypeKeyDialog extends Vue {
   @Watch('dialog', {immediate: true})
   onDialogChange() {
     if(this.dialog) this.selectedMetatypeKey = JSON.parse(JSON.stringify(this.metatypeKey))
+
+    if(this.selectedMetatypeKey && !this.selectedMetatypeKey.validation) {
+      this.selectedMetatypeKey.validation = {regex: "", min: 0, max: 0}
+    }
   }
 
   mounted() {
     // have to do this to avoid mutating properties
     this.selectedMetatypeKey = JSON.parse(JSON.stringify(this.metatypeKey))
+
+    if(this.selectedMetatypeKey && !this.selectedMetatypeKey.validation) {
+      this.selectedMetatypeKey.validation = {regex: "", min: 0, max: 0}
+    }
   }
 
   editMetatypeKey() {

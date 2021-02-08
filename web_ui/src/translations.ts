@@ -185,6 +185,42 @@ export default {
       cancel: "Cancel",
       errorCreatingAPI: "Error communicating with Deep Lynx:"
     },
+    createMetatypeRelationshipPair: {
+      createMetatypeRelationshipPair: "Create Metatype Relationship Pair",
+      formTitle: "New Metatype Relationship Pair",
+      name: "Name",
+      description: "Description",
+      requiredSmall: "required",
+      originMetatype: "Origin Metatype",
+      relationship: "Relationship",
+      destinationMetatype: "Destination Metatype",
+      relationshipType: "RelationshipType",
+      cancel: "Cancel",
+      save: "Save",
+      relationshipTypeRequired: "relationship required",
+      originRequired: "origin metatype required",
+      destinationRequired: "destination metatype required",
+      relationshipRequired: "relationship required",
+      errorCreatingAPI: "Error communicating with Deep Lynx:"
+    },
+    editMetatypeRelationshipPair: {
+      editMetatypeRelationshipPair: "Edit Metatype Relationship Pair",
+      formTitle: "Edit Metatype Relationship Pair",
+      name: "Name",
+      description: "Description",
+      requiredSmall: "required",
+      originMetatype: "Origin Metatype",
+      relationship: "Relationship",
+      destinationMetatype: "Destination Metatype",
+      relationshipType: "RelationshipType",
+      cancel: "Cancel",
+      save: "Save",
+      relationshipTypeRequired: "relationship required",
+      originRequired: "origin metatype required",
+      destinationRequired: "destination metatype required",
+      relationshipRequired: "relationship required",
+      errorEditingAPI: "Error communicating with Deep Lynx:"
+    },
     metatypeRelationships: {
       relationshipSuccessfullyCreated :"Metatype Relationship created successfully",
       metatypeRelationships: "Metatype Relationships",
@@ -314,14 +350,14 @@ export default {
       confirmPassword: "Confirm New Password"
     },
     containers: {
-     title: "Manage Containers",
-     name: "Name",
-     description: "Description",
-     newContainerButton: "Create New Container",
-     actions: "Actions",
-     formTitle: "Create New Container",
-     owlUrlHelp: "A URL to an .owl file - used to auto-populate the ontology",
-     owlFileHelp: "An .owl file - used to auto-populate the ontology"
+      title: "Manage Containers",
+      name: "Name",
+      description: "Description",
+      newContainerButton: "Create New Container",
+      actions: "Actions",
+      formTitle: "Create New Container",
+      owlUrlHelp: "A URL to an .owl file - used to auto-populate the ontology",
+      owlFileHelp: "An .owl file - used to auto-populate the ontology"
     },
     containerSelect: {
       continue: "Continue",

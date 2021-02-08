@@ -83,7 +83,7 @@ export type MetatypeRelationshipKeyT= {
         regex: string;
         min: number;
         max: number;
-    } | undefined;
+    };
     options: string[] | undefined;
     default_value: string | boolean | number | any[] | undefined;
     created_at: string;

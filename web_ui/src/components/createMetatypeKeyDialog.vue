@@ -66,7 +66,7 @@
                   <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeKey.regexHelp')"></info-tooltip></template>
                 </v-text-field>
                 <v-text-field
-                    v-model="metatypeKey.validation.max"
+                    v-model.number="metatypeKey.validation.max"
                     :disabled="metatypeKey.validation.regex === ''"
                     type="number"
                     :label="$t('createMetatypeKey.max')"
@@ -74,7 +74,7 @@
                   <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeKey.maxHelp')"></info-tooltip></template>
                 </v-text-field>
                 <v-text-field
-                    v-model="metatypeKey.validation.min"
+                    v-model.number="metatypeKey.validation.min"
                     :disabled="metatypeKey.validation.regex === ''"
                     type="number"
                     :label="$t('createMetatypeKey.min')"
@@ -149,12 +149,12 @@ export default class CreateMetatypeKeyDialog extends Vue {
   errorMessage = ""
   dialog = false
   formValid = false
-  metatypeKey: MetatypeKeyT = {validation: {}, required: false} as MetatypeKeyT
+  metatypeKey: MetatypeKeyT = {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeKeyT
   dataTypes = ["number", "date", "string", "boolean", "enumeration", "file"]
 
   @Watch('dialog', {immediate: true})
   onDialogChange() {
-    if(this.dialog) this.metatypeKey = {validation: {}, required: false} as MetatypeKeyT
+    if(this.dialog) this.metatypeKey = {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeKeyT
   }
 
   createMetatypeKey() {

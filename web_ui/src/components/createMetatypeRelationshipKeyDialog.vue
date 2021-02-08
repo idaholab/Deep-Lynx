@@ -66,7 +66,7 @@
                   <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeRelationshipKey.regexHelp')"></info-tooltip></template>
                 </v-text-field>
                 <v-text-field
-                    v-model="metatypeRelationshipKey.validation.max"
+                    v-model.number="metatypeRelationshipKey.validation.max"
                     :disabled="metatypeRelationshipKey.validation.regex === ''"
                     type="number"
                     :label="$t('createMetatypeRelationshipKey.max')"
@@ -74,7 +74,7 @@
                   <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeRelationshipKey.maxHelp')"></info-tooltip></template>
                 </v-text-field>
                 <v-text-field
-                    v-model="metatypeRelationshipKey.validation.min"
+                    v-model.number="metatypeRelationshipKey.validation.min"
                     :disabled="metatypeRelationshipKey.validation.regex === ''"
                     type="number"
                     :label="$t('createMetatypeRelationshipKey.min')"
@@ -149,12 +149,12 @@ export default class CreateMetatypeRelationshipKeyDialog extends Vue {
   errorMessage = ""
   dialog = false
   formValid = false
-  metatypeRelationshipKey: MetatypeRelationshipKeyT = {validation: {}, required: false} as MetatypeRelationshipKeyT
+  metatypeRelationshipKey: MetatypeRelationshipKeyT = {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeRelationshipKeyT
   dataTypes = ["number", "date", "string", "boolean", "enumeration", "file"]
 
   @Watch('dialog', {immediate: true})
   onDialogChange() {
-    if(this.dialog) this.metatypeRelationshipKey = {validation: {}, required: false} as MetatypeRelationshipKeyT
+    if(this.dialog) this.metatypeRelationshipKey = {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeRelationshipKeyT
   }
 
   createMetatypeKey() {
