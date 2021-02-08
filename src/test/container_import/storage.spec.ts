@@ -60,7 +60,7 @@ describe('A Container Import', async() => {
 
         const updated = fs.readFileSync(`${__dirname}/test_update.owl`)
 
-        container = await containerImport.ImportOntology("test suite", containerInput, updated, false, true, containerID);
+        container = await containerImport.ImportOntology(user, containerInput, updated, false, true, containerID);
 
         expect(container.isError).false;
         expect(container.value).not.empty;
@@ -173,7 +173,12 @@ describe('A Container Import', async() => {
         expect(nodeCreate.isError).false;
         expect(nodeCreate2.isError).false;
 
-        let relationshipPair = await relationshipStorage.RetrieveByMetatypes('Action', 'Action')
+        // retrieve Action metatype ID
+        let actionMetatype = await metatypeStorage.List(containerID, 0, 1, 'Action')
+        let actionMetatypeID = actionMetatype.value[0].id!
+
+        // retrieve relationship pair
+        let relationshipPair = await relationshipStorage.RetrieveByMetatypes(actionMetatypeID, actionMetatypeID)
 
         expect(relationshipPair.isError).false;
 
@@ -218,7 +223,7 @@ describe('A Container Import', async() => {
         containerID = container.value
 
         const updated = fs.readFileSync(`${__dirname}/test_successful_removal_update.owl`)
-        container = await containerImport.ImportOntology("test suite", containerInput, updated, false, true, containerID);
+        container = await containerImport.ImportOntology(user, containerInput, updated, false, true, containerID);
 
         expect(container.isError).false;
         expect(container.value).not.empty;

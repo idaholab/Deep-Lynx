@@ -393,31 +393,32 @@ export default class ContainerImport {
               thisMetatype.container_id = containerID
               thisMetatype.db_id = metatype.id
               classIDMap.set(thisMetatype.id, thisMetatype)
-            }
-            // check metatypeKeys
-            const newMetatypeKeys = classListMap.get(metatype.name).keys
-            const oldMetatypeKeys = (await metatypeKeyStorage.List(metatype.id!)).value
 
-            for (const key of oldMetatypeKeys) {
+              // check metatypeKeys for metatypes to be updated
+              const newMetatypeKeys = classListMap.get(metatype.name).keys
+              const oldMetatypeKeys = (await metatypeKeyStorage.List(metatype.id!)).value
 
-              if (!newMetatypeKeys.includes(key.name)) {
-                const nodes = (await nodeStorage.ListByMetatypeID(metatype.id!, 0, 10)).value
+              for (const key of oldMetatypeKeys) {
 
-                if (nodes.length > 0) {
-                  resolve(Result.Failure(`Attempting to remove metatype ${metatype.name} key ${key.name}.
-                    This metatype has associated data, please delete the data before container update.`));
+                if (!newMetatypeKeys.includes(key.name)) {
+                  const nodes = (await nodeStorage.ListByMetatypeID(metatype.id!, 0, 10)).value
+
+                  if (nodes.length > 0) {
+                    resolve(Result.Failure(`Attempting to remove metatype ${metatype.name} key ${key.name}.
+                      This metatype has associated data, please delete the data before container update.`));
+                  } else {
+                    // no associated data, remove key
+                    Logger.info(`Removing metatype key ${key.name}`)
+                    const removal = await metatypeKeyStorage.PermanentlyDelete(key.id!)
+                    if (removal.error) return resolve(Result.Failure(`Unable to delete metatype key ${key.name}`))
+                  }
+
                 } else {
-                  // no associated data, remove key
-                  Logger.info(`Removing metatype key ${key.name}`)
-                  const removal = await metatypeKeyStorage.PermanentlyDelete(key.id!)
-                  if (removal.error) return resolve(Result.Failure(`Unable to delete metatype key ${key.name}`))
+                  // update key
+                  const thisMetatype = classListMap.get(metatype.name)
+                  thisMetatype.updateKeys.set(key.name, key)
+                  thisMetatype.updateKeyNames.push(key.name)
                 }
-
-              } else {
-                // update key
-                const thisMetatype = classListMap.get(metatype.name)
-                thisMetatype.updateKeys.set(key.name, key)
-                thisMetatype.updateKeyNames.push(key.name)
               }
             }
           }
@@ -507,10 +508,14 @@ export default class ContainerImport {
             resolve(Result.SilentFailure(rollback))
             return
           } else {
-            const resultValue = resultEntry.value[0]
-            const mapValue = relationshipMap.get(resultValue.name)
-            mapValue.db_id = resultValue.id
-            relationshipMap.set(mapValue.name, mapValue)
+            // need to handle BatchUpdate returns with >1 entries in Result.value
+            resultEntry.value.forEach(resultValue => {
+              if (resultValue.id) {
+                const mapValue = relationshipMap.get(resultValue.name)
+                mapValue.db_id = resultValue.id
+                relationshipMap.set(mapValue.name, mapValue)
+              }
+            })
           }
         })
 
@@ -555,12 +560,16 @@ export default class ContainerImport {
             resolve(Result.SilentFailure(rollback))
             return
           } else {
-            const resultValue = resultEntry.value[0]
-            const mapValue = classListMap.get(resultValue.name)
-            mapValue.db_id = resultValue.id
+            // need to handle BatchUpdate returns with >1 entries in Result.value
+            resultEntry.value.forEach(resultValue => {
+              const mapValue = classListMap.get(resultValue.name)
+              if (resultValue.id) {
+                mapValue.db_id = resultValue.id
 
-            classListMap.set(mapValue.name, mapValue)
-            classIDMap.set(mapValue.id, mapValue)
+                classListMap.set(mapValue.name, mapValue)
+                classIDMap.set(mapValue.id, mapValue)
+              }
+            })
           }
         })
 
@@ -700,11 +709,7 @@ export default class ContainerImport {
           }
         }
 
-        if (update) {
-          resolve(Result.Success(`Container ${containerID} successfully updated`))
-        } else {
-          resolve(Result.Success(containerID))
-        }
+        resolve(Result.Success(containerID))
 
       }
     })
