@@ -10,6 +10,7 @@
         :footer-props="{
           'items-per-page-options': [25, 50, 100]
         }"
+        :item-key="id"
         class="elevation-1"
     >
 
@@ -145,8 +146,9 @@ export default class Metatypes extends Vue {
       description: (this.description !== "") ? this.description : undefined,
     })
         .then((results) => {
-          this.metatypes = results as MetatypeT[]
           this.metatypesLoading = false
+          this.metatypes = results as MetatypeT[]
+          this.$forceUpdate()
         })
         .catch((e: any) => this.errorMessage = e)
   }
@@ -161,6 +163,7 @@ export default class Metatypes extends Vue {
 
   recentlyCreatedMetatype(metatype: MetatypeT) {
     this.createdMetatype = metatype
+    this.countMetatypes()
     this.loadMetatypes()
   }
 }

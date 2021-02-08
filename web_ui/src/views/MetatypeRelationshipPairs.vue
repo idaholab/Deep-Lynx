@@ -164,6 +164,7 @@ export default class MetatypeRelationshipPairs extends Vue {
 
   recentlyCreatedPair(pair: MetatypeRelationshipPairT) {
     this.createdMetatypeRelationshipPair = pair
+    this.countRelationshipPairs()
     this.loadMetatypeRelationshipPairs()
   }
 }

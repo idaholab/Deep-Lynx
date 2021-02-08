@@ -32,7 +32,7 @@
             <import-data-dialog
                 :dataSourceID="selectedDataSource.id"
                 :containerID="containerID"
-                @importUploaded="listImports">
+                @importUploaded="listImports()">
             </import-data-dialog>
           </v-col>
 
@@ -297,8 +297,9 @@ export default class DataImports extends Vue {
         sortDesc: sortDescParam
       })
           .then(imports => {
-            this.imports = imports
             this.importsLoading = false
+            this.imports = imports
+            this.$forceUpdate()
           })
           .catch(e => this.errorMessage = e)
     }
@@ -309,7 +310,7 @@ export default class DataImports extends Vue {
         .then(dataSources => {
           this.dataSources = dataSources
         })
-        .catch(e => console.log(e))
+        .catch(e => this.errorMessage = e)
   }
 
   deleteItem(importT: ImportT) {

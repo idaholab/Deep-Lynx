@@ -7,6 +7,7 @@
         :options.sync="options"
         :loading="loading"
         :items-per-page="100"
+        :item-key="id"
         :footer-props="{
           'items-per-page-options': [25, 50, 100]
         }"
@@ -145,8 +146,9 @@ export default class MetatypeRelationships extends Vue {
       description: (this.description !== "") ? this.description : undefined,
     })
         .then((results) => {
-          this.metatypeRelationships = results as MetatypeRelationshipT[]
           this.loading = false
+          this.metatypeRelationships = results as MetatypeRelationshipT[]
+          this.$forceUpdate()
         })
         .catch((e: any) => this.errorMessage = e)
   }
@@ -161,6 +163,7 @@ export default class MetatypeRelationships extends Vue {
 
   recentlyCreatedRelationship(relationship: MetatypeRelationshipT) {
     this.createdRelationship = relationship
+    this.countRelationships()
     this.loadMetatypeRelationships()
   }
 }

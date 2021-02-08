@@ -403,6 +403,7 @@
                 {{$t("dataMapping.reset")}}
               </v-btn>
 
+              <p><span style="color:red">*</span> = {{$t('dataMapping.requiredField')}}</p>
             </v-form>
           </v-col>
 
