@@ -29,13 +29,13 @@
                     :rules="[v => !!v || $t('editMetatypeRelationshipPair.originRequired')]"
                     required
                 >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.name')}} <small style="color:red" >{{$t("editMetatypeRelationshipPair.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.name')}} <small style="color:red" >*</small></template>
                 </v-text-field>
                 <v-textarea
                     v-model="selectedPair.description"
                     :rules="[v => !!v || $t('editMetatypeRelationshipPair.originRequired')]"
                 >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.description')}} <small style="color:red" >{{$t("editMetatypeRelationshipPair.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.description')}} <small style="color:red" >*</small></template>
                 </v-textarea>
                 <v-autocomplete
                     v-model="selectedPair.origin_metatype_id"
@@ -48,7 +48,7 @@
                     persistent-hint
                     required
                 >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.originMetatype')}} <small style="color:red" >{{$t("editMetatypeRelationshipPair.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.originMetatype')}} <small style="color:red" >*</small></template>
                 </v-autocomplete>
                 <v-autocomplete
                     v-model="selectedPair.relationship_id"
@@ -61,7 +61,7 @@
                     persistent-hint
                     required
                 >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationship')}} <small style="color:red" >{{$t("editMetatypeRelationshipPair.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationship')}} <small style="color:red" >*</small></template>
                 </v-autocomplete>
                 <v-autocomplete
                     v-model="selectedPair.destination_metatype_id"
@@ -74,7 +74,7 @@
                     persistent-hint
                     required
                 >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.destinationMetatype')}} <small style="color:red" >{{$t("editMetatypeRelationshipPair.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.destinationMetatype')}} <small style="color:red" >*</small></template>
                 </v-autocomplete>
                 <v-select
                     v-model="selectedPair.relationship_type"
@@ -82,9 +82,10 @@
                     :items="relationshipTypeChoices"
                     required
                 >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationshipType')}} <small style="color:red" >{{$t("editMetatypeRelationshipPair.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationshipType')}} <small style="color:red" >*</small></template>
                 </v-select>
               </v-form>
+              <p><span style="color:red">*</span> = {{$t('editMetatypeRelationshipPair.requiredField')}}</p>
             </v-col>
           </v-row>
         </v-container>

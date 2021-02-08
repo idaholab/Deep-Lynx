@@ -26,7 +26,7 @@
                     v-model="metatypeKey.name"
                     :rules="[v => !!v || $t('createMetatypeKey.nameRequired')]"
                 >
-                  <template v-slot:label>{{$t('createMetatypeKey.name')}} <small style="color:red" >{{$t("createMetatypeKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('createMetatypeKey.name')}} <small style="color:red" >*</small></template>
                 </v-text-field>
 
                 <v-text-field
@@ -34,7 +34,7 @@
                     :rules="[v => !!v || $t('createMetatypeKey.propertyNameRequired')]"
                     required
                 >
-                  <template v-slot:label>{{$t('createMetatypeKey.propertyName')}} <small style="color:red" >{{$t("createMetatypeKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('createMetatypeKey.propertyName')}} <small style="color:red" >*</small></template>
                 </v-text-field>
                 <v-select
                     v-model="metatypeKey.data_type"
@@ -43,19 +43,19 @@
                     :rules="[v => !!v || $t('createMetatypeKey.dataTypeRequired')]"
                     required
                 >
-                  <template v-slot:label>{{$t('createMetatypeKey.dataType')}} <small style="color:red" >{{$t("createMetatypeKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('createMetatypeKey.dataType')}} <small style="color:red" >*</small></template>
                 </v-select>
                 <v-checkbox
                     v-model="metatypeKey.required"
                 >
-                  <template v-slot:label>{{$t('createMetatypeKey.required')}} <small style="color:#ff0000" >{{$t("createMetatypeKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('createMetatypeKey.required')}} <small style="color:#ff0000" >*</small></template>
                 </v-checkbox>
                 <v-textarea
                     v-model="metatypeKey.description"
                     :rows="2"
                     :rules="[v => !!v || $t('createMetatypeKey.descriptionRequired')]"
                 >
-                  <template v-slot:label>{{$t('createMetatypeKey.description')}} <small style="color:#ff0000" >{{$t("createMetatypeKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('createMetatypeKey.description')}} <small style="color:#ff0000" >*</small></template>
                 </v-textarea>
 
                 <h3>{{$t('createMetatypeKey.validation')}}</h3>
@@ -92,6 +92,7 @@
                       clearable
                       deletable-chips
                       chips
+                      :label="$t('createMetatypeKey.defaultValue')"
                   ></v-combobox>
                 </div>
 
@@ -102,16 +103,19 @@
                       type="number"
                       :label="$t('createMetatypeKey.defaultValue')"
                   ></v-text-field>
-                  <v-checkbox
+                  <v-select
                       v-else-if="metatypeKey.data_type === 'boolean'"
                       v-model="metatypeKey.default_value"
                       :label="$t('createMetatypeKey.defaultValue')"
+                      :items="booleanOptions"
+                      required
                   >
-                  </v-checkbox>
+                  </v-select>
                   <v-text-field
                       v-else
                       v-model="metatypeKey.default_value"
                       :label="$t('createMetatypeKey.defaultValue')"
+                      :disabled="metatypeKey.data_type === 'file'"
                   ></v-text-field>
                 </div>
 
@@ -124,6 +128,7 @@
                     chips
                 ></v-combobox>
               </v-form>
+              <p><span style="color:red">*</span> = {{$t('createMetatypeKey.requiredField')}}</p>
             </v-col>
           </v-row>
         </v-container>
@@ -155,6 +160,7 @@ export default class CreateMetatypeKeyDialog extends Vue {
   formValid = false
   metatypeKey: MetatypeKeyT = {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeKeyT
   dataTypes = ["number", "date", "string", "boolean", "enumeration", "file"]
+  booleanOptions =  [true, false]
 
   @Watch('dialog', {immediate: true})
   onDialogChange() {

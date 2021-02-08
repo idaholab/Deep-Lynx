@@ -20,18 +20,24 @@
 
               <v-form
                   ref="form"
+                  v-model="valid"
               >
                 <v-text-field
                     v-model="selectedMetatype.name"
-                    :label="$t('editMetatype.name')"
+                    :rules="[v => !!v || $t('editMetatype.nameRequired')]"
                     required
-                ></v-text-field>
+                >
+                  <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
+                </v-text-field>
                 <v-textarea
                     v-model="selectedMetatype.description"
-                    :label="$t('editMetatype.description')"
-                ></v-textarea>
-
+                    :rules="[v => !!v || $t('editMetatype.descriptionRequired')]"
+                    required
+                >
+                  <template v-slot:label>{{$t('editMetatype.description')}} <small style="color:red" >*</small></template>
+                </v-textarea>
               </v-form>
+              <p><span style="color:red">*</span> = {{$t('editMetatype.requiredField')}}</p>
             </v-col>
 
             <v-col :cols="12" v-if="keysLoading">
@@ -78,7 +84,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("editMetatype.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" :disabled="!formValid" text @click="editMetatype()">{{$t("editMetatype.save")}}</v-btn>
+        <v-btn color="blue darken-1" :disabled="!valid" text @click="editMetatype()">{{$t("editMetatype.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -105,6 +111,7 @@ export default class EditMetatypeDialog extends Vue {
   keysLoading = false
   dialog = false
   selectedMetatype: MetatypeT | null  = null
+  valid = false
 
   // this way we only load the keys when the edit dialog is open, so we don't
   // overload someone using this in a list
@@ -127,10 +134,6 @@ export default class EditMetatypeDialog extends Vue {
   mounted() {
     // have to do this to avoid mutating properties
     this.selectedMetatype = JSON.parse(JSON.stringify(this.metatype))
-  }
-
-  get formValid() {
-    return this.selectedMetatype?.name !== ""
   }
 
   editMetatype() {

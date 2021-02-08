@@ -20,18 +20,24 @@
 
               <v-form
                   ref="form"
+                  v-model="valid"
               >
                 <v-text-field
                     v-model="name"
-                    :label="$t('createMetatypeRelationship.name')"
+                    :rules="[v => !!v || $t('createMetatypeRelationship.nameRequired')]"
                     required
-                ></v-text-field>
+                >
+                  <template v-slot:label>{{$t('createMetatypeRelationship.name')}} <small style="color:red" >*</small></template>
+                </v-text-field>
                 <v-textarea
                     v-model="description"
-                    :label="$t('createMetatypeRelationship.description')"
-                ></v-textarea>
-
+                    :rules="[v => !!v || $t('createMetatypeRelationship.descriptionRequired')]"
+                    required
+                >
+                  <template v-slot:label>{{$t('createMetatypeRelationship.description')}} <small style="color:red" >*</small></template>
+                </v-textarea>
               </v-form>
+              <p><span style="color:red">*</span> = {{$t('createMetatypeRelationship.requiredField')}}</p>
             </v-col>
           </v-row>
         </v-container>
@@ -40,7 +46,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="dialog = false; reset()" >{{$t("createMetatypeRelationship.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" :disabled="!formValid" text @click="createMetatype()">{{$t("createMetatypeRelationship.save")}}</v-btn>
+        <v-btn color="blue darken-1" :disabled="!valid" text @click="createMetatype()">{{$t("createMetatypeRelationship.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -61,10 +67,7 @@ export default class CreateMetatypeRelationshipDialog extends Vue {
   dialog = false
   name = ""
   description = ""
-
-  get formValid() {
-    return this.name !== ""
-  }
+  valid = false
 
   createMetatype() {
     this.$client.createMetatypeRelationship(this.containerID, this.name, this.description)

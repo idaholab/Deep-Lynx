@@ -26,7 +26,7 @@
                     v-model="selectedMetatypeKey.name"
                     :rules="[v => !!v || $t('editMetatypeKey.nameRequired')]"
                 >
-                  <template v-slot:label>{{$t('editMetatypeKey.name')}} <small style="color:red" >{{$t("editMetatypeKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeKey.name')}} <small style="color:red" >*</small></template>
                 </v-text-field>
 
                 <v-text-field
@@ -34,7 +34,7 @@
                     :rules="[v => !!v || $t('editMetatypeKey.propertyNameRequired')]"
                     required
                 >
-                  <template v-slot:label>{{$t('editMetatypeKey.propertyName')}} <small style="color:red" >{{$t("editMetatypeKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeKey.propertyName')}} <small style="color:red" >*</small></template>
                 </v-text-field>
                 <v-select
                     v-model="selectedMetatypeKey.data_type"
@@ -43,19 +43,19 @@
                     :rules="[v => !!v || $t('editMetatypeKey.dataTypeRequired')]"
                     required
                 >
-                  <template v-slot:label>{{$t('editMetatypeKey.dataType')}} <small style="color:red" >{{$t("editMetatypeKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeKey.dataType')}} <small style="color:red" >*</small></template>
                 </v-select>
                 <v-checkbox
                     v-model="selectedMetatypeKey.required"
                 >
-                  <template v-slot:label>{{$t('editMetatypeKey.required')}} <small style="color:#ff0000" >{{$t("editMetatypeKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeKey.required')}} <small style="color:#ff0000" >*</small></template>
                 </v-checkbox>
                 <v-textarea
                     v-model="selectedMetatypeKey.description"
                     :rows="2"
                     :rules="[v => !!v || $t('editMetatypeKey.descriptionRequired')]"
                 >
-                  <template v-slot:label>{{$t('editMetatypeKey.description')}} <small style="color:#ff0000" >{{$t("editMetatypeKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeKey.description')}} <small style="color:#ff0000" >*</small></template>
                 </v-textarea>
 
                 <h3>{{$t('editMetatypeKey.validation')}}</h3>
@@ -102,12 +102,14 @@
                       type="number"
                       :label="$t('editMetatypeKey.defaultValue')"
                   ></v-text-field>
-                  <v-checkbox
+                  <v-select
                       v-else-if="selectedMetatypeKey.data_type === 'boolean'"
                       v-model="selectedMetatypeKey.default_value"
                       :label="$t('editMetatypeKey.defaultValue')"
+                      :items="booleanOptions"
+                      required
                   >
-                  </v-checkbox>
+                  </v-select>
                   <v-text-field
                       v-else
                       v-model="selectedMetatypeKey.default_value"
@@ -124,6 +126,7 @@
                     deletable-chips
                 ></v-combobox>
               </v-form>
+              <p><span style="color:red">*</span> = {{$t('editMetatypeKey.requiredField')}}</p>
             </v-col>
           </v-row>
         </v-container>
@@ -158,6 +161,7 @@ export default class EditMetatypeKeyDialog extends Vue {
   formValid = false
   selectedMetatypeKey: MetatypeKeyT | null  = null
   dataTypes = ["number", "date", "string", "boolean", "enumeration", "file"]
+  booleanOptions = [true, false]
 
   @Watch('dialog', {immediate: true})
   onDialogChange() {

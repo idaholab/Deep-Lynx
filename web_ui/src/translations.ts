@@ -66,7 +66,8 @@ export default {
       keyName: "Name",
       keyDescription: "Description",
       keyType: "Data Type",
-      keyActions: "Actions"
+      keyActions: "Actions",
+      requiredField: "Required Field"
     },
     editMetatypeRelationship: {
       editMetatypeRelationship: "Edit Metatype Relationship",
@@ -81,12 +82,14 @@ export default {
       keyName: "Name",
       keyDescription: "Description",
       keyType: "Data Type",
-      keyActions: "Actions"
+      keyActions: "Actions",
+      requiredField: "Required Field"
     },
     editMetatypeKey: {
       edit: "Edit",
       name: "Name",
       propertyName: "Property Name",
+      propertyNameHelp: "JSON compatible property name",
       description: "Description",
       dataType: "Data Type",
       required: "Required",
@@ -103,11 +106,13 @@ export default {
       save: "Save",
       cancel: "Cancel",
       errorUpdatingAPI: "Error communicating with Deep Lynx:",
+      requiredField: "Required Field"
     },
     createMetatypeKey: {
       newKey: "New Property",
       name: "Name",
       propertyName: "Property Name",
+      propertyNameHelp: "JSON compatible property name",
       description: "Description",
       dataType: "Data Type",
       required: "Required",
@@ -124,11 +129,13 @@ export default {
       create: "Create",
       cancel: "Cancel",
       errorUpdatingAPI: "Error communicating with Deep Lynx:",
+      requiredField: "Required Field"
     },
     editMetatypeRelationshipKey: {
       edit: "Edit",
       name: "Name",
       propertyName: "Property Name",
+      propertyNameHelp: "JSON compatible property name",
       description: "Description",
       dataType: "Data Type",
       required: "Required",
@@ -145,11 +152,13 @@ export default {
       save: "Save",
       cancel: "Cancel",
       errorUpdatingAPI: "Error communicating with Deep Lynx:",
+      requiredField: "Required Field"
     },
     createMetatypeRelationshipKey: {
       newKey: "New Property",
       name: "Name",
       propertyName: "Property Name",
+      propertyNameHelp: "JSON compatible property name",
       description: "Description",
       dataType: "Data Type",
       required: "Required",
@@ -166,6 +175,7 @@ export default {
       create: "Create",
       cancel: "Cancel",
       errorUpdatingAPI: "Error communicating with Deep Lynx:",
+      requiredField: "Required Field"
     },
     createMetatype: {
       createMetatype: "Create Metatype",
@@ -174,7 +184,8 @@ export default {
       description: "Description",
       save: "Save",
       cancel: "Cancel",
-      errorCreatingAPI: "Error communicating with Deep Lynx:"
+      errorCreatingAPI: "Error communicating with Deep Lynx:",
+      requiredField: "Required Field"
     },
     createMetatypeRelationship: {
       createMetatypeRelationship: "Create Metatype Relationship",
@@ -183,7 +194,8 @@ export default {
       description: "Description",
       save: "Save",
       cancel: "Cancel",
-      errorCreatingAPI: "Error communicating with Deep Lynx:"
+      errorCreatingAPI: "Error communicating with Deep Lynx:",
+      requiredField: "Required Field"
     },
     createMetatypeRelationshipPair: {
       createMetatypeRelationshipPair: "Create Metatype Relationship Pair",
@@ -201,7 +213,8 @@ export default {
       originRequired: "origin metatype required",
       destinationRequired: "destination metatype required",
       relationshipRequired: "relationship required",
-      errorCreatingAPI: "Error communicating with Deep Lynx:"
+      errorCreatingAPI: "Error communicating with Deep Lynx:",
+      requiredField: "Required Field"
     },
     editMetatypeRelationshipPair: {
       editMetatypeRelationshipPair: "Edit Metatype Relationship Pair",
@@ -219,7 +232,8 @@ export default {
       originRequired: "origin metatype required",
       destinationRequired: "destination metatype required",
       relationshipRequired: "relationship required",
-      errorEditingAPI: "Error communicating with Deep Lynx:"
+      errorEditingAPI: "Error communicating with Deep Lynx:",
+      requiredField: "Required Field"
     },
     metatypeRelationships: {
       relationshipSuccessfullyCreated :"Metatype Relationship created successfully",
@@ -241,7 +255,8 @@ export default {
       searchDescription: "Search Description",
       originMetatype: "Search Origin Metatype",
       destinationMetatype: "Search Destination Metatype",
-      relationship: "Search Relationship"
+      relationship: "Search Relationship",
+      pairSuccessfullyCreated: "Successfully Created Metatype Relationship Pair"
     },
     dataSources: {
       create: "Create",

@@ -26,7 +26,7 @@
                     v-model="selectedMetatypeRelationshipKey.name"
                     :rules="[v => !!v || $t('editMetatypeRelationshipKey.nameRequired')]"
                 >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipKey.name')}} <small style="color:red" >{{$t("editMetatypeRelationshipKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeRelationshipKey.name')}} <small style="color:red" >*</small></template>
                 </v-text-field>
 
                 <v-text-field
@@ -34,7 +34,7 @@
                     :rules="[v => !!v || $t('editMetatypeRelationshipKey.propertyNameRequired')]"
                     required
                 >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipKey.propertyName')}} <small style="color:red" >{{$t("editMetatypeRelationshipKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeRelationshipKey.propertyName')}} <small style="color:red" >*</small></template>
                 </v-text-field>
                 <v-select
                     v-model="selectedMetatypeRelationshipKey.data_type"
@@ -43,19 +43,19 @@
                     :rules="[v => !!v || $t('editMetatypeRelationshipKey.dataTypeRequired')]"
                     required
                 >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipKey.dataType')}} <small style="color:red" >{{$t("editMetatypeRelationshipKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeRelationshipKey.dataType')}} <small style="color:red" >*</small></template>
                 </v-select>
                 <v-checkbox
                     v-model="selectedMetatypeRelationshipKey.required"
                 >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipKey.required')}} <small style="color:#ff0000" >{{$t("editMetatypeRelationshipKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeRelationshipKey.required')}} <small style="color:#ff0000" >*</small></template>
                 </v-checkbox>
                 <v-textarea
                     v-model="selectedMetatypeRelationshipKey.description"
                     :rows="2"
                     :rules="[v => !!v || $t('editMetatypeRelationshipKey.descriptionRequired')]"
                 >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipKey.description')}} <small style="color:#ff0000" >{{$t("editMetatypeRelationshipKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('editMetatypeRelationshipKey.description')}} <small style="color:#ff0000" >*</small></template>
                 </v-textarea>
 
                 <div v-if="selectedMetatypeRelationshipKey.validation">
@@ -102,12 +102,14 @@
                       type="number"
                       :label="$t('editMetatypeRelationshipKey.defaultValue')"
                   ></v-text-field>
-                  <v-checkbox
+                  <v-select
                       v-else-if="selectedMetatypeRelationshipKey.data_type === 'boolean'"
                       v-model="selectedMetatypeRelationshipKey.default_value"
                       :label="$t('editMetatypeRelationshipKey.defaultValue')"
+                      :items="booleanOptions"
+                      required
                   >
-                  </v-checkbox>
+                  </v-select>
                   <v-text-field
                       v-else
                       v-model="selectedMetatypeRelationshipKey.default_value"
@@ -124,6 +126,7 @@
                     chips
                 ></v-combobox>
               </v-form>
+              <p><span style="color:red">*</span> = {{$t('editMetatypeRelationshipKey.requiredField')}}</p>
             </v-col>
           </v-row>
         </v-container>
@@ -158,6 +161,7 @@ export default class EditMetatypeRelationshipKeyDialog extends Vue {
   formValid = false
   selectedMetatypeRelationshipKey: MetatypeRelationshipKeyT | null  = null
   dataTypes = ["number", "date", "string", "boolean", "enumeration", "file"]
+  booleanOptions = [true, false]
 
   @Watch('dialog', {immediate: true})
   onDialogChange() {

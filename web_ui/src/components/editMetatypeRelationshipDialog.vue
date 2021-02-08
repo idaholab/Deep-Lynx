@@ -20,18 +20,25 @@
 
               <v-form
                   ref="form"
+                  v-model="valid"
               >
                 <v-text-field
                     v-model="selectedMetatypeRelationship.name"
-                    :label="$t('editMetatypeRelationship.name')"
+                    :rules="[v => !!v || $t('editMetatypeRelationship.nameRequired')]"
                     required
-                ></v-text-field>
+                >
+                  <template v-slot:label>{{$t('editMetatypeRelationship.name')}} <small style="color:red" >*</small></template>
+                </v-text-field>
                 <v-textarea
                     v-model="selectedMetatypeRelationship.description"
-                    :label="$t('editMetatypeRelationship.description')"
-                ></v-textarea>
+                    :rules="[v => !!v || $t('editMetatypeRelationship.descriptionRequired')]"
+                    required
+                >
+                  <template v-slot:label>{{$t('editMetatypeRelationship.description')}} <small style="color:red" >*</small></template>
+                </v-textarea>
 
               </v-form>
+              <p><span style="color:red">*</span> = {{$t('editMetatypeRelationship.requiredField')}}</p>
             </v-col>
 
             <v-col :cols="12" v-if="keysLoading">
@@ -78,7 +85,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("editMetatypeRelationship.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" :disabled="!formValid" text @click="editMetatypeRelationship()">{{$t("editMetatypeRelationship.save")}}</v-btn>
+        <v-btn color="blue darken-1" :disabled="!valid" text @click="editMetatypeRelationship()">{{$t("editMetatypeRelationship.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -105,6 +112,7 @@ export default class EditMetatypeRelationshipDialog extends Vue {
   keysLoading = false
   dialog = false
   selectedMetatypeRelationship: MetatypeRelationshipT | null  = null
+  valid = false
 
   // this way we only load the keys when the edit dialog is open, so we don't
   // overload someone using this in a list
@@ -127,10 +135,6 @@ export default class EditMetatypeRelationshipDialog extends Vue {
   mounted() {
     // have to do this to avoid mutating properties
     this.selectedMetatypeRelationship = JSON.parse(JSON.stringify(this.metatypeRelationship))
-  }
-
-  get formValid() {
-    return this.selectedMetatypeRelationship?.name !== ""
   }
 
   editMetatypeRelationship() {

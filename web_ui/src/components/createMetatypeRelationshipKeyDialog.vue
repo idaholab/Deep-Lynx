@@ -26,7 +26,7 @@
                     v-model="metatypeRelationshipKey.name"
                     :rules="[v => !!v || $t('createMetatypeRelationshipKey.nameRequired')]"
                 >
-                  <template v-slot:label>{{$t('createMetatypeRelationshipKey.name')}} <small style="color:red" >{{$t("createMetatypeRelationshipKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('createMetatypeRelationshipKey.name')}} <small style="color:red" >*</small></template>
                 </v-text-field>
 
                 <v-text-field
@@ -34,7 +34,7 @@
                     :rules="[v => !!v || $t('createMetatypeRelationshipKey.propertyNameRequired')]"
                     required
                 >
-                  <template v-slot:label>{{$t('createMetatypeRelationshipKey.propertyName')}} <small style="color:red" >{{$t("createMetatypeRelationshipKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('createMetatypeRelationshipKey.propertyName')}} <small style="color:red" >*</small></template>
                 </v-text-field>
                 <v-select
                     v-model="metatypeRelationshipKey.data_type"
@@ -43,19 +43,19 @@
                     :rules="[v => !!v || $t('createMetatypeRelationshipKey.dataTypeRequired')]"
                     required
                 >
-                  <template v-slot:label>{{$t('createMetatypeRelationshipKey.dataType')}} <small style="color:red" >{{$t("createMetatypeRelationshipKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('createMetatypeRelationshipKey.dataType')}} <small style="color:red" >*</small></template>
                 </v-select>
                 <v-checkbox
                     v-model="metatypeRelationshipKey.required"
                 >
-                  <template v-slot:label>{{$t('createMetatypeRelationshipKey.required')}} <small style="color:#ff0000" >{{$t("createMetatypeRelationshipKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('createMetatypeRelationshipKey.required')}} <small style="color:red" >*</small></template>
                 </v-checkbox>
                 <v-textarea
                     v-model="metatypeRelationshipKey.description"
                     :rows="2"
                     :rules="[v => !!v || $t('createMetatypeRelationshipKey.descriptionRequired')]"
                 >
-                  <template v-slot:label>{{$t('createMetatypeRelationshipKey.description')}} <small style="color:#ff0000" >{{$t("createMetatypeRelationshipKey.requiredSmall")}}</small></template>
+                  <template v-slot:label>{{$t('createMetatypeRelationshipKey.description')}} <small style="color:red" >*</small></template>
                 </v-textarea>
 
                 <h3>{{$t('createMetatypeRelationshipKey.validation')}}</h3>
@@ -82,8 +82,6 @@
                   <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeRelationshipKey.minHelp')"></info-tooltip></template>
                 </v-text-field>
 
-
-
                 <!-- default value and options should be comboboxes when set to enumeration -->
                 <div v-if="metatypeRelationshipKey.data_type === 'enumeration'" >
                   <v-combobox
@@ -102,12 +100,14 @@
                       type="number"
                       :label="$t('createMetatypeRelationshipKey.defaultValue')"
                   ></v-text-field>
-                  <v-checkbox
+                  <v-select
                       v-else-if="metatypeRelationshipKey.data_type === 'boolean'"
                       v-model="metatypeRelationshipKey.default_value"
                       :label="$t('createMetatypeRelationshipKey.defaultValue')"
+                      :items="booleanOptions"
+                      required
                   >
-                  </v-checkbox>
+                  </v-select>
                   <v-text-field
                       v-else
                       v-model="metatypeRelationshipKey.default_value"
@@ -124,6 +124,7 @@
                     chips
                 ></v-combobox>
               </v-form>
+              <p><span style="color:red">*</span> = {{$t('createMetatypeRelationshipKey.requiredField')}}</p>
             </v-col>
           </v-row>
         </v-container>
@@ -155,6 +156,7 @@ export default class CreateMetatypeRelationshipKeyDialog extends Vue {
   formValid = false
   metatypeRelationshipKey: MetatypeRelationshipKeyT = {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeRelationshipKeyT
   dataTypes = ["number", "date", "string", "boolean", "enumeration", "file"]
+  booleanOptions = [true, false]
 
   @Watch('dialog', {immediate: true})
   onDialogChange() {
