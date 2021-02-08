@@ -127,6 +127,19 @@ export default class MetatypeRelationshipKeyStorage extends PostgresStorage{
         let i = 1;
 
         Object.keys(updatedField).map(k => {
+            if(k === `created_at` || k === `created_by` || k === 'modified_at' || k === 'modified_by') {
+                return
+            }
+
+            // we must stringify the default value as it could be something other
+            // than a string, we store it as a string in the DB for ease of use
+            if(k === 'default_value' || k === 'options') {
+                updateStatement.push(`${k} = $${i}`);
+                values.push(JSON.stringify(updatedField[k]));
+                i++
+                return
+            }
+
             updateStatement.push(`${k} = $${i}`);
             values.push(updatedField[k]);
             i++
@@ -134,6 +147,8 @@ export default class MetatypeRelationshipKeyStorage extends PostgresStorage{
 
         updateStatement.push(`modified_by = $${i}`);
         values.push(userID);
+
+        updateStatement.push('modified_at = NOW()')
 
         return new Promise(resolve => {
             PostgresAdapter.Instance.Pool.query({
@@ -252,8 +267,8 @@ export default class MetatypeRelationshipKeyStorage extends PostgresStorage{
             text:`INSERT INTO metatype_relationship_keys(metatype_relationship_id, id, name, description, property_name, required, data_type, options, default_value,validation, created_by, modified_by)
 VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
             values: [key.metatype_relationship_id, key.id, key.name, key.description,
-                key.property_name, key.required, key.data_type, key.options,
-                key.default_value,key.validation, key.created_by, key.modified_by]
+                key.property_name, key.required, key.data_type, JSON.stringify(key.options),
+                JSON.stringify(key.default_value),key.validation, key.created_by, key.modified_by]
         }
     }
 
@@ -297,8 +312,8 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
                  validation = $8
                  WHERE id = $9`,
             values: [key.name, key.description,
-                key.property_name, key.required, key.data_type, key.options,
-                key.default_value,key.validation, key.id]
+                key.property_name, key.required, key.data_type, JSON.stringify(key.options),
+                JSON.stringify(key.default_value),key.validation, key.id]
         }
     }
 }

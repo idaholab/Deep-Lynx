@@ -77,13 +77,11 @@
 </template>
 
 <script lang="ts">
-    // TODO SET ACTIVE/INACTIVE TYPE MAPPING
-    import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
+    import {Component, Prop, Vue} from 'vue-property-decorator'
     import {
       ImportDataT,
       TypeMappingT, TypeMappingTransformationT
     } from "../api/types";
-    import InfoTooltip from "@/components/infoTooltip.vue";
     import TransformationDialog from "@/components/transformationDialog.vue";
 
     @Component({
@@ -92,7 +90,7 @@
                 return JSON.stringify(value, null, 2)
             }
         },
-        components: {TransformationDialog, InfoTooltip}
+        components: {TransformationDialog}
     })
     export default class DataTypeMapping extends Vue {
 

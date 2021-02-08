@@ -251,7 +251,6 @@
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import {DataSourceT, MetatypeRelationshipPairT, MetatypeT, TypeMappingT} from "@/api/types";
-import InfoTooltip from "@/components/infoTooltip.vue";
 import DataTypeMapping from "@/components/dataTypeMapping.vue"
 
 @Component({filters: {
@@ -260,8 +259,7 @@ import DataTypeMapping from "@/components/dataTypeMapping.vue"
             }
         },
         components: {
-           DataTypeMapping,
-           InfoTooltip
+           DataTypeMapping
     }})
     export default class DataMapping extends Vue {
       @Prop({required: true})
