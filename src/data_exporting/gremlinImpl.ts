@@ -2,7 +2,6 @@ import {Exporter} from "./exporter";
 import {GremlinConfigT} from "../types/export/gremlinConfigT";
 import GremlinAdapter from "../data_storage/adapters/gremlin/gremlin";
 import Config from "../config";
-import * as fs from "fs";
 import ExportStorage from "../data_storage/export/export_storage";
 import {ExportT} from "../types/export/exportT";
 import Result from "../result";
@@ -46,19 +45,19 @@ export class GremlinImpl implements Exporter {
         } as ExportT);
 
         return new Promise(resolve => {
-           if(exp.isError) resolve(Result.Pass(exp));
-           instance.exportT = exp.value;
+            if(exp.isError) resolve(Result.Pass(exp));
+            instance.exportT = exp.value;
 
-           gremlinExportStorage.InitiateExport(exp.value.id!)
-               .then(result => {
-                  if(result.isError) {
-                      exportStorage.PermanentlyDelete(exp.value.id!);
-                      resolve(Result.Pass(exp))
-                  }
+            gremlinExportStorage.InitiateExport(exp.value.id!)
+                .then(result => {
+                    if(result.isError) {
+                        exportStorage.PermanentlyDelete(exp.value.id!);
+                        resolve(Result.Pass(exp))
+                    }
 
-                  resolve(Result.Success(instance))
-               })
-               .catch(e => resolve(Result.Failure(e)))
+                    resolve(Result.Success(instance))
+                })
+                .catch(e => resolve(Result.Failure(e)))
         })
     }
 
@@ -87,7 +86,7 @@ export class GremlinImpl implements Exporter {
     }
 
     async Start(userID: string): Promise<Result<boolean>>{
-        ExportStorage.Instance.SetProcessing(this.exportT.id!);
+        ExportStorage.Instance.SetStatus(this.exportT.id!, "processing")
         this.export();
 
         return new Promise(resolve => resolve(Result.Success(true)));
@@ -117,16 +116,30 @@ export class GremlinImpl implements Exporter {
                 return
             }
 
-            // unassociated nodes should be inserted as vertices without any edges, as such we get them out of the way first.
-            const unassociatedNodes = await gremlinExportStorage.ListUnassociatedNodes(this.exportT.id!, 0, (this.exportT.config as GremlinConfigT).writes_per_second);
+            const exportTransaction = await gremlinExportStorage.startTransaction()
+            if(exportTransaction.isError) {
+                Logger.error(`unable to initiate db transaction ${exportTransaction}`)
+                return
+            }
+
+            // unassociated nodes should be inserted as vertices without any edges,
+            // as such we get them out of the way first. We choose to wait here if
+            // we can't get a lock so that we don't error out, we'll perform a check
+            // later on to verify a node hasn't been inserted
+            const unassociatedNodes = await gremlinExportStorage.ListUnassociatedNodesAndLock(this.exportT.id!, 0, (this.exportT.config as GremlinConfigT).writes_per_second, exportTransaction.value, true);
             if(unassociatedNodes.isError) {
                 Logger.error(`gremlin export failing: ${unassociatedNodes.error?.error}`);
+                await gremlinExportStorage.completeTransaction(exportTransaction.value)
+
                 return
             }
 
             if(unassociatedNodes.value.length <= 0) break;
 
             for(const node of unassociatedNodes.value) {
+                // double check it hasn't been added
+                if(!node.gremlin_node_id || node.gremlin_node_id !== "") continue
+
                 const metatype = await MetatypeStorage.Instance.Retrieve(node.metatype_id);
                 if(metatype.isError){
                     Logger.error(`gremlin export node failed: ${metatype.error?.error}`);
@@ -146,6 +159,8 @@ export class GremlinImpl implements Exporter {
                 }
             }
 
+            await gremlinExportStorage.completeTransaction(exportTransaction.value)
+
             await this.delay(1000)
         }
 
@@ -160,9 +175,20 @@ export class GremlinImpl implements Exporter {
                 return
             }
 
-            const unassociatedEdges = await gremlinExportStorage.ListUnassociatedEdges(this.exportT.id!, 0, (this.exportT.config as GremlinConfigT).writes_per_second);
+            const exportTransaction = await gremlinExportStorage.startTransaction()
+            if(exportTransaction.isError) {
+                Logger.error(`unable to initiate db transaction ${exportTransaction}`)
+                return
+            }
+
+            // We choose to wait here if we can't get a lock so that we don't
+            // error out, we'll perform a check later on to verify a node hasn't
+            // been inserted
+            const unassociatedEdges = await gremlinExportStorage.ListUnassociatedEdgesAndLock(this.exportT.id!, 0, (this.exportT.config as GremlinConfigT).writes_per_second, exportTransaction.value, true);
             if(unassociatedEdges.isError) {
                 Logger.error(`gremlin export failing: ${unassociatedEdges.error?.error}`);
+                await gremlinExportStorage.completeTransaction(exportTransaction.value)
+
                 return
             }
 
@@ -170,6 +196,9 @@ export class GremlinImpl implements Exporter {
 
             // add corresponding gremlin edge for each
             for(const edge of unassociatedEdges.value) {
+                // double check it hasn't been added already
+                if(!edge.gremlin_edge_id || edge.gremlin_edge_id !== "") continue
+
                 const destination = await gremlinExportStorage.RetrieveNode(edge.destination_node_id);
                 const origin = await gremlinExportStorage.RetrieveNode(edge.origin_node_id!);
                 const pair = await MetatypeRelationshipPairStorage.Instance.Retrieve(edge.relationship_pair_id);
@@ -193,11 +222,13 @@ export class GremlinImpl implements Exporter {
                 }
             }
 
+            await gremlinExportStorage.completeTransaction(exportTransaction.value)
+
             await this.delay(1000)
         }
 
         Logger.debug(`gremlin export ${this.exportT.id} completed, cleaning up snapshot`);
-        await ExportStorage.Instance.SetCompleted(this.exportT.id!);
+        await ExportStorage.Instance.SetStatus(this.exportT.id!, "completed");
         await gremlinExportStorage.FinalizeExport(this.exportT.id!)
     }
     private delay(ms: number) {

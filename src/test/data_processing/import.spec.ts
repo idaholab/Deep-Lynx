@@ -214,6 +214,50 @@ describe('A data import', async() => {
         return storage.PermanentlyDelete(exp.value.id!)
     });
 
+    it('can be locked for processing', async()=> {
+        let storage = DataSourceStorage.Instance;
+        let importStorage = ImportStorage.Instance;
+
+        let exp = await storage.Create(containerID, "test suite",
+            {
+                name: "Test Data Source",
+                active:false,
+                adapter_type:"manual",
+                config: {}});
+
+        expect(exp.isError).false;
+        expect(exp.value).not.empty;
+
+        let newImport = await importStorage.InitiateImport(exp.value.id!, "test suite", "test");
+        expect(newImport.isError).false;
+
+        let imports = await importStorage.ListReady(exp.value.id!, 0, 100);
+        expect(imports.isError).false;
+        expect(imports.value).not.empty;
+
+        for(const i of imports.value) {
+            // start the first transaction which will lock the row
+            const transaction = await importStorage.startTransaction()
+
+            const importLocked = await importStorage.RetrieveAndLock(i.id, transaction.value)
+            expect(importLocked.isError).false
+            let stopped = await importStorage.SetStatus(i.id, "stopped", "locked", transaction.value);
+            expect(stopped.isError).false;
+
+
+            // second transaction should have no access to the row currently
+            const transaction2 = await importStorage.startTransaction()
+
+            const importLocked2 = await importStorage.RetrieveAndLock(i.id, transaction2.value)
+            expect(importLocked2.isError).true
+
+            importStorage.completeTransaction(transaction.value)
+            importStorage.completeTransaction(transaction2.value)
+        }
+
+        return storage.PermanentlyDelete(exp.value.id!)
+    });
+
     it('can be retrieved by last stopped', async()=> {
         let storage = DataSourceStorage.Instance;
         let importStorage = ImportStorage.Instance;

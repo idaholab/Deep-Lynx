@@ -193,9 +193,28 @@ export class HttpImpl implements DataSource {
             if(active.isError || !active.value) break;
 
 
-            // fetch last import, include time as url param
-            // TODO: don't poll if last import failed, corrected to handle error case
-            const lastImport = await ImportStorage.Instance.RetrieveLast(this.dataSourceT.id!);
+            // we start a transaction so that we can lock the previous and new import
+            // rows while we attempt to poll new data
+            const pollTransaction = await DataSourceStorage.Instance.startTransaction()
+            if(pollTransaction.isError) {
+                Logger.error(`unable to initiate db transaction ${pollTransaction.error}`);
+
+                (this.config.poll_interval) ?  await this.delay((this.config.poll_interval! * 1000)) : await this.delay(1000)
+                continue
+            }
+
+            // fetch last import, include time as url param - we lock the record on
+            // retrieval because if we can successfully lock it it means that it's
+            // not currently being processed or another export polling function is
+            // acting on it
+            const lastImport = await ImportStorage.Instance.RetrieveLastAndLock(this.dataSourceT.id!, pollTransaction.value);
+            if(lastImport.isError) {
+                Logger.error(`unable to retrieve and lock last import ${lastImport.error}`);
+                (this.config.poll_interval) ?  await this.delay((this.config.poll_interval! * 1000)) : await this.delay(1000)
+                await ImportStorage.Instance.completeTransaction(pollTransaction.value)
+
+                continue
+            }
 
             let lastImportTime = "";
             if(!lastImport.isError && lastImport.value.status === "completed") {
@@ -204,6 +223,8 @@ export class HttpImpl implements DataSource {
 
             if(lastImport.value && lastImport.value.status !== "completed") {
                 (this.config.poll_interval) ?  await this.delay((this.config.poll_interval! * 1000)) : await this.delay(1000)
+                await ImportStorage.Instance.completeTransaction(pollTransaction.value)
+
                 continue;
             }
 
@@ -240,6 +261,8 @@ export class HttpImpl implements DataSource {
 
                     if(!Array.isArray(resp.data)) {
                         Logger.error(`response from http importer must be an array of JSON objects`)
+                        await ImportStorage.Instance.completeTransaction(pollTransaction.value)
+
                         continue
                     }
 
@@ -247,8 +270,19 @@ export class HttpImpl implements DataSource {
                     const importRecord = await ImportStorage.Instance.InitiateImport(this.dataSourceT.id!, "polling system", reference)
                     if(importRecord.isError) {
                         Logger.error(`error creating import ${importRecord.error}`)
+                        await ImportStorage.Instance.completeTransaction(pollTransaction.value)
+
                         continue
                     }
+
+                    const lockNewImport = await ImportStorage.Instance.RetrieveAndLock(importRecord.value, pollTransaction.value, true)
+                    if(lockNewImport.isError) {
+                        Logger.error(`unable to retrieve and lock new import ${lockNewImport.error}`)
+                        await ImportStorage.Instance.completeTransaction(pollTransaction.value)
+
+                        continue
+                    }
+
 
                     for(const data of resp.data) {
                         const shapeHash = objectToShapeHash(data)
@@ -281,7 +315,11 @@ export class HttpImpl implements DataSource {
 
             // sleep for poll interval
             (this.config.poll_interval) ?  await this.delay((this.config.poll_interval! * 1000)) : await this.delay(1000)
-            }
+
+            // call the transaction complete after the delay interval so that there is no way another export
+            // function could possibly run an import while still in its cool-down
+            await ImportStorage.Instance.completeTransaction(pollTransaction.value)
+        }
 
         return Promise.resolve()
     }

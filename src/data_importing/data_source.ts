@@ -21,7 +21,10 @@ export async function StartDataSourcePolling(): Promise<Result<boolean>> {
         switch(source.adapter_type) {
             case "http": {
                 const httpImporter = await HttpImpl.NewFromDataSourceRecord(source);
-                if(httpImporter.isError) return new Promise(resolve => resolve(Result.Pass(httpImporter)));
+                if(httpImporter.isError) {
+                    Logger.error(`unable to initiate http importer ${httpImporter.error}`)
+                    continue
+                }
 
                 httpImporter.value.Poll()
             }

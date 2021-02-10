@@ -252,10 +252,12 @@ describe('A Data Processor', async() => {
         const active = await TypeMappingStorage.Instance.SetActive(typeMappingID)
         expect(active.isError).false
 
+        const dataImport = await ImportStorage.Instance.Retrieve(dataImportID)
+        expect(dataImport.isError).false
 
         const processor = new DataSourceProcessor(dataSource!,graphID)
 
-        let processed = await processor.process(dataImportID)
+        let processed = await processor.process(dataImport.value)
         expect(processed.isError).false
         expect(processed.value).true
 
