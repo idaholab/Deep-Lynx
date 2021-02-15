@@ -55,6 +55,21 @@ describe('An Export', async() => {
         return storage.PermanentlyDelete(exp.value.id!)
     });
 
+    it('can be have its status set', async()=> {
+        let storage = ExportStorage.Instance;
+
+        let exp = await storage.Create(containerID, "test suite",
+            {container_id: containerID, adapter:"gremlin", config: {}});
+
+        expect(exp.isError).false;
+        expect(exp.value).not.empty;
+
+        let set = await storage.SetStatus(exp.value.id!, "processing");
+        expect(set.isError).false;
+
+        return storage.PermanentlyDelete(exp.value.id!)
+    });
+
     it('can be listed from storage', async()=> {
         let storage = ExportStorage.Instance;
 

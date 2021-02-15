@@ -1,6 +1,6 @@
 import PostgresStorage from "../postgresStorage";
 import Result from "../../result";
-import {QueryConfig} from "pg";
+import {PoolClient, QueryConfig} from "pg";
 import {ImportT} from "../../types/import/importT";
 import uuid from "uuid";
 import {QueueProcessor} from "../../services/event_system/events";
@@ -31,11 +31,19 @@ export default class ImportStorage extends PostgresStorage {
         return super.retrieve<ImportT>(ImportStorage.retrieveStatement(id))
     }
 
-    public RetrieveLast(dataSourceID: string): Promise<Result<ImportT>> {
-        return super.retrieve<ImportT>(ImportStorage.retrieveLastStatement(dataSourceID))
+    // client is not optional here as the lock only applies if your call is in the
+    // context of a transaction
+    public RetrieveAndLock(id: string, client: PoolClient, wait?: boolean): Promise<Result<ImportT>> {
+        return super.retrieve<ImportT>(ImportStorage.retrieveLockStatement(id, wait), client)
     }
 
-    public async SetStatus(importID: string, status: "ready" | "processing" | "error" | "stopped" | "completed", message?: string): Promise<Result<boolean>> {
+    // client is not optional here as the lock only applies if your call is in the
+    // context of a transaction
+    public RetrieveLastAndLock(dataSourceID: string, client: PoolClient): Promise<Result<ImportT>> {
+        return super.retrieve<ImportT>(ImportStorage.retrieveLastAndLockStatement(dataSourceID), client)
+    }
+
+    public async SetStatus(importID: string, status: "ready" | "processing" | "error" | "stopped" | "completed", message?: string, client?: PoolClient): Promise<Result<boolean>> {
         if (status === "completed" || status === "stopped" || status === "error") {
             const completeImport = await this.Retrieve(importID)
             QueueProcessor.Instance.emit([{
@@ -48,7 +56,7 @@ export default class ImportStorage extends PostgresStorage {
                 }
             } as EventT])
         }
-        return super.runAsTransaction(ImportStorage.setStatusStatement(importID, status, message))
+        return super.run(ImportStorage.setStatusStatement(importID, status, message), client)
     }
 
     public async List(dataSourceID:string, offset:number, limit:number, sortBy?: string, sortDesc?: boolean): Promise<Result<ImportT[]>>{
@@ -96,9 +104,23 @@ export default class ImportStorage extends PostgresStorage {
         }
     }
 
-    private static retrieveLastStatement(logID: string): QueryConfig {
+    private static retrieveLockStatement(logID: string, wait?: boolean): QueryConfig {
+       if(wait) {
+           return {
+               text: `SELECT * FROM imports WHERE id = $1 FOR UPDATE`,
+               values: [logID]
+           }
+       }
+
+       return {
+            text: `SELECT * FROM imports WHERE id = $1 FOR UPDATE NOWAIT`,
+            values: [logID]
+        }
+    }
+
+    private static retrieveLastAndLockStatement(logID: string): QueryConfig {
         return {
-            text: `SELECT * FROM imports WHERE data_source_id = $1 ORDER BY modified_at DESC NULLS LAST LIMIT 1 `,
+            text: `SELECT * FROM imports WHERE data_source_id = $1 ORDER BY modified_at DESC NULLS LAST LIMIT 1 FOR UPDATE NOWAIT `,
             values: [logID]
         }
     }

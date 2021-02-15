@@ -91,8 +91,16 @@ export default class ExportStorage extends PostgresStorage{
         return super.retrieve<ExportT>(ExportStorage.retrieveStatement(id))
     }
 
-    public List(containerID: string ): Promise<Result<ExportT[]>> {
-        return super.rows<ExportT>(ExportStorage.listStatement(containerID))
+    public List(containerID: string, offset?: number, limit?: number, sortBy?: string, sortDesc?: boolean): Promise<Result<ExportT[]>> {
+        if(limit === -1 || !limit) {
+            return super.rows<ExportT>(ExportStorage.listAllStatement(containerID))
+        }
+
+        return super.rows<ExportT>(ExportStorage.listStatement(containerID, offset, limit, sortBy, sortDesc))
+    }
+
+    public Count(containerID: string): Promise<Result<number>> {
+        return super.count(ExportStorage.countStatement(containerID))
     }
 
     public ListByStatus(status: "created" | "processing" | "paused" | "completed" | "failed" ): Promise<Result<ExportT[]>> {
@@ -103,18 +111,17 @@ export default class ExportStorage extends PostgresStorage{
         return super.run(ExportStorage.deleteStatement(id))
     }
 
-    public SetProcessing(id: string): Promise<Result<boolean>> {
-        return super.run(ExportStorage.setProcessingStatement(id))
-    }
+    public async SetStatus(id: string, status: "created" | "processing" | "paused" | "completed" | "failed"): Promise<Result<boolean>> {
+        if(status === "completed") {
+            const completeExport = await this.Retrieve(id)
+            QueueProcessor.Instance.emit([{
+                source_id: completeExport.value.container_id,
+                source_type: "container",
+                type: "data_exported"
+            } as EventT])
+        }
 
-    public async SetCompleted(id: string): Promise<Result<boolean>> {
-        const completeExport = await this.Retrieve(id)
-        QueueProcessor.Instance.emit([{
-            source_id: completeExport.value.container_id,
-            source_type: "container",
-            type: "data_exported"
-        } as EventT])
-        return super.run(ExportStorage.setCompletedStatement(id))
+        return super.run(ExportStorage.setStatusStatement(id, status))
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -142,24 +149,49 @@ export default class ExportStorage extends PostgresStorage{
         }
     }
 
-    private static listStatement(containerID:string): QueryConfig {
+    private static listAllStatement(containerID:string): QueryConfig {
         return {
             text: `SELECT * FROM exports WHERE container_id = $1`,
             values: [containerID]
         }
     }
 
-    private static setProcessingStatement(id:string): QueryConfig {
+    private static countStatement(containerID:string): QueryConfig {
         return {
-            text: `UPDATE exports SET status = 'processing' WHERE id = $1`,
-            values: [id]
+            text: `SELECT COUNT(*) FROM exports WHERE container_id = $1`,
+            values: [containerID]
         }
     }
 
-    private static setCompletedStatement(id:string): QueryConfig {
+    private static listStatement(containerID:string, offset?: number, limit?: number, sortBy?: string, sortDesc?: boolean): QueryConfig {
+        if(sortDesc) {
+            return {
+                text: `SELECT * FROM exports
+                WHERE container_id = $1
+                ORDER BY "${sortBy} DESC"
+                OFFSET $2 LIMIT $3`,
+                values: [containerID, offset, limit]
+            }
+        } else if (sortBy) {
+            return {
+                text: `SELECT * FROM exports
+                WHERE container_id = $1
+                ORDER BY "${sortBy} ASC"
+                OFFSET $2 LIMIT $3`,
+                values: [containerID, offset, limit]
+            }
+        } else {
+            return {
+                text: `SELECT * FROM exports WHERE container_id = $1`,
+                values: [containerID]
+            }
+        }
+    }
+
+    private static setStatusStatement(id: string, status: "created" | "processing" | "paused" | "completed" | "failed" ): QueryConfig {
         return {
-            text: `UPDATE exports SET status = 'completed' WHERE id = $1`,
-            values: [id]
+            text: `UPDATE exports SET status = $1 WHERE id = $2`,
+            values: [status, id]
         }
     }
 

@@ -1,6 +1,6 @@
 import Result from "../../result"
 import PostgresStorage from "../postgresStorage";
-import {QueryConfig} from "pg";
+import {PoolClient, QueryConfig} from "pg";
 import {GremlinNodeT} from "../../types/export/gremlinNodeT";
 import {GremlinEdgeT} from "../../types/export/gremlinEdgeT";
 
@@ -44,16 +44,16 @@ export default class GremlinExportStorage extends PostgresStorage{
         return super.retrieve<GremlinEdgeT>(GremlinExportStorage.retrieveEdgeStatement(id))
     }
 
-    public ListUnassociatedNodes(exportID: string, offset: number, limit: number): Promise<Result<GremlinNodeT[]>> {
-        return super.rows<GremlinNodeT>(GremlinExportStorage.listUnassociatedNodesStatement(exportID, offset, limit))
+    public ListUnassociatedNodesAndLock(exportID: string, offset: number, limit: number, client: PoolClient, wait?: boolean): Promise<Result<GremlinNodeT[]>> {
+        return super.rows<GremlinNodeT>(GremlinExportStorage.listUnassociatedAndLockNodesStatement(exportID, offset, limit, wait), client)
     }
 
     public ListAssociatedNodes(exportID: string, offset: number, limit: number ): Promise<Result<GremlinNodeT[]>> {
         return super.rows<GremlinNodeT>(GremlinExportStorage.listAssociatedNodesStatement(exportID, offset, limit))
     }
 
-    public ListUnassociatedEdges(exportID: string, offset: number, limit: number ): Promise<Result<GremlinEdgeT[]>> {
-        return super.rows<GremlinEdgeT>(GremlinExportStorage.listUnassociatedEdgesStatement(exportID, offset, limit))
+    public ListUnassociatedEdgesAndLock(exportID: string, offset: number, limit: number, client: PoolClient, wait?: boolean ): Promise<Result<GremlinEdgeT[]>> {
+        return super.rows<GremlinEdgeT>(GremlinExportStorage.listUnassociatedAndLockEdgesStatement(exportID, offset, limit, wait), client)
     }
 
     public ListAssociatedEdges(exportID: string, offset: number, limit: number ): Promise<Result<GremlinEdgeT[]>> {
@@ -131,9 +131,16 @@ export default class GremlinExportStorage extends PostgresStorage{
         }
     }
 
-    private static listUnassociatedNodesStatement(exportID: string, offset: number, limit: number): QueryConfig {
+    private static listUnassociatedAndLockNodesStatement(exportID: string, offset: number, limit: number, wait?: boolean): QueryConfig {
+        if(wait) {
+            return {
+                text: `SELECT * FROM gremlin_export_nodes WHERE export_id = $1 AND gremlin_node_id IS NULL OFFSET $2 LIMIT $3 FOR UPDATE`,
+                values: [exportID, offset, limit]
+            }
+        }
+
         return {
-            text: `SELECT * FROM gremlin_export_nodes WHERE export_id = $1 AND gremlin_node_id IS NULL OFFSET $2 LIMIT $3`,
+            text: `SELECT * FROM gremlin_export_nodes WHERE export_id = $1 AND gremlin_node_id IS NULL OFFSET $2 LIMIT $3 FOR UPDATE NOWAIT`,
             values: [exportID, offset, limit]
         }
     }
@@ -145,9 +152,15 @@ export default class GremlinExportStorage extends PostgresStorage{
         }
     }
 
-    private static listUnassociatedEdgesStatement(exportID: string, offset: number, limit: number): QueryConfig {
+    private static listUnassociatedAndLockEdgesStatement(exportID: string, offset: number, limit: number, wait?: boolean): QueryConfig {
+        if(wait) {
+            return {
+                text: `SELECT * FROM gremlin_export_edges WHERE export_id = $1 AND gremlin_edge_id IS NULL OFFSET $2 LIMIT $3 FOR UPDATE`,
+                values: [exportID, offset, limit]
+            }
+        }
         return {
-            text: `SELECT * FROM gremlin_export_edges WHERE export_id = $1 AND gremlin_edge_id IS NULL OFFSET $2 LIMIT $3`,
+            text: `SELECT * FROM gremlin_export_edges WHERE export_id = $1 AND gremlin_edge_id IS NULL OFFSET $2 LIMIT $3 FOR UPDATE NOWAIT`,
             values: [exportID, offset, limit]
         }
     }

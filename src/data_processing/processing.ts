@@ -13,6 +13,7 @@ import EdgeStorage from "../data_storage/graph/edge_storage";
 import DataSourceStorage from "../data_storage/import/data_source_storage";
 import TypeTransformationStorage from "../data_storage/import/type_transformation_storage";
 import {ApplyTransformation, IsEdges, IsNodes} from "./type_mapping";
+import {ImportT} from "../types/import/importT";
 
 // DataSourceProcessor starts an unending processing loop for a data source. This
 // loop is what takes mapped data from data_staging and inserts it into the actual
@@ -38,12 +39,58 @@ export class DataSourceProcessor {
             const incompleteImports = await ImportStorage.Instance.ListIncompleteWithUninsertedData(this.dataSource.id!)
             if(!incompleteImports.isError) {
                 for(const incompleteImport of incompleteImports.value) {
-                    const processed = await this.process(incompleteImport.id)
+                    // we must wrap this insert as a transaction so that we are able to
+                    // lock the individual row for processing.
+                    // we won't pass the transaction into every function, only the updates
+                    const importTransaction = await ImportStorage.Instance.startTransaction()
+                    if(importTransaction.isError) {
+                        Logger.debug(`error attempting to start db transaction for import ${importTransaction.error}`)
+                        continue
+                    }
+
+                    // attempt to retrieve and lock the record for processing
+                    const dataImport = await ImportStorage.Instance.RetrieveAndLock(incompleteImport.id, importTransaction.value)
+                    if(dataImport.isError) {
+                        await ImportStorage.Instance.completeTransaction(importTransaction.value)
+
+                        Logger.debug(`error obtaining lock on import record ${dataImport.error}`)
+                        continue
+                    }
+
+
+                    const processed = await this.process(incompleteImport)
 
                     if(processed.isError) {
                         Logger.debug(`import ${incompleteImport.id} incomplete: ${processed.error?.error!}`)
+
+                        const set = await ImportStorage.Instance.SetStatus(incompleteImport.id, "error", `error attempting to process import ${processed.error?.error}`, importTransaction.value)
+                        if(set.isError) Logger.debug(`error attempting to update import status ${set.error}`)
+
+                        await ImportStorage.Instance.completeTransaction(importTransaction.value)
+                        continue
                     }
-                    else Logger.info(`processing of import ${incompleteImport.id} complete`)
+
+                    // check to see if import is now complete. If so, mark completed.
+                    const count = await DataStagingStorage.Instance.CountUninsertedForImport(incompleteImport.id)
+                    if(count.isError) {
+                        const set = await ImportStorage.Instance.SetStatus(incompleteImport.id, "error", `error attempting to count records ${count.error}`, importTransaction.value)
+                        if(set.isError) Logger.debug(`error attempting to update import status ${set.error}`)
+
+                        await ImportStorage.Instance.completeTransaction(importTransaction.value)
+                        continue
+                    }
+
+                    if(count.value === 0) {
+                        const set = await ImportStorage.Instance.SetStatus(incompleteImport.id, "completed", undefined, importTransaction.value)
+                        if(set.isError) Logger.debug(`error attempting to update import status ${set.error}`)
+
+                        await ImportStorage.Instance.completeTransaction(importTransaction.value)
+                        continue
+                    }
+
+                    const set = await  ImportStorage.Instance.SetStatus(incompleteImport.id, "processing", undefined, importTransaction.value)
+                    if(set.isError) Logger.debug(`error attempting to update import status ${set.error}`)
+                    await ImportStorage.Instance.completeTransaction(importTransaction.value)
                 }
             }
 
@@ -51,20 +98,18 @@ export class DataSourceProcessor {
         }
     }
 
-    public async process(dataImportID: string): Promise<Result<boolean>> {
+    public async process(dataImport: ImportT): Promise<Result<boolean>> {
         const ds = DataStagingStorage.Instance
 
         // attempt to process only those records which have active type mappings
         // with transformations
-        const totalToProcess = await ds.CountUninsertedActiveMapping(dataImportID)
-        if(totalToProcess.isError) return new Promise(resolve => resolve(Result.Pass(totalToProcess)))
+        const totalToProcess = await ds.CountUninsertedActiveMapping(dataImport.id)
+        if(totalToProcess.isError) {
+            return new Promise(resolve => resolve(Result.Pass(totalToProcess)))
+        }
 
-        if(totalToProcess.value === 0) return new Promise(resolve => resolve(Result.SilentFailure(`import data for ${dataImportID} does not have active type mappings with transformations for uninserted data`)))
-
-        // set import to processing status
-        const markProcessing = await ImportStorage.Instance.SetStatus(dataImportID, "processing")
-        if(markProcessing.isError) {
-            Logger.debug(`unable to set import ${dataImportID} to processing status: ${markProcessing.error}`)
+        if(totalToProcess.value === 0) {
+            return new Promise(resolve => resolve(Result.SilentFailure(`import data for ${dataImport.id} does not have active type mappings with transformations for uninserted data`)))
         }
 
         // so as to not swamp memory we process in batches, batch size determined by config.
@@ -74,10 +119,8 @@ export class DataSourceProcessor {
         // nodes/edges per data record one a time, we still need to batch the listing process for
         // the data as we have no idea how large an import could be.
         for(let i = 0; i < Math.floor(totalToProcess.value / Config.data_source_batch_size) + 1 ; i++) {
-            const toProcess = await ds.ListUninsertedActiveMapping(dataImportID, i * Config.data_source_batch_size, Config.data_source_batch_size)
+            const toProcess = await ds.ListUninsertedActiveMapping(dataImport.id, i * Config.data_source_batch_size, Config.data_source_batch_size)
             if(toProcess.isError) {
-                await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to fetch from data_staging ${toProcess.error?.error}`)
-
                 return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to fetch from data_staging ${toProcess.error?.error}`)))
             }
 
@@ -92,16 +135,23 @@ export class DataSourceProcessor {
                 // insert
                 const mapping = await TypeMappingStorage.Instance.Retrieve(row.mapping_id)
                 if(mapping.isError) {
-                    await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to fetch type mapping ${mapping.error?.error}`)
-
                     return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to fetch type mapping ${mapping.error?.error}`)))
                 }
 
                 const transformations = await TypeTransformationStorage.Instance.ListForTypeMapping(mapping.value.id!)
                 if(transformations.isError) {
-                    await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to fetch type mapping transformations ${transformations.error?.error}`)
-
                     return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to fetch type mapping transformations ${transformations.error?.error}`)))
+                }
+
+                // we must wrap this insert as a transaction so that if there are errors
+                // we are capable of rolling back Deep Lynx's data to a point before the
+                // import .Because we need the transaction client for edge verification
+                // we'll use the transaction primitives of a storage class.
+                const graphTransaction = await ds.startTransaction()
+                if(graphTransaction.isError) {
+                    return new Promise(resolve => {
+                        resolve(Result.SilentFailure(`error attempting to start db transaction for node/edge insertion ${graphTransaction.error}`))
+                    })
                 }
 
                 const nodesToInsert: NodeT[] = []
@@ -114,6 +164,7 @@ export class DataSourceProcessor {
                     const results = await ApplyTransformation(mapping.value, transformation, row)
                     if(results.isError) {
                         await DataStagingStorage.Instance.AddError(row.id, `unable to apply transformation ${transformation.id} to data ${row.id}: ${results.error}`)
+                        await GraphStorage.Instance.rollbackTransaction(graphTransaction.value)
 
                         return new Promise(resolve => resolve(Result.SilentFailure(`unable to apply transformation ${transformation.id} to data ${row.id}: ${results.error}`)))
                     }
@@ -123,19 +174,12 @@ export class DataSourceProcessor {
                     if(IsEdges(results.value)) edgesToInsert.push(...results.value)
                 }
 
-                // we must wrap this insert as a transaction so that if there are errors
-                // we are capable of rolling back Deep Lynx's data to a point before the
-                // import. Because we need the transaction client for edge verification
-                // we'll use the transaction primitives of a storage class.
-                const transaction = await GraphStorage.Instance.startTransaction()
-
                 // insert all nodes first, then edges
                 if(nodesToInsert.length > 0) {
                     for(const node of nodesToInsert) {
                         const insertedNodes = await NodeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, [node])
                         if (insertedNodes.isError) {
-                            await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to insert nodes ${insertedNodes.error?.error}`)
-                            await GraphStorage.Instance.rollbackTransaction(transaction.value)
+                            await GraphStorage.Instance.rollbackTransaction(graphTransaction.value)
 
                             // update the individual data row which failed
                             await DataStagingStorage.Instance.AddError(node.data_staging_id!, `error attempting to insert nodes ${insertedNodes.error?.error}` )
@@ -143,10 +187,9 @@ export class DataSourceProcessor {
                             return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to insert nodes ${insertedNodes.error?.error}`)))
                         }
 
-                        const inserted = await GraphStorage.Instance.runInTransaction(transaction.value, ...insertedNodes.value)
+                        const inserted = await GraphStorage.Instance.runInTransaction(graphTransaction.value, ...insertedNodes.value)
                         if (inserted.isError) {
-                            await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to insert nodes ${inserted.error?.error}`)
-                            await GraphStorage.Instance.rollbackTransaction(transaction.value)
+                            await GraphStorage.Instance.rollbackTransaction(graphTransaction.value)
 
                             // update the individual data row which failed
                             await DataStagingStorage.Instance.AddError(node.data_staging_id!, `error attempting to insert nodes ${inserted.error?.error}` )
@@ -162,10 +205,9 @@ export class DataSourceProcessor {
                     for(const edge of edgesToInsert) {
                         // we must also pass the transaction client to this function so that the edge verification of origin/destination
                         // node can take place even if there are new nodes coming in that are part of this transaction
-                        const insertedEdges = await EdgeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, [edge], transaction.value)
+                        const insertedEdges = await EdgeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, [edge], graphTransaction.value)
                         if(insertedEdges.isError) {
-                            await ImportStorage.Instance.SetStatus(dataImportID, "error",`error attempting to insert edges ${insertedEdges.error?.error}`)
-                            await GraphStorage.Instance.rollbackTransaction(transaction.value)
+                            await GraphStorage.Instance.rollbackTransaction(graphTransaction.value)
 
                             // update the individual data row which failed
                             await DataStagingStorage.Instance.AddError(edge.data_staging_id!, `error attempting to insert edges ${insertedEdges.error?.error}` )
@@ -173,10 +215,9 @@ export class DataSourceProcessor {
                             return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to insert edges ${insertedEdges.error?.error}`)))
                         }
 
-                        const inserted = await GraphStorage.Instance.runInTransaction(transaction.value, ...insertedEdges.value)
+                        const inserted = await GraphStorage.Instance.runInTransaction(graphTransaction.value, ...insertedEdges.value)
                         if (inserted.isError) {
-                            await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to insert edges ${inserted.error?.error}`)
-                            await GraphStorage.Instance.rollbackTransaction(transaction.value)
+                            await GraphStorage.Instance.rollbackTransaction(graphTransaction.value)
 
                             // update the individual data row which failed
                             await DataStagingStorage.Instance.AddError(edge.data_staging_id!, `error attempting to insert edges ${inserted.error?.error}` )
@@ -187,10 +228,9 @@ export class DataSourceProcessor {
                     }
                 }
 
-                const transactionComplete = await GraphStorage.Instance.completeTransaction(transaction.value)
+                const transactionComplete = await GraphStorage.Instance.completeTransaction(graphTransaction.value)
                 if (transactionComplete.isError || !transactionComplete.value) {
-                    await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to finalize transaction of  inserting nodes/edges`)
-                    await GraphStorage.Instance.rollbackTransaction(transaction.value)
+                    await GraphStorage.Instance.rollbackTransaction(graphTransaction.value)
 
                     // update the individual data row which failed
                     await DataStagingStorage.Instance.AddError(row.id, `error attempting to finalize transaction of inserting nodes/edges` )
@@ -200,8 +240,6 @@ export class DataSourceProcessor {
 
                 const marked = await DataStagingStorage.Instance.SetInserted(row.id)
                 if (marked.isError) {
-                    await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to mark data inserted ${marked.error}`)
-
                     // update the individual data row which failed
                     await DataStagingStorage.Instance.AddError(row.id, `error attempting to mark data inserted ${marked.error}` )
 
@@ -210,19 +248,7 @@ export class DataSourceProcessor {
             }
         }
 
-        // check to see if import is now complete. If so, mark completed.
-        const count = await DataStagingStorage.Instance.CountUninsertedForImport(dataImportID)
-        if(count.isError) {
-            await ImportStorage.Instance.SetStatus(dataImportID, "error", `error attempting to count records ${count.error}`)
-
-            return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to count records ${count.error}`)))
-        }
-
-        if(count.value === 0) {
-            return ImportStorage.Instance.SetStatus(dataImportID, "completed")
-        }
-
-        return ImportStorage.Instance.SetStatus(dataImportID, "processing")
+        return new Promise(resolve => resolve(Result.Success(true)))
     }
 
 
