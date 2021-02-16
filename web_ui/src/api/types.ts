@@ -126,13 +126,6 @@ export type AssignRolePayloadT = {
    role_name: string;
 }
 
-export type UnmappedDataT = {
-    id: number;
-    data: {[key: string]: any};
-    data_source_id: string;
-    import_id: string;
-}
-
 export type ImportDataT = {
     id: number;
     data_source_id: string;
@@ -214,15 +207,22 @@ export type UserContainerInviteT = {
     issued: string;
 }
 
-export type ResetPasswordPayloadT = {
-    email: string;
-    token: string;
-    new_password: string;
+export type ExportT = {
+    id: string;
+    adapter: "gremlin";
+    config: GremlinExportConfigT;
+    container_id?: string;
+    status?: "created" | "processing"| "paused" | "completed" | "failed"
 }
 
-export type NewUserPayloadT = {
-    display_name: string;
-    email: string;
-    password: string;
-    identity_provider: "username_password";
+export type GremlinExportConfigT = {
+    traversal_source: string;
+    user: string;
+    key: string;
+    endpoint: string;
+    port: string;
+    path: string;
+    writes_per_second: number;
+    mime_type?: string;
+    graphson_v1?: boolean;
 }

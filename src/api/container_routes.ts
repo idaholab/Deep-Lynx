@@ -1,9 +1,7 @@
 import {Request, Response, NextFunction, Application} from "express"
 import ContainerStorage from "../data_storage/container_storage";
 import {CreateContainer, ListContainers, RepairContainerPermissions} from "../api_handlers/container";
-import {NewDataExport, StartExport, StopExport} from "../data_exporting/exporter";
 import {UserT} from "../types/user_management/userT";
-import ExportStorage from "../data_storage/export/export_storage";
 import {authRequest, authInContainer} from "./middleware";
 import ContainerImport from "../data_storage/import/container_import";
 import { ContainerImportT } from "../types/import/containerImportT";
@@ -12,11 +10,9 @@ const Buffer = require('buffer').Buffer;
 const path = require('path')
 
 const storage = ContainerStorage.Instance;
-const exportStorage = ExportStorage.Instance;
 const containerImport = ContainerImport.Instance;
 
-// This contains all routes pertaining to container management. This also contains routes for the export functionality
-// as it was not large enough to pull into its own functionality.
+// This contains all routes pertaining to container management.
 export default class ContainerRoutes {
     public static mount(app: Application, middleware:any[]) {
         app.post("/containers", ...middleware,this.createContainer);
@@ -31,13 +27,6 @@ export default class ContainerRoutes {
         app.get("/containers/:id",...middleware, authInContainer("read", "data"),this.retrieveContainer);
         app.put("/containers/:id",...middleware, authInContainer("write", "data"),this.updateContainer);
         app.delete("/containers/:id",...middleware, authInContainer("write", "data"),this.archiveContainer);
-
-
-        app.post("/containers/:id/data/export",...middleware, authInContainer("write", "data"),this.exportDataFromContainer);
-        app.get("/containers/:id/data/export/:exportID",...middleware, authInContainer("read", "data"),this.getExport);
-        app.post("/containers/:id/data/export/:exportID",...middleware, authInContainer("write", "data"),this.startExport);
-        app.put("/containers/:id/data/export/:exportID",...middleware, authInContainer("write", "data"),this.stopExport);
-        app.delete("/containers/:id/data/export/:exportID",...middleware, authInContainer("write", "data"),this.deleteExport);
 
         app.post("/containers/:id/permissions", ...middleware, authRequest("write", "containers"), this.repairPermissions)
     }
@@ -230,75 +219,6 @@ export default class ContainerRoutes {
         })
 
         return req.pipe(busboy)
-    }
-
-    private static exportDataFromContainer(req: Request, res: Response, next: NextFunction) {
-        NewDataExport(req.user as UserT,req.params.id, req.body)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
-    }
-
-    private static getExport(req: Request, res: Response, next: NextFunction) {
-        exportStorage.Retrieve(req.params.exportID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
-    }
-    private static startExport(req: Request, res: Response, next: NextFunction) {
-        StartExport(req.user as UserT,req.params.exportID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
-    }
-
-    private static stopExport(req: Request, res: Response, next: NextFunction) {
-        StopExport(req.user as UserT,req.params.exportID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
-    }
-
-    private static deleteExport(req: Request, res: Response, next: NextFunction) {
-        exportStorage.PermanentlyDelete(req.params.exportID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
     }
 
     private static repairPermissions(req: Request, res: Response, next: NextFunction) {
