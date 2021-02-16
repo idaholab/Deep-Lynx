@@ -30,6 +30,7 @@ import GraphRoutes from "./graph_routes";
 import OAuthRoutes from "./oauth_routes";
 import UserStorage from "../data_storage/user_management/user_storage";
 import EventRoutes from "./event_routes";
+import ExportRoutes from "./export_routes";
 
 // Router is a self contained set of routes and middleware that the main express.js
 // application should call. It should be called only once.
@@ -68,6 +69,7 @@ export class Router {
     // Mount application controllers, middleware is passed in as an array of functions
     UserRoutes.mount(this.app, [authenticateRoute()]);
     ContainerRoutes.mount(this.app, [authenticateRoute()]);
+    ExportRoutes.mount(this.app, [authenticateRoute()]);
     DataSourceRoutes.mount(this.app, [authenticateRoute()]);
     MetatypeRoutes.mount(this.app, [authenticateRoute()]);
     MetatypeKeyRoutes.mount(this.app, [authenticateRoute()]);

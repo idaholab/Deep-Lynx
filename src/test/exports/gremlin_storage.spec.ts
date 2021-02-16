@@ -121,7 +121,9 @@ describe('Gremlin Exporter', async() => {
         let initiated = await gremlinExportStorage.InitiateExport(exp.value.id!);
         expect(initiated.isError).false;
 
-        gremlinExportStorage.ListUnassociatedNodes(exp.value.id!, 0, 100)
+        const transaction = await GremlinExportStorage.Instance.startTransaction()
+
+        gremlinExportStorage.ListUnassociatedNodesAndLock(exp.value.id!, 0, 100, transaction.value)
             .then((res: any) => {
                 console.log(res)
             })
@@ -129,11 +131,11 @@ describe('Gremlin Exporter', async() => {
                 console.log(e)
             });
 
-        let unassociatedNodes = await gremlinExportStorage.ListUnassociatedNodes(exp.value.id!, 0, 100);
+        let unassociatedNodes = await gremlinExportStorage.ListUnassociatedNodesAndLock(exp.value.id!, 0, 100, transaction.value);
         expect(unassociatedNodes.isError).false;
         expect(unassociatedNodes.value).not.empty;
 
-        let unassociatedEdges = await gremlinExportStorage.ListUnassociatedEdges(exp.value.id!, 0, 100);
+        let unassociatedEdges = await gremlinExportStorage.ListUnassociatedEdgesAndLock(exp.value.id!, 0, 100, transaction.value);
         expect(unassociatedEdges.isError).false;
         expect(unassociatedEdges.value).not.empty;
 

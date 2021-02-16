@@ -43,6 +43,10 @@ export default class ImportStorage extends PostgresStorage {
         return super.retrieve<ImportT>(ImportStorage.retrieveLastAndLockStatement(dataSourceID), client)
     }
 
+    public RetrieveLast(dataSourceID: string): Promise<Result<ImportT>> {
+        return super.retrieve<ImportT>(ImportStorage.retrieveLastStatement(dataSourceID))
+    }
+
     public async SetStatus(importID: string, status: "ready" | "processing" | "error" | "stopped" | "completed", message?: string, client?: PoolClient): Promise<Result<boolean>> {
         if (status === "completed" || status === "stopped" || status === "error") {
             const completeImport = await this.Retrieve(importID)
@@ -114,6 +118,13 @@ export default class ImportStorage extends PostgresStorage {
 
        return {
             text: `SELECT * FROM imports WHERE id = $1 FOR UPDATE NOWAIT`,
+            values: [logID]
+        }
+    }
+
+    private static retrieveLastStatement(logID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM imports WHERE data_source_id = $1 ORDER BY modified_at DESC NULLS LAST LIMIT 1`,
             values: [logID]
         }
     }
