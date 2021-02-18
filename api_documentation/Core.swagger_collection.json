@@ -4133,6 +4133,39 @@
             "headers": {}
           }
         }
+      },
+      "delete": {
+        "summary": "Delete Registered Event",
+        "tags": [
+          "Events"
+        ],
+        "operationId": "DeleteRegisteredEvent",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
       }
     },
     "/health": {
