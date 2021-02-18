@@ -49,7 +49,7 @@ export default class ExportRoutes {
         // @ts-ignore
         if(req.query.sortBy) {
             // @ts-ignore
-            exportStorage.List(req.params.sourceID, +req.query.offset, +req.query.limit, req.query.sortBy, req.query.sortDesc === 'true')
+            exportStorage.List(req.params.id, +req.query.offset, +req.query.limit, req.query.sortBy, req.query.sortDesc === 'true')
                 .then((result) => {
                     if (result.isError && result.error) {
                         res.status(result.error.errorCode).json(result);
@@ -62,7 +62,7 @@ export default class ExportRoutes {
                 .finally(() => next())
         } else if(req.query.count) {
             // @ts-ignore
-            exportStorage.Count()
+            exportStorage.Count(req.params.id)
                 .then((result) => {
                     if (result.isError && result.error) {
                         res.status(result.error.errorCode).json(result);
@@ -75,7 +75,7 @@ export default class ExportRoutes {
                 .finally(() => next())
         } else {
             // @ts-ignore
-            exportStorage.List(req.params.sourceID, +req.query.offset, +req.query.limit)
+            exportStorage.List(req.params.id, +req.query.offset, +req.query.limit)
                 .then((result) => {
                     if (result.isError && result.error) {
                         res.status(result.error.errorCode).json(result);
@@ -90,7 +90,7 @@ export default class ExportRoutes {
     }
 
     private static startExport(req: Request, res: Response, next: NextFunction) {
-        StartExport(req.user as UserT,req.params.exportID)
+        StartExport(req.user as UserT,req.params.exportID, req.query.restart === 'true')
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);

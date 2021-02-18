@@ -20,11 +20,11 @@ export default class GremlinExportStorage extends PostgresStorage{
         return GremlinExportStorage.instance
     }
 
-    public InitiateExport(exportID: string): Promise<Result<boolean>>{
-        return super.runAsTransaction(...GremlinExportStorage.initiateExportStatement(exportID))
+    public InitiateExport(exportID: string, containerID: string): Promise<Result<boolean>>{
+        return super.runAsTransaction(...GremlinExportStorage.initiateExportStatement(exportID, containerID))
     }
 
-    public FinalizeExport(exportID: string): Promise<Result<boolean>>{
+    public DeleteForExport(exportID: string): Promise<Result<boolean>>{
         return super.runAsTransaction(...GremlinExportStorage.deleteAllForExport(exportID))
     }
 
@@ -66,19 +66,23 @@ export default class GremlinExportStorage extends PostgresStorage{
 
     // this set of statements copies all current nodes and edges to the gremlin_* tables
     // and attaches the proper export ID
-    private static initiateExportStatement(exportID: string): QueryConfig[] {
+    private static initiateExportStatement(exportID: string, containerID: string): QueryConfig[] {
         return [
             {
                 text: `INSERT INTO gremlin_export_nodes(id, export_id, container_id, metatype_id,  properties)
                        SELECT id, '${exportID}' as export_id, container_id, metatype_id, properties
                        FROM nodes
-                       WHERE nodes.archived = FALSE`,
+                       WHERE nodes.archived = FALSE
+                       AND nodes.container_id = $1`,
+                values: [containerID]
             },
             {
                 text: `INSERT INTO gremlin_export_edges(id, export_id, container_id, relationship_pair_id, origin_node_id, destination_node_id, properties)
                        SELECT id, '${exportID}' as export_id, container_id, relationship_pair_id, origin_node_id, destination_node_id, properties
                        FROM edges
-                       WHERE edges.archived = FALSE`,
+                       WHERE edges.archived = FALSE
+                       AND edges.container_id = $1`,
+                values: [containerID]
             },
         ]
     }

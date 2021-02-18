@@ -118,7 +118,7 @@ describe('Gremlin Exporter', async() => {
 
         let gremlinExportStorage = GremlinExportStorage.Instance;
 
-        let initiated = await gremlinExportStorage.InitiateExport(exp.value.id!);
+        let initiated = await gremlinExportStorage.InitiateExport(exp.value.id!, containerID);
         expect(initiated.isError).false;
 
         const transaction = await GremlinExportStorage.Instance.startTransaction()

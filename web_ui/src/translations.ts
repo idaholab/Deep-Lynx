@@ -480,6 +480,14 @@ export default {
       acceptTitle: "Accept Invitation to Join Container",
       acceptDescription: "By clicking the button below you are accepting an invitation to be a part of the container ",
       loginToAccept: "Login to Accept Invitation"
+    },
+    exports: {
+      title: "Export Container Data",
+      destinationType: "Destination Type",
+      adapter: "Adapter",
+      status: "Status",
+      statusMessage: "Message",
+      actions: "Actions"
     }
   },
   es: {

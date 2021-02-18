@@ -48,7 +48,7 @@ export class GremlinImpl implements Exporter {
             if(exp.isError) resolve(Result.Pass(exp));
             instance.exportT = exp.value;
 
-            gremlinExportStorage.InitiateExport(exp.value.id!)
+            gremlinExportStorage.InitiateExport(exp.value.id!, containerID)
                 .then(result => {
                     if(result.isError) {
                         exportStorage.PermanentlyDelete(exp.value.id!);
@@ -71,22 +71,35 @@ export class GremlinImpl implements Exporter {
         const key = new NodeRSA(Config.encryption_key_secret);
 
         const config = exp.value.config as GremlinConfigT;
-        config.user = key.decryptPublic(config.user, "utf8");
-        config.key = key.decryptPublic(config.key, "utf8");
 
-        const instance = new GremlinImpl(config);
+        try {
+            if(config.user) config.user = key.decryptPublic(config.user, "utf8");
+            if(config.key) config.key = key.decryptPublic(config.key, "utf8");
+        } catch(err) {
+            Logger.error(`error while attempting to decrypt gremlin export adapter ${err}`)
 
-        // init client
-        const adapter = new GremlinAdapter(config);
+            return new Promise(resolve => resolve(Result.Failure(`error while attempting to decrypt gremlin export adapter ${err}`)))
+        }
 
+        let instance: GremlinImpl
+        let adapter: GremlinAdapter
 
-        instance.client = adapter;
-        instance.exportT = exp.value;
+        try {
+            instance = new GremlinImpl(config);
+            // init client
+            adapter = new GremlinAdapter(config);
+
+            instance.client = adapter;
+            instance.exportT = exp.value;
+        } catch (err) {
+            return new Promise(resolve => resolve(Result.Failure(`error while initiating gremlin adapter ${err}`)))
+        }
+
         return new Promise(resolve => resolve(Result.Success(instance)))
     }
 
     async Start(userID: string): Promise<Result<boolean>>{
-        ExportStorage.Instance.SetStatus(this.exportT.id!, "processing")
+        await ExportStorage.Instance.SetStatus(this.exportT.id!, "processing")
         this.export();
 
         return new Promise(resolve => resolve(Result.Success(true)));
@@ -97,10 +110,7 @@ export class GremlinImpl implements Exporter {
     }
 
     async Stop(userID: string): Promise<Result<boolean>>{
-        const exportStorage = ExportStorage.Instance;
-
-        // error result declaration by the application itself will handle the logging
-        return exportStorage.Update(this.exportT.id!, userID, this.exportT)
+        return ExportStorage.Instance.SetStatus(this.exportT.id!, "paused")
     }
 
     private async export(){
@@ -229,10 +239,29 @@ export class GremlinImpl implements Exporter {
 
         Logger.debug(`gremlin export ${this.exportT.id} completed, cleaning up snapshot`);
         await ExportStorage.Instance.SetStatus(this.exportT.id!, "completed");
-        await gremlinExportStorage.FinalizeExport(this.exportT.id!)
+        await gremlinExportStorage.DeleteForExport(this.exportT.id!)
     }
     private delay(ms: number) {
         return new Promise( resolve => setTimeout(resolve, ms) );
+    }
+
+    // reset will wipe out the gremlin nodes/edges database and then re-instantiate
+    // them
+    async Reset(userID: string): Promise<Result<boolean>> {
+        const deleted = await GremlinExportStorage.Instance.DeleteForExport(this.exportT.id!)
+
+        if(deleted.isError) {
+            Logger.error(`error deleting gremlin nodes and edges for export ${deleted.error}`)
+            return new Promise(resolve => resolve(Result.Pass(deleted)))
+        }
+
+        const initiated = await GremlinExportStorage.Instance.InitiateExport(this.exportT.id!, this.exportT.container_id!)
+        if(initiated.isError) {
+            Logger.error(`error initiating gremlin export ${initiated.error}`)
+            return new Promise(resolve => resolve(Result.Pass(initiated)))
+        }
+
+        return this.Start(userID)
     }
 }
 

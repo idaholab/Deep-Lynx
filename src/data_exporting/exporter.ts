@@ -13,6 +13,7 @@ import Logger from "../logger"
 export interface Exporter {
     Start(userID: string): Promise<Result<boolean>>
     Stop(userID: string): Promise<Result<boolean>>
+    Reset(userID: string): Promise<Result<boolean>>
     Status(): string
 }
 
@@ -38,7 +39,7 @@ export async function NewDataExport(user: UserT, containerID: string, input: any
 
 
 // Starts an export based on export record created by the above function.
-export async function StartExport(user: UserT, exportID: string): Promise<Result<boolean>> {
+export async function StartExport(user: UserT, exportID: string, reset?: boolean): Promise<Result<boolean>> {
     const exportStorage = ExportStorage.Instance;
 
     const exportRecord = await exportStorage.Retrieve(exportID);
@@ -53,6 +54,10 @@ export async function StartExport(user: UserT, exportID: string): Promise<Result
 
             exporter = gremlin.value
         }
+    }
+
+    if(reset) {
+        return exporter.Reset(user.id!)
     }
 
     return exporter.Start(user.id!)

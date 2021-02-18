@@ -212,7 +212,7 @@ export type ExportT = {
     adapter: "gremlin";
     config: GremlinExportConfigT;
     container_id?: string;
-    status?: "created" | "processing"| "paused" | "completed" | "failed"
+    status?: "created" | "processing"| "paused" | "completed" | "failed";
 }
 
 export type GremlinExportConfigT = {
@@ -225,4 +225,8 @@ export type GremlinExportConfigT = {
     writes_per_second: number;
     mime_type?: string;
     graphson_v1?: boolean;
+    created_at: string;
+    modified_at: string;
+    created_by: string;
+    modified_by: string;
 }
