@@ -3911,6 +3911,30 @@
 						"description": "Retrieve a registered event"
 					},
 					"response": []
+				},
+				{
+					"name": "Delete Registered Event",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/events/:id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"events",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},

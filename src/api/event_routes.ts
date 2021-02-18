@@ -13,6 +13,7 @@ export default class EventRoutes {
         app.get("/events",...middleware, authInContainer("read", "data"),this.listRegisteredEvent);
         app.get("/events/:id",...middleware, authInContainer("read", "data"),this.retrieveRegisteredEvent);
         app.put("/events/:id",...middleware, authInContainer("write", "data"),this.updateRegisteredEvent);
+        app.delete("/events/:id",...middleware, authInContainer("write", "data"),this.deleteRegisteredEvent);
     }
 
     private static createRegisteredEvent(req: Request, res: Response, next: NextFunction) {
@@ -95,6 +96,21 @@ export default class EventRoutes {
             .catch((updated:any) => res.status(500).send(updated))
             .finally(() => next())
         }
+    }
+
+    private static deleteRegisteredEvent(req: Request, res: Response, next: NextFunction) {
+        const user = req.user as UserT;
+        storage.PermanentlyDelete(req.params.id)
+            .then((result) => {
+                if (result.isError && result.error) {
+                    res.status(result.error.errorCode).json(result);
+                    return
+                }
+
+                res.sendStatus(200)
+            })
+            .catch((err) => res.status(500).send(err))
+            .finally(() => next())
     }
 
 }
