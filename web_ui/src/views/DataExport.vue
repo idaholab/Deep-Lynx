@@ -10,7 +10,6 @@
         :footer-props="{
           'items-per-page-options': [25, 50, 100]
         }"
-        :item-key="id"
         class="elevation-1"
     >
       <template v-slot:top>
@@ -25,7 +24,7 @@
               vertical
           ></v-divider>
           <v-spacer></v-spacer>
-          <create-export-dialog :containerID="containerID" @exportCreated="loadExports"></create-export-dialog>
+          <create-export-dialog :containerID="containerID" @exportCreated="loadExports()"></create-export-dialog>
         </v-toolbar>
       </template>
       <template v-slot:[`item.actions`]="{ item }">
