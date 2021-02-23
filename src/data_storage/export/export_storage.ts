@@ -66,6 +66,10 @@ export default class ExportStorage extends PostgresStorage{
         let i = 1;
 
         Object.keys(updatedField).map(k => {
+            if(k === `created_at` || k === `created_by` || k === 'modified_at' || k === 'modified_by') {
+                return
+            }
+
             updateStatement.push(`${k} = $${i}`);
             values.push(updatedField[k]);
             i++
@@ -111,7 +115,7 @@ export default class ExportStorage extends PostgresStorage{
         return super.run(ExportStorage.deleteStatement(id))
     }
 
-    public async SetStatus(id: string, status: "created" | "processing" | "paused" | "completed" | "failed"): Promise<Result<boolean>> {
+    public async SetStatus(id: string, status: "created" | "processing" | "paused" | "completed" | "failed", message?: string): Promise<Result<boolean>> {
         if(status === "completed") {
             const completeExport = await this.Retrieve(id)
             QueueProcessor.Instance.emit([{
@@ -121,7 +125,7 @@ export default class ExportStorage extends PostgresStorage{
             } as EventT])
         }
 
-        return super.run(ExportStorage.setStatusStatement(id, status))
+        return super.run(ExportStorage.setStatusStatement(id, status, message))
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -130,8 +134,8 @@ export default class ExportStorage extends PostgresStorage{
     // queries more easily.
     private static createStatement(exp: ExportT): QueryConfig {
         return {
-            text:`INSERT INTO exports(id,container_id,adapter,status,config,created_by, modified_by) VALUES($1, $2, $3, $4, $5, $6, $7)`,
-            values: [exp.id, exp.container_id, exp.adapter, exp.status, exp.config, exp.created_by,exp.modified_by]
+            text:`INSERT INTO exports(id,container_id,adapter,status,config,destination_type, created_by, modified_by) VALUES($1, $2, $3, $4, $5, $6, $7, $8)`,
+            values: [exp.id, exp.container_id, exp.adapter, exp.status, exp.config, exp.destination_type, exp.created_by,exp.modified_by]
         }
     }
 
@@ -188,10 +192,10 @@ export default class ExportStorage extends PostgresStorage{
         }
     }
 
-    private static setStatusStatement(id: string, status: "created" | "processing" | "paused" | "completed" | "failed" ): QueryConfig {
+    private static setStatusStatement(id: string, status: "created" | "processing" | "paused" | "completed" | "failed", message?: string): QueryConfig {
         return {
-            text: `UPDATE exports SET status = $1 WHERE id = $2`,
-            values: [status, id]
+            text: `UPDATE exports SET status = $1, status_message = $2 WHERE id = $3`,
+            values: [status, message, id]
         }
     }
 

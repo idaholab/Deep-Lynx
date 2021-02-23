@@ -14,7 +14,7 @@ import {
    MetatypeRelationshipPairT,
    UserContainerInviteT,
    TypeMappingTransformationPayloadT,
-   TypeMappingTransformationT,
+   TypeMappingTransformationT, ExportT,
 } from "@/api/types";
 import {RetrieveJWT} from "@/auth/authentication_service";
 import {UserT} from "@/auth/types";
@@ -111,7 +111,7 @@ export class Client {
       if(sortDesc) query.sortDesc = sortDesc
       if(count) query.count = "true"
 
-      return this.get<MetatypeT[]>(`/containers/${containerID}/metatypes`, query)
+      return this.get<MetatypeT[] | number>(`/containers/${containerID}/metatypes`, query)
    }
 
    listMetatypeRelationshipPairs(containerID: string, {name, description, metatypeID, originID, destinationID, limit, offset, sortBy, sortDesc, count}: {name?: string; description?: string; metatypeID?: string; originID?: string; destinationID?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; count?: boolean}): Promise<MetatypeRelationshipPairT[] | number> {
@@ -128,7 +128,7 @@ export class Client {
       if(sortDesc) query.sortDesc = sortDesc
       if(count) query.count = count
 
-      return this.get<MetatypeRelationshipPairT[]>(`/containers/${containerID}/metatype_relationship_pairs`, query)
+      return this.get<MetatypeRelationshipPairT[] | number>(`/containers/${containerID}/metatype_relationship_pairs`, query)
    }
 
 
@@ -175,7 +175,7 @@ export class Client {
       if(sortDesc) query.sortDesc = sortDesc
       if(count) query.count = "true"
 
-      return this.get<MetatypeRelationshipT[]>(`/containers/${containerID}/metatype_relationships`, query)
+      return this.get<MetatypeRelationshipT[] | number>(`/containers/${containerID}/metatype_relationships`, query)
    }
 
    retrieveMetatypeRelationship(containerID: string, metatypeRelationshipID: string): Promise<MetatypeRelationshipT> {
@@ -389,6 +389,33 @@ export class Client {
       return this.get<number>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings`, query)
    }
 
+   listExports(containerID: string, {limit, offset, sortBy, sortDesc, count}: {limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; count?: boolean}): Promise<ExportT[] | number> {
+      const query: {[key: string]: any} = {}
+
+      if(limit) query.limit = limit
+      if(offset) query.offset = offset
+      if(sortBy) query.sortBy = sortBy
+      if(sortDesc) query.sortDesc = sortDesc
+      if(count) query.count = "true"
+
+      return this.get<ExportT[] | number>(`/containers/${containerID}/data/export`, query)
+   }
+
+   createExport(containerID: string, exportT: ExportT): Promise<ExportT> {
+      return this.post<ExportT>(`/containers/${containerID}/data/export/`, exportT)
+   }
+
+   startExport(containerID: string, exportID: string, reset?: boolean): Promise<boolean> {
+       return this.post<boolean>(`/containers/${containerID}/data/export/${exportID}`, {}, {reset})
+   }
+
+   stopExport(containerID: string, exportID: string): Promise<boolean> {
+      return this.put<boolean>(`/containers/${containerID}/data/export/${exportID}`, {})
+   }
+
+   deleteExport(containerID: string, exportID: string): Promise<boolean> {
+      return this.delete(`/containers/${containerID}/data/export/${exportID}`)
+   }
 
    private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {
       const config: AxiosRequestConfig = {}
@@ -477,7 +504,7 @@ export class Client {
       })
    }
 
-   private async post<T>(uri: string, data: any): Promise<T> {
+   private async post<T>(uri: string, data: any, queryParams?: {[key: string]: any}): Promise<T> {
       const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
@@ -489,7 +516,15 @@ export class Client {
          config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
-      const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), data, config)
+      let url: string
+
+      if(queryParams) {
+         url = buildURL(this.config?.rootURL!, {path: uri, queryParams: queryParams!})
+      } else {
+         url = buildURL(this.config?.rootURL!, {path: uri})
+      }
+
+      const resp: AxiosResponse = await axios.post(url, data, config)
 
       return new Promise((resolve, reject) => {
          if(resp.status < 200 || resp.status > 299) reject(resp.status)
@@ -500,7 +535,7 @@ export class Client {
       })
    }
 
-   private async postNoData(uri: string, data: any): Promise<boolean> {
+   private async postNoData(uri: string, data: any, queryParams?: {[key: string]: any}): Promise<boolean> {
       const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
@@ -512,7 +547,15 @@ export class Client {
          config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
-      const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), data, config)
+      let url: string
+
+      if(queryParams) {
+         url = buildURL(this.config?.rootURL!, {path: uri, queryParams: queryParams!})
+      } else {
+         url = buildURL(this.config?.rootURL!, {path: uri})
+      }
+
+      const resp: AxiosResponse = await axios.post(url, data, config)
 
       return new Promise((resolve, reject) => {
          if(resp.status < 200 || resp.status > 299) reject(resp.status)
@@ -589,7 +632,7 @@ export class Client {
       })
    }
 
-   private async putNoData(uri: string, data: any): Promise<boolean> {
+   private async putNoData(uri: string, data: any, queryParams?: {[key: string]: any}): Promise<boolean> {
       const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
 
@@ -601,7 +644,15 @@ export class Client {
          config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
       }
 
-      const resp: AxiosResponse = await axios.put(buildURL(this.config?.rootURL!, {path: uri}), data, config)
+      let url: string
+
+      if(queryParams) {
+         url = buildURL(this.config?.rootURL!, {path: uri, queryParams: queryParams!})
+      } else {
+         url = buildURL(this.config?.rootURL!, {path: uri})
+      }
+
+      const resp: AxiosResponse = await axios.put(url, data, config)
 
       return new Promise((resolve, reject) => {
          if(resp.status < 200 || resp.status > 299) reject(resp.status)

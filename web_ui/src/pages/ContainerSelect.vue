@@ -42,7 +42,7 @@
                                     <v-divider></v-divider>
                                   </v-row>
                                   <v-row class="px-11 mt-4" align="center" justify="center">
-                                    <new-container-dialog @containerCreated="newContainer"></new-container-dialog>
+                                    <create-container-dialog @containerCreated="newContainer"></create-container-dialog>
                                   </v-row>
 
                                   <logout></logout>
@@ -73,13 +73,13 @@
     import LanguageSelect from '@/components/languageSelect.vue'
     import {ContainerT, UserContainerInviteT} from "@/api/types";
     import ContainerSelect from "@/components/containerSelect.vue"
-    import NewContainerDialog from "@/components/newContainerDialog.vue";
+    import CreateContainerDialog from "@/components/createContainerDialog.vue";
     import Logout from "@/components/logout.vue";
 
     @Component({components: {
             LanguageSelect,
             ContainerSelect,
-            NewContainerDialog,
+            CreateContainerDialog,
             Logout
         }})
     export default class ContainerSelection extends Vue {

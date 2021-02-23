@@ -10,6 +10,7 @@ export const exportRequired = t.type({
 
 export const exportOptional = t.partial({
     container_id: t.string,
+    destination_type: t.string,
     status: t.keyof({
         "created": null,
         "processing": null,
@@ -17,6 +18,7 @@ export const exportOptional = t.partial({
         "completed": null,
         "failed": null
     }),
+    status_message: t.string,
     id: t.string,
 });
 
