@@ -57,9 +57,7 @@ Instructions for configuring of provided authentication methods (basic, saml etc
 
 **Testing**
 
-This application uses [Mocha](https://mochajs.org/) and [Chai](https://www.chaijs.com/) for its unit and integration tests. Visit their respective websites and documentation to learn more about how to use and develop tests with their platforms. Only Gremlin functionality of the application is tested at the present time.
-
-Currently, in order to run tests you must provide the application with a data source endpoint. The data source must be a graph database and the data source endpoint must be to a [Gremlin API](https://tinkerpop.apache.org/gremlin.html). If you do not have access to a data source and cannot set one up locally, testing commands have been provided for creating a local instance of Gremlin's in memory graph database [TinkerGraph](http://tinkerpop.apache.org/javadocs/3.2.2/full/org/apache/tinkerpop/gremlin/tinkergraph/structure/TinkerGraph.html).
+This application uses [Mocha](https://mochajs.org/) and [Chai](https://www.chaijs.com/) for its unit and integration tests. Visit their respective websites and documentation to learn more about how to use and develop tests with their platforms.
 
 **IMPORTANT NOTE**
 

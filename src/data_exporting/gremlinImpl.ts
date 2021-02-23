@@ -28,21 +28,18 @@ export class GremlinImpl implements Exporter {
         this.client = new GremlinAdapter(config)
     }
 
-    public static async NewExport(containerID: string, userID: string, config: any | GremlinConfigT): Promise<Result<GremlinImpl>> {
-        const instance = new GremlinImpl(config);
+    public static async NewExport(containerID: string, userID: string, e: ExportT): Promise<Result<GremlinImpl>> {
+        const instance = new GremlinImpl(e.config as GremlinConfigT);
         const exportStorage = ExportStorage.Instance;
         const gremlinExportStorage = GremlinExportStorage.Instance;
 
         // encrypt the key and user information
         const key = new NodeRSA(Config.encryption_key_secret);
 
-        config.key = key.encryptPrivate(config.key, "base64");
-        config.user = key.encryptPrivate(config.user, "base64");
+        (e.config as GremlinConfigT).key = key.encryptPrivate((e.config as GremlinConfigT).key, "base64");
+        (e.config as GremlinConfigT).user = key.encryptPrivate((e.config as GremlinConfigT).user, "base64");
         // create a new export record and store
-        const exp = await exportStorage.Create(containerID, userID, {
-            adapter: "gremlin",
-            config
-        } as ExportT);
+        const exp = await exportStorage.Create(containerID, userID, e);
 
         return new Promise(resolve => {
             if(exp.isError) resolve(Result.Pass(exp));

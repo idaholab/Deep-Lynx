@@ -209,10 +209,12 @@ export type UserContainerInviteT = {
 
 export type ExportT = {
     id: string;
+    destination_type: string;
     adapter: "gremlin";
     config: GremlinExportConfigT;
     container_id?: string;
     status?: "created" | "processing"| "paused" | "completed" | "failed";
+    status_message?: string;
 }
 
 export type GremlinExportConfigT = {
@@ -220,13 +222,13 @@ export type GremlinExportConfigT = {
     user: string;
     key: string;
     endpoint: string;
-    port: string;
+    port: string; // port is a string due to the type expected by DL also being a string
     path: string;
     writes_per_second: number;
     mime_type?: string;
     graphson_v1?: boolean;
-    created_at: string;
-    modified_at: string;
-    created_by: string;
-    modified_by: string;
+    created_at?: string;
+    modified_at?: string;
+    created_by?: string;
+    modified_by?: string;
 }

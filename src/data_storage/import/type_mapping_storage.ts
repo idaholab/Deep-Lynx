@@ -9,7 +9,7 @@ import Config from "../../config"
 import TypeTransformationStorage from "./type_transformation_storage";
 
 /*
-* ImportAdapterStorage encompasses all logic dealing with the manipulation of the Import Adapter
+* TypeMappingStorage encompasses all logic dealing with the manipulation of the Type Mapping
 * class in a data storage layer.
 */
 export default class TypeMappingStorage extends PostgresStorage{

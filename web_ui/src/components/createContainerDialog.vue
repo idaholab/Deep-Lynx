@@ -67,7 +67,7 @@
    import {Component, Vue} from 'vue-property-decorator'
 
     @Component
-    export default class NewContainerDialog extends Vue {
+    export default class CreateContainerDialog extends Vue {
         errorMessage = ""
         loading = false
         dialog = false

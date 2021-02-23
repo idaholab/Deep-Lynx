@@ -24,7 +24,7 @@ export async function NewDataExport(user: UserT, containerID: string, input: any
             return async (ex: ExportT) => {
                 switch(ex.adapter) {
                     case "gremlin": {
-                        const gremlin = await GremlinImpl.NewExport(containerID, user.id!, ex.config);
+                        const gremlin = await GremlinImpl.NewExport(containerID, user.id!, ex);
                         if(gremlin.isError) resolve(Result.Pass(gremlin));
 
                         resolve(Result.Success(gremlin.value.exportT))

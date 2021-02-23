@@ -25,11 +25,10 @@
               vertical
           ></v-divider>
           <v-spacer></v-spacer>
-          <!-- <create-export-dialog :containerID="containerID" @exportCreated=""></create-export-dialog> -->
+          <create-export-dialog :containerID="containerID" @exportCreated="loadExports"></create-export-dialog>
         </v-toolbar>
       </template>
       <template v-slot:[`item.actions`]="{ item }">
-        <!-- <edit-metatype-dialog :metatype="item" :icon="true" @metatypeEdited="loadMetatypes()"></edit-metatype-dialog> -->
         <v-icon
             v-if="item.status === 'processing'"
             @click="stopExport(item)"
@@ -47,9 +46,11 @@
         >
           mdi-restart
         </v-icon>
+        <!-- we do not allow delete if export completed successfully, data tracking reasons -->
         <v-icon
+            v-if="item.status !== 'completed'"
             small
-            @click="deleteExport(item)"
+            @click="deleteExportDialog(item.id)"
         >
           mdi-delete
         </v-icon>
@@ -109,9 +110,43 @@
           <v-btn
               color="primary"
               text
-              @click="stopDialog = false"
+              @click="resetExport()"
           >
-            {{$t('exports.ok')}}
+            {{$t('exports.understandReset')}}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog
+        v-model="deleteDialog"
+        width="500"
+    >
+      <v-card>
+        <v-card-title class="headline grey lighten-2">
+          {{$t('exports.warningDeleteTitle')}}
+        </v-card-title>
+
+        <v-card-text>
+          {{$t('exports.warningDeleteBody')}}
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+              color="primary"
+              text
+              @click="deleteDialog = false"
+          >
+            {{$t('exports.cancel')}}
+          </v-btn>
+          <v-btn
+              color="primary"
+              text
+              @click="deleteExport()"
+          >
+            {{$t('exports.understandDelete')}}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -122,8 +157,11 @@
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
 import {ExportT} from "@/api/types";
+import CreateExportDialog from "@/components/createExportDialog.vue";
 
-@Component
+@Component({components: {
+  CreateExportDialog
+  }})
 export default class DataExport extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
@@ -132,6 +170,7 @@ export default class DataExport extends Vue {
   errorMessage = ""
   stopDialog = false
   resetDialog = false
+  deleteDialog = false
   resetLoading = false
   exportsLoading = false
   exports: ExportT[] = []
@@ -156,6 +195,7 @@ export default class DataExport extends Vue {
   headers() {
     return  [
       { text: this.$t('exports.destinationType'), value: 'destination_type'},
+      { text: this.$t('exports.createdAt'), value: 'created_at'},
       { text: this.$t('exports.status'), value: 'status'},
       { text: this.$t('exports.statusMessage'), value: 'status_message'},
       { text: this.$t('exports.actions'), value: 'actions', sortable: false }
@@ -232,20 +272,27 @@ export default class DataExport extends Vue {
               this.errorMessage = this.$t('exports.errorRestartingAPI') as string
             }
 
+            this.resetDialog = false
             this.loadExports()
             this.resetLoading = false
           })
     }
   }
 
-  deleteExport(dataExport: ExportT) {
-    this.$client.deleteExport(this.containerID, dataExport.id)
+  deleteExportDialog(exportID: string) {
+    this.selectedExportID = exportID
+    this.deleteDialog = true
+  }
+
+  deleteExport() {
+    this.$client.deleteExport(this.containerID, this.selectedExportID!)
         .then(result => {
           if (!result) {
             this.errorMessage = this.$t('exports.errorDeletingAPI') as string
           }
 
           this.loadExports()
+          this.deleteDialog = false
         })
   }
 }

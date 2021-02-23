@@ -15,7 +15,7 @@
                             vertical
                     ></v-divider>
                     <v-spacer></v-spacer>
-                    <new-data-source-dialog :containerID="containerID" @dataSourceCreated="refreshDataSources"></new-data-source-dialog>
+                    <create-data-source-dialog :containerID="containerID" @dataSourceCreated="refreshDataSources"></create-data-source-dialog>
                 </v-toolbar>
             </template>
             <template v-slot:[`item.active`]="{item}">
@@ -36,9 +36,9 @@
 <script lang="ts">
     import {Component, Prop, Vue} from 'vue-property-decorator'
     import {DataSourceT} from "@/api/types";
-    import NewDataSourceDialog from "@/components/newDataSourceDialog.vue"
+    import CreateDataSourceDialog from "@/components/createDataSourceDialog.vue"
 
-    @Component({components:{NewDataSourceDialog}})
+    @Component({components:{CreateDataSourceDialog}})
     export default class DataSources extends Vue {
         @Prop({required: true})
         readonly containerID!: string;

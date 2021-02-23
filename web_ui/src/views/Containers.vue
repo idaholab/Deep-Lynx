@@ -91,9 +91,9 @@
    import {Component, Vue} from 'vue-property-decorator'
    import {UserT} from "@/auth/types";
    import {ContainerT} from "@/api/types";
-   import NewContainerDialog from "@/components/newContainerDialog.vue"
+   import CreateContainerDialog from "@/components/createContainerDialog.vue"
 
-   @Component({components: {NewContainerDialog}})
+   @Component({components: {CreateContainerDialog}})
    export default class Containers extends Vue {
       dialog = false
       editDialog = false
@@ -125,20 +125,6 @@
       deleteContainer(container: ContainerT) {
          this.$client.deleteContainer(container.id)
          .then(() => {
-            this.refreshContainers()
-         })
-         .catch(e => console.log(e))
-      }
-
-      clearNew() {
-         this.newContainer = {name: null, description: null}
-      }
-
-      createContainer() {
-         this.$client.createContainer(this.newContainer)
-         .then(() => {
-            this.dialog = false
-            this.clearNew()
             this.refreshContainers()
          })
          .catch(e => console.log(e))

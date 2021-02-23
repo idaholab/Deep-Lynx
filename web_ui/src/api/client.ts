@@ -401,6 +401,10 @@ export class Client {
       return this.get<ExportT[] | number>(`/containers/${containerID}/data/export`, query)
    }
 
+   createExport(containerID: string, exportT: ExportT): Promise<ExportT> {
+      return this.post<ExportT>(`/containers/${containerID}/data/export/`, exportT)
+   }
+
    startExport(containerID: string, exportID: string, reset?: boolean): Promise<boolean> {
        return this.post<boolean>(`/containers/${containerID}/data/export/${exportID}`, {}, {reset})
    }
