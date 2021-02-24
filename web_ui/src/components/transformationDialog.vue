@@ -808,6 +808,7 @@ export default class TransformationDialog extends Vue {
 
     payload.conditions = this.conditions
     payload.keys = this.propertyMapping
+    payload.type_mapping_id = this.typeMappingID
     if(this.uniqueIdentifierKey) payload.unique_identifier_key = this.uniqueIdentifierKey
     if(this.rootArray) payload.root_array = this.rootArray
 
