@@ -194,6 +194,7 @@ export type TypeMappingTransformationPayloadT = {
     unique_identifier_key?: string;
     on_conflict?: "create" | "update" | "ignore";
     keys: TypeMappingTransformationKeyMapping[];
+    type_mappping_id: string;
 }
 
 export type UserContainerInviteT = {
