@@ -7,7 +7,6 @@
         :options.sync="options"
         :loading="loading"
         :items-per-page="100"
-        :item-key="id"
         :footer-props="{
           'items-per-page-options': [25, 50, 100]
         }"

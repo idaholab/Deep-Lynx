@@ -15,7 +15,7 @@
                        vertical
                ></v-divider>
                <v-spacer></v-spacer>
-               <new-container-dialog @containerCreated="refreshContainers"></new-container-dialog>
+               <create-container-dialog @containerCreated="refreshContainers"></create-container-dialog>
             </v-toolbar>
 
             <!-- TODO: Set search capability

@@ -92,6 +92,38 @@ export class Client {
       })
    }
 
+   async updateContainerFromImport(containerID: string, owlFile: File | null, owlFilePath: string): Promise<string> {
+      const config: {[key: string]: any} = {}
+      config.headers = {"Access-Control-Allow-Origin": "*"}
+
+      if(this.config?.auth_method === "token") {
+         config.headers = {"Authorization": `Bearer ${RetrieveJWT()}`}
+      }
+
+      if(this.config?.auth_method === "basic") {
+         config.auth = {username: this.config.username, password: this.config.password}
+      }
+
+      const formData = new FormData()
+      if(owlFile) {
+         formData.append('file', owlFile)
+      }
+
+      if(owlFilePath !== "") {
+         formData.append('path', owlFilePath)
+      }
+
+      const resp: AxiosResponse = await axios.put(buildURL(this.config?.rootURL!, {path: `containers/import/${containerID}`}), formData, config as AxiosRequestConfig)
+
+      return new Promise((resolve, reject) => {
+         if(resp.status < 200 || resp.status > 299) reject(resp.status)
+
+         if(resp.data.isError) reject(resp.data.error)
+
+         resolve(resp.data.value)
+      })
+   }
+
    deleteContainer(containerID: string): Promise<boolean> {
       return this.delete(`/containers/${containerID}`)
    }

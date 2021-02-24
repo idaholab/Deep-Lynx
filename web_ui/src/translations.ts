@@ -10,6 +10,8 @@ export default {
       metatypeRelationshipsDescription: "Modify Relationships",
       metatypeRelationshipPairs: "Metatype Relationship Pairs",
       metatypeRelationshipPairsDescription: "Modify Metatype Relationship Pairs",
+      ontologyUpdate: "Update Ontology",
+      ontologyUpdateDescription: "Update via Ontology File",
       import: "Import",
       data: "Data",
       dataSources: "Data Sources",
@@ -287,6 +289,9 @@ export default {
       destinationMetatype: "Search Destination Metatype",
       relationship: "Search Relationship",
       pairSuccessfullyCreated: "Successfully Created Metatype Relationship Pair"
+    },
+    ontologyUpdate: {
+      formTitle: "Update Taxonomy via Ontology File",
     },
     dataSources: {
       create: "Create",

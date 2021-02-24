@@ -61,6 +61,16 @@
                         </v-list-item-content>
                     </v-list-item>
 
+                    <v-list-item two-line link
+                                 v-if="$auth.Auth('ontology', 'read', containerID)"
+                                 @click="setActiveComponent('ontology-update')"
+                                 :input-value="currentMainComponent === 'OntologyUpdate'">
+                        <v-list-item-content>
+                            <v-list-item-title>{{$t("home.ontologyUpdate")}}</v-list-item-title>
+                            <v-list-item-subtitle>{{$t("home.ontologyUpdateDescription")}}</v-list-item-subtitle>
+                        </v-list-item-content>
+                    </v-list-item>
+
                 </v-list-group>
 
                 <v-list-group :value="false" dense>
@@ -193,6 +203,7 @@
     import Metatypes from "@/views/Metatypes.vue"
     import MetatypeRelationships from "@/views/MetatypeRelationships.vue"
     import MetatypeRelationshipPairs from "@/views/MetatypeRelationshipPairs.vue"
+    import OntologyUpdate from "@/views/OntologyUpdate.vue"
     import TaxonomyImport from "@/views/TaxonomyImport.vue"
     import DataExplorer from "@/views/DataExplorer.vue"
     import DataExport from "@/views/DataExport.vue"
@@ -216,6 +227,7 @@
             Metatypes,
             MetatypeRelationships,
             MetatypeRelationshipPairs,
+            OntologyUpdate,
             TaxonomyImport,
             DataExplorer,
             DataExport,
@@ -268,6 +280,12 @@
                 case "metatype-relationship-pairs": {
                     this.currentMainComponent = "MetatypeRelationshipPairs";
                     this.componentName = this.$t('home.metatypeRelationshipPairs')
+                    break;
+                }
+
+                case "ontology-update": {
+                    this.currentMainComponent = "OntologyUpdate";
+                    this.componentName = this.$t('home.ontologyUpdate')
                     break;
                 }
 

@@ -10,7 +10,6 @@
         :footer-props="{
           'items-per-page-options': [25, 50, 100]
         }"
-        :item-key="id"
         class="elevation-1"
     >
 
