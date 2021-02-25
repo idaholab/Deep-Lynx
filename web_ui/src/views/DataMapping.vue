@@ -130,7 +130,7 @@
             }"
         >
           <template v-slot:[`item.active`]="{ item }">
-            <v-checkbox v-model="item.active" disabled></v-checkbox>
+            <v-checkbox v-model="item.active" :disabled="true"></v-checkbox>
           </template>
 
           <template v-slot:[`item.resulting_types`]="{ item }">
