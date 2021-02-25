@@ -37,7 +37,7 @@
                   :label="$t('dataMapping.chooseResultingMetatype')"
                   :placeholder="$t('dataMapping.typeToSearch')"
                   return-object
-                  :disabled="selectedRelationshipPair"
+                  :disabled="selectedRelationshipPair != null"
                   clearable
               >
                 <template slot="append-outer"><info-tooltip :message="$t('dataMapping.metatypeSearchHelp')"></info-tooltip> </template>
@@ -53,7 +53,7 @@
                   :label="$t('dataMapping.chooseResultingRelationship')"
                   :placeholder="$t('dataMapping.typeToSearchRelationship')"
                   return-object
-                  :disabled="selectedMetatype"
+                  :disabled="selectedMetatype != null"
                   clearable
               >
                 <template slot="append-outer"><info-tooltip :message="$t('dataMapping.relationshipPairSearchHelp')"></info-tooltip></template>
@@ -79,7 +79,7 @@
         >
 
           <template v-slot:[`item.active`]="{ item }">
-            <v-checkbox :value="item.active" :disabled="true"></v-checkbox>
+            <v-checkbox v-model="item.active" :disabled="true"></v-checkbox>
           </template>
 
           <template v-slot:[`item.resulting_types`]="{ item }">
@@ -130,7 +130,7 @@
             }"
         >
           <template v-slot:[`item.active`]="{ item }">
-            <v-checkbox :value="item.active" :disabled="true"></v-checkbox>
+            <v-checkbox v-model="item.active" :disabled="true"></v-checkbox>
           </template>
 
           <template v-slot:[`item.resulting_types`]="{ item }">
@@ -181,7 +181,7 @@
             }"
         >
           <template v-slot:[`item.active`]="{ item }">
-            <v-checkbox :value="item.active" :disabled="true"></v-checkbox>
+            <v-checkbox v-model="item.active" :disabled="true"></v-checkbox>
           </template>
 
           <template v-slot:[`item.sample_payload`]="{ item }">
@@ -241,7 +241,7 @@
           {{$t('dataImports.editTypeMapping')}}
         </v-card-title>
         <div v-if="selectedDataSource !== null && mappingDialog">
-          <data-type-mapping :dataSourceID="selectedDataSource.id" :containerID="containerID" :typeMappingID="selectedTypeMapping.id" @mappingCreated="mappingDialog = false"></data-type-mapping>
+          <data-type-mapping :dataSourceID="selectedDataSource.id" :containerID="containerID" :typeMappingID="selectedTypeMapping.id" @mappingCreated="mappingDialog = false" @updated="loadTypeMappings"></data-type-mapping>
         </div>
       </v-card>
     </v-dialog>

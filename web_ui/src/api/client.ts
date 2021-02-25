@@ -263,11 +263,11 @@ export class Client {
    }
 
    createTypeMappingTransformation(containerID: string, dataSourceID: string, typeMappingID: string, transformation: TypeMappingTransformationPayloadT): Promise<TypeMappingTransformationPayloadT> {
-      return this.post<TypeMappingTransformationT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations`, transformation )
+      return this.post<TypeMappingTransformationPayloadT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations`, transformation )
    }
 
    updateTypeMappingTransformation(containerID: string, dataSourceID: string, typeMappingID: string, transformationID: string, transformation: TypeMappingTransformationPayloadT): Promise<TypeMappingTransformationPayloadT> {
-      return this.put<TypeMappingTransformationT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations/${transformationID}`, transformation )
+      return this.put<TypeMappingTransformationPayloadT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations/${transformationID}`, transformation )
    }
 
    dataSourceJSONFileImport(containerID: string, dataSourceID: string, file: File): Promise<boolean> {
