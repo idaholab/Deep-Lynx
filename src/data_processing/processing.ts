@@ -14,6 +14,7 @@ import DataSourceStorage from "../data_storage/import/data_source_storage";
 import TypeTransformationStorage from "../data_storage/import/type_transformation_storage";
 import {ApplyTransformation, IsEdges, IsNodes} from "./type_mapping";
 import {ImportT} from "../types/import/importT";
+import {PoolClient} from "pg";
 
 // DataSourceProcessor starts an unending processing loop for a data source. This
 // loop is what takes mapped data from data_staging and inserts it into the actual
@@ -58,7 +59,7 @@ export class DataSourceProcessor {
                     }
 
 
-                    const processed = await this.process(incompleteImport)
+                    const processed = await this.process(incompleteImport, importTransaction.value)
 
                     if(processed.isError) {
                         Logger.debug(`import ${incompleteImport.id} incomplete: ${processed.error?.error!}`)
@@ -98,7 +99,7 @@ export class DataSourceProcessor {
         }
     }
 
-    public async process(dataImport: ImportT): Promise<Result<boolean>> {
+    public async process(dataImport: ImportT, transactionClient: PoolClient): Promise<Result<boolean>> {
         const ds = DataStagingStorage.Instance
 
         // attempt to process only those records which have active type mappings
@@ -143,17 +144,6 @@ export class DataSourceProcessor {
                     return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to fetch type mapping transformations ${transformations.error?.error}`)))
                 }
 
-                // we must wrap this insert as a transaction so that if there are errors
-                // we are capable of rolling back Deep Lynx's data to a point before the
-                // import .Because we need the transaction client for edge verification
-                // we'll use the transaction primitives of a storage class.
-                const graphTransaction = await ds.startTransaction()
-                if(graphTransaction.isError) {
-                    return new Promise(resolve => {
-                        resolve(Result.SilentFailure(`error attempting to start db transaction for node/edge insertion ${graphTransaction.error}`))
-                    })
-                }
-
                 const nodesToInsert: NodeT[] = []
                 const edgesToInsert: EdgeT[] = []
 
@@ -164,7 +154,7 @@ export class DataSourceProcessor {
                     const results = await ApplyTransformation(mapping.value, transformation, row)
                     if(results.isError) {
                         await DataStagingStorage.Instance.AddError(row.id, `unable to apply transformation ${transformation.id} to data ${row.id}: ${results.error}`)
-                        await GraphStorage.Instance.rollbackTransaction(graphTransaction.value)
+                        await GraphStorage.Instance.rollbackTransaction(transactionClient)
 
                         return new Promise(resolve => resolve(Result.SilentFailure(`unable to apply transformation ${transformation.id} to data ${row.id}: ${results.error}`)))
                     }
@@ -179,7 +169,7 @@ export class DataSourceProcessor {
                     for(const node of nodesToInsert) {
                         const insertedNodes = await NodeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, [node])
                         if (insertedNodes.isError) {
-                            await GraphStorage.Instance.rollbackTransaction(graphTransaction.value)
+                            await GraphStorage.Instance.rollbackTransaction(transactionClient)
 
                             // update the individual data row which failed
                             await DataStagingStorage.Instance.AddError(node.data_staging_id!, `error attempting to insert nodes ${insertedNodes.error?.error}` )
@@ -187,9 +177,9 @@ export class DataSourceProcessor {
                             return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to insert nodes ${insertedNodes.error?.error}`)))
                         }
 
-                        const inserted = await GraphStorage.Instance.runInTransaction(graphTransaction.value, ...insertedNodes.value)
+                        const inserted = await GraphStorage.Instance.runInTransaction(transactionClient, ...insertedNodes.value)
                         if (inserted.isError) {
-                            await GraphStorage.Instance.rollbackTransaction(graphTransaction.value)
+                            await GraphStorage.Instance.rollbackTransaction(transactionClient)
 
                             // update the individual data row which failed
                             await DataStagingStorage.Instance.AddError(node.data_staging_id!, `error attempting to insert nodes ${inserted.error?.error}` )
@@ -205,9 +195,9 @@ export class DataSourceProcessor {
                     for(const edge of edgesToInsert) {
                         // we must also pass the transaction client to this function so that the edge verification of origin/destination
                         // node can take place even if there are new nodes coming in that are part of this transaction
-                        const insertedEdges = await EdgeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, [edge], graphTransaction.value)
+                        const insertedEdges = await EdgeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, [edge], transactionClient)
                         if(insertedEdges.isError) {
-                            await GraphStorage.Instance.rollbackTransaction(graphTransaction.value)
+                            await GraphStorage.Instance.rollbackTransaction(transactionClient)
 
                             // update the individual data row which failed
                             await DataStagingStorage.Instance.AddError(edge.data_staging_id!, `error attempting to insert edges ${insertedEdges.error?.error}` )
@@ -215,9 +205,9 @@ export class DataSourceProcessor {
                             return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to insert edges ${insertedEdges.error?.error}`)))
                         }
 
-                        const inserted = await GraphStorage.Instance.runInTransaction(graphTransaction.value, ...insertedEdges.value)
+                        const inserted = await GraphStorage.Instance.runInTransaction(transactionClient, ...insertedEdges.value)
                         if (inserted.isError) {
-                            await GraphStorage.Instance.rollbackTransaction(graphTransaction.value)
+                            await GraphStorage.Instance.rollbackTransaction(transactionClient)
 
                             // update the individual data row which failed
                             await DataStagingStorage.Instance.AddError(edge.data_staging_id!, `error attempting to insert edges ${inserted.error?.error}` )
@@ -228,9 +218,9 @@ export class DataSourceProcessor {
                     }
                 }
 
-                const transactionComplete = await GraphStorage.Instance.completeTransaction(graphTransaction.value)
+                const transactionComplete = await GraphStorage.Instance.completeTransaction(transactionClient)
                 if (transactionComplete.isError || !transactionComplete.value) {
-                    await GraphStorage.Instance.rollbackTransaction(graphTransaction.value)
+                    await GraphStorage.Instance.rollbackTransaction(transactionClient)
 
                     // update the individual data row which failed
                     await DataStagingStorage.Instance.AddError(row.id, `error attempting to finalize transaction of inserting nodes/edges` )
