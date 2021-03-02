@@ -53,29 +53,29 @@ export function CompileMetatypeKeys (mKeys: MetatypeKeyT[] | MetatypeRelationshi
     (mKeys as (MetatypeKeyT| MetatypeRelationshipKeyT)[]).map((key) => {
         switch(key.data_type) {
             case "number": {
-                (key.required) ? output[key.property_name] = t.number : partialOutput[key.property_name] = t.number;
+                (key.required) ? output[key.property_name] = t.number : partialOutput[key.property_name] = t.union([t.number, t.null]);
                 break;
             }
 
             case "date" : {
-                (key.required) ?  output[key.property_name] = t.string : partialOutput[key.property_name] = t.string;
+                (key.required) ?  output[key.property_name] = t.string : partialOutput[key.property_name] = t.union([t.null, t.string]);
                 break;
             }
 
             case "string" : {
-                (key.required) ? output[key.property_name] = t.string : partialOutput[key.property_name] = t.string;
+                (key.required) ? output[key.property_name] = t.string : partialOutput[key.property_name] = t.union([t.null, t.string]);
                 break;
             }
 
             case "boolean": {
-                (key.required) ? output[key.property_name] = t.boolean : partialOutput[key.property_name] = t.boolean;
+                (key.required) ? output[key.property_name] = t.boolean : partialOutput[key.property_name] = t.union([t.null, t.boolean]);
                 break;
             }
 
             case "enumeration": {
                 // if we don't have options, enum will default to a string value
                 if (key.options === undefined) {
-                    output[key.property_name] = t.string;
+                    output[key.property_name] = t.union([t.null, t.string]);
                     break;
                 }
 

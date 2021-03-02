@@ -159,6 +159,11 @@ export default class NodeStorage extends PostgresStorage{
                     ns[n].graph_id = graphID;
                     ns[n].container_id = containerID;
 
+                    // grab metatype_name if it was not supplied
+                    if (typeof ns[n].metatype_name === 'undefined') {
+                        ns[n].metatype_name = (await MetatypeStorage.Instance.Retrieve(ns[n].metatype_id)).value.name;
+                    }
+
                     ns[n].id = super.generateUUID();
                     queries.push(...NodeStorage.createOrUpdateStatement(ns[n]))
 
