@@ -1,6 +1,6 @@
 /* tslint:disable */
 import { expect } from 'chai'
-import {getNestedValue} from "../../utilities";
+import {getNestedValue, objectToShapeHash} from "../../utilities";
 
 describe('Utility functions can', async() => {
     it('fetch keys from payload using dot notation', async() => {
@@ -18,6 +18,16 @@ describe('Utility functions can', async() => {
 
         value = getNestedValue("car_maintenance.maintenance_entries.[].parts_list.[].id", test_payload[0], [0, 1])
         expect(value).eq("pan")
+    })
+
+
+
+    it('create valid shape hash of objects with array of objects', async() => {
+        let normalHash = objectToShapeHash(test_payload)
+        expect(normalHash).not.null
+
+        let arrayHash = objectToShapeHash(test_payload_single_array)
+        expect(arrayHash).eq(normalHash)
     })
 });
 
@@ -106,6 +116,63 @@ const test_payload = [
                             "name": "bolts",
                             "price": 1.99,
                             "quantity": 5
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+]
+
+
+const test_payload_single_array = [
+    {
+        "car": {
+            "id": "UUID",
+            "name": "test car",
+            "manufacturer": {
+                "id": "UUID",
+                "name": "Test Cars Inc",
+                "location": "Seattle, WA"
+            },
+            "tire_pressures": [
+                {
+                    "id": "tire0",
+                    "measurement_unit": "PSI",
+                    "measurement": 35.08,
+                    "measurement_name": "tire pressure"
+                }
+            ]
+        },
+        "car_maintenance": {
+            "id": "UUID",
+            "name": "test car's maintenance",
+            "start_date": "1/1/2020 12:00:00",
+            "average_visits_per_year": 4,
+            "maintenance_entries": [
+                {
+                    "id": 1,
+                    "check_engine_light_flag": true,
+                    "type": "oil change",
+                    "parts_list": [
+                        {
+                            "id": "oil",
+                            "name": "synthetic oil",
+                            "price": 45.66,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                {
+                    "id": 2,
+                    "check_engine_light_flag": false,
+                    "type": "tire rotation",
+                    "parts_list": [
+                        {
+                            "id": "tire",
+                            "name": "all terrain tire",
+                            "price": 150.99,
+                            "quantity": 4
                         }
                     ]
                 }
