@@ -43,12 +43,26 @@ export function getNestedValue(key:string, payload: any, index?: number[]): any 
 // of its keys and the type of data those keys are in
 export function objectToShapeHash(obj: any) {
     const keyTypes: string[] = []
-    const flattened = flatten(obj)
+    // safe means that the flattened object will maintain arrays as they are,
+    // not attempt to flatten them along with the rest of the object
+    const flattened = flatten(obj, {safe : true})
 
-    for(const key of Object.keys(flattened)) {
-        keyTypes.push(key+`:${typeof flattened[key]}`)
-   }
+    extractPropsAndTypes(flattened, keyTypes)
 
     return crypto.createHash("sha256").update(keyTypes.sort().join("")).digest("base64");
+}
+
+// reminder that arrays are pass by reference, we can push to array in this function
+// and have it affect the final product
+export function extractPropsAndTypes(obj: any, resultArray: string[]) {
+    for(const key of Object.keys(obj)) {
+        if(Array.isArray(obj[key]) && obj[key].length > 0) {
+            if(typeof obj[key][0] === 'object'  && obj[key][0] !== null) {
+                extractPropsAndTypes(obj[key][0], resultArray)
+            }
+        }
+
+        resultArray.push(key+`:${typeof obj[key]}`)
+    }
 }
 
