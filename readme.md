@@ -10,7 +10,7 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 
 **Requirements**
 
-- node.js 12.x 
+- node.js  8.x, 10.x, 12.x, 14.x, and 15.x
 - Typescript ^3.5.x
 - npm ^6.x
 - Docker ^18.x - *optional* - for ease of use in development
@@ -25,7 +25,7 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 
 **Steps**
 
-1. NodeJS must be installed. You can find the download for your platform here: https://nodejs.org/en/download/ **note** - Newer versions of Node may be incompatible with some of the following commands. The most recent version tested that works fully is 13.10.1.
+1. NodeJS must be installed. You can find the download for your platform here: https://nodejs.org/en/download/ **note** - Newer versions of Node may be incompatible with some of the following commands.
 2. Clone the Deep Lynx [repository](https://github.com/idaholab/Deep-Lynx)
 3. Run `npm upgrade && npm install` in your local Deep Lynx directory
 4. Copy and rename `.env-sample` to `.env`
