@@ -1,11 +1,12 @@
 /* tslint:disable */
 import faker from 'faker'
 import { expect } from 'chai'
-import PostgresAdapter from "../../data_storage/adapters/postgres/postgres";
+import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
 import Logger from "../../logger";
-import ContainerStorage from "../../data_storage/container_storage";
-import DataSourceStorage from "../../data_storage/import/data_source_storage";
-import FileStorage from "../../data_storage/file_storage";
+import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
+import DataSourceStorage from "../../data_mappers/import/data_source_storage";
+import FileStorage from "../../data_mappers/file_storage";
+import Container from "../../data_warehouse/ontology/container";
 
 describe('A File can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -17,14 +18,14 @@ describe('A File can', async() => {
            this.skip()
        }
 
-        let storage = ContainerStorage.Instance;
-
         await PostgresAdapter.Instance.init();
-        let container = await storage.Create("test suite", {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let mapper = ContainerStorage.Instance;
+
+        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(container.isError).false;
-        expect(container.value).not.empty;
-        containerID = container.value[0].id!;
+        expect(container.value.id).not.null
+        containerID = container.value.id!;
 
         let exp = await DataSourceStorage.Instance.Create(containerID, "test suite",
             {
@@ -45,7 +46,7 @@ describe('A File can', async() => {
     after(async function() {
        await DataSourceStorage.Instance.PermanentlyDelete(dataSourceID)
 
-        return ContainerStorage.Instance.PermanentlyDelete(containerID)
+        return ContainerStorage.Instance.Delete(containerID)
     })
 
     it('can be saved to storage', async()=> {

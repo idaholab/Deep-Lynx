@@ -1,4 +1,4 @@
-import PostgresAdapter from "./data_storage/adapters/postgres/postgres";
+import PostgresAdapter from "./data_mappers/adapters/postgres/postgres";
 
 export class Storage {
    // Once the adapter has been initialized you can then safely initialize any other

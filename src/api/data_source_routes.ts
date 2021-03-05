@@ -8,11 +8,11 @@ import {
     SetDataSourceActive,
     SetDataSourceConfiguration
 } from "../api_handlers/data_source";
-import DataSourceStorage from "../data_storage/import/data_source_storage";
-import ImportStorage from "../data_storage/import/import_storage";
-import DataStagingStorage from "../data_storage/import/data_staging_storage";
+import DataSourceStorage from "../data_mappers/import/data_source_storage";
+import ImportStorage from "../data_mappers/import/import_storage";
+import DataStagingStorage from "../data_mappers/import/data_staging_storage";
 import {Readable} from "stream";
-import FileDataStorage from "../data_storage/file_storage";
+import FileDataStorage from "../data_mappers/file_storage";
 import {FileStorage} from "../file_storage/file_storage";
 import AzureBlobImpl from "../file_storage/azure_blob_impl";
 import Config from "../config";
@@ -20,9 +20,9 @@ import Filesystem from "../file_storage/filesystem_impl";
 import MockFileStorageImpl from "../file_storage/mock_impl";
 import Result from "../result";
 import {FileT} from "../types/fileT";
-import TypeMappingStorage from "../data_storage/import/type_mapping_storage";
-import TypeTransformationStorage from "../data_storage/import/type_transformation_storage";
-import TypeMappingFilter from "../data_storage/import/type_mapping_filter";
+import TypeMappingStorage from "../data_mappers/import/type_mapping_storage";
+import TypeTransformationStorage from "../data_mappers/import/type_transformation_storage";
+import TypeMappingFilter from "../data_mappers/import/type_mapping_filter";
 const Busboy = require('busboy');
 const fileUpload = require('express-fileupload')
 const csv=require('csvtojson')

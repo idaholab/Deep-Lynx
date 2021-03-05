@@ -8,20 +8,20 @@ import {
     UserT
 } from "../types/user_management/userT";
 import Result, {ErrorUnauthorized} from "../result";
-import UserStorage from "../data_storage/user_management/user_storage";
+import UserStorage from "../data_mappers/user_management/user_storage";
 import Authorization from "./authorization/authorization";
 import {assignRolePayloadT, AssignRolePayloadT} from "../types/user_management/assignRolePayloadT";
 import {onDecodeError} from "../utilities";
 import Config from "../config";
 import Logger from "./../logger";
 import bcrypt from "bcrypt"
-import KeyPairStorage from "../data_storage/user_management/keypair_storage";
+import KeyPairStorage from "../data_mappers/user_management/keypair_storage";
 import {Emailer} from "../services/email/email";
 import {ValidateEmailTemplate} from "../services/email/templates/validate_email";
 import {ResetPasswordEmailTemplate} from "../services/email/templates/reset_password";
 import {ContainerInviteEmailTemplate} from "../services/email/templates/container_invite";
-import UserContainerInviteStorage from "../data_storage/user_management/user_container_invite_storage";
-import ContainerStorage from "../data_storage/container_storage";
+import UserContainerInviteStorage from "../data_mappers/user_management/user_container_invite_storage";
+import ContainerStorage from "../data_access_layer/mappers/container_mapper";
 
 export async function CreateDefaultSuperUser(): Promise<Result<UserT>>{
     // if the super user exists, don't recreate

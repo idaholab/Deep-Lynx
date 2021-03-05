@@ -10,8 +10,8 @@ import {fold} from "fp-ts/lib/Either";
 import {onDecodeError} from "../../utilities";
 import Cache from "../cache/cache"
 import Result from "../../result";
-import UserStorage from "../../data_storage/user_management/user_storage";
-import OAuthApplicationStorage from "../../data_storage/user_management/oauth_application_storage";
+import UserStorage from "../../data_mappers/user_management/user_storage";
+import OAuthApplicationStorage from "../../data_mappers/user_management/oauth_application_storage";
 
 const crypto = require('crypto');
 import bcrypt from "bcrypt"

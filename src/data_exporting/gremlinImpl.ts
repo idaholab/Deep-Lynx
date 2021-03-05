@@ -1,14 +1,14 @@
 import {Exporter} from "./exporter";
 import {GremlinConfigT} from "../types/export/gremlinConfigT";
-import GremlinAdapter from "../data_storage/adapters/gremlin/gremlin";
+import GremlinAdapter from "../data_mappers/adapters/gremlin/gremlin";
 import Config from "../config";
-import ExportStorage from "../data_storage/export/export_storage";
+import ExportStorage from "../data_mappers/export/export_storage";
 import {ExportT} from "../types/export/exportT";
 import Result from "../result";
-import GremlinExportStorage from "../data_storage/export/gremlin_export_storage";
+import GremlinExportStorage from "../data_mappers/export/gremlin_export_storage";
 import Logger from "../logger"
-import MetatypeStorage from "../data_storage/metatype_storage";
-import MetatypeRelationshipPairStorage from "../data_storage/metatype_relationship_pair_storage";
+import MetatypeStorage from "../data_mappers/metatype_storage";
+import MetatypeRelationshipPairStorage from "../data_mappers/metatype_relationship_pair_storage";
 import NodeRSA from "node-rsa"
 
 

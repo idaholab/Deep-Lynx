@@ -1,8 +1,8 @@
 import {Request, Response, NextFunction, Application} from "express"
-import MetatypeRelationshipPairStorage from "../data_storage/metatype_relationship_pair_storage";
+import MetatypeRelationshipPairStorage from "../data_mappers/metatype_relationship_pair_storage";
 import {authInContainer} from "./middleware";
 import {UserT} from "../types/user_management/userT";
-import MetatypeRelationshipPairFilter from "../data_storage/metatype_relationship_pair_filter";
+import MetatypeRelationshipPairFilter from "../data_mappers/metatype_relationship_pair_filter";
 
 const storage = MetatypeRelationshipPairStorage.Instance;
 

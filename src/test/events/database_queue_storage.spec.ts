@@ -1,18 +1,20 @@
 /* tslint:disable */
 import Logger from "../../logger";
-import PostgresAdapter from "../../data_storage/adapters/postgres/postgres";
+import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
 import faker from "faker";
 import {expect} from "chai";
-import ContainerStorage from "../../data_storage/container_storage";
-import QueueStorage from "../../data_storage/events/queue_storage";
-import DataSourceStorage from "../../data_storage/import/data_source_storage";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
+import QueueStorage from "../../data_mappers/events/queue_storage";
+import DataSourceStorage from "../../data_mappers/import/data_source_storage";
 import { DataSourceT } from "../../types/import/dataSourceT";
-import DataStagingStorage from "../../data_storage/import/data_staging_storage";
-import ImportStorage from "../../data_storage/import/import_storage";
-import ExportStorage from "../../data_storage/export/export_storage";
-import FileStorage from "../../data_storage/file_storage";
+import DataStagingStorage from "../../data_mappers/import/data_staging_storage";
+import ImportStorage from "../../data_mappers/import/import_storage";
+import ExportStorage from "../../data_mappers/export/export_storage";
+import FileStorage from "../../data_mappers/file_storage";
 import {objectToShapeHash} from "../../utilities";
-import TypeMappingStorage from "../../data_storage/import/type_mapping_storage";
+import TypeMappingStorage from "../../data_mappers/import/type_mapping_storage";
+import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
+import Container from "../../data_warehouse/ontology/container";
 
 describe('Database Queue Event Creation', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -25,16 +27,16 @@ describe('Database Queue Event Creation', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        let storage = ContainerStorage.Instance;
         const dStorage = DataSourceStorage.Instance;
         const qStorage = QueueStorage.Instance;
 
-        let container = await storage.Create( "test suite", {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let mapper = ContainerStorage.Instance;
+
+        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(container.isError).false;
-        expect(container.value).not.empty;
-        containerID = container.value[0].id!;
-
+        expect(container.value.id).not.null
+        containerID = container.value.id!;
         const datasource = await dStorage.Create(containerID, "test suite", newDatasource);
         expect(datasource.isError).false;
         expect(datasource.value).not.empty;

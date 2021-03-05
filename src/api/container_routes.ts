@@ -1,14 +1,17 @@
 import {Request, Response, NextFunction, Application} from "express"
-import ContainerStorage from "../data_storage/container_storage";
-import {CreateContainer, ListContainers, RepairContainerPermissions} from "../api_handlers/container";
+import ContainerStorage from "../data_access_layer/mappers/container_mapper";
 import {UserT} from "../types/user_management/userT";
 import {authRequest, authInContainer} from "./middleware";
-import ContainerImport from "../data_storage/import/container_import";
+import ContainerImport from "../data_mappers/import/container_import";
 import { ContainerImportT } from "../types/import/containerImportT";
+import ContainerRepository from "../data_access_layer/repositories/container_respository";
+import {plainToClass} from "class-transformer";
+import Container from "../data_warehouse/ontology/container";
 const Busboy = require('busboy');
 const Buffer = require('buffer').Buffer;
 const path = require('path')
 
+const repository = new ContainerRepository();
 const storage = ContainerStorage.Instance;
 const containerImport = ContainerImport.Instance;
 
@@ -32,7 +35,7 @@ export default class ContainerRoutes {
     }
 
     private static createContainer(req: Request, res: Response, next: NextFunction) {
-        CreateContainer(req.user as UserT, req.body)
+        repository.save(req.user as UserT, plainToClass(Container, req.body as object))
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -48,6 +51,7 @@ export default class ContainerRoutes {
     private static batchUpdate(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT;
 
+        /*
         storage.BatchUpdate(user.id!, req.body)
             .then((result) => {
                 if (result.isError && result.error) {
@@ -59,11 +63,12 @@ export default class ContainerRoutes {
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
+         */
     }
 
 
     private static retrieveContainer(req: Request, res: Response, next: NextFunction) {
-        storage.Retrieve(req.params.id)
+        repository.findByID(req.params.id)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -77,12 +82,13 @@ export default class ContainerRoutes {
     }
 
     private static async listContainers(req: Request, res: Response, next: NextFunction) {
-        ListContainers(req.user as UserT)
+        repository.listForUser(req.user as UserT)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
                     return
                 }
+
                 res.status(200).json(result)
             })
             .catch((err) => res.status(404).send(err))
@@ -90,9 +96,10 @@ export default class ContainerRoutes {
     }
 
     private static updateContainer(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
+        const container = plainToClass(Container, req.body as object)
+        container.id = req.params.id
 
-        storage.Update(req.params.id, user.id!, req.body)
+        repository.save(req.user as UserT, container)
             .then((updated) => {
                 if (updated.isError && updated.error) {
                     res.status(updated.error.errorCode).json(updated);
@@ -107,7 +114,7 @@ export default class ContainerRoutes {
         const user = req.user as UserT;
 
         if(req.query.permanent === 'true') {
-            storage.PermanentlyDelete(req.params.id)
+            storage.Delete(req.params.id)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -222,14 +229,25 @@ export default class ContainerRoutes {
     }
 
     private static repairPermissions(req: Request, res: Response, next: NextFunction) {
-        RepairContainerPermissions(req.params.id)
-            .then((updated) => {
-                if (!updated) {
-                    res.sendStatus(500);
+        repository.findByID(req.params.id)
+            .then(result => {
+                if(result.isError) {
+                    res.sendStatus(500).json(result)
                     return
                 }
-                res.status(200).json(updated)
+
+                result.value.setPermissions()
+                    .then(set => {
+                        if(result.isError) {
+                            res.sendStatus(500).json(result)
+                            return
+                        }
+
+                        res.status(200).json(set)
+                    })
+                    .catch((err) => res.status(500).send(err))
+
             })
-            .catch((updated) => res.status(500).send(updated))
+            .catch((err) => res.status(500).send(err))
     }
 }

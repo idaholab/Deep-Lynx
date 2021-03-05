@@ -1,5 +1,6 @@
 import Config from "../../../config"
-import {Pool, Client, types} from "pg";
+import {Pool, types} from "pg";
+import 'reflect-metadata'; // this is required for the class-transformer package we use
 
 // PostgresAdapter represents a connection to the PostgreSQL database.
 export default class PostgresAdapter {

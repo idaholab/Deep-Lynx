@@ -1,19 +1,20 @@
 /* tslint:disable */
 import Logger from "../../logger";
-import PostgresAdapter from "../../data_storage/adapters/postgres/postgres";
-import MetatypeKeyStorage from "../../data_storage/metatype_key_storage";
-import MetatypeStorage from "../../data_storage/metatype_storage";
+import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import MetatypeKeyStorage from "../../data_mappers/metatype_key_storage";
+import MetatypeStorage from "../../data_mappers/metatype_storage";
 import faker from "faker";
 import {expect} from "chai";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
-import GraphStorage from "../../data_storage/graph/graph_storage";
-import NodeStorage from "../../data_storage/graph/node_storage";
-import ContainerStorage from "../../data_storage/container_storage";
-import EdgeStorage from "../../data_storage/graph/edge_storage";
-import MetatypeRelationshipStorage from "../../data_storage/metatype_relationship_storage";
-import MetatypeRelationshipPairStorage from "../../data_storage/metatype_relationship_pair_storage";
-import ExportStorage from "../../data_storage/export/export_storage";
-import GremlinExportStorage from "../../data_storage/export/gremlin_export_storage";
+import GraphStorage from "../../data_mappers/graph/graph_storage";
+import NodeStorage from "../../data_mappers/graph/node_storage";
+import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
+import EdgeStorage from "../../data_mappers/graph/edge_storage";
+import MetatypeRelationshipStorage from "../../data_mappers/metatype_relationship_storage";
+import MetatypeRelationshipPairStorage from "../../data_mappers/metatype_relationship_pair_storage";
+import ExportStorage from "../../data_mappers/export/export_storage";
+import GremlinExportStorage from "../../data_mappers/export/gremlin_export_storage";
+import Container from "../../data_warehouse/ontology/container";
 
 describe('Gremlin Exporter', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -28,15 +29,14 @@ describe('Gremlin Exporter', async() => {
             Logger.debug("skipping gremlin tests");
             this.skip()
         }
-
         await PostgresAdapter.Instance.init();
-        let storage = ContainerStorage.Instance;
+        let mapper = ContainerStorage.Instance;
 
-        let container = await storage.Create( "test suite", {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(container.isError).false;
-        expect(container.value).not.empty;
-        containerID = container.value[0].id!;
+        expect(container.value.id).not.null
+        containerID = container.value.id!;
 
         return Promise.resolve()
     });

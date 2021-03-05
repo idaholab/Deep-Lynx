@@ -1,17 +1,17 @@
 import {Request, Response, NextFunction, Application} from "express"
 import {UserT} from "../types/user_management/userT";
-import OAuthApplicationStorage from "../data_storage/user_management/oauth_application_storage";
+import OAuthApplicationStorage from "../data_mappers/user_management/oauth_application_storage";
 import {LocalAuthMiddleware} from "../user_management/authentication/local";
 import {OAuth} from "../services/oauth/oauth";
 import {OAuthAuthorizationRequestT, OAuthTokenExchangeT} from "../types/user_management/oauth";
-import UserStorage from "../data_storage/user_management/user_storage";
+import UserStorage from "../data_mappers/user_management/user_storage";
 import {
     CreateNewUser,
     InitiateResetPassword,
     ResetPassword,
     RetrieveResourcePermissions
 } from "../user_management/users";
-import KeyPairStorage from "../data_storage/user_management/keypair_storage";
+import KeyPairStorage from "../data_mappers/user_management/keypair_storage";
 import Config from "../config"
 import Cache from "../services/cache/cache"
 

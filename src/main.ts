@@ -7,6 +7,7 @@ import BackedLogger from "./logger";
 import Config from "./config"
 import {CreateDefaultSuperUser} from "./user_management/users";
 const {spawn} = require('child_process')
+import 'reflect-metadata';
 
 
 const storage = new Storage();

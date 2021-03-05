@@ -1,12 +1,12 @@
 /* tslint:disable */
 import faker from 'faker'
 import { expect } from 'chai'
-import PostgresAdapter from "../../data_storage/adapters/postgres/postgres";
-import ContainerStorage from "../../data_storage/container_storage";
+import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import Logger from "../../logger";
-import UserStorage from "../../data_storage/user_management/user_storage";
+import UserStorage from "../../data_mappers/user_management/user_storage";
 import {UserT} from "../../types/user_management/userT";
-import KeyPairStorage from "../../data_storage/user_management/keypair_storage";
+import KeyPairStorage from "../../data_mappers/user_management/keypair_storage";
 
 describe('A KeyPair', async() => {
 

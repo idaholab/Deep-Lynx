@@ -1,7 +1,7 @@
 import {Request, Response, NextFunction, Application} from "express"
 import {UserT} from "../types/user_management/userT";
 import {authInContainer} from "./middleware";
-import EventStorage from "../data_storage/events/event_storage";
+import EventStorage from "../data_mappers/events/event_storage";
 import Result from "../result";
 
 const storage = EventStorage.Instance;

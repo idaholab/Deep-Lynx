@@ -17,7 +17,7 @@ import MetatypeKeyRoutes from "./metatype_key_routes";
 import MetatypeRelationshipRoutes from "./metatype_relationship_routes";
 import MetatypeRelationshipKeyRoutes from "./metatype_relationship_key_routes";
 import MetatypeRelationshipPairRoutes from "./metatype_relationship_pair_routes";
-import PostgresAdapter from "../data_storage/adapters/postgres/postgres";
+import PostgresAdapter from "../data_mappers/adapters/postgres/postgres";
 import Config from "../config";
 import {SetSamlAdfs} from "../user_management/authentication/saml/saml-adfs";
 import {SuperUser, UserT} from "../types/user_management/userT";
@@ -28,7 +28,7 @@ import {SetLocalAuthMethod} from "../user_management/authentication/local";
 import QueryRoutes from "./query_routes";
 import GraphRoutes from "./graph_routes";
 import OAuthRoutes from "./oauth_routes";
-import UserStorage from "../data_storage/user_management/user_storage";
+import UserStorage from "../data_mappers/user_management/user_storage";
 import EventRoutes from "./event_routes";
 import ExportRoutes from "./export_routes";
 

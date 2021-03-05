@@ -2,16 +2,16 @@ import {DataSourceT} from "../types/import/dataSourceT";
 import Logger from "../logger"
 import Config from "../config"
 import Result from "../result";
-import DataStagingStorage from "../data_storage/import/data_staging_storage";
-import ImportStorage from "../data_storage/import/import_storage";
+import DataStagingStorage from "../data_mappers/import/data_staging_storage";
+import ImportStorage from "../data_mappers/import/import_storage";
 import {EdgeT, edgeT} from "../types/graph/edgeT";
 import {NodeT, nodeT} from "../types/graph/nodeT";
-import TypeMappingStorage from "../data_storage/import/type_mapping_storage";
-import NodeStorage from "../data_storage/graph/node_storage";
-import GraphStorage from "../data_storage/graph/graph_storage";
-import EdgeStorage from "../data_storage/graph/edge_storage";
-import DataSourceStorage from "../data_storage/import/data_source_storage";
-import TypeTransformationStorage from "../data_storage/import/type_transformation_storage";
+import TypeMappingStorage from "../data_mappers/import/type_mapping_storage";
+import NodeStorage from "../data_mappers/graph/node_storage";
+import GraphStorage from "../data_mappers/graph/graph_storage";
+import EdgeStorage from "../data_mappers/graph/edge_storage";
+import DataSourceStorage from "../data_mappers/import/data_source_storage";
+import TypeTransformationStorage from "../data_mappers/import/type_transformation_storage";
 import {ApplyTransformation, IsEdges, IsNodes} from "./type_mapping";
 import {ImportT} from "../types/import/importT";
 import {PoolClient} from "pg";

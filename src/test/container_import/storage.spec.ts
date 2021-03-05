@@ -1,15 +1,16 @@
 /* tslint:disable */
 import faker from 'faker'
 import { expect } from 'chai'
-import PostgresAdapter from "../../data_storage/adapters/postgres/postgres";
+import 'reflect-metadata';
+import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
 import Logger from "../../logger";
-import ContainerImport from "../../data_storage/import/container_import"
+import ContainerImport from "../../data_mappers/import/container_import"
 import fs from 'fs'
-import ContainerStorage from '../../data_storage/container_storage';
-import NodeStorage from '../../data_storage/graph/node_storage';
-import MetatypeStorage from '../../data_storage/metatype_storage';
-import MetatypeRelationshipPairStorage from '../../data_storage/metatype_relationship_pair_storage';
-import EdgeStorage from '../../data_storage/graph/edge_storage';
+import ContainerMapper from '../../data_access_layer/mappers/container_mapper';
+import NodeStorage from '../../data_mappers/graph/node_storage';
+import MetatypeStorage from '../../data_mappers/metatype_storage';
+import MetatypeRelationshipPairStorage from '../../data_mappers/metatype_relationship_pair_storage';
+import EdgeStorage from '../../data_mappers/graph/edge_storage';
 import { UserT } from '../../types/user_management/userT';
 
 describe('A Container Import', async() => {
@@ -26,7 +27,7 @@ describe('A Container Import', async() => {
 
     it('can create a container from a valid ontology file', async()=> {
         let containerImport = ContainerImport.Instance;
-        let storage = ContainerStorage.Instance;
+        let storage = ContainerMapper.Instance;
 
         let user: UserT = {identity_provider: 'username_password', display_name: 'test suite', email: 'test@test.com', id: 'test suite'}
 
@@ -37,14 +38,14 @@ describe('A Container Import', async() => {
         expect(container.isError, `container creation from ontology failed: ${container.error}`).false;
         expect(container.value).not.empty;
 
-        return storage.PermanentlyDelete(container.value)
+        return storage.Delete(container.value)
 
     });
 
 
     it('can update a container with a valid ontology file', async()=> {
         let containerImport = ContainerImport.Instance;
-        let storage = ContainerStorage.Instance;
+        let storage = ContainerMapper.Instance;
 
         let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
         let user: UserT = {identity_provider: 'username_password', display_name: 'test suite', email: 'test@test.com', id: 'test suite'}
@@ -65,13 +66,13 @@ describe('A Container Import', async() => {
         expect(container.isError).false;
         expect(container.value).not.empty;
 
-        return storage.PermanentlyDelete(container.value)
+        return storage.Delete(container.value)
     });
 
     it('can prevent container update when a metatype to be removed has associated data', async()=> {
         // using the Document class/metatype
         let containerImport = ContainerImport.Instance;
-        let storage = ContainerStorage.Instance;
+        let storage = ContainerMapper.Instance;
         let metatypeStorage = MetatypeStorage.Instance;
         let nodeStorage = NodeStorage.Instance;
 
@@ -101,13 +102,13 @@ describe('A Container Import', async() => {
 
         expect(container.isError).true;
 
-        return storage.PermanentlyDelete(container.value)
+        return storage.Delete(container.value)
     });
 
     it('can prevent container update when a metatype key to be removed is for a metatype with associated data', async()=> {
         // using the Document class/metatype
         let containerImport = ContainerImport.Instance;
-        let storage = ContainerStorage.Instance;
+        let storage = ContainerMapper.Instance;
         let metatypeStorage = MetatypeStorage.Instance;
         let nodeStorage = NodeStorage.Instance;
 
@@ -137,13 +138,13 @@ describe('A Container Import', async() => {
 
         expect(container.isError).true;
 
-        return storage.PermanentlyDelete(container.value)
+        return storage.Delete(container.value)
     });
 
     it('can prevent container update when a metatype relationship pair to be removed has associated data', async()=> {
         // using the Action class/metatype
         let containerImport = ContainerImport.Instance;
-        let storage = ContainerStorage.Instance;
+        let storage = ContainerMapper.Instance;
         let metatypeStorage = MetatypeStorage.Instance;
         let relationshipStorage = MetatypeRelationshipPairStorage.Instance;
         let nodeStorage = NodeStorage.Instance;
@@ -203,13 +204,13 @@ describe('A Container Import', async() => {
 
         expect(container.isError).true;
 
-        return storage.PermanentlyDelete(container.value)
+        return storage.Delete(container.value)
     })
 
     it('can remove deleted metatypes, metatype keys, relationship pairs, and relationships from the container with no associated data', async()=> {
         // using Action, Document, and Equipment classes/metatypes and caused by/causes relationships
         let containerImport = ContainerImport.Instance;
-        let storage = ContainerStorage.Instance;
+        let storage = ContainerMapper.Instance;
 
         let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
         let user: UserT = {identity_provider: 'username_password', display_name: 'test suite', email: 'test@test.com', id: 'test suite'}
@@ -228,6 +229,6 @@ describe('A Container Import', async() => {
         expect(container.isError).false;
         expect(container.value).not.empty;
 
-        return storage.PermanentlyDelete(container.value)
+        return storage.Delete(container.value)
     });
 });

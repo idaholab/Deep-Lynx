@@ -1,15 +1,16 @@
 /* tslint:disable */
 import Logger from "../../logger";
-import PostgresAdapter from "../../data_storage/adapters/postgres/postgres";
-import MetatypeKeyStorage from "../../data_storage/metatype_key_storage";
-import MetatypeStorage from "../../data_storage/metatype_storage";
+import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import MetatypeKeyStorage from "../../data_mappers/metatype_key_storage";
+import MetatypeStorage from "../../data_mappers/metatype_storage";
 import faker from "faker";
 import {expect} from "chai";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
-import ContainerStorage from "../../data_storage/container_storage";
+import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
-import MetatypeRelationshipStorage from "../../data_storage/metatype_relationship_storage";
-import MetatypeRelationshipPairStorage from "../../data_storage/metatype_relationship_pair_storage";
+import MetatypeRelationshipStorage from "../../data_mappers/metatype_relationship_storage";
+import MetatypeRelationshipPairStorage from "../../data_mappers/metatype_relationship_pair_storage";
+import Container from "../../data_warehouse/ontology/container";
 
 describe('A Metatype Relationship Pair can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -21,13 +22,13 @@ describe('A Metatype Relationship Pair can', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        let storage = ContainerStorage.Instance;
+        let mapper = ContainerStorage.Instance;
 
-        let container = await storage.Create( "test suite", {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(container.isError).false;
-        expect(container.value).not.empty;
-        containerID = container.value[0].id!;
+        expect(container.value.id).not.null
+        containerID = container.value.id!;
 
         return Promise.resolve()
     });

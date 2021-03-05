@@ -1,5 +1,5 @@
 import {Request, Response, NextFunction, Application} from "express"
-import MetatypeRelationshipKeyStorage from "../data_storage/metatype_relationship_key_storage";
+import MetatypeRelationshipKeyStorage from "../data_mappers/metatype_relationship_key_storage";
 import {authInContainer} from "./middleware";
 import {UserT} from "../types/user_management/userT";
 

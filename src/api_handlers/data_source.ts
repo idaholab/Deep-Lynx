@@ -5,19 +5,19 @@ import Result from "../result";
 import {UserT} from "../types/user_management/userT";
 import {dataSourceT, DataSourceT} from "../types/import/dataSourceT";
 import {HttpImpl} from "../data_importing/httpImpl";
-import DataSourceStorage from "../data_storage/import/data_source_storage";
+import DataSourceStorage from "../data_mappers/import/data_source_storage";
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
 import {objectToShapeHash, onDecodeError} from "../utilities";
-import ImportStorage from "../data_storage/import/import_storage";
+import ImportStorage from "../data_mappers/import/import_storage";
 import {DataSource} from "../data_importing/data_source"
 import {Readable} from "stream";
 import {FileT} from "../types/fileT";
 import FileStorageProvider, {FileUploadResponse} from "../file_storage/file_storage";
-import FileStorage from "../data_storage/file_storage";
+import FileStorage from "../data_mappers/file_storage";
 import Logger from "../logger";
-import DataStagingStorage from "../data_storage/import/data_staging_storage";
-import TypeMappingStorage from "../data_storage/import/type_mapping_storage";
+import DataStagingStorage from "../data_mappers/import/data_staging_storage";
+import TypeMappingStorage from "../data_mappers/import/type_mapping_storage";
 import {TypeMappingT} from "../types/import/typeMappingT";
 
 

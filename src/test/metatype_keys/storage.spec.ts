@@ -1,12 +1,13 @@
 /* tslint:disable */
 import faker from 'faker'
 import { expect } from 'chai'
-import PostgresAdapter from "../../data_storage/adapters/postgres/postgres";
-import MetatypeKeyStorage from "../../data_storage/metatype_key_storage";
+import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import MetatypeKeyStorage from "../../data_mappers/metatype_key_storage";
 import Logger from "../../logger";
-import MetatypeStorage from "../../data_storage/metatype_storage";
+import MetatypeStorage from "../../data_mappers/metatype_storage";
 import {single_test_key, test_keys} from "./compile.spec";
-import ContainerStorage from "../../data_storage/container_storage";
+import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
+import Container from "../../data_warehouse/ontology/container";
 
 describe('A Metatype Key', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -17,14 +18,14 @@ describe('A Metatype Key', async() => {
            this.skip()
        }
 
-        let storage = ContainerStorage.Instance;
         await PostgresAdapter.Instance.init();
+        let mapper = ContainerStorage.Instance;
 
-        let container = await storage.Create("test suite", {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(container.isError).false;
-        expect(container.value).not.empty;
-        containerID = container.value[0].id!;
+        expect(container.value.id).not.null
+        containerID = container.value.id!;
 
         return Promise.resolve()
     });

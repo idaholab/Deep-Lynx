@@ -7,11 +7,11 @@ import {
     RetrieveUserRoles
 } from "../user_management/users";
 import {authInContainer, authRequest, authUser} from "./middleware";
-import UserStorage from "../data_storage/user_management/user_storage";
+import UserStorage from "../data_mappers/user_management/user_storage";
 import {UserT} from "../types/user_management/userT";
-import KeyPairStorage from "../data_storage/user_management/keypair_storage";
+import KeyPairStorage from "../data_mappers/user_management/keypair_storage";
 import {UsersForContainer} from "../api_handlers/user";
-import UserContainerInviteStorage from "../data_storage/user_management/user_container_invite_storage";
+import UserContainerInviteStorage from "../data_mappers/user_management/user_container_invite_storage";
 
 // These routes pertain to User management. Currently user creation is reserved
 // for SAML authentication routes. You cannot manually create a user as of June 2020.

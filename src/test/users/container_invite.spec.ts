@@ -1,13 +1,14 @@
 
 import Logger from "../../logger";
-import PostgresAdapter from "../../data_storage/adapters/postgres/postgres";
-import ContainerStorage from "../../data_storage/container_storage";
+import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import faker from "faker";
 import {expect} from "chai";
 import {UserT} from "../../types/user_management/userT";
-import UserStorage from "../../data_storage/user_management/user_storage";
-import UserContainerInviteStorage from "../../data_storage/user_management/user_container_invite_storage";
+import UserStorage from "../../data_mappers/user_management/user_storage";
+import UserContainerInviteStorage from "../../data_mappers/user_management/user_container_invite_storage";
 import {UserContainerInviteT} from "../../types/user_management/userContainerInviteT";
+import Container from "../../data_warehouse/ontology/container";
 
 describe('A User Container Invite can', async() => {
     let containerID: string = process.env.TEST_CONTAINER_ID || "";
@@ -18,18 +19,14 @@ describe('A User Container Invite can', async() => {
             Logger.debug("skipping metatype tests, no storage layer");
             this.skip()
         }
-
         await PostgresAdapter.Instance.init();
-        const storage = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
-        const container = await storage.Create("test suite", {
-            "name": faker.name.findName(),
-            "description": faker.random.alphaNumeric()
-        });
+        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(container.isError).false;
-        expect(container.value).not.empty;
-        containerID = container.value[0].id!;
+        expect(container.value.id).not.null
+        containerID = container.value.id!;
 
         const user = await UserStorage.Instance.Create("test suite", (
             {

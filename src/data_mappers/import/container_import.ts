@@ -1,11 +1,10 @@
 import axios, { AxiosRequestConfig } from "axios";
-import ContainerStorage from "../../data_storage/container_storage";
-import { CreateContainer } from "../../api_handlers/container";
-import MetatypeRelationshipStorage from "../../data_storage/metatype_relationship_storage"
-import MetatypeStorage from "../../data_storage/metatype_storage"
-import MetatypeRelationshipPairStorage from "../../data_storage/metatype_relationship_pair_storage"
-import MetatypeKeyStorage from "../../data_storage/metatype_key_storage"
-import MetatypeRelationshipKeyStorage from "../../data_storage/metatype_relationship_key_storage"
+import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
+import MetatypeRelationshipStorage from "../metatype_relationship_storage"
+import MetatypeStorage from "../metatype_storage"
+import MetatypeRelationshipPairStorage from "../metatype_relationship_pair_storage"
+import MetatypeKeyStorage from "../metatype_key_storage"
+import MetatypeRelationshipKeyStorage from "../metatype_relationship_key_storage"
 import { UserT } from "../../types/user_management/userT";
 import Result from "../../result";
 import { ContainerImportT } from "../../types/import/containerImportT"
@@ -13,9 +12,11 @@ import { MetatypeT } from "../../types/metatypeT";
 import { MetatypeRelationshipPairT } from "../../types/metatype_relationship_pairT";
 import { MetatypeKeyT, MetatypeKeysT } from "../../types/metatype_keyT";
 import { MetatypeRelationshipT } from "../../types/metatype_relationshipT";
-import NodeStorage from "../../data_storage/graph/node_storage"
-import EdgeStorage from "../../data_storage/graph/edge_storage"
+import NodeStorage from "../graph/node_storage"
+import EdgeStorage from "../graph/edge_storage"
 import Logger from "../../logger"
+import ContainerRepository from "../../data_access_layer/repositories/container_respository";
+import Container from "../../data_warehouse/ontology/container";
 const convert = require('xml-js');
 
 const containerStorage = ContainerStorage.Instance;
@@ -68,7 +69,7 @@ export default class ContainerImport {
 
   private rollbackOntology(containerID: string) {
     return new Promise((resolve, reject) => {
-      containerStorage.PermanentlyDelete(containerID)
+      containerStorage.Delete(containerID)
         .then(_ => {
           resolve("Ontology rolled back successfully.")
         })
@@ -303,13 +304,11 @@ export default class ContainerImport {
       } else {
         // If performing a create, need to create container and retrieve container ID
         if (!update) {
-          const containers = await CreateContainer(user,
-            {
-              name,
-              description: ontologyDescription
-            })
+          const repository = new ContainerRepository()
+
+          const containers = await repository.save(user, new Container(name, ontologyDescription))
           if (containers.isError) return resolve(Result.SilentFailure(containers.error!.error));
-          containerID = containers.value[0].id!;
+          containerID = containers.value.id!;
         }
 
         const allRelationshipPairNames: string[] = [];

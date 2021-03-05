@@ -74,7 +74,7 @@ export default class PostgresStorage {
 
     // generally you'll use transactions for create/update/destroy functionality
     // as such, you'll be in charge of your own return and input values.
-    async runAsTransaction(...statements:QueryConfig[]): Promise<Result<boolean>> {
+    async runAsTransaction(...statements:QueryConfig[] | string[]): Promise<Result<boolean>> {
         const client = await this.startTransaction();
         const i = 0;
 
@@ -89,8 +89,8 @@ export default class PostgresStorage {
            await client.value.query('ROLLBACK');
            client.value.release();
            return new Promise(resolve => {
-               Logger.error(`transaction failed - ${(e as Error).message} for values ${statements[i].values}`);
-               resolve(Result.Failure(`${(e as Error).message} for values ${statements[i].values} `))
+               Logger.error(`transaction failed - ${(e as Error).message} `);
+               resolve(Result.Failure(`transaction failed ${(e as Error).message}`))
            })
         }
 
@@ -128,6 +128,35 @@ export default class PostgresStorage {
         }
     }
 
+    // run simple query
+    // TODO: rename to run once refactor is completed
+    async runRaw(statement:QueryConfig | string, client?: PoolClient): Promise<Result<object[]>> {
+        if(client) {
+            return new Promise(resolve => {
+                client.query<object[]>(statement)
+                    .then((result) => {
+                        resolve(Result.Success(result.rows))
+                    })
+                    .catch(e => {
+                        Logger.error(`query failed - ${(e as Error).message}`);
+                        resolve(Result.Failure(e))
+                    })
+            })
+
+        } else {
+            return new Promise(resolve => {
+                PostgresAdapter.Instance.Pool.query<object[]>(statement)
+                    .then((result) => {
+                        resolve(Result.Success(result.rows))
+                    })
+                    .catch(e => {
+                        Logger.error(`query failed - ${(e as Error).message}`);
+                        resolve(Result.Failure(e))
+                    })
+            })
+        }
+    }
+
     // run a query, retrieve first result and cast to T
     retrieve<T>(q: QueryConfig, client?: PoolClient): Promise<Result<T>> {
         return new Promise<Result<any>>(resolve => {
@@ -143,6 +172,34 @@ export default class PostgresStorage {
                     })
             } else {
                 PostgresAdapter.Instance.Pool.query<T>(q)
+                    .then(res => {
+                        if(res.rows.length < 1) resolve(Result.Error(ErrorNotFound));
+
+                        resolve(Result.Success(res.rows[0]))
+                    })
+                    .catch(e => {
+                        resolve(Result.Failure(`record retrieval failed - ${(e as Error).message}`))
+                    })
+            }
+        })
+    }
+
+    // run a query, retrieve first result and cast to any
+    // TODO: remove with domain mapping refactor is complete
+    retrieveRaw(q: QueryConfig, client?: PoolClient): Promise<Result<object>> {
+        return new Promise<Result<any>>(resolve => {
+            if(client) {
+                client.query<object[]>(q)
+                    .then(res => {
+                        if(res.rows.length < 1) resolve(Result.Error(ErrorNotFound));
+
+                        resolve(Result.Success(res.rows[0]))
+                    })
+                    .catch(e => {
+                        resolve(Result.Failure(`record retrieval failed - ${(e as Error).message}`))
+                    })
+            } else {
+                PostgresAdapter.Instance.Pool.query<object[]>(q)
                     .then(res => {
                         if(res.rows.length < 1) resolve(Result.Error(ErrorNotFound));
 
@@ -178,7 +235,32 @@ export default class PostgresStorage {
                     })
             })
         }
+    }
 
+    // run query and return all rows, cast to object[]
+    // TODO: Once all types have made the transition to classes, rename back to rows
+    rowsRaw(q:QueryConfig, client?: PoolClient): Promise<Result<object[]>> {
+        if(client) {
+            return new Promise<Result<object[]>>(resolve => {
+                client.query<object[]>(q)
+                    .then(res => {
+                        resolve(Result.Success(res.rows))
+                    })
+                    .catch(e => {
+                        resolve(Result.Failure(`row retrieval failed - ${(e as Error).message}`))
+                    })
+            })
+        } else {
+            return new Promise<Result<object[]>>(resolve => {
+                PostgresAdapter.Instance.Pool.query<object[]>(q)
+                    .then(res => {
+                        resolve(Result.Success(res.rows))
+                    })
+                    .catch(e => {
+                        resolve(Result.Failure(`row retrieval failed - ${(e as Error).message}`))
+                    })
+            })
+        }
     }
 
     // count accepts SELECT COUNT(*) queries only

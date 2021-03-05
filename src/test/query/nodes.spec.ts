@@ -1,19 +1,20 @@
 /* tslint:disable */
 import Logger from "../../logger";
-import PostgresAdapter from "../../data_storage/adapters/postgres/postgres";
-import MetatypeKeyStorage from "../../data_storage/metatype_key_storage";
-import MetatypeStorage from "../../data_storage/metatype_storage";
+import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import MetatypeKeyStorage from "../../data_mappers/metatype_key_storage";
+import MetatypeStorage from "../../data_mappers/metatype_storage";
 import faker from "faker";
 import {expect} from "chai";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
-import GraphStorage from "../../data_storage/graph/graph_storage";
-import NodeStorage from "../../data_storage/graph/node_storage";
-import ContainerStorage from "../../data_storage/container_storage";
+import GraphStorage from "../../data_mappers/graph/graph_storage";
+import NodeStorage from "../../data_mappers/graph/node_storage";
+import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import {NodeT} from "../../types/graph/nodeT";
 import {graphql} from "graphql";
 import resolversRoot from "../../data_query/resolvers";
 import {schema} from "../../data_query/schema"
 import { MetatypeT } from "../../types/metatypeT";
+import Container from "../../data_warehouse/ontology/container";
 
 describe('Using a GraphQL Query on nodes we', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -27,13 +28,13 @@ describe('Using a GraphQL Query on nodes we', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        let storage = ContainerStorage.Instance;
+        let mapper = ContainerStorage.Instance;
 
-        let container = await storage.Create( "test suite", {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(container.isError).false;
-        expect(container.value).not.empty;
-        containerID = container.value[0].id!;
+        expect(container.value.id).not.null
+        containerID = container.value.id!;
 
         const nodeStorage = NodeStorage.Instance;
         const kStorage = MetatypeKeyStorage.Instance;

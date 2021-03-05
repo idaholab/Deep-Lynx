@@ -1,7 +1,7 @@
 /* tslint:disable */
 import { expect } from 'chai'
 import { structure } from "gremlin"
-import { GraphSONReaderV1 } from "../../data_storage/adapters/gremlin/graphson_v1_reader/reader"
+import { GraphSONReaderV1 } from "../../data_mappers/adapters/gremlin/graphson_v1_reader/reader"
 import { GraphsonTestBodies } from "./graphson_test_bodies"
 
 describe('When GraphSON v1.0 vertex data is parsed', () => {

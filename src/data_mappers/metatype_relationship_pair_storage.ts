@@ -286,7 +286,7 @@ WHERE id = $6`,
             values: [containerID]
         }
     }
-    
+
     private static countStatement(containerID: string): QueryConfig {
         return {
             text: `SELECT COUNT(*) FROM metatype_relationship_pairs WHERE NOT archived AND container_id = $1`,

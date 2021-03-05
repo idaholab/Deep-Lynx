@@ -9,16 +9,16 @@ import {objectToShapeHash, onDecodeError} from "../utilities";
 import Logger from "../logger"
 import Config from "../config";
 import {DataSourceT} from "../types/import/dataSourceT";
-import DataSourceStorage from "../data_storage/import/data_source_storage";
-import ImportStorage from "../data_storage/import/import_storage";
+import DataSourceStorage from "../data_mappers/import/data_source_storage";
+import ImportStorage from "../data_mappers/import/import_storage";
 
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
 import NodeRSA from "node-rsa";
 import axios, {AxiosResponse} from "axios"
-import DataStagingStorage from "../data_storage/import/data_staging_storage";
+import DataStagingStorage from "../data_mappers/import/data_staging_storage";
 import {TypeMappingT} from "../types/import/typeMappingT";
-import TypeMappingStorage from "../data_storage/import/type_mapping_storage";
+import TypeMappingStorage from "../data_mappers/import/type_mapping_storage";
 
 // HttpImpl is a data source which polls and HTTP source for data every x seconds
 // this implementation allows the user to query both basic authentication and

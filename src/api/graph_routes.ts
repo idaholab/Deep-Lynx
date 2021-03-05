@@ -1,5 +1,5 @@
-import NodeStorage from "../data_storage/graph/node_storage";
-import EdgeStorage from "../data_storage/graph/edge_storage";
+import NodeStorage from "../data_mappers/graph/node_storage";
+import EdgeStorage from "../data_mappers/graph/edge_storage";
 
 import {Request, Response, NextFunction, Application} from "express";
 import {authInContainer} from "./middleware";
