@@ -1,7 +1,7 @@
 import {Request, Response, NextFunction, Application} from "express"
 import {NewDataExport, StartExport, StopExport} from "../data_exporting/exporter";
 import {UserT} from "../types/user_management/userT";
-import ExportStorage from "../data_mappers/export/export_storage";
+import ExportStorage from "../data_access_layer/mappers/export/export_storage";
 import {authInContainer} from "./middleware";
 
 const exportStorage = ExportStorage.Instance;

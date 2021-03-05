@@ -4,7 +4,7 @@
 // file that the main application uses.
 
 import {Pool} from "pg";
-import PostgresAdapter from "./data_mappers/adapters/postgres/postgres";
+import PostgresAdapter from "./data_access_layer/mappers/adapters/postgres/postgres";
 import Config from "./config"
 import * as fs from "fs";
 import Logger from "./logger"

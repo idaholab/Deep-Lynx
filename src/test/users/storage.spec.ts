@@ -1,10 +1,10 @@
 /* tslint:disable */
 import faker from 'faker'
 import { expect } from 'chai'
-import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import Logger from "../../logger";
-import UserStorage from "../../data_mappers/user_management/user_storage";
+import UserStorage from "../../data_access_layer/mappers/user_management/user_storage";
 import {UserT} from "../../types/user_management/userT";
 
 describe('A User', async() => {

@@ -1,18 +1,18 @@
 /* tslint:disable */
 import Logger from "../../logger";
-import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
-import MetatypeKeyStorage from "../../data_mappers/metatype_key_storage";
-import MetatypeStorage from "../../data_mappers/metatype_storage";
+import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
+import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeStorage from "../../data_access_layer/mappers/metatype_storage";
 import faker from "faker";
 import {expect} from "chai";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
-import GraphStorage from "../../data_mappers/graph/graph_storage";
-import NodeStorage from "../../data_mappers/graph/node_storage";
+import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
+import NodeStorage from "../../data_access_layer/mappers/graph/node_storage";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
-import MetatypeRelationshipStorage from "../../data_mappers/metatype_relationship_storage";
-import MetatypeRelationshipPairStorage from "../../data_mappers/metatype_relationship_pair_storage";
-import EdgeStorage from "../../data_mappers/graph/edge_storage";
+import MetatypeRelationshipStorage from "../../data_access_layer/mappers/metatype_relationship_storage";
+import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
+import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
 import Container from "../../data_warehouse/ontology/container";
 
 // This is both test and utility for creating a full realized, semi-complex

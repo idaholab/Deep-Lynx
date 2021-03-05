@@ -3,8 +3,8 @@ Resolvers contains the functions used by a GraphQL query to resolve a field
 to its known value. This file is a mix of the static resolvers and functionality
 for auto-generating resolvers based on the stored ontology.
  */
-import NodeStorage from "../data_mappers/graph/node_storage";
-import MetatypeStorage from "../data_mappers/metatype_storage";
+import NodeStorage from "../data_access_layer/mappers/graph/node_storage";
+import MetatypeStorage from "../data_access_layer/mappers/metatype_storage";
 import {
     EdgeFilterQL,
     EdgeQL, EdgeWhereQL, FileFilterQL, FileQL, FileWhereQL,
@@ -17,16 +17,16 @@ import {
     PropertyQL
 } from "./types";
 import {NodeT} from "../types/graph/nodeT";
-import MetatypeRelationshipPairStorage from "../data_mappers/metatype_relationship_pair_storage";
+import MetatypeRelationshipPairStorage from "../data_access_layer/mappers/metatype_relationship_pair_storage";
 import Logger from "../logger";
-import MetatypeRelationshipStorage from "../data_mappers/metatype_relationship_storage";
-import NodeFilter from "../data_mappers/graph/node_filter";
+import MetatypeRelationshipStorage from "../data_access_layer/mappers/metatype_relationship_storage";
+import NodeFilter from "../data_access_layer/mappers/graph/node_filter";
 import {EdgeT} from "../types/graph/edgeT";
-import EdgeFilter from "../data_mappers/graph/edge_filter";
-import FileStorage from "../data_mappers/file_storage";
+import EdgeFilter from "../data_access_layer/mappers/graph/edge_filter";
+import FileStorage from "../data_access_layer/mappers/file_storage";
 import Config from "../config";
 import {FileT} from "../types/fileT";
-import FileFilter from "../data_mappers/file_filter";
+import FileFilter from "../data_access_layer/mappers/file_filter";
 
 export default function resolversRoot(containerID: string):any {
     return {

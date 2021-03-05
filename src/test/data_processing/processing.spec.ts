@@ -1,29 +1,29 @@
 /* tslint:disable */
 import faker from 'faker'
 import { expect } from 'chai'
-import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import Logger from "../../logger";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
-import DataSourceStorage from "../../data_mappers/import/data_source_storage";
-import TypeMappingStorage from "../../data_mappers/import/type_mapping_storage";
+import DataSourceStorage from "../../data_access_layer/mappers/import/data_source_storage";
+import TypeMappingStorage from "../../data_access_layer/mappers/import/type_mapping_storage";
 import {TypeMappingT, TypeTransformationT} from "../../types/import/typeMappingT";
-import MetatypeStorage from "../../data_mappers/metatype_storage";
-import MetatypeKeyStorage from "../../data_mappers/metatype_key_storage";
+import MetatypeStorage from "../../data_access_layer/mappers/metatype_storage";
+import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
 import {objectToShapeHash} from "../../utilities";
 import {MetatypeT} from "../../types/metatypeT";
-import GraphStorage from "../../data_mappers/graph/graph_storage";
-import ImportStorage from "../../data_mappers/import/import_storage";
-import DataStagingStorage from "../../data_mappers/import/data_staging_storage";
+import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
+import ImportStorage from "../../data_access_layer/mappers/import/import_storage";
+import DataStagingStorage from "../../data_access_layer/mappers/import/data_staging_storage";
 import {MetatypeRelationshipT} from "../../types/metatype_relationshipT";
-import MetatypeRelationshipStorage from "../../data_mappers/metatype_relationship_storage";
-import MetatypeRelationshipPairStorage from "../../data_mappers/metatype_relationship_pair_storage";
+import MetatypeRelationshipStorage from "../../data_access_layer/mappers/metatype_relationship_storage";
+import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
 import {MetatypeRelationshipPairT} from "../../types/metatype_relationship_pairT";
 import {DataSourceT} from "../../types/import/dataSourceT";
-import TypeTransformationStorage from "../../data_mappers/import/type_transformation_storage";
+import TypeTransformationStorage from "../../data_access_layer/mappers/import/type_transformation_storage";
 import {DataSourceProcessor} from "../../data_processing/processing";
-import NodeFilter from "../../data_mappers/graph/node_filter";
-import EdgeFilter from "../../data_mappers/graph/edge_filter";
+import NodeFilter from "../../data_access_layer/mappers/graph/node_filter";
+import EdgeFilter from "../../data_access_layer/mappers/graph/edge_filter";
 import Container from "../../data_warehouse/ontology/container";
 
 describe('A Data Processor', async() => {

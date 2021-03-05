@@ -1,10 +1,10 @@
 /* tslint:disable */
 import Logger from "../../logger";
-import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import faker from "faker";
 import {expect} from "chai";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
-import EventStorage from "../../data_mappers/events/event_storage";
+import EventStorage from "../../data_access_layer/mappers/events/event_storage";
 import { RegisteredEventT } from "../../types/events/registered_eventT";
 import Container from "../../data_warehouse/ontology/container";
 

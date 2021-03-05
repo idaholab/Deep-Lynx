@@ -1,15 +1,15 @@
 /* tslint:disable */
 import Logger from "../../logger";
-import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
-import MetatypeKeyStorage from "../../data_mappers/metatype_key_storage";
-import MetatypeStorage from "../../data_mappers/metatype_storage";
+import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
+import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeStorage from "../../data_access_layer/mappers/metatype_storage";
 import faker from "faker";
 import {expect} from "chai";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
-import MetatypeRelationshipStorage from "../../data_mappers/metatype_relationship_storage";
-import MetatypeRelationshipPairStorage from "../../data_mappers/metatype_relationship_pair_storage";
+import MetatypeRelationshipStorage from "../../data_access_layer/mappers/metatype_relationship_storage";
+import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
 import Container from "../../data_warehouse/ontology/container";
 
 describe('A Metatype Relationship Pair can', async() => {

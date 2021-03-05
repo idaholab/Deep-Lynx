@@ -2,15 +2,15 @@
 import faker from 'faker'
 import { expect } from 'chai'
 import 'reflect-metadata';
-import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import Logger from "../../logger";
-import ContainerImport from "../../data_mappers/import/container_import"
+import ContainerImport from "../../data_access_layer/mappers/import/container_import"
 import fs from 'fs'
 import ContainerMapper from '../../data_access_layer/mappers/container_mapper';
-import NodeStorage from '../../data_mappers/graph/node_storage';
-import MetatypeStorage from '../../data_mappers/metatype_storage';
-import MetatypeRelationshipPairStorage from '../../data_mappers/metatype_relationship_pair_storage';
-import EdgeStorage from '../../data_mappers/graph/edge_storage';
+import NodeStorage from '../../data_access_layer/mappers/graph/node_storage';
+import MetatypeStorage from '../../data_access_layer/mappers/metatype_storage';
+import MetatypeRelationshipPairStorage from '../../data_access_layer/mappers/metatype_relationship_pair_storage';
+import EdgeStorage from '../../data_access_layer/mappers/graph/edge_storage';
 import { UserT } from '../../types/user_management/userT';
 
 describe('A Container Import', async() => {

@@ -5,7 +5,7 @@ import {UserT} from "../../types/user_management/userT";
 import ContainerMapper from "../mappers/container_mapper";
 import Authorization from "../../user_management/authorization/authorization";
 import Logger from "../../logger"
-import GraphStorage from "../../data_mappers/graph/graph_storage";
+import GraphStorage from "../mappers/graph/graph_storage";
 
 export default class ContainerRepository implements Repository<Container> {
     #mapper: ContainerMapper = ContainerMapper.Instance

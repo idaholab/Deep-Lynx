@@ -4,7 +4,7 @@ import {exportT, ExportT} from "../types/export/exportT";
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
 import {GremlinImpl} from "./gremlinImpl";
-import ExportStorage from "../data_mappers/export/export_storage";
+import ExportStorage from "../data_access_layer/mappers/export/export_storage";
 import {onDecodeError} from "../utilities";
 import Logger from "../logger"
 

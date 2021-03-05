@@ -1,12 +1,12 @@
 import {ContainerT, ContainersT, containersT} from "../../types/containerT"
 import Container from "../../data_warehouse/ontology/container";
 import Result from "../../result"
-import PostgresStorage from "../../data_mappers/postgresStorage";
+import PostgresStorage from "./postgresStorage";
 import {PoolClient, QueryConfig} from "pg";
 import * as t from "io-ts";
-import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import PostgresAdapter from "./adapters/postgres/postgres";
 import uuid from "uuid";
-import GraphStorage from "../../data_mappers/graph/graph_storage";
+import GraphStorage from "./graph/graph_storage";
 import Logger from "../../logger";
 import {plainToClass} from "class-transformer";
 const format = require('pg-format')

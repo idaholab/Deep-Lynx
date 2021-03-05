@@ -1,16 +1,16 @@
 /* tslint:disable */
 import faker from 'faker'
 import { expect } from 'chai'
-import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import Logger from "../../logger";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
-import DataSourceStorage from "../../data_mappers/import/data_source_storage";
-import TypeMappingStorage from "../../data_mappers/import/type_mapping_storage";
-import MetatypeStorage from "../../data_mappers/metatype_storage";
-import MetatypeKeyStorage from "../../data_mappers/metatype_key_storage";
+import DataSourceStorage from "../../data_access_layer/mappers/import/data_source_storage";
+import TypeMappingStorage from "../../data_access_layer/mappers/import/type_mapping_storage";
+import MetatypeStorage from "../../data_access_layer/mappers/metatype_storage";
+import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
 import {objectToShapeHash} from "../../utilities";
-import TypeTransformationStorage from "../../data_mappers/import/type_transformation_storage";
+import TypeTransformationStorage from "../../data_access_layer/mappers/import/type_transformation_storage";
 import Container from "../../data_warehouse/ontology/container";
 
 describe('A Data Type Mapping', async() => {

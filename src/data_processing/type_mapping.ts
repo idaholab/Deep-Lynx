@@ -3,8 +3,8 @@ import {nodeT, NodeT} from "../types/graph/nodeT";
 import Result from "../result";
 import {edgeT, EdgeT} from "../types/graph/edgeT";
 import {getNestedValue} from "../utilities";
-import MetatypeKeyStorage from "../data_mappers/metatype_key_storage";
-import MetatypeRelationshipKeyStorage from "../data_mappers/metatype_relationship_key_storage";
+import MetatypeKeyStorage from "../data_access_layer/mappers/metatype_key_storage";
+import MetatypeRelationshipKeyStorage from "../data_access_layer/mappers/metatype_relationship_key_storage";
 import {DataStagingT} from "../types/import/dataStagingT";
 import Logger from "../logger"
 

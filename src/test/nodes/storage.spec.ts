@@ -1,15 +1,15 @@
 /* tslint:disable */
 import Logger from "../../logger";
-import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
-import MetatypeKeyStorage from "../../data_mappers/metatype_key_storage";
-import MetatypeStorage from "../../data_mappers/metatype_storage";
+import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
+import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeStorage from "../../data_access_layer/mappers/metatype_storage";
 import faker from "faker";
 import {expect} from "chai";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
-import GraphStorage from "../../data_mappers/graph/graph_storage";
-import NodeStorage from "../../data_mappers/graph/node_storage";
+import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
+import NodeStorage from "../../data_access_layer/mappers/graph/node_storage";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
-import DataSourceStorage from "../../data_mappers/import/data_source_storage";
+import DataSourceStorage from "../../data_access_layer/mappers/import/data_source_storage";
 import {NodeT} from "../../types/graph/nodeT";
 import Container from "../../data_warehouse/ontology/container";
 

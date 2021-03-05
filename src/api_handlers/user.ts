@@ -1,7 +1,7 @@
 import {UserT} from "../types/user_management/userT";
 import Result from "../result";
 import Authorization  from "../user_management/authorization/authorization";
-import UserStorage from "../data_mappers/user_management/user_storage";
+import UserStorage from "../data_access_layer/mappers/user_management/user_storage";
 
 // The only connection a user has to a container are the roles that are assigned to them,
 // and those roles are managed using Casbin. We use this function to fetch all users associated

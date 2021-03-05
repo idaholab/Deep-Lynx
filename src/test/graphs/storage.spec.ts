@@ -1,8 +1,8 @@
 /* tslint:disable */
 import faker from 'faker'
 import { expect } from 'chai'
-import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
-import GraphStorage from "../../data_mappers/graph/graph_storage";
+import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
+import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
 import Logger from "../../logger";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import Container from "../../data_warehouse/ontology/container";

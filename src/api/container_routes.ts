@@ -2,7 +2,7 @@ import {Request, Response, NextFunction, Application} from "express"
 import ContainerStorage from "../data_access_layer/mappers/container_mapper";
 import {UserT} from "../types/user_management/userT";
 import {authRequest, authInContainer} from "./middleware";
-import ContainerImport from "../data_mappers/import/container_import";
+import ContainerImport from "../data_access_layer/mappers/import/container_import";
 import { ContainerImportT } from "../types/import/containerImportT";
 import ContainerRepository from "../data_access_layer/repositories/container_respository";
 import {plainToClass} from "class-transformer";

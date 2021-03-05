@@ -1,14 +1,14 @@
 
 import Logger from "../../logger";
-import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import faker from "faker";
 import {expect} from "chai";
 import {UserT} from "../../types/user_management/userT";
-import UserStorage from "../../data_mappers/user_management/user_storage";
-import UserContainerInviteStorage from "../../data_mappers/user_management/user_container_invite_storage";
+import UserStorage from "../../data_access_layer/mappers/user_management/user_storage";
+import UserContainerInviteStorage from "../../data_access_layer/mappers/user_management/user_container_invite_storage";
 import {UserContainerInviteT} from "../../types/user_management/userContainerInviteT";
-import OAuthApplicationStorage from "../../data_mappers/user_management/oauth_application_storage";
+import OAuthApplicationStorage from "../../data_access_layer/mappers/user_management/oauth_application_storage";
 
 describe('A OAuth Application can', async() => {
     let userID: string

@@ -3,7 +3,7 @@ import passport from "passport";
 import * as fs from "fs";
 import {UserT} from "../../../types/user_management/userT";
 import Config from "../../../config"
-import UserStorage from "../../../data_mappers/user_management/user_storage";
+import UserStorage from "../../../data_access_layer/mappers/user_management/user_storage";
 import Result from "../../../result";
 
 

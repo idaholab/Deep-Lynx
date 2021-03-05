@@ -1,8 +1,8 @@
-import MetatypeStorage from "../data_mappers/metatype_storage";
+import MetatypeStorage from "../data_access_layer/mappers/metatype_storage";
 import {Request, Response, NextFunction, Application} from "express"
 import {authInContainer} from "./middleware";
 import {UserT} from "../types/user_management/userT";
-import MetatypeFilter from "../data_mappers/metatype_filter";
+import MetatypeFilter from "../data_access_layer/mappers/metatype_filter";
 
 const storage = MetatypeStorage.Instance;
 

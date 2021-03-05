@@ -1,11 +1,11 @@
 /* tslint:disable */
 import faker from 'faker'
 import { expect } from 'chai'
-import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import Logger from "../../logger";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
-import DataSourceStorage from "../../data_mappers/import/data_source_storage";
-import FileStorage from "../../data_mappers/file_storage";
+import DataSourceStorage from "../../data_access_layer/mappers/import/data_source_storage";
+import FileStorage from "../../data_access_layer/mappers/file_storage";
 import Container from "../../data_warehouse/ontology/container";
 
 describe('A File can', async() => {

@@ -1,18 +1,18 @@
 /* tslint:disable */
 import Logger from "../../logger";
-import PostgresAdapter from "../../data_mappers/adapters/postgres/postgres";
+import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import faker from "faker";
 import {expect} from "chai";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
-import QueueStorage from "../../data_mappers/events/queue_storage";
-import DataSourceStorage from "../../data_mappers/import/data_source_storage";
+import QueueStorage from "../../data_access_layer/mappers/events/queue_storage";
+import DataSourceStorage from "../../data_access_layer/mappers/import/data_source_storage";
 import { DataSourceT } from "../../types/import/dataSourceT";
-import DataStagingStorage from "../../data_mappers/import/data_staging_storage";
-import ImportStorage from "../../data_mappers/import/import_storage";
-import ExportStorage from "../../data_mappers/export/export_storage";
-import FileStorage from "../../data_mappers/file_storage";
+import DataStagingStorage from "../../data_access_layer/mappers/import/data_staging_storage";
+import ImportStorage from "../../data_access_layer/mappers/import/import_storage";
+import ExportStorage from "../../data_access_layer/mappers/export/export_storage";
+import FileStorage from "../../data_access_layer/mappers/file_storage";
 import {objectToShapeHash} from "../../utilities";
-import TypeMappingStorage from "../../data_mappers/import/type_mapping_storage";
+import TypeMappingStorage from "../../data_access_layer/mappers/import/type_mapping_storage";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import Container from "../../data_warehouse/ontology/container";
 
