@@ -10,7 +10,7 @@ const exphbs = require('express-handlebars')
 const methodOverride = require('method-override')
 
 import { Server } from "./server"
-import { PerformanceMiddleware, authenticateRoute, offsetLimitReplacer } from "./middleware";
+import {PerformanceMiddleware, authenticateRoute, offsetLimitReplacer, containerContext} from "./middleware";
 import ContainerRoutes from "./container_routes"
 import MetatypeRoutes from "./metatype_routes"
 import MetatypeKeyRoutes from "./metatype_key_routes";
@@ -67,18 +67,18 @@ export class Router {
     this.mountPreMiddleware();
 
     // Mount application controllers, middleware is passed in as an array of functions
-    UserRoutes.mount(this.app, [authenticateRoute()]);
-    ContainerRoutes.mount(this.app, [authenticateRoute()]);
-    ExportRoutes.mount(this.app, [authenticateRoute()]);
-    DataSourceRoutes.mount(this.app, [authenticateRoute()]);
-    MetatypeRoutes.mount(this.app, [authenticateRoute()]);
-    MetatypeKeyRoutes.mount(this.app, [authenticateRoute()]);
-    MetatypeRelationshipRoutes.mount(this.app, [authenticateRoute()]);
-    MetatypeRelationshipKeyRoutes.mount(this.app, [authenticateRoute()]);
-    MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute()]);
-    QueryRoutes.mount(this.app, [authenticateRoute()]);
-    GraphRoutes.mount(this.app, [authenticateRoute()]);
-    EventRoutes.mount(this.app, [authenticateRoute()]);
+    UserRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    ContainerRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    ExportRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    DataSourceRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    MetatypeRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    MetatypeKeyRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    MetatypeRelationshipRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    MetatypeRelationshipKeyRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    QueryRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    GraphRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    EventRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
 
     // OAuth and Identity Provider routes - these are the only routes that serve up
     // webpages. WE ALSO MOUNT THE '/' ENDPOINT HERE

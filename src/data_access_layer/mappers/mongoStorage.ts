@@ -1,5 +1,5 @@
-import Result from "./../result"
-import Logger from "../logger"
+import Result from "../../result"
+import Logger from "../../logger"
 import {Collection, WriteConcernError, WriteError, ObjectID, MongoError} from "mongodb";
 import {pipe} from "fp-ts/lib/pipeable";
 import {Errors} from "io-ts";

@@ -1,5 +1,5 @@
 import {BaseDataClass} from "../../base_data_class";
-import {IsNotEmpty, IsOptional, IsString, MinLength} from "class-validator";
+import {IsBoolean, IsNotEmpty, IsOptional, IsString, MinLength} from "class-validator";
 import Result from "../../result";
 import Authorization from "../../user_management/authorization/authorization";
 import Logger from "../../logger";
@@ -8,6 +8,10 @@ export default class Container extends BaseDataClass {
     @IsOptional()
     @IsString()
     id?: string
+
+    @IsOptional()
+    @IsBoolean()
+    archived?: boolean
 
     @IsNotEmpty()
     @IsString()

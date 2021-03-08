@@ -6,6 +6,7 @@ import Authorization from "../user_management/authorization/authorization";
 import Config from "../config";
 import passport from "passport";
 import {SuperUser, UserT} from "../types/user_management/userT";
+import ContainerRepository from "../data_access_layer/repositories/container_respository";
 
 // PerformanceMiddleware uses the provided logger to display the time each route
 // took to process and send a response to the requester. This leverages node.js's
@@ -161,4 +162,34 @@ export function offsetLimitReplacer(): any {
         if(isNaN(+req.query.limit))  req.query.limit = "10000";
         next()};
 
+}
+
+// containerContext will attempt to fetch a container by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "containerID"
+export function containerContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have a containerID, don't fail, just pass without action
+        if(!req.params.containerID) {
+            next()
+            return
+        }
+
+        const repo = new ContainerRepository()
+
+        repo.findByID(req.params.containerID)
+            .then(result => {
+               if(result.isError) {
+                   resp.status(result.error?.errorCode!).json(result)
+                   return
+               }
+
+               req.container = result.value
+               next()
+            })
+            .catch(error => {
+                resp.status(500).json(error)
+                return
+            })
+    }
 }
