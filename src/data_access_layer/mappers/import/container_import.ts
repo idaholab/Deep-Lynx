@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig } from "axios";
 import ContainerStorage from "../container_mapper";
 import MetatypeRelationshipStorage from "../metatype_relationship_storage"
-import MetatypeStorage from "../metatype_storage"
+import MetatypeStorage from "../metatype_mapper"
 import MetatypeRelationshipPairStorage from "../metatype_relationship_pair_storage"
 import MetatypeKeyStorage from "../metatype_key_storage"
 import MetatypeRelationshipKeyStorage from "../metatype_relationship_key_storage"
@@ -17,6 +17,7 @@ import EdgeStorage from "../graph/edge_storage"
 import Logger from "../../../logger"
 import ContainerRepository from "../../repositories/container_respository";
 import Container from "../../../data_warehouse/ontology/container";
+import Metatype from "../../../data_warehouse/ontology/metatype";
 const convert = require('xml-js');
 
 const containerStorage = ContainerStorage.Instance;
@@ -518,17 +519,15 @@ export default class ContainerImport {
           }
         })
 
-        const classPromises: Promise<Result<MetatypeT[]>>[] = [];
+        const classPromises: Promise<Result<Metatype[]>>[] = [];
         const metatypeUpdates: MetatypeT[] = [];
 
         classListMap.forEach(thisClass => {
           // if not marked for update, create
           if (!thisClass.update) {
-            const data = {
-              name: thisClass.name,
-              description: thisClass.description
-            };
-            classPromises.push(metatypeStorage.Create(containerID, user.id!, data))
+            const data = new Metatype(thisClass.name, thisClass.description)
+
+            classPromises.push(metatypeStorage.BulkCreate(containerID, user.id!, [data]))
           } else {
             // else add to batch update
             const data = {

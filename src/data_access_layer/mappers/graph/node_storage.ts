@@ -7,7 +7,7 @@ import MetatypeKeyStorage from "../metatype_key_storage";
 import {CompileMetatypeKeys, MetatypeKeyT} from "../../../types/metatype_keyT";
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
-import MetatypeStorage from "../metatype_storage";
+import MetatypeMapper from "../metatype_mapper";
 import GraphStorage from "./graph_storage";
 import Logger from "../../../logger";
 
@@ -66,7 +66,7 @@ export default class NodeStorage extends PostgresStorage{
                 for(const n in ns) {
                     // find and register metatype keys
                     if(!keysByMetatypeID[ns[n].metatype_id]) {
-                        const m = await MetatypeStorage.Instance.Retrieve(ns[n].metatype_id);
+                        const m = await MetatypeMapper.Instance.Retrieve(ns[n].metatype_id);
                         if(m.isError || m.value.container_id !== containerID) {
                             resolve(Result.Failure(`unable to find metatype, or metatype does not belong to container`));
                             return
@@ -95,7 +95,7 @@ export default class NodeStorage extends PostgresStorage{
 
                     // grab metatype_name if it was not supplied
                     if (typeof ns[n].metatype_name === 'undefined') {
-                        ns[n].metatype_name = (await MetatypeStorage.Instance.Retrieve(ns[n].metatype_id)).value.name;
+                        ns[n].metatype_name = (await MetatypeMapper.Instance.Retrieve(ns[n].metatype_id)).value.name;
                     }
 
 
@@ -136,7 +136,7 @@ export default class NodeStorage extends PostgresStorage{
                 for(const n in ns) {
                     // find and register metatype keys
                     if(!keysByMetatypeID[ns[n].metatype_id]) {
-                        const m = await MetatypeStorage.Instance.Retrieve(ns[n].metatype_id);
+                        const m = await MetatypeMapper.Instance.Retrieve(ns[n].metatype_id);
                         if(m.isError || m.value.container_id !== containerID) {
                             return new Promise(resolve => resolve(Result.Failure(`unable to find metatype, or metatype does not belong to container`)));
                         }
@@ -161,7 +161,7 @@ export default class NodeStorage extends PostgresStorage{
 
                     // grab metatype_name if it was not supplied
                     if (typeof ns[n].metatype_name === 'undefined') {
-                        ns[n].metatype_name = (await MetatypeStorage.Instance.Retrieve(ns[n].metatype_id)).value.name;
+                        ns[n].metatype_name = (await MetatypeMapper.Instance.Retrieve(ns[n].metatype_id)).value.name;
                     }
 
                     ns[n].id = super.generateUUID();

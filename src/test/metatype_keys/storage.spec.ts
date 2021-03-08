@@ -4,10 +4,11 @@ import { expect } from 'chai'
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
 import Logger from "../../logger";
-import MetatypeStorage from "../../data_access_layer/mappers/metatype_storage";
+import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import {single_test_key, test_keys} from "./compile.spec";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import Container from "../../data_warehouse/ontology/container";
+import Metatype from "../../data_warehouse/ontology/metatype";
 
 describe('A Metatype Key', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -32,48 +33,48 @@ describe('A Metatype Key', async() => {
 
     it('can be saved to storage', async()=> {
         let storage = MetatypeKeyStorage.Instance;
-        let mStorage = MetatypeStorage.Instance;
+        let mMapper = MetatypeMapper.Instance;
 
-        let metatype = await mStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let metatype = await mMapper.Create(containerID, "test suite",
+            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await storage.Create(metatype.value[0].id!, "test suite", test_keys);
+        let keys = await storage.Create(metatype.value.id!, "test suite", test_keys);
         expect(keys.isError).false;
 
-        return mStorage.PermanentlyDelete(metatype.value[0].id!)
+        return mMapper.PermanentlyDelete(metatype.value.id!)
     });
 
     it('can be saved to storage with valid regex', async()=> {
         let storage = MetatypeKeyStorage.Instance;
-        let mStorage = MetatypeStorage.Instance;
+        let mMapper = MetatypeMapper.Instance;
 
-        let metatype = await mStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let metatype = await mMapper.Create(containerID, "test suite",
+            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await storage.Create(metatype.value[0].id!, "test suite", test_keys);
+        let keys = await storage.Create(metatype.value.id!, "test suite", test_keys);
         expect(keys.isError).false;
 
-        return mStorage.PermanentlyDelete(metatype.value[0].id!)
+        return mMapper.PermanentlyDelete(metatype.value.id!)
     });
 
 
     it('can be retrieved from  storage', async()=> {
         let storage = MetatypeKeyStorage.Instance;
-        let mStorage = MetatypeStorage.Instance;
+        let mMapper = MetatypeMapper.Instance;
 
-        let metatype = await mStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let metatype = await mMapper.Create(containerID, "test suite",
+            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let key = await storage.Create(metatype.value[0].id!, "test suite", single_test_key);
+        let key = await storage.Create(metatype.value.id!, "test suite", single_test_key);
         expect(key.isError).false;
         expect(key.value).not.empty;
 
@@ -81,46 +82,46 @@ describe('A Metatype Key', async() => {
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(key.value[0].id);
 
-        return mStorage.PermanentlyDelete(metatype.value[0].id!)
+        return mMapper.PermanentlyDelete(metatype.value.id!)
     });
 
     it('can be listed from storage', async()=> {
-        let mStorage = MetatypeStorage.Instance;
+        let mMapper = MetatypeMapper.Instance;
         let storage = MetatypeKeyStorage.Instance;
 
-        let metatype = await mStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let metatype = await mMapper.Create(containerID, "test suite",
+            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await storage.Create(metatype.value[0].id!, "test suite", test_keys);
+        let keys = await storage.Create(metatype.value.id!, "test suite", test_keys);
         expect(keys.isError).false;
 
-        let retrieved = await storage.List(metatype.value[0].id!);
+        let retrieved = await storage.List(metatype.value.id!);
         expect(retrieved.isError).false;
         expect(retrieved.value).not.empty;
         expect(retrieved.value).length(keys.value.length);
 
-        return mStorage.PermanentlyDelete(metatype.value[0].id!)
+        return mMapper.PermanentlyDelete(metatype.value.id!)
     })
 
     it('can be batch updated', async()=> {
         let storage = MetatypeKeyStorage.Instance;
-        let mStorage = MetatypeStorage.Instance;
+        let mMapper = MetatypeMapper.Instance;
 
-        let metatype = await mStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let metatype = await mMapper.Create(containerID, "test suite",
+            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await storage.Create(metatype.value[0].id!, "test suite", test_keys);
+        let keys = await storage.Create(metatype.value.id!, "test suite", test_keys);
         expect(keys.isError).false;
 
         let updateKeys = await storage.BatchUpdate(keys.value, "test suite");
         expect(updateKeys.isError).false;
 
-        return mStorage.PermanentlyDelete(metatype.value[0].id!)
+        return mMapper.PermanentlyDelete(metatype.value.id!)
     });
 });

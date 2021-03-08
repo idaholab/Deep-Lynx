@@ -2,7 +2,7 @@
 import Logger from "../../logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
-import MetatypeStorage from "../../data_access_layer/mappers/metatype_storage";
+import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
@@ -14,6 +14,7 @@ import MetatypeRelationshipStorage from "../../data_access_layer/mappers/metatyp
 import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
 import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
 import Container from "../../data_warehouse/ontology/container";
+import Metatype from "../../data_warehouse/ontology/metatype";
 
 // This is both test and utility for creating a full realized, semi-complex
 // graphs. As such this test _does not_ delete its data after running
@@ -43,7 +44,7 @@ describe('A Complex Graph can be created', async() => {
         const storage = EdgeStorage.Instance;
         const nStorage = NodeStorage.Instance;
         const kStorage = MetatypeKeyStorage.Instance;
-        const mStorage = MetatypeStorage.Instance;
+        const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
         const rStorage = MetatypeRelationshipStorage.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
@@ -54,10 +55,10 @@ describe('A Complex Graph can be created', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mStorage.Create(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate(containerID, "test suite",
             [
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
                 ]);
 
         expect(metatype.isError).false;

@@ -1,5 +1,5 @@
 import Filter from "./filter";
-import MetatypeStorage from "./metatype_storage";
+import MetatypeStorage from "./metatype_mapper";
 import Result from "../../result";
 import {MetatypeT} from "../../types/metatypeT";
 

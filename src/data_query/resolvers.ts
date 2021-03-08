@@ -4,7 +4,7 @@ to its known value. This file is a mix of the static resolvers and functionality
 for auto-generating resolvers based on the stored ontology.
  */
 import NodeStorage from "../data_access_layer/mappers/graph/node_storage";
-import MetatypeStorage from "../data_access_layer/mappers/metatype_storage";
+import MetatypeStorage from "../data_access_layer/mappers/metatype_mapper";
 import {
     EdgeFilterQL,
     EdgeQL, EdgeWhereQL, FileFilterQL, FileQL, FileWhereQL,

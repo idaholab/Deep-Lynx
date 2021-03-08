@@ -2,7 +2,7 @@
 import Logger from "../../logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
-import MetatypeStorage from "../../data_access_layer/mappers/metatype_storage";
+import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
@@ -21,6 +21,7 @@ import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
 import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
 import {EdgeT} from "../../types/graph/edgeT";
 import Container from "../../data_warehouse/ontology/container";
+import Metatype from "../../data_warehouse/ontology/metatype";
 
 describe('Using a GraphQL Query for a nodes edges', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -46,7 +47,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         const edgeStorage = EdgeStorage.Instance
         const nodeStorage = NodeStorage.Instance;
         const kStorage = MetatypeKeyStorage.Instance;
-        const mStorage = MetatypeStorage.Instance;
+        const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
         const rStorage = MetatypeRelationshipStorage.Instance;
         const rkStorage = MetatypeRelationshipKeyStorage.Instance;
@@ -58,18 +59,18 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatypeResult = await mStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        const metatypeResult = await mMapper.Create(containerID, "test suite",
+            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatypeResult.isError).false;
         expect(metatypeResult.value).not.empty;
-        metatype = metatypeResult.value[0]
+        metatype = metatypeResult.value
 
-        const keys = await kStorage.Create(metatypeResult.value[0].id!, "test suite", test_keys);
+        const keys = await kStorage.Create(metatypeResult.value.id!, "test suite", test_keys);
         expect(keys.isError).false;
 
         const mixed = {
-            metatype_id: metatypeResult.value[0].id!,
+            metatype_id: metatypeResult.value.id!,
             properties: payload
         };
 

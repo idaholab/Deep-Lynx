@@ -2,7 +2,7 @@
 import Logger from "../../logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
-import MetatypeStorage from "../../data_access_layer/mappers/metatype_storage";
+import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
@@ -17,6 +17,7 @@ import {EdgeT} from "../../types/graph/edgeT";
 import DataSourceStorage from "../../data_access_layer/mappers/import/data_source_storage";
 import MetatypeRelationshipKeyStorage from "../../data_access_layer/mappers/metatype_relationship_key_storage";
 import Container from "../../data_warehouse/ontology/container";
+import Metatype from "../../data_warehouse/ontology/metatype";
 
 describe('A Graph Edge can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -46,7 +47,7 @@ describe('A Graph Edge can', async() => {
         const storage = EdgeStorage.Instance;
         const nStorage = NodeStorage.Instance;
         const kStorage = MetatypeKeyStorage.Instance;
-        const mStorage = MetatypeStorage.Instance;
+        const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
         const rStorage = MetatypeRelationshipStorage.Instance;
         const rkStorage = MetatypeRelationshipKeyStorage.Instance;
@@ -58,10 +59,10 @@ describe('A Graph Edge can', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mStorage.Create(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate(containerID, "test suite",
             [
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
                 ]);
 
         expect(metatype.isError).false;
@@ -112,7 +113,7 @@ describe('A Graph Edge can', async() => {
         expect(edge.isError).false;
 
 
-       await mStorage.PermanentlyDelete(metatype.value[0].id!);
+       await mMapper.PermanentlyDelete(metatype.value[0].id!);
        return gStorage.PermanentlyDelete(graph.value.id)
     });
 
@@ -120,7 +121,7 @@ describe('A Graph Edge can', async() => {
         const storage = EdgeStorage.Instance;
         const nStorage = NodeStorage.Instance;
         const kStorage = MetatypeKeyStorage.Instance;
-        const mStorage = MetatypeStorage.Instance;
+        const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
         const rStorage = MetatypeRelationshipStorage.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
@@ -144,10 +145,10 @@ describe('A Graph Edge can', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mStorage.Create(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate(containerID, "test suite",
             [
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
             ]);
 
         expect(metatype.isError).false;
@@ -201,7 +202,7 @@ describe('A Graph Edge can', async() => {
         expect(edge.isError).false;
 
 
-        await mStorage.PermanentlyDelete(metatype.value[0].id!);
+        await mMapper.PermanentlyDelete(metatype.value[0].id!);
         return gStorage.PermanentlyDelete(graph.value.id)
     });
 
@@ -209,7 +210,7 @@ describe('A Graph Edge can', async() => {
         const storage = EdgeStorage.Instance;
         const nStorage = NodeStorage.Instance;
         const kStorage = MetatypeKeyStorage.Instance;
-        const mStorage = MetatypeStorage.Instance;
+        const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
         const rStorage = MetatypeRelationshipStorage.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
@@ -218,12 +219,11 @@ describe('A Graph Edge can', async() => {
         let graph = await gStorage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
-        expect(graph.value).not.empty;
 
-        const metatype = await mStorage.Create(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate(containerID, "test suite",
             [
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
             ]);
 
         expect(metatype.isError).false;
@@ -277,7 +277,7 @@ describe('A Graph Edge can', async() => {
         let deleted = await storage.PermanentlyDelete(edge.value[0].id!);
         expect(deleted.isError).false;
 
-        await mStorage.PermanentlyDelete(metatype.value[0].id!);
+        await mMapper.PermanentlyDelete(metatype.value[0].id!);
         return gStorage.PermanentlyDelete(graph.value.id)
     });
 
@@ -285,7 +285,7 @@ describe('A Graph Edge can', async() => {
         const storage = EdgeStorage.Instance;
         const nStorage = NodeStorage.Instance;
         const kStorage = MetatypeKeyStorage.Instance;
-        const mStorage = MetatypeStorage.Instance;
+        const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
         const rStorage = MetatypeRelationshipStorage.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
@@ -296,10 +296,11 @@ describe('A Graph Edge can', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mStorage.Create(containerID, "test suite",
+
+        const metatype = await mMapper.BulkCreate(containerID, "test suite",
             [
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
             ]);
 
         expect(metatype.isError).false;
@@ -352,7 +353,7 @@ describe('A Graph Edge can', async() => {
         let updatedEdge = await storage.CreateOrUpdate(containerID, graph.value.id,  edge.value[0]);
         expect(updatedEdge.isError, updatedEdge.error?.error).false;
 
-        await mStorage.PermanentlyDelete(metatype.value[0].id!);
+        await mMapper.PermanentlyDelete(metatype.value[0].id!);
         return gStorage.PermanentlyDelete(graph.value.id)
     })
 });

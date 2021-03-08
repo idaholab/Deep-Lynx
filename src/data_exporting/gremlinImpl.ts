@@ -7,7 +7,7 @@ import {ExportT} from "../types/export/exportT";
 import Result from "../result";
 import GremlinExportStorage from "../data_access_layer/mappers/export/gremlin_export_storage";
 import Logger from "../logger"
-import MetatypeStorage from "../data_access_layer/mappers/metatype_storage";
+import MetatypeStorage from "../data_access_layer/mappers/metatype_mapper";
 import MetatypeRelationshipPairStorage from "../data_access_layer/mappers/metatype_relationship_pair_storage";
 import NodeRSA from "node-rsa"
 

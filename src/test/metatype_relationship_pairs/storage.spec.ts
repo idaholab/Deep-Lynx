@@ -2,7 +2,7 @@
 import Logger from "../../logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
-import MetatypeStorage from "../../data_access_layer/mappers/metatype_storage";
+import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
@@ -11,6 +11,7 @@ import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
 import MetatypeRelationshipStorage from "../../data_access_layer/mappers/metatype_relationship_storage";
 import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
 import Container from "../../data_warehouse/ontology/container";
+import Metatype from "../../data_warehouse/ontology/metatype";
 
 describe('A Metatype Relationship Pair can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -35,15 +36,15 @@ describe('A Metatype Relationship Pair can', async() => {
 
     it('can be saved to storage', async()=> {
         const kStorage = MetatypeKeyStorage.Instance;
-        const mStorage = MetatypeStorage.Instance;
+        const mMapper = MetatypeMapper.Instance;
         const rStorage = MetatypeRelationshipStorage.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
 
-        const metatype = await mStorage.Create(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate(containerID, "test suite",
             [
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
-                ]);
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
+            ]);
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -72,19 +73,19 @@ describe('A Metatype Relationship Pair can', async() => {
 
         expect(pair.isError).false;
 
-       return mStorage.PermanentlyDelete(metatype.value[0].id!);
+       return mMapper.PermanentlyDelete(metatype.value[0].id!);
     });
 
     it('can be archived and permanently deleted', async()=> {
         const kStorage = MetatypeKeyStorage.Instance;
-        const mStorage = MetatypeStorage.Instance;
+        const mMapper = MetatypeMapper.Instance;
         const rStorage = MetatypeRelationshipStorage.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
 
-        const metatype = await mStorage.Create(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate(containerID, "test suite",
             [
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
             ]);
 
         expect(metatype.isError).false;
@@ -120,20 +121,20 @@ describe('A Metatype Relationship Pair can', async() => {
         let deleted = await rpStorage.Delete(pair.value[0].id!);
         expect(deleted.isError).false;
 
-        await mStorage.PermanentlyDelete(metatype.value[0].id!);
+        await mMapper.PermanentlyDelete(metatype.value[0].id!);
         return
     });
 
     it('can be listed by destination and origin', async()=> {
         const kStorage = MetatypeKeyStorage.Instance;
-        const mStorage = MetatypeStorage.Instance;
+        const mMapper = MetatypeMapper.Instance;
         const rStorage = MetatypeRelationshipStorage.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
 
-        const metatype = await mStorage.Create(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate(containerID, "test suite",
             [
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
-                {"name": faker.name.findName(), "description": faker.random.alphaNumeric()},
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
+                new Metatype(faker.name.findName(), faker.random.alphaNumeric()),
             ]);
 
         expect(metatype.isError).false;
@@ -171,7 +172,7 @@ describe('A Metatype Relationship Pair can', async() => {
         expect(fetchedPair2.isError).false;
         expect(fetchedPair2.value.id).not.undefined;
 
-        return mStorage.PermanentlyDelete(metatype.value[0].id!);
+        return mMapper.PermanentlyDelete(metatype.value[0].id!);
     });
 });
 

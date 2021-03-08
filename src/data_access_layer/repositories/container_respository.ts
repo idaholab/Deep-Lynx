@@ -1,4 +1,4 @@
-import Repository from "./repository_base";
+import RepositoryInterface from "./repository_base";
 import Container from "../../data_warehouse/ontology/container";
 import Result from "../../result";
 import {UserT} from "../../types/user_management/userT";
@@ -7,7 +7,7 @@ import Authorization from "../../user_management/authorization/authorization";
 import Logger from "../../logger"
 import GraphStorage from "../mappers/graph/graph_storage";
 
-export default class ContainerRepository implements Repository<Container> {
+export default class ContainerRepository implements RepositoryInterface<Container> {
     #mapper: ContainerMapper = ContainerMapper.Instance
 
     // save will always return a new instance of provided class to save, this is

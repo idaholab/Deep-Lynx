@@ -1,4 +1,4 @@
-import MetatypeStorage from "../data_access_layer/mappers/metatype_storage";
+import MetatypeStorage from "../data_access_layer/mappers/metatype_mapper";
 import {Request, Response, NextFunction, Application} from "express"
 import {authInContainer} from "./middleware";
 import {UserT} from "../types/user_management/userT";

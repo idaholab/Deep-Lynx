@@ -8,7 +8,7 @@ import ContainerImport from "../../data_access_layer/mappers/import/container_im
 import fs from 'fs'
 import ContainerMapper from '../../data_access_layer/mappers/container_mapper';
 import NodeStorage from '../../data_access_layer/mappers/graph/node_storage';
-import MetatypeStorage from '../../data_access_layer/mappers/metatype_storage';
+import MetatypeStorage from '../../data_access_layer/mappers/metatype_mapper';
 import MetatypeRelationshipPairStorage from '../../data_access_layer/mappers/metatype_relationship_pair_storage';
 import EdgeStorage from '../../data_access_layer/mappers/graph/edge_storage';
 import { UserT } from '../../types/user_management/userT';

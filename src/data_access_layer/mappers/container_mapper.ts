@@ -1,10 +1,7 @@
-import {ContainerT, ContainersT, containersT} from "../../types/containerT"
 import Container from "../../data_warehouse/ontology/container";
 import Result from "../../result"
 import PostgresStorage from "./postgresStorage";
 import {PoolClient, QueryConfig} from "pg";
-import * as t from "io-ts";
-import PostgresAdapter from "./adapters/postgres/postgres";
 import uuid from "uuid";
 import GraphStorage from "./graph/graph_storage";
 import Logger from "../../logger";
@@ -28,9 +25,6 @@ export default class ContainerMapper extends PostgresStorage{
         return ContainerMapper.instance
     }
 
-    // Create accepts a single object. The function will validate
-    // if those objects are valid and will return a detailed error message
-    // if not.
     public async Create(userID:string, c: Container, transaction?: PoolClient): Promise<Result<Container>> {
         const r = await super.runRaw(this.createStatement(c, userID), transaction)
         if(r.isError) {
@@ -42,19 +36,8 @@ export default class ContainerMapper extends PostgresStorage{
         return Promise.resolve(Result.Success(resultContainers[0]))
     }
 
-    // BulkCreate accepts a single object, or array of Containers. The function will validate
-    // if those objects are valid and will return a detailed error message
-    // if not.
     public async BulkCreate(userID:string, c: Container[] | Container, transaction?: PoolClient): Promise<Result<Container[]>> {
         if(!Array.isArray(c)) c = [c]
-
-        for(const i in c) {
-            const errors = await c[i].validationErrors()
-
-            if(errors) {
-                return Promise.resolve(Result.Failure(`one or more containers do not pass validation ${errors.join(",")}`))
-            }
-        }
 
         const r = await super.runRaw(this.bulkCreateStatement(c, userID), transaction)
         if(r.isError) {
@@ -62,21 +45,6 @@ export default class ContainerMapper extends PostgresStorage{
         }
 
         const resultContainers = plainToClass(Container, r.value)
-
-        for(const c of resultContainers) {
-            // create graph
-            GraphStorage.Instance.Create(c.id!, userID).then(async (result) => {
-                // set active graph from graph ID
-                if (result.isError) {
-                    Logger.error(result.error?.error!);
-                } else {
-                    const activeGraph = await GraphStorage.Instance.SetActiveForContainer(c.id!, result.value.id);
-                    if (activeGraph.isError || !activeGraph.value) {
-                        Logger.error(activeGraph.error?.error!);
-                    }
-                }
-            }).catch(e => Logger.error(e))
-        }
 
         return Promise.resolve(Result.Success(resultContainers))
     }
@@ -118,7 +86,7 @@ export default class ContainerMapper extends PostgresStorage{
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<Container[]>> {
-        const results = await super.rows<ContainerT>(this.listFromIDsStatement(ids))
+        const results = await super.rowsRaw(this.listFromIDsStatement(ids))
 
         if(results.isError) return new Promise(resolve => resolve(Result.Pass(results)))
 

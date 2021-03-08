@@ -7,7 +7,7 @@ import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import DataSourceStorage from "../../data_access_layer/mappers/import/data_source_storage";
 import TypeMappingStorage from "../../data_access_layer/mappers/import/type_mapping_storage";
 import {TypeMappingT, TypeTransformationT} from "../../types/import/typeMappingT";
-import MetatypeStorage from "../../data_access_layer/mappers/metatype_storage";
+import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
 import {objectToShapeHash} from "../../utilities";
@@ -25,6 +25,7 @@ import {DataSourceProcessor} from "../../data_processing/processing";
 import NodeFilter from "../../data_access_layer/mappers/graph/node_filter";
 import EdgeFilter from "../../data_access_layer/mappers/graph/edge_filter";
 import Container from "../../data_warehouse/ontology/container";
+import Metatype from "../../data_warehouse/ontology/metatype";
 
 describe('A Data Processor', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -66,12 +67,12 @@ describe('A Data Processor', async() => {
         graphID = graph.value.id
 
         let dstorage = DataSourceStorage.Instance;
-        let metatypeStorage = MetatypeStorage.Instance;
+        let metatypeStorage = MetatypeMapper.Instance;
         let relationshipStorage = MetatypeRelationshipStorage.Instance;
         let keyStorage = MetatypeKeyStorage.Instance
         let mappingStorage = TypeMappingStorage.Instance
 
-        let metatypes = await metatypeStorage.Create(containerID, "test suite", test_metatypes);
+        let metatypes = await metatypeStorage.BulkCreate(containerID, "test suite", test_metatypes);
 
         expect(metatypes.isError).false;
         expect(metatypes.value).not.empty;
@@ -329,29 +330,14 @@ describe('A Data Processor', async() => {
     })
 });
 
-const test_metatypes: MetatypeT[] = [
-    {
-        name: "Car",
-        description: "A vehicle"
-    },{
-        name: "Manufacturer",
-        description: "Creator of car"
-    },{
-        name: "Tire Pressure",
-        description: "Pressure of tire"
-    },{
-        name: "Maintenance",
-        description: "Maintenance"
-    },{
-        name: "Maintenance Entry",
-        description: "Maintenance Log"
-    },{
-        name: "Part",
-        description:"physical part of a car"
-    },{
-        name: "Component",
-        description: "base component of part"
-    }
+const test_metatypes: Metatype[] = [
+    new Metatype("Car", "A Vehicle"),
+    new Metatype("Manufacturer", "Creator of Car"),
+    new Metatype("Tire Pressure", "Pressure of tire"),
+    new Metatype("Maintenance", "Maintenance records"),
+    new Metatype("Maintenance Entry", "Maintenance entries"),
+    new Metatype("Part", "Physical part of car"),
+    new Metatype("Component", "Base component of part"),
 ];
 
 const test_metatype_relationships: MetatypeRelationshipT[] = [

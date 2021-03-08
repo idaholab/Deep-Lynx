@@ -3,7 +3,7 @@ import Logger from "../../logger";
 import uuid from "uuid"
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
-import MetatypeStorage from "../../data_access_layer/mappers/metatype_storage";
+import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
@@ -12,6 +12,7 @@ import NodeStorage from "../../data_access_layer/mappers/graph/node_storage";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import NodeFilter from "../../data_access_layer/mappers/graph/node_filter";
 import Container from "../../data_warehouse/ontology/container";
+import Metatype from "../../data_warehouse/ontology/metatype";
 
 describe('Filtering Nodes', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -36,7 +37,7 @@ describe('Filtering Nodes', async() => {
     it('can filter by equality', async()=> {
         const storage = NodeStorage.Instance;
         const kStorage = MetatypeKeyStorage.Instance;
-        const mStorage = MetatypeStorage.Instance;
+        const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
 
         // SETUP
@@ -45,17 +46,17 @@ describe('Filtering Nodes', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        const metatype = await mMapper.Create(containerID, "test suite",
+            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        const keys = await kStorage.Create(metatype.value[0].id!, "test suite", test_keys);
+        const keys = await kStorage.Create(metatype.value.id!, "test suite", test_keys);
         expect(keys.isError).false;
 
         const mixed = {
-            metatype_id: metatype.value[0].id!,
+            metatype_id: metatype.value.id!,
             properties: payload
         };
 
@@ -67,7 +68,7 @@ describe('Filtering Nodes', async() => {
         let nodes = await filter.where()
             .containerID("eq", containerID)
             .and()
-            .metatypeID("eq", metatype.value[0].id!)
+            .metatypeID("eq", metatype.value.id!)
             .all()
         expect(nodes.isError, nodes.error?.error).false
         expect(nodes.value).not.empty
@@ -94,19 +95,19 @@ describe('Filtering Nodes', async() => {
         nodes = await filter.where()
             .containerID("eq",containerID)
             .and()
-            .metatypeName("eq", metatype.value[0].name)
+            .metatypeName("eq", metatype.value.name)
             .all()
         expect(nodes.isError, nodes.error?.error).false
         expect(nodes.value).not.empty
 
-        await mStorage.PermanentlyDelete(metatype.value[0].id!);
+        await mMapper.PermanentlyDelete(metatype.value.id!);
         return gStorage.PermanentlyDelete(graph.value.id);
     });
 
     it('can filter by like', async()=> {
         const storage = NodeStorage.Instance;
         const kStorage = MetatypeKeyStorage.Instance;
-        const mStorage = MetatypeStorage.Instance;
+        const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
 
         // SETUP
@@ -115,17 +116,17 @@ describe('Filtering Nodes', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        const metatype = await mMapper.Create(containerID, "test suite",
+            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        const keys = await kStorage.Create(metatype.value[0].id!, "test suite", test_keys);
+        const keys = await kStorage.Create(metatype.value.id!, "test suite", test_keys);
         expect(keys.isError).false;
 
         const mixed = {
-            metatype_id: metatype.value[0].id!,
+            metatype_id: metatype.value.id!,
             properties: payload
         };
 
@@ -137,19 +138,19 @@ describe('Filtering Nodes', async() => {
         let nodes = await filter.where()
             .containerID("eq", containerID)
             .and()
-            .metatypeName("like", metatype.value[0].name)
+            .metatypeName("like", metatype.value.name)
             .all()
         expect(nodes.isError, nodes.error?.error).false
         expect(nodes.value).not.empty
 
-        await mStorage.PermanentlyDelete(metatype.value[0].id!);
+        await mMapper.PermanentlyDelete(metatype.value.id!);
         return gStorage.PermanentlyDelete(graph.value.id);
     });
 
     it('can filter by ids', async()=> {
         const storage = NodeStorage.Instance;
         const kStorage = MetatypeKeyStorage.Instance;
-        const mStorage = MetatypeStorage.Instance;
+        const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
 
         // SETUP
@@ -158,17 +159,17 @@ describe('Filtering Nodes', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        const metatype = await mMapper.Create(containerID, "test suite",
+            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        const keys = await kStorage.Create(metatype.value[0].id!, "test suite", test_keys);
+        const keys = await kStorage.Create(metatype.value.id!, "test suite", test_keys);
         expect(keys.isError).false;
 
         const mixed = {
-            metatype_id: metatype.value[0].id!,
+            metatype_id: metatype.value.id!,
             properties: payload
         };
 
@@ -194,7 +195,7 @@ describe('Filtering Nodes', async() => {
         expect(nodes.value).not.empty
 
 
-        await mStorage.PermanentlyDelete(metatype.value[0].id!);
+        await mMapper.PermanentlyDelete(metatype.value.id!);
         return gStorage.PermanentlyDelete(graph.value.id);
     });
 
