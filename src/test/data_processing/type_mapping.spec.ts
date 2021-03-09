@@ -27,6 +27,7 @@ import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
 import {EdgeT} from "../../types/graph/edgeT";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 describe('A Data Type Mapping can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -73,7 +74,17 @@ describe('A Data Type Mapping can', async() => {
         let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingStorage.Instance
 
-        let metatypes = await metatypeStorage.BulkCreate(containerID, "test suite", test_metatypes);
+        const test_metatypes: Metatype[] = [
+            new Metatype(containerID,"Car", "A Vehicle"),
+            new Metatype(containerID,"Manufacturer", "Creator of Car"),
+            new Metatype(containerID,"Tire Pressure", "Pressure of tire"),
+            new Metatype(containerID,"Maintenance", "Maintenance records"),
+            new Metatype(containerID,"Maintenance Entry", "Maintenance entries"),
+            new Metatype(containerID,"Part", "Physical part of car"),
+            new Metatype(containerID,"Component", "Base component of part"),
+        ];
+
+        let metatypes = await metatypeStorage.BulkCreate("test suite", test_metatypes);
 
         expect(metatypes.isError).false;
         expect(metatypes.value).not.empty;
@@ -200,6 +211,10 @@ describe('A Data Type Mapping can', async() => {
         data = insertedData.value[0]
 
         return Promise.resolve()
+    })
+
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
     })
 
     it('can generate a car node', async() => {
@@ -773,15 +788,7 @@ describe('A Data Type Mapping can', async() => {
 
 });
 
-const test_metatypes: Metatype[] = [
-    new Metatype(containerID,"Car", "A Vehicle"),
-    new Metatype(containerID,"Manufacturer", "Creator of Car"),
-    new Metatype(containerID,"Tire Pressure", "Pressure of tire"),
-    new Metatype(containerID,"Maintenance", "Maintenance records"),
-    new Metatype(containerID,"Maintenance Entry", "Maintenance entries"),
-    new Metatype(containerID,"Part", "Physical part of car"),
-    new Metatype(containerID,"Component", "Base component of part"),
-];
+
 
 const test_metatype_relationships: MetatypeRelationshipT[] = [
     {

@@ -189,9 +189,7 @@ export default class MetatypeKeyMapper extends PostgresStorage{
                 const queries: QueryConfig[] = [];
 
                 for(const i in ms) {
-                    ms[i].modified_by = userID;
-
-                    queries.push(this.fullUpdateStatement(ms[i]))
+                    queries.push(this.fullUpdateStatement(userID, ms[i]))
 
                     // need to clear the cache for its parent metatype
                     Cache.del(`${MetatypeKeyMapper.tableName}:metatypeID:${ms[i].metatype_id}`)
@@ -323,7 +321,7 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
         }
     }
 
-    private fullUpdateStatement(key: MetatypeKeyT): QueryConfig {
+    private fullUpdateStatement(userID: string, key: MetatypeKeyT): QueryConfig {
         return {
             text:`UPDATE metatype_keys SET name = $1,
                  description = $2,
@@ -332,32 +330,33 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
                  data_type = $5,
                  options = $6,
                  default_value = $7,
-                 validation = $8
-                 WHERE id = $9`,
+                 validation = $8,
+                 modified_by = $9
+                 WHERE id = $10`,
             values: [key.name, key.description,
                 key.property_name, key.required, key.data_type, JSON.stringify(key.options),
-                JSON.stringify(key.default_value),key.validation, key.id]
+                JSON.stringify(key.default_value),key.validation, userID, key.id]
         }
     }
 
     private fullBulkUpdateStatement(userID: string, keys: MetatypeKey[]): string {
             const text = `UPDATE metatype_keys AS m SET
                      name = k.name,
-                     metatype_id = k.metatype_id,
+                     metatype_id = k.metatype_id::uuid,
                      description = k.description,
                      property_name = k.property_name,
-                     required = k.required,
+                     required = k.required::boolean,
                      data_type = k.data_type,
-                     options = k.options,
-                     default_value = k.default_value,
-                     validation = k.validation,
-                     modified_by = k.modified_by
+                     options = k.options::jsonb,
+                     default_value = k.default_value::jsonb,
+                     validation = k.validation::jsonb,
+                     modified_by = k.modified_by,
                      modified_at = NOW()
                  FROM(VALUES %L) AS k(id, name, metatype_id, description, property_name, required, data_type, options, default_value, validation, modified_by)
                  WHERE k.id::uuid = m.id RETURNING *`
             const values = keys.map(key => [key.id, key.name, key.metatype_id, key.description,
-                key.property_name, key.required, key.data_type, JSON.stringify(key.options),
-                JSON.stringify(key.default_value), key.validation, userID])
+                key.property_name, key.required, key.data_type, key.options,
+                key.default_value, key.validation, userID])
 
             return format(text, values)
     }

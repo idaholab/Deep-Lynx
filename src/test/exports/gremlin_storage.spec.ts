@@ -16,6 +16,7 @@ import ExportStorage from "../../data_access_layer/mappers/export/export_storage
 import GremlinExportStorage from "../../data_access_layer/mappers/export/gremlin_export_storage";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 describe('Gremlin Exporter', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -42,6 +43,10 @@ describe('Gremlin Exporter', async() => {
         return Promise.resolve()
     });
 
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
+
     it('can initiate export by copying nodes and edges', async(done)=> {
         const storage = EdgeStorage.Instance;
         const nStorage = NodeStorage.Instance;
@@ -57,7 +62,7 @@ describe('Gremlin Exporter', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mMapper.BulkCreate(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate( "test suite",
             [
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),

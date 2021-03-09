@@ -16,6 +16,7 @@ export default class MetatypeRoutes {
         app.delete("/containers/:id/metatypes/:typeID", ...middleware, authInContainer("write", "ontology"), this.archiveMetatype)
     }
     private static createMetatype(req: Request, res: Response, next: NextFunction) {
+        /*
         const user = req.user as UserT;
 
         storage.Create(req.params.id, user.id!, req.body)
@@ -31,6 +32,7 @@ export default class MetatypeRoutes {
                 res.status(500).json(err.message)
             })
             .finally(() => next())
+         */
     }
 
 
@@ -95,7 +97,7 @@ export default class MetatypeRoutes {
 
     private static updateMetatype(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT;
-
+/*
         storage.Update(req.params.typeID, user.id!, req.body)
             .then((updated) => {
                 if (updated.isError && updated.error) {
@@ -105,6 +107,7 @@ export default class MetatypeRoutes {
                 res.status(200).json(updated)
             })
             .catch((updated) => res.status(500).send(updated))
+ */
     }
 
     private static archiveMetatype(req: Request, res: Response, next: NextFunction) {

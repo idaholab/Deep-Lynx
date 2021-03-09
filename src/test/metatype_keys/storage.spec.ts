@@ -9,6 +9,7 @@ import {single_test_key, test_keys} from "./compile.spec";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 describe('A Metatype Key', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -31,11 +32,15 @@ describe('A Metatype Key', async() => {
         return Promise.resolve()
     });
 
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
+
     it('can be saved to storage', async()=> {
         let storage = MetatypeKeyMapper.Instance;
         let mMapper = MetatypeMapper.Instance;
 
-        let metatype = await mMapper.Create(containerID, "test suite",
+        let metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
@@ -51,7 +56,7 @@ describe('A Metatype Key', async() => {
         let storage = MetatypeKeyMapper.Instance;
         let mMapper = MetatypeMapper.Instance;
 
-        let metatype = await mMapper.Create(containerID, "test suite",
+        let metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
@@ -68,7 +73,7 @@ describe('A Metatype Key', async() => {
         let storage = MetatypeKeyMapper.Instance;
         let mMapper = MetatypeMapper.Instance;
 
-        let metatype = await mMapper.Create(containerID, "test suite",
+        let metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
@@ -89,7 +94,7 @@ describe('A Metatype Key', async() => {
         let mMapper = MetatypeMapper.Instance;
         let storage = MetatypeKeyMapper.Instance;
 
-        let metatype = await mMapper.Create(containerID, "test suite",
+        let metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
@@ -110,7 +115,7 @@ describe('A Metatype Key', async() => {
         let storage = MetatypeKeyMapper.Instance;
         let mMapper = MetatypeMapper.Instance;
 
-        let metatype = await mMapper.Create(containerID, "test suite",
+        let metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;

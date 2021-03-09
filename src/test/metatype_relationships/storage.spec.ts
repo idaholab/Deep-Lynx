@@ -6,6 +6,7 @@ import MetatypeRelationshipStorage from "../../data_access_layer/mappers/metatyp
 import Logger from "../../logger";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import Container from "../../data_warehouse/ontology/container";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 describe('A Metatype Relationship', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -27,6 +28,10 @@ describe('A Metatype Relationship', async() => {
 
         return Promise.resolve()
     });
+
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
 
     it('can be saved to storage', async()=> {
         let storage = MetatypeRelationshipStorage.Instance;

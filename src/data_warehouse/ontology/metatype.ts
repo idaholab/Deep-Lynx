@@ -11,7 +11,6 @@ export default class Metatype extends BaseDataClass {
     @IsUUID()
     container_id: string
 
-
     @IsOptional()
     @IsBoolean()
     archived?: boolean

@@ -7,6 +7,7 @@ import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import EventStorage from "../../data_access_layer/mappers/events/event_storage";
 import { RegisteredEventT } from "../../types/events/registered_eventT";
 import Container from "../../data_warehouse/ontology/container";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 describe('Registered Event Creation', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -28,6 +29,10 @@ describe('Registered Event Creation', async() => {
 
         return Promise.resolve()
     });
+
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
 
 
     it('can update registered event', async()=> {

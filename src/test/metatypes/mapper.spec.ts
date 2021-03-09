@@ -8,8 +8,8 @@ import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 
-describe('A Metatype', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
+describe('A Metatype Mapper', async() => {
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
        if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -28,10 +28,14 @@ describe('A Metatype', async() => {
         return Promise.resolve()
     });
 
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
+
     it('can be saved to mapper', async()=> {
         let mapper = MetatypeMapper.Instance;
 
-        const metatype = await mapper.Create(containerID, "test suite",
+        const metatype = await mapper.Create("test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
@@ -40,10 +44,25 @@ describe('A Metatype', async() => {
         return mapper.PermanentlyDelete(metatype.value.id!)
     });
 
+    it('can be deleted', async()=> {
+        let mapper = MetatypeMapper.Instance;
+
+        const metatype = await mapper.Create("test suite",
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
+
+        expect(metatype.isError).false;
+        expect(metatype.value).not.empty;
+
+        const deleted = await mapper.PermanentlyDelete(metatype.value.id!)
+        expect(deleted.isError).false
+
+        return Promise.resolve()
+    });
+
     it('can be batch saved', async()=> {
         let mapper = MetatypeMapper.Instance;
 
-        const metatype = await mapper.Create(containerID, "test suite",
+        const metatype = await mapper.Create("test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
@@ -55,7 +74,7 @@ describe('A Metatype', async() => {
     it('can be retrieved from  mapper', async()=> {
         let mapper = MetatypeMapper.Instance;
 
-        const metatype = await mapper.Create(containerID, "test suite",
+        const metatype = await mapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
@@ -71,7 +90,7 @@ describe('A Metatype', async() => {
     it('can be listed from mapper', async()=> {
         let mapper = MetatypeMapper.Instance;
 
-        const metatype = await mapper.Create(containerID, "test suite",
+        const metatype = await mapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
@@ -87,7 +106,7 @@ describe('A Metatype', async() => {
     it('can be updated in mapper', async()=> {
         let mapper = MetatypeMapper.Instance;
 
-        const metatype = await mapper.Create(containerID, "test suite",
+        const metatype = await mapper.Create("test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
@@ -96,8 +115,10 @@ describe('A Metatype', async() => {
         let updatedName = faker.name.findName();
         let updatedDescription = faker.random.alphaNumeric();
 
-        let updateResult = await mapper.Update(metatype.value.id!, "test-suite",
-            {name: updatedName, description: updatedDescription});
+        metatype.value.name = updatedName
+        metatype.value.description = updatedDescription
+
+        let updateResult = await mapper.Update( "test-suite",metatype.value);
         expect(updateResult.isError).false;
 
         let retrieved = await mapper.Retrieve(metatype.value.id!);

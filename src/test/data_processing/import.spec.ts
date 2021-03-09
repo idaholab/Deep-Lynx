@@ -10,6 +10,7 @@ import {objectToShapeHash} from "../../utilities";
 import TypeMappingStorage from "../../data_access_layer/mappers/import/type_mapping_storage";
 import DataStagingStorage from "../../data_access_layer/mappers/import/data_staging_storage";
 import Container from "../../data_warehouse/ontology/container";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 describe('A data import', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -31,6 +32,10 @@ describe('A data import', async() => {
 
         return Promise.resolve()
     });
+
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
 
     it('can be listed', async()=> {
         let storage = DataSourceStorage.Instance;

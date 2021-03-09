@@ -44,7 +44,7 @@ export default class ContainerImport {
     // Don't replace any IDs of other classes
     const regex = new RegExp('[1-9:-]');
     if (!['string', 'number', 'boolean', 'date', 'enumeration', 'file'].includes(target) &&
-      !regex.test(target)) {
+        !regex.test(target)) {
       switch (target) {
         case 'integer':
           target = 'number';
@@ -71,16 +71,16 @@ export default class ContainerImport {
   private rollbackOntology(containerID: string) {
     return new Promise((resolve, reject) => {
       containerStorage.Delete(containerID)
-        .then(_ => {
-          resolve("Ontology rolled back successfully.")
-        })
-        .catch(_ => {
-          reject("Unable to roll back ontology.")
-        })
+          .then(_ => {
+            resolve("Ontology rolled back successfully.")
+          })
+          .catch(_ => {
+            reject("Unable to roll back ontology.")
+          })
     })
   }
 
-  public async ImportOntology(user: UserT | any, input: ContainerImportT, file: Buffer, dryrun: boolean, update: boolean, containerID: string): Promise<Result<string>> {
+  public async ImportOntology(user: UserT, input: ContainerImportT, file: Buffer, dryrun: boolean, update: boolean, containerID: string): Promise<Result<string>> {
     if (file.length === 0) {
       const axiosConfig: AxiosRequestConfig = {
         headers: {
@@ -101,14 +101,14 @@ export default class ContainerImport {
         });
 
         this.parseOntology(user, JSON.parse(jsonData), input.name, input.description || "", dryrun, update, containerID)
-          .then((result) => {
-            resolve(result)
-          })
-          .catch(e => {
-            reject(e)
-          })
+            .then((result) => {
+              resolve(result)
+            })
+            .catch(e => {
+              reject(e)
+            })
       })
-        .catch((e) => { return Promise.reject(Result.Failure(e)) })
+          .catch((e) => { return Promise.reject(Result.Failure(e)) })
     } else {
       const jsonData = convert.xml2json(file.toString('utf8'), {
         compact: true,
@@ -118,7 +118,7 @@ export default class ContainerImport {
       return new Promise<Result<string>>((resolve) => {
         resolve(this.parseOntology(user, JSON.parse(jsonData), input.name, input.description || "", dryrun, update, containerID))
       })
-        .catch((e) => { return Promise.reject(Result.Failure(e)) })
+          .catch((e) => { return Promise.reject(Result.Failure(e)) })
     }
   }
 
@@ -133,15 +133,24 @@ export default class ContainerImport {
       const contributor = ontologyHead["dc:contributor"];
 
       // Declare an intersection type to add needed fields to MetatypeT
-      type MetatypeExtendT = MetatypeT &
-      {
-        db_id?: string,
-        parent_id?: string,
-        properties: { [key: string]: any },
-        keys: { [key: string]: any },
-        updateKeys: Map<string, any>,
-        updateKeyNames: { [key: string]: any }
-      }
+      type MetatypeExtendT = {
+            name: string,
+            description: string,
+            id?: string,
+            container_id?: string,
+            archived?: boolean,
+            created_by?: string,
+            modified_by?: string,
+            created_at?: string | Date | undefined,
+            modified_at?: string | Date | undefined,
+            db_id?: string,
+            parent_id?: string,
+            properties: { [key: string]: any },
+            keys: { [key: string]: any },
+            updateKeys: Map<string, any>,
+            updateKeyNames: { [key: string]: any },
+            update: boolean
+          }
 
       type PropertyT = {
         value: string,
@@ -193,17 +202,17 @@ export default class ContainerImport {
 
             if (typeof property["owl:someValuesFrom"] === "undefined") {
               restrictionType = property["owl:qualifiedCardinality"] ? "exact"
-                : property["owl:maxQualifiedCardinality"] ? "max"
-                  : property["owl:minQualifiedCardinality"] ? "min"
-                    : 'unknown restriction type';
+                  : property["owl:maxQualifiedCardinality"] ? "max"
+                      : property["owl:minQualifiedCardinality"] ? "min"
+                          : 'unknown restriction type';
               cardinalityQuantity = property["owl:qualifiedCardinality"] ? property["owl:qualifiedCardinality"]._text
-                : property["owl:maxQualifiedCardinality"] ? property["owl:maxQualifiedCardinality"]._text
-                  : property["owl:minQualifiedCardinality"] ? property["owl:minQualifiedCardinality"]._text
-                    : 'unknown cardinality value';
+                  : property["owl:maxQualifiedCardinality"] ? property["owl:maxQualifiedCardinality"]._text
+                      : property["owl:minQualifiedCardinality"] ? property["owl:minQualifiedCardinality"]._text
+                          : 'unknown cardinality value';
               // Primitive type and class cardinality
               dataRange = property["owl:onDataRange"] ? property["owl:onDataRange"]._attributes["rdf:resource"].split("#")[1]
-                : property["owl:onClass"] ? property["owl:onClass"]._attributes["rdf:resource"]
-                  : 'unknown data range';
+                  : property["owl:onClass"] ? property["owl:onClass"]._attributes["rdf:resource"]
+                      : 'unknown data range';
 
               target = dataRange; // This contains the class or datatype with a cardinality
               target = this.ValidateTarget(target);
@@ -305,11 +314,11 @@ export default class ContainerImport {
       } else {
         // If performing a create, need to create container and retrieve container ID
         if (!update) {
-          const repository = new ContainerRepository()
+          const repository = new ContainerRepository();
 
-          const containers = await repository.save(user, new Container(name, ontologyDescription))
-          if (containers.isError) return resolve(Result.SilentFailure(containers.error!.error));
-          containerID = containers.value.id!;
+          const container = await repository.save(user, new Container(name, ontologyDescription))
+          if (container.isError) return resolve(Result.SilentFailure(container.error!.error));
+          containerID = container.value.id!;
         }
 
         const allRelationshipPairNames: string[] = [];
@@ -499,12 +508,12 @@ export default class ContainerImport {
         relationshipResult.forEach(async resultEntry => {
           if (resultEntry.isError) {
             const rollback = await this.rollbackOntology(containerID)
-              .then((result) => {
-                return result + " " + resultEntry.error?.error
-              })
-              .catch((err: string) => {
-                return err + " " + resultEntry.error?.error
-              })
+                .then((result) => {
+                  return result + " " + resultEntry.error?.error
+                })
+                .catch((err: string) => {
+                  return err + " " + resultEntry.error?.error
+                })
             resolve(Result.SilentFailure(rollback))
             return
           } else {
@@ -520,27 +529,27 @@ export default class ContainerImport {
         })
 
         const classPromises: Promise<Result<Metatype[]>>[] = [];
-        const metatypeUpdates: MetatypeT[] = [];
+        const metatypeUpdates: Metatype[] = [];
 
-        classListMap.forEach(thisClass => {
+        classListMap.forEach((thisClass: MetatypeExtendT) => {
           // if not marked for update, create
           if (!thisClass.update) {
-            const data = new Metatype(containerID,thisClass.name, thisClass.description)
-
-            classPromises.push(metatypeStorage.BulkCreate(containerID, user.id!, [data]))
-          } else {
-            // else add to batch update
             const data = {
               name: thisClass.name,
-              description: thisClass.description,
-              metatype_id: thisClass.id
+              description: thisClass.description
             };
+            classPromises.push(metatypeStorage.BulkCreate(user.id!, [new Metatype(containerID, thisClass.name, thisClass.description)]))
+          } else {
+            // else add to batch update
+            const data = new Metatype(containerID, thisClass.name, thisClass.description)
+            data.id = thisClass.db_id
+
             metatypeUpdates.push(data)
           }
         })
 
         if (metatypeUpdates.length > 0) {
-          classPromises.push(metatypeStorage.BatchUpdate(metatypeUpdates))
+          classPromises.push(metatypeStorage.BulkUpdate(user.id!, metatypeUpdates))
         }
 
         const classResult: Result<MetatypeT[]>[] = await Promise.all(classPromises)
@@ -549,12 +558,12 @@ export default class ContainerImport {
         classResult.forEach(async resultEntry => {
           if (resultEntry.isError) {
             const rollback = await this.rollbackOntology(containerID)
-              .then((result) => {
-                return result + " " + resultEntry.error?.error
-              })
-              .catch((err: string) => {
-                return err + " " + resultEntry.error?.error
-              })
+                .then((result) => {
+                  return result + " " + resultEntry.error?.error
+                })
+                .catch((err: string) => {
+                  return err + " " + resultEntry.error?.error
+                })
             resolve(Result.SilentFailure(rollback))
             return
           } else {
@@ -696,12 +705,12 @@ export default class ContainerImport {
         for (const propResult of propertyResults) {
           if (propResult.isError) {
             const rollback = await this.rollbackOntology(containerID)
-              .then((result) => {
-                return result + " " + propResult.error?.error
-              })
-              .catch((err: string) => {
-                return err + " " + propResult.error?.error
-              })
+                .then((result) => {
+                  return result + " " + propResult.error?.error
+                })
+                .catch((err: string) => {
+                  return err + " " + propResult.error?.error
+                })
             resolve(Result.SilentFailure(rollback))
             return
           }
@@ -711,8 +720,8 @@ export default class ContainerImport {
 
       }
     })
-      .catch<Result<string>>((e: string) => {
-        return Promise.resolve(Result.SilentFailure(e))
-      })
+        .catch<Result<string>>((e: string) => {
+          return Promise.resolve(Result.SilentFailure(e))
+        })
   }
 }

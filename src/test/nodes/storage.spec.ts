@@ -13,6 +13,7 @@ import DataSourceStorage from "../../data_access_layer/mappers/import/data_sourc
 import {NodeT} from "../../types/graph/nodeT";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 describe('Graph Node Creation', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -35,6 +36,10 @@ describe('Graph Node Creation', async() => {
         return Promise.resolve()
     });
 
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
+
     // more advanced tests on payload rejection based on automatic types happen
     // in test/metatype_keys/compile
     it('can reject malformed payload', async()=> {
@@ -49,7 +54,7 @@ describe('Graph Node Creation', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        let metatype = await mMapper.Create(containerID, "test suite",
+        let metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
@@ -80,7 +85,7 @@ describe('Graph Node Creation', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        let metatype = await mMapper.Create(containerID, "test suite",
+        let metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
 
@@ -114,7 +119,7 @@ describe('Graph Node Creation', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        let metatype = await mMapper.Create(containerID, "test suite",
+        let metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
 
@@ -157,7 +162,7 @@ describe('Graph Node Creation', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        let metatype = await mMapper.Create(containerID, "test suite",
+        let metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
 
@@ -207,7 +212,7 @@ describe('Graph Node Creation', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        let metatype = await mMapper.Create(containerID, "test suite",
+        let metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
 
@@ -256,7 +261,7 @@ describe('Graph Node Creation', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        let metatype = await mMapper.Create(containerID, "test suite",
+        let metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
 
@@ -301,7 +306,7 @@ describe('Graph Node Creation', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        let metatype = await mMapper.Create(containerID, "test suite",
+        let metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
 
@@ -335,7 +340,7 @@ describe('Graph Node Creation', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        let metatype = await mMapper.Create(containerID, "test suite",
+        let metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
 

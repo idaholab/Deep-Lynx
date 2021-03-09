@@ -14,7 +14,6 @@ import EdgeStorage from '../../data_access_layer/mappers/graph/edge_storage';
 import { UserT } from '../../types/user_management/userT';
 
 describe('A Container Import', async() => {
-
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
             Logger.debug("skipping container import tests, no storage layer");
@@ -39,7 +38,6 @@ describe('A Container Import', async() => {
         expect(container.value).not.empty;
 
         return storage.Delete(container.value)
-
     });
 
 
@@ -98,7 +96,7 @@ describe('A Container Import', async() => {
         expect(nodeCreate.isError).false;
 
         const updated = fs.readFileSync(`${__dirname}/test_metatype_removal_err.owl`)
-        container = await containerImport.ImportOntology("test suite", containerInput, updated, false, true, containerID);
+        container = await containerImport.ImportOntology(user, containerInput, updated, false, true, containerID);
 
         expect(container.isError).true;
 
@@ -134,7 +132,7 @@ describe('A Container Import', async() => {
         expect(nodeCreate.isError).false;
 
         const updated = fs.readFileSync(`${__dirname}/test_metatype_key_removal_err.owl`)
-        container = await containerImport.ImportOntology("test suite", containerInput, updated, false, true, containerID);
+        container = await containerImport.ImportOntology(user, containerInput, updated, false, true, containerID);
 
         expect(container.isError).true;
 
@@ -200,7 +198,7 @@ describe('A Container Import', async() => {
 
         const updated = fs.readFileSync(`${__dirname}/test_metatype_relationship_removal_err.owl`)
 
-        container = await containerImport.ImportOntology("test suite", containerInput, updated, false, true, containerID);
+        container = await containerImport.ImportOntology(user, containerInput, updated, false, true, containerID);
 
         expect(container.isError).true;
 

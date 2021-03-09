@@ -18,6 +18,7 @@ import DataSourceStorage from "../../data_access_layer/mappers/import/data_sourc
 import MetatypeRelationshipKeyStorage from "../../data_access_layer/mappers/metatype_relationship_key_storage";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 describe('A Graph Edge can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -42,6 +43,10 @@ describe('A Graph Edge can', async() => {
     });
 
 
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
+
 
     it('can be created', async()=> {
         const storage = EdgeStorage.Instance;
@@ -59,7 +64,7 @@ describe('A Graph Edge can', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mMapper.BulkCreate(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate( "test suite",
             [
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
@@ -145,7 +150,7 @@ describe('A Graph Edge can', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mMapper.BulkCreate(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate( "test suite",
             [
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
@@ -220,7 +225,7 @@ describe('A Graph Edge can', async() => {
 
         expect(graph.isError, graph.error?.error).false;
 
-        const metatype = await mMapper.BulkCreate(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate( "test suite",
             [
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
@@ -297,7 +302,7 @@ describe('A Graph Edge can', async() => {
         expect(graph.value).not.empty;
 
 
-        const metatype = await mMapper.BulkCreate(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate( "test suite",
             [
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),

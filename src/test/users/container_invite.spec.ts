@@ -1,4 +1,4 @@
-
+/* tslint:disable */
 import Logger from "../../logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
@@ -9,6 +9,7 @@ import UserStorage from "../../data_access_layer/mappers/user_management/user_st
 import UserContainerInviteStorage from "../../data_access_layer/mappers/user_management/user_container_invite_storage";
 import {UserContainerInviteT} from "../../types/user_management/userContainerInviteT";
 import Container from "../../data_warehouse/ontology/container";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 describe('A User Container Invite can', async() => {
     let containerID: string = process.env.TEST_CONTAINER_ID || "";
@@ -44,6 +45,10 @@ describe('A User Container Invite can', async() => {
 
         return Promise.resolve()
     });
+
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
 
     it('can be saved to storage', async() => {
         const storage = UserContainerInviteStorage.Instance

@@ -37,7 +37,7 @@ describe('A Container Repository', async() => {
     });
 
     it('can be saved', async()=> {
-        let repository = new ContainerRepository()
+        const repository = new ContainerRepository()
         const container = new Container(faker.name.findName(), faker.random.alphaNumeric());
 
         let results = await repository.save(user, container)
@@ -60,7 +60,7 @@ describe('A Container Repository', async() => {
     });
 
     it('can be bulk saved', async()=> {
-        let repository = new ContainerRepository()
+        const repository = new ContainerRepository()
 
         const container1 = new Container(faker.name.findName(), faker.random.alphaNumeric())
         const container2 = new Container(faker.name.findName(), faker.random.alphaNumeric())
@@ -93,14 +93,14 @@ describe('A Container Repository', async() => {
     });
 
     it('can find container by ID', async()=> {
-        let repository = new ContainerRepository()
+        const repository = new ContainerRepository()
 
         const container = await repository.save(user, new Container(faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(container.isError).false;
         expect(container.value).not.empty;
 
-        let retrieved = await repository.findByID(container.value.id!)
+        const retrieved = await repository.findByID(container.value.id!)
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(container.value.id);
 
@@ -113,7 +113,7 @@ describe('A Container Repository', async() => {
         const container1 = new Container(faker.name.findName(), faker.random.alphaNumeric())
         const container2 = new Container(faker.name.findName(), faker.random.alphaNumeric())
 
-        let results = await repository.bulkSave(user, [container1, container2])
+        const results = await repository.bulkSave(user, [container1, container2])
         expect(results.isError).false;
         expect(results.value).not.empty;
 
@@ -134,14 +134,16 @@ describe('A Container Repository', async() => {
     });
 
     it('can archive a container', async()=> {
-        let repository = new ContainerRepository()
+        const repository = new ContainerRepository()
         const container = new Container(faker.name.findName(), faker.random.alphaNumeric());
 
-        let results = await repository.save(user, container)
+        const results = await repository.save(user, container)
         expect(results.isError).false
         expect(results.value.id).not.undefined
 
         const archived = await repository.archive(user, results.value)
         expect(archived.isError).false
+
+        return repository.delete(results.value)
     });
 });

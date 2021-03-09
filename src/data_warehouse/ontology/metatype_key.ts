@@ -7,7 +7,6 @@ export default class MetatypeKey extends BaseDataClass {
     id?: string
 
     @IsUUID()
-    @IsOptional()
     metatype_id?: string
 
     @IsOptional()

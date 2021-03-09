@@ -23,7 +23,7 @@ export class BaseDataClass {
             await validateOrReject(this)
             return null
         } catch(errors) {
-            return ["", ""]
+            return errors
         }
     }
 }

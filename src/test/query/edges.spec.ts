@@ -22,6 +22,7 @@ import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
 import {EdgeT} from "../../types/graph/edgeT";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 describe('Using a GraphQL Query for a nodes edges', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -59,7 +60,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatypeResult = await mMapper.Create(containerID, "test suite",
+        const metatypeResult = await mMapper.Create("test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatypeResult.isError).false;
@@ -110,6 +111,10 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
 
         return Promise.resolve()
     });
+
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
 
     it('can query by id, with all edge resolvers functioning', async()=> {
         let response = await graphql(schema, `{

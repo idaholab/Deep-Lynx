@@ -1,9 +1,6 @@
 import Result from "../../result"
 import PostgresStorage from "./postgresStorage";
 import {PoolClient, QueryConfig} from "pg";
-import Logger from "../../logger"
-import Cache from "../../services/cache/cache"
-import MetatypeKeyMapper from "./metatype_key_storage";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import uuid from "uuid";
 import {plainToClass} from "class-transformer";
@@ -88,41 +85,10 @@ export default class MetatypeMapper extends PostgresStorage{
     }
 
     public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        const toDelete = await this.Retrieve(id);
-
-        if(!toDelete.isError) {
-            Cache.del(`${MetatypeMapper.tableName}:${toDelete.value.id}`)
-                .then(set => {
-                    if(!set) Logger.error(`unable to remove metatype ${toDelete.value.id} from cache`)
-                })
-
-            // needs to remove the key listing response as well
-            Cache.del(`${MetatypeKeyMapper.tableName}:metatypeID:${toDelete.value.id}`)
-                .then(set => {
-                    if(!set) Logger.error(`unable to remove metatype ${toDelete.value.id}'s keys from cache`)
-                })
-        }
-
-
         return super.run(this.deleteStatement(id))
     }
 
     public async Archive(id: string, userID: string): Promise<Result<boolean>> {
-        const toDelete = await this.Retrieve(id);
-
-        if(!toDelete.isError) {
-            Cache.del(`${MetatypeMapper.tableName}:${toDelete.value.id}`)
-                .then(set => {
-                    if(!set) Logger.error(`unable to remove metatype ${toDelete.value.id} from cache`)
-                })
-
-            // needs to remove the key listing response as well
-            Cache.del(`${MetatypeKeyMapper.tableName}:metatypeID:${toDelete.value.id}`)
-                .then(set => {
-                    if(!set) Logger.error(`unable to remove metatype ${toDelete.value.id}'s keys from cache`)
-                })
-        }
-
         return super.run(this.archiveStatement(id, userID))
     }
 

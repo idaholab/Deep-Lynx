@@ -16,6 +16,7 @@ import {schema} from "../../data_query/schema"
 import { MetatypeT } from "../../types/metatypeT";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 describe('Using a GraphQL Query on nodes we', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -48,7 +49,7 @@ describe('Using a GraphQL Query on nodes we', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatypeResult = await mMapper.Create(containerID, "test suite",
+        const metatypeResult = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatypeResult.isError).false;
@@ -70,6 +71,10 @@ describe('Using a GraphQL Query on nodes we', async() => {
 
         return Promise.resolve()
     });
+
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
 
     it('can query by id, with all resolvers functioning', async()=> {
         let response = await graphql(schema, `{

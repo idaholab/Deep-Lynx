@@ -6,6 +6,7 @@ import Logger from "../../logger";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import DataSourceStorage from "../../data_access_layer/mappers/import/data_source_storage";
 import Container from "../../data_warehouse/ontology/container";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 describe('A Data Source', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -28,6 +29,10 @@ describe('A Data Source', async() => {
 
         return Promise.resolve()
     });
+
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
 
     it('can be saved to storage', async()=> {
         let storage = DataSourceStorage.Instance;

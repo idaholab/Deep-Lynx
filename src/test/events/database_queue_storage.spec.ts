@@ -51,6 +51,10 @@ describe('Database Queue Event Creation', async() => {
         return Promise.resolve()
     });
 
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
+
 
     it('can send event on datasource modify', async()=> {
         const storage = QueueStorage.Instance;

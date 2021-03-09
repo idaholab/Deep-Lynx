@@ -10,6 +10,7 @@ import {plainToClass, serialize} from "class-transformer";
 import MetatypeKeyMapper from "../mappers/metatype_key_storage";
 import MetatypeKey from "../../data_warehouse/ontology/metatype_key";
 import {PoolClient} from "pg";
+import {QueryOptions} from "./repository_base";
 
 export default class MetatypeRepository extends Repository implements RepositoryInterface<Metatype> {
     #mapper: MetatypeMapper = MetatypeMapper.Instance
@@ -18,7 +19,7 @@ export default class MetatypeRepository extends Repository implements Repository
     // save will always return a new instance of provided class to save, this is
     // done so that the user can have the updated ID and other information after
     // insert. By default this will also save/update any attached keys to the object
-    async save(user: UserT, m: Metatype, saveKeys?: boolean): Promise<Result<Metatype>> {
+    async save(user: UserT, m: Metatype, saveKeys: boolean = true): Promise<Result<Metatype>> {
         // we run the bulk save in a transaction so that on failure we don't get
         // stuck figuring out what metatypes' keys didn't update
         const transaction = await this.#mapper.startTransaction()
@@ -26,6 +27,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
         const errors = await m.validationErrors()
         if(errors) {
+            await this.#mapper.rollbackTransaction(transaction.value)
             return Promise.resolve(Result.Failure(`metatype does not pass validation ${errors.join(",")}`))
         }
 
@@ -42,15 +44,26 @@ export default class MetatypeRepository extends Repository implements Repository
                     if(!set) Logger.error(`unable to remove metatype ${result.value.id} from cache`)
                 })
 
-            // you must call the original object here as the returned value from
-            // the mapper will not have any keys on it currently
-            const keys = await this.saveKeys(user, m, transaction.value)
-            if(keys.isError) {
-                await this.#mapper.rollbackTransaction(transaction.value)
-                return Promise.resolve(Result.Failure(`metatype saved successfully but updating its keys failed ${keys.error}`))
+            // copy the keys over and assign the new id to them all
+            result.value.keys = m.keys
+            result.value.keys.forEach(key => key.metatype_id = result.value.id)
+
+            if(saveKeys) {
+                const keys = await this.saveKeys(user, result.value, transaction.value)
+                if(keys.isError) {
+                    await this.#mapper.rollbackTransaction(transaction.value)
+                    return Promise.resolve(Result.Failure(`metatype saved successfully but updating its keys failed ${keys.error}`))
+                }
+
+                result.value.keys = keys.value
             }
 
-            result.value.keys = keys.value
+            const committed = await this.#mapper.completeTransaction(transaction.value)
+            if(committed.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value)
+                return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`))
+            }
+
             return Promise.resolve(Result.Success(result.value))
         }
 
@@ -60,26 +73,33 @@ export default class MetatypeRepository extends Repository implements Repository
             return Promise.resolve(Result.Pass(result))
         }
 
-        const keys = await this.saveKeys(user, m, transaction.value)
-        if(keys.isError) {
-            await this.#mapper.rollbackTransaction(transaction.value)
-            return Promise.resolve(Result.Failure(`updating metatypes keys failed: ${keys.error}`))
+        // copy the keys over and assign the new id to them all
+        result.value.keys = m.keys
+        result.value.keys.forEach(key => key.metatype_id = result.value.id)
+
+        if(saveKeys) {
+            const keys = await this.saveKeys(user, result.value, transaction.value)
+            if(keys.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value)
+                return Promise.resolve(Result.Failure(`updating metatypes keys failed: ${keys.error}`))
+            }
+
+            result.value.keys = keys.value
         }
 
         const committed = await this.#mapper.completeTransaction(transaction.value)
         if(committed.isError) {
-            this.#mapper.rollbackTransaction(transaction.value)
+            await this.#mapper.rollbackTransaction(transaction.value)
             return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`))
         }
 
-        result.value.keys = keys.value
         return Promise.resolve(Result.Success(result.value))
     }
 
     // bulkSave will always return  new instances of provided class to save, this is
     // done so that the user can have the updated ID and other information after
     // insert.
-    async bulkSave(user: UserT, m: Metatype[]): Promise<Result<Metatype[]>> {
+    async bulkSave(user: UserT, m: Metatype[], saveKeys: boolean = true): Promise<Result<Metatype[]>> {
         // separate metatypes by which need to be created and which need to updated
         const toCreate: Metatype[] = []
         const toUpdate: Metatype[] = []
@@ -92,6 +112,8 @@ export default class MetatypeRepository extends Repository implements Repository
             if(errors){
                 return Promise.resolve(Result.Failure(`one or more metatypes do not pass validation ${errors.join(",")}`))
             }
+
+            (metatype.id) ? toUpdate.push(metatype): toCreate.push(metatype)
         }
 
         // we run the bulk save in a transaction so that on failure we don't get
@@ -119,20 +141,28 @@ export default class MetatypeRepository extends Repository implements Repository
             toReturn.push(...results.value)
         }
 
-        // update the keys
-        for(const metatype of toReturn) {
-            const keys = await this.saveKeys(user, metatype, transaction.value)
-            if(keys.isError) {
-                await this.#mapper.rollbackTransaction(transaction.value)
-                return Promise.resolve(Result.Failure(`updating metatypes keys failed: ${keys.error}`))
-            }
+        // we must copy the keys from the original objects to the results
+        toReturn.forEach(result => {
+            const original = m.find(metatype => metatype.name === result.name && metatype.description === result.description)
+            if(original) result.keys = original.keys
+        })
 
-            metatype.keys = keys.value
+        // update the keys
+        if(saveKeys) {
+            for(const metatype of toReturn) {
+                const keys = await this.saveKeys(user, metatype, transaction.value)
+                if(keys.isError) {
+                    await this.#mapper.rollbackTransaction(transaction.value)
+                    return Promise.resolve(Result.Failure(`updating metatypes keys failed: ${keys.error}`))
+                }
+
+                metatype.keys = keys.value
+            }
         }
 
         const committed = await this.#mapper.completeTransaction(transaction.value)
         if(committed.isError) {
-            this.#mapper.rollbackTransaction(transaction.value)
+            await this.#mapper.rollbackTransaction(transaction.value)
             return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`))
         }
 
@@ -141,6 +171,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
 
     private async saveKeys(user: UserT, m: Metatype, transaction?: PoolClient): Promise<Result<MetatypeKey[]>> {
+        let internalTransaction: boolean = false
         const keysUpdate: MetatypeKey[] = []
         const keysCreate: MetatypeKey[] = []
         const returnKeys: MetatypeKey[] = []
@@ -151,11 +182,16 @@ export default class MetatypeRepository extends Repository implements Repository
             if(newTransaction.isError) return Promise.resolve(Result.Failure('unable to initiate database transaction'))
 
             transaction = newTransaction.value
+            internalTransaction = true // let the function know this is a generated transaction
         }
 
         for(const key of m.keys) {
+            // set key's metatype_id to equal its parent
+            key.metatype_id = m.id;
+
             const errors = await key.validationErrors();
             if(errors) {
+                if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
                 return Promise.resolve(Result.Failure(`one or more metatype keys do not pass validation ${errors.join(",")}`))
             }
 
@@ -165,7 +201,7 @@ export default class MetatypeRepository extends Repository implements Repository
         if(keysUpdate.length > 0) {
             const results = await this.#keyMapper.BulkUpdate(user.id!, keysUpdate, transaction)
             if(results.isError) {
-                await this.#mapper.rollbackTransaction(transaction)
+                if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
                 return Promise.resolve(Result.Pass(results))
             }
 
@@ -173,17 +209,19 @@ export default class MetatypeRepository extends Repository implements Repository
         }
 
         if(keysCreate.length > 0) {
-            const results = await this.#keyMapper.BulkCreate(user.id!, keysUpdate, transaction)
+            const results = await this.#keyMapper.BulkCreate(user.id!, keysCreate, transaction)
             if(results.isError) {
-                await this.#mapper.rollbackTransaction(transaction)
+                if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
                 return Promise.resolve(Result.Pass(results))
             }
 
             returnKeys.push(...results.value)
         }
 
-        const commit = await this.#mapper.completeTransaction(transaction)
-        if(commit.isError) return Promise.resolve(Result.Pass(commit))
+        if(internalTransaction) {
+            const commit = await this.#mapper.completeTransaction(transaction)
+            if(commit.isError) return Promise.resolve(Result.Pass(commit))
+        }
 
         return Promise.resolve(Result.Success(returnKeys))
     }
@@ -192,8 +230,13 @@ export default class MetatypeRepository extends Repository implements Repository
     // done so that the user can have the updated ID and other information after
     // insert.
 
-    delete(m: Metatype): Promise<Result<boolean>> {
+    async delete(m: Metatype): Promise<Result<boolean>> {
         if(m.id) {
+            Cache.del(`${MetatypeMapper.tableName}:${m.id}`)
+                .then(set => {
+                    if(!set) Logger.error(`unable to remove metatype ${m.id} from cache`)
+                })
+
             return this.#mapper.PermanentlyDelete(m.id)
         }
 
@@ -202,6 +245,11 @@ export default class MetatypeRepository extends Repository implements Repository
 
     archive(user: UserT, m: Metatype): Promise<Result<boolean>> {
         if (m.id) {
+            Cache.del(`${MetatypeMapper.tableName}:${m.id}`)
+                .then(set => {
+                    if(!set) Logger.error(`unable to remove metatype ${m.id} from cache`)
+                })
+
             return this.#mapper.Archive(m.id, user.id!)
         }
 
@@ -261,20 +309,21 @@ export default class MetatypeRepository extends Repository implements Repository
         return super.count()
     }
 
-    async list(limit?: number, offset?:number, sortBy?: string, sortDesc?: boolean): Promise<Result<Metatype[]>> {
-        const results = await super.findAll<object>(limit, offset, sortBy, sortDesc)
+    async list(loadKeys?: boolean, options?: QueryOptions): Promise<Result<Metatype[]>> {
+        const results = await super.findAll<object>(options)
 
         if(results.isError) return Promise.resolve(Result.Pass(results))
 
         const metatypes = plainToClass(Metatype, results.value)
 
-        await Promise.all(metatypes.map(async (metatype) => {
-            const keys = await MetatypeKeyMapper.Instance.List(metatype.id!)
+        if(loadKeys) {
+            await Promise.all(metatypes.map(async (metatype) => {
+                const keys = await MetatypeKeyMapper.Instance.List(metatype.id!)
 
-            metatype.keys = plainToClass(MetatypeKey, keys.value)
-        }))
+                metatype.keys = plainToClass(MetatypeKey, keys.value)
+            }))
+        }
 
         return Promise.resolve(Result.Success(metatypes))
     }
-
 }

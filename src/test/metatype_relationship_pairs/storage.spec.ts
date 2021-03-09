@@ -12,6 +12,7 @@ import MetatypeRelationshipStorage from "../../data_access_layer/mappers/metatyp
 import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 describe('A Metatype Relationship Pair can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -34,13 +35,17 @@ describe('A Metatype Relationship Pair can', async() => {
         return Promise.resolve()
     });
 
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
+
     it('can be saved to storage', async()=> {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const rStorage = MetatypeRelationshipStorage.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
 
-        const metatype = await mMapper.BulkCreate(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate("test suite",
             [
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
@@ -82,7 +87,7 @@ describe('A Metatype Relationship Pair can', async() => {
         const rStorage = MetatypeRelationshipStorage.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
 
-        const metatype = await mMapper.BulkCreate(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate( "test suite",
             [
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
@@ -131,7 +136,7 @@ describe('A Metatype Relationship Pair can', async() => {
         const rStorage = MetatypeRelationshipStorage.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
 
-        const metatype = await mMapper.BulkCreate(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate( "test suite",
             [
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),

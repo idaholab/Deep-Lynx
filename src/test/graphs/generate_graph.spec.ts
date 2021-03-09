@@ -15,6 +15,7 @@ import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/met
 import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 // This is both test and utility for creating a full realized, semi-complex
 // graphs. As such this test _does not_ delete its data after running
@@ -39,6 +40,10 @@ describe('A Complex Graph can be created', async() => {
     });
 
 
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
+
 
     it('can be created', async()=> {
         const storage = EdgeStorage.Instance;
@@ -55,7 +60,7 @@ describe('A Complex Graph can be created', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mMapper.BulkCreate(containerID, "test suite",
+        const metatype = await mMapper.BulkCreate( "test suite",
             [
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
                 new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),

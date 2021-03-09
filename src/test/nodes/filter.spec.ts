@@ -13,6 +13,7 @@ import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import NodeFilter from "../../data_access_layer/mappers/graph/node_filter";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 
 describe('Filtering Nodes', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -34,6 +35,10 @@ describe('Filtering Nodes', async() => {
         return Promise.resolve()
     });
 
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
+
     it('can filter by equality', async()=> {
         const storage = NodeStorage.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
@@ -46,7 +51,7 @@ describe('Filtering Nodes', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mMapper.Create(containerID, "test suite",
+        const metatype = await mMapper.Create("test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
@@ -116,7 +121,7 @@ describe('Filtering Nodes', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mMapper.Create(containerID, "test suite",
+        const metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
@@ -159,7 +164,7 @@ describe('Filtering Nodes', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mMapper.Create(containerID, "test suite",
+        const metatype = await mMapper.Create( "test suite",
             new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;

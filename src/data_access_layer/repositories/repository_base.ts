@@ -8,6 +8,8 @@ export default interface RepositoryInterface<T> {
     delete(t:T): Promise<Result<boolean>>
 }
 
+// Repository should be used as the base class so the parent can access the filter
+// functions for pulling from the db
 export class Repository {
     private readonly _tableName: string
     public _rawQuery: string[] = []
@@ -128,24 +130,24 @@ export class Repository {
         return this
     }
 
-    findAll<T>(limit?: number, offset?: number, sortBy?: string, sortDesc?: boolean): Promise<Result<T[]>> {
+    findAll<T>(options?: QueryOptions): Promise<Result<T[]>> {
         const storage = new PostgresStorage()
 
-        if(sortBy) {
-            if(sortDesc) {
-                this._rawQuery.push(`ORDER BY "${sortBy}" DESC`)
+        if(options && options.sortBy) {
+            if(options.sortDesc) {
+                this._rawQuery.push(`ORDER BY "${options.sortBy}" DESC`)
             } else {
-                this._rawQuery.push(`ORDER BY "${sortBy}" ASC`)
+                this._rawQuery.push(`ORDER BY "${options.sortBy}" ASC`)
             }
         }
 
-        if(offset) {
-            this._values.push(offset)
+        if(options && options.offset) {
+            this._values.push(options.offset)
             this._rawQuery.push(`OFFSET $${this._values.length}`)
         }
 
-        if(limit) {
-            this._values.push(limit)
+        if(options && options.limit) {
+            this._values.push(options.limit)
             this._rawQuery.push(`LIMIT $${this._values.length}`)
         }
 
@@ -180,4 +182,9 @@ export class Repository {
     }
 }
 
-
+export type QueryOptions = {
+    limit?: number
+    offset?: number
+    sortBy?: number
+    sortDesc?: boolean
+}
