@@ -3,7 +3,7 @@ import PostgresStorage from "../postgresStorage";
 import {PoolClient, QueryConfig} from "pg";
 import * as t from "io-ts";
 import {NodesT, NodeT, nodeT, nodesT} from "../../../types/graph/nodeT";
-import MetatypeKeyStorage from "../metatype_key_storage";
+import MetatypeKeyMapper from "../metatype_key_storage";
 import {CompileMetatypeKeys, MetatypeKeyT} from "../../../types/metatype_keyT";
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
@@ -72,7 +72,7 @@ export default class NodeStorage extends PostgresStorage{
                             return
                         }
 
-                        const typeKeys = await MetatypeKeyStorage.Instance.List(m.value.id!);
+                        const typeKeys = await MetatypeKeyMapper.Instance.List(m.value.id!);
                         // allow creation of nodes for metatypes with no associated keys
                         if(typeKeys.isError || typeKeys.value.length < 0) {
                             resolve(Result.Failure(typeKeys.error?.error!));
@@ -141,7 +141,7 @@ export default class NodeStorage extends PostgresStorage{
                             return new Promise(resolve => resolve(Result.Failure(`unable to find metatype, or metatype does not belong to container`)));
                         }
 
-                        const typeKeys = await MetatypeKeyStorage.Instance.List(m.value.id!);
+                        const typeKeys = await MetatypeKeyMapper.Instance.List(m.value.id!);
                         if(typeKeys.isError || typeKeys.value.length <= 0) {
                             return new Promise(resolve => resolve(Result.Failure(typeKeys.error?.error!)));
                         }

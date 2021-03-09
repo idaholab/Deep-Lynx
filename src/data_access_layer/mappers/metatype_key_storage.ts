@@ -1,28 +1,32 @@
 import Result from "../../result"
 import {metatypeKeysT, MetatypeKeysT, MetatypeKeyT} from "../../types/metatype_keyT";
 import PostgresStorage from "./postgresStorage";
-import {QueryConfig} from "pg";
+import {PoolClient, QueryConfig} from "pg";
 import * as t from "io-ts";
 import PostgresAdapter from "./adapters/postgres/postgres";
 import Logger from "../../logger"
 import Cache from "../../services/cache/cache"
 import Config from "../../config"
+import MetatypeKey from "../../data_warehouse/ontology/metatype_key";
+import uuid from "uuid";
+import {plainToClass} from "class-transformer";
+const format = require('pg-format')
 
 /*
-* MetatypeKeyStorage encompasses all logic dealing with the manipulation of the
+* MetatypeKeyMapper encompasses all logic dealing with the manipulation of the
 * MetatypeKey class in a data storage layer.
 */
-export default class MetatypeKeyStorage extends PostgresStorage{
+export default class MetatypeKeyMapper extends PostgresStorage{
     public static tableName = "metatype_keys";
 
-    private static instance: MetatypeKeyStorage;
+    private static instance: MetatypeKeyMapper;
 
-    public static get Instance(): MetatypeKeyStorage {
-        if(!MetatypeKeyStorage.instance) {
-            MetatypeKeyStorage.instance = new MetatypeKeyStorage()
+    public static get Instance(): MetatypeKeyMapper {
+        if(!MetatypeKeyMapper.instance) {
+            MetatypeKeyMapper.instance = new MetatypeKeyMapper()
         }
 
-        return MetatypeKeyStorage.instance
+        return MetatypeKeyMapper.instance
     }
 
     // Create accepts a single object, or array of objects. The function will
@@ -41,12 +45,12 @@ export default class MetatypeKeyStorage extends PostgresStorage{
                     ms[i].created_by = userID;
                     ms[i].modified_by = userID;
 
-                    queries.push(MetatypeKeyStorage.createStatement(ms[i]))
+                    queries.push(this.createStatement(ms[i]))
 
 
                     // need to clear the cache for its parent metatype
                     // an error but don't fail
-                    Cache.del(`${MetatypeKeyStorage.tableName}:metatypeID:${ms[i].metatype_id}`)
+                    Cache.del(`${MetatypeKeyMapper.tableName}:metatypeID:${ms[i].metatype_id}`)
                         .then(deleted => {
                             if(!deleted) Logger.error(`unable to clear cache for metatype ${ms[i].metatype_id}'s keys`)
                         })
@@ -71,17 +75,24 @@ export default class MetatypeKeyStorage extends PostgresStorage{
         return super.decodeAndValidate<MetatypeKeysT>(metatypeKeysT, onSuccess, payload)
     }
 
+    public async BulkCreate(userID: string, keys: MetatypeKey[], transaction?: PoolClient): Promise<Result<MetatypeKey[]>> {
+        const r = await super.runRaw(this.bulkCreateStatement(userID, keys), transaction)
+        if(r.isError) return Promise.resolve(Result.Pass(r))
+
+        return Promise.resolve(Result.Success(plainToClass(MetatypeKey, r.value)))
+    }
+
     public async Retrieve(id: string): Promise<Result<MetatypeKeyT>> {
-        const cached = await Cache.get<MetatypeKeyT>(`${MetatypeKeyStorage.tableName}:${id}`)
+        const cached = await Cache.get<MetatypeKeyT>(`${MetatypeKeyMapper.tableName}:${id}`)
         if(cached) {
             return new Promise(resolve => resolve(Result.Success(cached)))
         }
 
-        const retrieved = await super.retrieve<MetatypeKeyT>(MetatypeKeyStorage.retrieveStatement(id))
+        const retrieved = await super.retrieve<MetatypeKeyT>(this.retrieveStatement(id))
 
         if(!retrieved.isError) {
             // don't fail out on cache set failure, log and move on
-            Cache.set(`${MetatypeKeyStorage.tableName}:${id}`, retrieved.value, Config.cache_default_ttl)
+            Cache.set(`${MetatypeKeyMapper.tableName}:${id}`, retrieved.value, Config.cache_default_ttl)
                 .then(set => {
                     if(!set) Logger.error(`unable to insert metatype key ${id} into cache`)
                 })
@@ -91,16 +102,16 @@ export default class MetatypeKeyStorage extends PostgresStorage{
     }
 
     public async List(metatypeID: string): Promise<Result<MetatypeKeyT[]>> {
-        const cached = await Cache.get<MetatypeKeyT[]>(`${MetatypeKeyStorage.tableName}:metatypeID:${metatypeID}`)
+        const cached = await Cache.get<MetatypeKeyT[]>(`${MetatypeKeyMapper.tableName}:metatypeID:${metatypeID}`)
         if(cached) {
             return new Promise(resolve => resolve(Result.Success(cached)))
         }
 
-        const retrieved = await super.rows<MetatypeKeyT>(MetatypeKeyStorage.listStatement(metatypeID))
+        const retrieved = await super.rows<MetatypeKeyT>(this.listStatement(metatypeID))
 
         if(!retrieved.isError) {
             // don't fail out on cache set failure, log and move on
-            Cache.set(`${MetatypeKeyStorage.tableName}:metatypeID:${metatypeID}`, retrieved.value, Config.cache_default_ttl)
+            Cache.set(`${MetatypeKeyMapper.tableName}:metatypeID:${metatypeID}`, retrieved.value, Config.cache_default_ttl)
                 .then(set => {
                     if(!set) Logger.error(`unable to insert metatype keys for metatype ${metatypeID} into cache`)
                 })
@@ -154,12 +165,12 @@ export default class MetatypeKeyStorage extends PostgresStorage{
             })
                 .then(() => {
                     // need to clear the cache for its parent metatype
-                    Cache.del(`${MetatypeKeyStorage.tableName}:metatypeID:${toUpdate.value.metatype_id}`)
+                    Cache.del(`${MetatypeKeyMapper.tableName}:metatypeID:${toUpdate.value.metatype_id}`)
                         .then(deleted => {
                             if(!deleted) Logger.error(`unable to clear cache for metatype ${toUpdate.value.metatype_id}'s keys`)
                         })
 
-                    Cache.del(`${MetatypeKeyStorage.tableName}:${id}`)
+                    Cache.del(`${MetatypeKeyMapper.tableName}:${id}`)
                         .then(deleted => {
                             if(!deleted) Logger.error(`unable to clear cache for metatype key ${id}`)
                         })
@@ -180,15 +191,15 @@ export default class MetatypeKeyStorage extends PostgresStorage{
                 for(const i in ms) {
                     ms[i].modified_by = userID;
 
-                    queries.push(MetatypeKeyStorage.fullUpdateStatement(ms[i]))
+                    queries.push(this.fullUpdateStatement(ms[i]))
 
                     // need to clear the cache for its parent metatype
-                    Cache.del(`${MetatypeKeyStorage.tableName}:metatypeID:${ms[i].metatype_id}`)
+                    Cache.del(`${MetatypeKeyMapper.tableName}:metatypeID:${ms[i].metatype_id}`)
                         .then(deleted => {
                             if(!deleted) Logger.error(`unable to clear cache for metatype ${ms[i].metatype_id}'s keys`)
                         })
 
-                    Cache.del(`${MetatypeKeyStorage.tableName}:${ms[i].id}`)
+                    Cache.del(`${MetatypeKeyMapper.tableName}:${ms[i].id}`)
                         .then(deleted => {
                             if(!deleted) Logger.error(`unable to clear cache for metatype key ${ms[i].id}`)
                         })
@@ -212,23 +223,30 @@ export default class MetatypeKeyStorage extends PostgresStorage{
         return super.decodeAndValidate<MetatypeKeysT>(metatypeKeysT, onValidateSuccess, payload)
     }
 
+    public async BulkUpdate(userID: string, keys: MetatypeKey[], transaction?: PoolClient): Promise<Result<MetatypeKey[]>> {
+        const r = await super.runRaw(this.fullBulkUpdateStatement(userID, keys), transaction)
+        if(r.isError) return Promise.resolve(Result.Pass(r))
+
+        return Promise.resolve(Result.Success(plainToClass(MetatypeKey, r.value)))
+    }
+
     public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
         const toDelete = await this.Retrieve(id);
 
         if(!toDelete.isError) {
             // need to clear the cache for its parent metatype
-            Cache.del(`${MetatypeKeyStorage.tableName}:metatypeID:${toDelete.value.metatype_id}`)
+            Cache.del(`${MetatypeKeyMapper.tableName}:metatypeID:${toDelete.value.metatype_id}`)
                 .then(deleted => {
                     if(!deleted) Logger.error(`unable to clear cache for metatype ${toDelete.value.metatype_id}'s keys`)
                 })
 
-            Cache.del(`${MetatypeKeyStorage.tableName}:${id}`)
+            Cache.del(`${MetatypeKeyMapper.tableName}:${id}`)
                 .then(deleted => {
                     if(!deleted) Logger.error(`unable to clear cache for metatype key ${id}`)
                 })
         }
 
-        return super.run(MetatypeKeyStorage.deleteStatement(id))
+        return super.run(this.deleteStatement(id))
     }
 
     public async Archive(id: string, userID: string): Promise<Result<boolean>> {
@@ -236,25 +254,25 @@ export default class MetatypeKeyStorage extends PostgresStorage{
 
         if(!toDelete.isError) {
             // need to clear the cache for its parent metatype
-            Cache.del(`${MetatypeKeyStorage.tableName}:metatypeID:${toDelete.value.metatype_id}`)
+            Cache.del(`${MetatypeKeyMapper.tableName}:metatypeID:${toDelete.value.metatype_id}`)
                 .then(deleted => {
                     if(!deleted) Logger.error(`unable to clear cache for metatype ${toDelete.value.metatype_id}'s keys`)
                 })
 
-            Cache.del(`${MetatypeKeyStorage.tableName}:${id}`)
+            Cache.del(`${MetatypeKeyMapper.tableName}:${id}`)
                 .then(deleted => {
                     if(!deleted) Logger.error(`unable to clear cache for metatype key ${id}`)
                 })
         }
 
-        return super.run(MetatypeKeyStorage.archiveStatement(id, userID))
+        return super.run(this.archiveStatement(id, userID))
     }
 
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
-    private static createStatement(key: MetatypeKeyT): QueryConfig {
+    private createStatement(key: MetatypeKeyT): QueryConfig {
         return {
             text:`
 INSERT INTO
@@ -266,35 +284,46 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
         }
     }
 
-    private static retrieveStatement(metatypeKeyID:string): QueryConfig {
+    private bulkCreateStatement(userID: string, keys: MetatypeKey[]): QueryConfig {
+            const text =`INSERT INTO
+                        metatype_keys(metatype_id, id, name, description, property_name, required, data_type, options, default_value, validation, created_by, modified_by)
+                        VALUES %L RETURNING *`
+            const values = keys.map(key => [key.metatype_id, uuid.v4(), key.name, key.description,
+                key.property_name, key.required, key.data_type, JSON.stringify(key.options),
+                JSON.stringify(key.default_value), key.validation, userID, userID])
+
+            return format(text, values)
+    }
+
+    private retrieveStatement(metatypeKeyID:string): QueryConfig {
         return {
             text:`SELECT * FROM metatype_keys WHERE id = $1 AND NOT ARCHIVED`,
             values: [metatypeKeyID]
         }
     }
 
-    private static archiveStatement(metatypeKeyID: string, userID: string): QueryConfig {
+    private archiveStatement(metatypeKeyID: string, userID: string): QueryConfig {
         return {
             text:`UPDATE metatype_keys SET archived = true, modified_by = $2  WHERE id = $1`,
             values: [metatypeKeyID, userID]
         }
     }
 
-    private static deleteStatement(metatypeKeyID: string): QueryConfig {
+    private deleteStatement(metatypeKeyID: string): QueryConfig {
         return {
             text:`DELETE FROM metatype_keys WHERE id = $1`,
             values: [metatypeKeyID]
         }
     }
 
-    private static listStatement(metatypeID:string): QueryConfig {
+    private listStatement(metatypeID:string): QueryConfig {
         return {
             text: `SELECT * FROM metatype_keys WHERE metatype_id = $1 AND NOT archived`,
             values: [metatypeID]
         }
     }
 
-    private static fullUpdateStatement(key: MetatypeKeyT): QueryConfig {
+    private fullUpdateStatement(key: MetatypeKeyT): QueryConfig {
         return {
             text:`UPDATE metatype_keys SET name = $1,
                  description = $2,
@@ -309,5 +338,27 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
                 key.property_name, key.required, key.data_type, JSON.stringify(key.options),
                 JSON.stringify(key.default_value),key.validation, key.id]
         }
+    }
+
+    private fullBulkUpdateStatement(userID: string, keys: MetatypeKey[]): string {
+            const text = `UPDATE metatype_keys AS m SET
+                     name = k.name,
+                     metatype_id = k.metatype_id,
+                     description = k.description,
+                     property_name = k.property_name,
+                     required = k.required,
+                     data_type = k.data_type,
+                     options = k.options,
+                     default_value = k.default_value,
+                     validation = k.validation,
+                     modified_by = k.modified_by
+                     modified_at = NOW()
+                 FROM(VALUES %L) AS k(id, name, metatype_id, description, property_name, required, data_type, options, default_value, validation, modified_by)
+                 WHERE k.id::uuid = m.id RETURNING *`
+            const values = keys.map(key => [key.id, key.name, key.metatype_id, key.description,
+                key.property_name, key.required, key.data_type, JSON.stringify(key.options),
+                JSON.stringify(key.default_value), key.validation, userID])
+
+            return format(text, values)
     }
 }

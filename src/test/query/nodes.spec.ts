@@ -1,7 +1,7 @@
 /* tslint:disable */
 import Logger from "../../logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
-import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_storage";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
@@ -38,7 +38,7 @@ describe('Using a GraphQL Query on nodes we', async() => {
         containerID = container.value.id!;
 
         const nodeStorage = NodeStorage.Instance;
-        const kStorage = MetatypeKeyStorage.Instance;
+        const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
 
@@ -49,7 +49,7 @@ describe('Using a GraphQL Query on nodes we', async() => {
         expect(graph.value).not.empty;
 
         const metatypeResult = await mMapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatypeResult.isError).false;
         expect(metatypeResult.value).not.empty;

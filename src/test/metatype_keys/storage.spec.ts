@@ -2,7 +2,7 @@
 import faker from 'faker'
 import { expect } from 'chai'
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
-import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_storage";
 import Logger from "../../logger";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import {single_test_key, test_keys} from "./compile.spec";
@@ -32,11 +32,11 @@ describe('A Metatype Key', async() => {
     });
 
     it('can be saved to storage', async()=> {
-        let storage = MetatypeKeyStorage.Instance;
+        let storage = MetatypeKeyMapper.Instance;
         let mMapper = MetatypeMapper.Instance;
 
         let metatype = await mMapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -48,11 +48,11 @@ describe('A Metatype Key', async() => {
     });
 
     it('can be saved to storage with valid regex', async()=> {
-        let storage = MetatypeKeyStorage.Instance;
+        let storage = MetatypeKeyMapper.Instance;
         let mMapper = MetatypeMapper.Instance;
 
         let metatype = await mMapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -65,11 +65,11 @@ describe('A Metatype Key', async() => {
 
 
     it('can be retrieved from  storage', async()=> {
-        let storage = MetatypeKeyStorage.Instance;
+        let storage = MetatypeKeyMapper.Instance;
         let mMapper = MetatypeMapper.Instance;
 
         let metatype = await mMapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -87,10 +87,10 @@ describe('A Metatype Key', async() => {
 
     it('can be listed from storage', async()=> {
         let mMapper = MetatypeMapper.Instance;
-        let storage = MetatypeKeyStorage.Instance;
+        let storage = MetatypeKeyMapper.Instance;
 
         let metatype = await mMapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -107,11 +107,11 @@ describe('A Metatype Key', async() => {
     })
 
     it('can be batch updated', async()=> {
-        let storage = MetatypeKeyStorage.Instance;
+        let storage = MetatypeKeyMapper.Instance;
         let mMapper = MetatypeMapper.Instance;
 
         let metatype = await mMapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;

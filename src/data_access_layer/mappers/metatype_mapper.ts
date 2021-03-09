@@ -1,12 +1,9 @@
-import {MetatypeT, metatypesT, MetatypesT} from "../../types/metatypeT"
 import Result from "../../result"
 import PostgresStorage from "./postgresStorage";
 import {PoolClient, QueryConfig} from "pg";
-import * as t from "io-ts";
-import PostgresAdapter from "./adapters/postgres/postgres";
 import Logger from "../../logger"
 import Cache from "../../services/cache/cache"
-import MetatypeKeyStorage from "./metatype_key_storage";
+import MetatypeKeyMapper from "./metatype_key_storage";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import uuid from "uuid";
 import {plainToClass} from "class-transformer";
@@ -29,26 +26,20 @@ export default class MetatypeMapper extends PostgresStorage{
         return MetatypeMapper.instance
     }
 
-    public async Create(containerID: string, userID:string, input: Metatype, transaction?: PoolClient): Promise<Result<Metatype>> {
-        const r = await super.runRaw(this.createStatement(containerID, userID, input), transaction)
-        if(r.isError) {
-            return Promise.resolve(Result.Pass(r))
-        }
+    public async Create(userID:string, input: Metatype, transaction?: PoolClient): Promise<Result<Metatype>> {
+        const r = await super.runRaw(this.createStatement(userID, input), transaction)
+        if(r.isError) return Promise.resolve(Result.Pass(r))
 
         const resultMetatypes = plainToClass(Metatype, r.value)
 
         return Promise.resolve(Result.Success(resultMetatypes[0]))
     }
 
-    public async BulkCreate(containerID: string, userID: string, m: Metatype[], transacation?: PoolClient): Promise<Result<Metatype[]>> {
-        const r = await super.runRaw(this.bulkCreateStatement(containerID, userID, m), transacation)
-        if(r.isError) {
-            return Promise.resolve(Result.Pass(r))
-        }
+    public async BulkCreate(userID: string, m: Metatype[], transaction?: PoolClient): Promise<Result<Metatype[]>> {
+        const r = await super.runRaw(this.bulkCreateStatement(userID, m), transaction)
+        if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        const resultMetatypes = plainToClass(Metatype, r.value)
-
-        return Promise.resolve(Result.Success(resultMetatypes))
+        return Promise.resolve(Result.Success(plainToClass(Metatype, r.value)))
     }
 
     public async Retrieve(id: string): Promise<Result<Metatype>> {
@@ -58,87 +49,42 @@ export default class MetatypeMapper extends PostgresStorage{
         return Promise.resolve(Result.Success(plainToClass(Metatype, result.value)))
     }
 
-    public List(containerID: string, offset: number, limit:number, name?:string): Promise<Result<MetatypeT[]>> {
+    public async List(containerID: string, offset: number, limit:number, name?:string): Promise<Result<Metatype[]>> {
+        const returns: object[] = []
         if(name){
-            return super.rows<MetatypeT>(this.searchStatement(containerID, name))
+            const results = await super.rowsRaw(this.searchStatement(containerID, name))
+            if(results.isError) return Promise.resolve(Result.Pass(results))
+
+            returns.push(...results.value)
+        } else if(limit === -1) {
+            const results = await super.rowsRaw(this.listAllStatement(containerID))
+            if(results.isError) return Promise.resolve(Result.Pass(results))
+
+            returns.push(...results.value)
+        } else {
+            const results = await super.rowsRaw(this.listStatement(containerID, offset, limit))
+            if(results.isError) return Promise.resolve(Result.Pass(results))
+
+            returns.push(...results.value)
         }
 
-        if(limit === -1) {
-            return super.rows<MetatypeT>(this.listAllStatement(containerID))
-        }
-
-        return super.rows<MetatypeT>(this.listStatement(containerID, offset, limit))
+        return Promise.resolve(Result.Success(plainToClass(Metatype, returns)))
     }
 
-    public async Update(id: string, userID:string, updatedField: {[key:string]: any}): Promise<Result<boolean>> {
-        const toUpdate = await this.Retrieve(id);
+    public async Update(userID:string, m: Metatype, transaction?: PoolClient): Promise<Result<Metatype>> {
+        const r = await super.runRaw(this.fullUpdateStatement(m, userID), transaction)
+        if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        if(toUpdate.isError) {
-            return new Promise(resolve => resolve(Result.Failure(toUpdate.error!.error)))
-        }
+        const resultMetatypes = plainToClass(Metatype, r.value)
 
-        const updateStatement:string[] = [];
-        const values:string[] = [];
-        let i = 1;
-
-        Object.keys(updatedField).map(k => {
-            updateStatement.push(`${k} = $${i}`);
-            values.push(updatedField[k]);
-            i++
-        });
-
-        updateStatement.push(`modified_by = $${i}`);
-        values.push(userID);
-
-        return new Promise(resolve => {
-            PostgresAdapter.Instance.Pool.query({
-                text: `UPDATE metatypes SET ${updateStatement.join(",")} WHERE id = '${id}'`,
-                values
-            })
-                .then(() => {
-                    Cache.del(`${MetatypeMapper.tableName}:${id}`)
-                        .then(set => {
-                            if(!set) Logger.error(`unable to remove metatype ${id} from cache`)
-                        })
-
-                    resolve(Result.Success(true))
-                })
-                .catch(e => resolve(Result.Failure(e)))
-        })
-
+        return Promise.resolve(Result.Success(resultMetatypes[0]))
     }
 
-    // BatchUpdate accepts multiple metatype payloads for full update
-    public async BatchUpdate(input:any | MetatypesT): Promise<Result<Metatype[]>> {
-        const onSuccess = ( resolve: (r:any) => void): (c: Metatype[])=> void => {
-            return async (ms:MetatypesT) => {
-                const queries: QueryConfig[] = [];
+    public async BulkUpdate(userID:string, m: Metatype[], transaction?: PoolClient): Promise<Result<Metatype[]>> {
+        const r = await super.runRaw(this.fullBulkUpdateStatement(m, userID), transaction)
+        if(r.isError) return Promise.resolve(Result.Pass(r))
 
-                for(const i in ms) {
-                    queries.push(this.fullUpdateStatement(ms[i]))
-
-                    Cache.del(`${MetatypeMapper.tableName}:${ms[i]}`)
-                        .then(set => {
-                            if(!set) Logger.error(`unable to remove metatype ${ms[i].id} from cache`)
-                        })
-                }
-
-                super.runAsTransaction(...queries)
-                    .then((r) => {
-                        if(r.isError) {
-                            resolve(r);
-                            return
-                        }
-
-                        resolve(Result.Success(plainToClass(Metatype, ms)))
-                    })
-            }
-        };
-
-        // allows us to accept an array of input if needed
-        const payload = (t.array(t.unknown).is(input)) ? input : [input];
-
-        return super.decodeAndValidate<Metatype[]>(metatypesT, onSuccess, payload)
+        return Promise.resolve(Result.Success(plainToClass(Metatype, r.value)))
     }
 
     public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
@@ -151,7 +97,7 @@ export default class MetatypeMapper extends PostgresStorage{
                 })
 
             // needs to remove the key listing response as well
-            Cache.del(`${MetatypeKeyStorage.tableName}:metatypeID:${toDelete.value.id}`)
+            Cache.del(`${MetatypeKeyMapper.tableName}:metatypeID:${toDelete.value.id}`)
                 .then(set => {
                     if(!set) Logger.error(`unable to remove metatype ${toDelete.value.id}'s keys from cache`)
                 })
@@ -171,7 +117,7 @@ export default class MetatypeMapper extends PostgresStorage{
                 })
 
             // needs to remove the key listing response as well
-            Cache.del(`${MetatypeKeyStorage.tableName}:metatypeID:${toDelete.value.id}`)
+            Cache.del(`${MetatypeKeyMapper.tableName}:metatypeID:${toDelete.value.id}`)
                 .then(set => {
                     if(!set) Logger.error(`unable to remove metatype ${toDelete.value.id}'s keys from cache`)
                 })
@@ -188,17 +134,17 @@ export default class MetatypeMapper extends PostgresStorage{
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
-    private createStatement(containerID: string, userID: string, metatype: Metatype): QueryConfig {
+    private createStatement(userID: string, metatype: Metatype): QueryConfig {
         return {
             text:`INSERT INTO metatypes(container_id, id,name,description, created_by, modified_by) VALUES($1, $2, $3, $4, $5, $6) RETURNING *`,
-            values: [containerID, uuid.v4(), metatype.name, metatype.description, userID, userID]
+            values: [metatype.container_id, uuid.v4(), metatype.name, metatype.description, userID, userID]
         }
     }
 
 
-    private bulkCreateStatement(containerID: string, userID: string, metatypes: Metatype[]): QueryConfig {
+    private bulkCreateStatement(userID: string, metatypes: Metatype[]): QueryConfig {
         const text= `INSERT INTO metatypes(container_id, id,name,description, created_by, modified_by) VALUES %L RETURNING *`
-        const values = metatypes.map(metatype => [containerID, uuid.v4(), metatype.name, metatype.description, userID, userID])
+        const values = metatypes.map(metatype => [metatype.container_id, uuid.v4(), metatype.name, metatype.description, userID, userID])
 
         return format(text, values)
     }
@@ -245,11 +191,24 @@ export default class MetatypeMapper extends PostgresStorage{
         }
     }
 
-    private fullUpdateStatement(metatype: MetatypeT): QueryConfig {
+    private fullUpdateStatement(metatype: Metatype, userID: string): QueryConfig {
         return {
-            text:`UPDATE metatypes SET name = $1, description = $2 WHERE id = $3`,
-            values: [metatype.name, metatype.description, metatype.id]
+            text:`UPDATE metatypes SET name = $1, description = $2, modified_by = $3, modified_at = NOW() WHERE id = $4 RETURNING *`,
+            values: [metatype.name, metatype.description, userID, metatype.id]
         }
+    }
+
+    private fullBulkUpdateStatement(metatypes: Metatype[], userID: string): string{
+        const text = `UPDATE metatypes AS m SET
+                        name = u.name,
+                        description = u.description,
+                        modified_by = u.modified_by,
+                        modified_at = NOW()
+                      FROM(VALUES %L) AS u(id, name, description, modified_by)
+                      WHERE u.id::uuid = m.id RETURNING *`
+        const values = metatypes.map(metatype=> [metatype.id, metatype.name, metatype.description, userID])
+
+        return format(text, values)
     }
 
     private countStatement(containerID: string): QueryConfig {

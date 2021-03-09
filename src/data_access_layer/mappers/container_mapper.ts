@@ -27,9 +27,7 @@ export default class ContainerMapper extends PostgresStorage{
 
     public async Create(userID:string, c: Container, transaction?: PoolClient): Promise<Result<Container>> {
         const r = await super.runRaw(this.createStatement(c, userID), transaction)
-        if(r.isError) {
-            return Promise.resolve(Result.Pass(r));
-        }
+        if(r.isError) return Promise.resolve(Result.Pass(r));
 
         const resultContainers = plainToClass(Container, r.value)
 
@@ -40,9 +38,7 @@ export default class ContainerMapper extends PostgresStorage{
         if(!Array.isArray(c)) c = [c]
 
         const r = await super.runRaw(this.bulkCreateStatement(c, userID), transaction)
-        if(r.isError) {
-            return Promise.resolve(Result.Pass(r));
-        }
+        if(r.isError) return Promise.resolve(Result.Pass(r));
 
         const resultContainers = plainToClass(Container, r.value)
 
@@ -58,9 +54,7 @@ export default class ContainerMapper extends PostgresStorage{
 
     public async Update(userID: string, c: Container, transaction?: PoolClient): Promise<Result<Container>> {
         const r = await super.runRaw(this.fullUpdateStatement(c, userID), transaction)
-        if(r.isError) {
-            return Promise.resolve(Result.Pass(r));
-        }
+        if(r.isError) return Promise.resolve(Result.Pass(r));
 
         const resultContainers = plainToClass(Container, r.value)
 
@@ -70,9 +64,7 @@ export default class ContainerMapper extends PostgresStorage{
 
     public async BulkUpdate(userID: string, c: Container[], transaction?: PoolClient): Promise<Result<Container[]>> {
         const r = await super.runRaw(this.fullBulkUpdateStatement(c, userID), transaction)
-        if(r.isError) {
-            return Promise.resolve(Result.Pass(r));
-        }
+        if(r.isError) return Promise.resolve(Result.Pass(r));
 
         return Promise.resolve(Result.Success(plainToClass(Container, r.value)))
     }

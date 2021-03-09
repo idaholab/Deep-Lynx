@@ -1,10 +1,10 @@
-import MetatypeKeyStorage from "../data_access_layer/mappers/metatype_key_storage"
+import MetatypeKeyMapper from "../data_access_layer/mappers/metatype_key_storage"
 
 import {Request, Response, NextFunction, Application} from "express"
 import {authInContainer} from "./middleware";
 import {UserT} from "../types/user_management/userT";
 
-const storage = MetatypeKeyStorage.Instance;
+const storage = MetatypeKeyMapper.Instance;
 
 // This contains all routes pertaining to MetatypeKeys and their management.
 export default class MetatypeKeyRoutes {

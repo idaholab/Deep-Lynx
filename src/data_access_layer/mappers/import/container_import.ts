@@ -3,7 +3,7 @@ import ContainerStorage from "../container_mapper";
 import MetatypeRelationshipStorage from "../metatype_relationship_storage"
 import MetatypeStorage from "../metatype_mapper"
 import MetatypeRelationshipPairStorage from "../metatype_relationship_pair_storage"
-import MetatypeKeyStorage from "../metatype_key_storage"
+import MetatypeKeyMapper from "../metatype_key_storage"
 import MetatypeRelationshipKeyStorage from "../metatype_relationship_key_storage"
 import { UserT } from "../../../types/user_management/userT";
 import Result from "../../../result";
@@ -24,7 +24,7 @@ const containerStorage = ContainerStorage.Instance;
 const metatypeRelationshipStorage = MetatypeRelationshipStorage.Instance;
 const metatypeStorage = MetatypeStorage.Instance;
 const metatypeRelationshipPairStorage = MetatypeRelationshipPairStorage.Instance;
-const metatypeKeyStorage = MetatypeKeyStorage.Instance;
+const metatypeKeyStorage = MetatypeKeyMapper.Instance;
 const metatypeRelationshipKeyStorage = MetatypeRelationshipKeyStorage.Instance;
 const nodeStorage = NodeStorage.Instance;
 const edgeStorage = EdgeStorage.Instance;
@@ -525,7 +525,7 @@ export default class ContainerImport {
         classListMap.forEach(thisClass => {
           // if not marked for update, create
           if (!thisClass.update) {
-            const data = new Metatype(thisClass.name, thisClass.description)
+            const data = new Metatype(containerID,thisClass.name, thisClass.description)
 
             classPromises.push(metatypeStorage.BulkCreate(containerID, user.id!, [data]))
           } else {

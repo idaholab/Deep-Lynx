@@ -3,7 +3,7 @@ import {nodeT, NodeT} from "../types/graph/nodeT";
 import Result from "../result";
 import {edgeT, EdgeT} from "../types/graph/edgeT";
 import {getNestedValue} from "../utilities";
-import MetatypeKeyStorage from "../data_access_layer/mappers/metatype_key_storage";
+import MetatypeKeyMapper from "../data_access_layer/mappers/metatype_key_storage";
 import MetatypeRelationshipKeyStorage from "../data_access_layer/mappers/metatype_relationship_key_storage";
 import {DataStagingT} from "../types/import/dataStagingT";
 import Logger from "../logger"
@@ -142,7 +142,7 @@ async function generateResults(mapping: TypeMappingT, transformation: TypeTransf
          // separate the metatype and metatype relationship keys from each other
          // the type mapping _should_ have easily handled the combination of keys
          if (k.metatype_key_id) {
-            const fetched = await MetatypeKeyStorage.Instance.Retrieve(k.metatype_key_id)
+            const fetched = await MetatypeKeyMapper.Instance.Retrieve(k.metatype_key_id)
             if (fetched.isError) return Promise.resolve(Result.Failure('unable to fetch keys to map payload'))
 
             newPayload[fetched.value.property_name] = value

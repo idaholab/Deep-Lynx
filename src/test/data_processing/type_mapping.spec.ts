@@ -8,7 +8,7 @@ import DataSourceStorage from "../../data_access_layer/mappers/import/data_sourc
 import TypeMappingStorage from "../../data_access_layer/mappers/import/type_mapping_storage";
 import {TypeMappingT, TypeTransformationConditionT, TypeTransformationT} from "../../types/import/typeMappingT";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
-import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_storage";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
 import {ApplyTransformation, ValidTransformationCondition} from "../../data_processing/type_mapping";
 import {objectToShapeHash} from "../../utilities";
@@ -70,7 +70,7 @@ describe('A Data Type Mapping can', async() => {
         let dstorage = DataSourceStorage.Instance;
         let metatypeStorage = MetatypeMapper.Instance;
         let relationshipStorage = MetatypeRelationshipStorage.Instance;
-        let keyStorage = MetatypeKeyStorage.Instance
+        let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingStorage.Instance
 
         let metatypes = await metatypeStorage.BulkCreate(containerID, "test suite", test_metatypes);
@@ -774,13 +774,13 @@ describe('A Data Type Mapping can', async() => {
 });
 
 const test_metatypes: Metatype[] = [
-    new Metatype("Car", "A Vehicle"),
-    new Metatype("Manufacturer", "Creator of Car"),
-    new Metatype("Tire Pressure", "Pressure of tire"),
-    new Metatype("Maintenance", "Maintenance records"),
-    new Metatype("Maintenance Entry", "Maintenance entries"),
-    new Metatype("Part", "Physical part of car"),
-    new Metatype("Component", "Base component of part"),
+    new Metatype(containerID,"Car", "A Vehicle"),
+    new Metatype(containerID,"Manufacturer", "Creator of Car"),
+    new Metatype(containerID,"Tire Pressure", "Pressure of tire"),
+    new Metatype(containerID,"Maintenance", "Maintenance records"),
+    new Metatype(containerID,"Maintenance Entry", "Maintenance entries"),
+    new Metatype(containerID,"Part", "Physical part of car"),
+    new Metatype(containerID,"Component", "Base component of part"),
 ];
 
 const test_metatype_relationships: MetatypeRelationshipT[] = [

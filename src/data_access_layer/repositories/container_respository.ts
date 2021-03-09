@@ -15,7 +15,6 @@ export default class ContainerRepository implements RepositoryInterface<Containe
     // insert.
     async save(user: UserT, c: Container): Promise<Result<Container>> {
         const errors = await c.validationErrors()
-
         if(errors) {
             return Promise.resolve(Result.Failure(`container does not pass validation ${errors.join(",")}`))
         }
@@ -56,8 +55,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         const toCreate: Container[] = []
         const toUpdate: Container [] = []
 
-        const updated: Container[] = []
-        const created: Container[] = []
+        const toReturn: Container[] = []
 
         // run validation and separate
         for(const container of c) {
@@ -82,7 +80,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
                 return Promise.resolve(Result.Pass(results))
             }
 
-            updated.push(...results.value)
+            toReturn.push(...results.value)
         }
 
         if(toCreate.length > 0) {
@@ -110,12 +108,16 @@ export default class ContainerRepository implements RepositoryInterface<Containe
                 }).catch(e => Logger.error(e))
             }
 
-            created.push(...results.value)
+            toReturn.push(...results.value)
         }
 
-        await this.#mapper.completeTransaction(transaction.value)
+        const committed = await this.#mapper.completeTransaction(transaction.value)
+        if(committed.isError) {
+           this.#mapper.rollbackTransaction(transaction.value)
+           return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`))
+        }
 
-        return Promise.resolve(Result.Success([...updated, ...created]));
+        return Promise.resolve(Result.Success(toReturn));
     }
 
     async listForUser(user: UserT): Promise<Result<Container[]>> {

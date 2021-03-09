@@ -32,7 +32,7 @@ describe('A Metatype', async() => {
         let mapper = MetatypeMapper.Instance;
 
         const metatype = await mapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -44,7 +44,7 @@ describe('A Metatype', async() => {
         let mapper = MetatypeMapper.Instance;
 
         const metatype = await mapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -56,7 +56,7 @@ describe('A Metatype', async() => {
         let mapper = MetatypeMapper.Instance;
 
         const metatype = await mapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -72,7 +72,7 @@ describe('A Metatype', async() => {
         let mapper = MetatypeMapper.Instance;
 
         const metatype = await mapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -88,7 +88,7 @@ describe('A Metatype', async() => {
         let mapper = MetatypeMapper.Instance;
 
         const metatype = await mapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;

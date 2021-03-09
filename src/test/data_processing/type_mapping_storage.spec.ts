@@ -7,7 +7,7 @@ import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import DataSourceStorage from "../../data_access_layer/mappers/import/data_source_storage";
 import TypeMappingStorage from "../../data_access_layer/mappers/import/type_mapping_storage";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
-import MetatypeKeyStorage from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_storage";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
 import {objectToShapeHash} from "../../utilities";
 import TypeTransformationStorage from "../../data_access_layer/mappers/import/type_transformation_storage";
@@ -38,11 +38,11 @@ describe('A Data Type Mapping', async() => {
     it('can be saved to storage', async()=> {
         let storage = DataSourceStorage.Instance;
         let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyStorage.Instance
+        let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingStorage.Instance
 
         let metatype = await mMapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -74,11 +74,11 @@ describe('A Data Type Mapping', async() => {
     it('can be retrieved from storage', async()=> {
         let storage = DataSourceStorage.Instance;
         let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyStorage.Instance
+        let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingStorage.Instance
 
         let metatype = await mMapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -112,11 +112,11 @@ describe('A Data Type Mapping', async() => {
     it('can set active', async()=> {
         let storage = DataSourceStorage.Instance;
         let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyStorage.Instance
+        let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingStorage.Instance
 
         let metatype = await mMapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -152,11 +152,11 @@ describe('A Data Type Mapping', async() => {
     it('can be listed from storage by container and data source', async()=> {
         let storage = DataSourceStorage.Instance;
         let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyStorage.Instance
+        let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingStorage.Instance
 
         let metatype = await mMapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -195,11 +195,11 @@ describe('A Data Type Mapping', async() => {
     it('can be deleted from storage', async()=> {
         let storage = DataSourceStorage.Instance;
         let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyStorage.Instance
+        let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingStorage.Instance
 
         let metatype = await mMapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -257,11 +257,11 @@ describe('A Data Type Mapping Transformation', async() => {
     it('can be saved to storage', async()=> {
         let storage = DataSourceStorage.Instance;
         let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyStorage.Instance
+        let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingStorage.Instance
 
         let metatype = await mMapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -307,11 +307,11 @@ describe('A Data Type Mapping Transformation', async() => {
     it('can be retrieved from storage', async()=> {
         let storage = DataSourceStorage.Instance;
         let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyStorage.Instance
+        let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingStorage.Instance
 
         let metatype = await mMapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -359,11 +359,11 @@ describe('A Data Type Mapping Transformation', async() => {
     it('can listed by type mapping id', async()=> {
         let storage = DataSourceStorage.Instance;
         let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyStorage.Instance
+        let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingStorage.Instance
 
         let metatype = await mMapper.Create(containerID, "test suite",
-            new Metatype(faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;

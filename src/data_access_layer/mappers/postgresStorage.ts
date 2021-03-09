@@ -59,9 +59,11 @@ export default class PostgresStorage {
         try {
             await transactionClient.query('COMMIT')
         } catch(e) {
+            transactionClient.release()
             return new Promise(resolve => resolve(Result.Failure(e.message)))
         }
 
+        transactionClient.release()
         return new Promise(resolve => resolve(Result.Success(true)))
     }
 

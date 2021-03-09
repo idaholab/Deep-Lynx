@@ -8,9 +8,8 @@ export default class Metatype extends BaseDataClass {
     @IsUUID()
     id?: string
 
-    @IsOptional()
     @IsUUID()
-    container_id?: string
+    container_id: string
 
 
     @IsOptional()
@@ -28,9 +27,10 @@ export default class Metatype extends BaseDataClass {
 
     keys: MetatypeKey[] = []
 
-    constructor(name: string, description: string) {
+    constructor(containerID: string, name: string, description: string) {
         super();
 
+        this.container_id = containerID
         this.name = name
         this.description = description
     }
