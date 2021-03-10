@@ -314,64 +314,6 @@ export default class EdgeStorage extends PostgresStorage{
         return super.rows<EdgeT>(EdgeStorage.retrieveByOriginAndDestinationStatement(originID, destinationID))
     }
 
-    private async validateAndTransformEdgeProperties(relationshipKeys: MetatypeRelationshipKeyT[], input: any): Promise<Result<any>> {
-       const compiledType = CompileMetatypeKeys(relationshipKeys);
-
-        // before we attempt to validate we need to insure that any keys with default values have that applied to the payload
-       for(const key of relationshipKeys) {
-            if(key.property_name in input) continue;
-
-            switch(key.data_type) {
-                case "number": {
-                    input[key.property_name] = +key.default_value!
-                    break;
-                }
-
-                case "boolean": {
-                    input[key.property_name] = key.default_value === "true" || key.default_value === "t"
-                    break;
-                }
-
-                default: {
-                    input[key.property_name] = key.default_value
-                    break;
-                }
-            }
-        }
-
-
-       const onValidateSuccess = ( resolve: (r:any) => void): (c: any)=> void => {
-            return async (cts:any) => {
-                for(const key of relationshipKeys) {
-                    if(key.validation === undefined || key.validation === null) continue;
-
-                    if(key.validation.min || key.validation.max) {
-                        if(key.validation.min !== undefined || input[key.property_name] < key.validation.min!) {
-                            resolve(Result.Failure(`validation of ${key.property_name} failed, less than min`))
-                        }
-
-                        if(key.validation.max !== undefined || input[key.property_name] > key.validation.max!) {
-                            resolve(Result.Failure(`validation of ${key.property_name} failed, more than max`))
-                        }
-                    }
-
-                    if(key.validation && key.validation.regex) {
-                        const matcher = new RegExp(key.validation.regex)
-
-                        if(!matcher.test(input[key.property_name])) {
-                            resolve(Result.Failure(`validation of ${key.property_name} failed, regex mismatch `))
-                        }
-                    }
-                }
-                resolve(Result.Success(cts))
-            }
-        };
-
-       return new Promise((resolve) => {
-            pipe(compiledType.decode(input), fold(this.OnDecodeError(resolve), onValidateSuccess(resolve)))
-        })
-    }
-
     private async validateRelationship(pair: MetatypeRelationshipPairT, origin: NodeT, destination: NodeT): Promise<Result<boolean>> {
         if(pair.origin_metatype_id !== origin.metatype_id || pair.destination_metatype_id !== destination.metatype_id) {
             return Promise.resolve(Result.Failure('origin and destination node types do not match relationship pair'))
