@@ -1,11 +1,11 @@
-import {Request, Response, NextFunction, Application} from "express"
+import {Application, NextFunction, Request, Response} from "express"
 import {authInContainer} from "./middleware";
 import {UserT} from "../types/user_management/userT";
 import MetatypeRepository from "../data_access_layer/repositories/metatype_repository";
 import {plainToClass} from "class-transformer";
 import Metatype from "../data_warehouse/ontology/metatype";
 import Result from "../result";
-import { QueryOptions } from "../data_access_layer/repositories/repository_base";
+import {QueryOptions} from "../data_access_layer/repositories/repository_base";
 
 const repo = new MetatypeRepository()
 
