@@ -1,32 +1,41 @@
-import MetatypeRelationshipStorage from "../data_access_layer/mappers/metatype_relationship_storage";
 import {Request, Response, NextFunction, Application} from "express"
 import {authInContainer} from "./middleware";
 import {UserT} from "../types/user_management/userT";
-import MetatypeRelationshipFilter from "../data_access_layer/mappers/metatype_relationship_filter";
+import MetatypeRelationshipRepository from "../data_access_layer/repositories/metatype_relationship_repository";
+import {plainToClass} from "class-transformer";
+import MetatypeRelationship from "../data_warehouse/ontology/metatype_relationship";
+import Result from "../result";
+import {QueryOptions} from "../data_access_layer/repositories/repository_base";
 
-const storage = MetatypeRelationshipStorage.Instance;
+const repo = new MetatypeRelationshipRepository()
 
 // This contains all routes for managing Metatype Relationships.
 export default class MetatypeRelationshipRoutes {
     public static mount(app: Application, middleware: any[]) {
-        app.post("/containers/:id/metatype_relationships", ...middleware, authInContainer("write", "ontology"),this.createMetatypeRelationship);
-        app.get("/containers/:id/metatype_relationships/:relationshipID", ...middleware, authInContainer("read", "ontology"),this.retrieveMetatypeRelationship);
-        app.get("/containers/:id/metatype_relationships", ...middleware, authInContainer("read", "ontology"),this.listMetatypeRelationships);
-        app.put("/containers/:id/metatype_relationships/:relationshipID", ...middleware, authInContainer("write", "ontology"),this.updateMetatypeRelationship);
-        app.delete("/containers/:id/metatype_relationships/:relationshipID", ...middleware, authInContainer("write", "ontology"),this.archiveMetatypeRelationship)
+        app.post("/containers/:containerID/metatype_relationships", ...middleware, authInContainer("write", "ontology"),this.createMetatypeRelationship);
+        app.get("/containers/:containerID/metatype_relationships/:metatypeRelationshipID", ...middleware, authInContainer("read", "ontology"),this.retrieveMetatypeRelationship);
+        app.get("/containers/:containerID/metatype_relationships", ...middleware, authInContainer("read", "ontology"),this.listMetatypeRelationships);
+        app.put("/containers/:containerID/metatype_relationships/:metatypeRelationshipID", ...middleware, authInContainer("write", "ontology"),this.updateMetatypeRelationship);
+        app.delete("/containers/:containerID/metatype_relationships/:metatypeRelationshipID", ...middleware, authInContainer("write", "ontology"),this.archiveMetatypeRelationship)
     }
 
     private static createMetatypeRelationship(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
+        let toCreate: MetatypeRelationship[] = []
 
-        storage.Create(req.params.id, user.id!, req.body)
+        if(Array.isArray(req.body)) {
+            toCreate = plainToClass(MetatypeRelationship, req.body)
+        } else {
+            toCreate = [plainToClass(MetatypeRelationship, req.body as object)]
+        }
+
+        // update with the containerID
+        if(req.container) {
+            toCreate.forEach(relationship => relationship.container_id = req.container!.id!)
+        }
+
+        repo.bulkSave(req.user as UserT, toCreate)
             .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(201).json(result)
+                result.asResponse(res)
             })
             .catch((err) => {
                 res.status(500).json(err.message)
@@ -35,42 +44,38 @@ export default class MetatypeRelationshipRoutes {
     }
 
     private static retrieveMetatypeRelationship(req: Request, res: Response, next: NextFunction) {
-        storage.Retrieve(req.params.relationshipID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-                res.status(200).json(result)
-            })
-            .catch((err) => res.status(404).send(err))
-            .finally(() => next())
+        if(req.metatypeRelationship) {
+            const result = Result.Success(req.metatypeRelationship)
+            result.asResponse(res)
+            next()
+            return
+        }
+
+        const results = Result.Failure('metatype relationship not found', 404)
+        results.asResponse(res)
+        next()
     }
 
     private static listMetatypeRelationships(req: Request, res: Response, next: NextFunction) {
-        let filter = new MetatypeRelationshipFilter()
-        filter = filter.where().containerID("eq", req.params.id)
+        let repository = new MetatypeRelationshipRepository()
+        repository = repository.where().containerID("eq", req.params.containerID)
 
         if(typeof req.query.name !== "undefined" && req.query.name as string !== "") {
-            filter = filter.and().name("like", `%${req.query.name}%`)
+            repository = repository.and().name("like", `%${req.query.name}%`)
         }
 
         if(typeof req.query.description !== "undefined" && req.query.description as string !== "") {
-            filter = filter.and().description("like", `%${req.query.description}%`)
+            repository = repository.and().description("like", `%${req.query.description}%`)
         }
 
         if(req.query.archived as string !== "true") {
-            filter = filter.and().archived("eq", false)
+            repository = repository.and().archived("eq", false)
         }
 
         if(req.query.count !== undefined && req.query.count === "true") {
-            filter.count()
+            repository.count()
                 .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-                    res.status(200).json(result)
+                    result.asResponse(res)
                 })
                 .catch((err) => {
                     res.status(404).send(err)
@@ -78,13 +83,15 @@ export default class MetatypeRelationshipRoutes {
                 .finally(() => next())
         } else {
             // @ts-ignore
-            filter.all(+req.query.limit, +req.query.offset, req.query.sortBy, (req.query.sortDesc) ? req.query.sortDesc === "true" : undefined)
+            repository.list(req.query.loadKeys === undefined || req.query.loadKeys === "true",
+                {
+                    limit: (req.query.limit) ? +req.query.limit : undefined,
+                    offset: (req.query.offset) ? +req.query.offset : undefined,
+                    sortBy: req.query.sortBy,
+                    sortDesc: (req.query.sortDesc) ? req.query.sortDesc === "true" : undefined
+                } as QueryOptions)
                 .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-                    res.status(200).json(result)
+                   result.asResponse(res)
                 })
                 .catch((err) => {
                     res.status(404).send(err)
@@ -93,34 +100,38 @@ export default class MetatypeRelationshipRoutes {
         }
     }
 
-
     private static updateMetatypeRelationship(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
+        if(req.metatypeRelationship && req.container) {
+            // easiest way to handle full update right now is to assign
+            const payload = plainToClass(MetatypeRelationship, req.body as object)
+            payload.id = req.metatypeRelationship.id
+            payload.container_id = req.container.id!
 
-        storage.Update(req.params.relationshipID, user.id!, req.body)
-            .then((updated) => {
-                if (updated.isError && updated.error) {
-                    res.status(updated.error.errorCode).json(updated);
-                    return
-                }
-                res.status(200).json(updated)
-            })
-            .catch((updated) => res.status(500).send(updated))
+            repo.save(req.user as UserT, payload)
+                .then((result) => {
+                    result.asResponse(res)
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        } else {
+            Result.Failure('metatype relationship not found', 404).asResponse(res)
+            next()
+        }
     }
 
     private static archiveMetatypeRelationship(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
-
-        storage.Archive(req.params.relationshipID, user.id!)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-                res.sendStatus(200)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
+        if(req.metatypeRelationship) {
+            repo.archive(req.user as UserT, req.metatypeRelationship)
+                .then((result) => {
+                    result.asResponse(res)
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        } else {
+            const results = Result.Failure('metatype relationship not found', 404)
+            results.asResponse(res)
+            next()
+        }
     }
 }
 

@@ -1,9 +1,9 @@
 import {Request, Response, NextFunction, Application} from "express"
-import MetatypeRelationshipKeyStorage from "../data_access_layer/mappers/metatype_relationship_key_storage";
+import MetatypeRelationshipKeyMapper from "../data_access_layer/mappers/metatype_relationship_key_mapper";
 import {authInContainer} from "./middleware";
 import {UserT} from "../types/user_management/userT";
 
-const storage = MetatypeRelationshipKeyStorage.Instance;
+const storage = MetatypeRelationshipKeyMapper.Instance;
 
 // This contains all routes pertaining to Metatype Relationship Keys and their management.
 export default class MetatypeRelationshipKeyRoutes {

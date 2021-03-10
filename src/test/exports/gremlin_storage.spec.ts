@@ -1,7 +1,7 @@
 /* tslint:disable */
 import Logger from "../../logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
-import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_mapper";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
@@ -10,13 +10,14 @@ import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
 import NodeStorage from "../../data_access_layer/mappers/graph/node_storage";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
-import MetatypeRelationshipStorage from "../../data_access_layer/mappers/metatype_relationship_storage";
+import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
 import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
 import ExportStorage from "../../data_access_layer/mappers/export/export_storage";
 import GremlinExportStorage from "../../data_access_layer/mappers/export/gremlin_export_storage";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
+import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
 
 describe('Gremlin Exporter', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -53,7 +54,7 @@ describe('Gremlin Exporter', async() => {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
-        const rStorage = MetatypeRelationshipStorage.Instance;
+        const rMapper = MetatypeRelationshipMapper.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
 
         // SETUP CREATE NODES AND EDGE
@@ -88,8 +89,8 @@ describe('Gremlin Exporter', async() => {
         const node = await nStorage.CreateOrUpdate(containerID, graph.value.id,  mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        let relationship = await rStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let relationship = await rMapper.Create("test suite",
+            new MetatypeRelationship(containerID, faker.name.findName(), faker.random.alphaNumeric()))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -99,7 +100,7 @@ describe('Gremlin Exporter', async() => {
             "description": faker.random.alphaNumeric(),
             "origin_metatype_id": metatype.value[0].id,
             "destination_metatype_id": metatype.value[1].id,
-            "metatype_relationship_id": relationship.value[0].id,
+            "metatype_relationship_id": relationship.value.id,
             "relationship_type": "one:one"
         });
 

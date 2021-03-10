@@ -7,7 +7,7 @@ import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import DataSourceStorage from "../../data_access_layer/mappers/import/data_source_storage";
 import TypeMappingStorage from "../../data_access_layer/mappers/import/type_mapping_storage";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
-import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_mapper";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
 import {objectToShapeHash} from "../../utilities";
 import TypeTransformationStorage from "../../data_access_layer/mappers/import/type_transformation_storage";

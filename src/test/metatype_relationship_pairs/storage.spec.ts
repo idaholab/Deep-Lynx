@@ -1,18 +1,19 @@
 /* tslint:disable */
 import Logger from "../../logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
-import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_mapper";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
-import MetatypeRelationshipStorage from "../../data_access_layer/mappers/metatype_relationship_storage";
+import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
 import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
+import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
 
 describe('A Metatype Relationship Pair can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -42,7 +43,7 @@ describe('A Metatype Relationship Pair can', async() => {
     it('can be saved to storage', async()=> {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const rStorage = MetatypeRelationshipStorage.Instance;
+        const rMapper = MetatypeRelationshipMapper.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
 
         const metatype = await mMapper.BulkCreate("test suite",
@@ -60,9 +61,8 @@ describe('A Metatype Relationship Pair can', async() => {
         const keys2 = await kStorage.Create(metatype.value[1].id!, "test suite", test_keys);
         expect(keys2.isError).false;
 
-
-        let relationship = await rStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let relationship = await rMapper.Create("test suite",
+            new MetatypeRelationship(containerID, faker.name.findName(), faker.random.alphaNumeric()))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -72,7 +72,7 @@ describe('A Metatype Relationship Pair can', async() => {
             "description": faker.random.alphaNumeric(),
             "origin_metatype_id": metatype.value[0].id,
             "destination_metatype_id": metatype.value[1].id,
-            "relationship_id": relationship.value[0].id,
+            "relationship_id": relationship.value.id,
             "relationship_type": "one:one"
         });
 
@@ -84,7 +84,7 @@ describe('A Metatype Relationship Pair can', async() => {
     it('can be archived and permanently deleted', async()=> {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const rStorage = MetatypeRelationshipStorage.Instance;
+        const rMapper = MetatypeRelationshipMapper.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
 
         const metatype = await mMapper.BulkCreate( "test suite",
@@ -102,9 +102,8 @@ describe('A Metatype Relationship Pair can', async() => {
         const keys2 = await kStorage.Create(metatype.value[1].id!, "test suite", test_keys);
         expect(keys2.isError).false;
 
-
-        let relationship = await rStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let relationship = await rMapper.Create("test suite",
+            new MetatypeRelationship(containerID, faker.name.findName(), faker.random.alphaNumeric()))
 
         expect(relationship.isError).false;
       //  expect(relationship.value).not.empty;
@@ -114,7 +113,7 @@ describe('A Metatype Relationship Pair can', async() => {
             "description": faker.random.alphaNumeric(),
             "origin_metatype_id": metatype.value[0].id,
             "destination_metatype_id": metatype.value[1].id,
-            "relationship_id": relationship.value[0].id,
+            "relationship_id": relationship.value.id,
             "relationship_type": "one:one"
         });
 
@@ -133,7 +132,7 @@ describe('A Metatype Relationship Pair can', async() => {
     it('can be listed by destination and origin', async()=> {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const rStorage = MetatypeRelationshipStorage.Instance;
+        const rMapper = MetatypeRelationshipMapper.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
 
         const metatype = await mMapper.BulkCreate( "test suite",
@@ -151,9 +150,8 @@ describe('A Metatype Relationship Pair can', async() => {
         const keys2 = await kStorage.Create(metatype.value[1].id!, "test suite", test_keys);
         expect(keys2.isError).false;
 
-
-        let relationship = await rStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let relationship = await rMapper.Create("test suite",
+            new MetatypeRelationship(containerID, faker.name.findName(), faker.random.alphaNumeric()))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -163,7 +161,7 @@ describe('A Metatype Relationship Pair can', async() => {
             "description": faker.random.alphaNumeric(),
             "origin_metatype_id": metatype.value[0].id,
             "destination_metatype_id": metatype.value[1].id,
-            "relationship_id": relationship.value[0].id,
+            "relationship_id": relationship.value.id,
             "relationship_type": "one:one"
         });
 

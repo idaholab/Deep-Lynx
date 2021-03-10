@@ -2,7 +2,7 @@
 import faker from 'faker'
 import { expect } from 'chai'
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
-import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_mapper";
 import Logger from "../../logger";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";

@@ -65,7 +65,6 @@ export default class NodeStorage extends PostgresStorage{
                         resolve(Result.Failure(`unable to retrieve node's metatype ${metatype.error?.error}`))
                         return
                     }
-                    const check = metatype.value.keys
 
                     const validPayload = await metatype.value.validateAndTransformProperties(ns[n].properties);
                     if(validPayload.isError) {

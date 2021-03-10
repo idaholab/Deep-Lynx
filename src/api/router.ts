@@ -15,7 +15,7 @@ import {
     authenticateRoute,
     offsetLimitReplacer,
     containerContext,
-    metatypeContext
+    metatypeContext, metatypeRelationshipContext
 } from "./middleware";
 import ContainerRoutes from "./container_routes"
 import MetatypeRoutes from "./metatype_routes"
@@ -79,8 +79,8 @@ export class Router {
     DataSourceRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
     MetatypeRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeContext()]);
     MetatypeKeyRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeContext()]);
-    MetatypeRelationshipRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
-    MetatypeRelationshipKeyRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    MetatypeRelationshipRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipContext()]);
+    MetatypeRelationshipKeyRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipContext()]);
     MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
     QueryRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
     GraphRoutes.mount(this.app, [authenticateRoute(), containerContext()]);

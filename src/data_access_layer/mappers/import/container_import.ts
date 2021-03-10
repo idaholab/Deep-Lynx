@@ -1,10 +1,9 @@
 import axios, { AxiosRequestConfig } from "axios";
 import ContainerStorage from "../container_mapper";
-import MetatypeRelationshipStorage from "../metatype_relationship_storage"
+import MetatypeRelationshipMapper from "../metatype_relationship_mapper"
 import MetatypeStorage from "../metatype_mapper"
 import MetatypeRelationshipPairStorage from "../metatype_relationship_pair_storage"
-import MetatypeKeyMapper from "../metatype_key_storage"
-import MetatypeRelationshipKeyStorage from "../metatype_relationship_key_storage"
+import MetatypeKeyMapper from "../metatype_key_mapper"
 import { UserT } from "../../../types/user_management/userT";
 import Result from "../../../result";
 import { ContainerImportT } from "../../../types/import/containerImportT"
@@ -18,14 +17,15 @@ import ContainerRepository from "../../repositories/container_respository";
 import Container from "../../../data_warehouse/ontology/container";
 import Metatype from "../../../data_warehouse/ontology/metatype";
 import MetatypeRepository from "../../repositories/metatype_repository";
+import MetatypeRelationshipRepository from "../../repositories/metatype_relationship_repository";
+import MetatypeRelationship from "../../../data_warehouse/ontology/metatype_relationship";
 const convert = require('xml-js');
 
 const containerStorage = ContainerStorage.Instance;
-const metatypeRelationshipStorage = MetatypeRelationshipStorage.Instance;
+const metatypeRelationshipStorage = MetatypeRelationshipMapper.Instance;
 const metatypeStorage = MetatypeStorage.Instance;
 const metatypeRelationshipPairStorage = MetatypeRelationshipPairStorage.Instance;
 const metatypeKeyStorage = MetatypeKeyMapper.Instance;
-const metatypeRelationshipKeyStorage = MetatypeRelationshipKeyStorage.Instance;
 const nodeStorage = NodeStorage.Instance;
 const edgeStorage = EdgeStorage.Instance;
 
@@ -371,7 +371,8 @@ export default class ContainerImport {
           let oldMetatypeRelationshipPairs
 
           // retrieve existing container, relationships, metatypes, and relationship pairs
-          oldMetatypeRelationships = (await metatypeRelationshipStorage.List(containerID, 0, -1)).value
+          const relationshipRepository = new MetatypeRelationshipRepository()
+          oldMetatypeRelationships = (await relationshipRepository.where().containerID("eq", containerID).list(false)).value
 
           const metatypeRepository = new MetatypeRepository()
           oldMetatypes = await metatypeRepository.where().containerID("eq", containerID).list(false)
@@ -478,30 +479,23 @@ export default class ContainerImport {
           }
         }
 
-        const relationshipPromises: Promise<Result<MetatypeRelationshipT[]>>[] = [];
-        const relationshipUpdates: MetatypeRelationshipT[] = [];
+        const relationshipPromises: Promise<Result<MetatypeRelationship[]>>[] = [];
+        const relationshipUpdates: MetatypeRelationship[] = [];
 
         relationshipMap.forEach(relationship => {
           // if not marked for update, create
           if (!relationship.update) {
-            const data = {
-              name: relationship.name,
-              description: relationship.description
-            };
-            relationshipPromises.push(metatypeRelationshipStorage.Create(containerID, user.id!, data))
+            relationshipPromises.push(metatypeRelationshipStorage.BulkCreate(user.id!,[new MetatypeRelationship(containerID, relationship.name, relationship.description)]))
           } else {
-            // else add to batch update
-            const data = {
-              name: relationship.name,
-              description: relationship.description,
-              id: relationship.db_id
-            }
+            const data = new MetatypeRelationship(containerID, relationship.name, relationship.description)
+            data.id = relationship.db_id
+
             relationshipUpdates.push(data)
           }
         })
 
         if (relationshipUpdates.length > 0) {
-          relationshipPromises.push(metatypeRelationshipStorage.BatchUpdate(relationshipUpdates))
+          relationshipPromises.push(metatypeRelationshipStorage.BulkUpdate(user.id!, relationshipUpdates))
         }
 
         const relationshipResult: Result<MetatypeRelationshipT[]>[] = await Promise.all(relationshipPromises)
@@ -536,10 +530,6 @@ export default class ContainerImport {
         classListMap.forEach((thisClass: MetatypeExtendT) => {
           // if not marked for update, create
           if (!thisClass.update) {
-            const data = {
-              name: thisClass.name,
-              description: thisClass.description
-            };
             classPromises.push(metatypeStorage.BulkCreate(user.id!, [new Metatype(containerID, thisClass.name, thisClass.description)]))
           } else {
             // else add to batch update

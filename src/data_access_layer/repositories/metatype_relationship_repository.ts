@@ -1,28 +1,28 @@
 import RepositoryInterface, {Repository} from "./repository_base";
-import Metatype from "../../data_warehouse/ontology/metatype";
+import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
 import Result from "../../result";
 import {UserT} from "../../types/user_management/userT";
 import Cache from "../../services/cache/cache";
 import Config from "../../config";
 import Logger from "../../logger";
-import MetatypeMapper from "../mappers/metatype_mapper";
+import MetatypeRelationshipMapper from "../mappers/metatype_relationship_mapper";
 import {plainToClass, serialize} from "class-transformer";
-import MetatypeKeyMapper from "../mappers/metatype_key_mapper";
-import MetatypeKey from "../../data_warehouse/ontology/metatype_key";
+import MetatypeRelationshipKeyMapper from "../mappers/metatype_relationship_key_mapper";
+import MetatypeRelationshipKey from "../../data_warehouse/ontology/metatype_key";
 import {PoolClient} from "pg";
 import {QueryOptions} from "./repository_base";
 
-export default class MetatypeRepository extends Repository implements RepositoryInterface<Metatype> {
-    #mapper: MetatypeMapper = MetatypeMapper.Instance
-    #keyMapper: MetatypeKeyMapper = MetatypeKeyMapper.Instance
+export default class MetatypeRelationshipRepository extends Repository implements RepositoryInterface<MetatypeRelationship> {
+    #mapper: MetatypeRelationshipMapper = MetatypeRelationshipMapper.Instance
+    #keyMapper: MetatypeRelationshipKeyMapper = MetatypeRelationshipKeyMapper.Instance
 
     // save will always return a new instance of provided class to save, this is
     // done so that the user can have the updated ID and other information after
     // insert. By default this will also save/update any attached keys to the object
-    async save(user: UserT, m: Metatype, saveKeys: boolean = true): Promise<Result<Metatype>> {
+    async save(user: UserT, m: MetatypeRelationship, saveKeys: boolean = true): Promise<Result<MetatypeRelationship>> {
         const errors = await m.validationErrors()
         if(errors) {
-            return Promise.resolve(Result.Failure(`metatype does not pass validation ${errors.join(",")}`))
+            return Promise.resolve(Result.Failure(`metatype relationship does not pass validation ${errors.join(",")}`))
         }
 
         // we run the bulk save in a transaction so that on failure we don't get
@@ -41,14 +41,14 @@ export default class MetatypeRepository extends Repository implements Repository
             }
 
             // copy the keys over and assign the new id to them all
-            m.keys.forEach(key => key.metatype_id = result.value.id)
+            m.keys.forEach(key => key.metatype_relationship_id = result.value.id)
             result.value.replaceKeys(m.keys, m.removedKeys)
 
             if(saveKeys) {
                 const keys = await this.saveKeys(user, result.value, transaction.value)
                 if(keys.isError) {
                     await this.#mapper.rollbackTransaction(transaction.value)
-                    return Promise.resolve(Result.Failure(`unable to update metatype's keys ${keys.error?.error}`))
+                    return Promise.resolve(Result.Failure(`unable to update metatype relationship's keys ${keys.error?.error}`))
                 }
             }
 
@@ -68,14 +68,14 @@ export default class MetatypeRepository extends Repository implements Repository
         }
 
         // copy the keys over and assign the new id to them all
-        m.keys.forEach(key => key.metatype_id = result.value.id)
+        m.keys.forEach(key => key.metatype_relationship_id = result.value.id)
         result.value.replaceKeys(m.keys, m.removedKeys)
 
         if(saveKeys) {
             const keys = await this.saveKeys(user, result.value, transaction.value)
             if(keys.isError) {
                 await this.#mapper.rollbackTransaction(transaction.value)
-                return Promise.resolve(Result.Failure(`updating metatypes keys failed: ${keys.error}`))
+                return Promise.resolve(Result.Failure(`updating metatype relationships keys failed: ${keys.error}`))
             }
         }
 
@@ -91,18 +91,18 @@ export default class MetatypeRepository extends Repository implements Repository
     // bulkSave will always return  new instances of provided class to save, this is
     // done so that the user can have the updated ID and other information after
     // insert.
-    async bulkSave(user: UserT, m: Metatype[], saveKeys: boolean = true): Promise<Result<Metatype[]>> {
+    async bulkSave(user: UserT, m: MetatypeRelationship[], saveKeys: boolean = true): Promise<Result<MetatypeRelationship[]>> {
         // separate metatypes by which need to be created and which need to updated
-        const toCreate: Metatype[] = []
-        const toUpdate: Metatype[] = []
+        const toCreate: MetatypeRelationship[] = []
+        const toUpdate: MetatypeRelationship[] = []
 
-        const toReturn: Metatype[] = []
+        const toReturn: MetatypeRelationship[] = []
 
         // run validation, separate, and clear cache for each metatype
         for(const metatype of m) {
             const errors = await metatype.validationErrors()
             if(errors){
-                return Promise.resolve(Result.Failure(`one or more metatypes do not pass validation ${errors.join(",")}`))
+                return Promise.resolve(Result.Failure(`one or more metatype relationships do not pass validation ${errors.join(",")}`))
             }
 
             if(metatype.id) {
@@ -150,7 +150,7 @@ export default class MetatypeRepository extends Repository implements Repository
                 const keys = await this.saveKeys(user, metatype, transaction.value)
                 if(keys.isError) {
                     await this.#mapper.rollbackTransaction(transaction.value)
-                    return Promise.resolve(Result.Failure(`updating metatypes keys failed: ${keys.error}`))
+                    return Promise.resolve(Result.Failure(`updating metatype relationships keys failed: ${keys.error}`))
                 }
             }
         }
@@ -165,11 +165,11 @@ export default class MetatypeRepository extends Repository implements Repository
     }
 
 
-    private async saveKeys(user: UserT, m: Metatype, transaction?: PoolClient): Promise<Result<boolean>> {
+    private async saveKeys(user: UserT, m: MetatypeRelationship, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction: boolean = false
-        const keysUpdate: MetatypeKey[] = []
-        const keysCreate: MetatypeKey[] = []
-        const returnKeys: MetatypeKey[] = []
+        const keysUpdate: MetatypeRelationshipKey[] = []
+        const keysCreate: MetatypeRelationshipKey[] = []
+        const returnKeys: MetatypeRelationshipKey[] = []
 
         // we wrap this in a transaction so we don't get partially updated keys
         if(!transaction) {
@@ -199,12 +199,12 @@ export default class MetatypeRepository extends Repository implements Repository
 
         for(const key of m.keys) {
             // set key's metatype_id to equal its parent
-            key.metatype_id = m.id;
+            key.metatype_relationship_id = m.id;
 
             const errors = await key.validationErrors();
             if(errors) {
                 if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
-                return Promise.resolve(Result.Failure(`one or more metatype keys do not pass validation ${errors.join(",")}`))
+                return Promise.resolve(Result.Failure(`one or more metatype relationship keys do not pass validation ${errors.join(",")}`))
             }
 
             (key.id) ? keysUpdate.push(key) : keysCreate.push(key)
@@ -244,27 +244,27 @@ export default class MetatypeRepository extends Repository implements Repository
     // done so that the user can have the updated ID and other information after
     // insert.
 
-    async delete(m: Metatype): Promise<Result<boolean>> {
+    async delete(m: MetatypeRelationship): Promise<Result<boolean>> {
         if(m.id) {
             this.deleteCached(m.id)
 
             return this.#mapper.PermanentlyDelete(m.id)
         }
 
-        return Promise.resolve(Result.Failure('metatype has no id'))
+        return Promise.resolve(Result.Failure('metatype relationship has no id'))
     }
 
-    archive(user: UserT, m: Metatype): Promise<Result<boolean>> {
+    archive(user: UserT, m: MetatypeRelationship): Promise<Result<boolean>> {
         if (m.id) {
             this.deleteCached(m.id)
 
             return this.#mapper.Archive(m.id, user.id!)
         }
 
-        return Promise.resolve(Result.Failure('metatype has no id'))
+        return Promise.resolve(Result.Failure('metatype relationship has no id'))
     }
 
-    async findByID(id: string, loadKeys:boolean = true): Promise<Result<Metatype>> {
+    async findByID(id: string, loadKeys:boolean = true): Promise<Result<MetatypeRelationship>> {
         const cached = await this.getCached(id)
         if(cached) {
             return Promise.resolve(Result.Success(cached))
@@ -274,7 +274,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
         if(!retrieved.isError) {
             if(loadKeys) {
-                const keys = await this.#keyMapper.ListForMetatype(retrieved.value.id!)
+                const keys = await this.#keyMapper.ListForRelationship(retrieved.value.id!)
                 if(!keys.isError) retrieved.value.addKey(...keys.value)
             }
 
@@ -285,32 +285,32 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(retrieved)
     }
 
-    private async getCached(id: string): Promise<Metatype | undefined> {
-        const cached = await Cache.get<object>(`${MetatypeMapper.tableName}:${id}`)
+    private async getCached(id: string): Promise<MetatypeRelationship | undefined> {
+        const cached = await Cache.get<object>(`${MetatypeRelationshipMapper.tableName}:${id}`)
         if(cached) {
-            const metatype = plainToClass(Metatype, cached)
+            const metatype = plainToClass(MetatypeRelationship, cached)
             return Promise.resolve(metatype)
         }
 
         return Promise.resolve(undefined)
     }
 
-    private async setCache(m: Metatype): Promise<boolean> {
-       const set = await Cache.set(`${MetatypeMapper.tableName}:${m.id}`, serialize(m), Config.cache_default_ttl)
-       if(!set) Logger.error(`unable to set cache for metatype ${m.id}`)
+    private async setCache(m: MetatypeRelationship): Promise<boolean> {
+       const set = await Cache.set(`${MetatypeRelationshipMapper.tableName}:${m.id}`, serialize(m), Config.cache_default_ttl)
+       if(!set) Logger.error(`unable to set cache for metatype relationship ${m.id}`)
 
        return Promise.resolve(set)
     }
 
     private async deleteCached(id: string): Promise<boolean> {
-        const deleted = await Cache.del(`${MetatypeMapper.tableName}:${id}`)
-        if(!deleted) Logger.error(`unable to remove metatype ${id} from cache`)
+        const deleted = await Cache.del(`${MetatypeRelationshipMapper.tableName}:${id}`)
+        if(!deleted) Logger.error(`unable to remove metatype relationship ${id} from cache`)
 
         return Promise.resolve(deleted)
     }
 
     constructor() {
-        super(MetatypeMapper.tableName);
+        super(MetatypeRelationshipMapper.tableName);
     }
 
     // filter specific functions
@@ -343,16 +343,16 @@ export default class MetatypeRepository extends Repository implements Repository
         return super.count()
     }
 
-    async list(loadKeys: boolean = true, options?: QueryOptions): Promise<Result<Metatype[]>> {
+    async list(loadKeys: boolean = true, options?: QueryOptions): Promise<Result<MetatypeRelationship[]>> {
         const results = await super.findAll<object>(options)
 
         if(results.isError) return Promise.resolve(Result.Pass(results))
 
-        const metatypes = plainToClass(Metatype, results.value)
+        const metatypes = plainToClass(MetatypeRelationship, results.value)
 
         if(loadKeys) {
             await Promise.all(metatypes.map(async (metatype) => {
-                const keys = await MetatypeKeyMapper.Instance.ListForMetatype(metatype.id!)
+                const keys = await MetatypeRelationshipKeyMapper.Instance.ListForRelationship(metatype.id!)
 
                 return metatype.addKey(...keys.value)
             }))

@@ -1,12 +1,12 @@
 import {BaseDataClass} from "../../base_data_class";
 import {IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength} from "class-validator";
-import MetatypeKey from "./metatype_key";
+import MetatypeRelationshipKey from "./metatype_relationship_key";
 import * as t from "io-ts";
 import Result from "../../result";
 import {pipe} from "fp-ts/pipeable";
 import {fold} from "fp-ts/Either";
 
-export default class Metatype extends BaseDataClass {
+export default class MetatypeRelationship extends BaseDataClass {
     @IsOptional()
     @IsUUID()
     id?: string
@@ -29,9 +29,9 @@ export default class Metatype extends BaseDataClass {
 
     // because we need to track removed keys in case of update, keys is made private
     // and only accessible through a getter.
-    keys: MetatypeKey[] = []
+    keys: MetatypeRelationshipKey[] = []
     // for tracking removed keys for update
-    #removedKeys: MetatypeKey[] = []
+    #removedKeys: MetatypeRelationshipKey[] = []
 
     constructor(containerID: string, name: string, description: string) {
         super();
@@ -45,18 +45,18 @@ export default class Metatype extends BaseDataClass {
         return this.#removedKeys
     }
 
-    addKey(...keys: MetatypeKey[]) {
+    addKey(...keys: MetatypeRelationshipKey[]) {
         this.keys.push(...keys)
     }
 
-    replaceKeys(keys: MetatypeKey[], removedKeys?: MetatypeKey[]) {
+    replaceKeys(keys: MetatypeRelationshipKey[], removedKeys?: MetatypeRelationshipKey[]) {
         this.keys = keys
         if(removedKeys) this.#removedKeys = removedKeys
     }
 
     // removeKeys will remove the first matching key, you must save the object
     // for changes to take place
-    removeKey(...keys: MetatypeKey[] | string[]) {
+    removeKey(...keys: MetatypeRelationshipKey[] | string[]) {
         for(const key of keys) {
             if(typeof key === 'string') {
                 this.keys = this.keys.filter(k => {
@@ -79,10 +79,10 @@ export default class Metatype extends BaseDataClass {
         }
     }
 
-    // CompileMetatypeKeys creates an io-ts runtime type decoder out of them.
+    // CompileMetatypeRelationshipKeys creates an io-ts runtime type decoder out of them.
     // This single function is extremely important, and is the driving force
     // behind the dynamic type generation and being able to type-check user payloads.
-    compileKeys (){
+    compileKeys() {
         const output : {[key:string]:any} = {};
         const partialOutput : {[key:string]:any} = {};
 
@@ -118,7 +118,7 @@ export default class Metatype extends BaseDataClass {
 
                     const toUnion: {[key:string]:any} = {};
 
-                    // options must be represented by strings, as defined in the MetatypeKey type definitions. As such, we can
+                    // options must be represented by strings, as defined in the MetatypeRelationshipKey type definitions. As such, we can
                     // dynamically create a union using keyof
                     for(const option of key.options) {
                         toUnion[option] = null

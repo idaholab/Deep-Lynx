@@ -8,14 +8,14 @@ import DataSourceStorage from "../../data_access_layer/mappers/import/data_sourc
 import TypeMappingStorage from "../../data_access_layer/mappers/import/type_mapping_storage";
 import {TypeMappingT, TypeTransformationT} from "../../types/import/typeMappingT";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
-import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_mapper";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
 import {objectToShapeHash} from "../../utilities";
 import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
 import ImportStorage from "../../data_access_layer/mappers/import/import_storage";
 import DataStagingStorage from "../../data_access_layer/mappers/import/data_staging_storage";
 import {MetatypeRelationshipT} from "../../types/metatype_relationshipT";
-import MetatypeRelationshipStorage from "../../data_access_layer/mappers/metatype_relationship_storage";
+import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
 import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
 import {MetatypeRelationshipPairT} from "../../types/metatype_relationship_pairT";
 import {DataSourceT} from "../../types/import/dataSourceT";
@@ -26,6 +26,7 @@ import EdgeFilter from "../../data_access_layer/mappers/graph/edge_filter";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
+import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
 
 describe('A Data Processor', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -67,8 +68,8 @@ describe('A Data Processor', async() => {
         graphID = graph.value.id
 
         let dstorage = DataSourceStorage.Instance;
-        let metatypeStorage = MetatypeMapper.Instance;
-        let relationshipStorage = MetatypeRelationshipStorage.Instance;
+        let metatypeMapper = MetatypeMapper.Instance;
+        let relationshipMapper = MetatypeRelationshipMapper.Instance;
         let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingStorage.Instance
 
@@ -82,7 +83,7 @@ describe('A Data Processor', async() => {
             new Metatype(containerID,"Component", "Base component of part"),
         ];
 
-        let metatypes = await metatypeStorage.BulkCreate("test suite", test_metatypes);
+        let metatypes = await metatypeMapper.BulkCreate("test suite", test_metatypes);
 
         expect(metatypes.isError).false;
         expect(metatypes.value).not.empty;
@@ -150,8 +151,12 @@ describe('A Data Processor', async() => {
             }
         }
 
+        const test_metatype_relationships: MetatypeRelationship[] = [
+            new MetatypeRelationship(containerID, "parent", "item is another's parent")
+        ];
+
         // create the relationships
-        let metatypeRelationships = await relationshipStorage.Create(containerID, "test suite", test_metatype_relationships)
+        let metatypeRelationships = await relationshipMapper.BulkCreate("test suite", test_metatype_relationships)
 
         expect(metatypeRelationships.isError).false;
         expect(metatypeRelationships.value).not.empty;
@@ -344,13 +349,6 @@ describe('A Data Processor', async() => {
     })
 });
 
-
-const test_metatype_relationships: MetatypeRelationshipT[] = [
-    {
-        name: "parent",
-        description: "item is another's parent"
-    }
-];
 
 const car_metatype_keys: MetatypeKeyT[] = [{
     name: "id",

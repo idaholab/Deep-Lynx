@@ -1,4 +1,4 @@
-import MetatypeKeyMapper from "../data_access_layer/mappers/metatype_key_storage"
+import MetatypeKeyMapper from "../data_access_layer/mappers/metatype_key_mapper"
 
 import {Request, Response, NextFunction, Application} from "express"
 import {authInContainer} from "./middleware";

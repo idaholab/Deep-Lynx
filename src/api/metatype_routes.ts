@@ -58,24 +58,24 @@ export default class MetatypeRoutes {
 
     private static listMetatypes(req: Request, res: Response, next: NextFunction) {
         // we'll use a fresh repository every time to insure no leftover queries
-        let repo = new MetatypeRepository()
-        repo = repo.where().containerID("eq", req.params.containerID)
+        let repository = new MetatypeRepository()
+        repository = repository.where().containerID("eq", req.params.containerID)
 
         if(typeof req.query.name !== "undefined" && req.query.name as string !== "") {
-            repo = repo.and().name("like", `%${req.query.name}%`)
+            repository = repository.and().name("like", `%${req.query.name}%`)
         }
 
         if(typeof req.query.description !== "undefined" && req.query.description as string !== "") {
-            repo = repo.and().description("like", `%${req.query.description}%`)
+            repository = repository.and().description("like", `%${req.query.description}%`)
         }
 
         if(req.query.archived as string !== "true") {
-            repo = repo.and().archived("eq", false)
+            repository = repository.and().archived("eq", false)
         }
 
         if (req.query.count !== undefined) {
             if (req.query.count === "true") {
-                repo.count()
+                repository.count()
                     .then((result) => {
                         result.asResponse(res)
                     })
@@ -86,7 +86,7 @@ export default class MetatypeRoutes {
             }
         } else {
                 // @ts-ignore
-                repo.list(req.query.loadKeys === undefined || req.query.loadKeys === "true",
+                repository.list(req.query.loadKeys === undefined || req.query.loadKeys === "true",
                     {
                         limit: (req.query.limit) ? +req.query.limit : undefined,
                         offset: (req.query.offset) ? +req.query.offset : undefined,

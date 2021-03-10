@@ -1,7 +1,7 @@
 /* tslint:disable */
 import Logger from "../../logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
-import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_mapper";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
@@ -10,12 +10,13 @@ import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
 import NodeStorage from "../../data_access_layer/mappers/graph/node_storage";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
-import MetatypeRelationshipStorage from "../../data_access_layer/mappers/metatype_relationship_storage";
+import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
 import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
 import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
+import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
 
 // This is both test and utility for creating a full realized, semi-complex
 // graphs. As such this test _does not_ delete its data after running
@@ -51,7 +52,7 @@ describe('A Complex Graph can be created', async() => {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
-        const rStorage = MetatypeRelationshipStorage.Instance;
+        const rMapper = MetatypeRelationshipMapper.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
 
         // SETUP
@@ -110,8 +111,8 @@ describe('A Complex Graph can be created', async() => {
         expect(nodePair.isError, nodePair.error?.error).false;
 
 
-        let relationship = await rStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let relationship = await rMapper.Create("test suite",
+            new MetatypeRelationship(containerID, faker.name.findName(), faker.random.alphaNumeric()))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -121,7 +122,7 @@ describe('A Complex Graph can be created', async() => {
             "description": faker.random.alphaNumeric(),
             "origin_metatype_id": metatype.value[0].id,
             "destination_metatype_id": metatype.value[1].id,
-            "relationship_id": relationship.value[0].id,
+            "relationship_id": relationship.value.id,
             "relationship_type": "many:many"
         });
 
@@ -130,7 +131,7 @@ describe('A Complex Graph can be created', async() => {
             "description": faker.random.alphaNumeric(),
             "destination_metatype_id": metatype.value[0].id,
             "origin_metatype_id": metatype.value[1].id,
-            "relationship_id": relationship.value[0].id,
+            "relationship_id": relationship.value.id,
             "relationship_type": "many:many"
         });
 

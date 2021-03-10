@@ -294,7 +294,7 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
         }
     }
 
-    private bulkCreateStatement(userID: string, keys: MetatypeKey[]): QueryConfig {
+    private bulkCreateStatement(userID: string, keys: MetatypeKey[]): string {
             const text =`INSERT INTO
                         metatype_keys(metatype_id, id, name, description, property_name, required, data_type, options, default_value, validation, created_by, modified_by)
                         VALUES %L RETURNING *`

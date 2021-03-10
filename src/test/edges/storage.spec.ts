@@ -1,24 +1,24 @@
 /* tslint:disable */
 import Logger from "../../logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
-import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_mapper";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
 import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
 import NodeStorage from "../../data_access_layer/mappers/graph/node_storage";
-import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
-import MetatypeRelationshipStorage from "../../data_access_layer/mappers/metatype_relationship_storage";
-import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
+import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
+import MetatypeRelationshipPairMapper from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
 import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
 import {EdgeT} from "../../types/graph/edgeT";
 import DataSourceStorage from "../../data_access_layer/mappers/import/data_source_storage";
-import MetatypeRelationshipKeyStorage from "../../data_access_layer/mappers/metatype_relationship_key_storage";
+import MetatypeRelationshipKeyMapper from "../../data_access_layer/mappers/metatype_relationship_key_mapper";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
+import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
 
 describe('A Graph Edge can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -31,7 +31,7 @@ describe('A Graph Edge can', async() => {
 
 
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+        let mapper = ContainerMapper.Instance;
 
         const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
 
@@ -54,9 +54,9 @@ describe('A Graph Edge can', async() => {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
-        const rStorage = MetatypeRelationshipStorage.Instance;
-        const rkStorage = MetatypeRelationshipKeyStorage.Instance;
-        const rpStorage = MetatypeRelationshipPairStorage.Instance;
+        const rMapper = MetatypeRelationshipMapper.Instance;
+        const rkStorage = MetatypeRelationshipKeyMapper.Instance;
+        const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // SETUP
         let graph = await gStorage.Create(containerID, "test suite");
@@ -90,20 +90,20 @@ describe('A Graph Edge can', async() => {
         const node = await nStorage.CreateOrUpdate(containerID, graph.value.id,  mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        let relationship = await rStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let relationship = await rMapper.Create("test suite",
+            new MetatypeRelationship(containerID, faker.name.findName(), faker.random.alphaNumeric()))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
 
-        const rkeys = await rkStorage.Create(relationship.value[0].id!, "test suite", test_relationship_keys)
+        const rkeys = await rkStorage.Create(relationship.value.id!, "test suite", test_relationship_keys)
 
         let pair = await rpStorage.Create(containerID, "test suite", {
             "name": faker.name.findName(),
             "description": faker.random.alphaNumeric(),
             "origin_metatype_id": metatype.value[0].id,
             "destination_metatype_id": metatype.value[1].id,
-            "relationship_id": relationship.value[0].id,
+            "relationship_id": relationship.value.id,
             "relationship_type": "one:one"
         });
 
@@ -128,8 +128,8 @@ describe('A Graph Edge can', async() => {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
-        const rStorage = MetatypeRelationshipStorage.Instance;
-        const rpStorage = MetatypeRelationshipPairStorage.Instance;
+        const rMapper = MetatypeRelationshipMapper.Instance;
+        const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // we must create a valid data source for this test
         const dataStorage = DataSourceStorage.Instance;
@@ -180,8 +180,8 @@ describe('A Graph Edge can', async() => {
         const node = await nStorage.CreateOrUpdate(containerID, graph.value.id,  mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        let relationship = await rStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let relationship = await rMapper.Create("test suite",
+            new MetatypeRelationship(containerID, faker.name.findName(), faker.random.alphaNumeric()))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -191,7 +191,7 @@ describe('A Graph Edge can', async() => {
             "description": faker.random.alphaNumeric(),
             "origin_metatype_id": metatype.value[0].id,
             "destination_metatype_id": metatype.value[1].id,
-            "relationship_id": relationship.value[0].id,
+            "relationship_id": relationship.value.id,
             "relationship_type": "one:one"
         });
 
@@ -217,8 +217,8 @@ describe('A Graph Edge can', async() => {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
-        const rStorage = MetatypeRelationshipStorage.Instance;
-        const rpStorage = MetatypeRelationshipPairStorage.Instance;
+        const rMapper = MetatypeRelationshipMapper.Instance;
+        const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // SETUP
         let graph = await gStorage.Create(containerID, "test suite");
@@ -251,8 +251,8 @@ describe('A Graph Edge can', async() => {
         const node = await nStorage.CreateOrUpdate(containerID, graph.value.id,  mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        let relationship = await rStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let relationship = await rMapper.Create("test suite",
+            new MetatypeRelationship(containerID, faker.name.findName(), faker.random.alphaNumeric()))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -262,7 +262,7 @@ describe('A Graph Edge can', async() => {
             "description": faker.random.alphaNumeric(),
             "origin_metatype_id": metatype.value[0].id,
             "destination_metatype_id": metatype.value[1].id,
-            "relationship_id": relationship.value[0].id,
+            "relationship_id": relationship.value.id,
             "relationship_type": "one:one"
         });
 
@@ -292,8 +292,8 @@ describe('A Graph Edge can', async() => {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
-        const rStorage = MetatypeRelationshipStorage.Instance;
-        const rpStorage = MetatypeRelationshipPairStorage.Instance;
+        const rMapper = MetatypeRelationshipMapper.Instance;
+        const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // SETUP
         let graph = await gStorage.Create(containerID, "test suite");
@@ -328,8 +328,8 @@ describe('A Graph Edge can', async() => {
         const node = await nStorage.CreateOrUpdate(containerID, graph.value.id,  mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        let relationship = await rStorage.Create(containerID, "test suite",
-            {"name": faker.name.findName(), "description": faker.random.alphaNumeric()});
+        let relationship = await rMapper.Create("test suite",
+            new MetatypeRelationship(containerID, faker.name.findName(), faker.random.alphaNumeric()))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -339,7 +339,7 @@ describe('A Graph Edge can', async() => {
             "description": faker.random.alphaNumeric(),
             "origin_metatype_id": metatype.value[0].id,
             "destination_metatype_id": metatype.value[1].id,
-            "relationship_id": relationship.value[0].id,
+            "relationship_id": relationship.value.id,
             "relationship_type": "one:one"
         });
 

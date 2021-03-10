@@ -8,6 +8,7 @@ import passport from "passport";
 import {SuperUser, UserT} from "../types/user_management/userT";
 import ContainerRepository from "../data_access_layer/repositories/container_respository";
 import MetatypeRepository from "../data_access_layer/repositories/metatype_repository";
+import MetatypeRelationshipRepository from "../data_access_layer/repositories/metatype_relationship_repository";
 
 // PerformanceMiddleware uses the provided logger to display the time each route
 // took to process and send a response to the requester. This leverages node.js's
@@ -216,6 +217,36 @@ export function metatypeContext(): any {
                 }
 
                 req.metatype = result.value
+                next()
+            })
+            .catch(error => {
+                resp.status(500).json(error)
+                return
+            })
+    }
+}
+
+// metatypeRelationshipContext will attempt to fetch a metatype by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "metatypeID"
+export function metatypeRelationshipContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have a containerID, don't fail, just pass without action
+        if(!req.params.metatypeRelationshipID) {
+            next()
+            return
+        }
+
+        const repo = new MetatypeRelationshipRepository()
+
+        repo.findByID(req.params.metatypeRelationshipID)
+            .then(result => {
+                if(result.isError) {
+                    resp.status(result.error?.errorCode!).json(result)
+                    return
+                }
+
+                req.metatypeRelationship = result.value
                 next()
             })
             .catch(error => {

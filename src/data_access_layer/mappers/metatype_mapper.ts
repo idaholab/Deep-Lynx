@@ -72,10 +72,6 @@ export default class MetatypeMapper extends PostgresStorage{
         return super.run(this.archiveStatement(id, userID))
     }
 
-    public async Count(containerID: string): Promise<Result<number>> {
-        return super.count(this.countStatement(containerID))
-    }
-
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -88,7 +84,7 @@ export default class MetatypeMapper extends PostgresStorage{
     }
 
 
-    private bulkCreateStatement(userID: string, metatypes: Metatype[]): QueryConfig {
+    private bulkCreateStatement(userID: string, metatypes: Metatype[]): string {
         const text= `INSERT INTO metatypes(container_id, id,name,description, created_by, modified_by) VALUES %L RETURNING *`
         const values = metatypes.map(metatype => [metatype.container_id, uuid.v4(), metatype.name, metatype.description, userID, userID])
 
@@ -134,12 +130,5 @@ export default class MetatypeMapper extends PostgresStorage{
         const values = metatypes.map(metatype=> [metatype.id, metatype.name, metatype.description, userID])
 
         return format(text, values)
-    }
-
-    private countStatement(containerID: string): QueryConfig {
-        return {
-            text: `SELECT COUNT(*) FROM metatypes WHERE NOT archived AND container_id = $1`,
-            values: [containerID]
-        }
     }
 }

@@ -1,7 +1,7 @@
 /* tslint:disable */
 import Logger from "../../logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
-import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_storage";
+import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_mapper";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
@@ -13,8 +13,8 @@ import {NodeT} from "../../types/graph/nodeT";
 import {graphql} from "graphql";
 import resolversRoot from "../../data_query/resolvers";
 import {schema} from "../../data_query/schema"
-import MetatypeRelationshipStorage from "../../data_access_layer/mappers/metatype_relationship_storage";
-import MetatypeRelationshipKeyStorage from "../../data_access_layer/mappers/metatype_relationship_key_storage";
+import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
+import MetatypeRelationshipKeyMapper from "../../data_access_layer/mappers/metatype_relationship_key_mapper";
 import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
 import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
 import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
@@ -22,6 +22,7 @@ import {EdgeT} from "../../types/graph/edgeT";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
+import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
 
 describe('Using a GraphQL Query for a nodes edges', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -49,8 +50,8 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
-        const rStorage = MetatypeRelationshipStorage.Instance;
-        const rkStorage = MetatypeRelationshipKeyStorage.Instance;
+        const rMapper = MetatypeRelationshipMapper.Instance;
+        const rkStorage = MetatypeRelationshipKeyMapper.Instance;
         const rpStorage = MetatypeRelationshipPairStorage.Instance;
 
         // SETUP
@@ -79,20 +80,20 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
 
         node = nodes.value[0]
 
-        let relationship = await rStorage.Create(containerID, "test suite",
-            {"name": "parent", "description": faker.random.alphaNumeric()});
+        let relationship = await rMapper.Create("test suite", new MetatypeRelationship(containerID, "parent", faker.random.alphaNumeric()))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
 
-        const rkeys = await rkStorage.Create(relationship.value[0].id!, "test suite", test_relationship_keys)
+        const rkeys = await rkStorage.Create(relationship.value.id!, "test suite", test_relationship_keys)
+        expect(rkeys.isError).false
 
         let pair = await rpStorage.Create(containerID, "test suite", {
             "name": faker.name.findName(),
             "description": faker.random.alphaNumeric(),
             "origin_metatype_id": metatype.id,
             "destination_metatype_id": metatype.id,
-            "relationship_id": relationship.value[0].id,
+            "relationship_id": relationship.value.id,
             "relationship_type": "one:one"
         });
 
