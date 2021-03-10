@@ -5,11 +5,11 @@ import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/p
 import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_storage";
 import Logger from "../../logger";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
-import {single_test_key, test_keys} from "./compile.spec";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
+import {MetatypeKeyT} from "../../types/metatype_keyT";
 
 describe('A Metatype Key', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -130,3 +130,48 @@ describe('A Metatype Key', async() => {
         return mMapper.PermanentlyDelete(metatype.value.id!)
     });
 });
+export const test_keys: MetatypeKeyT[] = [{
+    name: "Test",
+    property_name: "flower",
+    required: true,
+    description: "flower name",
+    data_type: "string"
+},
+    {
+        name: "Test 2",
+        property_name: "color",
+        required: true,
+        description: "color of flower allowed",
+        data_type: "enumeration",
+        options: ["yellow", "blue"]
+    },
+    {
+        name: "Test Not Required",
+        property_name: "notRequired",
+        required: false,
+        description: "not required",
+        data_type: "number",
+        validation: {
+            regex: '/\\S+/'
+        }
+    },
+];
+
+export const single_test_key: MetatypeKeyT = {
+    name: "Test Not Required",
+    property_name: "notRequired",
+    required: false,
+    description: "not required",
+    data_type: "number",
+};
+
+export const single_test_key_regex: MetatypeKeyT = {
+    name: "Test Not Required",
+    property_name: "notRequired",
+    required: false,
+    description: "not required",
+    data_type: "number",
+    validation: {
+        regex: '/\\S+/'
+    }
+};

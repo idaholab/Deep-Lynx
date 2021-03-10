@@ -133,10 +133,11 @@ export class Client {
    }
 
    listMetatypes(containerID: string, {name, description, limit, offset, sortBy, sortDesc, count}: {name?: string; description?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; count?: boolean}): Promise<MetatypeT[] | number> {
+      console.log(description)
       const query: {[key: string]: any} = {}
 
       if(name) query.name = name
-      if(description) query.description = name
+      if(description) query.description = description
       if(limit) query.limit = limit
       if(offset) query.offset = offset
       if(sortBy) query.sortBy = sortBy
@@ -150,9 +151,9 @@ export class Client {
       const query: {[key: string]: any} = {}
 
       if(name) query.name = name
-      if(description) query.description = name
-      if(originID) query.originID = name
-      if(destinationID) query.destinationID = name
+      if(description) query.description = description
+      if(originID) query.originID = originID
+      if(destinationID) query.destinationID = destinationID
       if(metatypeID) query.metatypeID = metatypeID
       if(limit) query.limit = limit
       if(offset) query.offset = offset

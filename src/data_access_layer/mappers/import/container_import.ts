@@ -8,7 +8,6 @@ import MetatypeRelationshipKeyStorage from "../metatype_relationship_key_storage
 import { UserT } from "../../../types/user_management/userT";
 import Result from "../../../result";
 import { ContainerImportT } from "../../../types/import/containerImportT"
-import { MetatypeT } from "../../../types/metatypeT";
 import { MetatypeRelationshipPairT } from "../../../types/metatype_relationship_pairT";
 import { MetatypeKeyT, MetatypeKeysT } from "../../../types/metatype_keyT";
 import { MetatypeRelationshipT } from "../../../types/metatype_relationshipT";
@@ -18,6 +17,7 @@ import Logger from "../../../logger"
 import ContainerRepository from "../../repositories/container_respository";
 import Container from "../../../data_warehouse/ontology/container";
 import Metatype from "../../../data_warehouse/ontology/metatype";
+import MetatypeRepository from "../../repositories/metatype_repository";
 const convert = require('xml-js');
 
 const containerStorage = ContainerStorage.Instance;
@@ -372,7 +372,9 @@ export default class ContainerImport {
 
           // retrieve existing container, relationships, metatypes, and relationship pairs
           oldMetatypeRelationships = (await metatypeRelationshipStorage.List(containerID, 0, -1)).value
-          oldMetatypes = await metatypeStorage.List(containerID, 0, -1)
+
+          const metatypeRepository = new MetatypeRepository()
+          oldMetatypes = await metatypeRepository.where().containerID("eq", containerID).list(false)
           oldMetatypes = oldMetatypes.value
           oldMetatypeRelationshipPairs = (await metatypeRelationshipPairStorage.List(containerID, 0, -1)).value
 
@@ -552,7 +554,7 @@ export default class ContainerImport {
           classPromises.push(metatypeStorage.BulkUpdate(user.id!, metatypeUpdates))
         }
 
-        const classResult: Result<MetatypeT[]>[] = await Promise.all(classPromises)
+        const classResult: Result<Metatype[]>[] = await Promise.all(classPromises)
 
         // loop through promise results ensuring no errors and adding database IDs
         classResult.forEach(async resultEntry => {

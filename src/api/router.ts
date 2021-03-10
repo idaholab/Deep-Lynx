@@ -10,7 +10,13 @@ const exphbs = require('express-handlebars')
 const methodOverride = require('method-override')
 
 import { Server } from "./server"
-import {PerformanceMiddleware, authenticateRoute, offsetLimitReplacer, containerContext} from "./middleware";
+import {
+    PerformanceMiddleware,
+    authenticateRoute,
+    offsetLimitReplacer,
+    containerContext,
+    metatypeContext
+} from "./middleware";
 import ContainerRoutes from "./container_routes"
 import MetatypeRoutes from "./metatype_routes"
 import MetatypeKeyRoutes from "./metatype_key_routes";
@@ -71,8 +77,8 @@ export class Router {
     ContainerRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
     ExportRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
     DataSourceRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
-    MetatypeRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
-    MetatypeKeyRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    MetatypeRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeContext()]);
+    MetatypeKeyRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeContext()]);
     MetatypeRelationshipRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
     MetatypeRelationshipKeyRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
     MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute(), containerContext()]);

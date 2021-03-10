@@ -183,8 +183,8 @@ export class Repository {
 }
 
 export type QueryOptions = {
-    limit?: number
-    offset?: number
-    sortBy?: number
-    sortDesc?: boolean
+    limit?: number | undefined
+    offset?: number | undefined
+    sortBy?: string | undefined
+    sortDesc?: boolean | undefined
 }

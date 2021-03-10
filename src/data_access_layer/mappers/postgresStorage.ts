@@ -3,10 +3,11 @@ import Result, {ErrorNotFound} from "../../result";
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
 import {Errors, ValidationError} from "io-ts";
-import {Pool, PoolClient, QueryConfig, QueryResult} from "pg";
+import {PoolClient, QueryConfig} from "pg";
 import uuid from "uuid"
 import PostgresAdapter from "./adapters/postgres/postgres";
 import Logger from "../../logger"
+import 'reflect-metadata'; // this is required for the class-transformer package we use
 
 // PostgresStorage contains ORM like CRUD functions, and a few helpers for more complex functionality.
 // This contains things like transaction runners, as well as things like the type decoder
@@ -102,7 +103,7 @@ export default class PostgresStorage {
     }
 
     // run simple query
-    async run(statement:QueryConfig, client?: PoolClient): Promise<Result<boolean>> {
+    async run(statement:QueryConfig | string, client?: PoolClient): Promise<Result<boolean>> {
         if(client) {
             return new Promise(resolve => {
                 client.query(statement)

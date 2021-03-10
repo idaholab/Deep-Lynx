@@ -4,7 +4,6 @@ to its known value. This file is a mix of the static resolvers and functionality
 for auto-generating resolvers based on the stored ontology.
  */
 import NodeStorage from "../data_access_layer/mappers/graph/node_storage";
-import MetatypeStorage from "../data_access_layer/mappers/metatype_mapper";
 import {
     EdgeFilterQL,
     EdgeQL, EdgeWhereQL, FileFilterQL, FileQL, FileWhereQL,
@@ -27,6 +26,7 @@ import FileStorage from "../data_access_layer/mappers/file_storage";
 import Config from "../config";
 import {FileT} from "../types/fileT";
 import FileFilter from "../data_access_layer/mappers/file_filter";
+import MetatypeRepository from "../data_access_layer/repositories/metatype_repository";
 
 export default function resolversRoot(containerID: string):any {
     return {
@@ -269,7 +269,9 @@ async function NodeResolver(node: NodeT, containerID:string): Promise<NodeQL> {
 }
 
 async function MetatypeResolver(metatypeID: string): Promise<MetatypeQL> {
-    const result = await MetatypeStorage.Instance.Retrieve(metatypeID)
+    const metatypeRepo = new MetatypeRepository()
+
+    const result = await metatypeRepo.findByID(metatypeID)
     if(result.isError) return Promise.resolve({} as MetatypeQL)
 
     return Promise.resolve({

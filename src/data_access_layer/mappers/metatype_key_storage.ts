@@ -120,6 +120,14 @@ export default class MetatypeKeyMapper extends PostgresStorage{
         return new Promise(resolve => resolve(retrieved))
     }
 
+    public async ListForMetatype(metatypeID: string): Promise<Result<MetatypeKey[]>> {
+        const retrieved = await super.rowsRaw(this.listStatement(metatypeID))
+
+        if(retrieved.isError) return Promise.resolve(Result.Pass(retrieved))
+
+        return Promise.resolve(Result.Success(plainToClass(MetatypeKey, retrieved.value)))
+    }
+
     // Update partially updates the MetatypeKey. This function will allow you to
     // rewrite foreign keys - this is by design. The storage layer is dumb, whatever
     // uses the storage layer should be what enforces user privileges etc.
@@ -247,6 +255,10 @@ export default class MetatypeKeyMapper extends PostgresStorage{
         return super.run(this.deleteStatement(id))
     }
 
+    public async BulkDelete(keys: MetatypeKey[], transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.run(this.bulkDeleteStatement(keys), transaction)
+    }
+
     public async Archive(id: string, userID: string): Promise<Result<boolean>> {
         const toDelete = await this.Retrieve(id);
 
@@ -305,6 +317,13 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
             text:`UPDATE metatype_keys SET archived = true, modified_by = $2  WHERE id = $1`,
             values: [metatypeKeyID, userID]
         }
+    }
+
+    private bulkDeleteStatement(keys: MetatypeKey[]): string {
+        const text = `DELETE FROM metatype_keys WHERE id IN(%L)`
+        const values = keys.filter(k => k.id).map(k => k.id as string)
+
+        return format(text, values)
     }
 
     private deleteStatement(metatypeKeyID: string): QueryConfig {

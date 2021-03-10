@@ -1,4 +1,3 @@
-import {MetatypeT, metatypesT, MetatypesT} from "../../types/metatypeT"
 import Result from "../../result"
 import PostgresStorage from "./postgresStorage";
 import {QueryConfig} from "pg";
@@ -72,7 +71,7 @@ export default class MetatypeRelationshipStorage extends PostgresStorage{
             return new Promise(resolve => resolve(Result.Success(cached)))
         }
 
-        const retrieved = await super.retrieve<MetatypeT>(MetatypeRelationshipStorage.retrieveStatement(id))
+        const retrieved = await super.retrieve<MetatypeRelationshipT>(MetatypeRelationshipStorage.retrieveStatement(id))
 
         if(!retrieved.isError) {
             // don't fail out on cache set failure, log and move on
@@ -136,8 +135,8 @@ export default class MetatypeRelationshipStorage extends PostgresStorage{
     // BatchUpdate accepts multiple MetatypeRelationship(s) payloads for full update
     public async BatchUpdate(input:any | MetatypeRelationshipsT): Promise<Result<MetatypeRelationshipsT>> {
         // Again, this callback runs after the payload is verified.
-        const onValidateSuccess = ( resolve: (r:any) => void): (c: MetatypesT)=> void => {
-            return async (ms:MetatypesT) => {
+        const onValidateSuccess = ( resolve: (r:any) => void): (c: MetatypeRelationshipsT)=> void => {
+            return async (ms:MetatypeRelationshipsT) => {
                 const queries: QueryConfig[] = [];
 
                 for(const i in ms) {
@@ -215,31 +214,31 @@ export default class MetatypeRelationshipStorage extends PostgresStorage{
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
-    private static createStatement(metatype: MetatypeT): QueryConfig {
+    private static createStatement(metatype: MetatypeRelationshipT): QueryConfig {
         return {
             text:`INSERT INTO metatype_relationships(container_id, id,name,description,created_by,modified_by) VALUES($1, $2, $3, $4, $5, $6)`,
             values: [metatype.container_id, metatype.id, metatype.name, metatype.description, metatype.created_by, metatype.modified_by]
         }
     }
 
-    private static retrieveStatement(metatypeID:string): QueryConfig {
+    private static retrieveStatement(relationshipID:string): QueryConfig {
         return {
             text:`SELECT * FROM metatype_relationships WHERE id = $1 AND NOT ARCHIVED`,
-            values: [metatypeID]
+            values: [relationshipID]
         }
     }
 
-    private static archiveStatement(metatypeID: string, userID: string): QueryConfig {
+    private static archiveStatement(relationshipID: string, userID: string): QueryConfig {
         return {
             text:`UPDATE metatype_relationships SET archived = true, modified_by = $2  WHERE id = $1`,
-            values: [metatypeID, userID]
+            values: [relationshipID, userID]
         }
     }
 
-    private static deleteStatement(metatypeID: string): QueryConfig {
+    private static deleteStatement(relationshipID: string): QueryConfig {
         return {
             text:`DELETE FROM metatype_relationships WHERE id = $1`,
-            values: [metatypeID]
+            values: [relationshipID]
         }
     }
 
@@ -257,10 +256,10 @@ export default class MetatypeRelationshipStorage extends PostgresStorage{
         }
     }
 
-    private static fullUpdateStatement(metatype: MetatypeT): QueryConfig {
+    private static fullUpdateStatement(relationship: MetatypeRelationshipT): QueryConfig {
         return {
             text:`UPDATE metatype_relationships SET name = $1, description = $2 WHERE id = $3`,
-            values: [metatype.name, metatype.description, metatype.id]
+            values: [relationship.name, relationship.description, relationship.id]
         }
     }
 

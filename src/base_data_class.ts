@@ -1,5 +1,8 @@
-import {IsDate, IsOptional, validateOrReject, ValidationError} from "class-validator";
+import {IsDate, IsOptional, validateOrReject} from "class-validator";
 import {Type} from "class-transformer";
+import 'reflect-metadata';
+import {Errors, ValidationError} from "io-ts";
+import Result from "./result"; // this is required for the class-transformer package we use
 
 export class BaseDataClass {
     @IsOptional()
@@ -25,5 +28,18 @@ export class BaseDataClass {
         } catch(errors) {
             return errors
         }
+    }
+
+    onDecodeError(resolve:((check: any) => void) ): ((e: Errors ) => void) {
+        return ((e: ValidationError[]) => {
+            const errorStrings: string[] = []
+            for(const error of e) {
+                const last = error.context[error.context.length - 1]
+
+                errorStrings.push(`Invalid Value '${error.value}' supplied for field '${last.key}'`)
+            }
+
+            resolve(Result.Failure(errorStrings.join(",")))
+        })
     }
 }

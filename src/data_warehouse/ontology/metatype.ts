@@ -1,7 +1,11 @@
 import {BaseDataClass} from "../../base_data_class";
 import {IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength} from "class-validator";
+import {Expose, Type} from "class-transformer";
 import MetatypeKey from "./metatype_key";
 import * as t from "io-ts";
+import Result from "../../result";
+import {pipe} from "fp-ts/pipeable";
+import {fold} from "fp-ts/Either";
 
 export default class Metatype extends BaseDataClass {
     @IsOptional()
@@ -24,7 +28,11 @@ export default class Metatype extends BaseDataClass {
     @IsString()
     description: string
 
+    // because we need to track removed keys in case of update, keys is made private
+    // and only accessible through a getter.
     keys: MetatypeKey[] = []
+    // for tracking removed keys for update
+    #removedKeys: MetatypeKey[] = []
 
     constructor(containerID: string, name: string, description: string) {
         super();
@@ -32,6 +40,44 @@ export default class Metatype extends BaseDataClass {
         this.container_id = containerID
         this.name = name
         this.description = description
+    }
+
+    get removedKeys() {
+        return this.#removedKeys
+    }
+
+    addKey(...keys: MetatypeKey[]) {
+        this.keys.push(...keys)
+    }
+
+    replaceKeys(keys: MetatypeKey[], removedKeys?: MetatypeKey[]) {
+        this.keys = keys
+        if(removedKeys) this.#removedKeys = removedKeys
+    }
+
+    // removeKeys will remove the first matching key, you must save the object
+    // for changes to take place
+    removeKey(...keys: MetatypeKey[] | string[]) {
+        for(const key of keys) {
+            if(typeof key === 'string') {
+                this.keys = this.keys.filter(k => {
+                    if(k.id !== key) {
+                        return false
+                    }
+                    this.#removedKeys.push(k)
+                }, this)
+            } else {
+                // if it's not a string, we can safely assume it's the type
+                this.keys = this.keys.filter(k => {
+                    // to avoid accidentally removing keys with no id check the name
+                    // as well, it's a unique identifier for the combo of metatype/keys
+                    if(k.id !== key.id && k.name !== key.name) {
+                        return false
+                    }
+                    this.#removedKeys.push(k)
+                }, this)
+            }
+        }
     }
 
     // CompileMetatypeKeys creates an io-ts runtime type decoder out of them.
@@ -92,6 +138,74 @@ export default class Metatype extends BaseDataClass {
 
         // First iteration of the core is built to accept any additional user properties, change to t.exact later on
         return t.intersection([t.type(output), t.partial(partialOutput)])
+    }
+
+    // validateAndTransformProperties will compile an io-ts type to run a provided
+    // input against. You use this method to insure that the provided input's structure
+    // and values match the expected structure and values defined in the ontology
+    // as well as run any validations that might be required on a given key
+    // this will return a valid payload with default values set if needed
+    async validateAndTransformProperties(input:any): Promise<Result<any>> {
+        // easiest way to create type for callback func
+        const compiledType = this.compileKeys();
+
+
+        // before we attempt to validate we need to insure that any keys with default values have that applied to the payload
+        for(const key of this.keys) {
+            if(key.property_name in input || key.default_value === null) continue;
+
+            switch(key.data_type) {
+                case "number": {
+                    input[key.property_name] = +key.default_value!
+                    break;
+                }
+
+                case "boolean": {
+                    input[key.property_name] = key.default_value === "true" || key.default_value === "t"
+                    break;
+                }
+
+                default: {
+                    input[key.property_name] = key.default_value
+                    break;
+                }
+            }
+        }
+
+        const onValidateSuccess = ( resolve: (r:any) => void): (c: any)=> void => {
+            return async (cts:any) => {
+                // now that we know the payload matches the shape of the data required, run additional validation
+                // such as regex pattern matching on string payloads
+                for(const key of this.keys) {
+                    if(key.validation === null || key.validation === undefined) continue;
+
+                    if(key.validation.min || key.validation.max) {
+                        if(key.validation.min !== undefined || input[key.property_name] < key.validation.min!) {
+                            resolve(Result.Failure(`validation of ${key.property_name} failed, less than min`))
+                        }
+
+                        if(key.validation.max !== undefined || input[key.property_name] > key.validation.max!) {
+                            resolve(Result.Failure(`validation of ${key.property_name} failed, more than max`))
+                        }
+                    }
+
+                    if(key.validation && key.validation.regex) {
+                        const matcher = new RegExp(key.validation.regex)
+
+                        if(!matcher.test(input[key.property_name])) {
+                            resolve(Result.Failure(`validation of ${key.property_name} failed, regex mismatch `))
+                        }
+                    }
+
+                }
+
+                resolve(Result.Success(cts))
+            }
+        };
+
+        return new Promise((resolve) => {
+            pipe(compiledType.decode(input), fold(this.onDecodeError(resolve), onValidateSuccess(resolve)))
+        })
     }
 
 }

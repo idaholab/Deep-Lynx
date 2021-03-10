@@ -7,6 +7,7 @@ import Config from "../config";
 import passport from "passport";
 import {SuperUser, UserT} from "../types/user_management/userT";
 import ContainerRepository from "../data_access_layer/repositories/container_respository";
+import MetatypeRepository from "../data_access_layer/repositories/metatype_repository";
 
 // PerformanceMiddleware uses the provided logger to display the time each route
 // took to process and send a response to the requester. This leverages node.js's
@@ -180,12 +181,42 @@ export function containerContext(): any {
         repo.findByID(req.params.containerID)
             .then(result => {
                if(result.isError) {
-                   resp.status(result.error?.errorCode!).json(result)
+                   result.asResponse(resp)
                    return
                }
 
                req.container = result.value
                next()
+            })
+            .catch(error => {
+                resp.status(500).json(error)
+                return
+            })
+    }
+}
+
+// metatypeContext will attempt to fetch a metatype by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "metatypeID"
+export function metatypeContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have a containerID, don't fail, just pass without action
+        if(!req.params.metatypeID) {
+            next()
+            return
+        }
+
+        const repo = new MetatypeRepository()
+
+        repo.findByID(req.params.metatypeID)
+            .then(result => {
+                if(result.isError) {
+                    resp.status(result.error?.errorCode!).json(result)
+                    return
+                }
+
+                req.metatype = result.value
+                next()
             })
             .catch(error => {
                 resp.status(500).json(error)

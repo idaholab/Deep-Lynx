@@ -32,7 +32,7 @@ export default class MetatypeKey extends BaseDataClass {
     data_type: string
 
     @IsBoolean()
-    required: boolean = false
+    required: boolean
 
     @IsObject()
     @IsOptional()
@@ -44,14 +44,16 @@ export default class MetatypeKey extends BaseDataClass {
 
     @IsArray()
     @IsOptional()
-    options?: string[]
+    options?: any[]
 
     @IsOptional()
     default_value?: string | boolean | number | any[]
 
-    constructor(name: string, description: string, propertyName: string, dataType: string) {
+    constructor(name: string, description: string, required:boolean, propertyName: string, dataType: string, options?: any[]) {
         super();
 
+        this.options = options
+        this.required = required
         this.name = name
         this.description = description
         this.property_name = propertyName

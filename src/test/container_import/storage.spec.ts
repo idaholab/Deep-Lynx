@@ -12,6 +12,7 @@ import MetatypeStorage from '../../data_access_layer/mappers/metatype_mapper';
 import MetatypeRelationshipPairStorage from '../../data_access_layer/mappers/metatype_relationship_pair_storage';
 import EdgeStorage from '../../data_access_layer/mappers/graph/edge_storage';
 import { UserT } from '../../types/user_management/userT';
+import MetatypeRepository from "../../data_access_layer/repositories/metatype_repository";
 
 describe('A Container Import', async() => {
     before(async function() {
@@ -71,7 +72,7 @@ describe('A Container Import', async() => {
         // using the Document class/metatype
         let containerImport = ContainerImport.Instance;
         let storage = ContainerMapper.Instance;
-        let metatypeStorage = MetatypeStorage.Instance;
+        let metatypeRepository = new MetatypeRepository()
         let nodeStorage = NodeStorage.Instance;
 
         let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
@@ -85,7 +86,7 @@ describe('A Container Import', async() => {
         expect(container.value).not.empty;
         containerID = container.value
 
-        let metatype = await metatypeStorage.List(containerID, 0, 1, 'Document')
+        let metatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Document").list(false)
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -107,7 +108,7 @@ describe('A Container Import', async() => {
         // using the Document class/metatype
         let containerImport = ContainerImport.Instance;
         let storage = ContainerMapper.Instance;
-        let metatypeStorage = MetatypeStorage.Instance;
+        let metatypeRepository = new MetatypeRepository()
         let nodeStorage = NodeStorage.Instance;
 
         let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
@@ -121,7 +122,7 @@ describe('A Container Import', async() => {
         expect(container.value).not.empty;
         containerID = container.value
 
-        let metatype = await metatypeStorage.List(containerID, 0, 1, 'Document')
+        let metatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Document").list(false)
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -143,7 +144,7 @@ describe('A Container Import', async() => {
         // using the Action class/metatype
         let containerImport = ContainerImport.Instance;
         let storage = ContainerMapper.Instance;
-        let metatypeStorage = MetatypeStorage.Instance;
+        let metatypeRepository = new MetatypeRepository()
         let relationshipStorage = MetatypeRelationshipPairStorage.Instance;
         let nodeStorage = NodeStorage.Instance;
         let edgeStorage = EdgeStorage.Instance;
@@ -160,7 +161,7 @@ describe('A Container Import', async() => {
         expect(container.value).not.empty;
         containerID = container.value
 
-        let metatype = await metatypeStorage.List(containerID, 0, 1, 'Action')
+        let metatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Action").list(false)
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -173,7 +174,7 @@ describe('A Container Import', async() => {
         expect(nodeCreate2.isError).false;
 
         // retrieve Action metatype ID
-        let actionMetatype = await metatypeStorage.List(containerID, 0, 1, 'Action')
+        let actionMetatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Action").list(false)
         let actionMetatypeID = actionMetatype.value[0].id!
 
         // retrieve relationship pair

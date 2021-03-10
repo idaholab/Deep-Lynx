@@ -13,7 +13,6 @@ import {NodeT} from "../../types/graph/nodeT";
 import {graphql} from "graphql";
 import resolversRoot from "../../data_query/resolvers";
 import {schema} from "../../data_query/schema"
-import { MetatypeT } from "../../types/metatypeT";
 import MetatypeRelationshipStorage from "../../data_access_layer/mappers/metatype_relationship_storage";
 import MetatypeRelationshipKeyStorage from "../../data_access_layer/mappers/metatype_relationship_key_storage";
 import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
@@ -28,7 +27,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
     var node: NodeT
     var edge: EdgeT
-    var metatype: MetatypeT
+    var metatype: Metatype
 
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {

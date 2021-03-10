@@ -2,14 +2,10 @@ import Result from "../../../result"
 import PostgresStorage from "../postgresStorage";
 import {PoolClient, QueryConfig} from "pg";
 import * as t from "io-ts";
-import {NodesT, NodeT, nodeT, nodesT} from "../../../types/graph/nodeT";
-import MetatypeKeyMapper from "../metatype_key_storage";
-import {CompileMetatypeKeys, MetatypeKeyT} from "../../../types/metatype_keyT";
-import {pipe} from "fp-ts/lib/pipeable";
-import {fold} from "fp-ts/lib/Either";
-import MetatypeMapper from "../metatype_mapper";
+import {NodesT, NodeT, nodesT} from "../../../types/graph/nodeT";
 import GraphStorage from "./graph_storage";
 import Logger from "../../../logger";
+import MetatypeRepository from "../../repositories/metatype_repository";
 
 /*
 * NodeStorage encompasses all logic dealing with the manipulation of the data nodes
@@ -52,6 +48,8 @@ export default class NodeStorage extends PostgresStorage{
     passed an updated node.
     */
     public async CreateOrUpdate(containerID: string, graphID: string, input: any | NodesT, importID?:string, preQueries?: QueryConfig[], postQueries?: QueryConfig[]): Promise<Result<NodesT>> {
+        const metatypeRepo = new MetatypeRepository()
+
         const onValidateSuccess = ( resolve: (r:any) => void): (n: NodesT)=> void => {
             return async(ns: NodesT) => {
                 const queries: QueryConfig[] = [];
@@ -61,30 +59,17 @@ export default class NodeStorage extends PostgresStorage{
                 // have to check metatype id because they would not have gotten
                 // here without one present, and validate properties will fail
                 // if no metatype is found
-                const keysByMetatypeID: {[key:string]: any} = [];
-
                 for(const n in ns) {
-                    // find and register metatype keys
-                    if(!keysByMetatypeID[ns[n].metatype_id]) {
-                        const m = await MetatypeMapper.Instance.Retrieve(ns[n].metatype_id);
-                        if(m.isError || m.value.container_id !== containerID) {
-                            resolve(Result.Failure(`unable to find metatype, or metatype does not belong to container`));
-                            return
-                        }
-
-                        const typeKeys = await MetatypeKeyMapper.Instance.List(m.value.id!);
-                        // allow creation of nodes for metatypes with no associated keys
-                        if(typeKeys.isError || typeKeys.value.length < 0) {
-                            resolve(Result.Failure(typeKeys.error?.error!));
-                            return
-                        }
-
-                        keysByMetatypeID[ns[n].metatype_id] = typeKeys.value
+                    const metatype = await metatypeRepo.findByID(ns[n].metatype_id)
+                    if(metatype.isError) {
+                        resolve(Result.Failure(`unable to retrieve node's metatype ${metatype.error?.error}`))
+                        return
                     }
+                    const check = metatype.value.keys
 
-                    const validPayload = await this.validateAndTransformNodeProperties((keysByMetatypeID[ns[n].metatype_id]), ns[n].properties);
+                    const validPayload = await metatype.value.validateAndTransformProperties(ns[n].properties);
                     if(validPayload.isError) {
-                        resolve(Result.Failure(`node's properties do no match declared metatype: ${ns[n].metatype_id}`));
+                        resolve(Result.Failure(`node's properties do no match declared metatype: ${ns[n].metatype_id} or validation failed: ${validPayload.error?.error}`));
                         return
                     }
 
@@ -95,13 +80,12 @@ export default class NodeStorage extends PostgresStorage{
 
                     // grab metatype_name if it was not supplied
                     if (typeof ns[n].metatype_name === 'undefined') {
-                        ns[n].metatype_name = (await MetatypeMapper.Instance.Retrieve(ns[n].metatype_id)).value.name;
+                        ns[n].metatype_name = metatype.value.name
                     }
 
 
                     ns[n].id = super.generateUUID();
                     queries.push(...NodeStorage.createOrUpdateStatement(ns[n]))
-
                 }
 
                 if(postQueries) queries.push(...postQueries);
@@ -124,6 +108,7 @@ export default class NodeStorage extends PostgresStorage{
    }
 
     public async CreateOrUpdateStatement(containerID: string, graphID: string, ns: NodesT, importID?: string, preQueries?: QueryConfig[], postQueries?: QueryConfig[]): Promise<Result<QueryConfig[]>> {
+                const metatypeRepo = new MetatypeRepository()
                 const queries: QueryConfig[] = [];
                 if(preQueries) queries.push(...preQueries);
 
@@ -131,27 +116,15 @@ export default class NodeStorage extends PostgresStorage{
                 // have to check metatype id because they would not have gotten
                 // here without one present, and validate properties will fail
                 // if no metatype is found
-                const keysByMetatypeID: {[key:string]: any} = [];
-
                 for(const n in ns) {
-                    // find and register metatype keys
-                    if(!keysByMetatypeID[ns[n].metatype_id]) {
-                        const m = await MetatypeMapper.Instance.Retrieve(ns[n].metatype_id);
-                        if(m.isError || m.value.container_id !== containerID) {
-                            return new Promise(resolve => resolve(Result.Failure(`unable to find metatype, or metatype does not belong to container`)));
-                        }
-
-                        const typeKeys = await MetatypeKeyMapper.Instance.List(m.value.id!);
-                        if(typeKeys.isError || typeKeys.value.length <= 0) {
-                            return new Promise(resolve => resolve(Result.Failure(typeKeys.error?.error!)));
-                        }
-
-                        keysByMetatypeID[ns[n].metatype_id] = typeKeys.value
+                    const metatype = await metatypeRepo.findByID(ns[n].metatype_id)
+                    if(metatype.isError) {
+                        return Promise.resolve(Result.Failure(`unable to retrieve node's metatype ${metatype.error?.error}`))
                     }
 
-                    const validPayload = await this.validateAndTransformNodeProperties((keysByMetatypeID[ns[n].metatype_id]), ns[n].properties);
+                    const validPayload = await metatype.value.validateAndTransformProperties(ns[n].properties);
                     if(validPayload.isError) {
-                        return new Promise(resolve => resolve(Result.Failure(`node's properties do no match declared metatype: ${ns[n].metatype_id}`)));
+                        return Promise.resolve(Result.Failure(`node's properties do no match declared metatype: ${ns[n].metatype_id} or validation failed: ${validPayload.error?.error}`));
                     }
 
                     // replace the properties with the validated and transformed payload
@@ -161,7 +134,7 @@ export default class NodeStorage extends PostgresStorage{
 
                     // grab metatype_name if it was not supplied
                     if (typeof ns[n].metatype_name === 'undefined') {
-                        ns[n].metatype_name = (await MetatypeMapper.Instance.Retrieve(ns[n].metatype_id)).value.name;
+                        ns[n].metatype_name = metatype.value.name
                     }
 
                     ns[n].id = super.generateUUID();
@@ -180,70 +153,6 @@ export default class NodeStorage extends PostgresStorage{
 
     public Archive(id: string): Promise<Result<boolean>> {
         return super.run(NodeStorage.archiveStatement(id))
-    }
-
-    private async validateAndTransformNodeProperties(typeKeys: MetatypeKeyT[], input:any): Promise<Result<any>> {
-        // easiest way to create type for callback func
-        const compiledType = CompileMetatypeKeys(typeKeys);
-
-
-        // before we attempt to validate we need to insure that any keys with default values have that applied to the payload
-        for(const key of typeKeys) {
-            if(key.property_name in input || key.default_value === null) continue;
-
-            switch(key.data_type) {
-                case "number": {
-                    input[key.property_name] = +key.default_value!
-                    break;
-                }
-
-                case "boolean": {
-                    input[key.property_name] = key.default_value === "true" || key.default_value === "t"
-                    break;
-                }
-
-                default: {
-                    input[key.property_name] = key.default_value
-                    break;
-                }
-            }
-        }
-
-        const onValidateSuccess = ( resolve: (r:any) => void): (c: any)=> void => {
-            return async (cts:any) => {
-                // now that we know the payload matches the shape of the data required, run additional validation
-                // such as regex pattern matching on string payloads
-                for(const key of typeKeys) {
-                    if(key.validation === null || key.validation === undefined) continue;
-
-                    if(key.validation.min || key.validation.max) {
-                        if(key.validation.min !== undefined || input[key.property_name] < key.validation.min!) {
-                            resolve(Result.Failure(`validation of ${key.property_name} failed, less than min`))
-                        }
-
-                        if(key.validation.max !== undefined || input[key.property_name] > key.validation.max!) {
-                            resolve(Result.Failure(`validation of ${key.property_name} failed, more than max`))
-                        }
-                    }
-
-                    if(key.validation && key.validation.regex) {
-                        const matcher = new RegExp(key.validation.regex)
-
-                        if(!matcher.test(input[key.property_name])) {
-                            resolve(Result.Failure(`validation of ${key.property_name} failed, regex mismatch `))
-                        }
-                    }
-
-                }
-
-
-                resolve(Result.Success(cts))
-            }
-        };
-
-        return new Promise((resolve) => {
-            pipe(compiledType.decode(input), fold(this.OnDecodeError(resolve), onValidateSuccess(resolve)))
-        })
     }
 
     public async Retrieve(id: string, client?:PoolClient): Promise<Result<NodeT>> {

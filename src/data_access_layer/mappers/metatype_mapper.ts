@@ -8,7 +8,9 @@ const format = require('pg-format')
 
 /*
 * MetatypeMapper encompasses all logic dealing with the manipulation of the Metatype
-* class in a data storage layer.
+* class in a data storage layer. Create and update functions return
+* classes as we have no surefire way of associating what return rows belong to
+* what original classes, and it would be dangerous to make assumptions
 */
 export default class MetatypeMapper extends PostgresStorage{
     public static tableName = "metatypes";
@@ -44,28 +46,6 @@ export default class MetatypeMapper extends PostgresStorage{
 
         if(result.isError) return Promise.resolve(Result.Pass(result))
         return Promise.resolve(Result.Success(plainToClass(Metatype, result.value)))
-    }
-
-    public async List(containerID: string, offset: number, limit:number, name?:string): Promise<Result<Metatype[]>> {
-        const returns: object[] = []
-        if(name){
-            const results = await super.rowsRaw(this.searchStatement(containerID, name))
-            if(results.isError) return Promise.resolve(Result.Pass(results))
-
-            returns.push(...results.value)
-        } else if(limit === -1) {
-            const results = await super.rowsRaw(this.listAllStatement(containerID))
-            if(results.isError) return Promise.resolve(Result.Pass(results))
-
-            returns.push(...results.value)
-        } else {
-            const results = await super.rowsRaw(this.listStatement(containerID, offset, limit))
-            if(results.isError) return Promise.resolve(Result.Pass(results))
-
-            returns.push(...results.value)
-        }
-
-        return Promise.resolve(Result.Success(plainToClass(Metatype, returns)))
     }
 
     public async Update(userID:string, m: Metatype, transaction?: PoolClient): Promise<Result<Metatype>> {
@@ -133,27 +113,6 @@ export default class MetatypeMapper extends PostgresStorage{
         return {
             text:`DELETE FROM metatypes WHERE id = $1`,
             values: [metatypeID]
-        }
-    }
-
-    private listStatement(containerID:string, offset:number, limit:number): QueryConfig {
-        return {
-            text: `SELECT * FROM metatypes WHERE container_id = $1 AND NOT archived OFFSET $2 LIMIT $3`,
-            values: [containerID, offset, limit]
-        }
-    }
-
-    private listAllStatement(containerID:string): QueryConfig {
-        return {
-            text: `SELECT * FROM metatypes WHERE container_id = $1 AND NOT archived`,
-            values: [containerID]
-        }
-    }
-
-    private searchStatement(containerID: string, name: string): QueryConfig {
-        return {
-            text: `SELECT * FROM metatypes WHERE container_id = $1 AND NOT archived AND name LIKE '%${name}%'`,
-            values: [containerID],
         }
     }
 

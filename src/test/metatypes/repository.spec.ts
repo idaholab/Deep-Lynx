@@ -50,7 +50,7 @@ describe('A Metatype Repository', async() => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 
-    it('can be saved', async()=> {
+    it('can save a Metatype', async()=> {
         const repository = new MetatypeRepository()
         const metatype = new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric())
 
@@ -73,11 +73,11 @@ describe('A Metatype Repository', async() => {
         return repository.delete(results.value)
     });
 
-    it('can be saved with keys', async()=> {
+    it('can save a Metatype with keys', async()=> {
         const repository = new MetatypeRepository()
         const metatype = new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric())
-        const key = new MetatypeKey(faker.name.findName(), faker.random.alphaNumeric(),"test_property", "string")
-        metatype.keys.push(key)
+        const key = new MetatypeKey(faker.name.findName(), faker.random.alphaNumeric(),true, "test_property", "string")
+        metatype.addKey(key)
 
         let results = await repository.save(user, metatype)
         expect(results.isError).false
@@ -98,11 +98,24 @@ describe('A Metatype Repository', async() => {
         expect(results.value.id).not.undefined
         expect(results.value.name).eq(updatedName)
         expect(results.value.description).eq(updatedDescription)
+        expect(results.value.keys[0].name).eq(updatedName)
+        expect(results.value.keys[0].description).eq(updatedDescription)
+
+        // now remove the keys and save again
+        results.value.removeKey(results.value.keys[0])
+        expect(results.value.keys.length).eq(0)
+
+        results = await repository.save(user, results.value)
+        expect(results.isError).false
+        expect(results.value.id).not.undefined
+        expect(results.value.name).eq(updatedName)
+        expect(results.value.description).eq(updatedDescription)
+        expect(results.value.keys.length).eq(0)
 
         return repository.delete(results.value)
     });
 
-    it('can be bulk saved', async()=> {
+    it('can save multiple Metatypes', async()=> {
         const repository = new MetatypeRepository()
         const metatype1 = new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric())
         const metatype2 = new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric())
@@ -134,15 +147,15 @@ describe('A Metatype Repository', async() => {
         return Promise.resolve()
     });
 
-    it('can be bulk saved with keys', async()=> {
+    it('can save multiple Metatypes with keys', async()=> {
         const repository = new MetatypeRepository()
         const metatype1 = new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric())
         const metatype2 = new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric())
 
         // we'll use the same key for ease of use
-        const key = new MetatypeKey(faker.name.findName(), faker.random.alphaNumeric(),"test_property", "string")
-        metatype1.keys.push(key)
-        metatype2.keys.push(key)
+        const key = new MetatypeKey(faker.name.findName(), faker.random.alphaNumeric(),true, "test_property", "string")
+        metatype1.addKey(key)
+        metatype2.addKey(key)
 
         let results = await repository.bulkSave(user, [metatype1, metatype2])
         expect(results.isError).false
@@ -183,7 +196,7 @@ describe('A Metatype Repository', async() => {
         return Promise.resolve()
     });
 
-    it('can find by id', async()=> {
+    it('can find a Metatype by id', async()=> {
         const repository = new MetatypeRepository()
         const metatype = new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric())
 
@@ -198,7 +211,7 @@ describe('A Metatype Repository', async() => {
         return repository.delete(results.value)
     });
 
-    it('can archive a metatype', async()=> {
+    it('can archive a Metatype', async()=> {
         const repository = new MetatypeRepository()
         const metatype = new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric())
 
@@ -212,7 +225,7 @@ describe('A Metatype Repository', async() => {
         return repository.delete(results.value)
     });
 
-    it('can query and list results', async()=> {
+    it('can query and list Metatypes', async()=> {
         const repository = new MetatypeRepository()
         const metatype1 = new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric())
         const metatype2 = new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric())

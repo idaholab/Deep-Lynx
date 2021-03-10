@@ -87,22 +87,6 @@ describe('A Metatype Mapper', async() => {
         return mapper.PermanentlyDelete(metatype.value.id!)
     });
 
-    it('can be listed from mapper', async()=> {
-        let mapper = MetatypeMapper.Instance;
-
-        const metatype = await mapper.Create( "test suite",
-            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
-
-        expect(metatype.isError).false;
-        expect(metatype.value).not.empty;
-
-        let retrieved = await mapper.List(containerID, 0, 100);
-        expect(retrieved.isError).false;
-        expect(retrieved.value).not.empty;
-
-        return mapper.PermanentlyDelete(metatype.value.id!)
-    });
-
     it('can be updated in mapper', async()=> {
         let mapper = MetatypeMapper.Instance;
 

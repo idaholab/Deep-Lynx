@@ -1,4 +1,6 @@
 import Logger from "./logger";
+import express from "express";
+import {serialize} from "class-transformer";
 
 // Result was created to solve the problem of constantly throwing and catching
 // errors in the node.js promise ecosystem. Instead of throwing an error, we
@@ -30,6 +32,21 @@ export default class Result<TSuccess> {
 
     public static Pass(res:Result<any>) {
         return res;
+    }
+
+    // this is a helper method that allows use to utilize the class-transformer
+    // when working with express.js returns
+    public asResponse(resp: express.Response, code?: number) {
+        if(this.isError) {
+            resp.status((this.error?.errorCode) ? this.error.errorCode : 500)
+        } else if(code) {
+            resp.status(code)
+        } else {
+            resp.status(200)
+        }
+
+        resp.setHeader('Content-Type', 'application/json')
+        resp.send(serialize(this))
     }
 
 

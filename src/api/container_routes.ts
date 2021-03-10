@@ -36,12 +36,7 @@ export default class ContainerRoutes {
     private static createContainer(req: Request, res: Response, next: NextFunction) {
         repository.save(req.user as UserT, plainToClass(Container, req.body as object))
             .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(201).json(result)
+                result.asResponse(res)
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
@@ -56,12 +51,7 @@ export default class ContainerRoutes {
 
         repository.bulkSave(req.user as UserT, containers)
             .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(201).json(result)
+                result.asResponse(res)
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
@@ -70,7 +60,8 @@ export default class ContainerRoutes {
     private static retrieveContainer(req: Request, res: Response, next: NextFunction) {
         // the middleware will have fetched the container for us, no need to refecth
         if(req.container) {
-            res.status(200).json(Result.Success(req.container))
+            const result = Result.Success(req.container)
+            result.asResponse(res)
             next()
             return
         }
@@ -82,12 +73,7 @@ export default class ContainerRoutes {
     private static async listContainers(req: Request, res: Response, next: NextFunction) {
         repository.listForUser(req.user as UserT)
             .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(200).json(result)
+                result.asResponse(res)
             })
             .catch((err) => res.status(404).send(err))
             .finally(() => next())
@@ -99,11 +85,7 @@ export default class ContainerRoutes {
 
         repository.save(req.user as UserT, container)
             .then((updated) => {
-                if (updated.isError && updated.error) {
-                    res.status(updated.error.errorCode).json(updated);
-                    return
-                }
-                res.status(200).json(updated)
+                updated.asResponse(res)
             })
             .catch((updated) => res.status(500).send(updated))
     }
@@ -117,22 +99,14 @@ export default class ContainerRoutes {
         if(req.query.permanent === 'true') {
             repository.delete(req.container!)
                 .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-                    res.sendStatus(200)
+                    result.asResponse(res)
                 })
                 .catch((err) => res.status(500).send(err))
                 .finally(() => next())
         } else {
             repository.archive(user, req.container!)
                 .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-                    res.sendStatus(200)
+                    result.asResponse(res)
                 })
                 .catch((err) => res.status(500).send(err))
                 .finally(() => next())
@@ -170,12 +144,7 @@ export default class ContainerRoutes {
         busboy.on('finish', () => {
             containerImport.ImportOntology(user, input as ContainerImportT, fileBuffer, req.query.dryrun === 'true', false, '')
                 .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-
-                    res.status(201).json(result)
+                    result.asResponse(res)
                 })
                 .catch((err) => res.status(500).send(err))
                 .finally(() => next())
@@ -215,12 +184,7 @@ export default class ContainerRoutes {
         busboy.on('finish', () => {
             containerImport.ImportOntology(user, input as ContainerImportT, fileBuffer, req.query.dryrun === 'false', true, req.params.containerID)
                 .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-
-                    res.status(201).json(result)
+                    result.asResponse(res)
                 })
                 .catch((err) => res.status(500).send(err))
                 .finally(() => next())
@@ -238,12 +202,7 @@ export default class ContainerRoutes {
 
         req.container.setPermissions()
             .then(set => {
-                if(set.isError) {
-                    res.sendStatus(500).json(set)
-                    return
-                }
-
-                res.status(200).json(set)
+                set.asResponse(res)
             })
             .catch((err) => res.status(500).send(err))
     }

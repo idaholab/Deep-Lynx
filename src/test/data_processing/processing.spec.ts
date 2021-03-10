@@ -11,7 +11,6 @@ import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_storage";
 import {MetatypeKeyT} from "../../types/metatype_keyT";
 import {objectToShapeHash} from "../../utilities";
-import {MetatypeT} from "../../types/metatypeT";
 import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
 import ImportStorage from "../../data_access_layer/mappers/import/import_storage";
 import DataStagingStorage from "../../data_access_layer/mappers/import/data_staging_storage";
@@ -35,7 +34,7 @@ describe('A Data Processor', async() => {
     var typeMapping: TypeMappingT | undefined = undefined
     var dataSource: DataSourceT | undefined = undefined
     var dataImportID: string = ""
-    var resultMetatypes: MetatypeT[] = []
+    var resultMetatypes: Metatype[] = []
     var resultMetatypeRelationships: MetatypeRelationshipT[] = []
 
     var carKeys: MetatypeKeyT[] = []

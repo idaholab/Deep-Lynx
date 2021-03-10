@@ -12,7 +12,6 @@ import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_stor
 import {MetatypeKeyT} from "../../types/metatype_keyT";
 import {ApplyTransformation, ValidTransformationCondition} from "../../data_processing/type_mapping";
 import {objectToShapeHash} from "../../utilities";
-import {MetatypeT} from "../../types/metatypeT";
 import {NodeT} from "../../types/graph/nodeT";
 import NodeStorage from "../../data_access_layer/mappers/graph/node_storage";
 import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
@@ -35,7 +34,7 @@ describe('A Data Type Mapping can', async() => {
     var typeMappingID: string = ""
     var typeMapping: TypeMappingT | undefined = undefined
     var dataSourceID: string = ""
-    var resultMetatypes: MetatypeT[] = []
+    var resultMetatypes: Metatype[] = []
     var resultMetatypeRelationships: MetatypeRelationshipT[] = []
     var data: DataStagingT | undefined = undefined
 

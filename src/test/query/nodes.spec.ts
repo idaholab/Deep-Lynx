@@ -13,7 +13,6 @@ import {NodeT} from "../../types/graph/nodeT";
 import {graphql} from "graphql";
 import resolversRoot from "../../data_query/resolvers";
 import {schema} from "../../data_query/schema"
-import { MetatypeT } from "../../types/metatypeT";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
@@ -21,7 +20,7 @@ import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 describe('Using a GraphQL Query on nodes we', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
     var node: NodeT
-    var metatype: MetatypeT
+    var metatype: Metatype
 
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {

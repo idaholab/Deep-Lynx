@@ -7,9 +7,9 @@ import {ExportT} from "../types/export/exportT";
 import Result from "../result";
 import GremlinExportStorage from "../data_access_layer/mappers/export/gremlin_export_storage";
 import Logger from "../logger"
-import MetatypeStorage from "../data_access_layer/mappers/metatype_mapper";
 import MetatypeRelationshipPairStorage from "../data_access_layer/mappers/metatype_relationship_pair_storage";
 import NodeRSA from "node-rsa"
+import MetatypeRepository from "../data_access_layer/repositories/metatype_repository";
 
 
 // The Gremlin implementation of the Exporter interface allows the application to export
@@ -111,6 +111,7 @@ export class GremlinImpl implements Exporter {
     }
 
     private async export(){
+        const metatypeRepo = new MetatypeRepository()
         Logger.debug(`restarting gremlin export ${this.exportT.id}`);
         const gremlinExportStorage = GremlinExportStorage.Instance;
 
@@ -147,7 +148,7 @@ export class GremlinImpl implements Exporter {
                 // double check it hasn't been added
                 if(!node.gremlin_node_id || node.gremlin_node_id !== "") continue
 
-                const metatype = await MetatypeStorage.Instance.Retrieve(node.metatype_id);
+                const metatype = await metatypeRepo.findByID(node.metatype_id);
                 if(metatype.isError){
                     Logger.error(`gremlin export node failed: ${metatype.error?.error}`);
                     continue

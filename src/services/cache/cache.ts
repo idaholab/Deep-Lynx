@@ -48,9 +48,14 @@ export class MemoryCacheImpl implements CacheInterface {
     get<T>(key: string): Promise<T | undefined> {
         const value = this._cache.get(key)
 
-        if(undefined) return new Promise(resolve => resolve(undefined))
+        if(!value) return new Promise(resolve => resolve(undefined))
 
-        return new Promise(resolve => resolve(value as T))
+        try {
+            const parsed = JSON.parse(value)
+            return new Promise(resolve => resolve(parsed as T))
+        } catch {
+            return new Promise(resolve => resolve(value as T))
+        }
     }
 
     set(key: string, val: any, ttl?: number): Promise<boolean> {
