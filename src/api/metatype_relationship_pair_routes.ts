@@ -1,10 +1,10 @@
 import {Request, Response, NextFunction, Application} from "express"
-import MetatypeRelationshipPairStorage from "../data_access_layer/mappers/metatype_relationship_pair_storage";
+import MetatypeRelationshipPairMapper from "../data_access_layer/mappers/metatype_relationship_pair_mapper";
 import {authInContainer} from "./middleware";
 import {UserT} from "../types/user_management/userT";
 import MetatypeRelationshipPairFilter from "../data_access_layer/mappers/metatype_relationship_pair_filter";
 
-const storage = MetatypeRelationshipPairStorage.Instance;
+const storage = MetatypeRelationshipPairMapper.Instance;
 
 // This contains all routes for Metatype Relationship Pair management.
 export default class MetatypeRelationshipPairRoutes {

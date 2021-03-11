@@ -1,0 +1,43 @@
+/* tslint:disable */
+import {expect} from 'chai'
+import * as faker from "faker";
+import Logger from "../../logger";
+import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
+import Container from "../../data_warehouse/ontology/container";
+import {plainToClass} from "class-transformer";
+import MetatypeRelationshipPair from "../../data_warehouse/ontology/metatype_relationship_pair";
+
+describe('A Metatype Relationship Pair should', async() => {
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
+
+    before(async function() {
+        if (process.env.CORE_DB_CONNECTION_STRING === "") {
+            Logger.debug("skipping metatype tests, no mapper layer");
+            this.skip()
+        }
+        await PostgresAdapter.Instance.init();
+        let mapper = ContainerMapper.Instance;
+
+        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
+
+        expect(container.isError).false;
+        expect(container.value.id).not.null
+        containerID = container.value.id!;
+
+        return Promise.resolve()
+    });
+
+    after(async function() {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
+
+    it('be able to assign metatype ids on plainToClass transformation', async()=> {
+        const check = plainToClass(MetatypeRelationshipPair, {destination_metatype_id: "1", origin_metatype_id: "1", relationship_id: "1"})
+        expect(check.originMetatype).not.undefined
+        expect(check.destinationMetatype).not.undefined
+        expect(check.relationship).not.undefined
+
+        return Promise.resolve()
+    })
+})

@@ -9,7 +9,7 @@ import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
 import {NodeT} from "../../../types/graph/nodeT";
 import NodeStorage from "./node_storage";
-import MetatypeRelationshipPairStorage from "../metatype_relationship_pair_storage";
+import MetatypeRelationshipPairMapper from "../metatype_relationship_pair_mapper";
 import {MetatypeRelationshipPairT} from "../../../types/metatype_relationship_pairT";
 import GraphStorage from "./graph_storage";
 import Logger from "../../../logger";
@@ -72,7 +72,7 @@ export default class EdgeStorage extends PostgresStorage{
                for(const e in es) {
                    // find and register metatype relationship keys
                    // fetch the relationship itself first
-                   const metatypeRelationshipPair = await MetatypeRelationshipPairStorage.Instance.Retrieve(es[e].relationship_pair_id)
+                   const metatypeRelationshipPair = await MetatypeRelationshipPairMapper.Instance.Retrieve(es[e].relationship_pair_id)
                    if(metatypeRelationshipPair.isError) {
                        resolve(Result.Pass(metatypeRelationshipPair))
                        return
@@ -134,7 +134,7 @@ export default class EdgeStorage extends PostgresStorage{
 
 
 
-                   const pair = await MetatypeRelationshipPairStorage.Instance.RetrieveByMetatypesAndRelationship(origin.metatype_id, destination.metatype_id, es[e].relationship_pair_id);
+                   const pair = await MetatypeRelationshipPairMapper.Instance.RetrieveByMetatypesAndRelationship(origin.metatype_id, destination.metatype_id, es[e].relationship_pair_id);
                    if(pair.isError) {
                        resolve(Result.Failure(`unable to verify the validity of the proposed relationship between nodes`));
                        return
@@ -202,7 +202,7 @@ export default class EdgeStorage extends PostgresStorage{
                 // find and register metatype relationship keys
 
                 // fetch the relationship itself first
-                const metatypeRelationshipPair = await MetatypeRelationshipPairStorage.Instance.Retrieve(es[e].relationship_pair_id)
+                const metatypeRelationshipPair = await MetatypeRelationshipPairMapper.Instance.Retrieve(es[e].relationship_pair_id)
                 if(metatypeRelationshipPair.isError) {
                     return new Promise(resolve => resolve(Result.Pass(metatypeRelationshipPair)))
                 }
@@ -256,7 +256,7 @@ export default class EdgeStorage extends PostgresStorage{
 
 
 
-                const pair = await MetatypeRelationshipPairStorage.Instance.RetrieveByMetatypesAndRelationship(origin.metatype_id, destination.metatype_id, es[e].relationship_pair_id);
+                const pair = await MetatypeRelationshipPairMapper.Instance.RetrieveByMetatypesAndRelationship(origin.metatype_id, destination.metatype_id, es[e].relationship_pair_id);
                 if(pair.isError) {
                     return new Promise(resolve => resolve(Result.Failure(`unable to verify the validity of the proposed relationship between nodes`)));
                 }

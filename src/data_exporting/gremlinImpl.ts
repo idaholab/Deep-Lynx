@@ -7,7 +7,7 @@ import {ExportT} from "../types/export/exportT";
 import Result from "../result";
 import GremlinExportStorage from "../data_access_layer/mappers/export/gremlin_export_storage";
 import Logger from "../logger"
-import MetatypeRelationshipPairStorage from "../data_access_layer/mappers/metatype_relationship_pair_storage";
+import MetatypeRelationshipPairMapper from "../data_access_layer/mappers/metatype_relationship_pair_mapper";
 import NodeRSA from "node-rsa"
 import MetatypeRepository from "../data_access_layer/repositories/metatype_repository";
 
@@ -209,7 +209,7 @@ export class GremlinImpl implements Exporter {
 
                 const destination = await gremlinExportStorage.RetrieveNode(edge.destination_node_id);
                 const origin = await gremlinExportStorage.RetrieveNode(edge.origin_node_id!);
-                const pair = await MetatypeRelationshipPairStorage.Instance.Retrieve(edge.relationship_pair_id);
+                const pair = await MetatypeRelationshipPairMapper.Instance.Retrieve(edge.relationship_pair_id);
 
                 if(destination.isError || origin.isError || pair.isError) {
                     Logger.error(`gremlin export failing: ${destination.error?.error}/${origin.error?.error}`);

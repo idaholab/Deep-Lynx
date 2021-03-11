@@ -9,7 +9,7 @@ import fs from 'fs'
 import ContainerMapper from '../../data_access_layer/mappers/container_mapper';
 import NodeStorage from '../../data_access_layer/mappers/graph/node_storage';
 import MetatypeStorage from '../../data_access_layer/mappers/metatype_mapper';
-import MetatypeRelationshipPairStorage from '../../data_access_layer/mappers/metatype_relationship_pair_storage';
+import MetatypeRelationshipPairMapper from '../../data_access_layer/mappers/metatype_relationship_pair_mapper';
 import EdgeStorage from '../../data_access_layer/mappers/graph/edge_storage';
 import { UserT } from '../../types/user_management/userT';
 import MetatypeRepository from "../../data_access_layer/repositories/metatype_repository";
@@ -145,7 +145,7 @@ describe('A Container Import', async() => {
         let containerImport = ContainerImport.Instance;
         let storage = ContainerMapper.Instance;
         let metatypeRepository = new MetatypeRepository()
-        let relationshipStorage = MetatypeRelationshipPairStorage.Instance;
+        let relationshipStorage = MetatypeRelationshipPairMapper.Instance;
         let nodeStorage = NodeStorage.Instance;
         let edgeStorage = EdgeStorage.Instance;
 

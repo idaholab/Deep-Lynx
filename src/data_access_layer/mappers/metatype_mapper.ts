@@ -35,7 +35,7 @@ export default class MetatypeMapper extends PostgresStorage{
     }
 
     public async BulkCreate(userID: string, m: Metatype[], transaction?: PoolClient): Promise<Result<Metatype[]>> {
-        const r = await super.runRaw(this.bulkCreateStatement(userID, m), transaction)
+        const r = await super.runRaw(this.createStatement(userID, ...m), transaction)
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
         return Promise.resolve(Result.Success(plainToClass(Metatype, r.value)))
@@ -49,7 +49,7 @@ export default class MetatypeMapper extends PostgresStorage{
     }
 
     public async Update(userID:string, m: Metatype, transaction?: PoolClient): Promise<Result<Metatype>> {
-        const r = await super.runRaw(this.fullUpdateStatement(m, userID), transaction)
+        const r = await super.runRaw(this.fullUpdateStatement(userID, m), transaction)
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
         const resultMetatypes = plainToClass(Metatype, r.value)
@@ -58,7 +58,7 @@ export default class MetatypeMapper extends PostgresStorage{
     }
 
     public async BulkUpdate(userID:string, m: Metatype[], transaction?: PoolClient): Promise<Result<Metatype[]>> {
-        const r = await super.runRaw(this.fullBulkUpdateStatement(m, userID), transaction)
+        const r = await super.runRaw(this.fullUpdateStatement(userID, ...m), transaction)
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
         return Promise.resolve(Result.Success(plainToClass(Metatype, r.value)))
@@ -76,15 +76,7 @@ export default class MetatypeMapper extends PostgresStorage{
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
-    private createStatement(userID: string, metatype: Metatype): QueryConfig {
-        return {
-            text:`INSERT INTO metatypes(container_id, id,name,description, created_by, modified_by) VALUES($1, $2, $3, $4, $5, $6) RETURNING *`,
-            values: [metatype.container_id, uuid.v4(), metatype.name, metatype.description, userID, userID]
-        }
-    }
-
-
-    private bulkCreateStatement(userID: string, metatypes: Metatype[]): string {
+    private createStatement(userID: string, ...metatypes: Metatype[]): string {
         const text= `INSERT INTO metatypes(container_id, id,name,description, created_by, modified_by) VALUES %L RETURNING *`
         const values = metatypes.map(metatype => [metatype.container_id, uuid.v4(), metatype.name, metatype.description, userID, userID])
 
@@ -112,14 +104,7 @@ export default class MetatypeMapper extends PostgresStorage{
         }
     }
 
-    private fullUpdateStatement(metatype: Metatype, userID: string): QueryConfig {
-        return {
-            text:`UPDATE metatypes SET name = $1, description = $2, modified_by = $3, modified_at = NOW() WHERE id = $4 RETURNING *`,
-            values: [metatype.name, metatype.description, userID, metatype.id]
-        }
-    }
-
-    private fullBulkUpdateStatement(metatypes: Metatype[], userID: string): string{
+    private fullUpdateStatement(userID: string, ...metatypes: Metatype[]): string{
         const text = `UPDATE metatypes AS m SET
                         name = u.name,
                         description = u.description,

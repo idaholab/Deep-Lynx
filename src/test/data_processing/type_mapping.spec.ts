@@ -18,9 +18,8 @@ import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
 import {DataStagingT} from "../../types/import/dataStagingT";
 import ImportStorage from "../../data_access_layer/mappers/import/import_storage";
 import DataStagingStorage from "../../data_access_layer/mappers/import/data_staging_storage";
-import {MetatypeRelationshipT} from "../../types/metatype_relationshipT";
 import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
-import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
+import MetatypeRelationshipPairMapper from "../../data_access_layer/mappers/metatype_relationship_pair_mapper";
 import {MetatypeRelationshipPairT} from "../../types/metatype_relationship_pairT";
 import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
 import {EdgeT} from "../../types/graph/edgeT";
@@ -36,7 +35,7 @@ describe('A Data Type Mapping can', async() => {
     var typeMapping: TypeMappingT | undefined = undefined
     var dataSourceID: string = ""
     var resultMetatypes: Metatype[] = []
-    var resultMetatypeRelationships: MetatypeRelationshipT[] = []
+    var resultMetatypeRelationships: MetatypeRelationship[] = []
     var data: DataStagingT | undefined = undefined
 
     var carKeys: MetatypeKeyT[] = []
@@ -163,7 +162,7 @@ describe('A Data Type Mapping can', async() => {
 
         resultMetatypeRelationships = metatypeRelationships.value;
 
-        let pairs = await MetatypeRelationshipPairStorage.Instance.Create(containerID, "test suite", {
+        let pairs = await MetatypeRelationshipPairMapper.Instance.Create(containerID, "test suite", {
             "name": "owns",
             "description": "owns another entity",
             "origin_metatype_id": resultMetatypes.find(m => m.name === "Maintenance")!.id,
@@ -790,15 +789,6 @@ describe('A Data Type Mapping can', async() => {
     })
 
 });
-
-
-
-const test_metatype_relationships: MetatypeRelationshipT[] = [
-    {
-    name: "parent",
-    description: "item is another's parent"
-    }
-];
 
 const car_metatype_keys: MetatypeKeyT[] = [{
     name: "id",

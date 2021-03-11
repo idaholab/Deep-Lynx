@@ -2,14 +2,13 @@ import axios, { AxiosRequestConfig } from "axios";
 import ContainerStorage from "../container_mapper";
 import MetatypeRelationshipMapper from "../metatype_relationship_mapper"
 import MetatypeStorage from "../metatype_mapper"
-import MetatypeRelationshipPairStorage from "../metatype_relationship_pair_storage"
+import MetatypeRelationshipPairMapper from "../metatype_relationship_pair_mapper"
 import MetatypeKeyMapper from "../metatype_key_mapper"
 import { UserT } from "../../../types/user_management/userT";
 import Result from "../../../result";
 import { ContainerImportT } from "../../../types/import/containerImportT"
 import { MetatypeRelationshipPairT } from "../../../types/metatype_relationship_pairT";
 import { MetatypeKeyT, MetatypeKeysT } from "../../../types/metatype_keyT";
-import { MetatypeRelationshipT } from "../../../types/metatype_relationshipT";
 import NodeStorage from "../graph/node_storage"
 import EdgeStorage from "../graph/edge_storage"
 import Logger from "../../../logger"
@@ -24,7 +23,7 @@ const convert = require('xml-js');
 const containerStorage = ContainerStorage.Instance;
 const metatypeRelationshipStorage = MetatypeRelationshipMapper.Instance;
 const metatypeStorage = MetatypeStorage.Instance;
-const metatypeRelationshipPairStorage = MetatypeRelationshipPairStorage.Instance;
+const metatypeRelationshipPairStorage = MetatypeRelationshipPairMapper.Instance;
 const metatypeKeyStorage = MetatypeKeyMapper.Instance;
 const nodeStorage = NodeStorage.Instance;
 const edgeStorage = EdgeStorage.Instance;
@@ -498,7 +497,7 @@ export default class ContainerImport {
           relationshipPromises.push(metatypeRelationshipStorage.BulkUpdate(user.id!, relationshipUpdates))
         }
 
-        const relationshipResult: Result<MetatypeRelationshipT[]>[] = await Promise.all(relationshipPromises)
+        const relationshipResult: Result<MetatypeRelationship[]>[] = await Promise.all(relationshipPromises)
 
         // loop through promise results ensuring no errors and adding database IDs
         relationshipResult.forEach(async resultEntry => {

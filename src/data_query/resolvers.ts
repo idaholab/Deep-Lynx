@@ -16,7 +16,7 @@ import {
     PropertyQL
 } from "./types";
 import {NodeT} from "../types/graph/nodeT";
-import MetatypeRelationshipPairStorage from "../data_access_layer/mappers/metatype_relationship_pair_storage";
+import MetatypeRelationshipPairMapper from "../data_access_layer/mappers/metatype_relationship_pair_mapper";
 import Logger from "../logger";
 import NodeFilter from "../data_access_layer/mappers/graph/node_filter";
 import {EdgeT} from "../types/graph/edgeT";
@@ -283,7 +283,7 @@ async function MetatypeResolver(metatypeID: string): Promise<MetatypeQL> {
 
 async function MetatypeRelationshipByPairResolver(relationshipPairID: string): Promise<MetatypeRelationshipQL> {
     const relationshipRepo = new MetatypeRelationshipRepository()
-    const pair = await MetatypeRelationshipPairStorage.Instance.Retrieve(relationshipPairID)
+    const pair = await MetatypeRelationshipPairMapper.Instance.Retrieve(relationshipPairID)
     if(pair.isError) {
         Logger.error(`unable to resolve metatype relationship pair: ${pair.error}`)
         return Promise.resolve({} as MetatypeRelationshipQL)

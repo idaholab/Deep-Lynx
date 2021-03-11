@@ -35,21 +35,21 @@ export default class MetatypeRelationshipMapper extends PostgresStorage{
     }
 
     public async BulkCreate(userID: string, m: MetatypeRelationship[], transaction?: PoolClient): Promise<Result<MetatypeRelationship[]>> {
-        const r = await super.runRaw(this.bulkCreateStatement(userID, m), transaction)
+        const r = await super.runRaw(this.createStatement(userID, ...m), transaction)
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
         return Promise.resolve(Result.Success(plainToClass(MetatypeRelationship, r.value)))
     }
 
     public async Retrieve(id: string): Promise<Result<MetatypeRelationship>> {
-        const result = await super.retrieveRaw(this.retrieveStatement(id))
+        const r = await super.retrieveRaw(this.retrieveStatement(id))
+        if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        if(result.isError) return Promise.resolve(Result.Pass(result))
-        return Promise.resolve(Result.Success(plainToClass(MetatypeRelationship, result.value)))
+        return Promise.resolve(Result.Success(plainToClass(MetatypeRelationship, r.value)))
     }
 
     public async Update(userID:string, m: MetatypeRelationship, transaction?: PoolClient): Promise<Result<MetatypeRelationship>> {
-        const r = await super.runRaw(this.fullUpdateStatement(m, userID), transaction)
+        const r = await super.runRaw(this.fullUpdateStatement(userID, m), transaction)
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
         const results = plainToClass(MetatypeRelationship, r.value)
@@ -58,7 +58,7 @@ export default class MetatypeRelationshipMapper extends PostgresStorage{
     }
 
     public async BulkUpdate(userID:string, m: MetatypeRelationship[], transaction?: PoolClient): Promise<Result<MetatypeRelationship[]>> {
-        const r = await super.runRaw(this.fullBulkUpdateStatement(m, userID), transaction)
+        const r = await super.runRaw(this.fullUpdateStatement(userID, ...m), transaction)
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
         return Promise.resolve(Result.Success(plainToClass(MetatypeRelationship, r.value)))
@@ -76,14 +76,7 @@ export default class MetatypeRelationshipMapper extends PostgresStorage{
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
-    private createStatement(userID: string, relationship: MetatypeRelationship): QueryConfig {
-        return {
-            text:`INSERT INTO metatype_relationships(container_id, id,name,description,created_by,modified_by) VALUES($1, $2, $3, $4, $5, $6) RETURNING *`,
-            values: [relationship.container_id, uuid.v4(), relationship.name, relationship.description, userID, userID]
-        }
-    }
-
-    private bulkCreateStatement(userID: string, relationships: MetatypeRelationship[]): string {
+    private createStatement(userID: string, ...relationships: MetatypeRelationship[]): string {
         const text = `INSERT INTO metatype_relationships(container_id, id,name,description,created_by,modified_by) VALUES %L RETURNING *`
         const values = relationships.map(r => [r.container_id, uuid.v4(), r.name, r.description, userID, userID])
 
@@ -111,14 +104,7 @@ export default class MetatypeRelationshipMapper extends PostgresStorage{
         }
     }
 
-    private fullUpdateStatement(relationship: MetatypeRelationship, userID: string): QueryConfig {
-        return {
-            text:`UPDATE metatype_relationships SET name = $1, description = $2, modified_by = $3, modified_at = NOW() WHERE id = $4 RETURNING *`,
-            values: [relationship.name, relationship.description, userID, relationship.id]
-        }
-    }
-
-    private fullBulkUpdateStatement(relationships: MetatypeRelationship[], userID: string): string{
+    private fullUpdateStatement(userID: string, ...relationships: MetatypeRelationship[]): string{
         const text = `UPDATE metatype_relationships AS m SET
                         name = u.name,
                         description = u.description,

@@ -15,7 +15,7 @@ import resolversRoot from "../../data_query/resolvers";
 import {schema} from "../../data_query/schema"
 import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
 import MetatypeRelationshipKeyMapper from "../../data_access_layer/mappers/metatype_relationship_key_mapper";
-import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
+import MetatypeRelationshipPairMapper from "../../data_access_layer/mappers/metatype_relationship_pair_mapper";
 import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
 import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
 import {EdgeT} from "../../types/graph/edgeT";
@@ -52,7 +52,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         const gStorage = GraphStorage.Instance;
         const rMapper = MetatypeRelationshipMapper.Instance;
         const rkStorage = MetatypeRelationshipKeyMapper.Instance;
-        const rpStorage = MetatypeRelationshipPairStorage.Instance;
+        const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // SETUP
         let graph = await gStorage.Create(containerID, "test suite");

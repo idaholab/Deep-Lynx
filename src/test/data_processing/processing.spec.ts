@@ -14,9 +14,8 @@ import {objectToShapeHash} from "../../utilities";
 import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
 import ImportStorage from "../../data_access_layer/mappers/import/import_storage";
 import DataStagingStorage from "../../data_access_layer/mappers/import/data_staging_storage";
-import {MetatypeRelationshipT} from "../../types/metatype_relationshipT";
 import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
-import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
+import MetatypeRelationshipPairMapper from "../../data_access_layer/mappers/metatype_relationship_pair_mapper";
 import {MetatypeRelationshipPairT} from "../../types/metatype_relationship_pairT";
 import {DataSourceT} from "../../types/import/dataSourceT";
 import TypeTransformationStorage from "../../data_access_layer/mappers/import/type_transformation_storage";
@@ -36,7 +35,7 @@ describe('A Data Processor', async() => {
     var dataSource: DataSourceT | undefined = undefined
     var dataImportID: string = ""
     var resultMetatypes: Metatype[] = []
-    var resultMetatypeRelationships: MetatypeRelationshipT[] = []
+    var resultMetatypeRelationships: MetatypeRelationship[] = []
 
     var carKeys: MetatypeKeyT[] = []
     var manufacturerKeys: MetatypeKeyT[] = []
@@ -163,7 +162,7 @@ describe('A Data Processor', async() => {
 
         resultMetatypeRelationships = metatypeRelationships.value;
 
-        let pairs = await MetatypeRelationshipPairStorage.Instance.Create(containerID, "test suite", {
+        let pairs = await MetatypeRelationshipPairMapper.Instance.Create(containerID, "test suite", {
             "name": "owns",
             "description": "owns another entity",
             "origin_metatype_id": resultMetatypes.find(m => m.name === "Maintenance")!.id,

@@ -22,7 +22,7 @@
     "migrate": "tsc && node -r dotenv/config ./dist/migrate.js",
     "build:dev": "tsc && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"./src/assets/**\" ./dist",
     "test": "cross-env TS_NODE_FILES=true npm run test:raw",
-    "test:raw": " cd src/test && cross-env-shell nyc mocha --exit  -r ts-node/register -r dotenv/config  **/*.spec.ts "
+    "test:raw": " cd src/test && cross-env-shell nyc mocha --exit  -r ts-node/register -r dotenv/config  **/*.spec.ts --prof "
   },
   "devDependencies": {
     "@azure/storage-blob": "12.1.2",
@@ -129,6 +129,7 @@
     "typescript": "^4.1.3",
     "uid-generator": "^2.0.0",
     "uuid-random": "^1.3.2",
+    "validator": "^13.5.2",
     "xml-crypto": "^2.0.0",
     "xml-js": "^1.6.11",
     "yargs-parser": "^20.2.4"

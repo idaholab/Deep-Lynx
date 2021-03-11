@@ -9,7 +9,7 @@ import {MetatypeKeyT} from "../../types/metatype_keyT";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
 import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
-import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
+import MetatypeRelationshipPairMapper from "../../data_access_layer/mappers/metatype_relationship_pair_mapper";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
@@ -44,7 +44,7 @@ describe('A Metatype Relationship Pair can', async() => {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const rMapper = MetatypeRelationshipMapper.Instance;
-        const rpStorage = MetatypeRelationshipPairStorage.Instance;
+        const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         const metatype = await mMapper.BulkCreate("test suite",
             [
@@ -85,7 +85,7 @@ describe('A Metatype Relationship Pair can', async() => {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const rMapper = MetatypeRelationshipMapper.Instance;
-        const rpStorage = MetatypeRelationshipPairStorage.Instance;
+        const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         const metatype = await mMapper.BulkCreate( "test suite",
             [
@@ -133,7 +133,7 @@ describe('A Metatype Relationship Pair can', async() => {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const rMapper = MetatypeRelationshipMapper.Instance;
-        const rpStorage = MetatypeRelationshipPairStorage.Instance;
+        const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         const metatype = await mMapper.BulkCreate( "test suite",
             [

@@ -11,7 +11,7 @@ import NodeStorage from "../../data_access_layer/mappers/graph/node_storage";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
 import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
-import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
+import MetatypeRelationshipPairMapper from "../../data_access_layer/mappers/metatype_relationship_pair_mapper";
 import ExportStorage from "../../data_access_layer/mappers/export/export_storage";
 import GremlinExportStorage from "../../data_access_layer/mappers/export/gremlin_export_storage";
 import Container from "../../data_warehouse/ontology/container";
@@ -55,7 +55,7 @@ describe('Gremlin Exporter', async() => {
         const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
         const rMapper = MetatypeRelationshipMapper.Instance;
-        const rpStorage = MetatypeRelationshipPairStorage.Instance;
+        const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // SETUP CREATE NODES AND EDGE
         let graph = await gStorage.Create(containerID, "test suite");

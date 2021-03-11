@@ -10,7 +10,7 @@ import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
 import NodeStorage from "../../data_access_layer/mappers/graph/node_storage";
 import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
 import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
-import MetatypeRelationshipPairMapper from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
+import MetatypeRelationshipPairMapper from "../../data_access_layer/mappers/metatype_relationship_pair_mapper";
 import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
 import {EdgeT} from "../../types/graph/edgeT";
 import DataSourceStorage from "../../data_access_layer/mappers/import/data_source_storage";

@@ -11,7 +11,7 @@ import NodeStorage from "../../data_access_layer/mappers/graph/node_storage";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
 import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
-import MetatypeRelationshipPairStorage from "../../data_access_layer/mappers/metatype_relationship_pair_storage";
+import MetatypeRelationshipPairMapper from "../../data_access_layer/mappers/metatype_relationship_pair_mapper";
 import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
@@ -53,7 +53,7 @@ describe('A Complex Graph can be created', async() => {
         const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphStorage.Instance;
         const rMapper = MetatypeRelationshipMapper.Instance;
-        const rpStorage = MetatypeRelationshipPairStorage.Instance;
+        const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // SETUP
         let graph = await gStorage.Create(containerID, "test suite");

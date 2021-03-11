@@ -27,8 +27,6 @@ export default class Metatype extends BaseDataClass {
     @IsString()
     description: string
 
-    // because we need to track removed keys in case of update, keys is made private
-    // and only accessible through a getter.
     keys: MetatypeKey[] = []
     // for tracking removed keys for update
     #removedKeys: MetatypeKey[] = []
