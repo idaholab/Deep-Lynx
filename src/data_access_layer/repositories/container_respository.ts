@@ -10,9 +10,6 @@ import GraphStorage from "../mappers/graph/graph_storage";
 export default class ContainerRepository implements RepositoryInterface<Container> {
     #mapper: ContainerMapper = ContainerMapper.Instance
 
-    // save will always return a new instance of provided class to save, this is
-    // done so that the user can have the updated ID and other information after
-    // insert.
     async save(user: UserT, c: Container): Promise<Result<boolean>> {
         const errors = await c.validationErrors()
         if(errors) {
@@ -54,9 +51,6 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         return Promise.resolve(Result.Success(true));
     }
 
-    // bulkSave will always return  new instances of provided class to save, this is
-    // done so that the user can have the updated ID and other information after
-    // insert.
     async bulkSave(user: UserT, c: Container[]): Promise<Result<boolean>> {
         // separate containers by which need to be created and which need to be updated
         const toCreate: Container[] = []

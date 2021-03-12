@@ -16,9 +16,6 @@ export default class MetatypeRelationshipRepository extends Repository implement
     #mapper: MetatypeRelationshipMapper = MetatypeRelationshipMapper.Instance
     #keyMapper: MetatypeRelationshipKeyMapper = MetatypeRelationshipKeyMapper.Instance
 
-    // save will always return a new instance of provided class to save, this is
-    // done so that the user can have the updated ID and other information after
-    // insert. By default this will also save/update any attached keys to the object
     async save(user: UserT, m: MetatypeRelationship, saveKeys: boolean = true): Promise<Result<boolean>> {
         const errors = await m.validationErrors()
         if(errors) {
@@ -88,9 +85,6 @@ export default class MetatypeRelationshipRepository extends Repository implement
         return Promise.resolve(Result.Success(true))
     }
 
-    // bulkSave will always return  new instances of provided class to save, this is
-    // done so that the user can have the updated ID and other information after
-    // insert.
     async bulkSave(user: UserT, m: MetatypeRelationship[], saveKeys: boolean = true): Promise<Result<boolean>> {
         // separate metatypes by which need to be created and which need to updated
         const toCreate: MetatypeRelationship[] = []

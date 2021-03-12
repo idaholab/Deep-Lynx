@@ -121,6 +121,77 @@ describe('A Metatype Relationship Pair Repository', async() => {
         return repo.delete(pair)
     })
 
+    it('can bulk save Metatype Relationship Pairs', async() => {
+        const repo = new MetatypeRelationshipPairRepository()
+
+        // for this test we'll save/create the metatypes and relationships separately
+        const metatype1 = new Metatype({
+            containerID,
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric()
+        })
+        const metatype2 = new Metatype({
+            containerID,
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric()
+        })
+        const relationship = new MetatypeRelationship({
+            containerID,
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric()
+        })
+
+        let pair = new MetatypeRelationshipPair({
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric(),
+            relationshipType: "one:one",
+            originMetatype: metatype1,
+            destinationMetatype: metatype2,
+            relationship: relationship,
+            containerID: containerID
+        })
+
+        const metatype3 = new Metatype({
+            containerID,
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric()
+        })
+        const metatype4 = new Metatype({
+            containerID,
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric()
+        })
+        const relationship2 = new MetatypeRelationship({
+            containerID,
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric()
+        })
+
+        let pair2 = new MetatypeRelationshipPair({
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric(),
+            relationshipType: "many:many",
+            originMetatype: metatype3,
+            destinationMetatype: metatype4,
+            relationship: relationship2,
+            containerID: containerID
+        })
+
+        const saved = await repo.bulkSave(user, [pair, pair2], true)
+        expect(saved.isError).false
+        expect(pair.id).not.undefined
+        expect(pair.origin_metatype_id).not.undefined
+        expect(pair.destination_metatype_id).not.undefined
+        expect(pair.relationship_id).not.undefined
+        expect(pair2.id).not.undefined
+        expect(pair2.origin_metatype_id).not.undefined
+        expect(pair2.destination_metatype_id).not.undefined
+        expect(pair2.relationship_id).not.undefined
+
+        await repo.delete(pair)
+        return repo.delete(pair2)
+    })
+
     it('can save list Metatype Relationship Pairs by various means', async() => {
         const repo = new MetatypeRelationshipPairRepository()
 

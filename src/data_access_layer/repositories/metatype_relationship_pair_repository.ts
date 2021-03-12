@@ -114,6 +114,95 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return Promise.resolve(Result.Success(true))
     }
 
+    async bulkSave(user: UserT, p: MetatypeRelationshipPair[], saveRelationships?: boolean): Promise<Result<boolean>> {
+        // attempt to save the relationships first, if required - keep in mind that
+        // we can't wrap these in transactions so it is possible that you update one
+        // but not another of the relationships. This is why the saveRelationships is
+        // turned off by default.
+        if(saveRelationships) {
+            const operations: Promise<Result<boolean>>[] = []
+            const errors: string[] = []
+
+            p.map(async (pair) => {
+                const metatypeRepo = new MetatypeRepository()
+                const relationshipRepo = new MetatypeRelationshipRepository()
+
+                operations.push(...[
+                    metatypeRepo.save(user, pair.originMetatype!),
+                    metatypeRepo.save(user, pair.destinationMetatype!),
+                    relationshipRepo.save(user, pair.relationship!),
+                ])
+            })
+
+            const results = await Promise.all(operations)
+            results.forEach(result => {
+                if(result.isError) errors.push(result.error!.error)
+            })
+
+            if(errors.length > 0) return Promise.resolve(Result.Failure(`one or more relationships failed to save: ${errors.join(',')}`))
+        }
+
+        const toCreate: MetatypeRelationshipPair[] = []
+        const toUpdate: MetatypeRelationshipPair[] = []
+        const toReturn: MetatypeRelationshipPair[] = []
+
+        for(const pair of p) {
+            const errors = await pair.validationErrors()
+            if(errors){
+                return Promise.resolve(Result.Failure(`one or more metatype relationship pairs do not pass validation ${errors.join(",")}`))
+            }
+
+            if(pair.id) {
+                toUpdate.push(pair)
+                this.deleteCached(pair.id)
+            } else {
+                toCreate.push(pair)
+            }
+        }
+
+        // we run the bulk save in a transaction so that on failure we don't get
+        // stuck with partially updated items - keep in mind this does not apply
+        // to the relationships that might have been saved before this operation
+        const transaction = await this.#mapper.startTransaction()
+        if(transaction.isError) return Promise.resolve(Result.Failure(`unable to initiate db transaction`))
+
+        if(toUpdate.length > 0) {
+            const results = await this.#mapper.BulkUpdate(user.id!, toUpdate, transaction.value)
+            if(results.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value)
+                return Promise.resolve(Result.Pass(results))
+            }
+
+            toReturn.push(...results.value)
+        }
+
+        if(toCreate.length > 0) {
+            const results = await this.#mapper.BulkCreate(user.id!, toCreate, transaction.value)
+            if(results.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value)
+                return Promise.resolve(Result.Pass(results))
+            }
+
+            toReturn.push(...results.value)
+        }
+
+        toReturn.forEach((result, i) => {
+            Object.assign(p[i], result)
+        })
+
+        const committed = await this.#mapper.completeTransaction(transaction.value)
+        if(committed.isError) {
+            await this.#mapper.rollbackTransaction(transaction.value)
+            return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`))
+        }
+
+        await Promise.all(p.map(pair => {
+           return this.loadRelationships(pair)
+        }))
+
+        return Promise.resolve(Result.Success(true))
+    }
+
     // attempt to fully load the relationships for the given relationships, we
     // don't trust the cached versions of the relationships as they could have changed
     private async loadRelationships(pair: MetatypeRelationshipPair): Promise<Result<boolean>> {

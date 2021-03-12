@@ -86,14 +86,10 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(Result.Success(true))
     }
 
-    // bulkSave will always return  new instances of provided class to save, this is
-    // done so that the user can have the updated ID and other information after
-    // insert.
     async bulkSave(user: UserT, m: Metatype[], saveKeys: boolean = true): Promise<Result<boolean>> {
         // separate metatypes by which need to be created and which need to updated
         const toCreate: Metatype[] = []
         const toUpdate: Metatype[] = []
-
         const toReturn: Metatype[] = []
 
         // run validation, separate, and clear cache for each metatype
