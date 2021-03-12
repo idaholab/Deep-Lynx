@@ -48,20 +48,6 @@ export default class MetatypeRelationshipPairMapper extends PostgresStorage{
         return Promise.resolve(Result.Success(plainToClass(MetatypeRelationshipPair, r.value)))
     }
 
-    public async RetrieveByMetatypes(origin:string, destination:string): Promise<Result<MetatypeRelationshipPair>> {
-        const r = await super.retrieveRaw(this.retrieveForDestinationAndOriginStatement(origin, destination))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(MetatypeRelationshipPair, r.value)))
-    }
-
-    public async RetrieveByMetatypesAndRelationship(origin:string, destination:string, relationship:string,): Promise<Result<MetatypeRelationshipPair>> {
-        const r = await super.retrieveRaw(this.retrieveForDestinationAndOriginAndRelationshipStatement(origin, destination, relationship))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(MetatypeRelationshipPair, r.value)))
-    }
-
     public async Update(userID: string, p: MetatypeRelationshipPair, transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair>> {
         const r = await super.runRaw(this.fullUpdateStatement(userID, p), transaction)
         if(r.isError) return Promise.resolve(Result.Pass(r))
@@ -102,15 +88,15 @@ export default class MetatypeRelationshipPairMapper extends PostgresStorage{
                                                         relationship_type,
                                                         container_id,
                                                         created_by, modified_by)
-                    VALUES %L RETURNING *)`
+                    VALUES %L RETURNING *`
 
             const values =  pairs.map(pair => [
                 uuid.v4(),
                 pair.name,
                 pair.description,
-                pair.relationship.id,
-                pair.originMetatype.id,
-                pair.destinationMetatype.id,
+                pair.relationship!.id,
+                pair.originMetatype!.id,
+                pair.destinationMetatype!.id,
                 pair.relationship_type,
                 pair.container_id,
                 userID, userID])
@@ -144,9 +130,9 @@ export default class MetatypeRelationshipPairMapper extends PostgresStorage{
                 p.name,
                 p.description,
                 p.relationship_type,
-                p.relationship.id,
-                p.originMetatype.id,
-                p.destinationMetatype.id,
+                p.relationship!.id,
+                p.originMetatype!.id,
+                p.destinationMetatype!.id,
                 p.container_id,
                 userID
             ])
@@ -172,20 +158,6 @@ export default class MetatypeRelationshipPairMapper extends PostgresStorage{
         return {
             text:`SELECT * FROM metatype_relationship_pairs WHERE id = $1 AND NOT ARCHIVED `,
             values: [pairID]
-        }
-    }
-
-    private retrieveForDestinationAndOriginStatement(origin: string, destination :string): QueryConfig {
-        return {
-            text:`SELECT * FROM metatype_relationship_pairs WHERE origin_metatype_id = $1 AND destination_metatype_id = $2 AND NOT ARCHIVED`,
-            values: [origin, destination]
-        }
-    }
-
-    private retrieveForDestinationAndOriginAndRelationshipStatement(origin: string, destination :string, relationship:string): QueryConfig {
-        return {
-            text:`SELECT * FROM metatype_relationship_pairs WHERE origin_metatype_id = $1 AND destination_metatype_id = $2 AND id = $3 AND NOT ARCHIVED`,
-            values: [origin, destination, relationship]
         }
     }
 }

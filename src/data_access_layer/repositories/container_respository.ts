@@ -13,7 +13,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
     // save will always return a new instance of provided class to save, this is
     // done so that the user can have the updated ID and other information after
     // insert.
-    async save(user: UserT, c: Container): Promise<Result<Container>> {
+    async save(user: UserT, c: Container): Promise<Result<boolean>> {
         const errors = await c.validationErrors()
         if(errors) {
             return Promise.resolve(Result.Failure(`container does not pass validation ${errors.join(",")}`))
@@ -21,7 +21,11 @@ export default class ContainerRepository implements RepositoryInterface<Containe
 
         // if we have a set ID, attempt to update the Container
         if(c.id) {
-            return this.#mapper.Update(user.id!, c)
+            const updated = await this.#mapper.Update(user.id!, c)
+            if(updated.isError) return Promise.resolve(Result.Pass(updated))
+
+            Object.assign(c, updated.value)
+            return Promise.resolve(Result.Success(true))
         }
 
         // no id? create a new container and run relevant operations
@@ -44,13 +48,16 @@ export default class ContainerRepository implements RepositoryInterface<Containe
             }
         }).catch(e => Logger.error(e))
 
-        return Promise.resolve(result);
+        // set the original object to the returned one
+        Object.assign(c, result.value)
+
+        return Promise.resolve(Result.Success(true));
     }
 
     // bulkSave will always return  new instances of provided class to save, this is
     // done so that the user can have the updated ID and other information after
     // insert.
-    async bulkSave(user: UserT, c: Container[]): Promise<Result<Container[]>> {
+    async bulkSave(user: UserT, c: Container[]): Promise<Result<boolean>> {
         // separate containers by which need to be created and which need to be updated
         const toCreate: Container[] = []
         const toUpdate: Container [] = []
@@ -117,7 +124,11 @@ export default class ContainerRepository implements RepositoryInterface<Containe
            return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`))
         }
 
-        return Promise.resolve(Result.Success(toReturn));
+        toReturn.forEach((result, i) => {
+           Object.assign(c[i], result)
+        })
+
+        return Promise.resolve(Result.Success(true));
     }
 
     async listForUser(user: UserT): Promise<Result<Container[]>> {

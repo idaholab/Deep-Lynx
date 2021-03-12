@@ -57,7 +57,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
     // save will not save the origin/destination metatypes or metatype relationship unless the
     // user specifies. This is because we might be working with this object with a bare
     // minimum of info about those types
-    async save(user: UserT, p: MetatypeRelationshipPair, saveRelationships?: boolean): Promise<Result<MetatypeRelationshipPair>> {
+    async save(user: UserT, p: MetatypeRelationshipPair, saveRelationships?: boolean): Promise<Result<boolean>> {
         // attempt to save the relationships first, if required - keep in mind that
         // we can't wrap these in transactions so it is possible that you update one
         // but not another of the relationships. This is why the saveRelationships is
@@ -67,9 +67,9 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             const relationshipRepo = new MetatypeRelationshipRepository()
 
             const results = await Promise.all([
-                metatypeRepo.save(user, p.originMetatype),
-                metatypeRepo.save(user, p.destinationMetatype),
-                relationshipRepo.save(user, p.relationship),
+                metatypeRepo.save(user, p.originMetatype!),
+                metatypeRepo.save(user, p.destinationMetatype!),
+                relationshipRepo.save(user, p.relationship!),
             ])
 
             const errors: string[] = []
@@ -79,18 +79,9 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
                     errors.push(result.error?.error!)
                     return
                 }
-
-                if(result.value instanceof Metatype) {
-                    // if it's not the origin we can safely assume it's the destination
-                    (result.value.id === p.originMetatype.id) ? p.originMetatype = result.value : p.destinationMetatype = result.value
-                }
-
-                if(result.value instanceof MetatypeRelationship) {
-                    p.relationship = result.value
-                }
-
-                if(errors.length > 0) return Promise.resolve(Result.Failure(`one or more relationships failed to save: ${errors.join(',')}`))
             })
+
+            if(errors.length > 0) return Promise.resolve(Result.Failure(`one or more relationships failed to save: ${errors.join(',')}`))
         }
 
         // we run validation after relationship save in case the user included
@@ -100,29 +91,27 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             return Promise.resolve(Result.Failure(`metatype relationship pair does not pass validation ${errors.join}`))
         }
 
-        let result: Result<MetatypeRelationshipPair>
 
         // update if ID has already been set
         if(p.id) {
             this.deleteCached(p.id)
             const updated = await this.#mapper.Update(user.id!, p)
-            if(updated.isError) return Promise.resolve(Result.Failure(`failed to updated metatype relationship pair ${updated.error?.error}`))
+            if(updated.isError) return Promise.resolve(Result.Failure(`failed to update metatype relationship pair ${updated.error?.error}`))
 
-            // load or reload the relationships - this guarantees we have the latest versions
-            const loaded = await this.loadRelationships(updated.value)
-            if(loaded.isError) Logger.error(loaded.error?.error!)
+            Object.assign(p, updated.value)
 
-            return Promise.resolve(Result.Success(updated.value))
         } else {
-            result = await this.#mapper.Create(user.id!, p)
+            const created = await this.#mapper.Create(user.id!, p)
+            if(created.isError) return Promise.resolve(Result.Failure(`failed to create metatype relationship pair ${created.error?.error}`))
+
+            Object.assign(p, created.value)
         }
 
-        if(result.isError) return Promise.resolve(Result.Failure(`unable to save metatype relationship pair: ${result.error?.error}`))
-
-        const loaded = await this.loadRelationships(result.value)
+        // we want to insure we always have the latest relationship values
+        const loaded = await this.loadRelationships(p)
         if(loaded.isError) Logger.error(loaded.error?.error!)
 
-        return Promise.resolve(result)
+        return Promise.resolve(Result.Success(true))
     }
 
     // attempt to fully load the relationships for the given relationships, we
@@ -132,9 +121,9 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         const relationshipRepo = new MetatypeRelationshipRepository()
 
         const results = await Promise.all([
-            metatypeRepo.findByID(pair.originMetatype.id!),
-            metatypeRepo.findByID(pair.destinationMetatype.id!),
-            relationshipRepo.findByID(pair.relationship.id!)
+            metatypeRepo.findByID(pair.originMetatype!.id!),
+            metatypeRepo.findByID(pair.destinationMetatype!.id!),
+            relationshipRepo.findByID(pair.relationship!.id!)
         ])
 
         const errors: string[] = []
@@ -147,7 +136,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
 
             if(result.value instanceof Metatype) {
                 // if it's not the origin we can safely assume it's the destination
-                (result.value.id === pair.originMetatype.id) ? pair.originMetatype = result.value : pair.destinationMetatype = result.value
+                (result.value.id === pair.originMetatype!.id) ? pair.originMetatype = result.value : pair.destinationMetatype = result.value
             }
 
             if(result.value instanceof MetatypeRelationship) {

@@ -4,7 +4,7 @@ import PostgresStorage from "../mappers/postgresStorage";
 
 export default interface RepositoryInterface<T> {
     findByID(id: string): Promise<Result<T>>
-    save(user: UserT, t:T): Promise<Result<T>>
+    save(user: UserT, t:T): Promise<Result<boolean>>
     delete(t:T): Promise<Result<boolean>>
 }
 

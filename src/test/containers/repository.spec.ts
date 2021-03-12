@@ -42,21 +42,21 @@ describe('A Container Repository', async() => {
 
         let results = await repository.save(user, container)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
+        expect(container.id).not.undefined
 
         // now run an update
         const updatedName = faker.name.findName()
         const updatedDescription = faker.random.alphaNumeric()
-        results.value.name =  updatedName
-        results.value.description =  updatedDescription
+        container.name =  updatedName
+        container.description =  updatedDescription
 
-        results = await repository.save(user, results.value)
+        results = await repository.save(user, container)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
-        expect(results.value.name).eq(updatedName)
-        expect(results.value.description).eq(updatedDescription)
+        expect(container.id).not.undefined
+        expect(container.name).eq(updatedName)
+        expect(container.description).eq(updatedDescription)
 
-        return repository.delete(results.value)
+        return repository.delete(container)
     });
 
     it('can be bulk saved', async()=> {
@@ -67,23 +67,24 @@ describe('A Container Repository', async() => {
 
         let results = await repository.bulkSave(user, [container1, container2])
         expect(results.isError).false;
-        expect(results.value).not.empty;
+        expect(container1.id).not.undefined
+        expect(container2.id).not.undefined
 
         // now run an update
         const updatedName = faker.name.findName()
         const updatedName2 = faker.name.findName()
         const updatedDescription = faker.random.alphaNumeric()
         const updatedDescription2 = faker.random.alphaNumeric()
-        results.value[0].name =  updatedName
-        results.value[1].name =  updatedName2
-        results.value[0].description =  updatedDescription
-        results.value[1].description =  updatedDescription2
+        container1.name =  updatedName
+        container2.name =  updatedName2
+        container1.description =  updatedDescription
+        container2.description =  updatedDescription2
 
-        results = await repository.bulkSave(user, results.value)
+        results = await repository.bulkSave(user, [container1, container2])
         expect(results.isError).false
 
 
-        for(const container of results.value) {
+        for(const container of [container1, container2]) {
             expect(container.name).to.be.oneOf([updatedName,updatedName2])
             expect(container.description).to.be.oneOf([updatedDescription, updatedDescription2])
             await repository.delete(container)
@@ -94,17 +95,18 @@ describe('A Container Repository', async() => {
 
     it('can find container by ID', async()=> {
         const repository = new ContainerRepository()
+        let container = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
-        const container = await repository.save(user, new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
+        const result = await repository.save(user, container);
 
-        expect(container.isError).false;
-        expect(container.value).not.empty;
+        expect(result.isError).false;
+        expect(container.id).not.undefined;
 
-        const retrieved = await repository.findByID(container.value.id!)
+        const retrieved = await repository.findByID(container.id!)
         expect(retrieved.isError).false;
-        expect(retrieved.value.id).eq(container.value.id);
+        expect(container.id).eq(retrieved.value.id);
 
-        return repository.delete(container.value)
+        return repository.delete(container)
     });
 
     it('can list containers for user', async()=> {
@@ -115,20 +117,21 @@ describe('A Container Repository', async() => {
 
         const results = await repository.bulkSave(user, [container1, container2])
         expect(results.isError).false;
-        expect(results.value).not.empty;
+        expect(container1.id).not.undefined
+        expect(container2.id).not.undefined
 
         // we must assign the user a role with that container as a domain before we attempt to list it
-        const assigned = await Authorization.AssignRole(user.id!, "user", results.value[0].id)
+        const assigned = await Authorization.AssignRole(user.id!, "user", container1.id!)
         expect(assigned).true
 
 
         let retrieved = await repository.listForUser(user)
         expect(retrieved.isError).false;
         expect(retrieved.value.length).eq(1)
-        expect(retrieved.value[0].id).eq(results.value[0].id)
+        expect(retrieved.value[0].id).eq(container1.id)
 
-        await repository.delete(results.value[0])
-        await repository.delete(results.value[1])
+        await repository.delete(container1)
+        await repository.delete(container2)
 
         return Promise.resolve()
     });
@@ -139,11 +142,11 @@ describe('A Container Repository', async() => {
 
         const results = await repository.save(user, container)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
+        expect(container.id).not.undefined
 
-        const archived = await repository.archive(user, results.value)
+        const archived = await repository.archive(user, container)
         expect(archived.isError).false
 
-        return repository.delete(results.value)
+        return repository.delete(container)
     });
 });

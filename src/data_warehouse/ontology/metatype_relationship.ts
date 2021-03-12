@@ -29,9 +29,9 @@ export default class MetatypeRelationship extends BaseDataClass {
 
     // because we need to track removed keys in case of update, keys is made private
     // and only accessible through a getter.
-    keys: MetatypeRelationshipKey[] = []
+    keys: MetatypeRelationshipKey[] | undefined
     // for tracking removed keys for update
-    #removedKeys: MetatypeRelationshipKey[] = []
+    #removedKeys: MetatypeRelationshipKey[] | undefined
 
     constructor(input: {containerID?: string, name: string, description: string}) {
         super();
@@ -50,6 +50,7 @@ export default class MetatypeRelationship extends BaseDataClass {
     }
 
     addKey(...keys: MetatypeRelationshipKey[]) {
+        if(!this.keys) this.keys = []
         this.keys.push(...keys)
     }
 
@@ -61,13 +62,15 @@ export default class MetatypeRelationship extends BaseDataClass {
     // removeKeys will remove the first matching key, you must save the object
     // for changes to take place
     removeKey(...keys: MetatypeRelationshipKey[] | string[]) {
+        if(!this.keys) this.keys = []
+        if(!this.#removedKeys) this.#removedKeys = []
         for(const key of keys) {
             if(typeof key === 'string') {
                 this.keys = this.keys.filter(k => {
                     if(k.id !== key) {
                         return false
                     }
-                    this.#removedKeys.push(k)
+                    this.#removedKeys!.push(k)
                 }, this)
             } else {
                 // if it's not a string, we can safely assume it's the type
@@ -77,7 +80,7 @@ export default class MetatypeRelationship extends BaseDataClass {
                     if(k.id !== key.id && k.name !== key.name) {
                         return false
                     }
-                    this.#removedKeys.push(k)
+                    this.#removedKeys!.push(k)
                 }, this)
             }
         }
@@ -91,7 +94,7 @@ export default class MetatypeRelationship extends BaseDataClass {
         const partialOutput : {[key:string]:any} = {};
 
         // the handled key types here can become more complex as the application evolves
-        (this.keys).map((key) => {
+        if(this.keys) this.keys.map((key) => {
             switch(key.data_type) {
                 case "number": {
                     (key.required) ? output[key.property_name] = t.number : partialOutput[key.property_name] = t.union([t.number, t.null]);
@@ -154,7 +157,7 @@ export default class MetatypeRelationship extends BaseDataClass {
 
 
         // before we attempt to validate we need to insure that any keys with default values have that applied to the payload
-        for(const key of this.keys) {
+        if(this.keys) for(const key of this.keys) {
             if(key.property_name in input || key.default_value === null) continue;
 
             switch(key.data_type) {
@@ -179,7 +182,7 @@ export default class MetatypeRelationship extends BaseDataClass {
             return async (cts:any) => {
                 // now that we know the payload matches the shape of the data required, run additional validation
                 // such as regex pattern matching on string payloads
-                for(const key of this.keys) {
+                if(this.keys) for(const key of this.keys) {
                     if(key.validation === null || key.validation === undefined) continue;
 
                     if(key.validation.min || key.validation.max) {

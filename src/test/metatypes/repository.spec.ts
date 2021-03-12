@@ -56,24 +56,24 @@ describe('A Metatype Repository', async() => {
 
         let results = await repository.save(user, metatype)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
+        expect(metatype.id).not.undefined
 
         // now run an update
         const updatedName = faker.name.findName()
         const updatedDescription = faker.random.alphaNumeric()
-        results.value.name = updatedName
-        results.value.description = updatedDescription
+        metatype.name = updatedName
+        metatype.description = updatedDescription
 
-        results = await repository.save(user, results.value)
+        results = await repository.save(user, metatype)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
-        expect(results.value.name).eq(updatedName)
-        expect(results.value.description).eq(updatedDescription)
+        expect(metatype.id).not.undefined
+        expect(metatype.name).eq(updatedName)
+        expect(metatype.description).eq(updatedDescription)
 
-        return repository.delete(results.value)
+        return repository.delete(metatype)
     });
 
-    it('can save a Metatype with keys', async()=> {
+    it('can save a Metatype with keys!', async()=> {
         const repository = new MetatypeRepository()
         const metatype = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
         const key = new MetatypeKey({name: faker.name.findName(), description: faker.random.alphaNumeric(), required: true, propertyName: "test_property", dataType: "string"})
@@ -81,38 +81,38 @@ describe('A Metatype Repository', async() => {
 
         let results = await repository.save(user, metatype)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
-        expect(results.value.keys).not.empty
-        expect(results.value.keys[0].id).not.undefined
+        expect(metatype.id).not.undefined
+        expect(metatype.keys!).not.empty
+        expect(metatype.keys![0].id).not.undefined
 
         // now run an update
         const updatedName = faker.name.findName()
         const updatedDescription = faker.random.alphaNumeric()
-        results.value.name = updatedName
-        results.value.description = updatedDescription
-        results.value.keys[0].name = updatedName
-        results.value.keys[0].description = updatedDescription
+        metatype.name = updatedName
+        metatype.description = updatedDescription
+        metatype.keys![0].name = updatedName
+        metatype.keys![0].description = updatedDescription
 
-        results = await repository.save(user, results.value)
+        results = await repository.save(user, metatype)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
-        expect(results.value.name).eq(updatedName)
-        expect(results.value.description).eq(updatedDescription)
-        expect(results.value.keys[0].name).eq(updatedName)
-        expect(results.value.keys[0].description).eq(updatedDescription)
+        expect(metatype.id).not.undefined
+        expect(metatype.name).eq(updatedName)
+        expect(metatype.description).eq(updatedDescription)
+        expect(metatype.keys![0].name).eq(updatedName)
+        expect(metatype.keys![0].description).eq(updatedDescription)
 
-        // now remove the keys and save again
-        results.value.removeKey(results.value.keys[0])
-        expect(results.value.keys.length).eq(0)
+        // now remove the keys! and save again
+        metatype.removeKey(metatype.keys![0])
+        expect(metatype.keys!.length).eq(0)
 
-        results = await repository.save(user, results.value)
+        results = await repository.save(user, metatype)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
-        expect(results.value.name).eq(updatedName)
-        expect(results.value.description).eq(updatedDescription)
-        expect(results.value.keys.length).eq(0)
+        expect(metatype.id).not.undefined
+        expect(metatype.name).eq(updatedName)
+        expect(metatype.description).eq(updatedDescription)
+        expect(metatype.keys!.length).eq(0)
 
-        return repository.delete(results.value)
+        return repository.delete(metatype)
     });
 
     it('can save multiple Metatypes', async()=> {
@@ -122,22 +122,23 @@ describe('A Metatype Repository', async() => {
 
         let results = await repository.bulkSave(user, [metatype1, metatype2])
         expect(results.isError).false
-        expect(results.value).not.empty
+        expect(metatype1.id).not.undefined
+        expect(metatype2.id).not.undefined
 
         // now run an update
         const updatedName = faker.name.findName()
         const updatedName2 = faker.name.findName()
         const updatedDescription = faker.random.alphaNumeric()
         const updatedDescription2 = faker.random.alphaNumeric()
-        results.value[0].name = updatedName
-        results.value[1].name = updatedName2
-        results.value[0].description = updatedDescription
-        results.value[1].description = updatedDescription2
+        metatype1.name = updatedName
+        metatype2.name = updatedName2
+        metatype1.description = updatedDescription
+        metatype2.description = updatedDescription2
 
-        results = await repository.bulkSave(user, results.value)
+        results = await repository.bulkSave(user, [metatype1, metatype2])
         expect(results.isError).false
 
-        for(const metatype of results.value) {
+        for(const metatype of [metatype1, metatype2]) {
             expect(metatype.name).to.be.oneOf([updatedName, updatedName2])
             expect(metatype.description).to.be.oneOf([updatedDescription, updatedDescription2 ])
             await repository.delete(metatype)
@@ -147,7 +148,7 @@ describe('A Metatype Repository', async() => {
         return Promise.resolve()
     });
 
-    it('can save multiple Metatypes with keys', async()=> {
+    it('can save multiple Metatypes with keys!', async()=> {
         const repository = new MetatypeRepository()
         const metatype1 = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
         const metatype2 = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
@@ -159,11 +160,11 @@ describe('A Metatype Repository', async() => {
 
         let results = await repository.bulkSave(user, [metatype1, metatype2])
         expect(results.isError).false
-        expect(results.value).not.empty
 
-        for(const metatype of results.value) {
-            expect(metatype.keys[0].name).eq(key.name)
-            expect(metatype.keys[0].description).eq(key.description)
+        for(const metatype of [metatype1, metatype2]) {
+            expect(metatype.keys![0].id).not.undefined
+            expect(metatype.keys![0].name).eq(key.name)
+            expect(metatype.keys![0].description).eq(key.description)
         }
 
         // now run an update
@@ -171,23 +172,24 @@ describe('A Metatype Repository', async() => {
         const updatedName2 = faker.name.findName()
         const updatedDescription = faker.random.alphaNumeric()
         const updatedDescription2 = faker.random.alphaNumeric()
-        results.value[0].name = updatedName
-        results.value[1].name = updatedName2
-        results.value[0].description = updatedDescription
-        results.value[1].description = updatedDescription2
-        results.value[0].keys[0].name = updatedName
-        results.value[0].keys[0].description = updatedDescription
-        results.value[1].keys[0].name = updatedName
-        results.value[1].keys[0].description = updatedDescription
+        metatype1.name = updatedName
+        metatype2.name = updatedName2
+        metatype1.description = updatedDescription
+        metatype2.description = updatedDescription2
+        metatype1.keys![0].name = updatedName
+        metatype1.keys![0].description = updatedDescription
+        metatype2.keys![0].name = updatedName
+        metatype2.keys![0].description = updatedDescription
 
-        results = await repository.bulkSave(user, results.value)
+        results = await repository.bulkSave(user, [metatype1, metatype2])
         expect(results.isError).false
 
-        for(const metatype of results.value) {
+        for(const metatype of [metatype1, metatype2]) {
             expect(metatype.name).to.be.oneOf([updatedName, updatedName2])
             expect(metatype.description).to.be.oneOf([updatedDescription, updatedDescription2 ])
-            expect(metatype.keys[0].name).eq(updatedName)
-            expect(metatype.keys[0].description).eq(updatedDescription)
+            expect(metatype.keys![0].id).not.undefined
+            expect(metatype.keys![0].name).eq(updatedName)
+            expect(metatype.keys![0].description).eq(updatedDescription)
 
             await repository.delete(metatype)
         }
@@ -202,13 +204,13 @@ describe('A Metatype Repository', async() => {
 
         let results = await repository.save(user, metatype)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
+        expect(metatype.id).not.undefined
 
-        let retrieved = await repository.findByID(results.value.id!)
+        let retrieved = await repository.findByID(metatype.id!)
         expect(retrieved.isError).false
-        expect(retrieved.value.id).eq(results.value.id)
+        expect(retrieved.value.id).eq(metatype.id)
 
-        return repository.delete(results.value)
+        return repository.delete(metatype)
     });
 
     it('can archive a Metatype', async()=> {
@@ -217,12 +219,12 @@ describe('A Metatype Repository', async() => {
 
         const results = await repository.save(user, metatype)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
+        expect(metatype.id).not.undefined
 
-        const archived = await repository.archive(user, results.value)
+        const archived = await repository.archive(user, metatype)
         expect(archived.isError).false
 
-        return repository.delete(results.value)
+        return repository.delete(metatype)
     });
 
     it('can query and list Metatypes', async()=> {
@@ -230,30 +232,29 @@ describe('A Metatype Repository', async() => {
         const metatype1 = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
         const metatype2 = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
 
-        let results = await repository.bulkSave(user, [metatype1, metatype2])
-        expect(results.isError).false
-        expect(results.value).not.empty
+        let updated = await repository.bulkSave(user, [metatype1, metatype2])
+        expect(updated.isError).false
 
         // simple list first
-        results = await repository.list(false, {limit: 1, offset: 0})
+        let results = await repository.list(false, {limit: 1, offset: 0})
         expect(results.isError).false
-        expect(results.value).not.empty
+        expect(results).not.empty
         expect(results.value.length).eq(1)
 
         // now some more complicated queries
         results = await repository.where().name("eq", metatype1.name).findAll()
         expect(results.isError).false
-        expect(results.value).not.empty
+        expect(results).not.empty
         expect(results.value[0].name).eq(metatype1.name)
 
         results = await repository.where().description("eq", metatype1.description).findAll()
         expect(results.isError).false
-        expect(results.value).not.empty
+        expect(results).not.empty
         expect(results.value[0].description).eq(metatype1.description)
 
         results = await repository.where().containerID("eq", containerID).findAll()
         expect(results.isError).false
-        expect(results.value).not.empty
+        expect(results).not.empty
         expect(results.value.length).eq(2)
 
         // test count finally

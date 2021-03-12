@@ -24,7 +24,6 @@ const onRight = (s: any) => {
     return ""
 };
 
-
 describe('A Metatype Relationship should', async() => {
     let containerID:string = process.env.TEST_CONTAINER_ID || "";
 

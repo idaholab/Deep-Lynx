@@ -55,21 +55,21 @@ describe('A Metatype Relationship Repository', async() => {
 
         let results = await repository.save(user, relationship)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
+        expect(relationship.id).not.undefined
 
         // now run an update
         const updatedName = faker.name.findName()
         const updatedDescription = faker.random.alphaNumeric()
-        results.value.name = updatedName
-        results.value.description = updatedDescription
+        relationship.name = updatedName
+        relationship.description = updatedDescription
 
-        results = await repository.save(user, results.value)
+        results = await repository.save(user, relationship)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
-        expect(results.value.name).eq(updatedName)
-        expect(results.value.description).eq(updatedDescription)
+        expect(relationship.id).not.undefined
+        expect(relationship.name).eq(updatedName)
+        expect(relationship.description).eq(updatedDescription)
 
-        return repository.delete(results.value)
+        return repository.delete(relationship)
     });
 
     it('can save a Metatype Relationship with keys', async()=> {
@@ -80,38 +80,38 @@ describe('A Metatype Relationship Repository', async() => {
 
         let results = await repository.save(user, relationship)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
-        expect(results.value.keys).not.empty
-        expect(results.value.keys[0].id).not.undefined
+        expect(relationship.id).not.undefined
+        expect(relationship.keys!).not.empty
+        expect(relationship.keys![0].id).not.undefined
 
         // now run an update
         const updatedName = faker.name.findName()
         const updatedDescription = faker.random.alphaNumeric()
-        results.value.name = updatedName
-        results.value.description = updatedDescription
-        results.value.keys[0].name = updatedName
-        results.value.keys[0].description = updatedDescription
+        relationship.name = updatedName
+        relationship.description = updatedDescription
+        relationship.keys![0].name = updatedName
+        relationship.keys![0].description = updatedDescription
 
-        results = await repository.save(user, results.value)
+        results = await repository.save(user, relationship)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
-        expect(results.value.name).eq(updatedName)
-        expect(results.value.description).eq(updatedDescription)
-        expect(results.value.keys[0].name).eq(updatedName)
-        expect(results.value.keys[0].description).eq(updatedDescription)
+        expect(relationship.id).not.undefined
+        expect(relationship.name).eq(updatedName)
+        expect(relationship.description).eq(updatedDescription)
+        expect(relationship.keys![0].name).eq(updatedName)
+        expect(relationship.keys![0].description).eq(updatedDescription)
 
         // now remove the keys and save again
-        results.value.removeKey(results.value.keys[0])
-        expect(results.value.keys.length).eq(0)
+        relationship.removeKey(relationship.keys![0])
+        expect(relationship.keys!.length).eq(0)
 
-        results = await repository.save(user, results.value)
+        results = await repository.save(user, relationship)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
-        expect(results.value.name).eq(updatedName)
-        expect(results.value.description).eq(updatedDescription)
-        expect(results.value.keys.length).eq(0)
+        expect(relationship.id).not.undefined
+        expect(relationship.name).eq(updatedName)
+        expect(relationship.description).eq(updatedDescription)
+        expect(relationship.keys!.length).eq(0)
 
-        return repository.delete(results.value)
+        return repository.delete(relationship)
     });
 
     it('can save multiple Metatype Relationships', async()=> {
@@ -121,27 +121,25 @@ describe('A Metatype Relationship Repository', async() => {
 
         let results = await repository.bulkSave(user, [relationship1, relationship2])
         expect(results.isError).false
-        expect(results.value).not.empty
 
         // now run an update
         const updatedName = faker.name.findName()
         const updatedName2 = faker.name.findName()
         const updatedDescription = faker.random.alphaNumeric()
         const updatedDescription2 = faker.random.alphaNumeric()
-        results.value[0].name = updatedName
-        results.value[1].name = updatedName2
-        results.value[0].description = updatedDescription
-        results.value[1].description = updatedDescription2
+        relationship1.name = updatedName
+        relationship2.name = updatedName2
+        relationship1.description = updatedDescription
+        relationship2.description = updatedDescription2
 
-        results = await repository.bulkSave(user, results.value)
+        results = await repository.bulkSave(user, [relationship1, relationship2])
         expect(results.isError).false
 
-        for(const relationship of results.value) {
+        for(const relationship of [relationship1, relationship2]) {
             expect(relationship.name).to.be.oneOf([updatedName, updatedName2])
             expect(relationship.description).to.be.oneOf([updatedDescription, updatedDescription2 ])
             await repository.delete(relationship)
         }
-
 
         return Promise.resolve()
     });
@@ -158,11 +156,10 @@ describe('A Metatype Relationship Repository', async() => {
 
         let results = await repository.bulkSave(user, [relationship1, relationship2])
         expect(results.isError).false
-        expect(results.value).not.empty
 
-        for(const relationship of results.value) {
-            expect(relationship.keys[0].name).eq(key.name)
-            expect(relationship.keys[0].description).eq(key.description)
+        for(const relationship of [relationship1, relationship2]) {
+            expect(relationship.keys![0].name).eq(key.name)
+            expect(relationship.keys![0].description).eq(key.description)
         }
 
         // now run an update
@@ -170,23 +167,23 @@ describe('A Metatype Relationship Repository', async() => {
         const updatedName2 = faker.name.findName()
         const updatedDescription = faker.random.alphaNumeric()
         const updatedDescription2 = faker.random.alphaNumeric()
-        results.value[0].name = updatedName
-        results.value[1].name = updatedName2
-        results.value[0].description = updatedDescription
-        results.value[1].description = updatedDescription2
-        results.value[0].keys[0].name = updatedName
-        results.value[0].keys[0].description = updatedDescription
-        results.value[1].keys[0].name = updatedName
-        results.value[1].keys[0].description = updatedDescription
+        relationship1.name = updatedName
+        relationship2.name = updatedName2
+        relationship1.description = updatedDescription
+        relationship2.description = updatedDescription2
+        relationship1.keys![0].name = updatedName
+        relationship1.keys![0].description = updatedDescription
+        relationship2.keys![0].name = updatedName
+        relationship2.keys![0].description = updatedDescription
 
-        results = await repository.bulkSave(user, results.value)
+        results = await repository.bulkSave(user, [relationship1, relationship2])
         expect(results.isError).false
 
-        for(const relationship of results.value) {
+        for(const relationship of [relationship1, relationship2]) {
             expect(relationship.name).to.be.oneOf([updatedName, updatedName2])
             expect(relationship.description).to.be.oneOf([updatedDescription, updatedDescription2 ])
-            expect(relationship.keys[0].name).eq(updatedName)
-            expect(relationship.keys[0].description).eq(updatedDescription)
+            expect(relationship.keys![0].name).eq(updatedName)
+            expect(relationship.keys![0].description).eq(updatedDescription)
 
             await repository.delete(relationship)
         }
@@ -197,58 +194,57 @@ describe('A Metatype Relationship Repository', async() => {
 
     it('can find a Metatype Relationship by id', async()=> {
         const repository = new MetatypeRelationshipRepository()
-        const metatype = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const relationship = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
-        let results = await repository.save(user, metatype)
+        let results = await repository.save(user, relationship)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
+        expect(relationship.id).not.undefined
 
-        let retrieved = await repository.findByID(results.value.id!)
+        let retrieved = await repository.findByID(relationship.id!)
         expect(retrieved.isError).false
-        expect(retrieved.value.id).eq(results.value.id)
+        expect(retrieved.value.id).eq(relationship.id)
 
-        return repository.delete(results.value)
+        return repository.delete(relationship)
     });
 
     it('can archive a Metatype Relationship', async()=> {
         const repository = new MetatypeRelationshipRepository()
-        const metatype = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const relationship = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
-        const results = await repository.save(user, metatype)
+        const results = await repository.save(user, relationship)
         expect(results.isError).false
-        expect(results.value.id).not.undefined
+        expect(relationship.id).not.undefined
 
-        const archived = await repository.archive(user, results.value)
+        const archived = await repository.archive(user, relationship)
         expect(archived.isError).false
 
-        return repository.delete(results.value)
+        return repository.delete(relationship)
     });
 
     it('can query and list Metatype Relationships', async()=> {
         const repository = new MetatypeRelationshipRepository()
-        const metatype1 = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
-        const metatype2 = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const relationship1 = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const relationship2 = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
-        let results = await repository.bulkSave(user, [metatype1, metatype2])
-        expect(results.isError).false
-        expect(results.value).not.empty
+        const saved = await repository.bulkSave(user, [relationship1, relationship2])
+        expect(saved.isError).false
 
         // simple list first
-        results = await repository.list(false, {limit: 1, offset: 0})
+        let results = await repository.list(false, {limit: 1, offset: 0})
         expect(results.isError).false
         expect(results.value).not.empty
         expect(results.value.length).eq(1)
 
         // now some more complicated queries
-        results = await repository.where().name("eq", metatype1.name).findAll()
+        results = await repository.where().name("eq", relationship1.name).findAll()
         expect(results.isError).false
         expect(results.value).not.empty
-        expect(results.value[0].name).eq(metatype1.name)
+        expect(results.value[0].name).eq(relationship1.name)
 
-        results = await repository.where().description("eq", metatype1.description).findAll()
+        results = await repository.where().description("eq", relationship1.description).findAll()
         expect(results.isError).false
         expect(results.value).not.empty
-        expect(results.value[0].description).eq(metatype1.description)
+        expect(results.value[0].description).eq(relationship1.description)
 
         results = await repository.where().containerID("eq", containerID).findAll()
         expect(results.isError).false
