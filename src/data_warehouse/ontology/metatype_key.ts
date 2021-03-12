@@ -16,23 +16,23 @@ export default class MetatypeKey extends BaseDataClass {
     @IsNotEmpty()
     @IsString()
     @MinLength(1)
-    name: string
+    name: string =""
 
     @IsNotEmpty()
     @IsString()
-    description: string
+    description: string = ""
 
     @IsNotEmpty()
     @IsString()
-    property_name: string
+    property_name: string = ""
 
     @IsNotEmpty()
     @IsString()
-    @IsIn(["number", "date", "string", "boolean", "enumeration", "file"])
-    data_type: string
+    @IsIn(["number", "date", "string", "boolean", "enumeration", "file", "unknown"])
+    data_type: string = "unknown"
 
     @IsBoolean()
-    required: boolean
+    required: boolean = false
 
     @IsObject()
     @IsOptional()
@@ -49,14 +49,33 @@ export default class MetatypeKey extends BaseDataClass {
     @IsOptional()
     default_value?: string | boolean | number | any[]
 
-    constructor(name: string, description: string, required:boolean, propertyName: string, dataType: string, options?: any[]) {
+    constructor(input: {
+        metatypeID?: string,
+        name: string,
+        description: string,
+        required:boolean,
+        propertyName: string,
+        dataType: string,
+        options?: any[],
+        validation?: {
+            regex: string,
+            max: number,
+            min: number
+        }}) {
         super();
 
-        this.options = options
-        this.required = required
-        this.name = name
-        this.description = description
-        this.property_name = propertyName
-        this.data_type = dataType
+        // we have to do this because class-transformer doesn't know to create
+        // an object with our specifications for the parameter
+        if(input) {
+            this.required = input.required
+            this.name = input.name
+            this.description = input.description
+            this.property_name = input.propertyName
+            this.data_type = input.dataType
+            if(input.options) this.options = input.options
+            if(input.validation) this.validation = input.validation
+            if(input.metatypeID) this.metatype_id = input.metatypeID
+        }
+
     }
 }

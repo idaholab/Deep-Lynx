@@ -5,7 +5,7 @@ import Logger from "../../logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 import Container from "../../data_warehouse/ontology/container";
-import {plainToClass} from "class-transformer";
+import {classToPlain, plainToClass} from "class-transformer";
 import MetatypeRelationshipPair from "../../data_warehouse/ontology/metatype_relationship_pair";
 
 describe('A Metatype Relationship Pair should', async() => {
@@ -19,7 +19,7 @@ describe('A Metatype Relationship Pair should', async() => {
         await PostgresAdapter.Instance.init();
         let mapper = ContainerMapper.Instance;
 
-        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
+        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
         expect(container.isError).false;
         expect(container.value.id).not.null
@@ -37,6 +37,15 @@ describe('A Metatype Relationship Pair should', async() => {
         expect(check.originMetatype).not.undefined
         expect(check.destinationMetatype).not.undefined
         expect(check.relationship).not.undefined
+
+        // verify that the resulting object has simple strings for id's
+        const plain = classToPlain(check)
+        expect(plain.origin_metatype_id).to.be.a("string")
+        expect(plain.origin_metatype).to.be.a("object")
+        expect(plain.destination_metatype_id).to.be.a("string")
+        expect(plain.destination_metatype).to.be.a("object")
+        expect(plain.relationship).to.be.a("object")
+        expect(plain.relationship_id).to.be.a("string")
 
         return Promise.resolve()
     })

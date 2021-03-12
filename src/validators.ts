@@ -6,7 +6,7 @@ const validator = require('validator')
 export function MetatypeID(validationOptions?: ValidationOptions) {
     return (object: object, propertyName: string) => {
         registerDecorator({
-            name: 'MetatypeHasID',
+            name: 'MetatypeID',
             target: object.constructor,
             propertyName,
             constraints: [],
@@ -23,7 +23,7 @@ export function MetatypeID(validationOptions?: ValidationOptions) {
 export function MetatypeRelationshipID(validationOptions?: ValidationOptions) {
     return (object: object, propertyName: string) => {
         registerDecorator({
-            name: 'MetatypeHasID',
+            name: 'MetatypeRelationshipID',
             target: object.constructor,
             propertyName,
             constraints: [],

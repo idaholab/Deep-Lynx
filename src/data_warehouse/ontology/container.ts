@@ -16,17 +16,25 @@ export default class Container extends BaseDataClass {
     @IsNotEmpty()
     @IsString()
     @MinLength(1)
-    name: string
+    name: string = ""
 
     @IsNotEmpty()
     @IsString()
-    description: string
+    description: string = ""
 
-    constructor(name: string, description: string) {
+    /**
+     *
+     * @param input
+     */
+    constructor(input: {name: string, description: string}) {
         super();
 
-        this.name = name
-        this.description = description
+        // we have to do this because class-transformer doesn't know to create
+        // an object with our specifications for the parameter
+        if(input) {
+            this.name = input.name
+            this.description = input.description
+        }
     }
 
     // setPermissions creates or repairs the Casbin entries for this container

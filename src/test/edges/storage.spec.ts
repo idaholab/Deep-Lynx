@@ -33,7 +33,7 @@ describe('A Graph Edge can', async() => {
         await PostgresAdapter.Instance.init();
         let mapper = ContainerMapper.Instance;
 
-        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
+        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
         expect(container.isError).false;
         expect(container.value.id).not.null
@@ -66,8 +66,8 @@ describe('A Graph Edge can', async() => {
 
         const metatype = await mMapper.BulkCreate( "test suite",
             [
-                new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
-                new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
+                new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
+                new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
                 ]);
 
         expect(metatype.isError).false;
@@ -91,7 +91,7 @@ describe('A Graph Edge can', async() => {
         expect(node.isError, metatype.error?.error).false;
 
         let relationship = await rMapper.Create("test suite",
-            new MetatypeRelationship(containerID, faker.name.findName(), faker.random.alphaNumeric()))
+            new MetatypeRelationship({containerID,name: faker.name.findName(), description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -152,8 +152,8 @@ describe('A Graph Edge can', async() => {
 
         const metatype = await mMapper.BulkCreate( "test suite",
             [
-                new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
-                new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
+                new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
+                new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
             ]);
 
         expect(metatype.isError).false;
@@ -181,7 +181,7 @@ describe('A Graph Edge can', async() => {
         expect(node.isError, metatype.error?.error).false;
 
         let relationship = await rMapper.Create("test suite",
-            new MetatypeRelationship(containerID, faker.name.findName(), faker.random.alphaNumeric()))
+            new MetatypeRelationship({containerID,name: faker.name.findName(), description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -227,8 +227,8 @@ describe('A Graph Edge can', async() => {
 
         const metatype = await mMapper.BulkCreate( "test suite",
             [
-                new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
-                new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
+                new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
+                new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
             ]);
 
         expect(metatype.isError).false;
@@ -252,7 +252,7 @@ describe('A Graph Edge can', async() => {
         expect(node.isError, metatype.error?.error).false;
 
         let relationship = await rMapper.Create("test suite",
-            new MetatypeRelationship(containerID, faker.name.findName(), faker.random.alphaNumeric()))
+            new MetatypeRelationship({containerID,name: faker.name.findName(), description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -304,8 +304,8 @@ describe('A Graph Edge can', async() => {
 
         const metatype = await mMapper.BulkCreate( "test suite",
             [
-                new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
-                new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()),
+                new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
+                new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
             ]);
 
         expect(metatype.isError).false;
@@ -329,7 +329,7 @@ describe('A Graph Edge can', async() => {
         expect(node.isError, metatype.error?.error).false;
 
         let relationship = await rMapper.Create("test suite",
-            new MetatypeRelationship(containerID, faker.name.findName(), faker.random.alphaNumeric()))
+            new MetatypeRelationship({containerID,name: faker.name.findName(), description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;

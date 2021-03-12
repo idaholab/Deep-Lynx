@@ -1,6 +1,7 @@
 import Container from "../../src/data_warehouse/ontology/container"
 import Metatype from "../../src/data_warehouse/ontology/metatype";
 import MetatypeRelationship from "../../src/data_warehouse/ontology/metatype_relationship";
+import MetatypeRelationshipPair from "../../src/data_warehouse/ontology/metatype_relationship_pair";
 
 declare global {
     namespace Express {
@@ -8,6 +9,7 @@ declare global {
             container?: Container
             metatype?: Metatype
             metatypeRelationship?: MetatypeRelationship
+            metatypeRelationshipPair?: MetatypeRelationshipPair
         }
    }
 }

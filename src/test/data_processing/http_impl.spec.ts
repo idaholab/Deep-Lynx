@@ -26,7 +26,7 @@ describe('An HTTP Data Source', async() => {
         await PostgresAdapter.Instance.init();
         let mapper = ContainerStorage.Instance;
 
-        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
+        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
         expect(container.isError).false;
         expect(container.value.id).not.null

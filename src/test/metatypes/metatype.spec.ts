@@ -36,7 +36,7 @@ describe('A Metatype should', async() => {
         await PostgresAdapter.Instance.init();
         let mapper = ContainerMapper.Instance;
 
-        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
+        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
         expect(container.isError).false;
         expect(container.value.id).not.null
@@ -50,7 +50,7 @@ describe('A Metatype should', async() => {
     })
 
     it('be able to compile keys and pass/fail payloads', (done) => {
-        const metatype = new Metatype(containerID, faker.name.findName(), faker.random.alphaNumeric())
+        const metatype = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
         metatype.addKey(...test_keys)
 
         pipe(metatype.compileKeys().decode(payload), fold(onLeft, onRight));
@@ -72,9 +72,9 @@ const malformed_payload: {[key:string]:any} = {
 };
 
 export const test_keys: MetatypeKey[] = [
-    new MetatypeKey("Test", "flower name", true, "flower_name", "string"),
-    new MetatypeKey("Test2", "color of flower allowed", true, "color", "enumeration", ["yellow", "blue"]),
-    new MetatypeKey("Test Not Required", "not required", false, "notRequired", "number"),
+    new MetatypeKey({name: "Test", description: "flower name", required: true, propertyName: "flower_name", dataType: "string"}),
+    new MetatypeKey({name: "Test2", description: "color of flower allowed", required: true, propertyName: "color", dataType: "enumeration", options: ["yellow", "blue"]}),
+    new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"}),
 ];
 
-export const single_test_key: MetatypeKey = new MetatypeKey("Test Not Required", "not required", false, "notRequired", "number")
+export const single_test_key: MetatypeKey = new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"})

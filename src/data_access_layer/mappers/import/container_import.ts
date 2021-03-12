@@ -315,7 +315,7 @@ export default class ContainerImport {
         if (!update) {
           const repository = new ContainerRepository();
 
-          const container = await repository.save(user, new Container(name, ontologyDescription))
+          const container = await repository.save(user, new Container({name, description: ontologyDescription}))
           if (container.isError) return resolve(Result.SilentFailure(container.error!.error));
           containerID = container.value.id!;
         }
@@ -484,9 +484,9 @@ export default class ContainerImport {
         relationshipMap.forEach(relationship => {
           // if not marked for update, create
           if (!relationship.update) {
-            relationshipPromises.push(metatypeRelationshipStorage.BulkCreate(user.id!,[new MetatypeRelationship(containerID, relationship.name, relationship.description)]))
+            relationshipPromises.push(metatypeRelationshipStorage.BulkCreate(user.id!,[new MetatypeRelationship({containerID, name: relationship.name, description:relationship.description})]))
           } else {
-            const data = new MetatypeRelationship(containerID, relationship.name, relationship.description)
+            const data = new MetatypeRelationship({containerID, name:relationship.name, description: relationship.description})
             data.id = relationship.db_id
 
             relationshipUpdates.push(data)
@@ -529,10 +529,10 @@ export default class ContainerImport {
         classListMap.forEach((thisClass: MetatypeExtendT) => {
           // if not marked for update, create
           if (!thisClass.update) {
-            classPromises.push(metatypeStorage.BulkCreate(user.id!, [new Metatype(containerID, thisClass.name, thisClass.description)]))
+            classPromises.push(metatypeStorage.BulkCreate(user.id!, [new Metatype({containerID, name: thisClass.name, description: thisClass.description})]))
           } else {
             // else add to batch update
-            const data = new Metatype(containerID, thisClass.name, thisClass.description)
+            const data = new Metatype({containerID, name: thisClass.name, description: thisClass.description})
             data.id = thisClass.db_id
 
             metatypeUpdates.push(data)

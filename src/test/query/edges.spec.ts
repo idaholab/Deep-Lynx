@@ -39,7 +39,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         await PostgresAdapter.Instance.init();
         let mapper = ContainerStorage.Instance;
 
-        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
+        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
         expect(container.isError).false;
         expect(container.value.id).not.null
@@ -61,7 +61,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         expect(graph.value).not.empty;
 
         const metatypeResult = await mMapper.Create("test suite",
-            new Metatype(containerID,faker.name.findName(), faker.random.alphaNumeric()));
+            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatypeResult.isError).false;
         expect(metatypeResult.value).not.empty;
@@ -80,7 +80,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
 
         node = nodes.value[0]
 
-        let relationship = await rMapper.Create("test suite", new MetatypeRelationship(containerID, "parent", faker.random.alphaNumeric()))
+        let relationship = await rMapper.Create("test suite", new MetatypeRelationship({containerID, name: "parent", description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;

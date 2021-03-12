@@ -2,7 +2,6 @@ import {Request, Response, NextFunction, Application} from "express"
 import MetatypeRelationshipPairMapper from "../data_access_layer/mappers/metatype_relationship_pair_mapper";
 import {authInContainer} from "./middleware";
 import {UserT} from "../types/user_management/userT";
-import MetatypeRelationshipPairFilter from "../data_access_layer/mappers/metatype_relationship_pair_filter";
 
 const storage = MetatypeRelationshipPairMapper.Instance;
 

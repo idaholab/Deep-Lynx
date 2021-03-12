@@ -164,7 +164,6 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(Result.Success(toReturn))
     }
 
-
     private async saveKeys(user: UserT, m: Metatype, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction: boolean = false
         const keysUpdate: MetatypeKey[] = []

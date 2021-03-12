@@ -23,7 +23,7 @@ describe('A Container Mapper', async() => {
     it('can save to storage', async()=> {
         let mapper = ContainerStorage.Instance;
 
-        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
+        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
         expect(container.isError).false;
         expect(container.value.id).not.null
@@ -34,8 +34,8 @@ describe('A Container Mapper', async() => {
     it('can bulk save to storage', async()=> {
         let mapper = ContainerStorage.Instance;
 
-        const container1 = new Container(faker.name.findName(), faker.random.alphaNumeric())
-        const container2 = new Container(faker.name.findName(), faker.random.alphaNumeric())
+        const container1 = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const container2 = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
         let container = await mapper.BulkCreate("test suite", [container1, container2]);
 
@@ -48,7 +48,7 @@ describe('A Container Mapper', async() => {
     it('can be retrieve from storage', async()=> {
         let mapper = ContainerStorage.Instance;
 
-        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
+        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
         expect(container.isError).false;
         expect(container.value).not.empty;
@@ -63,7 +63,7 @@ describe('A Container Mapper', async() => {
     it('can list from storage', async()=> {
         let mapper = ContainerStorage.Instance;
 
-        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
+        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
         expect(container.isError).false;
         expect(container.value).not.empty;
@@ -78,7 +78,7 @@ describe('A Container Mapper', async() => {
     it('can update in storage', async()=> {
         let mapper = ContainerStorage.Instance;
 
-        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
+        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
         expect(container.isError).false;
         expect(container.value).not.empty;
@@ -103,8 +103,8 @@ describe('A Container Mapper', async() => {
     it('can bulk update in storage', async()=> {
         let mapper = ContainerStorage.Instance;
 
-        const container1 = new Container(faker.name.findName(), faker.random.alphaNumeric())
-        const container2 = new Container(faker.name.findName(), faker.random.alphaNumeric())
+        const container1 = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const container2 = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
         let containers = await mapper.BulkCreate("test suite", [container1, container2]);
 

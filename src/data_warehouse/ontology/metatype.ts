@@ -12,7 +12,7 @@ export default class Metatype extends BaseDataClass {
     id?: string
 
     @IsUUID()
-    container_id: string
+    container_id?: string
 
     @IsOptional()
     @IsBoolean()
@@ -21,22 +21,26 @@ export default class Metatype extends BaseDataClass {
     @IsNotEmpty()
     @IsString()
     @MinLength(1)
-    name: string
+    name: string = ""
 
     @IsNotEmpty()
     @IsString()
-    description: string
+    description: string = ""
 
     keys: MetatypeKey[] = []
     // for tracking removed keys for update
     #removedKeys: MetatypeKey[] = []
 
-    constructor(containerID: string, name: string, description: string) {
+    constructor(input: {containerID?: string, name: string, description: string}) {
         super();
 
-        this.container_id = containerID
-        this.name = name
-        this.description = description
+        // we have to do this because class-transformer doesn't know to create
+        // an object with our specifications for the parameter
+        if(input) {
+            if(input.containerID) this.container_id = input.containerID
+            this.name = input.name
+            this.description = input.description
+        }
     }
 
     get removedKeys() {

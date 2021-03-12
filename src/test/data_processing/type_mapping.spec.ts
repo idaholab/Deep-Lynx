@@ -20,7 +20,6 @@ import ImportStorage from "../../data_access_layer/mappers/import/import_storage
 import DataStagingStorage from "../../data_access_layer/mappers/import/data_staging_storage";
 import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
 import MetatypeRelationshipPairMapper from "../../data_access_layer/mappers/metatype_relationship_pair_mapper";
-import {MetatypeRelationshipPairT} from "../../types/metatype_relationship_pairT";
 import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
 import {EdgeT} from "../../types/graph/edgeT";
 import Container from "../../data_warehouse/ontology/container";
@@ -57,7 +56,7 @@ describe('A Data Type Mapping can', async() => {
         await PostgresAdapter.Instance.init();
         let mapper = ContainerStorage.Instance;
 
-        const container = await mapper.Create("test suite", new Container(faker.name.findName(), faker.random.alphaNumeric()));
+        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
         expect(container.isError).false;
         expect(container.value.id).not.null
@@ -74,13 +73,13 @@ describe('A Data Type Mapping can', async() => {
         let mappingStorage = TypeMappingStorage.Instance
 
         const test_metatypes: Metatype[] = [
-            new Metatype(containerID,"Car", "A Vehicle"),
-            new Metatype(containerID,"Manufacturer", "Creator of Car"),
-            new Metatype(containerID,"Tire Pressure", "Pressure of tire"),
-            new Metatype(containerID,"Maintenance", "Maintenance records"),
-            new Metatype(containerID,"Maintenance Entry", "Maintenance entries"),
-            new Metatype(containerID,"Part", "Physical part of car"),
-            new Metatype(containerID,"Component", "Base component of part"),
+            new Metatype({containerID,name: "Car", description: "A Vehicle"}),
+            new Metatype({containerID,name: "Manufacturer", description: "Creator of Car"}),
+            new Metatype({containerID,name: "Tire Pressure", description: "Pressure of tire"}),
+            new Metatype({containerID,name: "Maintenance", description: "Maintenance records"}),
+            new Metatype({containerID,name: "Maintenance Entry", description: "Maintenance entries"}),
+            new Metatype({containerID,name: "Part", description: "Physical part of car"}),
+            new Metatype({containerID,name: "Component", description: "Base component of part"}),
         ];
 
         let metatypes = await metatypeStorage.BulkCreate("test suite", test_metatypes);
@@ -152,7 +151,7 @@ describe('A Data Type Mapping can', async() => {
         }
 
         const test_metatype_relationships: MetatypeRelationship[] = [
-            new MetatypeRelationship(containerID, "parent", "item is another's parent")
+            new MetatypeRelationship({containerID, name: "parent", description: "item is another's parent"})
         ];
 
         // create the relationships
