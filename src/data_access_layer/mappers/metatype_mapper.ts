@@ -42,13 +42,13 @@ export default class MetatypeMapper extends PostgresStorage{
     }
 
     public async Retrieve(id: string): Promise<Result<Metatype>> {
-        const result = await super.retrieveRaw(this.retrieveStatement(id))
+        const r = await super.retrieveRaw(this.retrieveStatement(id))
+        if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        if(result.isError) return Promise.resolve(Result.Pass(result))
-        return Promise.resolve(Result.Success(plainToClass(Metatype, result.value)))
+        return Promise.resolve(Result.Success(plainToClass(Metatype, r.value)))
     }
 
-    public async Update(userID:string, m: Metatype, transaction?: PoolClient): Promise<Result<Metatype>> {
+    public async Update(userID: string, m: Metatype, transaction?: PoolClient): Promise<Result<Metatype>> {
         const r = await super.runRaw(this.fullUpdateStatement(userID, m), transaction)
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
@@ -57,7 +57,7 @@ export default class MetatypeMapper extends PostgresStorage{
         return Promise.resolve(Result.Success(resultMetatypes[0]))
     }
 
-    public async BulkUpdate(userID:string, m: Metatype[], transaction?: PoolClient): Promise<Result<Metatype[]>> {
+    public async BulkUpdate(userID: string, m: Metatype[], transaction?: PoolClient): Promise<Result<Metatype[]>> {
         const r = await super.runRaw(this.fullUpdateStatement(userID, ...m), transaction)
         if(r.isError) return Promise.resolve(Result.Pass(r))
 

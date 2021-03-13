@@ -55,15 +55,13 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         // separate containers by which need to be created and which need to be updated
         const toCreate: Container[] = []
         const toUpdate: Container [] = []
-
         const toReturn: Container[] = []
 
         // run validation and separate
         for(const container of c) {
             const errors = await container.validationErrors()
-
             if(errors) {
-                return Promise.resolve(Result.Failure(`container does not pass validation ${errors.join(",")}`))
+                return Promise.resolve(Result.Failure(`some containers do not pass validation ${errors.join(",")}`))
             }
 
             (container.id) ? toUpdate.push(container) : toCreate.push(container)
