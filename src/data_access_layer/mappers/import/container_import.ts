@@ -7,7 +7,6 @@ import MetatypeKeyMapper from "../metatype_key_mapper"
 import { UserT } from "../../../types/user_management/userT";
 import Result from "../../../result";
 import { ContainerImportT } from "../../../types/import/containerImportT"
-import { MetatypeRelationshipPairT } from "../../../types/metatype_relationship_pairT";
 import { MetatypeKeyT, MetatypeKeysT } from "../../../types/metatype_keyT";
 import NodeStorage from "../graph/node_storage"
 import EdgeStorage from "../graph/edge_storage"
@@ -18,6 +17,8 @@ import Metatype from "../../../data_warehouse/ontology/metatype";
 import MetatypeRepository from "../../repositories/metatype_repository";
 import MetatypeRelationshipRepository from "../../repositories/metatype_relationship_repository";
 import MetatypeRelationship from "../../../data_warehouse/ontology/metatype_relationship";
+import MetatypeRelationshipPairRepository from "../../repositories/metatype_relationship_pair_repository";
+import MetatypeRelationshipPair from "../../../data_warehouse/ontology/metatype_relationship_pair";
 const convert = require('xml-js');
 
 const containerStorage = ContainerStorage.Instance;
@@ -314,10 +315,11 @@ export default class ContainerImport {
         // If performing a create, need to create container and retrieve container ID
         if (!update) {
           const repository = new ContainerRepository();
+          const container = new Container({name, description: ontologyDescription})
 
-          const container = await repository.save(user, new Container({name, description: ontologyDescription}))
-          if (container.isError) return resolve(Result.SilentFailure(container.error!.error));
-          containerID = container.value.id!;
+          const saved = await repository.save(user, container)
+          if (saved.isError) return resolve(Result.SilentFailure(saved.error!.error));
+          containerID = container.id!;
         }
 
         const allRelationshipPairNames: string[] = [];
@@ -365,18 +367,19 @@ export default class ContainerImport {
         })
 
         if (update) {
-          let oldMetatypeRelationships
-          let oldMetatypes
-          let oldMetatypeRelationshipPairs
+          let oldMetatypeRelationships : MetatypeRelationship[]
+          let oldMetatypes : Metatype[]
+          let oldMetatypeRelationshipPairs : MetatypeRelationshipPair[]
 
           // retrieve existing container, relationships, metatypes, and relationship pairs
           const relationshipRepository = new MetatypeRelationshipRepository()
           oldMetatypeRelationships = (await relationshipRepository.where().containerID("eq", containerID).list(false)).value
 
           const metatypeRepository = new MetatypeRepository()
-          oldMetatypes = await metatypeRepository.where().containerID("eq", containerID).list(false)
-          oldMetatypes = oldMetatypes.value
-          oldMetatypeRelationshipPairs = (await metatypeRelationshipPairStorage.List(containerID, 0, -1)).value
+          oldMetatypes = (await metatypeRepository.where().containerID("eq", containerID).list(false)).value
+
+          const pairRepository = new MetatypeRelationshipPairRepository()
+          oldMetatypeRelationshipPairs = (await pairRepository.where().containerID("eq", containerID).list()).value
 
           // loop through above, checking if there is anything in old that has been removed
           // if anything has been removed, check for associated nodes/edges
@@ -571,11 +574,11 @@ export default class ContainerImport {
           }
         })
 
-        const propertyPromises: Promise<Result<MetatypeKeyT[] | MetatypeRelationshipPairT[]>>[] = [];
+        const propertyPromises: Promise<Result<MetatypeKeyT[] | MetatypeRelationshipPair[]>>[] = [];
         // Add metatype keys (properties) and relationship pairs
         classListMap.forEach(async (thisClass: MetatypeExtendT) => {
 
-          const updateRelationships: MetatypeRelationshipPairT[] = [];
+          const updateRelationships: MetatypeRelationshipPair[] = [];
 
           // Add relationship to parent class
           const relationship = relationshipMap.get('inheritance');
@@ -584,21 +587,22 @@ export default class ContainerImport {
 
             const relationshipName = thisClass.name + ' : child of : ' + classIDMap.get(thisClass.parent_id).name
 
-            const data: MetatypeRelationshipPairT = {
+            const data = new MetatypeRelationshipPair({
               name: relationshipName,
               description: relationship.description,
-              origin_metatype_id: thisClass.db_id!,
-              destination_metatype_id: classIDMap.get(thisClass.parent_id).db_id,
-              relationship_id: relationship.db_id,
-              relationship_type: "many:one"
-            };
+              originMetatype: thisClass.db_id!,
+              destinationMetatype: classIDMap.get(thisClass.parent_id).db_id,
+              relationship: relationship.db_id,
+              relationshipType: "many:one",
+              containerID
+            });
 
             if (thisClass.updateKeyNames.includes(relationshipName)) {
               const originalKeyData = thisClass.updateKeys.get(relationshipName)
               data.id = originalKeyData.id
               updateRelationships.push(data)
             } else {
-              propertyPromises.push(metatypeRelationshipPairStorage.Create(containerID, user.id!, data))
+              propertyPromises.push(metatypeRelationshipPairStorage.BulkCreate(user.id!, [data]))
             }
 
           }
@@ -664,21 +668,23 @@ export default class ContainerImport {
               const relationship = relationshipIDMap.get(property.value);
               const relationshipID = relationshipMap.get(relationship.name).db_id
               const relationshipName = thisClass.name + ' : ' + relationship.name + ' : ' + classIDMap.get(property.target).name
-              const data: MetatypeRelationshipPairT = {
+
+              const data = new MetatypeRelationshipPair({
                 name: relationshipName,
                 description: relationship.description,
-                origin_metatype_id: thisClass.db_id!,
-                destination_metatype_id: classIDMap.get(property.target).db_id,
-                relationship_id: relationshipID,
-                relationship_type: "many:many"
-              };
+                originMetatype: thisClass.db_id!,
+                destinationMetatype: classIDMap.get(property.target).db_id,
+                relationship: relationshipID,
+                relationshipType: "many:many",
+                containerID
+              });
 
               if (thisClass.updateKeyNames.includes(relationshipName)) {
                 const originalKeyData = thisClass.updateKeys.get(relationshipName)
                 data.id = originalKeyData.id
                 updateRelationships.push(data)
               } else {
-                propertyPromises.push(metatypeRelationshipPairStorage.Create(containerID, user.id!, data))
+                propertyPromises.push(metatypeRelationshipPairStorage.BulkCreate(user.id!, [data]))
               }
             }
           }
@@ -688,11 +694,11 @@ export default class ContainerImport {
           }
 
           if (updateRelationships.length > 0) {
-            propertyPromises.push(metatypeRelationshipPairStorage.BatchUpdate(updateRelationships))
+            propertyPromises.push(metatypeRelationshipPairStorage.BulkUpdate(user.id!, updateRelationships))
           }
 
         })
-        const propertyResults: Result<MetatypeKeyT[] | MetatypeRelationshipPairT[]>[] = await Promise.all(propertyPromises)
+        const propertyResults: Result<MetatypeKeyT[] | MetatypeRelationshipPair[]>[] = await Promise.all(propertyPromises)
         for (const propResult of propertyResults) {
           if (propResult.isError) {
             const rollback = await this.rollbackOntology(containerID)

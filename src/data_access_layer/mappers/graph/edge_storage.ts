@@ -2,18 +2,15 @@ import PostgresStorage from "../postgresStorage";
 import {PoolClient, Query, QueryConfig} from "pg";
 import {edgesT, EdgesT, EdgeT} from "../../../types/graph/edgeT";
 import * as t from "io-ts";
-import {MetatypeRelationshipKeyT} from "../../../types/metatype_relationship_keyT";
 import Result from "../../../result";
-import {CompileMetatypeKeys} from "../../../types/metatype_keyT";
-import {pipe} from "fp-ts/lib/pipeable";
-import {fold} from "fp-ts/lib/Either";
 import {NodeT} from "../../../types/graph/nodeT";
 import NodeStorage from "./node_storage";
 import MetatypeRelationshipPairMapper from "../metatype_relationship_pair_mapper";
-import {MetatypeRelationshipPairT} from "../../../types/metatype_relationship_pairT";
 import GraphStorage from "./graph_storage";
 import Logger from "../../../logger";
 import MetatypeRelationshipRepository from "../../repositories/metatype_relationship_repository";
+import MetatypeRelationshipPairRepository from "../../repositories/metatype_relationship_pair_repository";
+import MetatypeRelationshipPair from "../../../data_warehouse/ontology/metatype_relationship_pair";
 
 /*
 * EdgeStorage allows the user to create a graph relationship (edge) between two nodes of data
@@ -58,128 +55,136 @@ export default class EdgeStorage extends PostgresStorage{
      */
     public async CreateOrUpdate(containerID: string, graphID: string, input: any | EdgesT, client?: PoolClient, preQueries?: QueryConfig[], postQueries?: QueryConfig[]): Promise<Result<EdgesT>> {
         const relationshipRepo = new MetatypeRelationshipRepository()
+        const pairRepo = new MetatypeRelationshipPairRepository()
 
         const onValidateSuccess = ( resolve: (r:any) => void): (e: EdgesT) => void => {
-           return async (es: EdgesT) => {
+            return async (es: EdgesT) => {
 
-               const queries : QueryConfig[] = [];
-               if(preQueries) queries.push(...preQueries);
+                const queries : QueryConfig[] = [];
+                if(preQueries) queries.push(...preQueries);
 
-               // validate each edge's properties for the declared type We don't
-               // have to check the edge ID because they would not have gotten this
-               // far without one present, and validateProperties will fail if
-               // no metatype is found
-               for(const e in es) {
-                   // find and register metatype relationship keys
-                   // fetch the relationship itself first
-                   const metatypeRelationshipPair = await MetatypeRelationshipPairMapper.Instance.Retrieve(es[e].relationship_pair_id)
-                   if(metatypeRelationshipPair.isError) {
-                       resolve(Result.Pass(metatypeRelationshipPair))
-                       return
-                   }
+                // validate each edge's properties for the declared type We don't
+                // have to check the edge ID because they would not have gotten this
+                // far without one present, and validateProperties will fail if
+                // no metatype is found
+                for(const e in es) {
+                    // find and register metatype relationship keys
+                    // fetch the relationship itself first
+                    const metatypeRelationshipPair = await MetatypeRelationshipPairMapper.Instance.Retrieve(es[e].relationship_pair_id)
+                    if(metatypeRelationshipPair.isError) {
+                        resolve(Result.Pass(metatypeRelationshipPair))
+                        return
+                    }
 
-                   const relationship = await relationshipRepo.findByID(metatypeRelationshipPair.value.relationship_id)
-                   if(relationship.isError) {
-                       resolve(Result.Pass(relationship))
-                       return
-                   }
+                    const relationship = await relationshipRepo.findByID(metatypeRelationshipPair.value.relationship_id)
+                    if(relationship.isError) {
+                        resolve(Result.Pass(relationship))
+                        return
+                    }
 
-                   // Verifies that a relationship pair actually exists for these two nodes
-                   let origin: NodeT
-                   if(es[e].origin_node_id){
-                       const request = await NodeStorage.Instance.Retrieve(es[e].origin_node_id!);
-                       if(request.isError) {
-                           resolve(Result.Failure("origin node not found"));
-                           return
-                       }
+                    // Verifies that a relationship pair actually exists for these two nodes
+                    let origin: NodeT
+                    if(es[e].origin_node_id){
+                        const request = await NodeStorage.Instance.Retrieve(es[e].origin_node_id!);
+                        if(request.isError) {
+                            resolve(Result.Failure("origin node not found"));
+                            return
+                        }
 
-                       origin = request.value
-                   } else if(es[e].origin_node_composite_original_id && es[e].data_source_id) {
-                       const request = await NodeStorage.Instance.RetrieveByCompositeOriginalID(es[e].origin_node_composite_original_id!, es[e].data_source_id!);
-                       if(request.isError) {
-                           resolve(Result.Failure("origin node not found"));
-                           return
-                       }
+                        origin = request.value
+                    } else if(es[e].origin_node_composite_original_id && es[e].data_source_id) {
+                        const request = await NodeStorage.Instance.RetrieveByCompositeOriginalID(es[e].origin_node_composite_original_id!, es[e].data_source_id!);
+                        if(request.isError) {
+                            resolve(Result.Failure("origin node not found"));
+                            return
+                        }
 
-                       origin = request.value
-                       es[e].origin_node_id = request.value.id!
-                   } else {
-                       resolve(Result.Failure("no origin node id provided"))
-                       return
-                   }
-
-
-                   let destination: NodeT
-                   if(es[e].destination_node_id) {
-                       const request = await NodeStorage.Instance.Retrieve(es[e].destination_node_id!);
-                       if(request.isError) {
-                           resolve(Result.Failure("destination node not found"));
-                           return
-                       }
-
-                       destination = request.value
-                   } else if(es[e].destination_node_composite_original_id && es[e].data_source_id) {
-                       const request = await NodeStorage.Instance.RetrieveByCompositeOriginalID(es[e].destination_node_composite_original_id!, es[e].data_source_id!);
-                       if(request.isError) {
-                           resolve(Result.Failure("destination node not found"));
-                           return
-                       }
-
-                       destination = request.value
-                       es[e].destination_node_id = request.value.id!
-                   } else {
-                       resolve(Result.Failure("no destination node id provided"))
-                       return
-                   }
+                        origin = request.value
+                        es[e].origin_node_id = request.value.id!
+                    } else {
+                        resolve(Result.Failure("no origin node id provided"))
+                        return
+                    }
 
 
+                    let destination: NodeT
+                    if(es[e].destination_node_id) {
+                        const request = await NodeStorage.Instance.Retrieve(es[e].destination_node_id!);
+                        if(request.isError) {
+                            resolve(Result.Failure("destination node not found"));
+                            return
+                        }
 
-                   const pair = await MetatypeRelationshipPairMapper.Instance.RetrieveByMetatypesAndRelationship(origin.metatype_id, destination.metatype_id, es[e].relationship_pair_id);
-                   if(pair.isError) {
-                       resolve(Result.Failure(`unable to verify the validity of the proposed relationship between nodes`));
-                       return
-                   }
+                        destination = request.value
+                    } else if(es[e].destination_node_composite_original_id && es[e].data_source_id) {
+                        const request = await NodeStorage.Instance.RetrieveByCompositeOriginalID(es[e].destination_node_composite_original_id!, es[e].data_source_id!);
+                        if(request.isError) {
+                            resolve(Result.Failure("destination node not found"));
+                            return
+                        }
 
-                   const validPayload = await relationship.value.validateAndTransformProperties(es[e].properties);
-                   if(validPayload.isError ) {
-                       resolve(Result.Failure(`edges's properties do no match declared relationship type: ${es[e].relationship_pair_id}`));
-                       return
-                   }
+                        destination = request.value
+                        es[e].destination_node_id = request.value.id!
+                    } else {
+                        resolve(Result.Failure("no destination node id provided"))
+                        return
+                    }
 
-                   // replace the properties with the validated and transformed payload
-                   es[e].properties = validPayload.value
 
-                   // verify that the relationship is valid if new edge
-                   if(!es[e].modified_at && !es[e].deleted_at && !es[e].id) {
-                        const relationshipValid = await this.validateRelationship(pair.value, origin, destination);
+
+                    const pairs = await pairRepo.where()
+                        .origin_metatype_id("eq", origin.metatype_id)
+                        .and()
+                        .destination_metatype_id("eq", destination.metatype_id)
+                        .and()
+                        .id("eq", es[e].relationship_pair_id)
+                        .list(false, {limit: 1})
+                    if(pairs.isError || pairs.value.length <= 0) {
+                        resolve(Result.Failure(`unable to verify the validity of the proposed relationship between nodes`));
+                        return
+                    }
+                    const pair = pairs.value[0]
+
+                    const validPayload = await relationship.value.validateAndTransformProperties(es[e].properties);
+                    if(validPayload.isError ) {
+                        resolve(Result.Failure(`edges's properties do no match declared relationship type: ${es[e].relationship_pair_id}`));
+                        return
+                    }
+
+                    // replace the properties with the validated and transformed payload
+                    es[e].properties = validPayload.value
+
+                    // verify that the relationship is valid if new edge
+                    if(!es[e].modified_at && !es[e].deleted_at && !es[e].id) {
+                        const relationshipValid = await this.validateRelationship(pair, origin, destination);
                         if(relationshipValid.isError || !relationshipValid.value) {
                             resolve(Result.Failure(`unable to create relationship between nodes, fails relationship constraint: ${relationshipValid.error?.error}`))
                         }
                     }
 
-                   es[e].graph_id = graphID;
-                   es[e].container_id = containerID;
+                    es[e].graph_id = graphID;
+                    es[e].container_id = containerID;
 
-                   if((es[e].modified_at || es[e].deleted_at) && es[e].id) queries.push(...EdgeStorage.updateStatement(es[e]))
-                   else if((es[e].modified_at || es[e].deleted_at) && !es[e].id && es[e].original_data_id && es[e].data_source_id) queries.push(...EdgeStorage.updateByCompositeOriginalIDStatement(es[e]))
-                   else {
-                       es[e].id = super.generateUUID();
-                       queries.push(...EdgeStorage.createStatement(es[e]))
-                   }
-               }
+                    if((es[e].modified_at || es[e].deleted_at) && es[e].id) queries.push(...EdgeStorage.updateStatement(es[e]))
+                    else if((es[e].modified_at || es[e].deleted_at) && !es[e].id && es[e].original_data_id && es[e].data_source_id) queries.push(...EdgeStorage.updateByCompositeOriginalIDStatement(es[e]))
+                    else {
+                        es[e].id = super.generateUUID();
+                        queries.push(...EdgeStorage.createStatement(es[e]))
+                    }
+                }
 
 
-               if(postQueries) queries.push(...postQueries);
-               super.runAsTransaction(...queries)
-                   .then((r) => {
-                       if(r.isError) {
-                           resolve(r);
-                           return
-                       }
+                if(postQueries) queries.push(...postQueries);
+                super.runAsTransaction(...queries)
+                    .then((r) => {
+                        if(r.isError) {
+                            resolve(r);
+                            return
+                        }
 
-                       resolve(Result.Success(es))
-                   })
-           }
+                        resolve(Result.Success(es))
+                    })
+            }
         };
 
         const payload = (t.array(t.unknown).is(input)) ? input : [input];
@@ -190,108 +195,114 @@ export default class EdgeStorage extends PostgresStorage{
     // client? is needed so that we can search for nodes inside of a transaction. See the data processing loop where this is used to
     // get a better picture of whats happening
     public async CreateOrUpdateStatement(containerID: string, graphID: string, es: EdgesT, client?: PoolClient, preQueries?: QueryConfig[], postQueries?: QueryConfig[]): Promise<Result<QueryConfig[]>> {
-            const relationshipRepo = new MetatypeRelationshipRepository()
-            const queries : QueryConfig[] = [];
-            if(preQueries) queries.push(...preQueries);
+        const relationshipRepo = new MetatypeRelationshipRepository()
+        const pairRepo = new MetatypeRelationshipPairRepository()
+        const queries : QueryConfig[] = [];
+        if(preQueries) queries.push(...preQueries);
 
-            // validate each edge's properties for the declared type We don't
-            // have to check the edge ID because they would not have gotten this
-            // far without one present, and validateProperties will fail if
-            // no metatype is found
-            for(const e in es) {
-                // find and register metatype relationship keys
+        // validate each edge's properties for the declared type We don't
+        // have to check the edge ID because they would not have gotten this
+        // far without one present, and validateProperties will fail if
+        // no metatype is found
+        for(const e in es) {
+            // find and register metatype relationship keys
 
-                // fetch the relationship itself first
-                const metatypeRelationshipPair = await MetatypeRelationshipPairMapper.Instance.Retrieve(es[e].relationship_pair_id)
-                if(metatypeRelationshipPair.isError) {
-                    return new Promise(resolve => resolve(Result.Pass(metatypeRelationshipPair)))
+            // fetch the relationship itself first
+            const metatypeRelationshipPair = await MetatypeRelationshipPairMapper.Instance.Retrieve(es[e].relationship_pair_id)
+            if(metatypeRelationshipPair.isError) {
+                return new Promise(resolve => resolve(Result.Pass(metatypeRelationshipPair)))
+            }
+
+            const relationship = await relationshipRepo.findByID(metatypeRelationshipPair.value.relationship_id)
+            if(relationship.isError) {
+                return new Promise(resolve => resolve(Result.Pass(relationship)))
+            }
+
+            // Verifies that a relationship pair actually exists for these two nodes
+            let origin: NodeT
+            if(es[e].origin_node_id){
+                const request = await NodeStorage.Instance.Retrieve(es[e].origin_node_id!, client);
+                if(request.isError) {
+                    return new Promise(resolve => resolve(Result.Failure("origin node not found")));
                 }
 
-                const relationship = await relationshipRepo.findByID(metatypeRelationshipPair.value.relationship_id)
-                if(relationship.isError) {
-                    return new Promise(resolve => resolve(Result.Pass(relationship)))
+                origin = request.value
+            } else if(es[e].origin_node_composite_original_id && es[e].data_source_id) {
+                const request = await NodeStorage.Instance.RetrieveByCompositeOriginalID(es[e].origin_node_composite_original_id!, es[e].data_source_id!, client);
+                if(request.isError) {
+                    return new Promise(resolve => resolve(Result.Failure("origin node not found")));
                 }
 
-                // Verifies that a relationship pair actually exists for these two nodes
-                let origin: NodeT
-                if(es[e].origin_node_id){
-                    const request = await NodeStorage.Instance.Retrieve(es[e].origin_node_id!, client);
-                    if(request.isError) {
-                        return new Promise(resolve => resolve(Result.Failure("origin node not found")));
-                    }
-
-                    origin = request.value
-                } else if(es[e].origin_node_composite_original_id && es[e].data_source_id) {
-                    const request = await NodeStorage.Instance.RetrieveByCompositeOriginalID(es[e].origin_node_composite_original_id!, es[e].data_source_id!, client);
-                    if(request.isError) {
-                        return new Promise(resolve => resolve(Result.Failure("origin node not found")));
-                    }
-
-                    origin = request.value
-                    es[e].origin_node_id = request.value.id!
-                } else {
-                    return new Promise(resolve => resolve(Result.Failure("no origin node id provided")))
-                }
-
-
-                let destination: NodeT
-                if(es[e].destination_node_id) {
-                    const request = await NodeStorage.Instance.Retrieve(es[e].destination_node_id!, client);
-                    if(request.isError) {
-                        return new Promise(resolve => resolve(Result.Failure("destination node not found")));
-                    }
-
-                    destination = request.value
-                } else if(es[e].destination_node_composite_original_id && es[e].data_source_id) {
-                    const request = await NodeStorage.Instance.RetrieveByCompositeOriginalID(es[e].destination_node_composite_original_id!, es[e].data_source_id!, client);
-                    if(request.isError) {
-                        return new Promise(resolve => resolve(Result.Failure("destination node not found")));
-                    }
-
-                    destination = request.value
-                    es[e].destination_node_id = request.value.id!
-                } else {
-                    return new Promise(resolve => resolve(Result.Failure("no destination node id provided")))
-                }
-
-
-
-                const pair = await MetatypeRelationshipPairMapper.Instance.RetrieveByMetatypesAndRelationship(origin.metatype_id, destination.metatype_id, es[e].relationship_pair_id);
-                if(pair.isError) {
-                    return new Promise(resolve => resolve(Result.Failure(`unable to verify the validity of the proposed relationship between nodes`)));
-                }
-
-                const validPayload = await relationship.value.validateAndTransformProperties(es[e].properties);
-                if(validPayload.isError) {
-                    return new Promise(resolve => resolve(Result.Failure(`edges's properties do no match declared relationship type: ${es[e].relationship_pair_id}`)));
-                }
-
-                // replace the properties with the validated and transformed payload
-                es[e].properties = validPayload.value
-
-                // verify that the relationship is valid if new edge
-                if(!es[e].modified_at && !es[e].deleted_at && es[e].id) {
-                    const relationshipValid = await this.validateRelationship(pair.value, origin, destination);
-                    if(relationshipValid.isError || !relationshipValid.value) {
-                        return new Promise(resolve => resolve(Result.Failure(`unable to create relationship between nodes, fails relationship constraint: ${relationshipValid.error?.error}`)))
-                    }
-                }
-
-                es[e].graph_id = graphID;
-                es[e].container_id = containerID;
-
-                if((es[e].modified_at || es[e].deleted_at) && es[e].id) queries.push(...EdgeStorage.updateStatement(es[e]))
-                else if((es[e].modified_at || es[e].deleted_at) && !es[e].id && es[e].original_data_id && es[e].data_source_id) queries.push(...EdgeStorage.updateByCompositeOriginalIDStatement(es[e]))
-                else {
-                    es[e].id = super.generateUUID();
-                    queries.push(...EdgeStorage.createStatement(es[e]))
-                }
+                origin = request.value
+                es[e].origin_node_id = request.value.id!
+            } else {
+                return new Promise(resolve => resolve(Result.Failure("no origin node id provided")))
             }
 
 
-            if(postQueries) queries.push(...postQueries);
+            let destination: NodeT
+            if(es[e].destination_node_id) {
+                const request = await NodeStorage.Instance.Retrieve(es[e].destination_node_id!, client);
+                if(request.isError) {
+                    return new Promise(resolve => resolve(Result.Failure("destination node not found")));
+                }
 
-            return new Promise(resolve => resolve(Result.Success(queries)))
+                destination = request.value
+            } else if(es[e].destination_node_composite_original_id && es[e].data_source_id) {
+                const request = await NodeStorage.Instance.RetrieveByCompositeOriginalID(es[e].destination_node_composite_original_id!, es[e].data_source_id!, client);
+                if(request.isError) {
+                    return new Promise(resolve => resolve(Result.Failure("destination node not found")));
+                }
+
+                destination = request.value
+                es[e].destination_node_id = request.value.id!
+            } else {
+                return new Promise(resolve => resolve(Result.Failure("no destination node id provided")))
+            }
+
+            const pairs = await pairRepo.where()
+                .origin_metatype_id("eq", origin.metatype_id)
+                .and()
+                .destination_metatype_id("eq", destination.metatype_id)
+                .and()
+                .id("eq", es[e].relationship_pair_id)
+                .list(false, {limit: 1})
+            if(pairs.isError || pairs.value.length <= 0) {
+                return Promise.resolve(Result.Failure(`unable to verify the validity of the proposed relationship between nodes`));
+            }
+            const pair = pairs.value[0]
+
+            const validPayload = await relationship.value.validateAndTransformProperties(es[e].properties);
+            if(validPayload.isError) {
+                return new Promise(resolve => resolve(Result.Failure(`edges's properties do no match declared relationship type: ${es[e].relationship_pair_id}`)));
+            }
+
+            // replace the properties with the validated and transformed payload
+            es[e].properties = validPayload.value
+
+            // verify that the relationship is valid if new edge
+            if(!es[e].modified_at && !es[e].deleted_at && es[e].id) {
+                const relationshipValid = await this.validateRelationship(pair, origin, destination);
+                if(relationshipValid.isError || !relationshipValid.value) {
+                    return new Promise(resolve => resolve(Result.Failure(`unable to create relationship between nodes, fails relationship constraint: ${relationshipValid.error?.error}`)))
+                }
+            }
+
+            es[e].graph_id = graphID;
+            es[e].container_id = containerID;
+
+            if((es[e].modified_at || es[e].deleted_at) && es[e].id) queries.push(...EdgeStorage.updateStatement(es[e]))
+            else if((es[e].modified_at || es[e].deleted_at) && !es[e].id && es[e].original_data_id && es[e].data_source_id) queries.push(...EdgeStorage.updateByCompositeOriginalIDStatement(es[e]))
+            else {
+                es[e].id = super.generateUUID();
+                queries.push(...EdgeStorage.createStatement(es[e]))
+            }
+        }
+
+
+        if(postQueries) queries.push(...postQueries);
+
+        return new Promise(resolve => resolve(Result.Success(queries)))
     }
 
     public async ListByOrigin(nodeID: string): Promise<Result<EdgeT[]>> {
@@ -314,7 +325,7 @@ export default class EdgeStorage extends PostgresStorage{
         return super.rows<EdgeT>(EdgeStorage.retrieveByOriginAndDestinationStatement(originID, destinationID))
     }
 
-    private async validateRelationship(pair: MetatypeRelationshipPairT, origin: NodeT, destination: NodeT): Promise<Result<boolean>> {
+    private async validateRelationship(pair: MetatypeRelationshipPair, origin: NodeT, destination: NodeT): Promise<Result<boolean>> {
         if(pair.origin_metatype_id !== origin.metatype_id || pair.destination_metatype_id !== destination.metatype_id) {
             return Promise.resolve(Result.Failure('origin and destination node types do not match relationship pair'))
         }
@@ -378,12 +389,12 @@ export default class EdgeStorage extends PostgresStorage{
         return [
             {
                 text:`
-INSERT INTO edges(id, container_id, relationship_pair_id, graph_id, origin_node_id, destination_node_id, properties,original_data_id,data_source_id,type_mapping_transformation_id,origin_node_original_id,destination_node_original_id,import_data_id,data_staging_id,composite_original_id,origin_node_composite_original_id,destination_node_composite_original_id)
-VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,$15,$16,$17)
-ON CONFLICT (composite_original_id, data_source_id)
+                    INSERT INTO edges(id, container_id, relationship_pair_id, graph_id, origin_node_id, destination_node_id, properties,original_data_id,data_source_id,type_mapping_transformation_id,origin_node_original_id,destination_node_original_id,import_data_id,data_staging_id,composite_original_id,origin_node_composite_original_id,destination_node_composite_original_id)
+                    VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,$15,$16,$17)
+                        ON CONFLICT (composite_original_id, data_source_id)
 DO
-UPDATE SET container_id = $2, relationship_pair_id = $3, graph_id = $4, origin_node_id = $5, destination_node_id = $6, properties = $7, original_data_id = $8, data_source_id = $9, type_mapping_transformation_id = $10, origin_node_original_id = $11, destination_node_original_id = $12, import_data_id = $13, data_staging_id = $14, composite_original_id = $15, origin_node_composite_original_id = $16, destination_node_composite_original_id = $17, modified_at = NOW()
-`,
+                    UPDATE SET container_id = $2, relationship_pair_id = $3, graph_id = $4, origin_node_id = $5, destination_node_id = $6, properties = $7, original_data_id = $8, data_source_id = $9, type_mapping_transformation_id = $10, origin_node_original_id = $11, destination_node_original_id = $12, import_data_id = $13, data_staging_id = $14, composite_original_id = $15, origin_node_composite_original_id = $16, destination_node_composite_original_id = $17, modified_at = NOW()
+                `,
                 values: [e.id, e.container_id, e.relationship_pair_id,e.graph_id, e.origin_node_id, e.destination_node_id,  e.properties,e.original_data_id, e.data_source_id, e.type_mapping_transformation_id, e.origin_node_original_id, e.destination_node_original_id, e.import_data_id, e.data_staging_id, e.composite_original_id, e.origin_node_composite_original_id, e.destination_node_original_id]
             }
         ]

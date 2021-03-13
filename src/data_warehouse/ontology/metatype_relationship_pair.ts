@@ -101,19 +101,21 @@ export default class MetatypeRelationshipPair extends BaseDataClass {
         name: string,
         description: string,
         relationshipType: string,
-        originMetatype: Metatype,
-        destinationMetatype: Metatype,
-        relationship: MetatypeRelationship,
+        originMetatype: Metatype | string, // we will also accept ids in place of classes
+        destinationMetatype: Metatype | string,
+        relationship: MetatypeRelationship | string,
         containerID?: string}) {
         super();
 
         if(input) {
             this.name = input.name
             this.description = input.description
-            this.relationship_type = input.relationshipType
-            this.originMetatype = input.originMetatype
-            this.destinationMetatype = input.destinationMetatype
-            this.relationship = input.relationship
+            this.relationship_type = input.relationshipType;
+            // we also accept string id's in place of full classes as a backwards
+            // compatibility issue
+            (input.originMetatype instanceof Metatype) ? this.originMetatype = input.originMetatype as Metatype : this.originMetatype = plainToClass(Metatype, {id: input.originMetatype});
+            (input.destinationMetatype instanceof Metatype) ? this.destinationMetatype = input.destinationMetatype as Metatype : this.destinationMetatype = plainToClass(Metatype, {id: input.destinationMetatype});
+            (input.relationship instanceof MetatypeRelationship) ? this.relationship = input.relationship as MetatypeRelationship : this.relationship = plainToClass(MetatypeRelationship, {id: input.relationship});
 
             if(input.containerID) this.container_id = input.containerID
         }

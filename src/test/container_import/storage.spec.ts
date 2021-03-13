@@ -13,6 +13,8 @@ import MetatypeRelationshipPairMapper from '../../data_access_layer/mappers/meta
 import EdgeStorage from '../../data_access_layer/mappers/graph/edge_storage';
 import { UserT } from '../../types/user_management/userT';
 import MetatypeRepository from "../../data_access_layer/repositories/metatype_repository";
+import MetatypeRelationshipPairRepository
+    from "../../data_access_layer/repositories/metatype_relationship_pair_repository";
 
 describe('A Container Import', async() => {
     before(async function() {
@@ -145,7 +147,7 @@ describe('A Container Import', async() => {
         let containerImport = ContainerImport.Instance;
         let storage = ContainerMapper.Instance;
         let metatypeRepository = new MetatypeRepository()
-        let relationshipStorage = MetatypeRelationshipPairMapper.Instance;
+        let pairRepo = new MetatypeRelationshipPairRepository()
         let nodeStorage = NodeStorage.Instance;
         let edgeStorage = EdgeStorage.Instance;
 
@@ -178,11 +180,18 @@ describe('A Container Import', async() => {
         let actionMetatypeID = actionMetatype.value[0].id!
 
         // retrieve relationship pair
-        let relationshipPair = await relationshipStorage.RetrieveByMetatypes(actionMetatypeID, actionMetatypeID)
+        let pairs = await pairRepo.where()
+            .containerID("eq", containerID)
+            .and()
+            .origin_metatype_id("eq", actionMetatypeID)
+            .and()
+            .destination_metatype_id("eq", actionMetatypeID)
+            .list(false)
+        expect(pairs.isError).false
 
-        expect(relationshipPair.isError).false;
+        let relationshipPair = pairs.value[0]
 
-        let relationshipPairID = relationshipPair.value.id
+        let relationshipPairID = relationshipPair.id
         let originID = nodeCreate.value[0].id
         let destinationID = nodeCreate2.value[0].id
 

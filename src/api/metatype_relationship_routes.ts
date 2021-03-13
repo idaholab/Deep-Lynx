@@ -45,14 +45,12 @@ export default class MetatypeRelationshipRoutes {
 
     private static retrieveMetatypeRelationship(req: Request, res: Response, next: NextFunction) {
         if(req.metatypeRelationship) {
-            const result = Result.Success(req.metatypeRelationship)
-            result.asResponse(res)
+            Result.Success(req.metatypeRelationship).asResponse(res)
             next()
             return
         }
 
-        const results = Result.Failure('metatype relationship not found', 404)
-        results.asResponse(res)
+        Result.Failure('metatype relationship not found', 404).asResponse(res)
         next()
     }
 

@@ -23,6 +23,7 @@ import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
+import MetatypeRelationshipPair from "../../data_warehouse/ontology/metatype_relationship_pair";
 
 describe('Using a GraphQL Query for a nodes edges', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -88,18 +89,19 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         const rkeys = await rkStorage.Create(relationship.value.id!, "test suite", test_relationship_keys)
         expect(rkeys.isError).false
 
-        let pair = await rpStorage.Create(containerID, "test suite", {
+        let pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
             "name": faker.name.findName(),
             "description": faker.random.alphaNumeric(),
-            "origin_metatype_id": metatype.id,
-            "destination_metatype_id": metatype.id,
-            "relationship_id": relationship.value.id,
-            "relationship_type": "one:one"
-        });
+            "originMetatype": metatype.id!,
+            "destinationMetatype": metatype.id!,
+            "relationship": relationship.value.id!,
+            "relationshipType": "one:one",
+            containerID
+        }));
 
         // EDGE SETUP
         let edges = await edgeStorage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_pair_id: pair.value[0].id,
+            relationship_pair_id: pair.value.id,
             properties: payload,
             origin_node_id: node.id,
             destination_node_id: node.id

@@ -26,6 +26,7 @@ import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
+import MetatypeRelationshipPair from "../../data_warehouse/ontology/metatype_relationship_pair";
 
 describe('A Data Type Mapping can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -44,7 +45,7 @@ describe('A Data Type Mapping can', async() => {
     var maintenanceKeys: MetatypeKeyT[] = []
     var partKeys: MetatypeKeyT[] = []
     var componentKeys : MetatypeKeyT[] = []
-    var maintenancePair: MetatypeRelationshipPairT | undefined = undefined
+    var maintenancePair: MetatypeRelationshipPair | undefined = undefined
 
 
     before(async function() {
@@ -161,19 +162,20 @@ describe('A Data Type Mapping can', async() => {
 
         resultMetatypeRelationships = metatypeRelationships.value;
 
-        let pairs = await MetatypeRelationshipPairMapper.Instance.Create(containerID, "test suite", {
+        let pairs = await MetatypeRelationshipPairMapper.Instance.Create("test suite", new MetatypeRelationshipPair({
             "name": "owns",
             "description": "owns another entity",
-            "origin_metatype_id": resultMetatypes.find(m => m.name === "Maintenance")!.id,
-            "destination_metatype_id": resultMetatypes.find(m => m.name === "Maintenance Entry")!.id,
-            "relationship_id": resultMetatypeRelationships.find(m => m.name === "parent")!.id,
-            "relationship_type": "one:one"
-        });
+            "originMetatype": resultMetatypes.find(m => m.name === "Maintenance")!.id!,
+            "destinationMetatype": resultMetatypes.find(m => m.name === "Maintenance Entry")!.id!,
+            "relationship": resultMetatypeRelationships.find(m => m.name === "parent")!.id!,
+            "relationshipType": "one:one",
+            containerID
+        }));
 
         expect(pairs.isError).false;
         expect(pairs.value).not.empty;
 
-        maintenancePair = pairs.value[0]
+        maintenancePair = pairs.value
 
         let exp = await dstorage.Create(containerID, "test suite",
             {

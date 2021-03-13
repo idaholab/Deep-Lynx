@@ -19,6 +19,7 @@ import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
+import MetatypeRelationshipPair from "../../data_warehouse/ontology/metatype_relationship_pair";
 
 describe('A Graph Edge can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -98,18 +99,19 @@ describe('A Graph Edge can', async() => {
 
         const rkeys = await rkStorage.Create(relationship.value.id!, "test suite", test_relationship_keys)
 
-        let pair = await rpStorage.Create(containerID, "test suite", {
+        let pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
             "name": faker.name.findName(),
             "description": faker.random.alphaNumeric(),
-            "origin_metatype_id": metatype.value[0].id,
-            "destination_metatype_id": metatype.value[1].id,
-            "relationship_id": relationship.value.id,
-            "relationship_type": "one:one"
-        });
+            "originMetatype": metatype.value[0].id!,
+            "destinationMetatype": metatype.value[1].id!,
+            "relationship": relationship.value.id!,
+            "relationshipType": "one:one",
+            containerID,
+        }));
 
        // EDGE SETUP
         let edge = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_pair_id: pair.value[0].id,
+            relationship_pair_id: pair.value.id,
             properties: payload,
             origin_node_id: node.value[0].id,
             destination_node_id: node.value[1].id
@@ -186,18 +188,19 @@ describe('A Graph Edge can', async() => {
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
 
-        let pair = await rpStorage.Create(containerID, "test suite", {
+        let pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
             "name": faker.name.findName(),
             "description": faker.random.alphaNumeric(),
-            "origin_metatype_id": metatype.value[0].id,
-            "destination_metatype_id": metatype.value[1].id,
-            "relationship_id": relationship.value.id,
-            "relationship_type": "one:one"
-        });
+            "originMetatype": metatype.value[0].id!,
+            "destinationMetatype": metatype.value[1].id!,
+            "relationship": relationship.value.id!,
+            "relationshipType": "one:one",
+            containerID
+        }));
 
         // EDGE SETUP
         let edge = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_pair_id: pair.value[0].id,
+            relationship_pair_id: pair.value.id,
             properties: payload,
             origin_node_composite_original_id: node.value[0].composite_original_id,
             destination_node_composite_original_id: node.value[1].composite_original_id,
@@ -257,18 +260,19 @@ describe('A Graph Edge can', async() => {
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
 
-        let pair = await rpStorage.Create(containerID, "test suite", {
+        let pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
             "name": faker.name.findName(),
             "description": faker.random.alphaNumeric(),
-            "origin_metatype_id": metatype.value[0].id,
-            "destination_metatype_id": metatype.value[1].id,
-            "relationship_id": relationship.value.id,
-            "relationship_type": "one:one"
-        });
+            "originMetatype": metatype.value[0].id!,
+            "destinationMetatype": metatype.value[1].id!,
+            "relationship": relationship.value.id!,
+            "relationshipType": "one:one",
+            containerID
+        }));
 
         // EDGE SETUP
         let edge = await storage.CreateOrUpdate(containerID, graph.value.id, {
-            relationship_pair_id: pair.value[0].id,
+            relationship_pair_id: pair.value.id,
             properties: payload,
             origin_node_id: node.value[0].id,
             destination_node_id: node.value[1].id
@@ -334,18 +338,19 @@ describe('A Graph Edge can', async() => {
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
 
-        let pair = await rpStorage.Create(containerID, "test suite", {
+        let pair = await rpStorage.Create( "test suite",  new MetatypeRelationshipPair({
             "name": faker.name.findName(),
             "description": faker.random.alphaNumeric(),
-            "origin_metatype_id": metatype.value[0].id,
-            "destination_metatype_id": metatype.value[1].id,
-            "relationship_id": relationship.value.id,
-            "relationship_type": "one:one"
-        });
+            "originMetatype": metatype.value[0].id!,
+            "destinationMetatype": metatype.value[1].id!,
+            "relationship": relationship.value.id!,
+            "relationshipType": "one:one",
+            containerID
+        }));
 
         // EDGE SETUP
         let edge = await storage.CreateOrUpdate(containerID, graph.value.id,  {
-            relationship_pair_id: pair.value[0].id,
+            relationship_pair_id: pair.value.id,
             properties: payload,
             origin_node_id: node.value[0].id,
             destination_node_id: node.value[1].id

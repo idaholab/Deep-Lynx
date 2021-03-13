@@ -260,18 +260,18 @@ export function metatypeRelationshipContext(): any {
 
 // metatypeRelationshipPairContext will attempt to fetch a pair by id specified by the
 // id query parameter. If one is fetched it will pass it on in request context.
-// route must contain the param labeled "pairID"
+// route must contain the param labeled "relationshipPairID"
 export function metatypeRelationshipPairContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have a containerID, don't fail, just pass without action
-        if(!req.params.pairID) {
+        if(!req.params.relationshipPairID) {
             next()
             return
         }
 
         const repo = new MetatypeRelationshipPairRepository()
 
-        repo.findByID(req.params.pairID)
+        repo.findByID(req.params.relationshipPairID)
             .then(result => {
                 if(result.isError) {
                     resp.status(result.error?.errorCode!).json(result)
