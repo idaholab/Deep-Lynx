@@ -215,7 +215,7 @@ describe('Filtering Nodes', async() => {
 });
 
 const payload: {[key:string]:any} = {
-    "flower": "Daisy",
+    "flower_name": "Daisy",
     "color": "yellow",
     "notRequired": 1
 };

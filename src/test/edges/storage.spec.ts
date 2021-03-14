@@ -388,13 +388,13 @@ describe('A Graph Edge can', async() => {
 });
 
 const payload: {[key:string]:any} = {
-    "flower": "Daisy",
+    "flower_name": "Daisy",
     "color": "yellow",
     "notRequired": 1
 };
 
 const updatePayload : {[key:string]:any} = {
-    "flower": "Violet",
+    "flower_name": "Violet",
     "color": "blue",
     "notRequired": 1
 };

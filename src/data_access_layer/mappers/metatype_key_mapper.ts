@@ -92,8 +92,8 @@ export default class MetatypeKeyMapper extends PostgresStorage{
                         metatype_keys(metatype_id, id, name, description, property_name, required, data_type, options, default_value, validation, created_by, modified_by)
                         VALUES %L RETURNING *`
             const values = keys.map(key => [key.metatype_id, uuid.v4(), key.name, key.description,
-                key.property_name, key.required, key.data_type, key.options,
-                key.default_value, key.validation, userID, userID])
+                key.property_name, key.required, key.data_type, JSON.stringify(key.options),
+                JSON.stringify(key.default_value), JSON.stringify(key.validation), userID, userID])
 
             return format(text, values)
     }
@@ -149,8 +149,8 @@ export default class MetatypeKeyMapper extends PostgresStorage{
                  FROM(VALUES %L) AS k(id, name, metatype_id, description, property_name, required, data_type, options, default_value, validation, modified_by)
                  WHERE k.id::uuid = m.id RETURNING *`
             const values = keys.map(key => [key.id, key.name, key.metatype_id, key.description,
-                key.property_name, key.required, key.data_type, key.options,
-                key.default_value, key.validation, userID])
+                key.property_name, key.required, key.data_type, JSON.stringify(key.options),
+                JSON.stringify(key.default_value), JSON.stringify(key.validation), userID])
 
             return format(text, values)
     }

@@ -28,6 +28,8 @@ import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relatio
 import MetatypeRelationshipPair from "../../data_warehouse/ontology/metatype_relationship_pair";
 import MetatypeKey from "../../data_warehouse/ontology/metatype_key";
 import {UserT} from "../../types/user_management/userT";
+import UserStorage from "../../data_access_layer/mappers/user_management/user_storage";
+import MetatypeRepository from "../../data_access_layer/repositories/metatype_repository";
 
 describe('A Data Type Mapping can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -35,7 +37,6 @@ describe('A Data Type Mapping can', async() => {
     var typeMappingID: string = ""
     var typeMapping: TypeMappingT | undefined = undefined
     var dataSourceID: string = ""
-    var resultMetatypes: Metatype[] = []
     var resultMetatypeRelationships: MetatypeRelationship[] = []
     var data: DataStagingT | undefined = undefined
     var user: UserT
@@ -166,7 +167,7 @@ describe('A Data Type Mapping can', async() => {
             required: true
         })]
 
-    const car_part_metatype_keys: MetatypeKey[] = [
+    const partKeys: MetatypeKey[] = [
         new MetatypeKey({
             name: "id",
             propertyName: "id",
@@ -199,7 +200,7 @@ describe('A Data Type Mapping can', async() => {
         new Metatype({name: "Tire Pressure", description: "Pressure of tire", keys: tire_pressure_metatype_keys}),
         new Metatype({name: "Maintenance", description: "Maintenance records", keys: car_maintenance_metatype_keys}),
         new Metatype({name: "Maintenance Entry", description: "Maintenance entries", keys: maintenance_entry_metatype_keys}),
-        new Metatype({name: "Part", description: "Physical part of car", keys: car_part_metatype_keys}),
+        new Metatype({name: "Part", description: "Physical part of car", keys: partKeys}),
         new Metatype({name: "Component", description: "Base component of part", keys: component_metatype_keys}),
     ];
 
@@ -218,93 +219,33 @@ describe('A Data Type Mapping can', async() => {
         expect(container.value.id).not.null
         containerID = container.value.id!;
 
+        test_metatypes.forEach(metatype => metatype.container_id = containerID)
+
+        const userResult = await UserStorage.Instance.Create("test suite", (
+            {
+                identity_provider_id: faker.random.uuid(),
+                identity_provider: "username_password",
+                display_name: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"],
+                admin: false,
+            } as UserT));
+
+        expect(userResult.isError).false
+        user = userResult.value
+
         let graph = await GraphStorage.Instance.Create(containerID, "test suite")
         expect(graph.isError).false;
         graphID = graph.value.id
 
         let dstorage = DataSourceStorage.Instance;
-        let metatypeStorage = MetatypeMapper.Instance;
         let relationshipMapper = MetatypeRelationshipMapper.Instance;
-        let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingStorage.Instance
 
-        const test_metatypes: Metatype[] = [
-            new Metatype({containerID,name: "Car", description: "A Vehicle"}),
-            new Metatype({containerID,name: "Manufacturer", description: "Creator of Car"}),
-            new Metatype({containerID,name: "Tire Pressure", description: "Pressure of tire"}),
-            new Metatype({containerID,name: "Maintenance", description: "Maintenance records"}),
-            new Metatype({containerID,name: "Maintenance Entry", description: "Maintenance entries"}),
-            new Metatype({containerID,name: "Part", description: "Physical part of car"}),
-            new Metatype({containerID,name: "Component", description: "Base component of part"}),
-        ];
+        let metatypeRepo = new MetatypeRepository()
+        let created = await metatypeRepo.bulkSave(user, test_metatypes)
 
-        let metatypes = await metatypeStorage.BulkCreate("test suite", test_metatypes);
-
-        expect(metatypes.isError).false;
-        expect(metatypes.value).not.empty;
-
-        resultMetatypes = metatypes.value
-
-        // run through resulting metatypes adding in the keys based on metatype
-        for(const metatype of metatypes.value) {
-           switch(metatype.name) {
-               case "Car": {
-                   const keys = await keyStorage.Create(metatype.id!, "test suite", car_metatype_keys)
-                   expect(keys.isError).false
-
-                   carKeys = keys.value
-                   break;
-               }
-
-               case "Manufacturer": {
-                   const keys = await keyStorage.Create(metatype.id!, "test suite", manufacturer_metatype_keys)
-                   expect(keys.isError).false
-
-                   manufacturerKeys = keys.value
-                   break;
-               }
-
-               case "Tire Pressure": {
-                   const keys = await keyStorage.Create(metatype.id!, "test suite", tire_pressure_metatype_keys)
-                   expect(keys.isError).false
-
-                   tirePressureKeys = keys.value
-                   break;
-               }
-
-               case "Maintenance Entry": {
-                   const keys = await keyStorage.Create(metatype.id!, "test suite", maintenance_entry_metatype_keys)
-                   expect(keys.isError).false
-
-                   maintenanceEntryKeys = keys.value
-                   break;
-               }
-
-               case "Maintenance": {
-                   const keys = await keyStorage.Create(metatype.id!, "test suite", car_maintenance_metatype_keys)
-                   expect(keys.isError).false
-
-                   maintenanceKeys = keys.value
-                   break;
-               }
-
-               case "Part": {
-                   const keys = await keyStorage.Create(metatype.id!, "test suite", car_part_metatype_keys)
-                   expect(keys.isError).false
-
-                   partKeys = keys.value
-                   break;
-               }
-
-               case "Component": {
-                   const keys = await keyStorage.Create(metatype.id!, "test suite", component_metatype_keys)
-                   expect(keys.isError).false
-
-                   componentKeys = keys.value
-                   break;
-               }
-           }
-        }
+        expect(created.isError).false
 
         const test_metatype_relationships: MetatypeRelationship[] = [
             new MetatypeRelationship({containerID, name: "parent", description: "item is another's parent"})
@@ -320,8 +261,8 @@ describe('A Data Type Mapping can', async() => {
         let pairs = await MetatypeRelationshipPairMapper.Instance.Create("test suite", new MetatypeRelationshipPair({
             "name": "owns",
             "description": "owns another entity",
-            "originMetatype": resultMetatypes.find(m => m.name === "Maintenance")!.id!,
-            "destinationMetatype": resultMetatypes.find(m => m.name === "Maintenance Entry")!.id!,
+            "originMetatype": test_metatypes.find(m => m.name === "Maintenance")!.id!,
+            "destinationMetatype": test_metatypes.find(m => m.name === "Maintenance Entry")!.id!,
             "relationship": resultMetatypeRelationships.find(m => m.name === "parent")!.id!,
             "relationshipType": "one:one",
             containerID
@@ -376,6 +317,7 @@ describe('A Data Type Mapping can', async() => {
     })
 
     it('can generate a car node', async() => {
+        const carKeys = test_metatypes.find(metatype => metatype.name === "Car")!.keys!
         const carTransformation = {
            keys: [{
                key: "car.id",
@@ -384,7 +326,7 @@ describe('A Data Type Mapping can', async() => {
                key: "car.name",
                metatype_key_id: carKeys.find(key => key.name === "name")!.id
            }],
-            metatype_id: resultMetatypes.find(m => m.name === "Car")!.id,
+            metatype_id: test_metatypes.find(m => m.name === "Car")!.id,
             unique_identifier_key: "car.id"
         } as TypeTransformationT
 
@@ -403,6 +345,7 @@ describe('A Data Type Mapping can', async() => {
     })
 
     it('can generate a car node with constant values', async() => {
+        const carKeys = test_metatypes.find(metatype => metatype.name === "Car")!.keys!
         const carTransformation = {
             keys: [{
                 value: "TEST UUID",
@@ -411,7 +354,7 @@ describe('A Data Type Mapping can', async() => {
                 value: "MOTOROLA",
                 metatype_key_id: carKeys.find(key => key.name === "name")!.id
             }],
-            metatype_id: resultMetatypes.find(m => m.name === "Car")!.id,
+            metatype_id: test_metatypes.find(m => m.name === "Car")!.id,
             unique_identifier_key: "car.id"
         } as TypeTransformationT
 
@@ -434,18 +377,19 @@ describe('A Data Type Mapping can', async() => {
 
     // this will handle testing the root array function
     it('can generate car maintenance entries', async() => {
+        const entryKeys = test_metatypes.find(metatype => metatype.name === "Maintenance Entry")!.keys!
         const maintenanceTransformation = {
             keys: [{
                 key: "car_maintenance.maintenance_entries.[].id",
-                metatype_key_id: maintenanceEntryKeys.find(key => key.name === "id")!.id
+                metatype_key_id: entryKeys.find(key => key.name === "id")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].type",
-                metatype_key_id: maintenanceEntryKeys.find(key => key.name === "type")!.id
+                metatype_key_id: entryKeys.find(key => key.name === "type")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].check_engine_light_flag",
-                metatype_key_id: maintenanceEntryKeys.find(key => key.name === "check engine light flag")!.id
+                metatype_key_id: entryKeys.find(key => key.name === "check engine light flag")!.id
             }],
-            metatype_id: resultMetatypes.find(m => m.name === "Maintenance Entry")!.id,
+            metatype_id: test_metatypes.find(m => m.name === "Maintenance Entry")!.id,
             unique_identifier_key: "car_maintenance.maintenance_entries.[].id",
             root_array: "car_maintenance.maintenance_entries"
         } as TypeTransformationT
@@ -478,21 +422,22 @@ describe('A Data Type Mapping can', async() => {
     })
 
     it('can generate parts lists entries', async() => {
+        const partKeys = test_metatypes.find(metatype => metatype.name === "Part")!.keys!
         const maintenanceTransformation = {
             keys: [{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].id",
-                metatype_key_id: car_part_metatype_keys.find(key => key.name === "id")!.id
+                metatype_key_id: partKeys.find(key => key.name === "id")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].name",
-                metatype_key_id: car_part_metatype_keys.find(key => key.name === "name")!.id
+                metatype_key_id: partKeys.find(key => key.name === "name")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].quantity",
-                metatype_key_id: car_part_metatype_keys.find(key => key.name === "quantity")!.id
+                metatype_key_id: partKeys.find(key => key.name === "quantity")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].price",
-                metatype_key_id: car_part_metatype_keys.find(key => key.name === "price")!.id
+                metatype_key_id: partKeys.find(key => key.name === "price")!.id
             }],
-            metatype_id: resultMetatypes.find(m => m.name === "Part")!.id,
+            metatype_id: test_metatypes.find(m => m.name === "Part")!.id,
             unique_identifier_key: "car_maintenance.maintenance_entries.[].parts_list.[].id",
             root_array: "car_maintenance.maintenance_entries.[].parts_list"
         } as TypeTransformationT
@@ -554,6 +499,7 @@ describe('A Data Type Mapping can', async() => {
     })
 
     it('can generate parts lists entries based on conditions', async() => {
+        const partKeys = test_metatypes.find(metatype => metatype.name === "Part")!.keys!
         const maintenanceTransformation = {
             conditions: [
                 {
@@ -570,18 +516,18 @@ describe('A Data Type Mapping can', async() => {
             ],
             keys: [{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].id",
-                metatype_key_id: car_part_metatype_keys.find(key => key.name === "id")!.id
+                metatype_key_id: partKeys.find(key => key.name === "id")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].name",
-                metatype_key_id: car_part_metatype_keys.find(key => key.name === "name")!.id
+                metatype_key_id: partKeys.find(key => key.name === "name")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].quantity",
-                metatype_key_id: car_part_metatype_keys.find(key => key.name === "quantity")!.id
+                metatype_key_id: partKeys.find(key => key.name === "quantity")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].price",
-                metatype_key_id: car_part_metatype_keys.find(key => key.name === "price")!.id
+                metatype_key_id: partKeys.find(key => key.name === "price")!.id
             }],
-            metatype_id: resultMetatypes.find(m => m.name === "Part")!.id,
+            metatype_id: test_metatypes.find(m => m.name === "Part")!.id,
             unique_identifier_key: "car_maintenance.maintenance_entries.[].parts_list.[].id",
             root_array: "car_maintenance.maintenance_entries.[].parts_list"
         } as TypeTransformationT
@@ -608,15 +554,16 @@ describe('A Data Type Mapping can', async() => {
 
     // generally testing that our root array can indeed go more than 2 layers deep
     it('can generate component entries', async() => {
+        const keys = test_metatypes.find(metatype => metatype.name === "Component")!.keys!
         const componentTransformation = {
             keys: [{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].components.[].id",
-                metatype_key_id: componentKeys.find(key => key.name === "id")!.id
+                metatype_key_id: keys.find(key => key.name === "id")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].components.[].name",
-                metatype_key_id: componentKeys.find(key => key.name === "name")!.id
+                metatype_key_id: keys.find(key => key.name === "name")!.id
             }],
-            metatype_id: resultMetatypes.find(m => m.name === "Component")!.id,
+            metatype_id: test_metatypes.find(m => m.name === "Component")!.id,
             unique_identifier_key: "car_maintenance.maintenance_entries.[].parts_list.[].components.[].id",
             root_array: "car_maintenance.maintenance_entries.[].parts_list.[].components"
         } as TypeTransformationT
@@ -641,6 +588,7 @@ describe('A Data Type Mapping can', async() => {
 
     // this will handle testing the root array function
     it('can generate car maintenance entries, and connect them to a maintenance record through edges', async() => {
+        const maintenanceKeys = test_metatypes.find(metatype => metatype.name === "Maintenance")!.keys!
         const maintenanceTransformation = {
             keys: [{
                 key: "car_maintenance.id",
@@ -655,7 +603,7 @@ describe('A Data Type Mapping can', async() => {
                 key: "car_maintenance.average_visits_per_year",
                 metatype_key_id: maintenanceKeys.find(key => key.name === "average visits per year")!.id
             }],
-            metatype_id: resultMetatypes.find(m => m.name === "Maintenance")!.id,
+            metatype_id: test_metatypes.find(m => m.name === "Maintenance")!.id,
             unique_identifier_key: "car_maintenance.id",
         } as TypeTransformationT
 
@@ -675,18 +623,19 @@ describe('A Data Type Mapping can', async() => {
         const maintenanceInserted = await NodeStorage.Instance.CreateOrUpdate(containerID, graphID, maintenanceResult.value)
         expect(maintenanceInserted.isError).false
 
+        const entryKeys = test_metatypes.find(metatype => metatype.name === "Maintenance Entry")!.keys!
         const maintenanceEntryTransformation = {
             keys: [{
                 key: "car_maintenance.maintenance_entries.[].id",
-                metatype_key_id: maintenanceEntryKeys.find(key => key.name === "id")!.id
+                metatype_key_id: entryKeys.find(key => key.name === "id")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].type",
-                metatype_key_id: maintenanceEntryKeys.find(key => key.name === "type")!.id
+                metatype_key_id: entryKeys.find(key => key.name === "type")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].check_engine_light_flag",
-                metatype_key_id: maintenanceEntryKeys.find(key => key.name === "check engine light flag")!.id
+                metatype_key_id: entryKeys.find(key => key.name === "check engine light flag")!.id
             }],
-            metatype_id: resultMetatypes.find(m => m.name === "Maintenance Entry")!.id,
+            metatype_id: test_metatypes.find(m => m.name === "Maintenance Entry")!.id,
             unique_identifier_key: "car_maintenance.maintenance_entries.[].id",
             root_array: "car_maintenance.maintenance_entries"
         } as TypeTransformationT

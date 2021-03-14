@@ -1,19 +1,19 @@
 /* tslint:disable */
 import faker from 'faker'
-import { expect } from 'chai'
+import {expect} from 'chai'
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import Logger from "../../logger";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 import DataSourceStorage from "../../data_access_layer/mappers/import/data_source_storage";
 import TypeMappingStorage from "../../data_access_layer/mappers/import/type_mapping_storage";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_mapper";
-import {MetatypeKeyT} from "../../types/metatype_keyT";
 import {objectToShapeHash} from "../../utilities";
 import TypeTransformationStorage from "../../data_access_layer/mappers/import/type_transformation_storage";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
-import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
+import MetatypeKey from "../../data_warehouse/ontology/metatype_key";
 
 describe('A Data Type Mapping', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -52,7 +52,10 @@ describe('A Data Type Mapping', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await keyStorage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         let exp = await storage.Create(containerID, "test suite",
@@ -88,7 +91,10 @@ describe('A Data Type Mapping', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await keyStorage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         let exp = await storage.Create(containerID, "test suite",
@@ -126,7 +132,10 @@ describe('A Data Type Mapping', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await keyStorage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         let exp = await storage.Create(containerID, "test suite",
@@ -166,7 +175,10 @@ describe('A Data Type Mapping', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await keyStorage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         let exp = await storage.Create(containerID, "test suite",
@@ -209,7 +221,10 @@ describe('A Data Type Mapping', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await keyStorage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         let exp = await storage.Create(containerID, "test suite",
@@ -271,7 +286,10 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await keyStorage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         let exp = await storage.Create(containerID, "test suite",
@@ -321,7 +339,10 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await keyStorage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         let exp = await storage.Create(containerID, "test suite",
@@ -373,7 +394,10 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await keyStorage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         let exp = await storage.Create(containerID, "test suite",
@@ -417,30 +441,11 @@ describe('A Data Type Mapping Transformation', async() => {
 });
 
 
-const test_keys: MetatypeKeyT[] = [
-    {
-    name: "Radius",
-    property_name: "radius",
-    required: true,
-    description: "radius for a pipe",
-    data_type: "number"
-    },
-    {
-        name: "Color",
-        property_name: "color",
-        required: true,
-        description: "color of pipe allowed",
-        data_type: "enumeration",
-        options: ["yellow", "blue"]
-    },
-    {
-        name: "Not Required",
-        property_name: "optional",
-        required: false,
-        description: "not required",
-        data_type: "number",
-    },
-];
+export const test_keys: MetatypeKey[] = [
+    new MetatypeKey({name: "Test", description: "flower name", required: true, propertyName: "flower_name", dataType: "string"}),
+    new MetatypeKey({name: "Test2", description: "color of flower allowed", required: true, propertyName: "color", dataType: "enumeration", options: ["yellow", "blue"]}),
+    new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"}),
+];;
 
 const test_raw_payload = {
     "RAD": 0.1,

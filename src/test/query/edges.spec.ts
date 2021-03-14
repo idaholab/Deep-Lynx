@@ -209,7 +209,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
 });
 
 const payload: {[key:string]:any} = {
-    "flower": "Daisy",
+    "flower_name": "Daisy",
     "color": "yellow",
     "notRequired": 1,
     "nested": {

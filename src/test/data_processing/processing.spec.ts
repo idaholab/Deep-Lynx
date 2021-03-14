@@ -239,7 +239,6 @@ describe('A Data Processor', async() => {
 
         let dstorage = DataSourceStorage.Instance;
         let relationshipMapper = MetatypeRelationshipMapper.Instance;
-        let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingStorage.Instance
 
 

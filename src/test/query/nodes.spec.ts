@@ -221,7 +221,7 @@ describe('Using a GraphQL Query on nodes we', async() => {
             nodes(where: {
                 AND: [
                     {properties: [
-                    {key: "flower" value:"Daisy" operator:"eq"}
+                    {key: "flower_name" value:"Daisy" operator:"eq"}
                     ]}
                     ]
             }) {
@@ -245,7 +245,7 @@ describe('Using a GraphQL Query on nodes we', async() => {
             nodes(where: {
                 AND: [
                     {properties: [
-                    {key: "flower" value:"Dais%" operator:"like"}
+                    {key: "flower_name" value:"Dais%" operator:"like"}
                     ]}
                     ]
             }) {
@@ -316,7 +316,7 @@ describe('Using a GraphQL Query on nodes we', async() => {
 });
 
 const payload: {[key:string]:any} = {
-    "flower": "Daisy",
+    "flower_name": "Daisy",
     "color": "yellow",
     "notRequired": 1,
     "nested": {

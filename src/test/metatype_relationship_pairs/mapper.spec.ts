@@ -1,18 +1,15 @@
 /* tslint:disable */
 import Logger from "../../logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
-import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_mapper";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
-import {MetatypeKeyT} from "../../types/metatype_keyT";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
-import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
+import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
 import MetatypeRelationshipPairMapper from "../../data_access_layer/mappers/metatype_relationship_pair_mapper";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
-import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
 import MetatypeRelationshipPair from "../../data_warehouse/ontology/metatype_relationship_pair";
 

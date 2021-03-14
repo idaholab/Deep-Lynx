@@ -406,13 +406,13 @@ describe('Graph Node Creation', async() => {
 });
 
 const payload: {[key:string]:any} = {
-    "flower": "Daisy",
+    "flower_name": "Daisy",
     "color": "yellow",
     "notRequired": 1
 };
 
 const updatedPayload: {[key:string]:any} = {
-    "flower": "Violet",
+    "flower_name": "Violet",
     "color": "blue",
     "notRequired": 1
 };
@@ -432,7 +432,7 @@ export const test_keys: MetatypeKey[] = [
 const test_key_defaultValue: MetatypeKey[] = [
     new MetatypeKey({
     name: "Test",
-    propertyName: "flower",
+    propertyName: "flower_name",
     required: true,
     description: "flower name",
     dataType: "string"
