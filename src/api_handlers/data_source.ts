@@ -13,9 +13,9 @@ import ImportStorage from "../data_access_layer/mappers/import/import_storage";
 import {DataSource} from "../data_importing/data_source"
 import {Readable} from "stream";
 import {FileT} from "../types/fileT";
-import FileStorageProvider, {FileUploadResponse} from "../file_storage/file_storage";
+import FileStorageProvider, {BlobUploadResponse} from "../services/blob_storage/blob_storage";
 import FileStorage from "../data_access_layer/mappers/file_storage";
-import Logger from "../logger";
+import Logger from "../services/logger";
 import DataStagingStorage from "../data_access_layer/mappers/import/data_staging_storage";
 import TypeMappingStorage from "../data_access_layer/mappers/import/type_mapping_storage";
 import {TypeMappingT} from "../types/import/typeMappingT";

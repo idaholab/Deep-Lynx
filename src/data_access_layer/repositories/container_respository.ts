@@ -4,7 +4,7 @@ import Result from "../../result";
 import {UserT} from "../../types/user_management/userT";
 import ContainerMapper from "../mappers/container_mapper";
 import Authorization from "../../user_management/authorization/authorization";
-import Logger from "../../logger"
+import Logger from "../../services/logger"
 import GraphStorage from "../mappers/graph/graph_storage";
 
 export default class ContainerRepository implements RepositoryInterface<Container> {

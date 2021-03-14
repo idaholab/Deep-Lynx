@@ -1,7 +1,7 @@
 import Result from "../result";
 import {HttpImpl} from "./httpImpl";
 import DataSourceStorage from "../data_access_layer/mappers/import/data_source_storage";
-import Logger from "../logger"
+import Logger from "../services/logger"
 
 export interface DataSource {
     Poll(): Promise<void>

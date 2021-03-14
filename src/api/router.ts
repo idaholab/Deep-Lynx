@@ -28,7 +28,7 @@ import MetatypeRelationshipRoutes from "./metatype_relationship_routes";
 import MetatypeRelationshipKeyRoutes from "./metatype_relationship_key_routes";
 import MetatypeRelationshipPairRoutes from "./metatype_relationship_pair_routes";
 import PostgresAdapter from "../data_access_layer/mappers/adapters/postgres/postgres";
-import Config from "../config";
+import Config from "../services/config";
 import {SetSamlAdfs} from "../user_management/authentication/saml/saml-adfs";
 import {SuperUser, UserT} from "../types/user_management/userT";
 import UserRoutes from "./user_routes";

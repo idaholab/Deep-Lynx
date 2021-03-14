@@ -12,8 +12,8 @@ import UserStorage from "../data_access_layer/mappers/user_management/user_stora
 import Authorization from "./authorization/authorization";
 import {assignRolePayloadT, AssignRolePayloadT} from "../types/user_management/assignRolePayloadT";
 import {onDecodeError} from "../utilities";
-import Config from "../config";
-import Logger from "./../logger";
+import Config from "../services/config";
+import Logger from "../services/logger";
 import bcrypt from "bcrypt"
 import KeyPairStorage from "../data_access_layer/mappers/user_management/keypair_storage";
 import {Emailer} from "../services/email/email";

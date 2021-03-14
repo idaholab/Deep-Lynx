@@ -2,8 +2,8 @@ const NodeCache = require("node-cache")
 const Redis = require("ioredis")
 // @ts-ignore
 import {RedisStatic} from "ioredis";
-import Config from "../../config"
-import Logger from "../../logger"
+import Config from "../config"
+import Logger from "../logger"
 
 class Cache {
     public cache: CacheInterface

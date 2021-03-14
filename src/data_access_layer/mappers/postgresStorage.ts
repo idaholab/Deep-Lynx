@@ -6,7 +6,7 @@ import {Errors, ValidationError} from "io-ts";
 import {PoolClient, QueryConfig} from "pg";
 import uuid from "uuid"
 import PostgresAdapter from "./adapters/postgres/postgres";
-import Logger from "../../logger"
+import Logger from "../../services/logger"
 import 'reflect-metadata'; // this is required for the class-transformer package we use
 
 // PostgresStorage contains ORM like CRUD functions, and a few helpers for more complex functionality.

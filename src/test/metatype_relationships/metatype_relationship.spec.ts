@@ -7,7 +7,7 @@ import {failure} from "io-ts/lib/PathReporter";
 import MetatypeRelationshipKey from "../../data_warehouse/ontology/metatype_relationship_key";
 import * as faker from "faker";
 import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
-import Logger from "../../logger";
+import Logger from "../../services/logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 import Container from "../../data_warehouse/ontology/container";

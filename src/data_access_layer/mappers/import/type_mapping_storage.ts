@@ -3,9 +3,9 @@ import PostgresStorage from "../postgresStorage";
 import {QueryConfig} from "pg";
 import {TypeMappingT} from "../../../types/import/typeMappingT";
 import PostgresAdapter from "../adapters/postgres/postgres";
-import Logger from "../../../logger"
+import Logger from "../../../services/logger"
 import Cache from "../../../services/cache/cache"
-import Config from "../../../config"
+import Config from "../../../services/config"
 import TypeTransformationStorage from "./type_transformation_storage";
 
 /*

@@ -1,7 +1,7 @@
 /* tslint:disable */
 import {expect} from 'chai'
 import {MemoryCacheImpl, RedisCacheImpl} from "../../services/cache/cache"
-import Logger from "../../logger";
+import Logger from "../../services/logger";
 
 describe('Memory Cache implementation can', async() => {
     it('save an item to the cache', async()=> {

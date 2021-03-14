@@ -1,10 +1,10 @@
-import {IsDate, IsOptional, validateOrReject, registerDecorator, ValidationOptions, ValidationArguments} from "class-validator";
+import {IsDate, IsOptional, validateOrReject} from "class-validator";
 import {Type} from "class-transformer";
 import 'reflect-metadata';
 import {Errors, ValidationError} from "io-ts";
 import Result from "./result";
 
-export class BaseDataClass {
+export class BaseDomainClass {
     @IsOptional()
     created_by?: string
 

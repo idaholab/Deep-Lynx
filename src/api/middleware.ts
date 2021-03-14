@@ -1,9 +1,9 @@
 import express from "express";
 import uuid from "uuid-random";
 import { performance, PerformanceObserver } from "perf_hooks";
-import Logger from "../logger"
+import Logger from "../services/logger"
 import Authorization from "../user_management/authorization/authorization";
-import Config from "../config";
+import Config from "../services/config";
 import passport from "passport";
 import {SuperUser, UserT} from "../types/user_management/userT";
 import ContainerRepository from "../data_access_layer/repositories/container_respository";

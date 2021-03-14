@@ -4,7 +4,7 @@ import {PoolClient, QueryConfig} from "pg";
 import * as t from "io-ts";
 import {NodesT, NodeT, nodesT} from "../../../types/graph/nodeT";
 import GraphStorage from "./graph_storage";
-import Logger from "../../../logger";
+import Logger from "../../../services/logger";
 import MetatypeRepository from "../../repositories/metatype_repository";
 
 /*

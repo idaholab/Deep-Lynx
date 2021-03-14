@@ -1,7 +1,7 @@
 import express from "express";
-import Config from "./../config";
-import { Logger } from "../logger";
-import DefaultLogger from "../logger";
+import Config from "../services/config";
+import { Logger } from "../services/logger";
+import DefaultLogger from "../services/logger";
 import { Router } from "./router"
 
 // Server is a singleton and wraps the express.js library and application. This

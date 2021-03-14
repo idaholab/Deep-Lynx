@@ -1,7 +1,7 @@
-import {BaseDataClass} from "../../base_data_class";
+import {BaseDomainClass} from "../../base_domain_class";
 import {IsArray, IsBoolean, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, IsUUID, MinLength} from "class-validator";
 
-export default class MetatypeKey extends BaseDataClass {
+export default class MetatypeKey extends BaseDomainClass {
     @IsOptional()
     @IsUUID()
     id?: string

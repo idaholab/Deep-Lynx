@@ -1,5 +1,5 @@
 import express from "express"
-import Config from "../../config"
+import Config from "../../services/config"
 import passport from "passport"
 import passportJWT, {ExtractJwt} from "passport-jwt"
 

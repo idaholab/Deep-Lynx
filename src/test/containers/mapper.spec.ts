@@ -4,7 +4,7 @@ import { expect } from 'chai'
 import 'reflect-metadata';
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
-import Logger from "../../logger";
+import Logger from "../../services/logger";
 import Container from "../../data_warehouse/ontology/container";
 
 describe('A Container Mapper', async() => {

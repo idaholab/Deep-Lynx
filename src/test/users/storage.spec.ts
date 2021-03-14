@@ -3,7 +3,7 @@ import faker from 'faker'
 import { expect } from 'chai'
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
-import Logger from "../../logger";
+import Logger from "../../services/logger";
 import UserStorage from "../../data_access_layer/mappers/user_management/user_storage";
 import {UserT} from "../../types/user_management/userT";
 

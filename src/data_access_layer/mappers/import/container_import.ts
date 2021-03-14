@@ -9,7 +9,7 @@ import Result from "../../../result";
 import { ContainerImportT } from "../../../types/import/containerImportT"
 import NodeStorage from "../graph/node_storage"
 import EdgeStorage from "../graph/edge_storage"
-import Logger from "../../../logger"
+import Logger from "../../../services/logger"
 import ContainerRepository from "../../repositories/container_respository";
 import Container from "../../../data_warehouse/ontology/container";
 import Metatype from "../../../data_warehouse/ontology/metatype";

@@ -1,4 +1,4 @@
-import {Logger} from "../../../../logger"
+import {Logger} from "../../../../services/logger"
 
 import {driver, process} from "gremlin"
 import Vertices from './vertices';

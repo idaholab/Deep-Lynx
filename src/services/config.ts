@@ -104,8 +104,8 @@ export class Config {
     this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || "";
     this._db_name = process.env.DB_NAME || "deep_lynx";
 
-    this._template_dir = process.env.TEMPLATE_DIR || "./dist/api/views"
-    this._asset_dir = process.env.ASSET_DIR || "./dist/assets"
+    this._template_dir = process.env.TEMPLATE_DIR || "./../dist/api/views"
+    this._asset_dir = process.env.ASSET_DIR || "./../dist/assets"
 
     this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
 
@@ -131,7 +131,7 @@ export class Config {
     this._saml_adfs_private_cert_path = process.env.SAML_ADFS_PRIVATE_CERT_PATH
     this._saml_adfs_public_cert_path = process.env.SAML_ADFS_PUBLIC_CERT_PATH
     this._saml_enabled = process.env.SAML_ENABLED === "true"
-    this._auth_config_file = process.env.AUTH_CONFIG_FILE_PATH || path.resolve(__dirname, '../src/user_management/authorization/auth_model.conf');
+    this._auth_config_file = process.env.AUTH_CONFIG_FILE_PATH || path.resolve(__dirname, '../user_management/authorization/auth_model.conf');
     this._auth_token_expiry = process.env.AUTH_TOKEN_EXPIRY || "24h"
 
     this._data_source_processing_interval = (process.env.DATA_SOURCE_PROCESSING_INTERVAL) ? parseInt(process.env.DATA_SOURCE_PROCESSING_INTERVAL!, 10) : 10000

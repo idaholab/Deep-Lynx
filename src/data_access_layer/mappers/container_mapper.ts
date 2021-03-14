@@ -4,7 +4,7 @@ import PostgresStorage from "./postgresStorage";
 import {PoolClient, QueryConfig} from "pg";
 import uuid from "uuid";
 import GraphStorage from "./graph/graph_storage";
-import Logger from "../../logger";
+import Logger from "../../services/logger";
 import {plainToClass} from "class-transformer";
 const format = require('pg-format')
 

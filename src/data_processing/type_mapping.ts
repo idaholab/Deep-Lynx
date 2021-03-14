@@ -6,7 +6,7 @@ import {getNestedValue} from "../utilities";
 import MetatypeKeyMapper from "../data_access_layer/mappers/metatype_key_mapper";
 import MetatypeRelationshipKeyMapper from "../data_access_layer/mappers/metatype_relationship_key_mapper";
 import {DataStagingT} from "../types/import/dataStagingT";
-import Logger from "../logger"
+import Logger from "../services/logger"
 
 // ApplyTransformation will take a mapping, a transformation, and a data record
 // in order to generate an array of nodes or edges based on the transformation type

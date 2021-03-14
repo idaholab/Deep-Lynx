@@ -6,8 +6,8 @@ import {
 } from "../types/import/httpConfigT";
 
 import {objectToShapeHash, onDecodeError} from "../utilities";
-import Logger from "../logger"
-import Config from "../config";
+import Logger from "../services/logger"
+import Config from "../services/config";
 import {DataSourceT} from "../types/import/dataSourceT";
 import DataSourceStorage from "../data_access_layer/mappers/import/data_source_storage";
 import ImportStorage from "../data_access_layer/mappers/import/import_storage";

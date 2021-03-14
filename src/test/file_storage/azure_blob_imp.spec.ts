@@ -1,8 +1,8 @@
 /* tslint:disable */
 import { expect } from 'chai'
 import * as fs from "fs";
-import AzureBlobImpl from "../../file_storage/azure_blob_impl";
-import Logger from "../../logger";
+import AzureBlobImpl from "../../services/blob_storage/azure_blob_impl";
+import Logger from "../../services/logger";
 
 
 describe('Azure Blob Storage can', async() => {

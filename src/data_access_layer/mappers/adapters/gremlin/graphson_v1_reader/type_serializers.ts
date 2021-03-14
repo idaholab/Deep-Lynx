@@ -1,7 +1,7 @@
 /* tslint:disable */
 // tslint does not like typing files
 // tslint:disable-next-line:no-reference
-/// <reference path="../../../../../../typings/gremlin/index.d.ts" />
+/// <reference path="../../../../../typings/gremlin/index.d.ts" />
 import { structure } from "gremlin";
 import { GraphSONReaderV1 } from "./reader";
 

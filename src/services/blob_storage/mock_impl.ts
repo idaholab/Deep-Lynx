@@ -1,8 +1,8 @@
 import {Readable} from "stream";
-import Result from "../result";
+import Result from "../../result";
 import fs from "fs";
-import Logger from "../logger";
-import {FileStorage, FileUploadResponse} from "./file_storage";
+import Logger from "./../logger";
+import {BlobStorage, BlobUploadResponse} from "./blob_storage";
 const http = require('http');
 const https = require('https');
 
@@ -10,12 +10,12 @@ const https = require('https');
 // There is functionality that Mock has, namely downloading a file from a source
 // that Filesystem does not. So far this hasn't been required, if it does become
 // required, then it is planned Mock will be subsumed into Filesystem.
-export default class MockFileStorageImpl implements FileStorage {
+export default class MockFileStorageImpl implements BlobStorage {
     name(): string {
         return "mock"
     }
 
-    public async uploadPipe(filepath: string, fileName:string, stream: Readable| null, contentType?: string, encoding?: string, ): Promise<Result<FileUploadResponse>> {
+    public async uploadPipe(filepath: string, fileName:string, stream: Readable| null, contentType?: string, encoding?: string, ): Promise<Result<BlobUploadResponse>> {
         // how to use mimeType?
         // get name of the file from full path
         const filenameArr = filepath.match(/[\w.\- ]*$/);

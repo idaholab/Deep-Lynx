@@ -1,8 +1,8 @@
 /* tslint:disable */
 import { expect } from 'chai'
 import * as fs from "fs";
-import Logger from "../../logger";
-import Filesystem from "../../file_storage/filesystem_impl";
+import Logger from "../../services/logger";
+import Filesystem from "../../services/blob_storage/filesystem_impl";
 
 
 describe('Filesystem storage can', async() => {

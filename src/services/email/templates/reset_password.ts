@@ -1,4 +1,4 @@
-import Config from "../../../config"
+import Config from "../../config"
 
 export function ResetPasswordEmailTemplate(email: string, resetToken: string): string {
    return `<html>

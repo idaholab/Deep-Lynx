@@ -1,6 +1,6 @@
 import {Enforcer, newEnforcer} from "casbin";
 import TypeORMAdapter from "typeorm-adapter";
-import Config from "../../config"
+import Config from "../../services/config"
 import {isUserT, UserT} from "../../types/user_management/userT";
 
 

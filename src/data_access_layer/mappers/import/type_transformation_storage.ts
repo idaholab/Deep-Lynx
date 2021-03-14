@@ -2,9 +2,9 @@ import Result from "../../../result"
 import PostgresStorage from "../postgresStorage";
 import {QueryConfig} from "pg";
 import {typeTransformationT, TypeTransformationT} from "../../../types/import/typeMappingT";
-import Logger from "../../../logger"
+import Logger from "../../../services/logger"
 import Cache from "../../../services/cache/cache"
-import Config from "../../../config"
+import Config from "../../../services/config"
 
 /*
 * TypeTransformationStorage encompasses all logic dealing with the manipulation of the Import Adapter

@@ -1,11 +1,11 @@
-import {FileStorage, FileUploadResponse} from "../file_storage/file_storage";
-import Result from "../result";
+import {BlobStorage, BlobUploadResponse} from "./blob_storage";
+import Result from "../../result";
 import {Readable} from "stream";
 import * as fs from "fs";
-import Logger from "../logger";
+import Logger from "./../logger";
 const digestStream = require('digest-stream')
 
-export default class Filesystem implements FileStorage {
+export default class Filesystem implements BlobStorage {
     private _directory: string
     private _isWindows: boolean | undefined
 
@@ -25,7 +25,7 @@ export default class Filesystem implements FileStorage {
         return "filesystem";
     }
 
-    async uploadPipe(filepath: string, filename: string, stream: Readable | null, contentType?: string, encoding?: string): Promise<Result<FileUploadResponse>> {
+    async uploadPipe(filepath: string, filename: string, stream: Readable | null, contentType?: string, encoding?: string): Promise<Result<BlobUploadResponse>> {
         if(!this._directory) {
             return Promise.resolve(Result.Failure("directory does not exist or was unable to be opened"))
         }
@@ -60,7 +60,7 @@ export default class Filesystem implements FileStorage {
             size: dataLength / 1000,
             md5hash,
             adapter_name: this.name()
-        } as FileUploadResponse));
+        } as BlobUploadResponse));
     }
 
     downloadStream(filepath: string): Promise<Readable | undefined> {

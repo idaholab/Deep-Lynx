@@ -2,7 +2,7 @@ import express from "express"
 import passport from "passport";
 import * as fs from "fs";
 import {UserT} from "../../../types/user_management/userT";
-import Config from "../../../config"
+import Config from "../../../services/config"
 import UserStorage from "../../../data_access_layer/mappers/user_management/user_storage";
 import Result from "../../../result";
 

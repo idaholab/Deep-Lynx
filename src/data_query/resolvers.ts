@@ -17,12 +17,12 @@ import {
 } from "./types";
 import {NodeT} from "../types/graph/nodeT";
 import MetatypeRelationshipPairMapper from "../data_access_layer/mappers/metatype_relationship_pair_mapper";
-import Logger from "../logger";
+import Logger from "../services/logger";
 import NodeFilter from "../data_access_layer/mappers/graph/node_filter";
 import {EdgeT} from "../types/graph/edgeT";
 import EdgeFilter from "../data_access_layer/mappers/graph/edge_filter";
 import FileStorage from "../data_access_layer/mappers/file_storage";
-import Config from "../config";
+import Config from "../services/config";
 import {FileT} from "../types/fileT";
 import FileFilter from "../data_access_layer/mappers/file_filter";
 import MetatypeRepository from "../data_access_layer/repositories/metatype_repository";

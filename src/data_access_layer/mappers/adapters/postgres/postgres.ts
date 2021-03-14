@@ -1,4 +1,4 @@
-import Config from "../../../../config"
+import Config from "../../../../services/config"
 import {Pool, types} from "pg";
 import 'reflect-metadata'; // this is required for the class-transformer package we use
 

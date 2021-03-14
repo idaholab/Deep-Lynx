@@ -1,6 +1,6 @@
 /* tslint:disable */
 import { expect } from 'chai'
-import MockFileStorageImpl from "../../file_storage/mock_impl";
+import MockFileStorageImpl from "../../services/blob_storage/mock_impl";
 
 
 describe('A File Storage', async() => {

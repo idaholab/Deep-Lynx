@@ -1,7 +1,7 @@
 /* tslint:disable */
 import {expect} from 'chai'
 import * as faker from "faker";
-import Logger from "../../logger";
+import Logger from "../../services/logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 import Container from "../../data_warehouse/ontology/container";

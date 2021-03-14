@@ -3,17 +3,18 @@
 // script is treated as a transaction. Configuration comes from the same config
 // file that the main application uses.
 
-import {Pool} from "pg";
 import PostgresAdapter from "./data_access_layer/mappers/adapters/postgres/postgres";
-import Config from "./config"
+import Config from "./services/config"
 import * as fs from "fs";
-import Logger from "./logger"
+import Logger from "./services/logger"
 import pgtools from "pgtools";
+import * as path from "path";
 
 class Migrator {
-    private pool!: Pool;
+    private pool!: any;
 
     constructor() {
+        console.log("here")
         pgtools.createdb(Config.core_db_connection_string, Config.db_name, (err: any, res: string) => {
             if (err) {
                 if (err.name === 'duplicate_database') {
@@ -54,7 +55,7 @@ class Migrator {
 
 
         // read the migrations directory
-        fs.readdir("./migrations",
+        fs.readdir(path.resolve(__dirname,`../src/data_access_layer/migrations`),
             async (err, files)=>{
             if(err){
                 Logger.error('unable to read migration directory');
@@ -80,7 +81,7 @@ class Migrator {
                     Logger.info(`beginning migration of ${file}`);
 
                     await this.pool.query({text:`INSERT INTO migrations(name) VALUES($1)`, values:[file]});
-                    const statements = fs.readFileSync(`./migrations/${file}`).toString();
+                    const statements = fs.readFileSync(path.resolve(__dirname,`../src/data_access_layer/migrations/${file}`)).toString();
 
                     await this.pool.query(statements)
 

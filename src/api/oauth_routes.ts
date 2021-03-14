@@ -12,7 +12,7 @@ import {
     RetrieveResourcePermissions
 } from "../user_management/users";
 import KeyPairStorage from "../data_access_layer/mappers/user_management/keypair_storage";
-import Config from "../config"
+import Config from "../services/config"
 import Cache from "../services/cache/cache"
 
 import passport from "passport";

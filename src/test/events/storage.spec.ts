@@ -1,5 +1,5 @@
 /* tslint:disable */
-import Logger from "../../logger";
+import Logger from "../../services/logger";
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
 import faker from "faker";
 import {expect} from "chai";

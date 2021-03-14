@@ -6,7 +6,7 @@ import {fold} from "fp-ts/lib/Either";
 import {GremlinImpl} from "./gremlinImpl";
 import ExportStorage from "../data_access_layer/mappers/export/export_storage";
 import {onDecodeError} from "../utilities";
-import Logger from "../logger"
+import Logger from "../services/logger"
 
 // The exporter interface allows the user to create a standard implementation
 // for data export and implement it with minimum amount of work.

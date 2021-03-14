@@ -13,11 +13,11 @@ import ImportStorage from "../data_access_layer/mappers/import/import_storage";
 import DataStagingStorage from "../data_access_layer/mappers/import/data_staging_storage";
 import {Readable} from "stream";
 import FileDataStorage from "../data_access_layer/mappers/file_storage";
-import {FileStorage} from "../file_storage/file_storage";
-import AzureBlobImpl from "../file_storage/azure_blob_impl";
-import Config from "../config";
-import Filesystem from "../file_storage/filesystem_impl";
-import MockFileStorageImpl from "../file_storage/mock_impl";
+import {BlobStorage} from "../services/blob_storage/blob_storage";
+import AzureBlobImpl from "../services/blob_storage/azure_blob_impl";
+import Config from "../services/config";
+import Filesystem from "../services/blob_storage/filesystem_impl";
+import MockFileStorageImpl from "../services/blob_storage/mock_impl";
 import Result from "../result";
 import {FileT} from "../types/fileT";
 import TypeMappingStorage from "../data_access_layer/mappers/import/type_mapping_storage";
@@ -409,7 +409,7 @@ export default class DataSourceRoutes {
                     return
                 }
 
-                let fileStorageInstance: FileStorage
+                let fileStorageInstance: BlobStorage
 
                 switch (file.value.adapter) {
                     case "azure_blob": {

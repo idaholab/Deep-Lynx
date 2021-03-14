@@ -1,4 +1,4 @@
-import {BaseDataClass} from "../../base_data_class";
+import {BaseDomainClass} from "../../base_domain_class";
 import {IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength} from "class-validator";
 import MetatypeRelationshipKey from "./metatype_relationship_key";
 import * as t from "io-ts";
@@ -6,7 +6,7 @@ import Result from "../../result";
 import {pipe} from "fp-ts/pipeable";
 import {fold} from "fp-ts/Either";
 
-export default class MetatypeRelationship extends BaseDataClass {
+export default class MetatypeRelationship extends BaseDomainClass {
     @IsOptional()
     @IsUUID()
     id?: string

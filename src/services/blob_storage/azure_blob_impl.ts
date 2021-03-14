@@ -1,11 +1,11 @@
-import {FileStorage, FileUploadResponse} from "./file_storage";
-import Result from "../result";
+import {BlobStorage, BlobUploadResponse} from "./blob_storage";
+import Result from "../../result";
 import {Readable} from "stream";
 import {BlobServiceClient, ContainerClient, RestError} from "@azure/storage-blob";
-import Logger from "../logger";
+import Logger from "./../logger"
 const digestStream = require('digest-stream')
 
-export default class AzureBlobImpl implements FileStorage {
+export default class AzureBlobImpl implements BlobStorage {
     private _BlobServiceClient: BlobServiceClient
     private _ContainerClient: ContainerClient
 
@@ -25,7 +25,7 @@ export default class AzureBlobImpl implements FileStorage {
         return Promise.resolve(Result.Success(true));
     }
 
-    async uploadPipe(filepath: string, filename: string, stream: Readable | null, contentType: string, encoding: string): Promise<Result<FileUploadResponse>> {
+    async uploadPipe(filepath: string, filename: string, stream: Readable | null, contentType: string, encoding: string): Promise<Result<BlobUploadResponse>> {
         const blobClient = this._ContainerClient.getBlockBlobClient(`${filepath}${filename}`);
 
         if(stream) {

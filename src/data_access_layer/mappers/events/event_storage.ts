@@ -4,7 +4,7 @@ import PostgresStorage from "../postgresStorage";
 import {QueryConfig} from "pg";
 import * as t from "io-ts";
 import PostgresAdapter from "../adapters/postgres/postgres";
-import Logger from "../../../logger";
+import Logger from "../../../services/logger";
 
 /*
 * EventStorage interacts with registered events in the database to

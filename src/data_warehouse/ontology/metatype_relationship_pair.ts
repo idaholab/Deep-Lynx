@@ -1,11 +1,11 @@
-import {BaseDataClass} from "../../base_data_class";
+import {BaseDomainClass} from "../../base_domain_class";
 import {IsBoolean, IsIn, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength} from "class-validator";
 import {Expose, plainToClass, Transform} from "class-transformer"
 import Metatype from "./metatype";
 import MetatypeRelationship from "./metatype_relationship";
-import {MetatypeID, MetatypeRelationshipID} from "../../validators";
+import {MetatypeID, MetatypeRelationshipID} from "../../services/validators";
 
-export default class MetatypeRelationshipPair extends BaseDataClass {
+export default class MetatypeRelationshipPair extends BaseDomainClass {
     @IsOptional()
     @IsUUID()
     id?: string

@@ -3,8 +3,8 @@ import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relatio
 import Result from "../../result";
 import {UserT} from "../../types/user_management/userT";
 import Cache from "../../services/cache/cache";
-import Config from "../../config";
-import Logger from "../../logger";
+import Config from "../../services/config";
+import Logger from "../../services/logger";
 import MetatypeRelationshipMapper from "../mappers/metatype_relationship_mapper";
 import {plainToClass, serialize} from "class-transformer";
 import MetatypeRelationshipKeyMapper from "../mappers/metatype_relationship_key_mapper";

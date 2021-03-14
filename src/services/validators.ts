@@ -1,6 +1,6 @@
 import {registerDecorator, ValidationArguments, ValidationOptions} from "class-validator";
-import Metatype from "./data_warehouse/ontology/metatype";
-import MetatypeRelationship from "./data_warehouse/ontology/metatype_relationship";
+import Metatype from "../data_warehouse/ontology/metatype";
+import MetatypeRelationship from "../data_warehouse/ontology/metatype_relationship";
 const validator = require('validator')
 
 export function MetatypeID(validationOptions?: ValidationOptions) {

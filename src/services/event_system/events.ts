@@ -1,14 +1,14 @@
-import Queue = require('better-queue')
-import { ConnectionStringParser } from "connection-string-parser";
-import { EventT, EventsT } from "../../types/events/eventT";
-import { RegisteredEventT, RegisteredEventsT } from "../../types/events/registered_eventT";
-import { TaskT, TasksT } from "../../types/events/taskT";
+import Queue = require('better-queue');
+import {ConnectionStringParser} from "connection-string-parser";
+import {EventsT, EventT} from "../../types/events/eventT";
+import {RegisteredEventsT} from "../../types/events/registered_eventT";
+import {TaskT} from "../../types/events/taskT";
 import EventStorage from "../../data_access_layer/mappers/events/event_storage";
 import QueueStorage from "../../data_access_layer/mappers/events/queue_storage";
 import Result from "../../result";
-import Logger from "../../logger";
-import axios, { AxiosResponse } from "axios";
-import Config from "../../config";
+import Logger from "../logger";
+import axios from "axios";
+import Config from "../config";
 
 export class QueueProcessor {
 

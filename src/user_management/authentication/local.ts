@@ -3,7 +3,7 @@ import passport from "passport"
 import {Strategy} from "passport-local"
 import UserStorage from "../../data_access_layer/mappers/user_management/user_storage";
 import bcrypt from "bcrypt";
-import Logger from "./../../logger"
+import Logger from "../../services/logger"
 import {OAuth} from "../../services/oauth/oauth";
 const buildUrl = require('build-url');
 

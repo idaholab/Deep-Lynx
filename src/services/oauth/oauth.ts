@@ -16,8 +16,8 @@ import OAuthApplicationStorage from "../../data_access_layer/mappers/user_manage
 const crypto = require('crypto');
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-import Config from "../../config";
-import Logger from "../../logger"
+import Config from "../config";
+import Logger from "../logger"
 import base64url from "base64url";
 import {RetrieveResourcePermissions} from "../../user_management/users";
 

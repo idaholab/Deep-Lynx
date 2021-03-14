@@ -1,4 +1,4 @@
-import Config from "../../../../config"
+import Config from "../../../../services/config"
 import {Db, MongoClient} from "mongodb";
 
 export default class MongoAdapter {

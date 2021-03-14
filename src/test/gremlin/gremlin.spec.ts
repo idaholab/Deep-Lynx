@@ -3,7 +3,7 @@ import faker from 'faker'
 import { expect } from 'chai'
 import { structure } from 'gremlin'
 import GremlinAdapter from "../../data_access_layer/mappers/adapters/gremlin/gremlin"
-import Logger from "../../logger";
+import Logger from "../../services/logger";
 
 describe('A Gremlin Adapter', async () => {
     var g: GremlinAdapter | undefined = undefined

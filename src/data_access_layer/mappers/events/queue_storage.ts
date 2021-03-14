@@ -2,8 +2,8 @@ import {TaskT, TasksT} from "../../../types/events/taskT";
 import Result from "../../../result"
 import PostgresStorage from "../postgresStorage";
 import {QueryConfig} from "pg";
-import Logger from "../../../logger";
-import Config from "../../../config"
+import Logger from "../../../services/logger";
+import Config from "../../../services/config"
 
 /*
 * QueueStorage interacts with tasks in the database queue

@@ -3,8 +3,8 @@
 // entry-point for the application.
 import { Server } from "./api/server";
 import {Storage} from "./boot_storage";
-import BackedLogger from "./logger";
-import Config from "./config"
+import BackedLogger from "./services/logger";
+import Config from "./services/config"
 import {CreateDefaultSuperUser} from "./user_management/users";
 const {spawn} = require('child_process')
 import 'reflect-metadata';

@@ -3,7 +3,7 @@ import faker from 'faker'
 import { expect } from 'chai'
 import 'reflect-metadata';
 import PostgresAdapter from "../../data_access_layer/mappers/adapters/postgres/postgres";
-import Logger from "../../logger";
+import Logger from "../../services/logger";
 import ContainerImport from "../../data_access_layer/mappers/import/container_import"
 import fs from 'fs'
 import ContainerMapper from '../../data_access_layer/mappers/container_mapper';

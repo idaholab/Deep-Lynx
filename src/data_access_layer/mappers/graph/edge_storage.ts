@@ -7,7 +7,7 @@ import {NodeT} from "../../../types/graph/nodeT";
 import NodeStorage from "./node_storage";
 import MetatypeRelationshipPairMapper from "../metatype_relationship_pair_mapper";
 import GraphStorage from "./graph_storage";
-import Logger from "../../../logger";
+import Logger from "../../../services/logger";
 import MetatypeRelationshipRepository from "../../repositories/metatype_relationship_repository";
 import MetatypeRelationshipPairRepository from "../../repositories/metatype_relationship_pair_repository";
 import MetatypeRelationshipPair from "../../../data_warehouse/ontology/metatype_relationship_pair";
