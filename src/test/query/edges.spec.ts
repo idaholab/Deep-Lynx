@@ -5,7 +5,6 @@ import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_mapp
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
-import {MetatypeKeyT} from "../../types/metatype_keyT";
 import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
 import NodeStorage from "../../data_access_layer/mappers/graph/node_storage";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
@@ -17,13 +16,14 @@ import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype
 import MetatypeRelationshipKeyMapper from "../../data_access_layer/mappers/metatype_relationship_key_mapper";
 import MetatypeRelationshipPairMapper from "../../data_access_layer/mappers/metatype_relationship_pair_mapper";
 import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
-import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
 import {EdgeT} from "../../types/graph/edgeT";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
 import MetatypeRelationshipPair from "../../data_warehouse/ontology/metatype_relationship_pair";
+import MetatypeKey from "../../data_warehouse/ontology/metatype_key";
+import MetatypeRelationshipKey from "../../data_warehouse/ontology/metatype_relationship_key";
 
 describe('Using a GraphQL Query for a nodes edges', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -68,7 +68,11 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         expect(metatypeResult.value).not.empty;
         metatype = metatypeResult.value
 
-        const keys = await kStorage.Create(metatypeResult.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+
+        testKeys.forEach(key => key.metatype_id = metatypeResult.value.id!)
+
+        const keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         const mixed = {
@@ -86,7 +90,11 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
 
-        const rkeys = await rkStorage.Create(relationship.value.id!, "test suite", test_relationship_keys)
+        const relationshipKeys = [...test_relationship_keys]
+
+        relationshipKeys.forEach(key => key.metatype_relationship_id = relationship.value.id!)
+
+        const rkeys = await rkStorage.BulkCreate("test suite", relationshipKeys)
         expect(rkeys.isError).false
 
         let pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
@@ -209,57 +217,16 @@ const payload: {[key:string]:any} = {
     }
 };
 
-const test_keys: MetatypeKeyT[] = [{
-    name: "Test",
-    property_name: "flower",
-    required: true,
-    description: "flower name",
-    data_type: "string"
-},
-    {
-        name: "Test 2",
-        property_name: "color",
-        required: true,
-        description: "color of flower allowed",
-        data_type: "enumeration",
-        options: ["yellow", "blue"]
-    },
-    {
-        name: "Test Not Required",
-        property_name: "notRequired",
-        required: false,
-        description: "not required",
-        data_type: "number",
-    },
+export const test_keys: MetatypeKey[] = [
+    new MetatypeKey({name: "Test", description: "flower name", required: true, propertyName: "flower_name", dataType: "string"}),
+    new MetatypeKey({name: "Test2", description: "color of flower allowed", required: true, propertyName: "color", dataType: "enumeration", options: ["yellow", "blue"]}),
+    new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"}),
 ];
 
-export const single_test_key: MetatypeKeyT = {
-    name: "Test Not Required",
-    property_name: "notRequired",
-    required: false,
-    description: "not required",
-    data_type: "number",
-};
-const test_relationship_keys: MetatypeRelationshipKeyT[] = [{
-    name: "Test",
-    property_name: "flower",
-    required: true,
-    description: "flower name",
-    data_type: "string"
-},
-    {
-        name: "Test 2",
-        property_name: "color",
-        required: true,
-        description: "color of flower allowed",
-        data_type: "enumeration",
-        options: ["yellow", "blue"]
-    },
-    {
-        name: "Test Not Required",
-        property_name: "notRequired",
-        required: false,
-        description: "not required",
-        data_type: "number",
-    },
+export const single_test_key: MetatypeKey = new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"})
+
+export const test_relationship_keys: MetatypeRelationshipKey[] = [
+    new MetatypeRelationshipKey({name: "Test", description: "flower name", required: true, propertyName: "flower_name", dataType: "string"}),
+    new MetatypeRelationshipKey({name: "Test2", description: "color of flower allowed", required: true, propertyName: "color", dataType: "enumeration", options: ["yellow", "blue"]}),
+    new MetatypeRelationshipKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"}),
 ];

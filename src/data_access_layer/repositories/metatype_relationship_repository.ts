@@ -8,7 +8,7 @@ import Logger from "../../logger";
 import MetatypeRelationshipMapper from "../mappers/metatype_relationship_mapper";
 import {plainToClass, serialize} from "class-transformer";
 import MetatypeRelationshipKeyMapper from "../mappers/metatype_relationship_key_mapper";
-import MetatypeRelationshipKey from "../../data_warehouse/ontology/metatype_key";
+import MetatypeRelationshipKey from "../../data_warehouse/ontology/metatype_relationship_key";
 import {PoolClient} from "pg";
 import {QueryOptions} from "./repository_base";
 

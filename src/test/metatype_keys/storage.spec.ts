@@ -9,7 +9,7 @@ import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
-import {MetatypeKeyT} from "../../types/metatype_keyT";
+import MetatypeKey from "../../data_warehouse/ontology/metatype_key";
 
 describe('A Metatype Key', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -46,7 +46,10 @@ describe('A Metatype Key', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await storage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await storage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         return mMapper.PermanentlyDelete(metatype.value.id!)
@@ -62,7 +65,10 @@ describe('A Metatype Key', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await storage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await storage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         return mMapper.PermanentlyDelete(metatype.value.id!)
@@ -79,13 +85,20 @@ describe('A Metatype Key', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let key = await storage.Create(metatype.value.id!, "test suite", single_test_key);
+        const testKey: MetatypeKey = new MetatypeKey({
+            name: "Test Not Required",
+            description: "not required",
+            required: false,
+            propertyName: "notRequired",
+            dataType: "number",
+            metatypeID: metatype.value.id!})
+        let key = await storage.Create("test suite", testKey);
         expect(key.isError).false;
         expect(key.value).not.empty;
 
-        let retrieved = await storage.Retrieve(key.value[0].id!);
+        let retrieved = await storage.Retrieve(key.value.id!);
         expect(retrieved.isError).false;
-        expect(retrieved.value.id).eq(key.value[0].id);
+        expect(retrieved.value.id).eq(key.value.id);
 
         return mMapper.PermanentlyDelete(metatype.value.id!)
     });
@@ -100,10 +113,14 @@ describe('A Metatype Key', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await storage.Create(metatype.value.id!, "test suite", test_keys);
+
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await storage.BulkCreate( "test suite", testKeys);
         expect(keys.isError).false;
 
-        let retrieved = await storage.List(metatype.value.id!);
+        let retrieved = await storage.ListForMetatype(metatype.value.id!);
         expect(retrieved.isError).false;
         expect(retrieved.value).not.empty;
         expect(retrieved.value).length(keys.value.length);
@@ -121,57 +138,21 @@ describe('A Metatype Key', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let keys = await storage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await storage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        let updateKeys = await storage.BatchUpdate(keys.value, "test suite");
+        let updateKeys = await storage.BulkUpdate("test suite", keys.value);
         expect(updateKeys.isError).false;
 
         return mMapper.PermanentlyDelete(metatype.value.id!)
     });
 });
-export const test_keys: MetatypeKeyT[] = [{
-    name: "Test",
-    property_name: "flower",
-    required: true,
-    description: "flower name",
-    data_type: "string"
-},
-    {
-        name: "Test 2",
-        property_name: "color",
-        required: true,
-        description: "color of flower allowed",
-        data_type: "enumeration",
-        options: ["yellow", "blue"]
-    },
-    {
-        name: "Test Not Required",
-        property_name: "notRequired",
-        required: false,
-        description: "not required",
-        data_type: "number",
-        validation: {
-            regex: '/\\S+/'
-        }
-    },
+
+export const test_keys: MetatypeKey[] = [
+    new MetatypeKey({name: "Test", description: "flower name", required: true, propertyName: "flower_name", dataType: "string"}),
+    new MetatypeKey({name: "Test2", description: "color of flower allowed", required: true, propertyName: "color", dataType: "enumeration", options: ["yellow", "blue"]}),
+    new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"}),
 ];
-
-export const single_test_key: MetatypeKeyT = {
-    name: "Test Not Required",
-    property_name: "notRequired",
-    required: false,
-    description: "not required",
-    data_type: "number",
-};
-
-export const single_test_key_regex: MetatypeKeyT = {
-    name: "Test Not Required",
-    property_name: "notRequired",
-    required: false,
-    description: "not required",
-    data_type: "number",
-    validation: {
-        regex: '/\\S+/'
-    }
-};

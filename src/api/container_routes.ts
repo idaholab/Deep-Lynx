@@ -34,9 +34,15 @@ export default class ContainerRoutes {
     }
 
     private static createContainer(req: Request, res: Response, next: NextFunction) {
-        repository.save(req.user as UserT, plainToClass(Container, req.body as object))
+        const payload = plainToClass(Container, req.body as object)
+        repository.save(req.user as UserT, payload)
             .then((result) => {
-                result.asResponse(res)
+                if(result.isError) {
+                    result.asResponse(res)
+                    return
+                }
+
+                Result.Success(payload).asResponse(res)
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
@@ -51,7 +57,12 @@ export default class ContainerRoutes {
 
         repository.bulkSave(req.user as UserT, containers)
             .then((result) => {
-                result.asResponse(res)
+                if(result.isError){
+                    result.asResponse(res)
+                    return
+                }
+
+                Result.Success(containers).asResponse(res)
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
@@ -85,7 +96,12 @@ export default class ContainerRoutes {
 
         repository.save(req.user as UserT, container)
             .then((updated) => {
-                updated.asResponse(res)
+                if(updated.isError){
+                    updated.asResponse(res)
+                    return
+                }
+
+                Result.Success(container).asResponse(res)
             })
             .catch((updated) => res.status(500).send(updated))
     }

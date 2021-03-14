@@ -34,7 +34,12 @@ export default class MetatypeRoutes {
 
         repo.bulkSave(req.user as UserT, toCreate)
             .then((result) => {
-                result.asResponse(res)
+                if(result.isError) {
+                    result.asResponse(res)
+                    return
+                }
+
+                Result.Success(toCreate).asResponse(res)
             })
             .catch((err) => {
                 res.status(500).json(err.message)
@@ -45,14 +50,12 @@ export default class MetatypeRoutes {
 
     private static retrieveMetatype(req: Request, res: Response, next: NextFunction) {
         if(req.metatype) {
-            const result = Result.Success(req.metatype)
-            result.asResponse(res)
+            Result.Success(req.metatype).asResponse(res)
             next()
             return
         }
 
-        const results = Result.Failure('metatype not found', 404)
-        results.asResponse(res)
+        Result.Failure('metatype not found', 404).asResponse(res)
         next()
     }
 
@@ -112,7 +115,12 @@ export default class MetatypeRoutes {
 
             repo.save(req.user as UserT, payload)
                 .then((result) => {
-                    result.asResponse(res)
+                    if(result.isError) {
+                        result.asResponse(res)
+                        return
+                    }
+
+                    Result.Success(payload).asResponse(res)
                 })
                 .catch((err) => res.status(500).send(err))
                 .finally(() => next())
@@ -131,8 +139,7 @@ export default class MetatypeRoutes {
                 .catch((err) => res.status(500).send(err))
                 .finally(() => next())
         } else {
-            const results = Result.Failure('metatype not found', 404)
-            results.asResponse(res)
+            Result.Failure('metatype not found', 404).asResponse(res)
             next()
         }
     }

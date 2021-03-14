@@ -8,9 +8,8 @@ import {plainToClass} from "class-transformer";
 const format = require('pg-format')
 
 /*
-* MetatypeRelationshipKeyStorage encompasses all logic dealing with the manipulation of the Metatype_key
-* class in a data storage layer. In this case, the storage class requires a graph
-* storage interface.
+* MetatypeRelationshipKeyStorage encompasses all logic dealing with the manipulation of the Metatype Relationship Key
+* class in a data storage layer.
 */
 export default class MetatypeRelationshipKeyMapper extends PostgresStorage{
     public static tableName = "metatype_relationship_keys";

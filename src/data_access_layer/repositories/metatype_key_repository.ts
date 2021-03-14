@@ -19,6 +19,14 @@ export default class MetatypeKeyRepository extends  Repository implements Reposi
         return Promise.resolve(Result.Failure(`key has no id`));
     }
 
+    archive(user: UserT, k: MetatypeKey): Promise<Result<boolean>> {
+        if(k.id) {
+            return this.#mapper.Archive(k.id, user.id!)
+        }
+
+        return Promise.resolve(Result.Failure(`key has no id`));
+    }
+
     findByID(id: string): Promise<Result<MetatypeKey>> {
         return this.#mapper.Retrieve(id)
     }
@@ -92,5 +100,9 @@ export default class MetatypeKeyRepository extends  Repository implements Reposi
         })
 
         return Promise.resolve(Result.Success(true))
+    }
+
+    constructor() {
+        super(MetatypeKeyMapper.tableName);
     }
 }

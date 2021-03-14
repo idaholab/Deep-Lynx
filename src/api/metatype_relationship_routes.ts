@@ -35,7 +35,12 @@ export default class MetatypeRelationshipRoutes {
 
         repo.bulkSave(req.user as UserT, toCreate)
             .then((result) => {
-                result.asResponse(res)
+                if(result.isError) {
+                    result.asResponse(res)
+                    return
+                }
+
+                Result.Success(toCreate).asResponse(res)
             })
             .catch((err) => {
                 res.status(500).json(err.message)
@@ -107,7 +112,12 @@ export default class MetatypeRelationshipRoutes {
 
             repo.save(req.user as UserT, payload)
                 .then((result) => {
-                    result.asResponse(res)
+                    if(result.isError) {
+                        result.asResponse(res)
+                        return
+                    }
+
+                    Result.Success(payload).asResponse(res)
                 })
                 .catch((err) => res.status(500).send(err))
                 .finally(() => next())
@@ -126,8 +136,7 @@ export default class MetatypeRelationshipRoutes {
                 .catch((err) => res.status(500).send(err))
                 .finally(() => next())
         } else {
-            const results = Result.Failure('metatype relationship not found', 404)
-            results.asResponse(res)
+            Result.Failure('metatype relationship not found', 404).asResponse(res)
             next()
         }
     }

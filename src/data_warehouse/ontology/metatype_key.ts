@@ -38,8 +38,8 @@ export default class MetatypeKey extends BaseDataClass {
     @IsOptional()
     validation?: {
         regex: string,
-        min: number,
-        max: number
+        min?: number,
+        max?: number
     }
 
     @IsArray()
@@ -57,10 +57,11 @@ export default class MetatypeKey extends BaseDataClass {
         propertyName: string,
         dataType: string,
         options?: any[],
+        defaultValue?: any,
         validation?: {
             regex: string,
-            max: number,
-            min: number
+            max?: number,
+            min?: number
         }}) {
         super();
 
@@ -75,6 +76,7 @@ export default class MetatypeKey extends BaseDataClass {
             if(input.options) this.options = input.options
             if(input.validation) this.validation = input.validation
             if(input.metatypeID) this.metatype_id = input.metatypeID
+            if(input.defaultValue) this.default_value = input.defaultValue
         }
 
     }

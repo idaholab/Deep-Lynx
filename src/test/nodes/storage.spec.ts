@@ -5,7 +5,6 @@ import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_mapp
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
-import {MetatypeKeyT} from "../../types/metatype_keyT";
 import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
 import NodeStorage from "../../data_access_layer/mappers/graph/node_storage";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
@@ -14,6 +13,7 @@ import {NodeT} from "../../types/graph/nodeT";
 import Container from "../../data_warehouse/ontology/container";
 import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
+import MetatypeKey from "../../data_warehouse/ontology/metatype_key";
 
 describe('Graph Node Creation', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -60,9 +60,12 @@ describe('Graph Node Creation', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        const keys = await kStorage.Create(metatype.value.id!, "test suite", test_keys);
-        expect(keys.isError).false;
 
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await kStorage.BulkCreate("test suite", testKeys);
+        expect(keys.isError).false;
 
         const node = await storage.CreateOrUpdate(containerID, graph.value.id, malformed_payload);
         expect(node.isError, metatype.error?.error).true;
@@ -92,7 +95,10 @@ describe('Graph Node Creation', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        const keys = await kStorage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         const mixed = {
@@ -126,7 +132,10 @@ describe('Graph Node Creation', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        const keys = await kStorage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         const mixed = {
@@ -169,7 +178,10 @@ describe('Graph Node Creation', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        const keys = await kStorage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         const mixed = {
@@ -219,7 +231,10 @@ describe('Graph Node Creation', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        const keys = await kStorage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         const mixed = {
@@ -268,7 +283,10 @@ describe('Graph Node Creation', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        const keys = await kStorage.Create(metatype.value.id!, "test suite", test_keys);
+        const testKeys = [...test_keys]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         const mixed = {
@@ -313,7 +331,10 @@ describe('Graph Node Creation', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        const keys = await kStorage.Create(metatype.value.id!, "test suite", test_key_default_value);
+        const testKeys = [...test_key_defaultValue]
+        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
+
+        let keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         const mixed = {
@@ -347,7 +368,20 @@ describe('Graph Node Creation', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        const keys = await kStorage.Create(metatype.value.id!, "test suite", regex_test_key);
+
+        const regex_test_key: MetatypeKey = new MetatypeKey({
+            name: "Test Key Regex",
+            propertyName: "regex",
+            required: true,
+            description: "testing key regex",
+            dataType: "string",
+            // validation is a pattern match verifying that the value has at least 6 characters
+            // with 1 uppercase, 1 lowercase, 1 number and no spaces test at https://regex101.com/r/fX8dY0/1
+            validation: {regex: "^((?=\\S*?[A-Z])(?=\\S*?[a-z])(?=\\S*?[0-9]).{6,})\\S$"},
+            metatypeID: metatype.value.id
+        })
+
+        const keys = await kStorage.Create("test suite", regex_test_key);
         expect(keys.isError).false;
 
         const mixed = {
@@ -388,96 +422,63 @@ const malformed_payload: {[key:string]:any} = {
     "notRequired": 1
 };
 
-const test_keys: MetatypeKeyT[] = [{
-    name: "Test",
-    property_name: "flower",
-    required: true,
-    description: "flower name",
-    data_type: "string"
-},
-    {
-        name: "Test 2",
-        property_name: "color",
-        required: true,
-        description: "color of flower allowed",
-        data_type: "enumeration",
-        options: ["yellow", "blue"]
-    },
-    {
-        name: "Test Not Required",
-        property_name: "notRequired",
-        required: false,
-        description: "not required",
-        data_type: "number",
-    },
+export const test_keys: MetatypeKey[] = [
+    new MetatypeKey({name: "Test", description: "flower name", required: true, propertyName: "flower_name", dataType: "string"}),
+    new MetatypeKey({name: "Test2", description: "color of flower allowed", required: true, propertyName: "color", dataType: "enumeration", options: ["yellow", "blue"]}),
+    new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"}),
 ];
 
 
-const test_key_default_value: MetatypeKeyT[] = [{
+const test_key_defaultValue: MetatypeKey[] = [
+    new MetatypeKey({
     name: "Test",
-    property_name: "flower",
+    propertyName: "flower",
     required: true,
     description: "flower name",
-    data_type: "string"
-},
-    {
+    dataType: "string"
+}),
+   new MetatypeKey({
         name: "Test 2",
-        property_name: "color",
+        propertyName: "color",
         required: true,
         description: "color of flower allowed",
-        data_type: "enumeration",
+        dataType: "enumeration",
         options: ["yellow", "blue"]
-    },
-    {
+    }),
+    new MetatypeKey({
         name: "Test Default Value Number",
-        property_name: "default",
+        propertyName: "default",
         required: true,
         description: "not required",
-        data_type: "number",
-        default_value: 1
-    },{
+        dataType: "number",
+        defaultValue: 1
+    }), new MetatypeKey({
         name: "Test Default Value String",
-        property_name: "defaultString",
+        propertyName: "defaultString",
         required: true,
         description: "not required",
-        data_type: "string",
-        default_value: "test"
-    },{
+        dataType: "string",
+        defaultValue: "test"
+    }),new MetatypeKey({
         name: "Test Default Value Enum",
-        property_name: "defaultEnum",
+        propertyName: "defaultEnum",
         required: true,
         description: "not required",
-        data_type: "enumeration",
-        default_value: "yellow",
+        dataType: "enumeration",
+        defaultValue: "yellow",
         options: ["yellow", "blue"]
-    },{
+    }),new MetatypeKey({
         name: "Test Default Value Boolean",
-        property_name: "defaultBoolean",
+        propertyName: "defaultBoolean",
         required: true,
         description: "not required",
-        data_type: "boolean",
-        default_value: true,
-    },
+        dataType: "boolean",
+        defaultValue: true,
+    })
 ];
 
-export const single_test_key: MetatypeKeyT = {
-    name: "Test Not Required",
-    property_name: "notRequired",
-    required: false,
-    description: "not required",
-    data_type: "number",
-};
+export const single_test_key: MetatypeKey = new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"})
 
-export const regex_test_key: MetatypeKeyT = {
-    name: "Test Key Regex",
-    property_name: "regex",
-    required: true,
-    description: "testing key regex",
-    data_type: "string",
-    // validation is a pattern match verifying that the value has at least 6 characters
-    // with 1 uppercase, 1 lowercase, 1 number and no spaces test at https://regex101.com/r/fX8dY0/1
-    validation: {regex: "^((?=\\S*?[A-Z])(?=\\S*?[a-z])(?=\\S*?[0-9]).{6,})\\S$"}
-}
 
 const regex_payload : {[key:string]:any} = {
     regex: "Catcat1"

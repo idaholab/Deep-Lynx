@@ -7,7 +7,6 @@ import MetatypeKeyMapper from "../metatype_key_mapper"
 import { UserT } from "../../../types/user_management/userT";
 import Result from "../../../result";
 import { ContainerImportT } from "../../../types/import/containerImportT"
-import { MetatypeKeyT, MetatypeKeysT } from "../../../types/metatype_keyT";
 import NodeStorage from "../graph/node_storage"
 import EdgeStorage from "../graph/edge_storage"
 import Logger from "../../../logger"
@@ -19,6 +18,7 @@ import MetatypeRelationshipRepository from "../../repositories/metatype_relation
 import MetatypeRelationship from "../../../data_warehouse/ontology/metatype_relationship";
 import MetatypeRelationshipPairRepository from "../../repositories/metatype_relationship_pair_repository";
 import MetatypeRelationshipPair from "../../../data_warehouse/ontology/metatype_relationship_pair";
+import MetatypeKey from "../../../data_warehouse/ontology/metatype_key";
 const convert = require('xml-js');
 
 const containerStorage = ContainerStorage.Instance;
@@ -410,7 +410,7 @@ export default class ContainerImport {
 
               // check metatypeKeys for metatypes to be updated
               const newMetatypeKeys = classListMap.get(metatype.name).keys
-              const oldMetatypeKeys = (await metatypeKeyStorage.List(metatype.id!)).value
+              const oldMetatypeKeys = (await MetatypeKeyMapper.Instance.ListForMetatype(metatype.id!)).value
 
               for (const key of oldMetatypeKeys) {
 
@@ -574,7 +574,7 @@ export default class ContainerImport {
           }
         })
 
-        const propertyPromises: Promise<Result<MetatypeKeyT[] | MetatypeRelationshipPair[]>>[] = [];
+        const propertyPromises: Promise<Result<MetatypeKey[] | MetatypeRelationshipPair[]>>[] = [];
         // Add metatype keys (properties) and relationship pairs
         classListMap.forEach(async (thisClass: MetatypeExtendT) => {
 
@@ -609,7 +609,7 @@ export default class ContainerImport {
 
           // Add primitive properties and other relationships
           // placeholder for keys that will be sent to BatchUpdate()
-          const updateKeys: MetatypeKeysT = [];
+          const updateKeys: MetatypeKey[] = [];
 
           for (const propertyName in thisClass.properties) {
             const property = thisClass.properties[propertyName];
@@ -641,27 +641,27 @@ export default class ContainerImport {
               }
 
               const propName = dataProp.name.split(" ").join('_')
-              const data: MetatypeKeyT = {
-                metatype_id: thisClass.db_id,
+              const data = new MetatypeKey({
+                metatypeID: thisClass.db_id,
                 name: dataProp.name,
                 required: false,
-                property_name: propName,
+                propertyName: propName,
                 description: dataProp.description,
-                data_type: property.target,
+                dataType: property.target,
                 validation: {
                   regex: "",
                   min,
                   max
                 },
                 options: (propertyOptions.length > 0) ? propertyOptions : undefined
-              };
+              });
 
               if (thisClass.updateKeyNames.includes(dataProp.name)) {
                 const originalKeyData = thisClass.updateKeys.get(dataProp.name)
                 data.id = originalKeyData.id
                 updateKeys.push(data)
               } else {
-                propertyPromises.push(metatypeKeyStorage.Create(data.metatype_id!, user.id!, data));
+                propertyPromises.push(metatypeKeyStorage.BulkCreate(user.id!, [data]));
               }
 
             } else if (property.property_type === 'relationship') {
@@ -690,7 +690,7 @@ export default class ContainerImport {
           }
 
           if (updateKeys.length > 0) {
-            propertyPromises.push(metatypeKeyStorage.BatchUpdate(updateKeys, user.id!));
+            propertyPromises.push(metatypeKeyStorage.BulkUpdate(user.id!, updateKeys));
           }
 
           if (updateRelationships.length > 0) {
@@ -698,7 +698,7 @@ export default class ContainerImport {
           }
 
         })
-        const propertyResults: Result<MetatypeKeyT[] | MetatypeRelationshipPair[]>[] = await Promise.all(propertyPromises)
+        const propertyResults: Result<MetatypeKey[] | MetatypeRelationshipPair[]>[] = await Promise.all(propertyPromises)
         for (const propResult of propertyResults) {
           if (propResult.isError) {
             const rollback = await this.rollbackOntology(containerID)

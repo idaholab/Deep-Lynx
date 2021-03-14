@@ -5,11 +5,9 @@ import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_mapp
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
-import {MetatypeKeyT} from "../../types/metatype_keyT";
 import GraphStorage from "../../data_access_layer/mappers/graph/graph_storage";
 import NodeStorage from "../../data_access_layer/mappers/graph/node_storage";
 import ContainerStorage from "../../data_access_layer/mappers/container_mapper";
-import {MetatypeRelationshipKeyT} from "../../types/metatype_relationship_keyT";
 import MetatypeRelationshipMapper from "../../data_access_layer/mappers/metatype_relationship_mapper";
 import MetatypeRelationshipPairMapper from "../../data_access_layer/mappers/metatype_relationship_pair_mapper";
 import EdgeStorage from "../../data_access_layer/mappers/graph/edge_storage";
@@ -18,6 +16,7 @@ import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
 import MetatypeRelationshipPair from "../../data_warehouse/ontology/metatype_relationship_pair";
+import MetatypeKey from "../../data_warehouse/ontology/metatype_key";
 
 // This is both test and utility for creating a full realized, semi-complex
 // graphs. As such this test _does not_ delete its data after running
@@ -71,10 +70,14 @@ describe('A Complex Graph can be created', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        const keys = await kStorage.Create(metatype.value[0].id!, "test suite", test_keys);
+        const testKeys1 = [...test_keys]
+        testKeys1.forEach(key => key.metatype_id = metatype.value[0].id)
+        const keys = await kStorage.BulkCreate("test suite", testKeys1);
         expect(keys.isError).false;
 
-        const keys2 = await kStorage.Create(metatype.value[1].id!, "test suite", test_keys);
+        const testKeys2 = [...test_keys]
+        testKeys2.forEach(key => key.metatype_id = metatype.value[1].id)
+        const keys2 = await kStorage.BulkCreate("test suite", testKeys2);
         expect(keys2.isError).false;
 
         const mixed = [{
@@ -224,26 +227,8 @@ const payload: {[key:string]:any} = {
     "notRequired": 1
 };
 
-const test_keys: MetatypeKeyT[] = [{
-    name: "Test",
-    property_name: "flower",
-    required: true,
-    description: "flower name",
-    data_type: "string"
-},
-    {
-        name: "Test 2",
-        property_name: "color",
-        required: true,
-        description: "color of flower allowed",
-        data_type: "enumeration",
-        options: ["yellow", "blue"]
-    },
-    {
-        name: "Test Not Required",
-        property_name: "notRequired",
-        required: false,
-        description: "not required",
-        data_type: "number",
-    },
+export const test_keys: MetatypeKey[] = [
+    new MetatypeKey({name: "Test", description: "flower name", required: true, propertyName: "flower_name", dataType: "string"}),
+    new MetatypeKey({name: "Test2", description: "color of flower allowed", required: true, propertyName: "color", dataType: "enumeration", options: ["yellow", "blue"]}),
+    new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"}),
 ];

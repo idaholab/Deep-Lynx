@@ -1,32 +1,45 @@
-import MetatypeKeyMapper from "../data_access_layer/mappers/metatype_key_mapper"
-
-import {Request, Response, NextFunction, Application} from "express"
+import {Application, NextFunction, Request, Response} from "express"
 import {authInContainer} from "./middleware";
 import {UserT} from "../types/user_management/userT";
+import MetatypeKeyRepository from "../data_access_layer/repositories/metatype_key_repository";
+import {plainToClass} from "class-transformer";
+import MetatypeKey from "../data_warehouse/ontology/metatype_key";
+import Result from "../result";
 
-const storage = MetatypeKeyMapper.Instance;
+const repo = new MetatypeKeyRepository()
 
 // This contains all routes pertaining to MetatypeKeys and their management.
 export default class MetatypeKeyRoutes {
     public static mount(app: Application, middleware: any[]) {
-        app.post("/containers/:id/metatypes/:metatypeID/keys", ...middleware, authInContainer("write", "ontology"),this.createMetatypeKey);
-        app.get("/containers/:id/metatypes/:metatypeID/keys/:metatypeKeyID", ...middleware, authInContainer("read", "ontology"),this.retrieveMetatypeKey);
-        app.get("/containers/:id/metatypes/:metatypeID/keys", ...middleware, authInContainer("read", "ontology"),this.listMetatypeKeys);
-        app.delete("/containers/:id/metatypes/:metatypeID/keys/:metatypeKeyID", ...middleware, authInContainer("write", "ontology"),this.archiveMetatypeKey);
-        app.put("/containers/:id/metatypes/:metatypeID/keys/:metatypeKeyID", ...middleware, authInContainer("write", "ontology"),this.updateMetatypeKey)
+        app.post("/containers/:containerID/metatypes/:metatypeID/keys", ...middleware, authInContainer("write", "ontology"),this.createMetatypeKey);
+        app.get("/containers/:containerID/metatypes/:metatypeID/keys/:metatypeKeyID", ...middleware, authInContainer("read", "ontology"),this.retrieveMetatypeKey);
+        app.get("/containers/:containerID/metatypes/:metatypeID/keys", ...middleware, authInContainer("read", "ontology"),this.listMetatypeKeys);
+        app.delete("/containers/:containerID/metatypes/:metatypeID/keys/:metatypeKeyID", ...middleware, authInContainer("write", "ontology"),this.archiveMetatypeKey);
+        app.put("/containers/:containerID/metatypes/:metatypeID/keys/:metatypeKeyID", ...middleware, authInContainer("write", "ontology"),this.updateMetatypeKey)
     }
 
     private static createMetatypeKey(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
+        let toCreate: MetatypeKey[] = []
 
-        storage.Create(req.params.metatypeID, user.id!, req.body)
+        if(Array.isArray(req.body)) {
+            toCreate = plainToClass(MetatypeKey, req.body)
+        } else {
+            toCreate = [plainToClass(MetatypeKey, req.body as object)]
+        }
+
+        // update with the metatypeID
+        if(req.metatype) {
+            toCreate.forEach(key => key.metatype_id = req.metatype!.id!)
+        }
+
+        repo.bulkSave(req.user as UserT, toCreate)
             .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
+                if(result.isError){
+                    result.asResponse(res)
                     return
                 }
 
-                res.status(201).json(result)
+                Result.Success(toCreate).asResponse(res)
             })
             .catch((err) => {
                 res.status(500).json(err.message)
@@ -35,60 +48,65 @@ export default class MetatypeKeyRoutes {
     }
 
     private static retrieveMetatypeKey(req: Request, res: Response, next: NextFunction) {
-        storage.Retrieve(req.params.metatypeKeyID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-                res.status(200).json(result)
-            })
-            .catch((err) => res.status(404).send(err))
-            .finally(() => next())
+        if(req.metatypeKey) {
+            Result.Success(req.metatypeKey).asResponse(res)
+            next()
+            return
+        }
+
+        Result.Failure(`metatype key not found`, 404).asResponse(res)
+        next()
     }
 
     private static listMetatypeKeys(req: Request, res: Response, next: NextFunction) {
-        storage.List(req.params.metatypeID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-                res.status(200).json(result)
-            })
-            .catch((err) => {
-                res.status(404).send(err)
-            })
-            .finally(() => next())
+        // we don't have to do anything fancy here, simply return the metatype in
+        // the request's keys
+        if(req.metatype) {
+            Result.Success(req.metatype.keys).asResponse(res)
+            next()
+            return
+        }
+
+        Result.Failure('metatype not found', 404).asResponse(res)
+        next()
     }
 
 
     private static updateMetatypeKey(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
+        if(req.metatypeKey && req.metatype) {
+            // easiest way to handle full update right now is to assign
+            const payload = plainToClass(MetatypeKey, req.body as object)
+            payload.id = req.metatypeKey.id
+            payload.metatype_id = req.metatype!.id!
 
-        storage.Update(req.params.metatypeKeyID, user.id!, req.body)
-            .then((updated) => {
-                if (updated.isError && updated.error) {
-                    res.status(updated.error.errorCode).json(updated);
-                    return
-                }
-                res.status(200).json(updated)
-            })
-            .catch((updated) => res.status(500).send(updated))
+            repo.save(req.user as UserT, payload)
+                .then((result) => {
+                    if(result.isError) {
+                        result.asResponse(res)
+                        return
+                    }
+
+                    Result.Success(payload).asResponse(res)
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        } else {
+            Result.Failure('metatype or metatype key not found', 404).asResponse(res)
+            next()
+        }
     }
 
     private static archiveMetatypeKey(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
-
-        storage.Archive(req.params.metatypeKeyID, user.id!)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-                res.sendStatus(200)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
+        if(req.metatypeKey) {
+            repo.archive(req.user as UserT, req.metatypeKey)
+                .then((result) => {
+                    result.asResponse(res)
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        } else {
+            Result.Failure('metatype key not found', 404).asResponse(res)
+            next()
+        }
     }
 }

@@ -10,9 +10,7 @@ const format = require('pg-format')
 
 /*
 * ContainerMapper encompasses all logic dealing with the manipulation of the
-* Container class in a data storage layer. Create and update functions return
-* classes as we have no surefire way of associating what return rows belong to
-* what original classes, and it would be dangerous to make assumptions
+* Container class in a data storage layer.
 */
 export default class ContainerMapper extends PostgresStorage{
     public static tableName = "containers";

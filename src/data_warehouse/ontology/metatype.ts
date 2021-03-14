@@ -31,13 +31,14 @@ export default class Metatype extends BaseDataClass {
     // for tracking removed keys for update
     #removedKeys: MetatypeKey[] | undefined
 
-    constructor(input: {containerID?: string, name: string, description: string}) {
+    constructor(input: {containerID?: string, name: string, description: string, keys?: MetatypeKey[]}) {
         super();
 
         // we have to do this because class-transformer doesn't know to create
         // an object with our specifications for the parameter
         if(input) {
             if(input.containerID) this.container_id = input.containerID
+            if(input.keys) this.keys = input.keys
             this.name = input.name
             this.description = input.description
         }

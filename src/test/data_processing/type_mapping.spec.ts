@@ -9,7 +9,6 @@ import TypeMappingStorage from "../../data_access_layer/mappers/import/type_mapp
 import {TypeMappingT, TypeTransformationConditionT, TypeTransformationT} from "../../types/import/typeMappingT";
 import MetatypeMapper from "../../data_access_layer/mappers/metatype_mapper";
 import MetatypeKeyMapper from "../../data_access_layer/mappers/metatype_key_mapper";
-import {MetatypeKeyT} from "../../types/metatype_keyT";
 import {ApplyTransformation, ValidTransformationCondition} from "../../data_processing/type_mapping";
 import {objectToShapeHash} from "../../utilities";
 import {NodeT} from "../../types/graph/nodeT";
@@ -27,6 +26,8 @@ import Metatype from "../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../data_access_layer/mappers/container_mapper";
 import MetatypeRelationship from "../../data_warehouse/ontology/metatype_relationship";
 import MetatypeRelationshipPair from "../../data_warehouse/ontology/metatype_relationship_pair";
+import MetatypeKey from "../../data_warehouse/ontology/metatype_key";
+import {UserT} from "../../types/user_management/userT";
 
 describe('A Data Type Mapping can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -37,16 +38,170 @@ describe('A Data Type Mapping can', async() => {
     var resultMetatypes: Metatype[] = []
     var resultMetatypeRelationships: MetatypeRelationship[] = []
     var data: DataStagingT | undefined = undefined
+    var user: UserT
 
-    var carKeys: MetatypeKeyT[] = []
-    var manufacturerKeys: MetatypeKeyT[] = []
-    var tirePressureKeys: MetatypeKeyT[] = []
-    var maintenanceEntryKeys: MetatypeKeyT[] = []
-    var maintenanceKeys: MetatypeKeyT[] = []
-    var partKeys: MetatypeKeyT[] = []
-    var componentKeys : MetatypeKeyT[] = []
     var maintenancePair: MetatypeRelationshipPair | undefined = undefined
+    const car_metatype_keys: MetatypeKey[] = [
+        new MetatypeKey({
+            name: "id",
+            propertyName: "id",
+            description: "id of car",
+            dataType: "string",
+            required: true
+        }),new MetatypeKey({
+            name: "name",
+            propertyName: "name",
+            description: "name of car",
+            dataType: "string",
+            required: true})]
 
+
+    const component_metatype_keys: MetatypeKey[] = [
+        new MetatypeKey({
+            name: "id",
+            propertyName: "id",
+            description: "id of car",
+            dataType: "number",
+            required: true
+        }),new MetatypeKey({
+            name: "name",
+            propertyName: "name",
+            description: "name of car",
+            dataType: "string",
+            required: true})]
+
+    const manufacturer_metatype_keys: MetatypeKey[] = [
+        new MetatypeKey({
+            name: "id",
+            propertyName: "id",
+            description: "id of car",
+            dataType: "string",
+            required: true
+        }),new MetatypeKey({
+            name: "name",
+            propertyName: "name",
+            description: "name of car",
+            dataType: "string",
+            required: true
+        }),new MetatypeKey({
+            name: "location",
+            propertyName: "location",
+            description: "location of manufacturer",
+            dataType: "string",
+            required: true})]
+
+
+    const tire_pressure_metatype_keys: MetatypeKey[] = [
+        new MetatypeKey({
+            name: "id",
+            propertyName: "id",
+            description: "id of car",
+            dataType: "string",
+            required: true
+        }), new MetatypeKey({
+            name: "measurement",
+            propertyName: "measurement",
+            description: "measurement",
+            dataType: "number",
+            required: true
+        }),new MetatypeKey({
+            name: "measurement unit",
+            propertyName: "measurement_unit",
+            description: "unit of measurement",
+            dataType: "string",
+            required: true
+        }),new MetatypeKey({
+            name: "measurement name",
+            propertyName: "measurement_name",
+            description: "name of measurement",
+            dataType: "string",
+            required: true})]
+
+
+    const car_maintenance_metatype_keys: MetatypeKey[] = [
+        new MetatypeKey({
+            name: "id",
+            propertyName: "id",
+            description: "id of car",
+            dataType: "string",
+            required: true
+        }),new MetatypeKey({
+            name: "name",
+            propertyName: "name",
+            description: "name",
+            dataType: "string",
+            required: true
+        }),new MetatypeKey({
+            name: "start date",
+            propertyName: "start_date",
+            description: "start date",
+            dataType: "date",
+            required: true
+        }),new MetatypeKey({
+            name: "average visits per year",
+            propertyName: "average_visits",
+            description: "average visits per yera",
+            dataType: "number",
+            required: true
+        })]
+
+    const maintenance_entry_metatype_keys: MetatypeKey[] = [
+        new MetatypeKey({
+            name: "id",
+            propertyName: "id",
+            description: "id",
+            dataType: "number",
+            required: true
+        }),new MetatypeKey({
+            name: "check engine light flag",
+            propertyName: "check_engine_light_flag",
+            description: "check engine light flag",
+            dataType: "boolean",
+            required: true
+        }), new MetatypeKey({
+            name: "type",
+            propertyName: "type",
+            description: "type",
+            dataType: "string",
+            required: true
+        })]
+
+    const car_part_metatype_keys: MetatypeKey[] = [
+        new MetatypeKey({
+            name: "id",
+            propertyName: "id",
+            description: "id of car",
+            dataType: "string",
+            required: true
+        }),new MetatypeKey({
+            name: "name",
+            propertyName: "name",
+            description: "name",
+            dataType: "string",
+            required: true
+        }), new MetatypeKey({
+            name: "price",
+            propertyName: "price",
+            description: "price",
+            dataType: "number",
+            required: true
+        }), new MetatypeKey({
+            name: "quantity",
+            propertyName: "quantity",
+            description: "quantity",
+            dataType: "number",
+            required: true
+        })]
+
+    const test_metatypes: Metatype[] = [
+        new Metatype({name: "Car", description: "A Vehicle", keys: car_metatype_keys}),
+        new Metatype({name: "Manufacturer", description: "Creator of Car", keys: manufacturer_metatype_keys}),
+        new Metatype({name: "Tire Pressure", description: "Pressure of tire", keys: tire_pressure_metatype_keys}),
+        new Metatype({name: "Maintenance", description: "Maintenance records", keys: car_maintenance_metatype_keys}),
+        new Metatype({name: "Maintenance Entry", description: "Maintenance entries", keys: maintenance_entry_metatype_keys}),
+        new Metatype({name: "Part", description: "Physical part of car", keys: car_part_metatype_keys}),
+        new Metatype({name: "Component", description: "Base component of part", keys: component_metatype_keys}),
+    ];
 
     before(async function() {
        if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -790,151 +945,6 @@ describe('A Data Type Mapping can', async() => {
     })
 
 });
-
-const car_metatype_keys: MetatypeKeyT[] = [{
-    name: "id",
-    property_name: "id",
-    description: "id of car",
-    data_type: "string",
-    required: true
-    },{
-    name: "name",
-    property_name: "name",
-    description: "name of car",
-    data_type: "string",
-    required: true}]
-
-
-const component_metatype_keys: MetatypeKeyT[] = [{
-    name: "id",
-    property_name: "id",
-    description: "id of car",
-    data_type: "number",
-    required: true
-},{
-    name: "name",
-    property_name: "name",
-    description: "name of car",
-    data_type: "string",
-    required: true}]
-
-const manufacturer_metatype_keys: MetatypeKeyT[] = [{
-    name: "id",
-    property_name: "id",
-    description: "id of car",
-    data_type: "string",
-    required: true
-},{
-    name: "name",
-    property_name: "name",
-    description: "name of car",
-    data_type: "string",
-    required: true
-},{
-    name: "location",
-    property_name: "location",
-    description: "location of manufacturer",
-    data_type: "string",
-    required: true}]
-
-
-const tire_pressure_metatype_keys: MetatypeKeyT[] = [{
-    name: "id",
-    property_name: "id",
-    description: "id of car",
-    data_type: "string",
-    required: true
-},{
-    name: "measurement",
-    property_name: "measurement",
-    description: "measurement",
-    data_type: "number",
-    required: true
-},{
-    name: "measurement unit",
-    property_name: "measurement_unit",
-    description: "unit of measurement",
-    data_type: "string",
-    required: true
-},{
-    name: "measurement name",
-    property_name: "measurement_name",
-    description: "name of measurement",
-    data_type: "string",
-    required: true}]
-
-
-const car_maintenance_metatype_keys: MetatypeKeyT[] = [{
-    name: "id",
-    property_name: "id",
-    description: "id of car",
-    data_type: "string",
-    required: true
-},{
-    name: "name",
-    property_name: "name",
-    description: "name",
-    data_type: "string",
-    required: true
-},{
-    name: "start date",
-    property_name: "start_date",
-    description: "start date",
-    data_type: "date",
-    required: true
-},{
-    name: "average visits per year",
-    property_name: "average_visits",
-    description: "average visits per yera",
-    data_type: "number",
-    required: true
-}]
-
-const maintenance_entry_metatype_keys: MetatypeKeyT[] = [{
-    name: "id",
-    property_name: "id",
-    description: "id",
-    data_type: "number",
-    required: true
-},{
-    name: "check engine light flag",
-    property_name: "check_engine_light_flag",
-    description: "check engine light flag",
-    data_type: "boolean",
-    required: true
-},{
-    name: "type",
-    property_name: "type",
-    description: "type",
-    data_type: "string",
-    required: true
-}]
-
-const car_part_metatype_keys: MetatypeKeyT[] = [{
-    name: "id",
-    property_name: "id",
-    description: "id of car",
-    data_type: "string",
-    required: true
-},{
-    name: "name",
-    property_name: "name",
-    description: "name",
-    data_type: "string",
-    required: true
-},{
-    name: "price",
-    property_name: "price",
-    description: "price",
-    data_type: "number",
-    required: true
-},{
-    name: "quantity",
-    property_name: "quantity",
-    description: "quantity",
-    data_type: "number",
-    required: true
-}]
 
 const test_payload = [
     {

@@ -1,31 +1,45 @@
 import {Request, Response, NextFunction, Application} from "express"
-import MetatypeRelationshipKeyMapper from "../data_access_layer/mappers/metatype_relationship_key_mapper";
 import {authInContainer} from "./middleware";
 import {UserT} from "../types/user_management/userT";
+import MetatypeRelationshipKeyRepository from "../data_access_layer/repositories/metatype_relationship_key_repository";
+import {plainToClass} from "class-transformer";
+import Result from "../result";
+import MetatypeRelationshipKey from "../data_warehouse/ontology/metatype_relationship_key";
 
-const storage = MetatypeRelationshipKeyMapper.Instance;
+const repo = new MetatypeRelationshipKeyRepository()
 
 // This contains all routes pertaining to Metatype Relationship Keys and their management.
 export default class MetatypeRelationshipKeyRoutes {
     public static mount(app: Application, middleware: any[]) {
-        app.post("/containers/:id/metatype_relationships/:relationshipID/keys", ...middleware, authInContainer("write", "ontology"),this.createMetatypeRelationshipKey);
-        app.get("/containers/:id/metatype_relationships/:relationshipID/keys/:relationshipKeyID", ...middleware, authInContainer("read", "ontology"), this.retrieveMetatypeRelationshipKey);
-        app.get("/containers/:id/metatype_relationships/:relationshipID/keys", ...middleware, authInContainer("read", "ontology"), this.listMetatypeRelationshipKeys);
-        app.delete("/containers/:id/metatype_relationships/:relationshipID/keys/:relationshipKeyID", ...middleware, authInContainer("write", "ontology"), this.archiveMetatypeRelationshipKey);
-        app.put("/containers/:id/metatype_relationships/:relationshipID/keys/:relationshipKeyID", ...middleware, authInContainer("write", "ontology"),this.updateMetatypeRelationshipKey)
+        app.post("/containers/:containerID/metatype_relationships/:metatypeRelationshipID/keys", ...middleware, authInContainer("write", "ontology"),this.createMetatypeRelationshipKey);
+        app.get("/containers/:containerID/metatype_relationships/:metatypeRelationshipID/keys/:relationshipKeyID", ...middleware, authInContainer("read", "ontology"), this.retrieveMetatypeRelationshipKey);
+        app.get("/containers/:containerID/metatype_relationships/:metatypeRelationshipID/keys", ...middleware, authInContainer("read", "ontology"), this.listMetatypeRelationshipKeys);
+        app.delete("/containers/:containerID/metatype_relationships/:metatypeRelationshipID/keys/:relationshipKeyID", ...middleware, authInContainer("write", "ontology"), this.archiveMetatypeRelationshipKey);
+        app.put("/containers/:containerID/metatype_relationships/:metatypeRelationshipID/keys/:relationshipKeyID", ...middleware, authInContainer("write", "ontology"),this.updateMetatypeRelationshipKey)
     }
 
     private static createMetatypeRelationshipKey(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
+        let toCreate: MetatypeRelationshipKey[] = []
 
-        storage.Create(req.params.relationshipID, user.id!, req.body)
+        if(Array.isArray(req.body)) {
+            toCreate = plainToClass(MetatypeRelationshipKey, req.body)
+        } else {
+            toCreate = [plainToClass(MetatypeRelationshipKey, req.body as object)]
+        }
+
+        // update with the metatypeID
+        if(req.metatypeRelationship) {
+            toCreate.forEach(key => key.metatype_relationship_id = req.metatypeRelationship!.id!)
+        }
+
+        repo.bulkSave(req.user as UserT, toCreate)
             .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
+                if(result.isError){
+                    result.asResponse(res)
                     return
                 }
 
-                res.status(201).json(result)
+                Result.Success(toCreate).asResponse(res)
             })
             .catch((err) => {
                 res.status(500).json(err.message)
@@ -34,60 +48,65 @@ export default class MetatypeRelationshipKeyRoutes {
     }
 
     private static retrieveMetatypeRelationshipKey(req: Request, res: Response, next: NextFunction) {
-        storage.Retrieve(req.params.relationshipKeyID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-                res.status(200).json(result)
-            })
-            .catch((err) => res.status(404).send(err))
-            .finally(() => next())
+        if(req.metatypeRelationshipKey) {
+            Result.Success(req.metatypeRelationshipKey).asResponse(res)
+            next()
+            return
+        }
+
+        Result.Failure(`metatype relationship key not found`, 404).asResponse(res)
+        next()
     }
 
     private static listMetatypeRelationshipKeys(req: Request, res: Response, next: NextFunction) {
-        storage.List(req.params.relationshipID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-                res.status(200).json(result)
-            })
-            .catch((err) => {
-                res.status(404).send(err)
-            })
-            .finally(() => next())
+        // we don't have to do anything fancy here, simply return the metatype in
+        // the request's keys
+        if(req.metatypeRelationship) {
+            Result.Success(req.metatypeRelationship.keys).asResponse(res)
+            next()
+            return
+        }
+
+        Result.Failure('metatype relationship not found', 404).asResponse(res)
+        next()
     }
 
 
     private static updateMetatypeRelationshipKey(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
+        if(req.metatypeRelationshipKey && req.metatypeRelationship) {
+            // easiest way to handle full update right now is to assign
+            const payload = plainToClass(MetatypeRelationshipKey, req.body as object)
+            payload.id = req.metatypeRelationshipKey.id
+            payload.metatype_relationship_id = req.metatypeRelationship!.id!
 
-        storage.Update(req.params.relationshipKeyID, user.id!, req.body)
-            .then((updated) => {
-                if (updated.isError && updated.error) {
-                    res.status(updated.error.errorCode).json(updated);
-                    return
-                }
-                res.status(200).json(updated)
-            })
-            .catch((updated) => res.status(500).send(updated))
+            repo.save(req.user as UserT, payload)
+                .then((result) => {
+                    if(result.isError) {
+                        result.asResponse(res)
+                        return
+                    }
+
+                    Result.Success(payload).asResponse(res)
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        } else {
+            Result.Failure('metatype relationship or metatype relationship key not found', 404).asResponse(res)
+            next()
+        }
     }
 
     private static archiveMetatypeRelationshipKey(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
-
-        storage.Archive(req.params.relationshipKeyID, user.id!)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-                res.sendStatus(200)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
+        if(req.metatypeRelationshipKey) {
+            repo.archive(req.user as UserT, req.metatypeRelationshipKey)
+                .then((result) => {
+                    result.asResponse(res)
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        } else {
+            Result.Failure('metatype relationship key not found', 404).asResponse(res)
+            next()
+        }
     }
 }
