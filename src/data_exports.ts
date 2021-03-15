@@ -2,7 +2,7 @@
 // system resources. The main loop of Deep Lynx will spawn this process
 
 import {Storage} from "./boot_storage";
-import {RestartExports} from "./data_exporting/exporter";
+import {RestartExports} from "./data_warehouse/export/exporter";
 
 const storage = new Storage()
 

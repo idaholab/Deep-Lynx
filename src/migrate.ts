@@ -3,7 +3,7 @@
 // script is treated as a transaction. Configuration comes from the same config
 // file that the main application uses.
 
-import PostgresAdapter from "./data_access_layer/mappers/adapters/postgres/postgres";
+import PostgresAdapter from "./data_access_layer/mappers/db_adapters/postgres/postgres";
 import Config from "./services/config"
 import * as fs from "fs";
 import Logger from "./services/logger"
@@ -14,7 +14,6 @@ class Migrator {
     private pool!: any;
 
     constructor() {
-        console.log("here")
         pgtools.createdb(Config.core_db_connection_string, Config.db_name, (err: any, res: string) => {
             if (err) {
                 if (err.name === 'duplicate_database') {

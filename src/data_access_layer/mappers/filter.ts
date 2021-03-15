@@ -2,7 +2,7 @@
 // you to build a class for an individual data type so that you can write complex
 // queries.
 import Result from "../../result";
-import PostgresStorage from "./postgresStorage";
+import Mapper from "./mapper";
 
 export default abstract class Filter {
     private readonly _tableName: string
@@ -125,7 +125,7 @@ export default abstract class Filter {
     }
 
     findAll<T>(limit?: number, offset?: number, sortBy?: string, sortDesc?: boolean): Promise<Result<T[]>> {
-        const storage = new PostgresStorage()
+        const storage = new Mapper()
 
         if(sortBy) {
             if(sortDesc) {
@@ -158,7 +158,7 @@ export default abstract class Filter {
     }
 
     count(): Promise<Result<number>> {
-        const storage = new PostgresStorage()
+        const storage = new Mapper()
 
         // modify the original query to be count
         this._rawQuery[0] = `SELECT COUNT(*) FROM ${this._tableName}`

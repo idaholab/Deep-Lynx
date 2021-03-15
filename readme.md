@@ -52,7 +52,7 @@ Run using `npm run migrate` after configuring your datasource.
 
 ***Authentication***
 
-Instructions for configuring of provided authentication methods (basic, saml etc.) can be found in the authentication readme. See [Authetication Readme](src/user_management/authentication/readme.md). 
+Instructions for configuring of provided authentication methods (basic, saml etc.) can be found in the authentication readme. See [Authetication Readme](src/access_management/authentication/readme.md). 
 
 
 **Testing**

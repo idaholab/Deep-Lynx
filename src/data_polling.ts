@@ -2,7 +2,7 @@
 // system resources. The main loop of Deep Lynx will spawn this process
 
 import {Storage} from "./boot_storage";
-import {StartDataSourcePolling} from "./data_importing/data_source";
+import {StartDataSourcePolling} from "./data_warehouse/import/data_source";
 
 const storage = new Storage()
 

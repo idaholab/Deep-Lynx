@@ -1,11 +1,11 @@
 // Boot is where systems like the API server, data service layer etc. should be
 // initialized and any required interfaces be implemented. This is also the
 // entry-point for the application.
-import { Server } from "./api/server";
+import { Server } from "./http_server/server";
 import {Storage} from "./boot_storage";
 import BackedLogger from "./services/logger";
 import Config from "./services/config"
-import {CreateDefaultSuperUser} from "./user_management/users";
+import {CreateDefaultSuperUser} from "./access_management/users";
 const {spawn} = require('child_process')
 import 'reflect-metadata';
 
@@ -29,6 +29,7 @@ storage.boot()
 
         // Start the proactive data sources, e.g the HTTP poller data source type
         const dataSourcePolling = spawn('node', [`${Config.project_dir}/data_polling.js`])
+
         // we want the stdout and stderr output of the function to combine logging
         dataSourcePolling.stdout.on('data', (data: any) => {
                 console.log(data.toString().trim())

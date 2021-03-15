@@ -1,7 +1,7 @@
 import {BaseDomainClass} from "../../base_domain_class";
 import {IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength} from "class-validator";
 import Result from "../../result";
-import Authorization from "../../user_management/authorization/authorization";
+import Authorization from "../../access_management/authorization/authorization";
 import Logger from "../../services/logger";
 
 export default class Container extends BaseDomainClass {
