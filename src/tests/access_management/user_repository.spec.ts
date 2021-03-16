@@ -27,7 +27,7 @@ describe('A User Repository', async() => {
             admin: false,
             displayName: faker.name.findName(),
             email: faker.internet.email(),
-            password: Config.superuser_password,
+            password: faker.random.alphaNumeric(12),
             roles: ["superuser"]
         })}
 
@@ -51,7 +51,7 @@ describe('A User Repository', async() => {
                 admin: true,
                 displayName: faker.name.findName(),
                 email: faker.internet.email(),
-                password: Config.superuser_password,
+                password: faker.random.alphaNumeric(12),
                 roles: ["superuser"]
             }));
 
