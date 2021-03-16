@@ -28,7 +28,7 @@ import MetatypeRelationship from "../../../data_warehouse/ontology/metatype_rela
 import MetatypeRelationshipPair from "../../../data_warehouse/ontology/metatype_relationship_pair";
 import MetatypeKey from "../../../data_warehouse/ontology/metatype_key";
 import {UserT} from "../../../types/user_management/userT";
-import UserStorage from "../../../data_access_layer/mappers/access_management/user_storage";
+import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
 import MetatypeRepository from "../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 
 describe('A Data Type Mapping can', async() => {
@@ -221,7 +221,7 @@ describe('A Data Type Mapping can', async() => {
 
         test_metatypes.forEach(metatype => metatype.container_id = containerID)
 
-        const userResult = await UserStorage.Instance.Create("test suite", (
+        const userResult = await UserMapper.Instance.Create("test suite", (
             {
                 identity_provider_id: faker.random.uuid(),
                 identity_provider: "username_password",

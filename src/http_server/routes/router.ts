@@ -38,7 +38,7 @@ import {SetLocalAuthMethod} from "../../access_management/authentication/local";
 import QueryRoutes from "./data_warehouse/data/query/query_routes";
 import GraphRoutes from "./data_warehouse/data/graph_routes";
 import OAuthRoutes from "./access_management/oauth_routes";
-import UserStorage from "../../data_access_layer/mappers/access_management/user_storage";
+import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
 import EventRoutes from "./event_system/event_routes";
 import ExportRoutes from "./data_warehouse/export/export_routes";
 import TypeMappingRoutes from "./data_warehouse/etl/type_mapping_routes";
@@ -171,7 +171,7 @@ export class Router {
       });
 
     passport.deserializeUser((user: string, done: any) => {
-          UserStorage.Instance.Retrieve(user)
+          UserMapper.Instance.Retrieve(user)
               .then(result => {
                   if(result.isError) done("unable to retrieve user", null)
 

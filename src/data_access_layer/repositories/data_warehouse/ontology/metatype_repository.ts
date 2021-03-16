@@ -1,7 +1,6 @@
-import RepositoryInterface, {Repository} from "../../repository";
+import RepositoryInterface, {QueryOptions, Repository} from "../../repository";
 import Metatype from "../../../../data_warehouse/ontology/metatype";
 import Result from "../../../../result";
-import {UserT} from "../../../../types/user_management/userT";
 import Cache from "../../../../services/cache/cache";
 import Config from "../../../../services/config";
 import Logger from "../../../../services/logger";
@@ -10,19 +9,19 @@ import {plainToClass, serialize} from "class-transformer";
 import MetatypeKeyMapper from "../../../mappers/data_warehouse/ontology/metatype_key_mapper";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import {PoolClient} from "pg";
-import {QueryOptions} from "../../repository";
+import User from "../../../../access_management/user";
 
 export default class MetatypeRepository extends Repository implements RepositoryInterface<Metatype> {
     #mapper: MetatypeMapper = MetatypeMapper.Instance
     #keyMapper: MetatypeKeyMapper = MetatypeKeyMapper.Instance
 
-    async save(user: UserT, m: Metatype, saveKeys: boolean = true): Promise<Result<boolean>> {
+    async save(user: User, m: Metatype, saveKeys: boolean = true): Promise<Result<boolean>> {
         const errors = await m.validationErrors()
         if(errors) {
             return Promise.resolve(Result.Failure(`metatype does not pass validation ${errors.join(",")}`))
         }
 
-        // we run the bulk save in a transaction so that on failure we don't get
+        // we run the save in a transaction so that on failure we don't get
         // stuck figuring out what metatypes' keys didn't update
         const transaction = await this.#mapper.startTransaction()
         if(transaction.isError) return Promise.resolve(Result.Failure(`unable to initiate db transaction`))
@@ -86,7 +85,7 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(Result.Success(true))
     }
 
-    async bulkSave(user: UserT, m: Metatype[], saveKeys: boolean = true): Promise<Result<boolean>> {
+    async bulkSave(user: User, m: Metatype[], saveKeys: boolean = true): Promise<Result<boolean>> {
         // separate metatypes by which need to be created and which need to updated
         const toCreate: Metatype[] = []
         const toUpdate: Metatype[] = []
@@ -156,7 +155,7 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(Result.Success(true))
     }
 
-    private async saveKeys(user: UserT, m: Metatype, transaction?: PoolClient): Promise<Result<boolean>> {
+    private async saveKeys(user: User, m: Metatype, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction: boolean = false
         const keysUpdate: MetatypeKey[] = []
         const keysCreate: MetatypeKey[] = []
@@ -245,7 +244,7 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(Result.Failure('metatype has no id'))
     }
 
-    archive(user: UserT, m: Metatype): Promise<Result<boolean>> {
+    archive(user: User, m: Metatype): Promise<Result<boolean>> {
         if (m.id) {
             this.deleteCached(m.id)
 

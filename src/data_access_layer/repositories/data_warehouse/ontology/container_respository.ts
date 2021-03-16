@@ -1,16 +1,19 @@
 import RepositoryInterface from "../../repository";
 import Container from "../../../../data_warehouse/ontology/container";
 import Result from "../../../../result";
-import {UserT} from "../../../../types/user_management/userT";
 import ContainerMapper from "../../../mappers/data_warehouse/ontology/container_mapper";
 import Authorization from "../../../../access_management/authorization/authorization";
 import Logger from "../../../../services/logger"
 import GraphStorage from "../../../mappers/data_warehouse/data/graph_storage";
+import Cache from "../../../../services/cache/cache";
+import {plainToClass, serialize} from "class-transformer";
+import Config from "../../../../services/config";
+import User from "../../../../access_management/user";
 
 export default class ContainerRepository implements RepositoryInterface<Container> {
     #mapper: ContainerMapper = ContainerMapper.Instance
 
-    async save(user: UserT, c: Container): Promise<Result<boolean>> {
+    async save(user: User, c: Container): Promise<Result<boolean>> {
         const errors = await c.validationErrors()
         if(errors) {
             return Promise.resolve(Result.Failure(`container does not pass validation ${errors.join(",")}`))
@@ -18,6 +21,8 @@ export default class ContainerRepository implements RepositoryInterface<Containe
 
         // if we have a set ID, attempt to update the Container
         if(c.id) {
+            this.deleteCached(c.id)
+
             const updated = await this.#mapper.Update(user.id!, c)
             if(updated.isError) return Promise.resolve(Result.Pass(updated))
 
@@ -51,7 +56,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         return Promise.resolve(Result.Success(true));
     }
 
-    async bulkSave(user: UserT, c: Container[]): Promise<Result<boolean>> {
+    async bulkSave(user: User, c: Container[]): Promise<Result<boolean>> {
         // separate containers by which need to be created and which need to be updated
         const toCreate: Container[] = []
         const toUpdate: Container [] = []
@@ -64,7 +69,12 @@ export default class ContainerRepository implements RepositoryInterface<Containe
                 return Promise.resolve(Result.Failure(`some containers do not pass validation ${errors.join(",")}`))
             }
 
-            (container.id) ? toUpdate.push(container) : toCreate.push(container)
+            if(container.id) {
+                toUpdate.push(container)
+                this.deleteCached(container.id)
+            } else {
+                toCreate.push(container)
+            }
         }
 
         // we run the bulk save in a transaction so that on failure we don't get
@@ -123,7 +133,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         return Promise.resolve(Result.Success(true));
     }
 
-    async listForUser(user: UserT): Promise<Result<Container[]>> {
+    async listForUser(user: User): Promise<Result<Container[]>> {
         // casbin enforcer
         const e = await Authorization.enforcer()
 
@@ -157,21 +167,58 @@ export default class ContainerRepository implements RepositoryInterface<Containe
 
     delete(c: Container): Promise<Result<boolean>> {
         if(c.id) {
+            this.deleteCached(c.id)
             return this.#mapper.Delete(c.id)
         }
 
         return Promise.resolve(Result.Failure('container has no id'))
     }
 
-    archive(user: UserT, c: Container): Promise<Result<boolean>> {
+    archive(user: User, c: Container): Promise<Result<boolean>> {
         if(c.id) {
+            this.deleteCached(c.id)
             return this.#mapper.Archive(c.id, user.id!)
         }
 
         return Promise.resolve(Result.Failure('container has no id'))
     }
 
-    findByID(id: string): Promise<Result<Container>> {
-        return this.#mapper.Retrieve(id)
+    async findByID(id: string): Promise<Result<Container>> {
+        const cached = await this.getCached(id)
+        if(cached) {
+            return Promise.resolve(Result.Success(cached))
+        }
+
+        const retrieved = await this.#mapper.Retrieve(id)
+
+        if(!retrieved.isError) {
+            this.setCache(retrieved.value)
+        }
+
+        return Promise.resolve(retrieved)
+    }
+
+    private async getCached(id: string): Promise<Container | undefined> {
+        const cached = await Cache.get<object>(`${ContainerMapper.tableName}:${id}`)
+        if(cached) {
+            const container = plainToClass(Container, cached)
+            return Promise.resolve(container)
+        }
+
+        return Promise.resolve(undefined)
+    }
+
+    private async setCache(c: Container): Promise<boolean> {
+        const set = await Cache.set(`${ContainerMapper.tableName}:${c.id}`, serialize(c), Config.cache_default_ttl)
+        if(!set) Logger.error(`unable to set cache for container ${c.id}`)
+
+        return Promise.resolve(set)
+    }
+
+    private async deleteCached(id: string): Promise<boolean> {
+        const deleted = await Cache.del(`${ContainerMapper.tableName}:${id}`)
+        if(!deleted) Logger.error(`unable to remove container ${id} from cache`)
+
+        return Promise.resolve(deleted)
     }
 }

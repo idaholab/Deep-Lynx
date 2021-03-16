@@ -52,7 +52,6 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
         return this.destinationMetatype!
     }
 
-
     @MetatypeID({message: "Origin Metatype must have valid ID"})
     @Expose({name: "origin_metatype_id", toClassOnly: true})
     @Transform(({value}) => {

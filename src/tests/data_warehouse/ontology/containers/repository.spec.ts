@@ -5,7 +5,7 @@ import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/p
 import Logger from "../../../../services/logger";
 import Container from "../../../../data_warehouse/ontology/container";
 import {UserT} from "../../../../types/user_management/userT";
-import UserStorage from "../../../../data_access_layer/mappers/access_management/user_storage";
+import UserMapper from "../../../../data_access_layer/mappers/access_management/user_mapper";
 import ContainerRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository";
 import Authorization from "../../../../access_management/authorization/authorization";
 
@@ -20,7 +20,7 @@ describe('A Container Repository', async() => {
 
         await PostgresAdapter.Instance.init()
 
-        const result = await UserStorage.Instance.Create("test suite", (
+        const result = await UserMapper.Instance.Create("test suite", (
             {
                 identity_provider_id: faker.random.uuid(),
                 identity_provider: "username_password",

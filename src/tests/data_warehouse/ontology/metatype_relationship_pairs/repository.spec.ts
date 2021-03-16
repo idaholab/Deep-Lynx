@@ -6,7 +6,7 @@ import Logger from "../../../../services/logger";
 import ContainerMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import Container from "../../../../data_warehouse/ontology/container";
 import {UserT} from "../../../../types/user_management/userT";
-import UserStorage from "../../../../data_access_layer/mappers/access_management/user_storage";
+import UserMapper from "../../../../data_access_layer/mappers/access_management/user_mapper";
 import MetatypeRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 import MetatypeRelationshipRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository";
 import Metatype from "../../../../data_warehouse/ontology/metatype";
@@ -36,7 +36,7 @@ describe('A Metatype Relationship Pair Repository', async() => {
         expect(container.value.id).not.null
         containerID = container.value.id!;
 
-        const result = await UserStorage.Instance.Create("test suite", (
+        const result = await UserMapper.Instance.Create("test suite", (
             {
                 identity_provider_id: faker.random.uuid(),
                 identity_provider: "username_password",

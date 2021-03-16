@@ -3,7 +3,7 @@ import passport from "passport";
 import * as fs from "fs";
 import {UserT} from "../../../types/user_management/userT";
 import Config from "../../../services/config"
-import UserStorage from "../../../data_access_layer/mappers/access_management/user_storage";
+import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
 import Result from "../../../result";
 
 
@@ -33,7 +33,7 @@ export function SetSamlAdfs(app: express.Application) {
         signatureAlgorithm: 'sha256',
         RACComparison: 'exact'
     },(profile:any, done:any) => {
-        const storage = UserStorage.Instance;
+        const storage = UserMapper.Instance;
 
         return new Promise(resolve => {
             storage.RetrieveByIdentityProviderID(profile["http://schemas.microsoft.com/identity/claims/objectidentifier"])

@@ -1,10 +1,10 @@
-import {UserT} from "../../types/user_management/userT";
 import Result from "../../result";
 import Mapper from "../mappers/mapper";
+import User from "../../access_management/user";
 
 export default interface RepositoryInterface<T> {
     findByID(id: string): Promise<Result<T>>
-    save(user: UserT, t:T): Promise<Result<boolean>>
+    save(user: User, t:T): Promise<Result<boolean>>
     delete(t:T): Promise<Result<boolean>>
 }
 

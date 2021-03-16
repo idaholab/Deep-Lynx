@@ -4,7 +4,7 @@ import { expect } from 'chai'
 import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import ContainerStorage from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import Logger from "../../services/logger";
-import UserStorage from "../../data_access_layer/mappers/access_management/user_storage";
+import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
 import {UserT} from "../../types/user_management/userT";
 
 describe('A User', async() => {
@@ -19,7 +19,7 @@ describe('A User', async() => {
     });
 
     it('can be saved to storage', async()=> {
-        let storage = UserStorage.Instance;
+        let storage = UserMapper.Instance;
 
         let user = await storage.Create("test suite", (
             {
@@ -38,7 +38,7 @@ describe('A User', async() => {
     });
 
     it('can have their email validated', async()=> {
-        let storage = UserStorage.Instance;
+        let storage = UserMapper.Instance;
 
         let user = await storage.Create("test suite", (
             {
@@ -62,7 +62,7 @@ describe('A User', async() => {
     });
 
     it('can have reset token set', async()=> {
-        let storage = UserStorage.Instance;
+        let storage = UserMapper.Instance;
 
         let user = await storage.Create("test suite", (
             {
@@ -86,7 +86,7 @@ describe('A User', async() => {
     });
 
     it('can be retrieved from  storage', async()=> {
-        let storage = UserStorage.Instance;
+        let storage = UserMapper.Instance;
 
         let user = await storage.Create("test suite", (
             {
@@ -109,7 +109,7 @@ describe('A User', async() => {
     });
 
     it('can be listed from storage', async()=> {
-        let storage = UserStorage.Instance;
+        let storage = UserMapper.Instance;
 
         let user = await storage.Create("test suite", (
             {
@@ -132,7 +132,7 @@ describe('A User', async() => {
     });
 
     it('can be updated in storage', async()=> {
-        let storage = UserStorage.Instance;
+        let storage = UserMapper.Instance;
 
         let user = await storage.Create("test suite", (
             {

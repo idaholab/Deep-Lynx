@@ -1,8 +1,8 @@
 import RepositoryInterface, {Repository} from "../../repository";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import Result from "../../../../result";
-import {UserT} from "../../../../types/user_management/userT";
 import MetatypeKeyMapper from "../../../mappers/data_warehouse/ontology/metatype_key_mapper";
+import User from "../../../../access_management/user";
 
 // we have the bare minimum of functions in this repository, and it only exists
 // for backwards compatibility. Key manipulation should be handled when dealing
@@ -19,7 +19,7 @@ export default class MetatypeKeyRepository extends  Repository implements Reposi
         return Promise.resolve(Result.Failure(`key has no id`));
     }
 
-    archive(user: UserT, k: MetatypeKey): Promise<Result<boolean>> {
+    archive(user: User, k: MetatypeKey): Promise<Result<boolean>> {
         if(k.id) {
             return this.#mapper.Archive(k.id, user.id!)
         }
@@ -31,7 +31,7 @@ export default class MetatypeKeyRepository extends  Repository implements Reposi
         return this.#mapper.Retrieve(id)
     }
 
-    async save(user: UserT, k: MetatypeKey): Promise<Result<boolean>> {
+    async save(user: User, k: MetatypeKey): Promise<Result<boolean>> {
         const errors = await k.validationErrors()
         if(errors) {
             return Promise.resolve(Result.Failure(`key does not pass validation ${errors.join(",")}`))
@@ -52,7 +52,7 @@ export default class MetatypeKeyRepository extends  Repository implements Reposi
         return Promise.resolve(Result.Success(true))
     }
 
-    async bulkSave(user: UserT, k: MetatypeKey[]): Promise<Result<boolean>> {
+    async bulkSave(user: User, k: MetatypeKey[]): Promise<Result<boolean>> {
         const toCreate: MetatypeKey[] = []
         const toUpdate: MetatypeKey[] = []
         const toReturn: MetatypeKey[] = []

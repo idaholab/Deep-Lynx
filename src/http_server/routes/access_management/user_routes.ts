@@ -7,11 +7,11 @@ import {
     RetrieveUserRoles
 } from "../../../access_management/users";
 import {authInContainer, authRequest, authUser} from "../../middleware";
-import UserStorage from "../../../data_access_layer/mappers/access_management/user_storage";
+import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
 import {UserT} from "../../../types/user_management/userT";
-import KeyPairStorage from "../../../data_access_layer/mappers/access_management/keypair_storage";
+import KeyPairMapper from "../../../data_access_layer/mappers/access_management/keypair_mapper";
 import {UsersForContainer} from "../../user";
-import UserContainerInviteStorage from "../../../data_access_layer/mappers/access_management/user_container_invite_storage";
+import ContainerUserInviteMapper from "../../../data_access_layer/mappers/access_management/container_user_invite_mapper";
 
 // These routes pertain to User management. Currently user creation is reserved
 // for SAML authentication routes. You cannot manually create a user as of June 2020.
@@ -69,7 +69,7 @@ export default class UserRoutes {
 
     private static listInvitedUsers(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT
-        UserContainerInviteStorage.Instance.InvitesByUser(req.params.id, user.id!)
+        ContainerUserInviteMapper.Instance.InvitesByUser(req.params.id, user.id!)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -84,7 +84,7 @@ export default class UserRoutes {
 
     private static listOutstandingInvites(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT
-        UserContainerInviteStorage.Instance.InvitesForEmail(user.email)
+        ContainerUserInviteMapper.Instance.InvitesForEmail(user.email)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -98,7 +98,7 @@ export default class UserRoutes {
     }
 
     private static keysForUser(req: Request, res: Response, next: NextFunction) {
-        KeyPairStorage.Instance.KeysForUser(req.params.id)
+        KeyPairMapper.Instance.KeysForUser(req.params.id)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -112,7 +112,7 @@ export default class UserRoutes {
     }
 
     private static deleteUser(req: Request, res: Response, next: NextFunction) {
-        UserStorage.Instance.PermanentlyDelete(req.params.userID)
+        UserMapper.Instance.PermanentlyDelete(req.params.userID)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -127,7 +127,7 @@ export default class UserRoutes {
 
     private static updateUser(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT;
-        UserStorage.Instance.Update(req.params.userID, user.id!, req.body)
+        UserMapper.Instance.Update(req.params.userID, user.id!, req.body)
             .then((updated) => {
                 if (updated.isError && updated.error) {
                     res.status(updated.error.errorCode).json(updated);
@@ -167,7 +167,7 @@ export default class UserRoutes {
     }
 
     private static async listUsers(req: Request, res: Response, next: NextFunction) {
-        const storage = UserStorage.Instance;
+        const storage = UserMapper.Instance;
         storage.List()
             .then((result) => {
                 if (result.isError && result.error) {

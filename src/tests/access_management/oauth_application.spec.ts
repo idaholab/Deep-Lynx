@@ -5,8 +5,8 @@ import ContainerStorage from "../../data_access_layer/mappers/data_warehouse/ont
 import faker from "faker";
 import {expect} from "chai";
 import {UserT} from "../../types/user_management/userT";
-import UserStorage from "../../data_access_layer/mappers/access_management/user_storage";
-import UserContainerInviteStorage from "../../data_access_layer/mappers/access_management/user_container_invite_storage";
+import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
+import ContainerUserInviteMapper from "../../data_access_layer/mappers/access_management/container_user_invite_mapper";
 import {UserContainerInviteT} from "../../types/user_management/userContainerInviteT";
 import OAuthApplicationStorage from "../../data_access_layer/mappers/access_management/oauth_application_storage";
 
@@ -21,7 +21,7 @@ describe('A OAuth Application can', async() => {
 
         await PostgresAdapter.Instance.init();
 
-        const user = await UserStorage.Instance.Create("test suite", (
+        const user = await UserMapper.Instance.Create("test suite", (
             {
                 identity_provider_id: faker.random.uuid(),
                 identity_provider: "username_password",

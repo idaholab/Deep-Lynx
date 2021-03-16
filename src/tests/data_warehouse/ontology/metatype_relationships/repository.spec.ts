@@ -7,7 +7,7 @@ import ContainerMapper from "../../../../data_access_layer/mappers/data_warehous
 import Container from "../../../../data_warehouse/ontology/container";
 import MetatypeRelationship from "../../../../data_warehouse/ontology/metatype";
 import {UserT} from "../../../../types/user_management/userT";
-import UserStorage from "../../../../data_access_layer/mappers/access_management/user_storage";
+import UserMapper from "../../../../data_access_layer/mappers/access_management/user_mapper";
 import MetatypeRelationshipRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 import MetatypeRelationshipKey from "../../../../data_warehouse/ontology/metatype_key";
 
@@ -29,7 +29,7 @@ describe('A Metatype Relationship Repository', async() => {
         expect(container.value.id).not.null
         containerID = container.value.id!;
 
-        const result = await UserStorage.Instance.Create("test suite", (
+        const result = await UserMapper.Instance.Create("test suite", (
             {
                 identity_provider_id: faker.random.uuid(),
                 identity_provider: "username_password",

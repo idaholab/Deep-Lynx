@@ -1,7 +1,6 @@
 import RepositoryInterface, {Repository} from "../../repository";
 import MetatypeRelationship from "../../../../data_warehouse/ontology/metatype_relationship";
 import Result from "../../../../result";
-import {UserT} from "../../../../types/user_management/userT";
 import Cache from "../../../../services/cache/cache";
 import Config from "../../../../services/config";
 import Logger from "../../../../services/logger";
@@ -11,12 +10,13 @@ import MetatypeRelationshipKeyMapper from "../../../mappers/data_warehouse/ontol
 import MetatypeRelationshipKey from "../../../../data_warehouse/ontology/metatype_relationship_key";
 import {PoolClient} from "pg";
 import {QueryOptions} from "../../repository";
+import User from "../../../../access_management/user";
 
 export default class MetatypeRelationshipRepository extends Repository implements RepositoryInterface<MetatypeRelationship> {
     #mapper: MetatypeRelationshipMapper = MetatypeRelationshipMapper.Instance
     #keyMapper: MetatypeRelationshipKeyMapper = MetatypeRelationshipKeyMapper.Instance
 
-    async save(user: UserT, m: MetatypeRelationship, saveKeys: boolean = true): Promise<Result<boolean>> {
+    async save(user: User, m: MetatypeRelationship, saveKeys: boolean = true): Promise<Result<boolean>> {
         const errors = await m.validationErrors()
         if(errors) {
             return Promise.resolve(Result.Failure(`metatype relationship does not pass validation ${errors.join(",")}`))
@@ -85,7 +85,7 @@ export default class MetatypeRelationshipRepository extends Repository implement
         return Promise.resolve(Result.Success(true))
     }
 
-    async bulkSave(user: UserT, m: MetatypeRelationship[], saveKeys: boolean = true): Promise<Result<boolean>> {
+    async bulkSave(user: User, m: MetatypeRelationship[], saveKeys: boolean = true): Promise<Result<boolean>> {
         // separate metatypes by which need to be created and which need to updated
         const toCreate: MetatypeRelationship[] = []
         const toUpdate: MetatypeRelationship[] = []
@@ -157,7 +157,7 @@ export default class MetatypeRelationshipRepository extends Repository implement
     }
 
 
-    private async saveKeys(user: UserT, m: MetatypeRelationship, transaction?: PoolClient): Promise<Result<boolean>> {
+    private async saveKeys(user: User, m: MetatypeRelationship, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction: boolean = false
         const keysUpdate: MetatypeRelationshipKey[] = []
         const keysCreate: MetatypeRelationshipKey[] = []
@@ -246,7 +246,7 @@ export default class MetatypeRelationshipRepository extends Repository implement
         return Promise.resolve(Result.Failure('metatype relationship has no id'))
     }
 
-    archive(user: UserT, m: MetatypeRelationship): Promise<Result<boolean>> {
+    archive(user: User, m: MetatypeRelationship): Promise<Result<boolean>> {
         if (m.id) {
             this.deleteCached(m.id)
 

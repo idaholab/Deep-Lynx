@@ -5,12 +5,12 @@ import {plainToClass, serialize} from "class-transformer";
 import Config from "../../../../services/config";
 import Logger from "../../../../services/logger";
 import MetatypeRelationshipPair from "../../../../data_warehouse/ontology/metatype_relationship_pair";
-import {UserT} from "../../../../types/user_management/userT";
 import MetatypeRelationshipPairMapper from "../../../mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
 import MetatypeRepository from "./metatype_repository";
 import MetatypeRelationshipRepository from "./metatype_relationship_repository";
 import Metatype from "../../../../data_warehouse/ontology/metatype";
 import MetatypeRelationship from "../../../../data_warehouse/ontology/metatype_relationship";
+import User from "../../../../access_management/user";
 
 export default class MetatypeRelationshipPairRepository extends Repository implements RepositoryInterface<MetatypeRelationshipPair> {
     #mapper : MetatypeRelationshipPairMapper = MetatypeRelationshipPairMapper.Instance
@@ -25,7 +25,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return Promise.resolve(Result.Failure('metatype relationship pair has no id'))
     }
 
-    archive(user: UserT, p: MetatypeRelationshipPair): Promise<Result<boolean>> {
+    archive(user: User, p: MetatypeRelationshipPair): Promise<Result<boolean>> {
         if (p.id) {
             this.deleteCached(p.id)
 
@@ -57,7 +57,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
     // save will not save the origin/destination metatypes or metatype relationship unless the
     // user specifies. This is because we might be working with this object with a bare
     // minimum of info about those types
-    async save(user: UserT, p: MetatypeRelationshipPair, saveRelationships?: boolean): Promise<Result<boolean>> {
+    async save(user: User, p: MetatypeRelationshipPair, saveRelationships?: boolean): Promise<Result<boolean>> {
         // attempt to save the relationships first, if required - keep in mind that
         // we can't wrap these in transactions so it is possible that you update one
         // but not another of the relationships. This is why the saveRelationships is
@@ -114,7 +114,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return Promise.resolve(Result.Success(true))
     }
 
-    async bulkSave(user: UserT, p: MetatypeRelationshipPair[], saveRelationships?: boolean): Promise<Result<boolean>> {
+    async bulkSave(user: User, p: MetatypeRelationshipPair[], saveRelationships?: boolean): Promise<Result<boolean>> {
         // attempt to save the relationships first, if required - keep in mind that
         // we can't wrap these in transactions so it is possible that you update one
         // but not another of the relationships. This is why the saveRelationships is

@@ -5,8 +5,8 @@ import ContainerStorage from "../../data_access_layer/mappers/data_warehouse/ont
 import faker from "faker";
 import {expect} from "chai";
 import {UserT} from "../../types/user_management/userT";
-import UserStorage from "../../data_access_layer/mappers/access_management/user_storage";
-import UserContainerInviteStorage from "../../data_access_layer/mappers/access_management/user_container_invite_storage";
+import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
+import ContainerUserInviteMapper from "../../data_access_layer/mappers/access_management/container_user_invite_mapper";
 import {UserContainerInviteT} from "../../types/user_management/userContainerInviteT";
 import Container from "../../data_warehouse/ontology/container";
 import ContainerMapper from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
@@ -29,7 +29,7 @@ describe('A User Container Invite can', async() => {
         expect(container.value.id).not.null
         containerID = container.value.id!;
 
-        const user = await UserStorage.Instance.Create("test suite", (
+        const user = await UserMapper.Instance.Create("test suite", (
             {
                 identity_provider_id: faker.random.uuid(),
                 identity_provider: "username_password",
@@ -51,7 +51,7 @@ describe('A User Container Invite can', async() => {
     })
 
     it('can be saved to storage', async() => {
-        const storage = UserContainerInviteStorage.Instance
+        const storage = ContainerUserInviteMapper.Instance
 
         const invite = await storage.Create(userID,containerID, {
             email: faker.internet.email(),

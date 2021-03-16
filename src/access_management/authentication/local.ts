@@ -1,7 +1,7 @@
 import express from "express"
 import passport from "passport"
 import {Strategy} from "passport-local"
-import UserStorage from "../../data_access_layer/mappers/access_management/user_storage";
+import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
 import bcrypt from "bcrypt";
 import Logger from "../../services/logger"
 import {OAuth} from "../oauth/oauth";
@@ -9,7 +9,7 @@ const buildUrl = require('build-url');
 
 export  function SetLocalAuthMethod(app: express.Application) {
     passport.use(new Strategy({passReqToCallback: true},(req, username, password, done) => {
-        UserStorage.Instance.RetrieveByEmail(username)
+        UserMapper.Instance.RetrieveByEmail(username)
             .then(result => {
                 if(result.isError) return done(result.error)
                 if(!result.value) return done("unable to login as provided user")

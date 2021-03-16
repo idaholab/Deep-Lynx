@@ -4,14 +4,14 @@ import OAuthApplicationStorage from "../../../data_access_layer/mappers/access_m
 import {LocalAuthMiddleware} from "../../../access_management/authentication/local";
 import {OAuth} from "../../../access_management/oauth/oauth";
 import {OAuthAuthorizationRequestT, OAuthTokenExchangeT} from "../../../types/user_management/oauth";
-import UserStorage from "../../../data_access_layer/mappers/access_management/user_storage";
+import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
 import {
     CreateNewUser,
     InitiateResetPassword,
     ResetPassword,
     RetrieveResourcePermissions
 } from "../../../access_management/users";
-import KeyPairStorage from "../../../data_access_layer/mappers/access_management/keypair_storage";
+import KeyPairMapper from "../../../data_access_layer/mappers/access_management/keypair_mapper";
 import Config from "../../../services/config"
 import Cache from "../../../services/cache/cache"
 
@@ -63,7 +63,7 @@ export default class OAuthRoutes {
     private static profile(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT
         // profile must include a user's keys
-        KeyPairStorage.Instance.KeysForUser(user.id!)
+        KeyPairMapper.Instance.KeysForUser(user.id!)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.render('profile', {_error: "Unable to fetch user's API keys"})
@@ -115,7 +115,7 @@ export default class OAuthRoutes {
     private static generateKeyPair(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT
 
-        KeyPairStorage.Instance.Create(user.id!)
+        KeyPairMapper.Instance.Create(user.id!)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.redirect(buildUrl('/oauth/profile', {queryParams: {error: "Unable to generate key pair"}}))
@@ -138,7 +138,7 @@ export default class OAuthRoutes {
     private static deleteKeyPair(req: Request, res: Response, next: NextFunction) {
         const user = req.user as UserT
 
-        KeyPairStorage.Instance.PermanentlyDelete(user.id!, req.params.keyID)
+        KeyPairMapper.Instance.PermanentlyDelete(user.id!, req.params.keyID)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.redirect(buildUrl('/oauth/profile', {queryParams: {error: "Unable to delete key pair"}}))
@@ -479,14 +479,14 @@ export default class OAuthRoutes {
         const expiry = req.header("x-api-expiry")
 
         if(key && secret) {
-            KeyPairStorage.Instance.ValidateKeyPair(key, secret)
+            KeyPairMapper.Instance.ValidateKeyPair(key, secret)
                 .then(valid => {
                     if(!valid) {
                         res.status(401).send('unauthorized');
                         return
                     }
 
-                    KeyPairStorage.Instance.UserForKeyPair(key)
+                    KeyPairMapper.Instance.UserForKeyPair(key)
                         .then(user => {
                             if(user.isError) {
                                 // even though its an error with the user, we don't want
@@ -515,7 +515,7 @@ export default class OAuthRoutes {
 
     private static validateEmail(req: Request, res: Response, next: NextFunction) {
         // @ts-ignore
-        UserStorage.Instance.ValidateEmail(req.query.id, req.query.token)
+        UserMapper.Instance.ValidateEmail(req.query.id, req.query.token)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.render('email_validate', {_error: result.error})

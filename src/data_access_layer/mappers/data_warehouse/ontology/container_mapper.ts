@@ -3,9 +3,8 @@ import Result from "../../../../result"
 import Mapper from "../../mapper";
 import {PoolClient, QueryConfig} from "pg";
 import uuid from "uuid";
-import GraphStorage from "../data/graph_storage";
-import Logger from "../../../../services/logger";
 import {plainToClass} from "class-transformer";
+
 const format = require('pg-format')
 
 /*
@@ -26,7 +25,7 @@ export default class ContainerMapper extends Mapper{
     }
 
     public async Create(userID:string, c: Container, transaction?: PoolClient): Promise<Result<Container>> {
-        const r = await super.runRaw(this.createStatement(c, userID), transaction)
+        const r = await super.runRaw(this.createStatement(userID, c), transaction)
         if(r.isError) return Promise.resolve(Result.Pass(r));
 
         const resultContainers = plainToClass(Container, r.value)
@@ -37,7 +36,7 @@ export default class ContainerMapper extends Mapper{
     public async BulkCreate(userID:string, c: Container[] | Container, transaction?: PoolClient): Promise<Result<Container[]>> {
         if(!Array.isArray(c)) c = [c]
 
-        const r = await super.runRaw(this.bulkCreateStatement(c, userID), transaction)
+        const r = await super.runRaw(this.createStatement(userID, ...c), transaction)
         if(r.isError) return Promise.resolve(Result.Pass(r));
 
         const resultContainers = plainToClass(Container, r.value)
@@ -47,13 +46,13 @@ export default class ContainerMapper extends Mapper{
 
     public async Retrieve(id:string): Promise<Result<Container>>{
         const result = await super.retrieveRaw(this.retrieveStatement(id))
-
         if(result.isError) return Promise.resolve(Result.Pass(result))
+
         return Promise.resolve(Result.Success(plainToClass(Container, result.value)))
     }
 
     public async Update(userID: string, c: Container, transaction?: PoolClient): Promise<Result<Container>> {
-        const r = await super.runRaw(this.fullUpdateStatement(c, userID), transaction)
+        const r = await super.runRaw(this.fullUpdateStatement(userID, c), transaction)
         if(r.isError) return Promise.resolve(Result.Pass(r));
 
         const resultContainers = plainToClass(Container, r.value)
@@ -63,7 +62,7 @@ export default class ContainerMapper extends Mapper{
 
 
     public async BulkUpdate(userID: string, c: Container[], transaction?: PoolClient): Promise<Result<Container[]>> {
-        const r = await super.runRaw(this.fullBulkUpdateStatement(c, userID), transaction)
+        const r = await super.runRaw(this.fullUpdateStatement(userID, ...c), transaction)
         if(r.isError) return Promise.resolve(Result.Pass(r));
 
         return Promise.resolve(Result.Success(plainToClass(Container, r.value)))
@@ -74,7 +73,7 @@ export default class ContainerMapper extends Mapper{
 
         if(results.isError) return new Promise(resolve => resolve(Result.Pass(results)))
 
-        return new Promise(resolve => resolve(Result.Success(plainToClass(Container, results.value))))
+        return Promise.resolve(Result.Success(plainToClass(Container, results.value)))
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<Container[]>> {
@@ -82,7 +81,7 @@ export default class ContainerMapper extends Mapper{
 
         if(results.isError) return new Promise(resolve => resolve(Result.Pass(results)))
 
-        return new Promise(resolve => resolve(Result.Success(plainToClass(Container, results.value))))
+        return Promise.resolve(Result.Success(plainToClass(Container, results.value)))
     }
 
     public async Archive(containerID: string, userID: string): Promise<Result<boolean>> {
@@ -97,28 +96,14 @@ export default class ContainerMapper extends Mapper{
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
-    private createStatement(container: Container, userID: string): QueryConfig {
-        return {
-            text:`INSERT INTO containers(id,name,description, created_by, modified_by) VALUES($1, $2, $3, $4,$5) RETURNING *`,
-            values: [uuid.v4(), container.name, container.description, userID, userID]
-        }
-    }
-
-    private bulkCreateStatement(containers: Container[], userID: string): string {
+    private createStatement(userID: string, ...containers: Container[]): string {
         const text = `INSERT INTO containers(id,name,description, created_by, modified_by) VALUES %L RETURNING *`
         const values = containers.map(container => [uuid.v4(), container.name, container.description, userID, userID])
 
         return format(text, values)
     }
 
-    private fullUpdateStatement(container: Container, userID: string): QueryConfig {
-        return {
-            text:`UPDATE containers SET name = $1, description = $2, modified_by = $3, modified_at = NOW() WHERE id = $4 RETURNING *`,
-            values: [container.name, container.description, userID, container.id]
-        }
-    }
-
-    private fullBulkUpdateStatement(containers: Container[], userID: string): QueryConfig {
+    private fullUpdateStatement(userID: string, ...containers: Container[]): string {
         const text = `UPDATE containers AS c SET
                         name = u.name,
                         description = u.description,

@@ -4,9 +4,9 @@ import { expect } from 'chai'
 import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import ContainerStorage from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import Logger from "../../services/logger";
-import UserStorage from "../../data_access_layer/mappers/access_management/user_storage";
+import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
 import {UserT} from "../../types/user_management/userT";
-import KeyPairStorage from "../../data_access_layer/mappers/access_management/keypair_storage";
+import KeyPairMapper from "../../data_access_layer/mappers/access_management/keypair_mapper";
 
 describe('A KeyPair', async() => {
 
@@ -20,7 +20,7 @@ describe('A KeyPair', async() => {
     });
 
     it('can be created', async()=> {
-        let storage = UserStorage.Instance;
+        let storage = UserMapper.Instance;
 
         let user = await storage.Create("test suite", (
             {
@@ -35,14 +35,14 @@ describe('A KeyPair', async() => {
         expect(user.isError).false;
         expect(user.value).not.empty;
 
-        let keypair = await KeyPairStorage.Instance.Create(user.value.id!)
+        let keypair = await KeyPairMapper.Instance.Create(user.value.id!)
         expect(keypair.isError).false
 
         return storage.PermanentlyDelete(user.value.id!)
     });
 
     it('can be validated', async()=> {
-        let storage = UserStorage.Instance;
+        let storage = UserMapper.Instance;
 
         let user = await storage.Create("test suite", (
             {
@@ -57,13 +57,13 @@ describe('A KeyPair', async() => {
         expect(user.isError).false;
         expect(user.value).not.empty;
 
-        let keypair = await KeyPairStorage.Instance.Create(user.value.id!)
+        let keypair = await KeyPairMapper.Instance.Create(user.value.id!)
         expect(keypair.isError).false
 
-        let validated = await KeyPairStorage.Instance.ValidateKeyPair(keypair.value.key, keypair.value.secret_raw!)
+        let validated = await KeyPairMapper.Instance.ValidateKeyPair(keypair.value.key, keypair.value.secret_raw!)
         expect(validated).true
 
-        let invalidated = await KeyPairStorage.Instance.ValidateKeyPair(keypair.value.key, "fake key should fail")
+        let invalidated = await KeyPairMapper.Instance.ValidateKeyPair(keypair.value.key, "fake key should fail")
         expect(invalidated).false
 
         return storage.PermanentlyDelete(user.value.id!)

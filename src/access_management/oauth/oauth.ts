@@ -10,7 +10,7 @@ import {fold} from "fp-ts/lib/Either";
 import {onDecodeError} from "../../utilities";
 import Cache from "../../services/cache/cache"
 import Result from "../../result";
-import UserStorage from "../../data_access_layer/mappers/access_management/user_storage";
+import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
 import OAuthApplicationStorage from "../../data_access_layer/mappers/access_management/oauth_application_storage";
 
 const crypto = require('crypto');
@@ -49,7 +49,7 @@ export class OAuth {
         const originalReq = await Cache.get<OAuthAuthorizationRequestT>(exchangeReq.code)
         if(!originalReq) return new Promise(resolve => resolve(Result.Failure('unable to retrieve original request from cache')))
 
-        const user = await UserStorage.Instance.Retrieve(originalReq.user_id!)
+        const user = await UserMapper.Instance.Retrieve(originalReq.user_id!)
         if(user.isError) return new Promise(resolve => resolve(Result.Pass(user)))
 
         // quick verification between requests
