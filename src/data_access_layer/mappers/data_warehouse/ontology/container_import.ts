@@ -4,7 +4,6 @@ import MetatypeRelationshipMapper from "./metatype_relationship_mapper"
 import MetatypeStorage from "./metatype_mapper"
 import MetatypeRelationshipPairMapper from "./metatype_relationship_pair_mapper"
 import MetatypeKeyMapper from "./metatype_key_mapper"
-import { UserT } from "../../../../types/user_management/userT";
 import Result from "../../../../result";
 import { ContainerImportT } from "../../../../types/import/containerImportT"
 import NodeStorage from "../data/node_storage"
@@ -19,6 +18,7 @@ import MetatypeRelationship from "../../../../data_warehouse/ontology/metatype_r
 import MetatypeRelationshipPairRepository from "../../../repositories/data_warehouse/ontology/metatype_relationship_pair_repository";
 import MetatypeRelationshipPair from "../../../../data_warehouse/ontology/metatype_relationship_pair";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
+import {User} from "../../../../access_management/user";
 const convert = require('xml-js');
 
 const containerStorage = ContainerStorage.Instance;
@@ -80,7 +80,7 @@ export default class ContainerImport {
     })
   }
 
-  public async ImportOntology(user: UserT, input: ContainerImportT, file: Buffer, dryrun: boolean, update: boolean, containerID: string): Promise<Result<string>> {
+  public async ImportOntology(user: User, input: ContainerImportT, file: Buffer, dryrun: boolean, update: boolean, containerID: string): Promise<Result<string>> {
     if (file.length === 0) {
       const axiosConfig: AxiosRequestConfig = {
         headers: {
@@ -122,7 +122,7 @@ export default class ContainerImport {
     }
   }
 
-  private async parseOntology(user: UserT | any, json: any, name: string, description: string, dryrun: boolean, update: boolean, containerID: string): Promise<Result<string>> {
+  private async parseOntology(user: User | any, json: any, name: string, description: string, dryrun: boolean, update: boolean, containerID: string): Promise<Result<string>> {
     return new Promise<Result<string>>(async (resolve) => {
       json = json["rdf:RDF"]
       const ontologyHead = json["owl:Ontology"];

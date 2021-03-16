@@ -5,6 +5,7 @@ import UserMapper from "../../data_access_layer/mappers/access_management/user_m
 import bcrypt from "bcrypt";
 import Logger from "../../services/logger"
 import {OAuth} from "../oauth/oauth";
+import {serialize} from "class-transformer";
 const buildUrl = require('build-url');
 
 export  function SetLocalAuthMethod(app: express.Application) {
@@ -16,7 +17,7 @@ export  function SetLocalAuthMethod(app: express.Application) {
 
                 bcrypt.compare(password, result.value.password!)
                     .then((match) => {
-                        if(match) return done(null, result.value)
+                        if(match) return done(null, serialize(result.value))
 
                         return done(null, false)
                     })

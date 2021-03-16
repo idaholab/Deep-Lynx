@@ -1,16 +1,9 @@
 import {Request, Response, NextFunction, Application} from "express"
-import {UserT} from "../../../types/user_management/userT";
 import OAuthApplicationStorage from "../../../data_access_layer/mappers/access_management/oauth_application_storage";
 import {LocalAuthMiddleware} from "../../../access_management/authentication/local";
 import {OAuth} from "../../../access_management/oauth/oauth";
 import {OAuthAuthorizationRequestT, OAuthTokenExchangeT} from "../../../types/user_management/oauth";
 import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
-import {
-    CreateNewUser,
-    InitiateResetPassword,
-    ResetPassword,
-    RetrieveResourcePermissions
-} from "../../../access_management/users";
 import KeyPairMapper from "../../../data_access_layer/mappers/access_management/keypair_mapper";
 import Config from "../../../services/config"
 import Cache from "../../../services/cache/cache"
@@ -18,8 +11,15 @@ import Cache from "../../../services/cache/cache"
 import passport from "passport";
 import jwt from "jsonwebtoken";
 import uuid from "uuid"
+import UserRepository from "../../../data_access_layer/repositories/access_management/user_repository";
+import {KeyPair, ResetUserPasswordPayload, User} from "../../../access_management/user";
+import {plainToClass, serialize} from "class-transformer";
+import KeyPairRepository from "../../../data_access_layer/repositories/access_management/keypair_repository";
 const csurf = require('csurf')
 const buildUrl = require('build-url')
+
+const userRepo = new UserRepository()
+const keyRepo = new KeyPairRepository()
 
 export default class OAuthRoutes {
     public static mount(app: Application) {
@@ -61,7 +61,7 @@ export default class OAuthRoutes {
     }
 
     private static profile(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT
+        const user = req.currentUser!
         // profile must include a user's keys
         KeyPairMapper.Instance.KeysForUser(user.id!)
             .then((result) => {
@@ -74,7 +74,7 @@ export default class OAuthRoutes {
                 res.render('profile', {
                     // @ts-ignore
                     _csrfToken: req.csrfToken(),
-                    user: req.user,
+                    user: req.currentUser!,
                     apiKeys: result.value,
                     _success: req.query.success,
                     _error: req.query.error,
@@ -113,9 +113,9 @@ export default class OAuthRoutes {
     }
 
     private static generateKeyPair(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT
+        const user = req.currentUser!
 
-        KeyPairMapper.Instance.Create(user.id!)
+        KeyPairMapper.Instance.Create(new KeyPair(user.id!))
             .then((result) => {
                 if (result.isError && result.error) {
                     res.redirect(buildUrl('/oauth/profile', {queryParams: {error: "Unable to generate key pair"}}))
@@ -136,7 +136,7 @@ export default class OAuthRoutes {
     }
 
     private static deleteKeyPair(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT
+        const user = req.currentUser!
 
         KeyPairMapper.Instance.PermanentlyDelete(user.id!, req.params.keyID)
             .then((result) => {
@@ -152,7 +152,7 @@ export default class OAuthRoutes {
     }
 
     private static authorizePage(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT
+        const user = req.currentUser!
         const oauth = new OAuth()
         const request = oauth.AuthorizationFromRequest(req)
 
@@ -198,7 +198,7 @@ export default class OAuthRoutes {
 
     private static authorize(req: Request, res: Response, next: NextFunction) {
         const oauth = new OAuth()
-        const user = req.user as UserT
+        const user = req.currentUser!
 
         OAuthApplicationStorage.Instance.MarkApplicationApproved(req.body.application_id, user.id!)
             .then((result) => {
@@ -238,14 +238,12 @@ export default class OAuthRoutes {
         const oauth = new OAuth()
         const oauthRequest = oauth.AuthorizationFromRequest(req)
 
-        CreateNewUser(req.body)
+        userRepo.save(req.currentUser!, plainToClass(User, req.body as object))
             .then((result) => {
                 if (result.isError && result.error) {
                     res.redirect(buildUrl('/oauth/register', {queryParams: {error: "Unable to create a new user"}}))
                     return
                 }
-
-                delete result.value.password;
 
                 if(oauthRequest) {
                     req.login(result.value, () => {
@@ -342,7 +340,7 @@ export default class OAuthRoutes {
     }
 
     private static createOAuthApplication(req: Request, res: Response) {
-        const user = req.user as UserT
+        const user = req.currentUser!
         OAuthApplicationStorage.Instance.Create(user.id!, req.body)
             .then((result) => {
                 if (result.isError && result.error) {
@@ -365,7 +363,7 @@ export default class OAuthRoutes {
     }
 
     private static listOAuthApplications(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT
+        const user = req.currentUser!
         OAuthApplicationStorage.Instance.ListForUser(user.id!)
             .then((result) => {
                 if (result.isError && result.error) {
@@ -393,7 +391,7 @@ export default class OAuthRoutes {
     }
 
     private static updateOAuthApplication(req: Request, res: Response) {
-        const user = req.user as UserT
+        const user = req.currentUser!
 
         OAuthApplicationStorage.Instance.Retrieve(req.params.applicationID)
             .then((application) => {
@@ -424,7 +422,7 @@ export default class OAuthRoutes {
     }
 
     private static deleteOAuthApplication(req: Request, res: Response) {
-        const user = req.user as UserT
+        const user = req.currentUser!
 
         OAuthApplicationStorage.Instance.Retrieve(req.params.applicationID)
             .then((application) => {
@@ -479,7 +477,7 @@ export default class OAuthRoutes {
         const expiry = req.header("x-api-expiry")
 
         if(key && secret) {
-            KeyPairMapper.Instance.ValidateKeyPair(key, secret)
+            keyRepo.validateKeyPair(key, secret)
                 .then(valid => {
                     if(!valid) {
                         res.status(401).send('unauthorized');
@@ -497,11 +495,14 @@ export default class OAuthRoutes {
                             }
 
                             // fetch set of permissions per resource for the user before returning
-                            RetrieveResourcePermissions(user.value.id!)
-                                .then(permissions => {
-                                    user.value.permissions = permissions
+                            userRepo.retrievePermissions(req.currentUser!)
+                                .then(result => {
+                                    if(result.isError) {
+                                        res.sendStatus(500)
+                                        return
+                                    }
 
-                                    const token = jwt.sign(user.value, Config.encryption_key_secret, {expiresIn: expiry})
+                                    const token = jwt.sign(serialize(req.currentUser), Config.encryption_key_secret, {expiresIn: expiry})
                                     res.status(200).json(token)
                                     return
                                 })
@@ -544,7 +545,7 @@ export default class OAuthRoutes {
 
     private static initiatePasswordReset(req: Request, res: Response) {
         // @ts-ignore
-        InitiateResetPassword(req.body.email)
+        userRepo.initiateResetPassword(req.body.email)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.redirect(buildUrl('/reset-password', {queryParams: {error: result.error}}))
@@ -563,7 +564,7 @@ export default class OAuthRoutes {
     // the actual password reset will redirect users back to the login page with a successful user flash
     private static resetPassword(req: Request, res: Response) {
         // @ts-ignore
-        ResetPassword(req.body)
+        userRepo.resetPassword(plainToClass(ResetUserPasswordPayload, req.body))
             .then((result) => {
                 if (result.isError && result.error) {
                     res.redirect(buildUrl('/', {queryParams: {error: result.error}}))

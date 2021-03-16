@@ -1,14 +1,13 @@
 /* tslint:disable */
 import faker from 'faker'
-import { expect } from 'chai'
+import {expect} from 'chai'
 import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import Logger from "../../../services/logger";
 import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
+import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import DataSourceStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
 import TypeMappingStorage from "../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_storage";
 import {TypeMappingT, TypeTransformationConditionT, TypeTransformationT} from "../../../types/import/typeMappingT";
-import MetatypeMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper";
-import MetatypeKeyMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper";
 import {ApplyTransformation, ValidTransformationCondition} from "../../../data_warehouse/etl/type_mapping";
 import {objectToShapeHash} from "../../../utilities";
 import {NodeT} from "../../../types/graph/nodeT";
@@ -17,19 +16,20 @@ import GraphStorage from "../../../data_access_layer/mappers/data_warehouse/data
 import {DataStagingT} from "../../../types/import/dataStagingT";
 import ImportStorage from "../../../data_access_layer/mappers/data_warehouse/import/import_storage";
 import DataStagingStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
-import MetatypeRelationshipMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper";
-import MetatypeRelationshipPairMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
+import MetatypeRelationshipMapper
+    from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper";
+import MetatypeRelationshipPairMapper
+    from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
 import EdgeStorage from "../../../data_access_layer/mappers/data_warehouse/data/edge_storage";
 import {EdgeT} from "../../../types/graph/edgeT";
 import Container from "../../../data_warehouse/ontology/container";
 import Metatype from "../../../data_warehouse/ontology/metatype";
-import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import MetatypeRelationship from "../../../data_warehouse/ontology/metatype_relationship";
 import MetatypeRelationshipPair from "../../../data_warehouse/ontology/metatype_relationship_pair";
 import MetatypeKey from "../../../data_warehouse/ontology/metatype_key";
-import {UserT} from "../../../types/user_management/userT";
 import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
 import MetatypeRepository from "../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
+import {User} from "../../../access_management/user";
 
 describe('A Data Type Mapping can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -39,7 +39,7 @@ describe('A Data Type Mapping can', async() => {
     var dataSourceID: string = ""
     var resultMetatypeRelationships: MetatypeRelationship[] = []
     var data: DataStagingT | undefined = undefined
-    var user: UserT
+    var user: User
 
     var maintenancePair: MetatypeRelationshipPair | undefined = undefined
     const car_metatype_keys: MetatypeKey[] = [
@@ -221,17 +221,18 @@ describe('A Data Type Mapping can', async() => {
 
         test_metatypes.forEach(metatype => metatype.container_id = containerID)
 
-        const userResult = await UserMapper.Instance.Create("test suite", (
+        const userResult = await UserMapper.Instance.Create("test suite", new User(
             {
-                identity_provider_id: faker.random.uuid(),
-                identity_provider: "username_password",
-                display_name: faker.name.findName(),
-                email: faker.internet.email(),
-                roles: ["superuser"],
+                identityProviderID: faker.random.uuid(),
+                identityProvider: "username_password",
                 admin: false,
-            } as UserT));
+                displayName: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"]
+            }));
 
-        expect(userResult.isError).false
+        expect(userResult.isError).false;
+        expect(userResult.value).not.empty;
         user = userResult.value
 
         let graph = await GraphStorage.Instance.Create(containerID, "test suite")

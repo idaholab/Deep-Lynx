@@ -1,8 +1,9 @@
 import Result from "../../../result"
 import Mapper from "../mapper";
 import {PoolClient, QueryConfig} from "pg";
-import User from "../../../access_management/user";
+import {User} from "../../../access_management/user";
 import {plainToClass} from "class-transformer";
+import uuid from "uuid";
 
 const UIDGenerator = require('uid-generator');
 const uidgen = new UIDGenerator();
@@ -137,7 +138,7 @@ export default class UserMapper extends Mapper{
             modified_by,
             email_validation_token) VALUES %L RETURNING *`
         const values = users.map(user => [
-            user.id,
+            uuid.v4(),
             user.identity_provider_id,
             user.identity_provider,
             user.display_name,
@@ -157,13 +158,11 @@ export default class UserMapper extends Mapper{
                         identity_provider = u.identity_provider,
                         display_name = u.display_name,
                         email = u.email,
-                        active = u.active,
-                        admin = u.admin,
+                        active = u.active::boolean,
+                        admin = u.admin::boolean,
                         password = u.password,
-                        email_valid = u.email_valid,
+                        email_valid = u.email_valid::boolean,
                         email_validation_token = u.email_validation_token,
-                        reset_required = u.reset_required,
-                        reset_token = u.reset_token,
                         modified_by = u.modified_by,
                         modified_at = NOW()
                     FROM(VALUES %L) AS u(
@@ -177,10 +176,8 @@ export default class UserMapper extends Mapper{
                                         password,
                                         email_valid,
                                         email_validation_token,
-                                        reset_required,
-                                        reset_token,
                                         modified_by)
-                    WHERE u.id::uuid = t.id RETURNING *`
+                    WHERE u.id::uuid = t.id RETURNING t.*`
         const values = users.map(user => [
             user.id,
             user.identity_provider_id,
@@ -192,8 +189,6 @@ export default class UserMapper extends Mapper{
             user.password,
             user.email_valid,
             user.email_validation_token,
-            user.reset_required,
-            user.reset_token,
             userID])
 
         return format(text, values)

@@ -109,7 +109,7 @@ export default class MetatypeMapper extends Mapper{
                         modified_by = u.modified_by,
                         modified_at = NOW()
                       FROM(VALUES %L) AS u(id, name, description, modified_by)
-                      WHERE u.id::uuid = m.id RETURNING *`
+                      WHERE u.id::uuid = m.id RETURNING m.*`
         const values = metatypes.map(metatype=> [metatype.id, metatype.name, metatype.description, userID])
 
         return format(text, values)

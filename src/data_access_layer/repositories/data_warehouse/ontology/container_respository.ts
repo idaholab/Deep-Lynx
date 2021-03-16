@@ -8,7 +8,7 @@ import GraphStorage from "../../../mappers/data_warehouse/data/graph_storage";
 import Cache from "../../../../services/cache/cache";
 import {plainToClass, serialize} from "class-transformer";
 import Config from "../../../../services/config";
-import User from "../../../../access_management/user";
+import {User} from "../../../../access_management/user";
 
 export default class ContainerRepository implements RepositoryInterface<Container> {
     #mapper: ContainerMapper = ContainerMapper.Instance

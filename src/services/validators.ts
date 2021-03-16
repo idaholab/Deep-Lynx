@@ -2,9 +2,8 @@ import {registerDecorator, ValidationArguments, ValidationOptions} from "class-v
 import Metatype from "../data_warehouse/ontology/metatype";
 import MetatypeRelationship from "../data_warehouse/ontology/metatype_relationship";
 import Container from "../data_warehouse/ontology/container";
-import User from "../access_management/user";
+import {User} from "../access_management/user";
 const validator = require('validator')
-
 
 export function ContainerID(validationOptions?: ValidationOptions) {
     return (object: object, propertyName: string) => {

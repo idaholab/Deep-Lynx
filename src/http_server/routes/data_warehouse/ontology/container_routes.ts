@@ -1,5 +1,4 @@
 import {Request, Response, NextFunction, Application} from "express"
-import {UserT} from "../../../../types/user_management/userT";
 import {authRequest, authInContainer} from "../../../middleware";
 import ContainerImport from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_import";
 import { ContainerImportT } from "../../../../types/import/containerImportT";
@@ -35,7 +34,7 @@ export default class ContainerRoutes {
 
     private static createContainer(req: Request, res: Response, next: NextFunction) {
         const payload = plainToClass(Container, req.body as object)
-        repository.save(req.user as UserT, payload)
+        repository.save(req.currentUser!, payload)
             .then((result) => {
                 if(result.isError) {
                     result.asResponse(res)
@@ -55,7 +54,7 @@ export default class ContainerRoutes {
 
         const containers = plainToClass(Container, req.body)
 
-        repository.bulkSave(req.user as UserT, containers)
+        repository.bulkSave(req.currentUser! , containers)
             .then((result) => {
                 if(result.isError){
                     result.asResponse(res)
@@ -82,7 +81,7 @@ export default class ContainerRoutes {
     }
 
     private static async listContainers(req: Request, res: Response, next: NextFunction) {
-        repository.listForUser(req.user as UserT)
+        repository.listForUser(req.currentUser! )
             .then((result) => {
                 result.asResponse(res)
             })
@@ -94,7 +93,7 @@ export default class ContainerRoutes {
         const container = plainToClass(Container, req.body as object)
         container.id = req.params.containerID
 
-        repository.save(req.user as UserT, container)
+        repository.save(req.currentUser! , container)
             .then((updated) => {
                 if(updated.isError){
                     updated.asResponse(res)
@@ -107,7 +106,7 @@ export default class ContainerRoutes {
     }
 
     private static archiveContainer(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
+        const user = req.currentUser! ;
         if(!req.container) {
             res.status(500).json(Result.Failure(`must provide a container to archive or delete`))
         }
@@ -134,7 +133,7 @@ export default class ContainerRoutes {
         let fileBuffer: Buffer = Buffer.alloc(0)
         const input: {[key: string]: any} = {}
         const busboy = new Busboy({headers: req.headers})
-        const user = req.user as UserT
+        const user = req.currentUser!
 
         // if a file has been provided, create a buffer from it
         busboy.on('file', async (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
@@ -174,7 +173,7 @@ export default class ContainerRoutes {
         let fileBuffer: Buffer = Buffer.alloc(0)
         const input: {[key: string]: any} = {}
         const busboy = new Busboy({headers: req.headers})
-        const user = req.user as UserT
+        const user = req.currentUser!
 
         // if a file has been provided, create a buffer from it
         busboy.on('file', async (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {

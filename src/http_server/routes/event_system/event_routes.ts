@@ -1,5 +1,4 @@
 import {Request, Response, NextFunction, Application} from "express"
-import {UserT} from "../../../types/user_management/userT";
 import {authInContainer} from "../../middleware";
 import EventStorage from "../../../data_access_layer/mappers/event_system/event_storage";
 import Result from "../../../result";
@@ -17,7 +16,7 @@ export default class EventRoutes {
     }
 
     private static createRegisteredEvent(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
+        const user = req.currentUser!;
         storage.Create(user.id!, req.body)
             .then((result) => {
                 if (result.isError && result.error) {
@@ -59,7 +58,7 @@ export default class EventRoutes {
     }
 
     private static updateRegisteredEvent(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
+        const user = req.currentUser! ;
         const active = req.query.active;
 
         if (active && active === 'true') {
@@ -99,7 +98,6 @@ export default class EventRoutes {
     }
 
     private static deleteRegisteredEvent(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
         storage.PermanentlyDelete(req.params.id)
             .then((result) => {
                 if (result.isError && result.error) {

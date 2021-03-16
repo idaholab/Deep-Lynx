@@ -1,16 +1,17 @@
 /* tslint:disable */
 import faker from 'faker'
-import { expect } from 'chai'
+import {expect} from 'chai'
 import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import Logger from "../../../../services/logger";
 import Container from "../../../../data_warehouse/ontology/container";
-import {UserT} from "../../../../types/user_management/userT";
 import UserMapper from "../../../../data_access_layer/mappers/access_management/user_mapper";
-import ContainerRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository";
+import ContainerRepository
+    from "../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository";
 import Authorization from "../../../../access_management/authorization/authorization";
+import {User} from "../../../../access_management/user";
 
 describe('A Container Repository', async() => {
-    let user: UserT
+    let user: User
 
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -20,18 +21,19 @@ describe('A Container Repository', async() => {
 
         await PostgresAdapter.Instance.init()
 
-        const result = await UserMapper.Instance.Create("test suite", (
+        const userResult = await UserMapper.Instance.Create("test suite", new User(
             {
-                identity_provider_id: faker.random.uuid(),
-                identity_provider: "username_password",
-                display_name: faker.name.findName(),
-                email: faker.internet.email(),
-                roles: ["superuser"],
+                identityProviderID: faker.random.uuid(),
+                identityProvider: "username_password",
                 admin: false,
-            } as UserT));
+                displayName: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"]
+            }));
 
-        expect(result.isError).false
-        user = result.value
+        expect(userResult.isError).false;
+        expect(userResult.value).not.empty;
+        user = userResult.value
 
         return Promise.resolve()
     });

@@ -110,7 +110,7 @@ export default class ContainerMapper extends Mapper{
                         modified_by = u.modified_by,
                         modified_at = NOW()
                       FROM(VALUES %L) AS u(id, name, description, modified_by)
-                      WHERE u.id::uuid = c.id RETURNING *`
+                      WHERE u.id::uuid = c.id RETURNING c.*`
         const values = containers.map(container => [container.id, container.name, container.description, userID])
 
         return format(text, values)

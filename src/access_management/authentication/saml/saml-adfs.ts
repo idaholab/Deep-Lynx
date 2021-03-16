@@ -1,10 +1,11 @@
 import express from "express"
 import passport from "passport";
 import * as fs from "fs";
-import {UserT} from "../../../types/user_management/userT";
 import Config from "../../../services/config"
 import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
 import Result from "../../../result";
+import {User} from "../../user";
+import {serialize} from "class-transformer";
 
 
 const SamlStrategy = require('passport-saml').Strategy
@@ -16,10 +17,10 @@ export function SetSamlAdfs(app: express.Application) {
      if(!Config.saml_adfs_private_cert_path || !Config.saml_adfs_public_cert_path) return;
 
      // @ts-ignore - as of 1/6/2021 passport.js types haven't been updated
-     passport.serializeUser((user: UserT, done: any) => {
+     passport.serializeUser((user: User, done: any) => {
         done(null, user);
     });
-     passport.deserializeUser((user: UserT, done: any) => {
+     passport.deserializeUser((user: User, done: any) => {
         done(null, user);
     });
 
@@ -45,24 +46,24 @@ export function SetSamlAdfs(app: express.Application) {
                     if(result.isError && result.error?.errorCode === 404) {
                         storage.List()
                             .then(users => {
-                                storage.Create('saml-adfs login', {
-                                    identity_provider_id: profile["http://schemas.microsoft.com/identity/claims/objectidentifier"],
-                                    identity_provider: "saml_adfs",
-                                    display_name: profile["http://schemas.microsoft.com/identity/claims/displayname"],
+                                storage.Create('saml-adfs login', new User({
+                                    identityProviderID: profile["http://schemas.microsoft.com/identity/claims/objectidentifier"],
+                                    identityProvider: "saml_adfs",
+                                    displayName: profile["http://schemas.microsoft.com/identity/claims/displayname"],
                                     email: profile.nameID,
                                     admin: users.value.length === 0
-                                } as UserT)
-                                    .then((user: Result<UserT>) => {
+                                }))
+                                    .then((user: Result<User>) => {
                                         if(user.isError) {
                                             resolve(done(user.error, false))
                                         }
 
-                                        resolve(done(null, user.value))
+                                        resolve(done(null, serialize(user.value)))
                                     })
                             })
 
                     } else {
-                        resolve(done(null, result.value))
+                        resolve(done(null, serialize(result.value)))
                     }
 
                 })

@@ -147,7 +147,7 @@ export default class MetatypeKeyMapper extends Mapper{
                      modified_by = k.modified_by,
                      modified_at = NOW()
                  FROM(VALUES %L) AS k(id, name, metatype_id, description, property_name, required, data_type, options, default_value, validation, modified_by)
-                 WHERE k.id::uuid = m.id RETURNING *`
+                 WHERE k.id::uuid = m.id RETURNING m.*`
             const values = keys.map(key => [key.id, key.name, key.metatype_id, key.description,
                 key.property_name, key.required, key.data_type, JSON.stringify(key.options),
                 JSON.stringify(key.default_value), JSON.stringify(key.validation), userID])

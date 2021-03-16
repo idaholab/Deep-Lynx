@@ -5,9 +5,9 @@ import { Server } from "./http_server/server";
 import {Storage} from "./boot_storage";
 import BackedLogger from "./services/logger";
 import Config from "./services/config"
-import {CreateDefaultSuperUser} from "./access_management/users";
 const {spawn} = require('child_process')
 import 'reflect-metadata';
+import UserRepository from "./data_access_layer/repositories/access_management/user_repository";
 
 
 const storage = new Storage();
@@ -32,11 +32,11 @@ storage.boot()
 
         // we want the stdout and stderr output of the function to combine logging
         dataSourcePolling.stdout.on('data', (data: any) => {
-                console.log(data.toString().trim())
+            console.log(data.toString().trim())
         })
 
         dataSourcePolling.stderr.on('data', (data: any) => {
-                console.log(data.toString().trim())
+            console.log(data.toString().trim())
         })
 
 
@@ -45,11 +45,11 @@ storage.boot()
 
         // we want the stdout and stderr output of the function to combine logging
         dataProcessing.stdout.on('data', (data: any) => {
-               console.log(data.toString().trim())
+            console.log(data.toString().trim())
         })
 
         dataProcessing.stderr.on('data', (data: any) => {
-                console.log(data.toString().trim())
+            console.log(data.toString().trim())
         })
 
         // Start Event System
@@ -57,17 +57,18 @@ storage.boot()
 
         // we want the stdout and stderr output of the function to combine logging
         eventSystem.stdout.on('data', (data: any) => {
-               console.log(data.toString().trim())
+            console.log(data.toString().trim())
         })
 
         eventSystem.stderr.on('data', (data: any) => {
-                console.log(data.toString().trim())
+            console.log(data.toString().trim())
         })
 
         // if enabled, create an initial SuperUser for easier system management
         // if SAML is configured, the initial SAML user will be assigned admin status
         if(Config.initial_super_user) {
-                CreateDefaultSuperUser();
+            const userRepo = new UserRepository()
+            userRepo.createDefaultSuperUser()
         }
 
         Server.Instance.startServer(BackedLogger)

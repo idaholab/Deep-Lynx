@@ -1,7 +1,7 @@
 import {Enforcer, newEnforcer} from "casbin";
 import TypeORMAdapter from "typeorm-adapter";
 import Config from "../../services/config"
-import {isUserT, UserT} from "../../types/user_management/userT";
+import {User} from "../user";
 
 
 // Authorization in Deep Lynx uses the https://casbin.org/ library. Please use
@@ -26,9 +26,9 @@ export class Authorization {
         return new Promise(resolve => resolve(this.e))
     }
 
-    async AuthUser(user: UserT | any, action: "write" | "read", resource:string, domain?: string): Promise<boolean>{
+    async AuthUser(user: User | any, action: "write" | "read", resource:string, domain?: string): Promise<boolean>{
         await this.enforcer() // insure it's connected
-        if(isUserT(user)){
+        if(user instanceof  User){
             if(user.admin) return true;
 
             if(!domain) {

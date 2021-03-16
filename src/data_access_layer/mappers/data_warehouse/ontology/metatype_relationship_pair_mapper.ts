@@ -122,7 +122,7 @@ export default class MetatypeRelationshipPairMapper extends Mapper{
                                             destination_metatype_id,
                                             container_id,
                                             modified_by)
-                        WHERE u.id::uuid = p.id RETURNING *`
+                        WHERE u.id::uuid = p.id RETURNING p.*`
             const values = pairs.map(p => [
                 p.id,
                 p.name,

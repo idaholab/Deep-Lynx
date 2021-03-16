@@ -19,7 +19,7 @@ import {
     metatypeRelationshipContext,
     metatypeRelationshipPairContext,
     metatypeKeyContext,
-    metatypeRelationshipKeyContext
+    metatypeRelationshipKeyContext, currentUser, userContext
 } from "../middleware";
 import ContainerRoutes from "./data_warehouse/ontology/container_routes"
 import MetatypeRoutes from "./data_warehouse/ontology/metatype_routes"
@@ -30,7 +30,6 @@ import MetatypeRelationshipPairRoutes from "./data_warehouse/ontology/metatype_r
 import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import Config from "../../services/config";
 import {SetSamlAdfs} from "../../access_management/authentication/saml/saml-adfs";
-import {SuperUser, UserT} from "../../types/user_management/userT";
 import UserRoutes from "./access_management/user_routes";
 import DataSourceRoutes from "./data_warehouse/import/data_source_routes";
 import {SetJWTAuthMethod} from "../../access_management/authentication/jwt";
@@ -42,6 +41,8 @@ import UserMapper from "../../data_access_layer/mappers/access_management/user_m
 import EventRoutes from "./event_system/event_routes";
 import ExportRoutes from "./data_warehouse/export/export_routes";
 import TypeMappingRoutes from "./data_warehouse/etl/type_mapping_routes";
+import {serialize} from "class-transformer";
+import {SuperUser} from "../../access_management/user";
 
 // Router is a self contained set of routes and middleware that the main express.js
 // application should call. It should be called only once.
@@ -65,8 +66,6 @@ export class Router {
     // DO NOT REMOVE - this is required for some auth methods to work correctly
     this.app.use(express.urlencoded({ extended: false }));
 
-
-
     // single, raw endpoint for a health check
     this.app.get("/health", (req: express.Request, res: express.Response, next: express.NextFunction) => {
       res.sendStatus(200);
@@ -78,7 +77,7 @@ export class Router {
     this.mountPreMiddleware();
 
     // Mount application controllers, middleware is passed in as an array of functions
-    UserRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    UserRoutes.mount(this.app, [authenticateRoute(), containerContext(), userContext()]);
     ContainerRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
     ExportRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
     DataSourceRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
@@ -101,6 +100,7 @@ export class Router {
 
   private mountPreMiddleware() {
       this.app.use(methodOverride('_method'))
+      this.app.use(currentUser())
 
       // templating engine
       this.app.engine('.hbs', exphbs({extname: '.hbs'}))
@@ -147,7 +147,7 @@ export class Router {
     passport.use(new BasicStrategy(
         (userID, password, done) => {
           if(userID === Config.basic_user && password === Config.basic_password) {
-            return done(null, SuperUser());
+            return done(null, serialize(SuperUser));
           }
 
           return done(null, false)
@@ -165,7 +165,7 @@ export class Router {
     SetJWTAuthMethod(this.app)
 
     // @ts-ignore - as of 1/6/2021 passport.js types haven't been updated
-    passport.serializeUser((user: UserT, done: any) => {
+    passport.serializeUser((user: User, done: any) => {
           user.password = ""
           done(null, user.id);
       });

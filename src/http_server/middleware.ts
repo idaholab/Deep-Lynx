@@ -5,7 +5,6 @@ import Logger from "../services/logger"
 import Authorization from "../access_management/authorization/authorization";
 import Config from "../services/config";
 import passport from "passport";
-import {SuperUser, UserT} from "../types/user_management/userT";
 import ContainerRepository from "../data_access_layer/repositories/data_warehouse/ontology/container_respository";
 import MetatypeRepository from "../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 import MetatypeRelationshipRepository from "../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository";
@@ -13,6 +12,9 @@ import MetatypeRelationshipPairRepository
     from "../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository";
 import MetatypeKeyRepository from "../data_access_layer/repositories/data_warehouse/ontology/metatype_key_repository";
 import MetatypeRelationshipKeyRepository from "../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_key_repository";
+import {plainToClass} from "class-transformer";
+import {SuperUser, User} from "../access_management/user";
+import UserRepository from "../data_access_layer/repositories/access_management/user_repository";
 
 // PerformanceMiddleware uses the provided logger to display the time each route
 // took to process and send a response to the requester. This leverages node.js's
@@ -68,10 +70,8 @@ export class PerformanceMiddleware {
 export function authRequest( action: "read" | "write", resource: string, domainParam?:string) {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         let domain: string | undefined;
-        const user = req.user as UserT
-
         // pass auth if user is an admin
-        if(user.admin) {
+        if(req.currentUser && req.currentUser.admin) {
             next()
             return
         }
@@ -100,9 +100,7 @@ export function authRequest( action: "read" | "write", resource: string, domainP
 // authUser is used to manage user authorization against themselves, id refers to the user ID
 export function authUser() {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
-        const user = req.user as UserT
-
-        if(req.params.id === user.id) next()
+        if(req.currentUser && req.params.id === req.currentUser.id) next()
         else {
             resp.status(401).send('unauthorized')
         }
@@ -112,15 +110,13 @@ export function authUser() {
 // authDomain assumes the request paramater 'id' refers to the current domain of the user
 export function authInContainer(action: "read" | "write", resource: string) {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
-        const user = req.user as UserT
-
         // pass auth if user is an admin
-        if(user.admin) {
+        if(req.currentUser && req.currentUser.admin) {
             next()
             return
         }
 
-        Authorization.AuthUser(req.user, action, resource, req.params.id)
+        Authorization.AuthUser(req.currentUser, action, resource, req.params.id)
             .then(result => {
                 if(result) {
                     next();
@@ -152,7 +148,7 @@ export function authenticateRoute(): any {
 
         default: {
             return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
-                req.user = SuperUser();
+                req.currentUser = SuperUser;
                 next()};
         }
     }
@@ -347,5 +343,51 @@ export function metatypeRelationshipPairContext(): any {
                 resp.status(500).json(error)
                 return
             })
+    }
+}
+
+// userContext will attempt to fetch a user by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "userID"
+export function userContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have an id , don't fail, just pass without action
+        if(!req.params.userID) {
+            next()
+            return
+        }
+
+        const repo = new UserRepository()
+
+        repo.findByID(req.params.userID)
+            .then(result => {
+                if(result.isError) {
+                    resp.status(result.error?.errorCode!).json(result)
+                    return
+                }
+
+                req.routeUser = result.value
+                next()
+            })
+            .catch(error => {
+                resp.status(500).json(error)
+                return
+            })
+    }
+}
+
+// currentUser will attempt to pull the user object from the request set by
+// passport.js and convert it into a full user class for the routes to use as
+// needed
+export function currentUser(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have an id , don't fail, just pass without action
+        if(!req.user) {
+            next()
+            return
+        }
+
+        req.currentUser = plainToClass(User, req.user)
+        next()
     }
 }

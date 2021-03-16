@@ -1,9 +1,9 @@
-import RepositoryInterface from "../repository";
-import User, {
+import RepositoryInterface, {QueryOptions, Repository} from "../repository";
+import {
     AssignUserRolePayload,
     ContainerUserInvite,
     KeyPair,
-    ResetUserPasswordPayload
+    ResetUserPasswordPayload, User
 } from "../../../access_management/user";
 import Result, {ErrorUnauthorized} from "../../../result";
 import bcrypt from "bcrypt";
@@ -25,7 +25,7 @@ import {ValidateEmailTemplate} from "../../../services/email/templates/validate_
 const UIDGenerator = require('uid-generator');
 const uidgen = new UIDGenerator();
 
-export default class UserRepository implements RepositoryInterface<User> {
+export default class UserRepository extends Repository implements RepositoryInterface<User> {
     #mapper: UserMapper = UserMapper.Instance
     #keyMapper: KeyPairMapper = KeyPairMapper.Instance
 
@@ -72,20 +72,40 @@ export default class UserRepository implements RepositoryInterface<User> {
         if(transaction.isError) return Promise.resolve(Result.Failure(`unable to initiate db transaction`))
 
         try {
-            u.password = await bcrypt.hash(u.password, 10)
+            if(u.password !== "") u.password = await bcrypt.hash(u.password, 10)
             u.email_validation_token = await uidgen.generate()
         } catch(error) {
             await this.#mapper.rollbackTransaction(transaction.value)
             return Promise.resolve(Result.Failure(`unable to encrypt password ${error}`))
         }
 
-        const result = await this.#mapper.Create(user.id!, u)
-        if(result.isError) {
-            await this.#mapper.rollbackTransaction(transaction.value)
-            return Promise.resolve(Result.Pass(result))
-        }
+        if(u.id) {
+            const result = await this.#mapper.Update(user.id!, u)
+            if(result.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value)
+                return Promise.resolve(Result.Pass(result))
+            }
 
-        Object.assign(u, result.value)
+            Object.assign(u, result.value)
+        } else {
+            const result = await this.#mapper.Create(user.id!, u)
+            if(result.isError) {
+                await this.#mapper.rollbackTransaction(transaction.value)
+                return Promise.resolve(Result.Pass(result))
+            }
+
+            Object.assign(u, result.value)
+
+            // we send the email after the transaction has completed, as we won't actually be failing on email failure
+            if(Config.email_validation_enforced) {
+                Emailer.Instance.send(u.email,
+                    'Validate Deep Lynx Email Address',
+                    ValidateEmailTemplate(u.id!,u.email_validation_token!))
+                    .then(result => {
+                        if(result.isError) Logger.error(`unable to send email verification email ${result.error?.error}`)
+                    })
+            }
+        }
 
         if(saveKeys) {
             const keys = await this.saveKeys(u, transaction.value)
@@ -101,15 +121,6 @@ export default class UserRepository implements RepositoryInterface<User> {
             return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`))
         }
 
-        // we send the email after the transaction has completed, as we won't actually be failing on email failure
-        if(Config.email_validation_enforced) {
-            Emailer.Instance.send(u.email,
-                'Validate Deep Lynx Email Address',
-                ValidateEmailTemplate(u.id!,u.email_validation_token!))
-                .then(result => {
-                    if(result.isError) Logger.error(`unable to send email verification email ${result.error?.error}`)
-                })
-        }
 
         return Promise.resolve(Result.Success(true))
     }
@@ -148,6 +159,7 @@ export default class UserRepository implements RepositoryInterface<User> {
         }
 
         if(u.keys) for(const key of u.keys) {
+            if(key.secret) continue; // pass if we've already hashed and saved
             // set key's userID to equal its parent
             key.user_id = u.id!
 
@@ -155,6 +167,13 @@ export default class UserRepository implements RepositoryInterface<User> {
             if(errors) {
                 if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
                 return Promise.resolve(Result.Failure(`one or more user key pairs not pass validation ${errors.join(",")}`))
+            }
+
+            try {
+                const hashedSecret = await bcrypt.hash(key.secret_raw, 10)
+                key.secret = hashedSecret
+            } catch(error) {
+                return Promise.resolve(Result.Failure(`unable to hash key's secret ${error}`))
             }
 
             keysCreate.push(key)
@@ -166,16 +185,12 @@ export default class UserRepository implements RepositoryInterface<User> {
                 if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
                 return Promise.resolve(Result.Pass(results))
             }
-
-            returnKeys.push(...results.value)
         }
 
         if(internalTransaction) {
             const commit = await this.#mapper.completeTransaction(transaction)
             if(commit.isError) return Promise.resolve(Result.Pass(commit))
         }
-
-        u.replaceKeys(returnKeys)
 
         return Promise.resolve(Result.Success(true))
     }
@@ -197,8 +212,8 @@ export default class UserRepository implements RepositoryInterface<User> {
         Logger.info("creating default superuser")
         const superUser = new User({
             id: uuid.v4(),
-            identity_provider: "username_password",
-            display_name: "Super User",
+            identityProvider: "username_password",
+            displayName: "Super User",
             email: Config.superuser_email,
             password: Config.superuser_password,
             active: true,
@@ -309,10 +324,15 @@ export default class UserRepository implements RepositoryInterface<User> {
 
         const container = await containerRepo.findByID(created.value.container!.id!)
 
-        return Emailer.Instance.send(created.value.email,
+        Emailer.Instance.send(created.value.email,
             'Invitation to Deep Lynx Container',
             ContainerInviteEmailTemplate(created.value.token!, (container.isError) ? created.value.container!.id! : container.value.name )
         )
+            .then(result => {
+                if(result.isError) Logger.error(`unable to send container invitation email`)
+            })
+
+        return Promise.resolve(Result.Success(true))
     }
 
     async acceptContainerInvite(user: User, inviteToken: string): Promise<Result<boolean>> {
@@ -354,5 +374,26 @@ export default class UserRepository implements RepositoryInterface<User> {
         })
 
         return UserMapper.Instance.ListFromIDs(userIDs)
+    }
+
+    constructor() {
+        super(UserMapper.tableName);
+    }
+
+    async list(loadKeys: boolean = true ,options?: QueryOptions): Promise<Result<User[]>> {
+        const results = await super.findAll<object>(options)
+
+        if(results.isError) return Promise.resolve(Result.Pass(results))
+
+        const users = plainToClass(User, results.value)
+
+        if(loadKeys) {
+            await Promise.all(users.map(async (user) => {
+                const keys = await this.loadKeys(user)
+                if(keys.isError) Logger.error(`unable to load keys for user ${user.id}: ${keys.error?.error}`)
+            }))
+        }
+
+        return Promise.resolve(Result.Success(users))
     }
 }

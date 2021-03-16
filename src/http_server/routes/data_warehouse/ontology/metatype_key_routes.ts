@@ -1,6 +1,5 @@
 import {Application, NextFunction, Request, Response} from "express"
 import {authInContainer} from "../../../middleware";
-import {UserT} from "../../../../types/user_management/userT";
 import MetatypeKeyRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_key_repository";
 import {plainToClass} from "class-transformer";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
@@ -32,7 +31,7 @@ export default class MetatypeKeyRoutes {
             toCreate.forEach(key => key.metatype_id = req.metatype!.id!)
         }
 
-        repo.bulkSave(req.user as UserT, toCreate)
+        repo.bulkSave(req.currentUser! , toCreate)
             .then((result) => {
                 if(result.isError){
                     result.asResponse(res)
@@ -79,7 +78,7 @@ export default class MetatypeKeyRoutes {
             payload.id = req.metatypeKey.id
             payload.metatype_id = req.metatype!.id!
 
-            repo.save(req.user as UserT, payload)
+            repo.save(req.currentUser! , payload)
                 .then((result) => {
                     if(result.isError) {
                         result.asResponse(res)
@@ -98,7 +97,7 @@ export default class MetatypeKeyRoutes {
 
     private static archiveMetatypeKey(req: Request, res: Response, next: NextFunction) {
         if(req.metatypeKey) {
-            repo.archive(req.user as UserT, req.metatypeKey)
+            repo.archive(req.currentUser! , req.metatypeKey)
                 .then((result) => {
                     result.asResponse(res)
                 })

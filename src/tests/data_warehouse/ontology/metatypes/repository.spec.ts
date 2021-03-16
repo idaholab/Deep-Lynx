@@ -1,20 +1,19 @@
 /* tslint:disable */
 import faker from 'faker'
-import { expect } from 'chai'
+import {expect} from 'chai'
 import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
-import MetatypeMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper";
 import Logger from "../../../../services/logger";
 import ContainerMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import Container from "../../../../data_warehouse/ontology/container";
 import Metatype from "../../../../data_warehouse/ontology/metatype";
-import {UserT} from "../../../../types/user_management/userT";
 import UserMapper from "../../../../data_access_layer/mappers/access_management/user_mapper";
 import MetatypeRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
+import {User} from "../../../../access_management/user";
 
 describe('A Metatype Repository', async() => {
     let containerID:string = process.env.TEST_CONTAINER_ID || "";
-    let user: UserT
+    let user: User
 
     before(async function() {
        if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -30,23 +29,25 @@ describe('A Metatype Repository', async() => {
         expect(container.value.id).not.null
         containerID = container.value.id!;
 
-        const result = await UserMapper.Instance.Create("test suite", (
+        const userResult = await UserMapper.Instance.Create("test suite", new User(
             {
-                identity_provider_id: faker.random.uuid(),
-                identity_provider: "username_password",
-                display_name: faker.name.findName(),
-                email: faker.internet.email(),
-                roles: ["superuser"],
+                identityProviderID: faker.random.uuid(),
+                identityProvider: "username_password",
                 admin: false,
-            } as UserT));
+                displayName: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"]
+            }));
 
-        expect(result.isError).false
-        user = result.value
+        expect(userResult.isError).false;
+        expect(userResult.value).not.empty;
+        user = userResult.value
 
         return Promise.resolve()
     });
 
     after(async function() {
+        await UserMapper.Instance.PermanentlyDelete(user.id!)
         return ContainerMapper.Instance.Delete(containerID)
     })
 
@@ -76,8 +77,11 @@ describe('A Metatype Repository', async() => {
     it('can save a Metatype with keys!', async()=> {
         const repository = new MetatypeRepository()
         const metatype = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
-        const key = new MetatypeKey({name: faker.name.findName(), description: faker.random.alphaNumeric(), required: true, propertyName: "test_property", dataType: "string"})
-        metatype.addKey(key)
+        const keys = [
+            new MetatypeKey({name: faker.name.findName(), description: faker.random.alphaNumeric(), required: true, propertyName: "test_property", dataType: "string"}),
+            new MetatypeKey({name: faker.name.findName(), description: faker.random.alphaNumeric(), required: true, propertyName: "test_property", dataType: "string"})
+            ]
+        metatype.addKey(...keys)
 
         let results = await repository.save(user, metatype)
         expect(results.isError).false
@@ -103,14 +107,14 @@ describe('A Metatype Repository', async() => {
 
         // now remove the keys! and save again
         metatype.removeKey(metatype.keys![0])
-        expect(metatype.keys!.length).eq(0)
+        expect(metatype.keys!.length).eq(1)
 
         results = await repository.save(user, metatype)
         expect(results.isError).false
         expect(metatype.id).not.undefined
         expect(metatype.name).eq(updatedName)
         expect(metatype.description).eq(updatedDescription)
-        expect(metatype.keys!.length).eq(0)
+        expect(metatype.keys!.length).eq(1)
 
         return repository.delete(metatype)
     });

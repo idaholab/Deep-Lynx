@@ -10,7 +10,7 @@ import MetatypeRelationshipKeyMapper from "../../../mappers/data_warehouse/ontol
 import MetatypeRelationshipKey from "../../../../data_warehouse/ontology/metatype_relationship_key";
 import {PoolClient} from "pg";
 import {QueryOptions} from "../../repository";
-import User from "../../../../access_management/user";
+import {User} from "../../../../access_management/user";
 
 export default class MetatypeRelationshipRepository extends Repository implements RepositoryInterface<MetatypeRelationship> {
     #mapper: MetatypeRelationshipMapper = MetatypeRelationshipMapper.Instance

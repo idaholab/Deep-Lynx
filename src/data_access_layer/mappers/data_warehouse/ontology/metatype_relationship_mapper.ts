@@ -109,7 +109,7 @@ export default class MetatypeRelationshipMapper extends Mapper{
                         modified_by = u.modified_by,
                         modified_at = NOW()
                       FROM(VALUES %L) AS u(id, name, description, modified_by)
-                      WHERE u.id::uuid = m.id RETURNING *`
+                      WHERE u.id::uuid = m.id RETURNING m.*`
         const values = relationships.map(r=> [r.id, r.name, r.description, userID])
 
         return format(text, values)

@@ -2,7 +2,7 @@ import RepositoryInterface, {Repository} from "../../repository";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import Result from "../../../../result";
 import MetatypeKeyMapper from "../../../mappers/data_warehouse/ontology/metatype_key_mapper";
-import User from "../../../../access_management/user";
+import {User} from "../../../../access_management/user";
 
 // we have the bare minimum of functions in this repository, and it only exists
 // for backwards compatibility. Key manipulation should be handled when dealing

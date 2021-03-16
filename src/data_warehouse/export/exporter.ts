@@ -1,5 +1,4 @@
 import Result from "../../result";
-import {UserT} from "../../types/user_management/userT";
 import {exportT, ExportT} from "../../types/export/exportT";
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
@@ -7,6 +6,7 @@ import {GremlinImpl} from "./gremlinImpl";
 import ExportStorage from "../../data_access_layer/mappers/data_warehouse/export/export_storage";
 import {onDecodeError} from "../../utilities";
 import Logger from "../../services/logger"
+import {User} from "../../access_management/user";
 
 // The exporter interface allows the user to create a standard implementation
 // for data export and implement it with minimum amount of work.
@@ -18,7 +18,7 @@ export interface Exporter {
 }
 
 // Create a new data export, with each adapter needing to be implemented represented as a case
-export async function NewDataExport(user: UserT, containerID: string, input: any): Promise<Result<ExportT>> {
+export async function NewDataExport(user: User, containerID: string, input: any): Promise<Result<ExportT>> {
     return new Promise(resolve => {
         const onSuccess = (res: (r:any) => void): (e: ExportT)=> void => {
             return async (ex: ExportT) => {
@@ -39,7 +39,7 @@ export async function NewDataExport(user: UserT, containerID: string, input: any
 
 
 // Starts an export based on export record created by the above function.
-export async function StartExport(user: UserT, exportID: string, reset?: boolean): Promise<Result<boolean>> {
+export async function StartExport(user: User, exportID: string, reset?: boolean): Promise<Result<boolean>> {
     const exportStorage = ExportStorage.Instance;
 
     const exportRecord = await exportStorage.Retrieve(exportID);
@@ -90,7 +90,7 @@ export async function RestartExports(): Promise<Result<boolean>> {
     return new Promise(resolve => resolve(Result.Success(true)))
 }
 
-export async function StopExport(user: UserT, exportID: string): Promise<Result<boolean>> {
+export async function StopExport(user: User, exportID: string): Promise<Result<boolean>> {
     const exportStorage = ExportStorage.Instance;
 
     const exportRecord = await exportStorage.Retrieve(exportID);
@@ -112,7 +112,7 @@ export async function StopExport(user: UserT, exportID: string): Promise<Result<
 
 // Deletes an export record. NOTE: This does not delete data that might have already been exported nor
 // does it delete data inside the data warehouse.
-export async function DeleteExport(user: UserT, exportID: string): Promise<Result<boolean>> {
+export async function DeleteExport(user: User, exportID: string): Promise<Result<boolean>> {
     const exportStorage = ExportStorage.Instance;
 
     const exportRecord = await exportStorage.Retrieve(exportID);

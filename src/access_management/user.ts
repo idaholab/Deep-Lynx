@@ -1,12 +1,25 @@
 import {BaseDomainClass} from "../base_domain_class";
-import {IsArray, IsBoolean, IsDate, IsEmail, IsIn, IsOptional, IsString, IsUUID, MinLength} from "class-validator";
+import {
+    IsArray,
+    IsBoolean,
+    IsDate,
+    IsEmail,
+    IsIn,
+    IsNumber,
+    IsOptional,
+    IsString,
+    IsUUID,
+    MinLength
+} from "class-validator";
 import Config from "../services/config"
 import uuid from "uuid";
 import {Exclude, Expose, plainToClass, Transform, Type} from "class-transformer";
 import {ContainerID} from "../services/validators";
 import Container from "../data_warehouse/ontology/container";
+import bcrypt from "bcrypt";
+import Result from "../result";
 
-export default class User extends BaseDomainClass {
+export class User extends BaseDomainClass {
     @IsOptional()
     @IsUUID()
     id?: string
@@ -26,8 +39,9 @@ export default class User extends BaseDomainClass {
     email: string = ""
 
     @IsString()
+    @IsOptional()
     @Exclude() // we never want this to show up in a return
-    password: string = ""
+    password?: string
 
     @IsBoolean()
     admin: boolean = false
@@ -40,7 +54,7 @@ export default class User extends BaseDomainClass {
 
     @IsString()
     @IsOptional()
-    @Exclude() // we never want this to show up in a return
+    @Exclude({toPlainOnly: true}) // we never want this to show up in a return
     reset_token?: string
 
     @IsBoolean()
@@ -48,37 +62,44 @@ export default class User extends BaseDomainClass {
 
     @IsString()
     @IsOptional()
-    @Exclude() // we never want this to show up in a return
+    @Exclude({toPlainOnly: true}) // we never want this to show up in a return
     email_validation_token?: string
 
     @IsArray()
     permissions: string[][] = []
+
+    @IsArray()
+    roles: string[] = []
 
     keys: KeyPair[] | undefined
     // for tracking removed keys for update
     #removedKeys: KeyPair[] | undefined
 
     constructor(input: {
-        identity_provider: string,
-        identity_provider_id?: string,
-        display_name: string,
+        identityProvider: string,
+        identityProviderID?: string,
+        displayName: string,
         email: string,
-        password: string,
+        password?: string,
         admin?: boolean,
         active?: boolean,
+        permissions?: string[][],
+        roles?: string[],
         id?: string
     }) {
         super();
 
         if(input) {
-            this.identity_provider = input.identity_provider
-            if(input.identity_provider_id) this.identity_provider_id = input.identity_provider_id
-            this.display_name = input.display_name
+            this.identity_provider = input.identityProvider
+            if(input.identityProviderID) this.identity_provider_id = input.identityProviderID
+            this.display_name = input.displayName
             this.email = input.email
-            this.password = input.password
+            if(input.password) this.password = input.password
             if(input.admin) this.admin = input.admin
             if(input.active) this.active = input.active
             if(input.id) this.id = input.id
+            if(input.permissions) this.permissions = input.permissions
+            if(input.roles) this.roles = input.roles
         }
     }
     get removedKeys() {
@@ -106,17 +127,19 @@ export default class User extends BaseDomainClass {
             if(typeof key === 'string') {
                 this.keys = this.keys.filter(k => {
                     if(k.key!== key) {
-                        return false
+                        return true
                     }
                     this.#removedKeys!.push(k)
+                    return false
                 }, this)
             } else {
                 // if it's not a string, we can safely assume it's the type
                 this.keys = this.keys.filter(k => {
                     if(k.key !== key.key ) {
-                        return false
+                        return true
                     }
                     this.#removedKeys!.push(k)
+                    return false
                 }, this)
             }
         }
@@ -136,12 +159,23 @@ export class KeyPair extends BaseDomainClass {
     user_id?: string
 
     @IsOptional()
-    @Exclude() // we never want to show the secret when this is serialized to an object
+    @Exclude({toPlainOnly: true}) // we never want to show the secret when this is serialized to an object
     secret? : string
 
     constructor(userID?: string) {
         super();
         if(userID) this.user_id = userID
+    }
+
+    async setSecret(): Promise<Result<boolean>> {
+        try {
+            const hashedSecret = await bcrypt.hash(this.secret_raw, 10)
+            this.secret = hashedSecret
+
+            return Promise.resolve(Result.Success(true))
+        } catch(error) {
+            return Promise.resolve(Result.Failure(`unable to hash secret ${error}`))
+        }
     }
 }
 
@@ -153,6 +187,15 @@ export class ResetUserPasswordPayload extends BaseDomainClass {
     token?: string
     @IsString()
     new_password?: string
+
+    constructor(input?: {email?: string, token?: string, newPassword?: string}) {
+        super();
+        if(input){
+            if(input.email) this.email = input.email
+            if(input.token) this.token = input.token
+            if(input.newPassword) this.new_password = input.newPassword
+        }
+    }
 }
 
 export class AssignUserRolePayload extends BaseDomainClass {
@@ -163,13 +206,22 @@ export class AssignUserRolePayload extends BaseDomainClass {
     @IsString()
     @IsIn(["editor", "user", "admin"])
     role_name?: string
+
+    constructor(input?: {userID?:string, containerID?: string, roleName?: string}) {
+        super();
+        if(input) {
+            if(input.userID) this.user_id = input.userID
+            if(input.containerID) this.container_id = input.containerID
+            if(input.roleName) this.role_name = input.roleName
+        }
+    }
 }
 
 // this serves as both payload and data structure for the container invite table
 export class ContainerUserInvite extends  BaseDomainClass {
-    @IsUUID()
+    @IsNumber()
     @IsOptional()
-    id?: string
+    id?: number
 
     @IsEmail()
     email: string = ""
@@ -178,7 +230,7 @@ export class ContainerUserInvite extends  BaseDomainClass {
     origin_user?: string
 
     @IsString()
-    token: string = ""
+    token?: string = ""
 
     // because the end user of this class often needs more information about
     // the container for the invite email, we're going to include and load
@@ -193,14 +245,13 @@ export class ContainerUserInvite extends  BaseDomainClass {
     }, {toClassOnly: true})
     container: Container | undefined
 
-    @IsDate()
     @Type(() => Date)
     issued?: Date
 
     constructor(input: {
         email: string,
         originUser?: User,
-        token: string,
+        token?: string,
         container: string | Container
     }) {
         super();
@@ -208,7 +259,7 @@ export class ContainerUserInvite extends  BaseDomainClass {
         if(input) {
             this.email = input.email
             if(input.originUser) this.origin_user = input.originUser.id!
-            this.token = input.token
+            if(input.token) this.token = input.token
             if(input.container instanceof Container) {
                 this.container = input.container
             } else {
@@ -220,8 +271,8 @@ export class ContainerUserInvite extends  BaseDomainClass {
 
 export const SuperUser = new User({
     id: uuid.v4(),
-    identity_provider: "username_password",
-    display_name: "Super User",
+    identityProvider: "username_password",
+    displayName: "Super User",
     email: Config.superuser_email,
     password: Config.superuser_password,
     active: true,

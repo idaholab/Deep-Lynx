@@ -1,6 +1,6 @@
 /* tslint:disable */
 import faker from 'faker'
-import { expect } from 'chai'
+import {expect} from 'chai'
 import 'reflect-metadata';
 import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import Logger from "../../../../services/logger";
@@ -8,21 +8,36 @@ import ContainerImport from "../../../../data_access_layer/mappers/data_warehous
 import fs from 'fs'
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import NodeStorage from '../../../../data_access_layer/mappers/data_warehouse/data/node_storage';
-import MetatypeStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
-import MetatypeRelationshipPairMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
 import EdgeStorage from '../../../../data_access_layer/mappers/data_warehouse/data/edge_storage';
-import { UserT } from '../../../../types/user_management/userT';
 import MetatypeRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 import MetatypeRelationshipPairRepository
     from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository";
+import UserMapper from "../../../../data_access_layer/mappers/access_management/user_mapper";
+import {User} from "../../../../access_management/user";
 
 describe('A Container Import', async() => {
+    let user: User
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
             Logger.debug("skipping container import tests, no storage layer");
             this.skip()
         }
         await PostgresAdapter.Instance.init()
+
+        const userResult = await UserMapper.Instance.Create("test suite", new User(
+            {
+                identityProviderID: faker.random.uuid(),
+                identityProvider: "username_password",
+                admin: false,
+                displayName: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"]
+            }));
+
+        expect(userResult.isError).false;
+        expect(userResult.value).not.empty;
+        user = userResult.value
+
         return Promise.resolve()
     });
 
@@ -30,8 +45,6 @@ describe('A Container Import', async() => {
     it('can create a container from a valid ontology file', async()=> {
         let containerImport = ContainerImport.Instance;
         let storage = ContainerMapper.Instance;
-
-        let user: UserT = {identity_provider: 'username_password', display_name: 'test suite', email: 'test@test.com', id: 'test suite'}
 
         let fileBuffer = await fs.readFileSync(`${__dirname}/test.owl`)
 
@@ -49,7 +62,6 @@ describe('A Container Import', async() => {
         let storage = ContainerMapper.Instance;
 
         let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
-        let user: UserT = {identity_provider: 'username_password', display_name: 'test suite', email: 'test@test.com', id: 'test suite'}
         let containerID: string
 
         const original = fs.readFileSync(`${__dirname}/test.owl`)
@@ -78,7 +90,6 @@ describe('A Container Import', async() => {
         let nodeStorage = NodeStorage.Instance;
 
         let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
-        let user: UserT = {identity_provider: 'username_password', display_name: 'test suite', email: 'test@test.com', id: 'test suite'}
         let containerID: string
 
         const original = fs.readFileSync(`${__dirname}/test.owl`)
@@ -114,7 +125,6 @@ describe('A Container Import', async() => {
         let nodeStorage = NodeStorage.Instance;
 
         let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
-        let user: UserT = {identity_provider: 'username_password', display_name: 'test suite', email: 'test@test.com', id: 'test suite'}
         let containerID: string
 
         const original = fs.readFileSync(`${__dirname}/test.owl`)
@@ -152,7 +162,6 @@ describe('A Container Import', async() => {
         let edgeStorage = EdgeStorage.Instance;
 
         let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
-        let user: UserT = {identity_provider: 'username_password', display_name: 'test suite', email: 'test@test.com', id: 'test suite'}
         let containerID: string
 
         const original = fs.readFileSync(`${__dirname}/test.owl`)
@@ -221,7 +230,6 @@ describe('A Container Import', async() => {
         let storage = ContainerMapper.Instance;
 
         let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
-        let user: UserT = {identity_provider: 'username_password', display_name: 'test suite', email: 'test@test.com', id: 'test suite'}
         let containerID: string
 
         const original = fs.readFileSync(`${__dirname}/test.owl`)

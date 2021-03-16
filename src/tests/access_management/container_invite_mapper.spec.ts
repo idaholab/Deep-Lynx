@@ -2,18 +2,20 @@
 import Logger from "../../services/logger";
 import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import ContainerStorage from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
+import ContainerMapper from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import faker from "faker";
 import {expect} from "chai";
-import {UserT} from "../../types/user_management/userT";
 import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
 import ContainerUserInviteMapper from "../../data_access_layer/mappers/access_management/container_user_invite_mapper";
-import {UserContainerInviteT} from "../../types/user_management/userContainerInviteT";
 import Container from "../../data_warehouse/ontology/container";
-import ContainerMapper from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
+import {User, ContainerUserInvite} from "../../access_management/user";
+
+const UIDGenerator = require('uid-generator');
+const uidgen = new UIDGenerator();
 
 describe('A User Container Invite can', async() => {
     let containerID: string = process.env.TEST_CONTAINER_ID || "";
-    let userID: string
+    let user: User
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -29,19 +31,18 @@ describe('A User Container Invite can', async() => {
         expect(container.value.id).not.null
         containerID = container.value.id!;
 
-        const user = await UserMapper.Instance.Create("test suite", (
-            {
-                identity_provider_id: faker.random.uuid(),
-                identity_provider: "username_password",
-                display_name: faker.name.findName(),
+        const created = await UserMapper.Instance.Create("test suite", new User({
+                identityProviderID: faker.random.uuid(),
+                identityProvider: "username_password",
+                displayName: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ["superuser"],
                 admin: false,
-            } as UserT));
+            }));
 
-        expect(user.isError).false;
-        expect(user.value).not.empty;
-        userID = user.value.id!
+        expect(created.isError).false;
+        expect(created.value).not.empty;
+        user = created.value
 
         return Promise.resolve()
     });
@@ -52,16 +53,18 @@ describe('A User Container Invite can', async() => {
 
     it('can be saved to storage', async() => {
         const storage = ContainerUserInviteMapper.Instance
+        const token =  await uidgen.generate()
 
-        const invite = await storage.Create(userID,containerID, {
+        const invite = await storage.Create(new ContainerUserInvite({
             email: faker.internet.email(),
-            container_id: containerID,
-            role: "admin"
-        } as UserContainerInviteT)
+            container: containerID!,
+            originUser: user,
+            token
+        }))
 
         expect(invite.isError).false
 
-        const invites = await storage.InvitesByUser(userID, containerID)
+        const invites = await storage.InvitesByUser(user.id!, containerID)
 
         expect(invites.isError).false
         expect(invites.value).not.empty

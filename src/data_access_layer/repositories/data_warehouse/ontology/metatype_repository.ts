@@ -9,7 +9,7 @@ import {plainToClass, serialize} from "class-transformer";
 import MetatypeKeyMapper from "../../../mappers/data_warehouse/ontology/metatype_key_mapper";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import {PoolClient} from "pg";
-import User from "../../../../access_management/user";
+import {User} from "../../../../access_management/user";
 
 export default class MetatypeRepository extends Repository implements RepositoryInterface<Metatype> {
     #mapper: MetatypeMapper = MetatypeMapper.Instance
@@ -342,7 +342,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
         if(loadKeys) {
             await Promise.all(metatypes.map(async (metatype) => {
-                const keys = await MetatypeKeyMapper.Instance.ListForMetatype(metatype.id!)
+                const keys = await this.#keyMapper.ListForMetatype(metatype.id!)
 
                 return metatype.addKey(...keys.value)
             }))

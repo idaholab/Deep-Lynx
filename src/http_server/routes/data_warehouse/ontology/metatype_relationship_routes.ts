@@ -1,6 +1,5 @@
 import {Request, Response, NextFunction, Application} from "express"
 import {authInContainer} from "../../../middleware";
-import {UserT} from "../../../../types/user_management/userT";
 import MetatypeRelationshipRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository";
 import {plainToClass} from "class-transformer";
 import MetatypeRelationship from "../../../../data_warehouse/ontology/metatype_relationship";
@@ -33,7 +32,7 @@ export default class MetatypeRelationshipRoutes {
             toCreate.forEach(relationship => relationship.container_id = req.container!.id!)
         }
 
-        repo.bulkSave(req.user as UserT, toCreate)
+        repo.bulkSave(req.currentUser! , toCreate)
             .then((result) => {
                 if(result.isError) {
                     result.asResponse(res)
@@ -110,7 +109,7 @@ export default class MetatypeRelationshipRoutes {
             payload.id = req.metatypeRelationship.id
             payload.container_id = req.container.id!
 
-            repo.save(req.user as UserT, payload)
+            repo.save(req.currentUser! , payload)
                 .then((result) => {
                     if(result.isError) {
                         result.asResponse(res)
@@ -129,7 +128,7 @@ export default class MetatypeRelationshipRoutes {
 
     private static archiveMetatypeRelationship(req: Request, res: Response, next: NextFunction) {
         if(req.metatypeRelationship) {
-            repo.archive(req.user as UserT, req.metatypeRelationship)
+            repo.archive(req.currentUser! , req.metatypeRelationship)
                 .then((result) => {
                     result.asResponse(res)
                 })

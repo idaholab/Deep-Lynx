@@ -2,11 +2,11 @@
 import faker from 'faker'
 import { expect } from 'chai'
 import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgres/postgres";
-import ContainerStorage from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import Logger from "../../services/logger";
 import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
-import {UserT} from "../../types/user_management/userT";
 import KeyPairMapper from "../../data_access_layer/mappers/access_management/keypair_mapper";
+import {KeyPair, User} from "../../access_management/user";
+import KeyPairRepository from "../../data_access_layer/repositories/access_management/keypair_repository";
 
 describe('A KeyPair', async() => {
 
@@ -22,20 +22,23 @@ describe('A KeyPair', async() => {
     it('can be created', async()=> {
         let storage = UserMapper.Instance;
 
-        let user = await storage.Create("test suite", (
+        let user = await storage.Create("test suite", new User(
             {
-                identity_provider_id: faker.random.uuid(),
-                identity_provider: "username_password",
+                identityProviderID: faker.random.uuid(),
+                identityProvider: "username_password",
                 admin: false,
-                display_name: faker.name.findName(),
+                displayName: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ["superuser"]
-            } as UserT));
+            }));
 
         expect(user.isError).false;
         expect(user.value).not.empty;
 
-        let keypair = await KeyPairMapper.Instance.Create(user.value.id!)
+        let kp = new KeyPair(user.value.id!)
+        expect((await kp.setSecret()).isError).false
+
+        let keypair = await KeyPairMapper.Instance.Create(kp)
         expect(keypair.isError).false
 
         return storage.PermanentlyDelete(user.value.id!)
@@ -44,26 +47,31 @@ describe('A KeyPair', async() => {
     it('can be validated', async()=> {
         let storage = UserMapper.Instance;
 
-        let user = await storage.Create("test suite", (
+        let user = await storage.Create("test suite", new User(
             {
-                identity_provider_id: faker.random.uuid(),
-                identity_provider: "username_password",
+                identityProviderID: faker.random.uuid(),
+                identityProvider: "username_password",
                 admin: false,
-                display_name: faker.name.findName(),
+                displayName: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ["superuser"]
-            } as UserT));
+            }));
 
         expect(user.isError).false;
         expect(user.value).not.empty;
 
-        let keypair = await KeyPairMapper.Instance.Create(user.value.id!)
+        let kp = new KeyPair(user.value.id!)
+        expect((await kp.setSecret()).isError).false
+
+        let keypair = await KeyPairMapper.Instance.Create(kp)
         expect(keypair.isError).false
 
-        let validated = await KeyPairMapper.Instance.ValidateKeyPair(keypair.value.key, keypair.value.secret_raw!)
+        let keyRepo = new KeyPairRepository()
+
+        let validated = await keyRepo.validateKeyPair(keypair.value.key, keypair.value.secret_raw!)
         expect(validated).true
 
-        let invalidated = await KeyPairMapper.Instance.ValidateKeyPair(keypair.value.key, "fake key should fail")
+        let invalidated = await keyRepo.validateKeyPair(keypair.value.key, "fake key should fail")
         expect(invalidated).false
 
         return storage.PermanentlyDelete(user.value.id!)

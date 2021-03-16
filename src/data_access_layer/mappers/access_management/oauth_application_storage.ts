@@ -1,13 +1,10 @@
 import Result from "../../../result"
 import Mapper from "../mapper";
-import {Query, QueryConfig} from "pg";
+import {QueryConfig} from "pg";
 import PostgresAdapter from "../db_adapters/postgres/postgres";
-import {userT, UserT} from "../../../types/user_management/userT";
 import {oauthApplicationT, OauthApplicationT} from "../../../types/user_management/oauth_applicationT";
 import uuid from "uuid";
 import bcrypt from "bcrypt";
-const UIDGenerator = require('uid-generator');
-const uidgen = new UIDGenerator();
 
 /*
 * TypeStorage encompasses all logic dealing with the manipulation of the Metatype

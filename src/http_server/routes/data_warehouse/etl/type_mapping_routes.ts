@@ -1,5 +1,4 @@
 import {Application, NextFunction, Request, Response} from "express"
-import {UserT} from "../../../../types/user_management/userT";
 import {authInContainer} from "../../../middleware";
 import TypeMappingStorage from "../../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_storage";
 import TypeTransformationStorage from "../../../../data_access_layer/mappers/data_warehouse/etl/type_transformation_storage";
@@ -63,7 +62,7 @@ export default class TypeMappingRoutes {
     }
 
     private static createTypeTransformation(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT
+        const user = req.currentUser!
         TypeTransformationStorage.Instance.Create(req.params.mappingID, user.id!, req.body)
             .then((result) => {
                 if (result.isError && result.error) {
@@ -78,7 +77,7 @@ export default class TypeMappingRoutes {
     }
 
     private static updateTypeTransformation(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT
+        const user = req.currentUser!
         TypeTransformationStorage.Instance.Update(req.params.transformationID, user.id!, req.body)
             .then((result) => {
                 if (result.isError && result.error) {
@@ -107,7 +106,7 @@ export default class TypeMappingRoutes {
     }
 
     private static updateMapping(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT
+        const user = req.currentUser!
 
         TypeMappingStorage.Instance.Update(req.params.mappingID, user.id!, req.body)
             .then((result) => {

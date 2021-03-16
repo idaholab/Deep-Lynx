@@ -19,7 +19,8 @@ import jwt from "jsonwebtoken"
 import Config from "../../services/config";
 import Logger from "../../services/logger"
 import base64url from "base64url";
-import {RetrieveResourcePermissions} from "../users";
+import UserRepository from "../../data_access_layer/repositories/access_management/user_repository";
+import {serialize} from "class-transformer";
 
 export class OAuth {
     // AuthorizationRequest will make and store a request in cache for 10 minutes. It will
@@ -46,10 +47,11 @@ export class OAuth {
 
     // exchanges a token for a JWT to act on behalf of the user
     async AuthorizationCodeExchange(exchangeReq: OAuthTokenExchangeT): Promise<Result<string>> {
+        const userRepo = new UserRepository()
         const originalReq = await Cache.get<OAuthAuthorizationRequestT>(exchangeReq.code)
         if(!originalReq) return new Promise(resolve => resolve(Result.Failure('unable to retrieve original request from cache')))
 
-        const user = await UserMapper.Instance.Retrieve(originalReq.user_id!)
+        const user = await userRepo.findByID(originalReq.user_id!)
         if(user.isError) return new Promise(resolve => resolve(Result.Pass(user)))
 
         // quick verification between requests
@@ -78,10 +80,9 @@ export class OAuth {
         }
 
         // with all verification done generate and return a valid JWT after assigning user permissions
-        const permissions = await RetrieveResourcePermissions(user.value.id!)
-        user.value.permissions = permissions
+        await userRepo.retrievePermissions(user.value)
 
-        const token = jwt.sign(user.value, Config.encryption_key_secret, {expiresIn: '720m'})
+        const token = jwt.sign(serialize(user.value), Config.encryption_key_secret, {expiresIn: '720m'})
 
         return new Promise(resolve => resolve(Result.Success(token)))
     }

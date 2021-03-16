@@ -68,9 +68,10 @@ export default class MetatypeRelationship extends BaseDomainClass {
             if(typeof key === 'string') {
                 this.keys = this.keys.filter(k => {
                     if(k.id !== key) {
-                        return false
+                        return true
                     }
                     this.#removedKeys!.push(k)
+                    return false
                 }, this)
             } else {
                 // if it's not a string, we can safely assume it's the type
@@ -78,9 +79,10 @@ export default class MetatypeRelationship extends BaseDomainClass {
                     // to avoid accidentally removing keys with no id check the name
                     // as well, it's a unique identifier for the combo of metatype/keys
                     if(k.id !== key.id && k.name !== key.name) {
-                        return false
+                        return true
                     }
                     this.#removedKeys!.push(k)
+                    return false
                 }, this)
             }
         }

@@ -10,7 +10,7 @@ import MetatypeRepository from "./metatype_repository";
 import MetatypeRelationshipRepository from "./metatype_relationship_repository";
 import Metatype from "../../../../data_warehouse/ontology/metatype";
 import MetatypeRelationship from "../../../../data_warehouse/ontology/metatype_relationship";
-import User from "../../../../access_management/user";
+import {User} from "../../../../access_management/user";
 
 export default class MetatypeRelationshipPairRepository extends Repository implements RepositoryInterface<MetatypeRelationshipPair> {
     #mapper : MetatypeRelationshipPairMapper = MetatypeRelationshipPairMapper.Instance

@@ -1,5 +1,4 @@
 import {Request, Response, NextFunction, Application} from "express"
-import {UserT} from "../../../../types/user_management/userT";
 import {authInContainer} from "../../../middleware";
 import {
     DataSourceUploadFile,
@@ -51,7 +50,7 @@ export default class DataSourceRoutes {
     }
 
     private static createDataSource(req: Request, res: Response, next: NextFunction) {
-        NewDataSource(req.user as UserT, req.params.id, req.body)
+        NewDataSource(req.currentUser! , req.params.id, req.body)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -65,7 +64,7 @@ export default class DataSourceRoutes {
     }
 
     private static setConfiguration(req: Request, res: Response, next: NextFunction) {
-        SetDataSourceConfiguration(req.user as UserT, req.params.sourceID, req.body)
+        SetDataSourceConfiguration(req.currentUser! , req.params.sourceID, req.body)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -271,7 +270,7 @@ export default class DataSourceRoutes {
     // creeateManualImport will accept either a file or a raw JSON body
     private static createManualImport(req: Request, res: Response, next: NextFunction) {
         if (Object.keys(req.body).length !== 0) {
-            ManualJsonImport(req.user as UserT, req.params.sourceID, req.body)
+            ManualJsonImport(req.currentUser! , req.params.sourceID, req.body)
                 .then((result) => {
                     if (result.isError && result.error) {
                         res.status(result.error.errorCode).json(result);
@@ -285,7 +284,7 @@ export default class DataSourceRoutes {
             // @ts-ignore
         } else if (req.files.import.mimetype === "application/json") {
             // @ts-ignore
-            ManualJsonImport(req.user as UserT, req.params.sourceID, JSON.parse(req.files.import.data))
+            ManualJsonImport(req.currentUser! , req.params.sourceID, JSON.parse(req.files.import.data))
                 .then((result) => {
                     if (result.isError && result.error) {
                         res.status(result.error.errorCode).json(result);
@@ -302,7 +301,7 @@ export default class DataSourceRoutes {
             // @ts-ignore
             csv().fromString(req.files.import.data.toString())
                 .then((json: any) => {
-                    ManualJsonImport(req.user as UserT, req.params.sourceID, json)
+                    ManualJsonImport(req.currentUser! , req.params.sourceID, json)
                         .then((result) => {
                             if (result.isError && result.error) {
                                 res.status(result.error.errorCode).json(result);
@@ -360,7 +359,7 @@ export default class DataSourceRoutes {
     }
 
     private static updateImportData(req: Request, res: Response, next: NextFunction) {
-        const user = req.user as UserT;
+        const user = req.currentUser! ;
 
         DataStagingStorage.Instance.PartialUpdate(+req.params.dataID, user.id!, req.body)
             .then((updated: Result<boolean>) => {
@@ -443,7 +442,7 @@ export default class DataSourceRoutes {
         // can take information about the upload and pass it later on in the busboy parsing
         // because of this we're treating the file upload as fairly standalone
         busboy.on('file', async (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
-            const user = req.user as UserT
+            const user = req.currentUser!
             files.push(DataSourceUploadFile(req.params.id, req.params.sourceID, user.id!, filename, encoding, mimeType, file as Readable))
             fileNames.push(filename)
         })
@@ -470,7 +469,7 @@ export default class DataSourceRoutes {
                 // update the passed meta information with the file name deep lynx
                 // has stored it under
                 for (const i in fileNames) metadata[`deep-lynx-file-${i}`] = fileNames[i]
-                const user = req.user as UserT
+                const user = req.currentUser!
 
                 // create an "import" with a single object, the metadata and file information
                 // the user will then handle the mapping of this via the normal type mapping channels

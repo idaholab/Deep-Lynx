@@ -2,10 +2,9 @@
 import faker from 'faker'
 import { expect } from 'chai'
 import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgres/postgres";
-import ContainerStorage from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import Logger from "../../services/logger";
 import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
-import {UserT} from "../../types/user_management/userT";
+import {User} from "../../access_management/user";
 
 describe('A User', async() => {
 
@@ -21,15 +20,15 @@ describe('A User', async() => {
     it('can be saved to storage', async()=> {
         let storage = UserMapper.Instance;
 
-        let user = await storage.Create("test suite", (
+        const user= await UserMapper.Instance.Create("test suite", new User(
             {
-                identity_provider_id: faker.random.uuid(),
-                identity_provider: "username_password",
-                display_name: faker.name.findName(),
-                email: faker.internet.email(),
-                roles: ["superuser"],
+                identityProviderID: faker.random.uuid(),
+                identityProvider: "username_password",
                 admin: false,
-            } as UserT));
+                displayName: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"]
+            }));
 
         expect(user.isError).false;
         expect(user.value).not.empty;
@@ -40,15 +39,15 @@ describe('A User', async() => {
     it('can have their email validated', async()=> {
         let storage = UserMapper.Instance;
 
-        let user = await storage.Create("test suite", (
+        const user= await UserMapper.Instance.Create("test suite", new User(
             {
-                identity_provider_id: faker.random.uuid(),
-                identity_provider: "username_password",
-                display_name: faker.name.findName(),
-                email: faker.internet.email(),
-                roles: ["superuser"],
+                identityProviderID: faker.random.uuid(),
+                identityProvider: "username_password",
                 admin: false,
-            } as UserT));
+                displayName: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"]
+            }));
 
         expect(user.isError).false;
         expect(user.value).not.empty;
@@ -64,15 +63,15 @@ describe('A User', async() => {
     it('can have reset token set', async()=> {
         let storage = UserMapper.Instance;
 
-        let user = await storage.Create("test suite", (
+        const user= await UserMapper.Instance.Create("test suite", new User(
             {
-                identity_provider_id: faker.random.uuid(),
-                identity_provider: "username_password",
-                display_name: faker.name.findName(),
-                email: faker.internet.email(),
-                roles: ["superuser"],
+                identityProviderID: faker.random.uuid(),
+                identityProvider: "username_password",
                 admin: false,
-            } as UserT));
+                displayName: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"]
+            }));
 
         expect(user.isError).false;
         expect(user.value).not.empty;
@@ -88,15 +87,15 @@ describe('A User', async() => {
     it('can be retrieved from  storage', async()=> {
         let storage = UserMapper.Instance;
 
-        let user = await storage.Create("test suite", (
+        const user= await UserMapper.Instance.Create("test suite", new User(
             {
-                identity_provider_id: faker.random.uuid(),
-                identity_provider: "username_password",
-                display_name: faker.name.findName(),
-                email: faker.internet.email(),
-                roles: ["superuser"],
+                identityProviderID: faker.random.uuid(),
+                identityProvider: "username_password",
                 admin: false,
-            } as UserT));
+                displayName: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"]
+            }));
 
         expect(user.isError).false;
         expect(user.value).not.empty;
@@ -111,15 +110,15 @@ describe('A User', async() => {
     it('can be listed from storage', async()=> {
         let storage = UserMapper.Instance;
 
-        let user = await storage.Create("test suite", (
+        const user= await UserMapper.Instance.Create("test suite", new User(
             {
-                identity_provider_id: faker.random.uuid(),
-                identity_provider: "username_password",
-                display_name: faker.name.findName(),
-                email: faker.internet.email(),
-                roles: ["superuser"],
+                identityProviderID: faker.random.uuid(),
+                identityProvider: "username_password",
                 admin: false,
-            } as UserT));
+                displayName: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"]
+            }));
 
         expect(user.isError).false;
         expect(user.value).not.empty;
@@ -134,24 +133,25 @@ describe('A User', async() => {
     it('can be updated in storage', async()=> {
         let storage = UserMapper.Instance;
 
-        let user = await storage.Create("test suite", (
+        const user= await UserMapper.Instance.Create("test suite", new User(
             {
-                identity_provider_id: faker.random.uuid(),
-                identity_provider: "username_password",
-                display_name: faker.name.findName(),
-                email: faker.internet.email(),
-                roles: ["superuser"],
+                identityProviderID: faker.random.uuid(),
+                identityProvider: "username_password",
                 admin: false,
-            } as UserT));
+                displayName: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"]
+            }));
 
         expect(user.isError).false;
         expect(user.value).not.empty;
 
         let updatedName = faker.name.findName();
         let updatedEmail = faker.internet.email();
+        user.value.display_name = updatedName
+        user.value.email = updatedEmail
 
-        let updateResult = await storage.Update(user.value.id!, " test suite",
-            {display_name: updatedName, email: updatedEmail});
+        let updateResult = await storage.Update(user.value.id!, user.value);
         expect(updateResult.isError).false;
 
         let retrieved = await storage.Retrieve(user.value.id!);

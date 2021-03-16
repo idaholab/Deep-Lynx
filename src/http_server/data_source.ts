@@ -2,7 +2,6 @@
 // of data source without having to modify a large amount of source code. Hopefully
 // by providing this interface we also demonstrate how best to implement a new source.
 import Result from "../result";
-import {UserT} from "../types/user_management/userT";
 import {dataSourceT, DataSourceT} from "../types/import/dataSourceT";
 import {HttpImpl} from "../data_warehouse/import/httpImpl";
 import DataSourceStorage from "../data_access_layer/mappers/data_warehouse/import/data_source_storage";
@@ -19,13 +18,14 @@ import Logger from "../services/logger";
 import DataStagingStorage from "../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
 import TypeMappingStorage from "../data_access_layer/mappers/data_warehouse/etl/type_mapping_storage";
 import {TypeMappingT} from "../types/import/typeMappingT";
+import {User} from "../access_management/user";
 
 
 
 // Each data source might have its own particular startup needs. Make sure your data source
 // is handled in the switch statement below, and that you start any long-running processes
 // at this point.
-export async function NewDataSource(user:UserT, containerID:string, input: any): Promise<Result<DataSourceT>> {
+export async function NewDataSource(user:User, containerID:string, input: any): Promise<Result<DataSourceT>> {
     return new Promise(resolve => {
         const onSuccess = (res: (r:any) => void): (i: DataSourceT) => void => {
             return async (im: DataSourceT) => {
@@ -59,7 +59,7 @@ export async function NewDataSource(user:UserT, containerID:string, input: any):
 }
 
 // This import will create and insert data given the correct information and a payload of JSON objects.
-export async function ManualJsonImport(user:UserT, dataSourceID: string, payload:any): Promise<Result<string>> {
+export async function ManualJsonImport(user:User, dataSourceID: string, payload:any): Promise<Result<string>> {
     const dataSource = await DataSourceStorage.Instance.Retrieve(dataSourceID)
     if(dataSource.isError) return new Promise(resolve => resolve(Result.Pass(dataSource)))
 
@@ -96,7 +96,7 @@ export async function ManualJsonImport(user:UserT, dataSourceID: string, payload
 
 // Each data source's configuration is different, this allows us to both set that configuration and perform
 // any operations that need to happen (like encrypting passwords) at the same time as we update the config.
-export async function SetDataSourceConfiguration(user:UserT, dataSourceID: string, config:any): Promise<Result<boolean>> {
+export async function SetDataSourceConfiguration(user:User, dataSourceID: string, config:any): Promise<Result<boolean>> {
     const importer = await DataSourceStorage.Instance.Retrieve(dataSourceID);
     if(importer.isError) return new Promise(resolve => resolve(Result.Pass(importer)));
 

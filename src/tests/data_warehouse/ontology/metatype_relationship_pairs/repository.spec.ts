@@ -5,7 +5,6 @@ import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/p
 import Logger from "../../../../services/logger";
 import ContainerMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import Container from "../../../../data_warehouse/ontology/container";
-import {UserT} from "../../../../types/user_management/userT";
 import UserMapper from "../../../../data_access_layer/mappers/access_management/user_mapper";
 import MetatypeRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 import MetatypeRelationshipRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository";
@@ -14,10 +13,11 @@ import MetatypeRelationship from "../../../../data_warehouse/ontology/metatype_r
 import MetatypeRelationshipPair from "../../../../data_warehouse/ontology/metatype_relationship_pair";
 import MetatypeRelationshipPairRepository
     from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository";
+import {User} from "../../../../access_management/user";
 
 describe('A Metatype Relationship Pair Repository', async() => {
     let containerID: string = process.env.TEST_CONTAINER_ID || "";
-    let user: UserT
+    let user: User
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -36,18 +36,19 @@ describe('A Metatype Relationship Pair Repository', async() => {
         expect(container.value.id).not.null
         containerID = container.value.id!;
 
-        const result = await UserMapper.Instance.Create("test suite", (
+        const userResult = await UserMapper.Instance.Create("test suite", new User(
             {
-                identity_provider_id: faker.random.uuid(),
-                identity_provider: "username_password",
-                display_name: faker.name.findName(),
-                email: faker.internet.email(),
-                roles: ["superuser"],
+                identityProviderID: faker.random.uuid(),
+                identityProvider: "username_password",
                 admin: false,
-            } as UserT));
+                displayName: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"]
+            }));
 
-        expect(result.isError).false
-        user = result.value
+        expect(userResult.isError).false;
+        expect(userResult.value).not.empty;
+        user = userResult.value
 
         return Promise.resolve()
     });

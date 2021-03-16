@@ -1,6 +1,5 @@
 import {Request, Response, NextFunction, Application} from "express"
 import {NewDataExport, StartExport, StopExport} from "../../../../data_warehouse/export/exporter";
-import {UserT} from "../../../../types/user_management/userT";
 import ExportStorage from "../../../../data_access_layer/mappers/data_warehouse/export/export_storage";
 import {authInContainer} from "../../../middleware";
 
@@ -18,7 +17,7 @@ export default class ExportRoutes {
     }
 
     private static exportDataFromContainer(req: Request, res: Response, next: NextFunction) {
-        NewDataExport(req.user as UserT,req.params.id, req.body)
+        NewDataExport(req.currentUser! ,req.params.id, req.body)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -90,7 +89,7 @@ export default class ExportRoutes {
     }
 
     private static startExport(req: Request, res: Response, next: NextFunction) {
-        StartExport(req.user as UserT,req.params.exportID, req.query.restart === 'true')
+        StartExport(req.currentUser! ,req.params.exportID, req.query.restart === 'true')
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -104,7 +103,7 @@ export default class ExportRoutes {
     }
 
     private static stopExport(req: Request, res: Response, next: NextFunction) {
-        StopExport(req.user as UserT,req.params.exportID)
+        StopExport(req.currentUser! ,req.params.exportID)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);

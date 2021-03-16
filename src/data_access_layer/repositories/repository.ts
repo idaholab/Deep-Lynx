@@ -1,6 +1,6 @@
 import Result from "../../result";
 import Mapper from "../mappers/mapper";
-import User from "../../access_management/user";
+import {User} from "../../access_management/user";
 
 export default interface RepositoryInterface<T> {
     findByID(id: string): Promise<Result<T>>
