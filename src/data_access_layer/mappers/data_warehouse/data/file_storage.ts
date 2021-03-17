@@ -3,8 +3,8 @@ import Result from "../../../../result"
 import Mapper from "../../mapper";
 import { QueryConfig} from "pg";
 import PostgresAdapter from "../../db_adapters/postgres/postgres";
-import {QueueProcessor} from "../../../../event_system/event_system/events";
-import {EventT} from "../../../../types/events/eventT";
+import {QueueProcessor} from "../../../../event_system/processor";
+import Event from "../../../../event_system/event";
 
 /*
 * FileStore encompasses all logic dealing with the manipulation of the
@@ -52,12 +52,12 @@ export default class FileStorage extends Mapper{
                               return
                           }
 
-                          QueueProcessor.Instance.emit([{
-                            source_id: dataSourceID,
-                            source_type: "data_source",
+                          QueueProcessor.Instance.emit(new Event({
+                            sourceID: dataSourceID,
+                            sourceType: "data_source",
                             type: "file_created",
                             data: cs.id
-                          } as EventT])
+                          }))
 
                           resolve(Result.Success(fileT.encode(cs)))
                        })
@@ -105,12 +105,12 @@ export default class FileStorage extends Mapper{
                 values
             })
                 .then(() => {
-                    QueueProcessor.Instance.emit([{
-                        source_id: toUpdate.value.data_source_id!,
-                        source_type: "data_source",
+                    QueueProcessor.Instance.emit(new Event({
+                        sourceID: toUpdate.value.data_source_id!,
+                        sourceType: "data_source",
                         type: "file_modified",
                         data: id
-                    } as EventT])
+                    }))
 
                     resolve(Result.Success(true))
                 })

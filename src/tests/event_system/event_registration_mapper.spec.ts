@@ -4,12 +4,12 @@ import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgre
 import faker from "faker";
 import {expect} from "chai";
 import ContainerStorage from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import EventStorage from "../../data_access_layer/mappers/event_system/event_storage";
-import { RegisteredEventT } from "../../types/events/registered_eventT";
+import EventRegistrationMapper from "../../data_access_layer/mappers/event_system/event_registration_mapper";
 import Container from "../../data_warehouse/ontology/container";
 import ContainerMapper from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
+import EventRegistration from "../../event_system/event_registration";
 
-describe('Registered Event Creation', async() => {
+describe('An Event Registration Mapper Can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
@@ -36,21 +36,22 @@ describe('Registered Event Creation', async() => {
 
 
     it('can update registered event', async()=> {
-        const storage = EventStorage.Instance;
+        const storage = EventRegistrationMapper.Instance;
 
-        const event = await storage.Create("test suite", payload);
+        const event = await storage.Create("test suite", new EventRegistration({
+            appName: "Daisy",
+            appUrl: "yellow",
+            eventType: "data_ingested"
+        }));
         expect(event.isError).false;
         expect(event.value).not.empty;
 
-        const updateEvent = await storage.Update(event.value[0].id!, "test suite", {app_url: "yellow/flower"});
-        expect(updateEvent.value).true;
+        event.value.app_url = "yellow/flower"
+
+        const updateEvent = await storage.Update("test suite", event.value);
+        expect(updateEvent.isError).false;
+        expect(updateEvent.value.app_url).eq("yellow/flower")
 
         return Promise.resolve()
     });
 });
-
-const payload: RegisteredEventT = {
-    "app_name": "Daisy",
-    "app_url": "yellow",
-    "type": "data_ingested"
-};

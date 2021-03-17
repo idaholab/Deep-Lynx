@@ -1,14 +1,14 @@
 import Queue = require('better-queue');
 import {ConnectionStringParser} from "connection-string-parser";
-import {EventsT, EventT} from "../../types/events/eventT";
-import {RegisteredEventsT} from "../../types/events/registered_eventT";
-import {TaskT} from "../../types/events/taskT";
-import EventStorage from "../../data_access_layer/mappers/event_system/event_storage";
-import QueueStorage from "../../data_access_layer/mappers/event_system/queue_storage";
-import Result from "../../result";
-import Logger from "../../services/logger";
+import EventRegistrationMapper from "../data_access_layer/mappers/event_system/event_registration_mapper";
+import EventQueueMapper from "../data_access_layer/mappers/event_system/event_queue_mapper";
+import Result from "../result";
+import Logger from "../services/logger";
 import axios from "axios";
-import Config from "../../services/config";
+import Config from "../services/config";
+import Event from "./event";
+import Task from "./task";
+import EventRegistration from "./event_registration";
 
 export class QueueProcessor {
 
@@ -29,7 +29,7 @@ export class QueueProcessor {
     store: this.store
   });
 
-  public emit(events: EventsT) {
+  public emit(...events: Event[]) {
     if (Config.queue_system === 'database') {
       this.messageQueue.push(events)
     } else {
@@ -38,6 +38,8 @@ export class QueueProcessor {
   }
 }
 
+// StartQueue is used for getting the processing queue off the ground in a separate
+// thread so as not to slow/stop the main DL thread
 export async function StartQueue(): Promise<Result<boolean>> {
   Logger.debug('starting queue listener for event system');
 
@@ -45,30 +47,30 @@ export async function StartQueue(): Promise<Result<boolean>> {
   if (Config.queue_system === 'database') {
     while (true) {
 
-      const tasks: TaskT[] = await QueueStorage.Instance.List();
+      const tasks: Task[] = await EventQueueMapper.Instance.List();
 
       for (const task of tasks) {
 
-        const events: EventT[] = task.task;
+        const events: Event[] = task.task;
 
         for (const event of events) {
 
-          let registeredEvents: RegisteredEventsT;
+          let registeredEvents: EventRegistration[];
 
           if (event.source_type === 'data_source') {
-            const regResult = await EventStorage.Instance.ListByDataSource(event.type, event.source_id)
+            const regResult = await EventRegistrationMapper.Instance.ListByDataSource(event.type!, event.source_id!)
             if (regResult.isError) Logger.debug(`error listing registered events for event type ${event.type} and ID ${event.source_id}`)
 
             registeredEvents = regResult.value
           } else {
-            const regResult = await EventStorage.Instance.ListByContainer(event.type, event.source_id)
+            const regResult = await EventRegistrationMapper.Instance.ListByContainer(event.type!, event.source_id!)
             if (regResult.isError) Logger.debug(`error listing registered events for event type ${event.type} and ID ${event.source_id}`)
 
             registeredEvents = regResult.value
           }
 
           for (const rEvent of registeredEvents) {
-            await axios.post(rEvent.app_url, event.data)
+            await axios.post(rEvent.app_url!, event.data)
               .then(() => {
                 Logger.debug(`event: ${event.type} on ${event.source_type} ${event.source_id} sent to ${rEvent.app_name} at ${rEvent.app_url}`)
               })
@@ -79,7 +81,7 @@ export async function StartQueue(): Promise<Result<boolean>> {
         }
         // remove the task from the queue
         // task must be removed even if there was an error (potential for multiple listeners)
-        await QueueStorage.Instance.PermanentlyDelete(task.id);
+        await EventQueueMapper.Instance.PermanentlyDelete(task.id!);
       }
       await delay(Config.queue_poll_interval)
     }

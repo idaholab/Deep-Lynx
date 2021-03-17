@@ -16,6 +16,7 @@ import {plainToClass} from "class-transformer";
 import {SuperUser, User} from "../access_management/user";
 import UserRepository from "../data_access_layer/repositories/access_management/user_repository";
 import OAuthRepository from "../data_access_layer/repositories/access_management/oauth_repository";
+import EventRegistrationRepository from "../data_access_layer/repositories/event_system/event_registration_repository";
 
 // PerformanceMiddleware uses the provided logger to display the time each route
 // took to process and send a response to the requester. This leverages node.js's
@@ -414,6 +415,37 @@ export function oauthAppContext(): any {
                 }
 
                 req.oauthApp = result.value
+                next()
+            })
+            .catch(error => {
+                resp.status(500).json(error)
+                return
+            })
+    }
+}
+
+
+// eventRegistrationContext will attempt to fetch an event registration by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "eventRegistrationID"
+export function eventRegistrationContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have an id , don't fail, just pass without action
+        if(!req.params.eventRegistrationID) {
+            next()
+            return
+        }
+
+        const repo = new EventRegistrationRepository()
+
+        repo.findByID(req.params.eventRegistrationID)
+            .then(result => {
+                if(result.isError) {
+                    resp.status(result.error?.errorCode!).json(result)
+                    return
+                }
+
+                req.eventRegistration = result.value
                 next()
             })
             .catch(error => {

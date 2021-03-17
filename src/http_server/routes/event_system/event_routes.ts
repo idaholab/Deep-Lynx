@@ -1,37 +1,43 @@
-import {Request, Response, NextFunction, Application} from "express"
+import {Application, NextFunction, Request, Response} from "express"
 import {authInContainer} from "../../middleware";
-import EventStorage from "../../../data_access_layer/mappers/event_system/event_storage";
 import Result from "../../../result";
+import {plainToClass} from "class-transformer";
+import EventRegistration from "../../../event_system/event_registration";
+import EventRegistrationRepository
+    from "../../../data_access_layer/repositories/event_system/event_registration_repository";
 
-const storage = EventStorage.Instance;
+const repo = new EventRegistrationRepository()
 
 // This contains all routes pertaining to Events
 export default class EventRoutes {
     public static mount(app: Application, middleware:any[]) {
         app.post("/events",...middleware, authInContainer("write", "data"),this.createRegisteredEvent);
         app.get("/events",...middleware, authInContainer("read", "data"),this.listRegisteredEvent);
-        app.get("/events/:id",...middleware, authInContainer("read", "data"),this.retrieveRegisteredEvent);
-        app.put("/events/:id",...middleware, authInContainer("write", "data"),this.updateRegisteredEvent);
-        app.delete("/events/:id",...middleware, authInContainer("write", "data"),this.deleteRegisteredEvent);
+        app.get("/events/:eventRegistrationID",...middleware, authInContainer("read", "data"),this.retrieveRegisteredEvent);
+        app.put("/events/:eventRegistrationID",...middleware, authInContainer("write", "data"),this.updateRegisteredEvent);
+        app.delete("/events/:eventRegistrationID",...middleware, authInContainer("write", "data"),this.deleteRegisteredEvent);
     }
 
     private static createRegisteredEvent(req: Request, res: Response, next: NextFunction) {
         const user = req.currentUser!;
-        storage.Create(user.id!, req.body)
+
+        const payload = plainToClass(EventRegistration, req.body as object)
+
+        repo.save(user, payload)
             .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
+                if (result.isError) {
+                    result.asResponse(res)
                     return
                 }
 
-                res.status(201).json(result)
+                Result.Success(payload).asResponse(res)
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())
     }
 
     private static listRegisteredEvent(req: Request, res: Response, next: NextFunction) {
-        storage.List()
+        repo.list()
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -44,72 +50,67 @@ export default class EventRoutes {
     }
 
     private static retrieveRegisteredEvent(req: Request, res: Response, next: NextFunction) {
-        storage.Retrieve(req.params.id)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
+        if(req.eventRegistration) {
+            Result.Success(req.eventRegistration).asResponse(res)
+            next()
+            return
+        }
 
-                res.status(200).json(result)
-            })
-            .catch((err) => res.status(404).send(err))
-            .finally(() => next())
+        Result.Failure(`event registration not found`, 404).asResponse(res)
+        next()
     }
 
     private static updateRegisteredEvent(req: Request, res: Response, next: NextFunction) {
         const user = req.currentUser! ;
         const active = req.query.active;
+        if(req.eventRegistration) {
+            if (active && active === 'true') {
+                repo.setActive(user, req.eventRegistration)
+                    .then((updated) => {
+                        updated.asResponse(res)
+                    })
+                    .catch((updated: any) => res.status(500).send(updated))
+                    .finally(() => next())
+            } else if (active && active === 'false') {
+                repo.setInactive(user, req.eventRegistration)
+                    .then((updated) => {
+                        updated.asResponse(res)
+                    })
+                    .catch((updated: any) => res.status(500).send(updated))
+                    .finally(() => next())
+            } else {
+                const payload = plainToClass(EventRegistration, req.body as object)
+                payload.id = req.eventRegistration.id
 
-        if (active && active === 'true') {
-            storage.SetActive(req.params.id, user.id!)
-            .then((updated: Result<boolean>) => {
-                if (updated.isError && updated.error) {
-                    res.status(updated.error.errorCode).json(updated);
-                    return
-                }
-                res.status(200).json(updated)
-            })
-            .catch((updated:any) => res.status(500).send(updated))
-            .finally(() => next())
-        } else if (active && active === 'false') {
-            storage.SetInActive(req.params.id, user.id!)
-            .then((updated: Result<boolean>) => {
-                if (updated.isError && updated.error) {
-                    res.status(updated.error.errorCode).json(updated);
-                    return
-                }
-                res.status(200).json(updated)
-            })
-            .catch((updated:any) => res.status(500).send(updated))
-            .finally(() => next())
-        } else {
-            storage.Update(req.params.id, user.id!, req.body)
-            .then((updated: Result<boolean>) => {
-                if (updated.isError && updated.error) {
-                    res.status(updated.error.errorCode).json(updated);
-                    return
-                }
-                res.status(200).json(updated)
-            })
-            .catch((updated:any) => res.status(500).send(updated))
-            .finally(() => next())
+                repo.save(user, payload)
+                    .then((updated: Result<boolean>) => {
+                        if (updated.isError) {
+                            updated.asResponse(res)
+                            return
+                        }
+                        Result.Success(payload).asResponse(res)
+                    })
+                    .catch((updated: any) => res.status(500).send(updated))
+            }
+        }
+        else {
+            Result.Failure(`event registration not found`, 404).asResponse(res)
+            next()
         }
     }
 
     private static deleteRegisteredEvent(req: Request, res: Response, next: NextFunction) {
-        storage.PermanentlyDelete(req.params.id)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.sendStatus(200)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
+        if(req.eventRegistration) {
+            repo.delete(req.eventRegistration)
+                .then((result) => {
+                    result.asResponse(res)
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        } else {
+            Result.Failure(`event registration not found`, 404).asResponse(res)
+            next()
+        }
     }
-
 }
 

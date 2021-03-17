@@ -9,7 +9,8 @@ import {DataStagingT} from "../../../../types/import/dataStagingT";
 import Result from "../../../../result";
 import {QueryConfig} from "pg";
 import PostgresAdapter from "../../db_adapters/postgres/postgres";
-import {QueueProcessor} from "../../../../event_system/event_system/events";
+import {QueueProcessor} from "../../../../event_system/processor";
+import Event from "../../../../event_system/event";
 
 export default class DataStagingStorage extends Mapper {
     public static tableName = "data_staging";
@@ -32,11 +33,11 @@ export default class DataStagingStorage extends Mapper {
         return new Promise((resolve) => {
             PostgresAdapter.Instance.Pool.query(DataStagingStorage.createStatement(dataSourceID, importID, typeMappingID, data))
                 .then(() => {
-                    QueueProcessor.Instance.emit([{
-                        source_id: dataSourceID,
-                        source_type: "data_source",
+                    QueueProcessor.Instance.emit(new Event({
+                        sourceID: dataSourceID,
+                        sourceType: "data_source",
                         type: "data_imported"
-                    }])
+                    }))
 
                     resolve(Result.Success(true))
                 })

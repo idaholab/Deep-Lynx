@@ -4,7 +4,7 @@ import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgre
 import faker from "faker";
 import {expect} from "chai";
 import ContainerMapper from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import QueueStorage from "../../data_access_layer/mappers/event_system/queue_storage";
+import EventQueueMapper from "../../data_access_layer/mappers/event_system/event_queue_mapper";
 import DataSourceStorage from "../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
 import { DataSourceT } from "../../types/import/dataSourceT";
 import DataStagingStorage from "../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
@@ -16,7 +16,7 @@ import TypeMappingStorage from "../../data_access_layer/mappers/data_warehouse/e
 import ContainerStorage from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import Container from "../../data_warehouse/ontology/container";
 
-describe('Database Queue Event Creation', async() => {
+describe('An Event Queue Mapper can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
     var dataSourceID:string = process.env.TEST_DATASOURCE_ID || "";
 
@@ -28,7 +28,7 @@ describe('Database Queue Event Creation', async() => {
 
         await PostgresAdapter.Instance.init();
         const dStorage = DataSourceStorage.Instance;
-        const qStorage = QueueStorage.Instance;
+        const qStorage = EventQueueMapper.Instance;
 
         let mapper = ContainerStorage.Instance;
 
@@ -57,7 +57,7 @@ describe('Database Queue Event Creation', async() => {
 
 
     it('can send event on datasource modify', async()=> {
-        const storage = QueueStorage.Instance;
+        const storage = EventQueueMapper.Instance;
         const dStorage = DataSourceStorage.Instance;
 
         const updatedDatasource = await dStorage.Update(dataSourceID, "test suite", updateDatasource);
@@ -66,14 +66,14 @@ describe('Database Queue Event Creation', async() => {
         const task = await storage.List();
         expect(task).not.empty;
 
-        const deletedTask = await storage.PermanentlyDelete(task[0].id)
+        const deletedTask = await storage.PermanentlyDelete(task[0].id!)
         expect(deletedTask.value).true
 
         return Promise.resolve()
     });
 
     it('can send event on data staging import', async()=> {
-        const storage = QueueStorage.Instance;
+        const storage = EventQueueMapper.Instance;
         const dsStorage = DataStagingStorage.Instance;
         const importStorage = ImportStorage.Instance
 
@@ -91,14 +91,14 @@ describe('Database Queue Event Creation', async() => {
         let task = await storage.List();
         expect(task).not.empty;
 
-        let deletedTask = await storage.PermanentlyDelete(task[0].id)
+        let deletedTask = await storage.PermanentlyDelete(task[0].id!)
         expect(deletedTask.value).true
 
         return Promise.resolve()
     });
 
     it('can send event on import complete', async()=> {
-        const storage = QueueStorage.Instance;
+        const storage = EventQueueMapper.Instance;
         const importStorage = ImportStorage.Instance
 
         let imports = await importStorage.InitiateImport(dataSourceID, "test suite", "test");
@@ -108,14 +108,14 @@ describe('Database Queue Event Creation', async() => {
         let task = await storage.List();
         expect(task).not.empty;
 
-        let deletedTask = await storage.PermanentlyDelete(task[0].id)
+        let deletedTask = await storage.PermanentlyDelete(task[0].id!)
         expect(deletedTask.value).true
 
         return Promise.resolve()
     });
 
     it('can send event on data export', async()=> {
-        const storage = QueueStorage.Instance;
+        const storage = EventQueueMapper.Instance;
         const eStorage = ExportStorage.Instance;
 
         const dataExport = await eStorage.Create(containerID, "test suite",
@@ -127,14 +127,14 @@ describe('Database Queue Event Creation', async() => {
         let task = await storage.List();
         expect(task).not.empty;
 
-        let deletedTask = await storage.PermanentlyDelete(task[0].id)
+        let deletedTask = await storage.PermanentlyDelete(task[0].id!)
         expect(deletedTask.value).true
 
         return Promise.resolve()
     });
 
     it('can send event on file create and modify', async()=> {
-        const storage = QueueStorage.Instance;
+        const storage = EventQueueMapper.Instance;
         const fStorage = FileStorage.Instance;
 
         const file = await fStorage.Create("test suite", containerID, dataSourceID,
@@ -153,7 +153,7 @@ describe('Database Queue Event Creation', async() => {
         let task = await storage.List();
         expect(task).not.empty;
 
-        let deletedTask = await storage.PermanentlyDelete(task[0].id)
+        let deletedTask = await storage.PermanentlyDelete(task[0].id!)
         expect(deletedTask.value).true
 
         let updateResult = await fStorage.Update(file.value.id!, "test-suite",
@@ -163,7 +163,7 @@ describe('Database Queue Event Creation', async() => {
         task = await storage.List();
         expect(task).not.empty;
 
-        deletedTask = await storage.PermanentlyDelete(task[0].id)
+        deletedTask = await storage.PermanentlyDelete(task[0].id!)
         expect(deletedTask.value).true
 
         await storage.PermanentlyDelete(file.value.id!)

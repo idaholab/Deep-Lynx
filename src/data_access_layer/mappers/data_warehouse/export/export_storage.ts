@@ -3,8 +3,8 @@ import Mapper from "../../mapper";
 import {QueryConfig} from "pg";
 import {exportT, ExportT} from "../../../../types/export/exportT";
 import PostgresAdapter from "../../db_adapters/postgres/postgres";
-import {QueueProcessor} from "../../../../event_system/event_system/events";
-import {EventT} from "../../../../types/events/eventT";
+import {QueueProcessor} from "../../../../event_system/processor";
+import Event from "../../../../event_system/event";
 
 /*
 * ExportStorage encompasses all logic dealing with the manipulation of the Export
@@ -118,11 +118,11 @@ export default class ExportStorage extends Mapper{
     public async SetStatus(id: string, status: "created" | "processing" | "paused" | "completed" | "failed", message?: string): Promise<Result<boolean>> {
         if(status === "completed") {
             const completeExport = await this.Retrieve(id)
-            QueueProcessor.Instance.emit([{
-                source_id: completeExport.value.container_id,
-                source_type: "container",
+            QueueProcessor.Instance.emit(new Event({
+                sourceID: completeExport.value.container_id!,
+                sourceType: "container",
                 type: "data_exported"
-            } as EventT])
+            }))
         }
 
         return super.run(ExportStorage.setStatusStatement(id, status, message))

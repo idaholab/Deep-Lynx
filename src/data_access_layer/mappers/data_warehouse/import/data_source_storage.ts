@@ -3,8 +3,8 @@ import Mapper from "../../mapper";
 import {QueryConfig} from "pg";
 import PostgresAdapter from "../../db_adapters/postgres/postgres";
 import {dataSourceT, DataSourceT} from "../../../../types/import/dataSourceT";
-import {QueueProcessor} from "../../../../event_system/event_system/events";
-import {EventT} from "../../../../types/events/eventT";
+import {QueueProcessor} from "../../../../event_system/processor";
+import Event from "../../../../event_system/event";
 
 /*
 * ImportAdapterStorage encompasses all logic dealing with the manipulation of the Import Adapter
@@ -42,12 +42,12 @@ export default class DataSourceStorage extends Mapper{
                             return
                         }
 
-                        QueueProcessor.Instance.emit([{
-                            source_id: containerID,
-                            source_type: "container",
+                        QueueProcessor.Instance.emit(new Event({
+                            sourceID: containerID,
+                            sourceType: "container",
                             type: "data_source_created",
                             data: ia.id!
-                        } as EventT])
+                        }))
 
                         resolve(Result.Success(dataSourceT.encode(ia)))
                     })
@@ -86,12 +86,12 @@ export default class DataSourceStorage extends Mapper{
                 values
             })
                 .then(() => {
-                    QueueProcessor.Instance.emit([{
-                        source_id: toUpdate.value.container_id!,
-                        source_type: "container",
+                    QueueProcessor.Instance.emit(new Event({
+                        sourceID: toUpdate.value.container_id!,
+                        sourceType: "container",
                         type: "data_source_modified",
                         data: id
-                    } as EventT])
+                    }))
 
                     resolve(Result.Success(true))
                 })
