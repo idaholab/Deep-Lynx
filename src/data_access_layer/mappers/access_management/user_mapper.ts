@@ -49,10 +49,10 @@ export default class UserMapper extends Mapper{
     }
 
     public async Retrieve(id:string): Promise<Result<User>>{
-        const result = await super.retrieveRaw(this.retrieveStatement(id))
-        if(result.isError) return Promise.resolve(Result.Pass(result))
+        const r = await super.retrieveRaw(this.retrieveStatement(id))
+        if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        return Promise.resolve(Result.Success(plainToClass(User, result.value)))
+        return Promise.resolve(Result.Success(plainToClass(User, r.value)))
     }
 
     public async Update(userID: string, c: User, transaction?: PoolClient): Promise<Result<User>> {
@@ -152,6 +152,8 @@ export default class UserMapper extends Mapper{
         return format(text, values)
     }
 
+    // we update all values but password - use the reset functionality if you're
+    // attempting to set that
     private fullUpdateStatement(userID: string, ...users: User[]): QueryConfig {
         const text = `UPDATE users AS t SET
                         identity_provider_id = u.identity_provider_id,
@@ -160,7 +162,6 @@ export default class UserMapper extends Mapper{
                         email = u.email,
                         active = u.active::boolean,
                         admin = u.admin::boolean,
-                        password = u.password,
                         email_valid = u.email_valid::boolean,
                         email_validation_token = u.email_validation_token,
                         modified_by = u.modified_by,
@@ -173,7 +174,6 @@ export default class UserMapper extends Mapper{
                                         email,
                                         active,
                                         admin,
-                                        password,
                                         email_valid,
                                         email_validation_token,
                                         modified_by)
@@ -186,7 +186,6 @@ export default class UserMapper extends Mapper{
             user.email,
             user.active,
             user.admin,
-            user.password,
             user.email_valid,
             user.email_validation_token,
             userID])

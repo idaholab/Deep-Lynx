@@ -130,7 +130,6 @@ export default class UserRepository extends Repository implements RepositoryInte
         // const hashedSecret = await bcrypt.hash(secret.toString('base64'), 10)
         let internalTransaction: boolean = false
         const keysCreate: KeyPair[] = []
-        const returnKeys: KeyPair[] = []
 
         // we wrap this in a transaction so we don't get partially updated keys
         if(!transaction) {

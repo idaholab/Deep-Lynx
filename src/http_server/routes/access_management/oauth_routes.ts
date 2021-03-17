@@ -1,8 +1,6 @@
 import {Request, Response, NextFunction, Application} from "express"
-import OAuthApplicationStorage from "../../../data_access_layer/mappers/access_management/oauth_application_storage";
+import OAuthMapper from "../../../data_access_layer/mappers/access_management/oauth_mapper";
 import {LocalAuthMiddleware} from "../../../access_management/authentication/local";
-import {OAuth} from "../../../access_management/oauth/oauth";
-import {OAuthAuthorizationRequestT, OAuthTokenExchangeT} from "../../../types/user_management/oauth";
 import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
 import KeyPairMapper from "../../../data_access_layer/mappers/access_management/keypair_mapper";
 import Config from "../../../services/config"
@@ -15,21 +13,24 @@ import UserRepository from "../../../data_access_layer/repositories/access_manag
 import {KeyPair, ResetUserPasswordPayload, User} from "../../../access_management/user";
 import {plainToClass, serialize} from "class-transformer";
 import KeyPairRepository from "../../../data_access_layer/repositories/access_management/keypair_repository";
+import OAuthRepository from "../../../data_access_layer/repositories/access_management/oauth_repository";
+import {OAuthApplication, OAuthRequest, OAuthTokenExchangeRequest} from "../../../access_management/oauth/oauth";
 const csurf = require('csurf')
 const buildUrl = require('build-url')
 
 const userRepo = new UserRepository()
 const keyRepo = new KeyPairRepository()
+const oauthRepo = new OAuthRepository()
 
 export default class OAuthRoutes {
-    public static mount(app: Application) {
+    public static mount(app: Application, middleware: any[]) {
         // OAuth application management
-        app.get("/oauth/applications/create", csurf(), LocalAuthMiddleware, this.createOAuthApplicationPage)
-        app.post("/oauth/applications", csurf(), LocalAuthMiddleware, this.createOAuthApplication)
-        app.get("/oauth/applications", csurf(), LocalAuthMiddleware, this.listOAuthApplications)
-        app.get("/oauth/applications/:applicationID", csurf(), LocalAuthMiddleware, this.oauthApplicationPage)
-        app.put("/oauth/applications/:applicationID", csurf(), LocalAuthMiddleware, this.updateOAuthApplication )
-        app.delete("/oauth/applications/:applicationID", csurf(), LocalAuthMiddleware, this.deleteOAuthApplication)
+        app.get("/oauth/applications/create", csurf(),...middleware, LocalAuthMiddleware, this.createOAuthApplicationPage)
+        app.post("/oauth/applications", csurf(),...middleware, LocalAuthMiddleware, this.createOAuthApplication)
+        app.get("/oauth/applications", csurf(),...middleware, LocalAuthMiddleware, this.listOAuthApplications)
+        app.get("/oauth/applications/:oauthAppID",...middleware, csurf(), LocalAuthMiddleware, this.oauthApplicationPage)
+        app.put("/oauth/applications/:oauthAppID",...middleware, csurf(), LocalAuthMiddleware, this.updateOAuthApplication )
+        app.delete("/oauth/applications/:oauthAppID",...middleware, csurf(), LocalAuthMiddleware, this.deleteOAuthApplication)
 
         // login, register and authorize
         app.get("/", csurf(), this.loginPage)
@@ -96,7 +97,7 @@ export default class OAuthRoutes {
     }
 
     private static oauthApplicationPage(req: Request, res: Response) {
-        OAuthApplicationStorage.Instance.Retrieve(req.params.applicationID)
+        oauthRepo.findByID(req.params.applicationID)
             .then(application => {
                 if(application.isError) {
                     res.redirect(buildUrl('/oauth/applications', {queryParams: {error: application.error}}))
@@ -105,7 +106,7 @@ export default class OAuthRoutes {
                 res.render('oauth_application_single', {
                     // @ts-ignore
                     _csrfToken: req.csrfToken(),
-                    application: application.value
+                    application: serialize(application.value)
                 })
 
                 return
@@ -114,8 +115,9 @@ export default class OAuthRoutes {
 
     private static generateKeyPair(req: Request, res: Response, next: NextFunction) {
         const user = req.currentUser!
+        const keyPair = new KeyPair(user.id!)
 
-        KeyPairMapper.Instance.Create(new KeyPair(user.id!))
+        keyRepo.save(user, keyPair)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.redirect(buildUrl('/oauth/profile', {queryParams: {error: "Unable to generate key pair"}}))
@@ -127,8 +129,8 @@ export default class OAuthRoutes {
 
                 res.redirect(buildUrl('/oauth/profile', {queryParams: {
                     success: "Successfully generated key pair",
-                    newKey: result.value.key,
-                    newSecret: result.value.secret_raw
+                    newKey: keyPair.key,
+                    newSecret: keyPair.secret_raw
                 }}))
                 return
             })
@@ -136,9 +138,7 @@ export default class OAuthRoutes {
     }
 
     private static deleteKeyPair(req: Request, res: Response, next: NextFunction) {
-        const user = req.currentUser!
-
-        KeyPairMapper.Instance.PermanentlyDelete(user.id!, req.params.keyID)
+        KeyPairMapper.Instance.PermanentlyDelete(req.params.keyID)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.redirect(buildUrl('/oauth/profile', {queryParams: {error: "Unable to delete key pair"}}))
@@ -153,18 +153,17 @@ export default class OAuthRoutes {
 
     private static authorizePage(req: Request, res: Response, next: NextFunction) {
         const user = req.currentUser!
-        const oauth = new OAuth()
-        const request = oauth.AuthorizationFromRequest(req)
+        const request = oauthRepo.authorizationFromRequest(req)
 
         if(!request) {
             res.redirect(buildUrl("/", {queryParams: {error: "Missing authorization request parameters"}}))
             return
         }
 
-        oauth.MakeAuthorizationRequest(user.id!, request)
+        oauthRepo.makeAuthorizationRequest(user.id!, request)
             .then(token => {
                 // fetch the oauth application details
-                OAuthApplicationStorage.Instance.RetrieveByClientID(request!.client_id)
+                OAuthMapper.Instance.RetrieveByClientID(request!.client_id!)
                     .then((application) => {
                         if(application.isError) {
                             res.redirect(buildUrl("/", {queryParams: {error: "Unable to retrieve OAuth application"}}))
@@ -172,7 +171,7 @@ export default class OAuthRoutes {
                         }
 
                         // verify that the application has been approved or not
-                        OAuthApplicationStorage.Instance.ApplicationIsApproved(application.value.id!, user.id!)
+                        OAuthMapper.Instance.ApplicationIsApproved(application.value.id!, user.id!)
                             .then(result => {
                                 if(result.isError || !result.value) {
                                     res.render('authorize', {
@@ -195,12 +194,9 @@ export default class OAuthRoutes {
             })
     }
 
-
     private static authorize(req: Request, res: Response, next: NextFunction) {
-        const oauth = new OAuth()
         const user = req.currentUser!
-
-        OAuthApplicationStorage.Instance.MarkApplicationApproved(req.body.application_id, user.id!)
+        OAuthMapper.Instance.MarkApplicationApproved(req.body.application_id, user.id!)
             .then((result) => {
                 if(result.isError && !result.value) {
                     res.render('authorize', {_error:"Unable to authorize OAuth application"})
@@ -208,7 +204,7 @@ export default class OAuthRoutes {
                 }
 
                 // fetch the request so that we can do the redirect
-                oauth.AuthorizationFromToken(req.body.token)
+                oauthRepo.authorizationFromToken(req.body.token)
                     .then(oauthRequest => {
                         if(!oauthRequest) {
                             res.render('authorize', {_error:"Invalid token"})
@@ -216,27 +212,23 @@ export default class OAuthRoutes {
                         }
 
                         res.redirect(buildUrl(oauthRequest.redirect_uri, {queryParams: {token: req.body.token, state: oauthRequest.state}}))
-
                     })
             })
     }
 
 
     private static registerPage(req: Request, res: Response, next: NextFunction) {
-        const oauth = new OAuth()
-
         return res.render('register', {
             // @ts-ignore
             _csrfToken: req.csrfToken(),
-            oauthRequest: oauth.AuthorizationFromRequest(req),
+            oauthRequest: serialize(oauthRepo.authorizationFromRequest(req)),
             _success: req.query.success,
             _error: req.query.error
         })
     }
 
     private static createNewUser(req: Request, res: Response) {
-        const oauth = new OAuth()
-        const oauthRequest = oauth.AuthorizationFromRequest(req)
+        const oauthRequest = oauthRepo.authorizationFromRequest(req)
 
         userRepo.save(req.currentUser!, plainToClass(User, req.body as object))
             .then((result) => {
@@ -262,13 +254,12 @@ export default class OAuthRoutes {
 
     private static loginPage(req: Request, res: Response, next: NextFunction) {
         req.logout() // in case a previous user logged into a session
-        const oauth = new OAuth()
-        const oauthRequest = oauth.AuthorizationFromRequest(req)
+        const oauthRequest = oauthRepo.authorizationFromRequest(req)
 
         return res.render('login', {
             // @ts-ignore
             _csrfToken: req.csrfToken(),
-            oauthRequest,
+            oauthRequest: serialize(oauthRequest),
             registerLink: buildUrl('/oauth/register', {queryParams: req.query}),
             loginWithWindowsLink: buildUrl('/login-saml', {queryParams: req.query}),
             _success: req.query.success,
@@ -278,14 +269,13 @@ export default class OAuthRoutes {
     }
 
     private static loginSaml(req: Request, res:Response) {
-        const oauth = new OAuth()
-        const oauthRequest = oauth.AuthorizationFromRequest(req)
+        const oauthRequest = oauthRepo.authorizationFromRequest(req)
 
         // if this login is part of an OAuth request flow, we must save it in cache
         // so that we can restore it as part of the redirect
         if(oauthRequest) {
             const token = Buffer.from(uuid.v4()).toString('base64')
-            Cache.set(token, oauthRequest , 60 * 10)
+            Cache.set(token, serialize(oauthRequest) , 60 * 10)
             req.query.RelayState = token
         }
 
@@ -303,7 +293,7 @@ export default class OAuthRoutes {
 
             req.logIn(user, () => {
                 if(req.body.RelayState) {
-                    const oauthRequest = Cache.get<OAuthAuthorizationRequestT>(req.body.RelayState as string)
+                    const oauthRequest = Cache.get<object>(req.body.RelayState as string)
                     if(oauthRequest) {
                         res.redirect(buildUrl("/oauth/authorize", {queryParams: oauthRequest}))
                         return
@@ -327,12 +317,11 @@ export default class OAuthRoutes {
     }
 
     private static login(req: Request, res: Response, next: NextFunction) {
-        const oauth = new OAuth()
-        const request = oauth.AuthorizationFromRequest(req)
+        const request = oauthRepo.authorizationFromRequest(req)
 
         // if they've logged in following an auth request redirect to the authorize page vs. the profile page
         if(request) {
-            res.redirect(buildUrl('/oauth/authorize', {queryParams: request}))
+            res.redirect(buildUrl('/oauth/authorize', {queryParams: serialize(request)}))
             return
         }
 
@@ -341,21 +330,22 @@ export default class OAuthRoutes {
 
     private static createOAuthApplication(req: Request, res: Response) {
         const user = req.currentUser!
-        OAuthApplicationStorage.Instance.Create(user.id!, req.body)
+        const payload = plainToClass(OAuthApplication, req.body as object)
+        payload.owner_id = user.id!
+
+        oauthRepo.save(user, payload)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.redirect(buildUrl('/oauth/applications', {queryParams: {error: "Unable to successfully create OAuth application"}}))
                     return
                 }
 
-                delete result.value.client_secret;
-
                 res.redirect(buildUrl('/oauth/applications', {queryParams:
                         {
                             success: "Successfully created OAuth application",
-                            application_name: result.value.name,
-                            application_id: result.value.client_id,
-                            application_secret: result.value.client_secret_raw
+                            application_name: payload.name,
+                            application_id: payload.client_id,
+                            application_secret: payload.client_secret_raw
                         }
                 }))
             })
@@ -364,18 +354,12 @@ export default class OAuthRoutes {
 
     private static listOAuthApplications(req: Request, res: Response, next: NextFunction) {
         const user = req.currentUser!
-        OAuthApplicationStorage.Instance.ListForUser(user.id!)
+        oauthRepo.listForUser(user)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.render('oauth_applications', {_error: result.error.errorCode});
                     return
                 }
-
-                // we don't want to return the hashed secret as part of this endpoint
-                result.value = result.value.map(application => {
-                    delete application.client_secret
-                    return application
-                })
 
                 res.render('oauth_applications', {
                     // @ts-ignore
@@ -383,7 +367,7 @@ export default class OAuthRoutes {
                     // some parameters come from the create routes successful redirect
                     application_id: req.query.application_id,
                     application_secret: req.query.application_secret,
-                    applications: result.value,
+                    applications: serialize(result.value),
                     _error: req.query.error,
                     _success: req.query.success})
             })
@@ -393,70 +377,53 @@ export default class OAuthRoutes {
     private static updateOAuthApplication(req: Request, res: Response) {
         const user = req.currentUser!
 
-        OAuthApplicationStorage.Instance.Retrieve(req.params.applicationID)
-            .then((application) => {
-                if(application.isError && application.error) {
-                    res.redirect(buildUrl('/oauth/applications', {queryParams: {_error: application.error}}))
-                    return
-                }
+        if(req.oauthApp) {
+            if(req.oauthApp.owner_id !== user.id) {
+                res.redirect(buildUrl('/oauth/applications', {queryParams: {_error: "Unauthorized"}}))
+                return
+            }
 
-                if(application.value.owner_id !== user.id) {
-                    res.redirect(buildUrl('/oauth/applications', {queryParams: {_error: "Unauthorized"}}))
-                    return
-                }
+            const payload = plainToClass(OAuthApplication, req.body as object)
+            payload.id = req.oauthApp.id
 
-                OAuthApplicationStorage.Instance.Update(req.params.applicationID, user.id!, req.body)
-                    .then((result) => {
-                        if (application.isError && application.error) {
-                            res.redirect(buildUrl('/oauth/applications', {queryParams: {error: "Unable to update OAuth application"}}))
-                            return
-                        }
-
-                        res.redirect(buildUrl('/oauth/applications', {queryParams: {success: "Successfully updated OAuth application"}}))
+            oauthRepo.save(user, payload)
+                .then((result) => {
+                    if (result.isError && result.error) {
+                        res.redirect(buildUrl('/oauth/applications', {queryParams: {error: "Unable to update OAuth application"}}))
                         return
-                    })
-                    .catch((err) => res.redirect(buildUrl('/oauth/applications', {queryParams: {error: err}})))
+                    }
 
-            })
-            .catch((err) => res.redirect(buildUrl('/oauth/applications', {queryParams: {error: err}})))
+                    res.redirect(buildUrl('/oauth/applications', {queryParams: {success: "Successfully updated OAuth application"}}))
+                    return
+                })
+                .catch((err) => res.redirect(buildUrl('/oauth/applications', {queryParams: {error: err}})))
+        } else {
+            res.redirect(buildUrl('/oauth/applications', {queryParams: {_error: 'application not found'}}))
+            return
+        }
     }
 
     private static deleteOAuthApplication(req: Request, res: Response) {
-        const user = req.currentUser!
+        if(req.oauthApp) {
+           oauthRepo.delete(req.oauthApp)
+               .then((result) => {
+                   if (result.isError && result.error) {
+                       res.redirect(buildUrl('/oauth/applications', {queryParams: {error: "Unable to delete OAuth application"}}))
+                       return
+                   }
 
-        OAuthApplicationStorage.Instance.Retrieve(req.params.applicationID)
-            .then((application) => {
-                if(application.isError && application.error) {
-                    res.redirect(buildUrl('/oauth/applications', {queryParams: {error: application.error}}))
-                    return
-                }
-
-                if(application.value.owner_id !== user.id) {
-                    res.redirect(buildUrl('/oauth/applications', {queryParams: {error: "Unauthorized"}}))
-                    return
-                }
-
-                OAuthApplicationStorage.Instance.PermanentlyDelete(req.params.applicationID)
-                    .then((result) => {
-                        if (application.isError && application.error) {
-                            res.redirect(buildUrl('/oauth/applications', {queryParams: {error: "Unable to delete OAuth application"}}))
-                            return
-                        }
-
-                        res.redirect(buildUrl('/oauth/applications', {queryParams: {success: "Successfully deleted OAuth application"}}))
-                        return
-                    })
-                    .catch((err) => res.redirect(buildUrl('/oauth/applications', {queryParams: {error: err}})))
-
-            })
-            .catch((err) => res.redirect(buildUrl('/oauth/applications', {queryParams: {error: err}})))
+                   res.redirect(buildUrl('/oauth/applications', {queryParams: {success: "Successfully deleted OAuth application"}}))
+                   return
+               })
+               .catch((err) => res.redirect(buildUrl('/oauth/applications', {queryParams: {error: err}})))
+        } else {
+            res.redirect(buildUrl('/oauth/applications', {queryParams: {error: 'oauth app not found'}}))
+        }
     }
 
 
     private static tokenExchange(req: Request, res: Response, next: NextFunction) {
-        const oauth = new OAuth()
-
-        oauth.AuthorizationCodeExchange(req.body as OAuthTokenExchangeT)
+        oauthRepo.authorizationCodeExchange(plainToClass(OAuthTokenExchangeRequest, req.body as object))
             .then(result => {
                 if(result.isError) {
                     res.status(result.error?.errorCode!).json(result.error)
@@ -530,8 +497,6 @@ export default class OAuthRoutes {
     }
 
     private static resetPasswordPage(req: Request, res: Response) {
-        // if this is the final step in a password reset, verify that the issue time isn't 4 hours in the past
-
         res.render('reset_password', {
             _success: req.query.success,
             _error: req.query.error,

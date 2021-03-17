@@ -2,7 +2,6 @@ import {BaseDomainClass} from "../base_domain_class";
 import {
     IsArray,
     IsBoolean,
-    IsDate,
     IsEmail,
     IsIn,
     IsNumber,

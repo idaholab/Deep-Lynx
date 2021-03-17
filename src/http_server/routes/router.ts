@@ -19,7 +19,7 @@ import {
     metatypeRelationshipContext,
     metatypeRelationshipPairContext,
     metatypeKeyContext,
-    metatypeRelationshipKeyContext, currentUser, userContext
+    metatypeRelationshipKeyContext, currentUser, userContext, oauthAppContext
 } from "../middleware";
 import ContainerRoutes from "./data_warehouse/ontology/container_routes"
 import MetatypeRoutes from "./data_warehouse/ontology/metatype_routes"
@@ -93,7 +93,7 @@ export class Router {
 
     // OAuth and Identity Provider routes - these are the only routes that serve up
     // webpages. WE ALSO MOUNT THE '/' ENDPOINT HERE
-    OAuthRoutes.mount(this.app)
+    OAuthRoutes.mount(this.app, [oauthAppContext()])
 
     this.mountPostMiddleware()
   }

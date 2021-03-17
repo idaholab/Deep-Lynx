@@ -1,128 +1,135 @@
-import {Request} from "express"
-import {
-    OAuthAuthorizationRequestT,
-    oauthAuthorizationRequestT,
-    OAuthTokenExchangeT
-} from "../../types/user_management/oauth";
-import uuid from "uuid"
-import {pipe} from "fp-ts/pipeable";
-import {fold} from "fp-ts/lib/Either";
-import {onDecodeError} from "../../utilities";
-import Cache from "../../services/cache/cache"
+import {BaseDomainClass} from "../../base_domain_class";
+import {IsIn, IsOptional, IsString, IsUrl, IsUUID} from "class-validator";
+import uuid from "uuid";
 import Result from "../../result";
-import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
-import OAuthApplicationStorage from "../../data_access_layer/mappers/access_management/oauth_application_storage";
+import bcrypt from "bcrypt";
+import {User} from "../user";
+import {Exclude} from "class-transformer";
 
-const crypto = require('crypto');
-import bcrypt from "bcrypt"
-import jwt from "jsonwebtoken"
-import Config from "../../services/config";
-import Logger from "../../services/logger"
-import base64url from "base64url";
-import UserRepository from "../../data_access_layer/repositories/access_management/user_repository";
-import {serialize} from "class-transformer";
+export class OAuthApplication extends BaseDomainClass{
+    @IsOptional()
+    @IsUUID()
+    id?: string
 
-export class OAuth {
-    // AuthorizationRequest will make and store a request in cache for 10 minutes. It will
-    // return a token which then must be used to exchange for the final access token
-    async MakeAuthorizationRequest(userID: string, payload: any | OAuthAuthorizationRequestT): Promise<Result<string>> {
-       return new Promise(resolve => {
-           const onSuccess = (res: (r:any) => void): (r: OAuthAuthorizationRequestT) => void => {
-               return async (request: OAuthAuthorizationRequestT) => {
-                   const token = Buffer.from(uuid.v4()).toString('base64')
-                   request.user_id = userID
+    @IsString()
+    name: string = ""
 
-                   Cache.set(token, request, 60 * 10)
-                       .then(set => {
-                           if(!set) Logger.error(`unable to store oauth token in cache ${set}`)
-                       })
+    @IsString()
+    description: string = ""
 
-                   res(Result.Success(token))
-               }
-           }
+    @IsUUID()
+    owner_id?: string
 
-           pipe(oauthAuthorizationRequestT.decode(payload), fold(onDecodeError(resolve), onSuccess(resolve)))
-       })
-    }
+    @IsString()
+    client_id: string = Buffer.from(uuid.v4()).toString('base64')
 
-    // exchanges a token for a JWT to act on behalf of the user
-    async AuthorizationCodeExchange(exchangeReq: OAuthTokenExchangeT): Promise<Result<string>> {
-        const userRepo = new UserRepository()
-        const originalReq = await Cache.get<OAuthAuthorizationRequestT>(exchangeReq.code)
-        if(!originalReq) return new Promise(resolve => resolve(Result.Failure('unable to retrieve original request from cache')))
+    @IsString()
+    client_secret?: string
 
-        const user = await userRepo.findByID(originalReq.user_id!)
-        if(user.isError) return new Promise(resolve => resolve(Result.Pass(user)))
+    @IsString()
+    client_secret_raw: string = Buffer.from(uuid.v4()).toString('base64')
 
-        // quick verification between requests
-        if(originalReq.redirect_uri !== exchangeReq.redirect_uri) return new Promise(resolve => resolve(Result.Failure('non-matching redirect uri')))
-        if(originalReq.client_id !== exchangeReq.client_id) return new Promise(resolve => resolve(Result.Failure('non-matching client ids')))
+    constructor(input: {
+        name: string,
+        description: string,
+        owner?: string | User,
+        secret?: string}) {
+        super()
 
-        // if PKCE flow, verify the code
-        if(exchangeReq.code_verifier) {
-            if(originalReq.code_challenge_method === "S256") {
-                const hash = base64url(crypto.createHash('sha256').update(exchangeReq.code_verifier).digest());
-
-                if(hash !== decodeURIComponent(originalReq.code_challenge!)) return new Promise(resolve => resolve(Result.Failure('PKCE code challenge does not match')))
-
-            } else {
-                // for whatever reason we have to run the decode URI component twice on the original req, don't ask
-                // why - just don't remove it or you'll break it
-                if(exchangeReq.code_verifier !== decodeURIComponent(decodeURIComponent(originalReq.code_challenge!))) return new Promise(resolve => resolve(Result.Failure('PKCE code challenge does not match')))
-            }
-        } else { // if we're not doing PKCE there must be a client secret present
-            const application = await OAuthApplicationStorage.Instance.Retrieve(exchangeReq.client_id)
-            if(application.isError) return new Promise(resolve => resolve(Result.Pass(application)))
-
-            const valid = await bcrypt.compare(exchangeReq.client_secret, application.value.client_secret!)
-
-            if(!valid) return new Promise(resolve => resolve(Result.Failure('invalid client')))
+        if(input){
+            this.name = input.name;
+            this.description = input.description;
+            (input.owner instanceof User) ? this.owner_id = input.owner.id! : this.owner_id = input.owner as string;
+            if(input.secret) this.client_secret_raw = input.secret
         }
-
-        // with all verification done generate and return a valid JWT after assigning user permissions
-        await userRepo.retrievePermissions(user.value)
-
-        const token = jwt.sign(serialize(user.value), Config.encryption_key_secret, {expiresIn: '720m'})
-
-        return new Promise(resolve => resolve(Result.Success(token)))
     }
 
-    AuthorizationFromRequest(req: Request): OAuthAuthorizationRequestT | undefined {
-        const r: {[key: string]: any} = {}
+    async setSecret(): Promise<Result<boolean>> {
+        try {
+            const hashedSecret = await bcrypt.hash(this.client_secret_raw, 10)
+            this.client_secret = hashedSecret
 
-        // pull from query
-        if(req.query.response_type) r.response_type = req.query.response_type as "code"
-        if(req.query.client_id) r.client_id = req.query.client_id as string
-        if(req.query.redirect_uri) r.redirect_uri = req.query.redirect_uri as string
-        if(req.query.state) r.state = req.query.state as string
-        if(req.query.scope) r.scope = req.query.scope as "all"
-        if(req.query.code_challenge) {
-            // we need to maintain the raw, unparsed query param
-            // @ts-ignore
-            const queryParams = req._parsedUrl.query
-            queryParams.split('&').map((param: string) => {
-                if(param.includes('code_challenge') && !param.includes('code_challenge_method')){
-                    const codeChallenge = param.split("=")
-                    r.code_challenge = codeChallenge[1]
-                }
-            })
+            return Promise.resolve(Result.Success(true))
+        } catch(error) {
+            return Promise.resolve(Result.Failure(`unable to hash secret ${error}`))
         }
-        if(req.query.code_challenge_method) r.code_challenge_method = req.query.code_challenge_method as "plain" | "S256"
-
-        // pull from form
-        if(req.body.response_type) r.response_type = req.body.response_type as "code"
-        if(req.body.client_id) r.client_id = req.body.client_id as string
-        if(req.body.redirect_uri) r.redirect_uri = req.body.redirect_uri as string
-        if(req.body.state) r.state = req.body.state as string
-        if(req.body.scope) r.scope = req.body.scope as "all"
-        if(req.body.code_challenge) r.code_challenge = req.body.code_challenge as string
-        if(req.body.code_challenge_method) r.code_challenge_method = req.body.code_challenge_method as "plain" | "S256"
-
-        return (Object.keys(r).length > 0) ? r as OAuthAuthorizationRequestT : undefined
     }
+}
 
+export class OAuthRequest extends BaseDomainClass {
+    @IsString()
+    @IsIn(["code"])
+    response_type: string = "code"
 
-    AuthorizationFromToken(token: string): Promise<OAuthAuthorizationRequestT | undefined> {
-        return Cache.get<OAuthAuthorizationRequestT>(token)
+    @IsString()
+    client_id?: string
+
+    @IsUrl()
+    redirect_uri?: string
+
+    @IsString()
+    state?: string
+
+    @IsString()
+    @IsIn(["all"])
+    scope: string = "all"
+
+    @IsUUID()
+    user_id?: string
+
+    @IsOptional()
+    @IsString()
+    code_challenge?: string
+
+    @IsOptional()
+    @IsIn(["plain", "S256"])
+    code_challenge_method?: string
+
+    constructor(input: {
+        responseType: string,
+        clientID: string,
+        redirectURI: string,
+        state: string,
+        scope: string,
+        userID?: string,
+        codeChallenge?: string,
+        codeChallengeMethod?: string
+    }) {
+        super();
+
+        if(input) {
+            if(input.userID) this.user_id = input.userID
+            if(input.codeChallenge) this.code_challenge = input.codeChallenge
+            if(input.codeChallengeMethod) this.code_challenge_method = input.codeChallengeMethod
+            this.response_type = input.responseType
+            this.client_id = input.clientID
+            this.redirect_uri = input.redirectURI
+            this.state = input.state
+            this.scope = input.scope
+        }
     }
+}
+
+export class OAuthTokenExchangeRequest extends BaseDomainClass {
+    @IsString()
+    @IsIn(["authorization_code"])
+    grant_type: string = "authorization_code"
+
+    @IsString()
+    code?: string
+
+    @IsString()
+    client_id?: string
+
+    @IsUrl()
+    redirect_uri?: string
+
+    @IsOptional()
+    @IsString()
+    @Exclude({toPlainOnly: true})
+    client_secret?: string
+
+    @IsOptional()
+    @IsString()
+    code_verifier?: string
 }

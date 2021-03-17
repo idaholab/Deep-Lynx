@@ -5,6 +5,7 @@ import MetatypeRelationshipPair from "../../data_warehouse/ontology/metatype_rel
 import MetatypeKey from "../../data_warehouse/ontology/metatype_key";
 import MetatypeRelationshipKey from "../../data_warehouse/ontology/metatype_relationship_key";
 import {User as DLUser} from "../../access_management/user"
+import {OAuthApplication} from "../../access_management/oauth/oauth";
 
 declare global {
     namespace Express {
@@ -16,7 +17,8 @@ declare global {
             metatypeKey?: MetatypeKey
             metatypeRelationshipKey?: MetatypeRelationshipKey
             currentUser?: DLUser
-            routeUser?: DLUser
+            routeUser?: DLUser,
+            oauthApp?: OAuthApplication
         }
    }
 }

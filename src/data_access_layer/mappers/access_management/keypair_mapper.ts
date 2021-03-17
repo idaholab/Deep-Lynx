@@ -70,8 +70,8 @@ export default class KeyPairMapper extends Mapper{
         return Promise.resolve(Result.Success(plainToClass(KeyPair, r.value)))
     }
 
-    public PermanentlyDelete(userID: string, key : string): Promise<Result<boolean>> {
-        return super.run(this.deleteStatement(userID, key))
+    public PermanentlyDelete(key : string): Promise<Result<boolean>> {
+        return super.run(this.deleteStatement(key))
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -113,10 +113,10 @@ export default class KeyPairMapper extends Mapper{
         }
     }
 
-    private deleteStatement(userID:string, key: string): QueryConfig {
+    private deleteStatement(key: string): QueryConfig {
         return {
-            text:`DELETE FROM keypairs WHERE key = $1 AND user_id = $2`,
-            values: [key, userID]
+            text:`DELETE FROM keypairs WHERE key = $1`,
+            values: [key]
         }
     }
 }

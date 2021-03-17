@@ -3,13 +3,47 @@
 // really fit in that repository so they live here
 import KeyPairMapper from "../../mappers/access_management/keypair_mapper";
 import bcrypt from "bcrypt"
+import RepositoryInterface from "../repository";
+import {KeyPair, User} from "../../../access_management/user";
+import Result from "../../../result";
 
-export default class KeyPairRepository {
+export default class KeyPairRepository implements RepositoryInterface<KeyPair>{
     #mapper = KeyPairMapper.Instance
     async validateKeyPair(key: string, secretRaw: string): Promise<boolean> {
         const retrieved = await this.#mapper.Retrieve(key)
         if(retrieved.isError) return Promise.resolve(false)
 
         return bcrypt.compare(secretRaw, retrieved.value.secret!)
+    }
+
+    delete(k: KeyPair): Promise<Result<boolean>> {
+        return this.#mapper.PermanentlyDelete(k.key)
+    }
+
+    findByID(key: string): Promise<Result<KeyPair>> {
+        return this.#mapper.Retrieve(key)
+    }
+
+    async save(user: User, k: KeyPair): Promise<Result<boolean>> {
+        // if we have the secret already set, assume we're dealing with a created
+        // keypair
+        if(k.secret) return Promise.resolve(Result.Success(true))
+
+        const errors = await k.validationErrors()
+        if(errors) return Promise.resolve(Result.Failure(`keypair does not pass validation ${errors.join(',')}`))
+
+        try {
+            const hashedSecret = await bcrypt.hash(k.secret_raw, 10)
+            k.secret = hashedSecret
+        } catch(error) {
+            return Promise.resolve(Result.Failure(`unable to hash key's secret ${error}`))
+        }
+
+        const created = await this.#mapper.Create(k)
+        if(created.isError) return Promise.resolve(Result.Pass(created))
+
+        Object.assign(k, created.value)
+
+        return Promise.resolve(Result.Success(true))
     }
 }

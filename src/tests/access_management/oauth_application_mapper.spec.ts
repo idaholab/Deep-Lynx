@@ -3,8 +3,9 @@ import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgre
 import faker from "faker";
 import {expect} from "chai";
 import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
-import OAuthApplicationStorage from "../../data_access_layer/mappers/access_management/oauth_application_storage";
+import OAuthMapper from "../../data_access_layer/mappers/access_management/oauth_mapper";
 import {User} from "../../access_management/user";
+import {OAuthApplication} from "../../access_management/oauth/oauth";
 
 describe('A OAuth Application can', async() => {
     let user: User
@@ -35,12 +36,13 @@ describe('A OAuth Application can', async() => {
     });
 
     it('can be saved to storage', async() => {
-        const storage = OAuthApplicationStorage.Instance
+        const storage = OAuthMapper.Instance
 
-        const application = await storage.Create(user.id!, {
+        const application = await storage.Create(user.id!, new OAuthApplication({
             name: faker.name.firstName(),
-            description: faker.random.alphaNumeric()
-        })
+            description: faker.random.alphaNumeric(),
+            owner: user.id!,
+        }))
 
         expect(application.isError).false
 
@@ -48,12 +50,12 @@ describe('A OAuth Application can', async() => {
     })
 
     it('can be listed by user id', async() => {
-        const storage = OAuthApplicationStorage.Instance
+        const storage = OAuthMapper.Instance
 
-        const application = await storage.Create(user.id!, {
+        const application = await storage.Create(user.id!, new OAuthApplication({
             name: faker.name.firstName(),
             description: faker.random.alphaNumeric()
-        })
+        }))
 
         expect(application.isError).false
 
@@ -66,12 +68,12 @@ describe('A OAuth Application can', async() => {
     })
 
     it('can be marked approved for user', async() => {
-        const storage = OAuthApplicationStorage.Instance
+        const storage = OAuthMapper.Instance
 
-        const application = await storage.Create(user.id!, {
+        const application = await storage.Create(user.id!, new OAuthApplication({
             name: faker.name.firstName(),
             description: faker.random.alphaNumeric()
-        })
+        }))
 
         expect(application.isError).false
 
