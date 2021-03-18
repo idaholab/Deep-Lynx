@@ -2,8 +2,8 @@ import Result from "../../../result"
 import Mapper from "../mapper";
 import {PoolClient, QueryConfig} from "pg";
 import {ContainerUserInvite} from "../../../access_management/user";
-import {plainToClass} from "class-transformer";
 
+const resultClass = ContainerUserInvite
 /*
 * TypeStorage encompasses all logic dealing with the manipulation of the Metatype
 * class in a data storage layer. In this case, the storage class requires a graph
@@ -23,35 +23,22 @@ export default class ContainerUserInviteMapper extends Mapper{
     }
 
     public async Create(input: ContainerUserInvite, transaction?: PoolClient): Promise<Result<ContainerUserInvite>> {
-        const r = await super.runRaw(this.createStatement(input), transaction)
+        const r = await super.run(this.createStatement(input), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r));
 
-        const resultInvites = plainToClass(ContainerUserInvite, r.value)
-
-        return Promise.resolve(Result.Success(resultInvites[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async InvitesByUser(userID: string, containerID: string): Promise<Result<ContainerUserInvite[]>> {
-        const results = await super.rowsRaw(this.listForUserStatement(userID, containerID))
-        if(results.isError) return Promise.resolve(Result.Pass(results))
-
-        return Promise.resolve(Result.Success(plainToClass(ContainerUserInvite, results.value)))
+        return super.rows(this.listForUserStatement(userID, containerID), {resultClass})
     }
 
     public async InvitesForEmail(email: string): Promise<Result<ContainerUserInvite[]>> {
-        const results = await super.rowsRaw(this.listForEmailStatement(email))
-        if(results.isError) return Promise.resolve(Result.Pass(results))
-
-        return Promise.resolve(Result.Success(plainToClass(ContainerUserInvite, results.value)))
+        return super.rows(this.listForEmailStatement(email), {resultClass})
     }
 
     public async RetrieveByTokenAndEmail(token: string, email: string): Promise<Result<ContainerUserInvite>> {
-        const results = await super.rowsRaw(this.retrieveByTokenAndEmailStatement(token, email))
-        if(results.isError) return Promise.resolve(Result.Pass(results))
-
-        const invites = plainToClass(ContainerUserInvite, results.value)
-
-        return Promise.resolve(Result.Success(invites[0]))
+        return super.retrieve(this.retrieveByTokenAndEmailStatement(token, email), {resultClass})
     }
 
     public MarkAccepted(token: string, email: string): Promise<Result<boolean>> {
@@ -59,7 +46,7 @@ export default class ContainerUserInviteMapper extends Mapper{
     }
 
     public PermanentlyDelete(id: number): Promise<Result<boolean>> {
-        return super.run(this.deleteStatement(id))
+        return super.runStatement(this.deleteStatement(id))
     }
 
     // Below are a set of query building functions. So far they're very simple

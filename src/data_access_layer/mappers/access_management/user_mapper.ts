@@ -9,6 +9,7 @@ const UIDGenerator = require('uid-generator');
 const uidgen = new UIDGenerator();
 
 const format = require('pg-format')
+const resultClass = User
 
 /*
 * TypeStorage encompasses all logic dealing with the manipulation of the Metatype
@@ -29,95 +30,67 @@ export default class UserMapper extends Mapper{
     }
 
     public async Create(userID:string, u: User, transaction?: PoolClient): Promise<Result<User>> {
-        const r = await super.runRaw(this.createStatement(userID, u), transaction)
+        const r = await super.run(this.createStatement(userID, u), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r));
 
-        const resultUsers = plainToClass(User, r.value)
-
-        return Promise.resolve(Result.Success(resultUsers[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async BulkCreate(userID:string, u: User[] | User, transaction?: PoolClient): Promise<Result<User[]>> {
         if(!Array.isArray(u)) u = [u]
 
-        const r = await super.runRaw(this.createStatement(userID, ...u), transaction)
-        if(r.isError) return Promise.resolve(Result.Pass(r));
-
-        const resultUsers = plainToClass(User, r.value)
-
-        return Promise.resolve(Result.Success(resultUsers))
+        return super.run(this.createStatement(userID, ...u), {transaction, resultClass})
     }
 
     public async Retrieve(id:string): Promise<Result<User>>{
-        const r = await super.retrieveRaw(this.retrieveStatement(id))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(User, r.value)))
+        return super.retrieve(this.retrieveStatement(id), {resultClass})
     }
 
     public async Update(userID: string, c: User, transaction?: PoolClient): Promise<Result<User>> {
-        const r = await super.runRaw(this.fullUpdateStatement(userID, c), transaction)
+        const r = await super.run(this.fullUpdateStatement(userID, c), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r));
 
-        const resultUsers = plainToClass(User, r.value)
-
-        return Promise.resolve(Result.Success(resultUsers[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
-
     public async BulkUpdate(userID: string, c: User[], transaction?: PoolClient): Promise<Result<User[]>> {
-        const r = await super.runRaw(this.fullUpdateStatement(userID, ...c), transaction)
-        if (r.isError) return Promise.resolve(Result.Pass(r));
-
-        return Promise.resolve(Result.Success(plainToClass(User, r.value)))
+       return super.run(this.fullUpdateStatement(userID, ...c), {transaction, resultClass})
     }
 
     public async SetResetToken(id: string): Promise<Result<boolean>> {
-        return super.run(this.resetTokenStatement(id, await uidgen.generate()))
+        return super.runStatement(this.resetTokenStatement(id, await uidgen.generate()))
     }
 
     public async ResetPassword(resetToken: string, email: string, newPassword: string): Promise<Result<boolean>> {
-        return super.run(this.resetPasswordStatement(resetToken, email, newPassword))
+        return super.runStatement(this.resetPasswordStatement(resetToken, email, newPassword))
     }
 
     public async RetrieveByEmail(email: string): Promise<Result<User>> {
-        const r = await super.retrieveRaw(this.retrieveByEmailStatement(email))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(User, r.value)))
+        return super.retrieve(this.retrieveByEmailStatement(email), {resultClass})
     }
 
     public async RetrieveByIdentityProviderID(id: string): Promise<Result<User>> {
-        const r = await super.retrieveRaw(this.retrieveByIdentityProviderStatement(id))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(User, r.value)))
+        return super.retrieve(this.retrieveByIdentityProviderStatement(id), {resultClass})
     }
 
     public async List(): Promise<Result<User[]>> {
-        const r = await super.rowsRaw(this.listStatement())
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(User, r.value)))
+        return super.rows(this.listStatement(), {resultClass})
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<User[]>> {
-        const r = await super.rowsRaw(this.listFromIDsStatement(ids))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(User, r.value)))
+        return super.rows(this.listFromIDsStatement(ids), {resultClass})
     }
 
     public ValidateEmail(id: string, validationToken: string): Promise<Result<boolean>> {
-        return super.run(this.validateEmailStatement(id, validationToken))
+        return super.runStatement(this.validateEmailStatement(id, validationToken))
     }
 
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.run(this.deleteStatement(id))
+        return super.runStatement(this.deleteStatement(id))
     }
 
     public Archive(userID: string, id: string): Promise<Result<boolean>> {
-        return super.run(this.archiveStatement(userID, id))
+        return super.runStatement(this.archiveStatement(userID, id))
     }
 
     // Below are a set of query building functions. So far they're very simple

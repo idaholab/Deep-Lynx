@@ -128,7 +128,7 @@ export default class FileStorage extends Mapper{
     }
 
     public async PermanentlyDelete(containerID: string): Promise<Result<boolean>> {
-        return super.run(FileStorage.deleteStatement(containerID))
+        return super.runStatement(FileStorage.deleteStatement(containerID))
     }
 
     // Below are a set of query building functions. So far they're very simple

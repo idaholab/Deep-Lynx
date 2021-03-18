@@ -24,59 +24,45 @@ export default class EventRegistrationMapper extends Mapper{
     }
 
     public async Create(userID:string, input: EventRegistration, transaction?: PoolClient): Promise<Result<EventRegistration>> {
-        const r = await super.runRaw(this.createStatement(userID, input), transaction)
+        const r = await super.run(this.createStatement(userID, input), {transaction, resultClass: EventRegistration})
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        const results = plainToClass(EventRegistration, r.value)
-        return Promise.resolve(Result.Success(results[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async Update(userID:string, input: EventRegistration, transaction?: PoolClient): Promise<Result<EventRegistration>> {
-        const r = await super.runRaw(this.fullUpdateStatement(userID, input), transaction)
+        const r = await super.run(this.fullUpdateStatement(userID, input), {transaction, resultClass: EventRegistration})
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        const results = plainToClass(EventRegistration, r.value)
-        return Promise.resolve(Result.Success(results[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async Retrieve(id: string): Promise<Result<EventRegistration>> {
-        const r = await super.retrieveRaw(this.retrieveStatement(id))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(EventRegistration, r.value)))
+       return super.retrieve(this.retrieveStatement(id), {resultClass: EventRegistration})
     }
 
     public async List(): Promise<Result<EventRegistration[]>> {
-        const r = await super.rowsRaw(this.listStatement())
-        return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(EventRegistration, r.value)))
+       return super.rows(this.listStatement(), {resultClass: EventRegistration})
     }
 
     public async ListByDataSource(eventType: string, dataSourceID: string): Promise<Result<EventRegistration[]>> {
-        const r = await super.rowsRaw(this.datasourceSearchStatement(dataSourceID, eventType))
-        return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(EventRegistration, r.value)))
+        return super.rows(this.datasourceSearchStatement(dataSourceID, eventType), {resultClass: EventRegistration})
     }
 
     public async ListByContainer(eventType: string, containerID: string): Promise<Result<EventRegistration[]>> {
-        const r = await super.rowsRaw(this.containerSearchStatement(containerID, eventType))
-        return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(EventRegistration, r.value)))
+        return super.rows(this.containerSearchStatement(containerID, eventType), {resultClass: EventRegistration})
     }
 
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.run(this.deleteStatement(id))
+        return super.runStatement(this.deleteStatement(id))
     }
 
     public SetActive(id: string, userID: string): Promise<Result<boolean>> {
-        return super.run(this.setActiveStatement(id, userID))
+        return super.runStatement(this.setActiveStatement(id, userID))
     }
 
     public SetInActive(id: string, userID: string): Promise<Result<boolean>> {
-        return super.run(this.setInactiveStatement(id, userID))
+        return super.runStatement(this.setInactiveStatement(id, userID))
     }
 
     private createStatement(userID: string, ...registrations: EventRegistration[]): string {

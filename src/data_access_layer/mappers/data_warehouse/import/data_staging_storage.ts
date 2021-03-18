@@ -127,7 +127,7 @@ export default class DataStagingStorage extends Mapper {
     }
 
     public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.run(DataStagingStorage.deleteStatement(id))
+        return super.runStatement(DataStagingStorage.deleteStatement(id))
     }
 
     // completely overwrite the existing error set

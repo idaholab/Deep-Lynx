@@ -206,7 +206,7 @@ export default class TypeMappingStorage extends Mapper{
                 })
         }
 
-        return super.run(TypeMappingStorage.deleteStatement(id))
+        return super.runStatement(TypeMappingStorage.deleteStatement(id))
     }
 
     public async Count(dataSourceID: string): Promise<Result<number>> {

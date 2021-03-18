@@ -378,11 +378,11 @@ export default class EdgeStorage extends Mapper{
     }
 
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.run(EdgeStorage.deleteStatement(id))
+        return super.runStatement(EdgeStorage.deleteStatement(id))
     }
 
     public Archive(id: string): Promise<Result<boolean>> {
-        return super.run(EdgeStorage.archiveStatement(id))
+        return super.runStatement(EdgeStorage.archiveStatement(id))
     }
 
     private static createStatement(e: EdgeT): QueryConfig[] {

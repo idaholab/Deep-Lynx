@@ -112,7 +112,7 @@ export default class ExportStorage extends Mapper{
     }
 
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.run(ExportStorage.deleteStatement(id))
+        return super.runStatement(ExportStorage.deleteStatement(id))
     }
 
     public async SetStatus(id: string, status: "created" | "processing" | "paused" | "completed" | "failed", message?: string): Promise<Result<boolean>> {
@@ -125,7 +125,7 @@ export default class ExportStorage extends Mapper{
             }))
         }
 
-        return super.run(ExportStorage.setStatusStatement(id, status, message))
+        return super.runStatement(ExportStorage.setStatusStatement(id, status, message))
     }
 
     // Below are a set of query building functions. So far they're very simple

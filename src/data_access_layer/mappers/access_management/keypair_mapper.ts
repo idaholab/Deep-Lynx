@@ -2,8 +2,9 @@ import Result from "../../../result"
 import Mapper from "../mapper";
 import {PoolClient, QueryConfig} from "pg";
 import {KeyPair, User} from "../../../access_management/user";
-import {plainToClass} from "class-transformer";
+
 const format = require('pg-format')
+const resultClass = KeyPair
 
 /*
 * TypeStorage encompasses all logic dealing with the manipulation of the KeyPair
@@ -27,51 +28,40 @@ export default class KeyPairMapper extends Mapper{
     // will need that secret in order validate against the hashed secret. The unhashed secret is stored nowhere in the
     // application
     public async Create(key: KeyPair, transaction?: PoolClient): Promise<Result<KeyPair>> {
-        const r = await super.runRaw(this.createStatement(key), transaction)
+        const r = await super.run(this.createStatement(key), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r))
+        r.value[0].secret_raw = key.secret_raw
 
-        const resultKeys = plainToClass(KeyPair, r.value)
-        resultKeys[0].secret_raw = key.secret_raw
-
-        return Promise.resolve(Result.Success(resultKeys[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async BulkCreate(keys: KeyPair[], transaction?: PoolClient): Promise<Result<KeyPair[]>> {
-        const r = await super.runRaw(this.createStatement(...keys), transaction)
+        const r = await super.run(this.createStatement(...keys), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        const resultKeys = plainToClass(KeyPair, r.value)
-        resultKeys.forEach((key, i) => key.secret_raw = keys[i].secret_raw)
+        r.value.forEach((key, i) => key.secret_raw = keys[i].secret_raw)
 
-        return Promise.resolve(Result.Success(resultKeys))
+        return Promise.resolve(Result.Success(r.value))
     }
 
     public async BulkDelete(keys: KeyPair[], transaction?: PoolClient): Promise<Result<boolean>> {
-        return super.run(this.bulkDeleteStatement(keys), transaction)
+        return super.runStatement(this.bulkDeleteStatement(keys), {transaction})
     }
 
     public async Retrieve(id: string): Promise<Result<KeyPair>> {
-        const r = await super.retrieveRaw(this.retrieveStatement(id))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(KeyPair, r.value)))
+        return super.retrieve(this.retrieveStatement(id), {resultClass})
     }
 
     public async UserForKeyPair(key: string): Promise<Result<User>> {
-        const r = await super.retrieveRaw(this.userForKeyStatement(key))
-
-        return Promise.resolve(Result.Success(plainToClass(User, r.value)))
+        return super.retrieve(this.userForKeyStatement(key), {resultClass: User})
     }
 
     public async KeysForUser(userID: string): Promise<Result<KeyPair[]>> {
-        const r = await super.rowsRaw(this.keysForUserStatement(userID))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(KeyPair, r.value)))
+        return super.rows(this.keysForUserStatement(userID), {resultClass})
     }
 
     public PermanentlyDelete(key : string): Promise<Result<boolean>> {
-        return super.run(this.deleteStatement(key))
+        return super.runStatement(this.deleteStatement(key))
     }
 
     // Below are a set of query building functions. So far they're very simple

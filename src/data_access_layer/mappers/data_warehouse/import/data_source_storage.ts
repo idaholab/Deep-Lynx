@@ -147,7 +147,7 @@ export default class DataSourceStorage extends Mapper{
     }
 
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.run(DataSourceStorage.deleteStatement(id))
+        return super.runStatement(DataSourceStorage.deleteStatement(id))
     }
 
     // Below are a set of query building functions. So far they're very simple

@@ -3,9 +3,9 @@ import Result from "../../../../result"
 import Mapper from "../../mapper";
 import {PoolClient, QueryConfig} from "pg";
 import uuid from "uuid";
-import {plainToClass} from "class-transformer";
 
 const format = require('pg-format')
+const resultClass = Container
 
 /*
 * ContainerMapper encompasses all logic dealing with the manipulation of the
@@ -25,71 +25,48 @@ export default class ContainerMapper extends Mapper{
     }
 
     public async Create(userID:string, c: Container, transaction?: PoolClient): Promise<Result<Container>> {
-        const r = await super.runRaw(this.createStatement(userID, c), transaction)
+        const r = await super.run(this.createStatement(userID, c), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r));
 
-        const resultContainers = plainToClass(Container, r.value)
-
-        return Promise.resolve(Result.Success(resultContainers[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async BulkCreate(userID:string, c: Container[] | Container, transaction?: PoolClient): Promise<Result<Container[]>> {
         if(!Array.isArray(c)) c = [c]
 
-        const r = await super.runRaw(this.createStatement(userID, ...c), transaction)
-        if(r.isError) return Promise.resolve(Result.Pass(r));
-
-        const resultContainers = plainToClass(Container, r.value)
-
-        return Promise.resolve(Result.Success(resultContainers))
+        return super.run(this.createStatement(userID, ...c), {transaction, resultClass})
     }
 
     public async Retrieve(id:string): Promise<Result<Container>>{
-        const result = await super.retrieveRaw(this.retrieveStatement(id))
-        if(result.isError) return Promise.resolve(Result.Pass(result))
-
-        return Promise.resolve(Result.Success(plainToClass(Container, result.value)))
+       return super.retrieve(this.retrieveStatement(id), {resultClass: Container})
     }
 
     public async Update(userID: string, c: Container, transaction?: PoolClient): Promise<Result<Container>> {
-        const r = await super.runRaw(this.fullUpdateStatement(userID, c), transaction)
-        if(r.isError) return Promise.resolve(Result.Pass(r));
+        const r = await super.run(this.fullUpdateStatement(userID, c), {transaction, resultClass})
+        if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        const resultContainers = plainToClass(Container, r.value)
-
-        return Promise.resolve(Result.Success(resultContainers[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
 
     public async BulkUpdate(userID: string, c: Container[], transaction?: PoolClient): Promise<Result<Container[]>> {
-        const r = await super.runRaw(this.fullUpdateStatement(userID, ...c), transaction)
-        if(r.isError) return Promise.resolve(Result.Pass(r));
-
-        return Promise.resolve(Result.Success(plainToClass(Container, r.value)))
+        return super.run(this.fullUpdateStatement(userID, ...c), {transaction, resultClass})
     }
 
     public async List(): Promise<Result<Container[]>> {
-        const results = await super.rowsRaw(this.listStatement())
-
-        if(results.isError) return new Promise(resolve => resolve(Result.Pass(results)))
-
-        return Promise.resolve(Result.Success(plainToClass(Container, results.value)))
+        return super.rows(this.listStatement(), {resultClass: Container})
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<Container[]>> {
-        const results = await super.rowsRaw(this.listFromIDsStatement(ids))
-
-        if(results.isError) return new Promise(resolve => resolve(Result.Pass(results)))
-
-        return Promise.resolve(Result.Success(plainToClass(Container, results.value)))
+        return super.rows(this.listFromIDsStatement(ids), {resultClass})
     }
 
     public async Archive(containerID: string, userID: string): Promise<Result<boolean>> {
-        return super.run(this.archiveStatement(containerID, userID))
+        return super.runStatement(this.archiveStatement(containerID, userID))
     }
 
     public async Delete(containerID: string): Promise<Result<boolean>> {
-        return super.run(this.deleteStatement(containerID))
+        return super.runStatement(this.deleteStatement(containerID))
     }
 
     // Below are a set of query building functions. So far they're very simple

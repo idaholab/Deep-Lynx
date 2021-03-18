@@ -3,8 +3,9 @@ import Mapper from "../../mapper";
 import {PoolClient, QueryConfig} from "pg";
 import Metatype from "../../../../data_warehouse/ontology/metatype";
 import uuid from "uuid";
-import {plainToClass} from "class-transformer";
+
 const format = require('pg-format')
+const resultClass = Metatype
 
 /*
 * MetatypeMapper encompasses all logic dealing with the manipulation of the Metatype
@@ -24,50 +25,37 @@ export default class MetatypeMapper extends Mapper{
     }
 
     public async Create(userID:string, input: Metatype, transaction?: PoolClient): Promise<Result<Metatype>> {
-        const r = await super.runRaw(this.createStatement(userID, input), transaction)
+        const r = await super.run(this.createStatement(userID, input), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        const resultMetatypes = plainToClass(Metatype, r.value)
-
-        return Promise.resolve(Result.Success(resultMetatypes[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async BulkCreate(userID: string, m: Metatype[], transaction?: PoolClient): Promise<Result<Metatype[]>> {
-        const r = await super.runRaw(this.createStatement(userID, ...m), transaction)
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(Metatype, r.value)))
+        return super.run(this.createStatement(userID, ...m), {transaction, resultClass})
     }
 
     public async Retrieve(id: string): Promise<Result<Metatype>> {
-        const r = await super.retrieveRaw(this.retrieveStatement(id))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(Metatype, r.value)))
+        return super.retrieve(this.retrieveStatement(id), {resultClass})
     }
 
     public async Update(userID: string, m: Metatype, transaction?: PoolClient): Promise<Result<Metatype>> {
-        const r = await super.runRaw(this.fullUpdateStatement(userID, m), transaction)
+        const r = await super.run(this.fullUpdateStatement(userID, m), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        const resultMetatypes = plainToClass(Metatype, r.value)
-
-        return Promise.resolve(Result.Success(resultMetatypes[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async BulkUpdate(userID: string, m: Metatype[], transaction?: PoolClient): Promise<Result<Metatype[]>> {
-        const r = await super.runRaw(this.fullUpdateStatement(userID, ...m), transaction)
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(Metatype, r.value)))
+        return super.run(this.fullUpdateStatement(userID, ...m), {transaction, resultClass})
     }
 
     public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.run(this.deleteStatement(id))
+        return super.runStatement(this.deleteStatement(id))
     }
 
     public async Archive(id: string, userID: string): Promise<Result<boolean>> {
-        return super.run(this.archiveStatement(id, userID))
+        return super.runStatement(this.archiveStatement(id, userID))
     }
 
     // Below are a set of query building functions. So far they're very simple

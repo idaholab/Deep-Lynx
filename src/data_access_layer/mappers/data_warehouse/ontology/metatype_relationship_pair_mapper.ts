@@ -3,8 +3,9 @@ import Mapper from "../../mapper";
 import { PoolClient, QueryConfig} from "pg";
 import MetatypeRelationshipPair from "../../../../data_warehouse/ontology/metatype_relationship_pair";
 import uuid from "uuid";
-import {plainToClass} from "class-transformer";
+
 const format = require('pg-format')
+const resultClass = MetatypeRelationshipPair
 
 /*
 * MetatypeRelationshipPairMapper encompasses all logic dealing with the manipulation
@@ -24,51 +25,37 @@ export default class MetatypeRelationshipPairMapper extends Mapper{
     }
 
     public async Create(userID:string, input: MetatypeRelationshipPair, transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair>> {
-        const r = await super.runRaw(this.createStatement(userID, input), transaction)
+        const r = await super.run(this.createStatement(userID, input), {transaction,resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        const results = plainToClass(MetatypeRelationshipPair, r.value)
-
-        return Promise.resolve(Result.Success(results[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async BulkCreate(userID:string, input: MetatypeRelationshipPair[], transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair[]>> {
-        const r = await super.runRaw(this.createStatement(userID, ...input), transaction)
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(MetatypeRelationshipPair, r.value)))
+        return super.run(this.createStatement(userID, ...input), {transaction, resultClass})
     }
 
     public async Retrieve(id:string): Promise<Result<MetatypeRelationshipPair>>{
-        const r = await super.retrieveRaw(this.retrieveStatement(id))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(MetatypeRelationshipPair, r.value)))
+        return super.retrieve(this.retrieveStatement(id), {resultClass})
     }
 
     public async Update(userID: string, p: MetatypeRelationshipPair, transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair>> {
-        const r = await super.runRaw(this.fullUpdateStatement(userID, p), transaction)
+        const r = await super.run(this.fullUpdateStatement(userID, p), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        const results = plainToClass(MetatypeRelationshipPair, r.value)
-
-        return Promise.resolve(Result.Success(results[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async BulkUpdate(userID: string, p: MetatypeRelationshipPair[], transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair[]>> {
-        const r = await super.runRaw(this.fullUpdateStatement(userID, ...p), transaction)
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-
-        return Promise.resolve(Result.Success(plainToClass(MetatypeRelationshipPair, r.value)))
+        return super.run(this.fullUpdateStatement(userID, ...p), {transaction, resultClass})
     }
 
     public async Archive(pairID: string, userID: string): Promise<Result<boolean>> {
-        return super.run(this.archiveStatement(pairID, userID))
+        return super.runStatement(this.archiveStatement(pairID, userID))
     }
 
     public async Delete(pairID: string): Promise<Result<boolean>> {
-        return super.run(this.deleteStatement(pairID))
+        return super.runStatement(this.deleteStatement(pairID))
     }
 
     // Below are a set of query building functions. So far they're very simple

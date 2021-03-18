@@ -3,9 +3,9 @@ import Mapper from "../mapper";
 import {PoolClient, QueryConfig} from "pg";
 import uuid from "uuid";
 import {OAuthApplication} from "../../../access_management/oauth/oauth";
-import {plainToClass} from "class-transformer";
 
 const format = require('pg-format')
+const resultClass = OAuthApplication
 /*
 * The OAuthMapper actually contains mapping functions for itself and the application
 * tracking portions. This is done to be more easily understood and convenient to the user
@@ -24,49 +24,38 @@ export default class OAuthMapper extends Mapper{
     }
 
     public async Create(userID:string, app: OAuthApplication, transaction?: PoolClient): Promise<Result<OAuthApplication>> {
-       const r = await super.runRaw(this.createStatement(userID, app), transaction)
+       const r = await super.run(this.createStatement(userID, app), {transaction, resultClass})
        if(r.isError) return Promise.resolve(Result.Pass(r))
 
-       const resultApps = plainToClass(OAuthApplication, r.value)
-       resultApps[0].client_secret_raw = app.client_secret_raw
+       r.value[0].client_secret_raw = app.client_secret_raw
 
-       return Promise.resolve(Result.Success(resultApps[0]))
+       return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async Update(userID:string, app: OAuthApplication, transaction?: PoolClient): Promise<Result<OAuthApplication>> {
-        const r = await super.runRaw(this.fullUpdateStatement(userID, app), transaction)
+        const r = await super.run(this.fullUpdateStatement(userID, app), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        const resultApps = plainToClass(OAuthApplication, r.value)
-        resultApps[0].client_secret_raw = app.client_secret_raw
+        r.value[0].client_secret_raw = app.client_secret_raw
 
-        return Promise.resolve(Result.Success(resultApps[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async Retrieve(id: string): Promise<Result<OAuthApplication>> {
-        const r = await super.retrieveRaw(this.retrieveStatement(id))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(OAuthApplication, r.value)))
+        return super.retrieve(this.retrieveStatement(id), {resultClass: OAuthApplication})
     }
 
     public async RetrieveByClientID(clientID: string): Promise<Result<OAuthApplication>> {
-        const r = await super.retrieveRaw(this.retrieveByClientIDStatement(clientID))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(OAuthApplication, r.value)))
+        return super.retrieve(this.retrieveByClientIDStatement(clientID), {resultClass})
     }
 
     public async ListForUser(userID: string): Promise<Result<OAuthApplication[]>> {
-        const r = await super.rowsRaw(this.listForUserStatement(userID))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(OAuthApplication, r.value)))
+        return super.rows(this.listForUserStatement(userID), {resultClass})
     }
 
     // marks an application approved for user
     public MarkApplicationApproved(applicationID: string, userID: string): Promise<Result<boolean>> {
-        return super.run(this.markApplicationApprovedStatement(applicationID, userID))
+        return super.runStatement(this.markApplicationApprovedStatement(applicationID, userID))
     }
 
     // checks to see if application is approved for user
@@ -81,7 +70,7 @@ export default class OAuthMapper extends Mapper{
     }
 
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.run(this.deleteStatement(id))
+        return super.runStatement(this.deleteStatement(id))
     }
 
     // Below are a set of query building functions. So far they're very simple

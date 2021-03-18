@@ -1,13 +1,14 @@
 import * as t from "io-ts";
+import {Errors, ValidationError} from "io-ts";
 import Result, {ErrorNotFound} from "../../result";
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
-import {Errors, ValidationError} from "io-ts";
 import {PoolClient, QueryConfig} from "pg";
 import uuid from "uuid"
 import PostgresAdapter from "./db_adapters/postgres/postgres";
 import Logger from "../../services/logger"
-import 'reflect-metadata'; // this is required for the class-transformer package we use
+import 'reflect-metadata';
+import {ClassConstructor, plainToClass} from "class-transformer"; // this is required for the class-transformer package we use
 
 // Mapper contains ORM like CRUD functions, and a few helpers for more complex functionality.
 // This contains things like transaction runners, as well as things like the type decoder
@@ -102,13 +103,51 @@ export default class Mapper {
         })
     }
 
-    // run simple query
-    async run(statement:QueryConfig | string, client?: PoolClient): Promise<Result<boolean>> {
-        if(client) {
+    // run simple query with typed return
+    async run<T>(statement:QueryConfig | string, options?: Options<T>): Promise<Result<T[]>>{
+        if(options && options.transaction) {
             return new Promise(resolve => {
-                client.query(statement)
+                options!.transaction!.query(statement)
+                    .then((results) => {
+                        if(options && options.resultClass) {
+                            resolve(Result.Success(plainToClass(options.resultClass, results.rows)))
+                            return
+                        }
+
+                        resolve(Result.Success(results.rows as T[]))
+                    })
+                    .catch(e => {
+                        Logger.error(`query failed - ${(e as Error).message}`);
+                        resolve(Result.Failure(e))
+                    })
+            })
+
+        } else {
+            return new Promise(resolve => {
+                PostgresAdapter.Instance.Pool.query(statement)
+                    .then((results) => {
+                        if(options && options.resultClass) {
+                            resolve(Result.Success(plainToClass(options.resultClass, results.rows)))
+                            return
+                        }
+
+                        resolve(Result.Success(results.rows as T[]))
+                    })
+                    .catch(e => {
+                        Logger.error(`query failed - ${(e as Error).message}`);
+                        resolve(Result.Failure(e))
+                    })
+            })
+        }
+    }
+
+    // run the query, but return only true/false depending on execution
+    async runStatement(statement:QueryConfig | string, options?: Options<any>): Promise<Result<boolean>>{
+        if(options && options.transaction) {
+            return new Promise(resolve => {
+                options!.transaction!.query(statement)
                     .then(() => {
-                        resolve(Result.Success(true))
+                       resolve(Result.Success(true))
                     })
                     .catch(e => {
                         Logger.error(`query failed - ${(e as Error).message}`);
@@ -130,44 +169,20 @@ export default class Mapper {
         }
     }
 
-    // run simple query
-    // TODO: rename to run once refactor is completed
-    async runRaw(statement:QueryConfig | string, client?: PoolClient): Promise<Result<object[]>> {
-        if(client) {
-            return new Promise(resolve => {
-                client.query<object[]>(statement)
-                    .then((result) => {
-                        resolve(Result.Success(result.rows))
-                    })
-                    .catch(e => {
-                        Logger.error(`query failed - ${(e as Error).message}`);
-                        resolve(Result.Failure(e))
-                    })
-            })
-
-        } else {
-            return new Promise(resolve => {
-                PostgresAdapter.Instance.Pool.query<object[]>(statement)
-                    .then((result) => {
-                        resolve(Result.Success(result.rows))
-                    })
-                    .catch(e => {
-                        Logger.error(`query failed - ${(e as Error).message}`);
-                        resolve(Result.Failure(e))
-                    })
-            })
-        }
-    }
-
     // run a query, retrieve first result and cast to T
-    retrieve<T>(q: QueryConfig, client?: PoolClient): Promise<Result<T>> {
+    retrieve<T>(q: QueryConfig, options?: Options<T>): Promise<Result<T>> {
         return new Promise<Result<any>>(resolve => {
-            if(client) {
-                client.query<T>(q)
+            if(options && options.transaction) {
+                options.transaction.query<T>(q)
                     .then(res => {
                         if(res.rows.length < 1) resolve(Result.Error(ErrorNotFound));
 
-                        resolve(Result.Success(res.rows[0]))
+                        if(options && options.resultClass) {
+                            resolve(Result.Success(plainToClass(options.resultClass, res.rows[0])))
+                            return
+                        }
+
+                        resolve(Result.Success(res.rows[0] as T))
                     })
                     .catch(e => {
                         resolve(Result.Failure(`record retrieval failed - ${(e as Error).message}`))
@@ -177,35 +192,12 @@ export default class Mapper {
                     .then(res => {
                         if(res.rows.length < 1) resolve(Result.Error(ErrorNotFound));
 
-                        resolve(Result.Success(res.rows[0]))
-                    })
-                    .catch(e => {
-                        resolve(Result.Failure(`record retrieval failed - ${(e as Error).message}`))
-                    })
-            }
-        })
-    }
+                        if(options && options.resultClass) {
+                            resolve(Result.Success(plainToClass(options.resultClass, res.rows[0])))
+                            return
+                        }
 
-    // run a query, retrieve first result and cast to any
-    // TODO: remove with domain mapping refactor is complete
-    retrieveRaw(q: QueryConfig, client?: PoolClient): Promise<Result<object>> {
-        return new Promise<Result<any>>(resolve => {
-            if(client) {
-                client.query<object[]>(q)
-                    .then(res => {
-                        if(res.rows.length < 1) resolve(Result.Error(ErrorNotFound));
-
-                        resolve(Result.Success(res.rows[0]))
-                    })
-                    .catch(e => {
-                        resolve(Result.Failure(`record retrieval failed - ${(e as Error).message}`))
-                    })
-            } else {
-                PostgresAdapter.Instance.Pool.query<object[]>(q)
-                    .then(res => {
-                        if(res.rows.length < 1) resolve(Result.Error(ErrorNotFound));
-
-                        resolve(Result.Success(res.rows[0]))
+                        resolve(Result.Success(res.rows[0] as T))
                     })
                     .catch(e => {
                         resolve(Result.Failure(`record retrieval failed - ${(e as Error).message}`))
@@ -215,12 +207,17 @@ export default class Mapper {
     }
 
     // run query and return all rows, cast to T
-    rows<T>(q:QueryConfig, client?: PoolClient): Promise<Result<T[]>> {
-        if(client) {
+    rows<T>(q:QueryConfig, options?: Options<T>): Promise<Result<T[]>> {
+        if(options && options.transaction) {
             return new Promise<Result<any[]>>(resolve => {
-                client.query<T>(q)
-                    .then(res => {
-                        resolve(Result.Success(res.rows))
+                options!.transaction!.query<T>(q)
+                    .then(results => {
+                        if(options && options.resultClass) {
+                            resolve(Result.Success(plainToClass(options.resultClass, results.rows)))
+                            return
+                        }
+
+                        resolve(Result.Success(results.rows as T[]))
                     })
                     .catch(e => {
                         resolve(Result.Failure(`row retrieval failed - ${(e as Error).message}`))
@@ -229,34 +226,13 @@ export default class Mapper {
         } else {
             return new Promise<Result<any[]>>(resolve => {
                 PostgresAdapter.Instance.Pool.query<T>(q)
-                    .then(res => {
-                        resolve(Result.Success(res.rows))
-                    })
-                    .catch(e => {
-                        resolve(Result.Failure(`row retrieval failed - ${(e as Error).message}`))
-                    })
-            })
-        }
-    }
+                    .then(results => {
+                        if(options && options.resultClass) {
+                            resolve(Result.Success(plainToClass(options.resultClass, results.rows)))
+                            return
+                        }
 
-    // run query and return all rows, cast to object[]
-    // TODO: Once all types have made the transition to classes, rename back to rows
-    rowsRaw(q:QueryConfig, client?: PoolClient): Promise<Result<object[]>> {
-        if(client) {
-            return new Promise<Result<object[]>>(resolve => {
-                client.query<object[]>(q)
-                    .then(res => {
-                        resolve(Result.Success(res.rows))
-                    })
-                    .catch(e => {
-                        resolve(Result.Failure(`row retrieval failed - ${(e as Error).message}`))
-                    })
-            })
-        } else {
-            return new Promise<Result<object[]>>(resolve => {
-                PostgresAdapter.Instance.Pool.query<object[]>(q)
-                    .then(res => {
-                        resolve(Result.Success(res.rows))
+                        resolve(Result.Success(results.rows as T[]))
                     })
                     .catch(e => {
                         resolve(Result.Failure(`row retrieval failed - ${(e as Error).message}`))
@@ -312,4 +288,9 @@ export default class Mapper {
     generateUUID(): string {
         return uuid.v4()
     }
+}
+
+type Options<T> = {
+    resultClass?: ClassConstructor<T>,
+    transaction?: PoolClient
 }

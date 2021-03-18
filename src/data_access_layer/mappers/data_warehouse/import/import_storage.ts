@@ -33,21 +33,21 @@ export default class ImportStorage extends Mapper {
 
     // client is not optional here as the lock only applies if your call is in the
     // context of a transaction
-    public RetrieveAndLock(id: string, client: PoolClient, wait?: boolean): Promise<Result<ImportT>> {
-        return super.retrieve<ImportT>(ImportStorage.retrieveLockStatement(id, wait), client)
+    public RetrieveAndLock(id: string, transaction: PoolClient, wait?: boolean): Promise<Result<ImportT>> {
+        return super.retrieve<ImportT>(ImportStorage.retrieveLockStatement(id, wait), {transaction})
     }
 
     // client is not optional here as the lock only applies if your call is in the
     // context of a transaction
-    public RetrieveLastAndLock(dataSourceID: string, client: PoolClient): Promise<Result<ImportT>> {
-        return super.retrieve<ImportT>(ImportStorage.retrieveLastAndLockStatement(dataSourceID), client)
+    public RetrieveLastAndLock(dataSourceID: string, transaction: PoolClient): Promise<Result<ImportT>> {
+        return super.retrieve<ImportT>(ImportStorage.retrieveLastAndLockStatement(dataSourceID), {transaction})
     }
 
     public RetrieveLast(dataSourceID: string): Promise<Result<ImportT>> {
         return super.retrieve<ImportT>(ImportStorage.retrieveLastStatement(dataSourceID))
     }
 
-    public async SetStatus(importID: string, status: "ready" | "processing" | "error" | "stopped" | "completed", message?: string, client?: PoolClient): Promise<Result<boolean>> {
+    public async SetStatus(importID: string, status: "ready" | "processing" | "error" | "stopped" | "completed", message?: string, transaction?: PoolClient): Promise<Result<boolean>> {
         if (status === "completed" || status === "stopped" || status === "error") {
             const completeImport = await this.Retrieve(importID)
             QueueProcessor.Instance.emit(new Event({
@@ -60,7 +60,7 @@ export default class ImportStorage extends Mapper {
                 }
             }))
         }
-        return super.run(ImportStorage.setStatusStatement(importID, status, message), client)
+        return super.runStatement(ImportStorage.setStatusStatement(importID, status, message), {transaction})
     }
 
     public async List(dataSourceID:string, offset:number, limit:number, sortBy?: string, sortDesc?: boolean): Promise<Result<ImportT[]>>{
@@ -83,7 +83,7 @@ export default class ImportStorage extends Mapper {
     }
 
     public async PermanentlyDelete(importID: string): Promise<Result<boolean>> {
-        return super.run(ImportStorage.deleteStatement(importID))
+        return super.runStatement(ImportStorage.deleteStatement(importID))
     }
 
     // can only allow deletes on unprocessed imports

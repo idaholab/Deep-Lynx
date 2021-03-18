@@ -147,19 +147,19 @@ export default class NodeStorage extends Mapper{
     }
 
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.run(NodeStorage.deleteStatement(id))
+        return super.runStatement(NodeStorage.deleteStatement(id))
     }
 
     public Archive(id: string): Promise<Result<boolean>> {
-        return super.run(NodeStorage.archiveStatement(id))
+        return super.runStatement(NodeStorage.archiveStatement(id))
     }
 
-    public async Retrieve(id: string, client?:PoolClient): Promise<Result<NodeT>> {
-        return super.retrieve<NodeT>(NodeStorage.retrieveStatement(id), client)
+    public async Retrieve(id: string, transaction?:PoolClient): Promise<Result<NodeT>> {
+        return super.retrieve<NodeT>(NodeStorage.retrieveStatement(id), {transaction})
     }
 
-    public async RetrieveByCompositeOriginalID(originalID: string, dataSourceID: string, client?:PoolClient): Promise<Result<NodeT>> {
-        return super.retrieve<NodeT>(NodeStorage.retrieveByCompositeOriginalIDStatement(dataSourceID, originalID), client)
+    public async RetrieveByCompositeOriginalID(originalID: string, dataSourceID: string, transaction?:PoolClient): Promise<Result<NodeT>> {
+        return super.retrieve<NodeT>(NodeStorage.retrieveByCompositeOriginalIDStatement(dataSourceID, originalID), {transaction})
     }
 
     public DomainRetrieve(id: string, containerID: string): Promise<Result<NodeT>> {

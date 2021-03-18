@@ -29,11 +29,11 @@ export default class GremlinExportStorage extends Mapper{
     }
 
     public SetGremlinNodeID(nodeID: string, gremlinNodeID: string): Promise<Result<boolean>> {
-        return super.run(GremlinExportStorage.setGremlinNodeIDStatement(nodeID, gremlinNodeID))
+        return super.runStatement(GremlinExportStorage.setGremlinNodeIDStatement(nodeID, gremlinNodeID))
     }
 
     public SetGremlinEdgeID(edgeID: string, gremlinEdgeID: string): Promise<Result<boolean>> {
-        return super.run(GremlinExportStorage.setGremlinEdgeIDStatement(edgeID, gremlinEdgeID))
+        return super.runStatement(GremlinExportStorage.setGremlinEdgeIDStatement(edgeID, gremlinEdgeID))
     }
 
     public RetrieveNode(id: string): Promise<Result<GremlinNodeT>> {
@@ -44,16 +44,16 @@ export default class GremlinExportStorage extends Mapper{
         return super.retrieve<GremlinEdgeT>(GremlinExportStorage.retrieveEdgeStatement(id))
     }
 
-    public ListUnassociatedNodesAndLock(exportID: string, offset: number, limit: number, client: PoolClient, wait?: boolean): Promise<Result<GremlinNodeT[]>> {
-        return super.rows<GremlinNodeT>(GremlinExportStorage.listUnassociatedAndLockNodesStatement(exportID, offset, limit, wait), client)
+    public ListUnassociatedNodesAndLock(exportID: string, offset: number, limit: number, transaction?: PoolClient, wait?: boolean): Promise<Result<GremlinNodeT[]>> {
+        return super.rows<GremlinNodeT>(GremlinExportStorage.listUnassociatedAndLockNodesStatement(exportID, offset, limit, wait), {transaction})
     }
 
     public ListAssociatedNodes(exportID: string, offset: number, limit: number ): Promise<Result<GremlinNodeT[]>> {
         return super.rows<GremlinNodeT>(GremlinExportStorage.listAssociatedNodesStatement(exportID, offset, limit))
     }
 
-    public ListUnassociatedEdgesAndLock(exportID: string, offset: number, limit: number, client: PoolClient, wait?: boolean ): Promise<Result<GremlinEdgeT[]>> {
-        return super.rows<GremlinEdgeT>(GremlinExportStorage.listUnassociatedAndLockEdgesStatement(exportID, offset, limit, wait), client)
+    public ListUnassociatedEdgesAndLock(exportID: string, offset: number, limit: number, transaction?: PoolClient, wait?: boolean ): Promise<Result<GremlinEdgeT[]>> {
+        return super.rows<GremlinEdgeT>(GremlinExportStorage.listUnassociatedAndLockEdgesStatement(exportID, offset, limit, wait), {transaction})
     }
 
     public ListAssociatedEdges(exportID: string, offset: number, limit: number ): Promise<Result<GremlinEdgeT[]>> {
@@ -61,7 +61,7 @@ export default class GremlinExportStorage extends Mapper{
     }
 
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.run(GremlinExportStorage.deleteStatement(id))
+        return super.runStatement(GremlinExportStorage.deleteStatement(id))
     }
 
     // this set of statements copies all current nodes and edges to the gremlin_* tables

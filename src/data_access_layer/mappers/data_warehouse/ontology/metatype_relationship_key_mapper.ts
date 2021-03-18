@@ -3,9 +3,9 @@ import Mapper from "../../mapper";
 import {PoolClient, QueryConfig} from "pg";
 import MetatypeRelationshipKey from "../../../../data_warehouse/ontology/metatype_relationship_key";
 import uuid from "uuid";
-import {plainToClass} from "class-transformer";
 
 const format = require('pg-format')
+const resultClass = MetatypeRelationshipKey
 
 /*
 * MetatypeRelationshipKeyStorage encompasses all logic dealing with the manipulation of the Metatype Relationship Key
@@ -25,63 +25,45 @@ export default class MetatypeRelationshipKeyMapper extends Mapper{
     }
 
     public async Create(userID: string, key: MetatypeRelationshipKey, transaction?: PoolClient): Promise<Result<MetatypeRelationshipKey>> {
-        const r = await super.runRaw(this.createStatement(userID, key), transaction)
+        const r = await super.run(this.createStatement(userID, key), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        const resultKeys = plainToClass(MetatypeRelationshipKey, r.value)
-
-        return Promise.resolve(Result.Success(resultKeys[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async BulkCreate(userID: string, keys: MetatypeRelationshipKey[], transaction?: PoolClient): Promise<Result<MetatypeRelationshipKey[]>> {
-        const r = await super.runRaw(this.createStatement(userID, ...keys), transaction)
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(MetatypeRelationshipKey, r.value)))
+        return super.run(this.createStatement(userID, ...keys), {transaction, resultClass})
     }
 
     public async Retrieve(id: string): Promise<Result<MetatypeRelationshipKey>> {
-        const r = await super.retrieveRaw(this.retrieveStatement(id))
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(MetatypeRelationshipKey, r.value)))
+       return super.retrieve(this.retrieveStatement(id), {resultClass})
     }
 
     public async Update(userID: string, key: MetatypeRelationshipKey, transaction?: PoolClient): Promise<Result<MetatypeRelationshipKey>> {
-        const r = await super.runRaw(this.fullUpdateStatement(userID, key), transaction)
+        const r = await super.run(this.fullUpdateStatement(userID, key), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
-        const resultKeys = plainToClass(MetatypeRelationshipKey, r.value)
-
-        return Promise.resolve(Result.Success(resultKeys[0]))
+        return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async BulkUpdate(userID: string, keys: MetatypeRelationshipKey[], transaction?: PoolClient): Promise<Result<MetatypeRelationshipKey[]>> {
-        const r = await super.runRaw(this.fullUpdateStatement(userID, ...keys), transaction)
-        if(r.isError) return Promise.resolve(Result.Pass(r))
-
-        return Promise.resolve(Result.Success(plainToClass(MetatypeRelationshipKey, r.value)))
+        return super.run(this.fullUpdateStatement(userID, ...keys), {transaction,resultClass})
     }
 
     public async BulkDelete(keys: MetatypeRelationshipKey[], transaction?: PoolClient): Promise<Result<boolean>> {
-        return super.run(this.bulkDeleteStatement(keys), transaction)
+        return super.runStatement(this.bulkDeleteStatement(keys), {transaction})
     }
 
     public async ListForRelationship(relationshipID: string): Promise<Result<MetatypeRelationshipKey[]>> {
-        const retrieved = await super.rowsRaw(this.listStatement(relationshipID))
-
-        if(retrieved.isError) return Promise.resolve(Result.Pass(retrieved))
-
-        return Promise.resolve(Result.Success(plainToClass(MetatypeRelationshipKey, retrieved.value)))
+        return super.rows(this.listStatement(relationshipID), {resultClass})
     }
 
-
     public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.run(this.deleteStatement(id))
+        return super.runStatement(this.deleteStatement(id))
     }
 
     public async Archive(id: string, userID: string): Promise<Result<boolean>> {
-        return super.run(this.archiveStatement(id, userID))
+        return super.runStatement(this.archiveStatement(id, userID))
     }
 
     // Below are a set of query building functions. So far they're very simple

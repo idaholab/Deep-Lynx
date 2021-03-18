@@ -147,7 +147,7 @@ export default class TypeTransformationStorage extends Mapper{
                 })
         }
 
-        return super.run(TypeTransformationStorage.deleteStatement(id))
+        return super.runStatement(TypeTransformationStorage.deleteStatement(id))
     }
 
     // Below are a set of query building functions. So far they're very simple

@@ -89,11 +89,11 @@ export default class GraphStorage extends Mapper{
     }
 
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.run(GraphStorage.deleteStatement(id))
+        return super.runStatement(GraphStorage.deleteStatement(id))
     }
 
     public Archive(id: string): Promise<Result<boolean>> {
-        return super.run(GraphStorage.archiveStatement(id))
+        return super.runStatement(GraphStorage.archiveStatement(id))
     }
 
     // Below are a set of query building functions. So far they're very simple
