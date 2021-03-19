@@ -3,7 +3,7 @@ Resolvers contains the functions used by a GraphQL query to resolve a field
 to its known value. This file is a mix of the static resolvers and functionality
 for auto-generating resolvers based on the stored ontology.
  */
-import NodeStorage from "../../../data_access_layer/mappers/data_warehouse/data/node_storage";
+import NodeMapper from "../../../data_access_layer/mappers/data_warehouse/data/node_mapper";
 import {
     EdgeFilterQL,
     EdgeQL, EdgeWhereQL, FileFilterQL, FileQL, FileWhereQL,
@@ -15,10 +15,8 @@ import {
     PropertyFilterQL,
     PropertyQL
 } from "./types";
-import {NodeT} from "../../../types/graph/nodeT";
 import MetatypeRelationshipPairMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
 import Logger from "../../../services/logger";
-import NodeFilter from "../../../data_access_layer/mappers/data_warehouse/data/node_filter";
 import {EdgeT} from "../../../types/graph/edgeT";
 import EdgeFilter from "../../../data_access_layer/mappers/data_warehouse/data/edge_filter";
 import FileStorage from "../../../data_access_layer/mappers/data_warehouse/data/file_storage";
@@ -27,12 +25,15 @@ import {FileT} from "../../../types/fileT";
 import FileFilter from "../../../data_access_layer/mappers/data_warehouse/data/file_filter";
 import MetatypeRepository from "../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 import MetatypeRelationshipRepository from "../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository";
+import Node from "../node";
+import NodeRepository from "../../../data_access_layer/repositories/data_warehouse/data/node_repository";
 
 export default function resolversRoot(containerID: string):any {
     return {
         // the depth parameter isn't used by GraphQL, rather its an option
         // for when other functions use the node resolver
         nodes: async ({nodeID, limit, offset, where}: any) => {
+            const nodeRepo = new NodeRepository()
             if(nodeID) {
                 const node = await NodeResolverByID(nodeID, containerID)
                 return new Promise(resolve => {
@@ -45,7 +46,7 @@ export default function resolversRoot(containerID: string):any {
                 // no search parameters, return a simple list for graph based on
                 // limit/offset. Default values are provided by the schema so as
                 // not to overwhelm the response with hundreds of thousands of nodes
-                const nodes = await NodeStorage.Instance.List(containerID, offset, limit)
+                const nodes = await nodeRepo.where().containerID("eq", containerID).list(false, {offset, limit})
                 if(nodes.isError) return Promise.resolve([])
 
                 const output: Promise<NodeQL>[] = []
@@ -58,7 +59,7 @@ export default function resolversRoot(containerID: string):any {
             }
 
             const nodeWhere = where as NodeWhereQL
-            let filter = new NodeFilter().where().containerID("eq", containerID).and()
+            let filter = new NodeRepository().where().containerID("eq", containerID).and()
 
             for(const n in nodeWhere.AND) {
                 // in order to utilize the GraphQL error handling we wrap everything
@@ -96,7 +97,7 @@ export default function resolversRoot(containerID: string):any {
             }
 
 
-            const results = await filter.all(limit, offset)
+            const results = await filter.list(false, {limit, offset})
             if(results.isError) return Promise.resolve([])
 
             const output: Promise<NodeQL>[] = []
@@ -221,7 +222,7 @@ async function FileResolver(file: FileT, containerID: string): Promise<FileQL> {
 }
 
 async function NodeResolverByID(nodeID: string, containerID:string): Promise<NodeQL> {
-    const result = await NodeStorage.Instance.DomainRetrieve(nodeID, containerID)
+    const result = await NodeMapper.Instance.DomainRetrieve(nodeID, containerID)
     if(result.isError) return Promise.resolve({} as NodeQL) // and log
 
     const createdAt = (result.value.created_at) ? result.value.created_at.toString() : ""
@@ -246,7 +247,7 @@ async function NodeResolverByID(nodeID: string, containerID:string): Promise<Nod
 }
 
 
-async function NodeResolver(node: NodeT, containerID:string): Promise<NodeQL> {
+async function NodeResolver(node: Node, containerID:string): Promise<NodeQL> {
     const createdAt = (node.created_at) ? node.created_at.toString() : ""
     const modifiedAt = (node.modified_at) ? node.modified_at.toString() : ""
 
@@ -407,7 +408,7 @@ function PropertyResolver(properties: any): PropertyQL[]{
 // In order to utilize GraphQL's error type we must throw errors instead of
 // returning a Result type for this function. This is one of the few places in
 // the application in which throwing errors is encouraged.
-function buildNodeFilter(f: NodeFilter, fql: NodeFilterQL): NodeFilter {
+function buildNodeFilter(f: NodeRepository, fql: NodeFilterQL): NodeRepository{
     if(Object.keys(fql).length > 1) {
         throw Error('filter object must only contain a single field')
     }

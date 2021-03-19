@@ -11,6 +11,7 @@ import MetatypeRelationshipRepository from "./metatype_relationship_repository";
 import Metatype from "../../../../data_warehouse/ontology/metatype";
 import MetatypeRelationship from "../../../../data_warehouse/ontology/metatype_relationship";
 import {User} from "../../../../access_management/user";
+import {PoolClient} from "pg";
 
 export default class MetatypeRelationshipPairRepository extends Repository implements RepositoryInterface<MetatypeRelationshipPair> {
     #mapper : MetatypeRelationshipPairMapper = MetatypeRelationshipPairMapper.Instance
@@ -327,15 +328,13 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return super.count()
     }
 
-    async list(loadRelationships: boolean = false, options?: QueryOptions): Promise<Result<MetatypeRelationshipPair[]>> {
-        const results = await super.findAll<object>(options)
+    async list(loadRelationships: boolean = false, options?: QueryOptions, transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair[]>> {
+        const results = await super.findAll<MetatypeRelationshipPair>(options, {transaction, resultClass: MetatypeRelationshipPair})
         if(results.isError) return Promise.resolve(Result.Pass(results))
-
-        const pairs = plainToClass(MetatypeRelationshipPair, results.value)
 
         if(loadRelationships) {
             // logger will take care of informing user of problems
-            await Promise.all(pairs.map((pair) => {
+            await Promise.all(results.value.map((pair) => {
                 return this.loadRelationships(pair)
             }))
         }
@@ -348,7 +347,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             `LEFT JOIN metatype_relationships relationships ON metatype_relationship_pairs.relationship_id = relationships.id`,
         ]
 
-        return Promise.resolve(Result.Success(pairs))
+        return Promise.resolve(Result.Success(results.value))
     }
 }
 

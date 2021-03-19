@@ -211,8 +211,8 @@ export default class UserRepository extends Repository implements RepositoryInte
         Logger.info("creating default superuser")
         const superUser = new User({
             id: uuid.v4(),
-            identityProvider: "username_password",
-            displayName: "Super User",
+            identity_provider: "username_password",
+            display_name: "Super User",
             email: Config.superuser_email,
             password: Config.superuser_password,
             active: true,

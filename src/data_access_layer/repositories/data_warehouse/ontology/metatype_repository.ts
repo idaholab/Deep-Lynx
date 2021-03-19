@@ -230,10 +230,6 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(Result.Success(true))
     }
 
-    // bulkSave will always return  new instances of provided class to save, this is
-    // done so that the user can have the updated ID and other information after
-    // insert.
-
     async delete(m: Metatype): Promise<Result<boolean>> {
         if(m.id) {
             this.deleteCached(m.id)
@@ -292,7 +288,7 @@ export default class MetatypeRepository extends Repository implements Repository
        return Promise.resolve(set)
     }
 
-    private async deleteCached(id: string): Promise<boolean> {
+    async deleteCached(id: string): Promise<boolean> {
         const deleted = await Cache.del(`${MetatypeMapper.tableName}:${id}`)
         if(!deleted) Logger.error(`unable to remove metatype ${id} from cache`)
 
@@ -333,21 +329,18 @@ export default class MetatypeRepository extends Repository implements Repository
         return super.count()
     }
 
-    async list(loadKeys: boolean = true, options?: QueryOptions): Promise<Result<Metatype[]>> {
-        const results = await super.findAll<object>(options)
-
+    async list(loadKeys: boolean = true, options?: QueryOptions, transaction?: PoolClient): Promise<Result<Metatype[]>> {
+        const results = await super.findAll<Metatype>(options, {transaction, resultClass: Metatype})
         if(results.isError) return Promise.resolve(Result.Pass(results))
 
-        const metatypes = plainToClass(Metatype, results.value)
-
         if(loadKeys) {
-            await Promise.all(metatypes.map(async (metatype) => {
+            await Promise.all(results.value.map(async (metatype) => {
                 const keys = await this.#keyMapper.ListForMetatype(metatype.id!)
 
                 return metatype.addKey(...keys.value)
             }))
         }
 
-        return Promise.resolve(Result.Success(metatypes))
+        return Promise.resolve(Result.Success(results.value))
     }
 }

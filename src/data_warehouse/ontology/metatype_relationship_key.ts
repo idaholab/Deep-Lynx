@@ -50,12 +50,12 @@ export default class MetatypeRelationshipKey extends BaseDomainClass {
     default_value?: string | boolean | number | any[]
 
     constructor(input: {
-        metatypeRelationshipID?: string,
+        metatype_relationship_id?: string,
         name: string,
         description: string,
         required:boolean,
-        propertyName: string,
-        dataType: string,
+        property_name: string,
+        data_type: string,
         options?: any[],
         validation?: {
             regex: string,
@@ -70,11 +70,11 @@ export default class MetatypeRelationshipKey extends BaseDomainClass {
             this.required = input.required
             this.name = input.name
             this.description = input.description
-            this.property_name = input.propertyName
-            this.data_type = input.dataType
+            this.property_name = input.property_name
+            this.data_type = input.data_type
             if(input.options) this.options = input.options
             if(input.validation) this.validation = input.validation
-            if(input.metatypeRelationshipID) this.metatype_relationship_id = input.metatypeRelationshipID
+            if(input.metatype_relationship_id) this.metatype_relationship_id = input.metatype_relationship_id
         }
     }
 }

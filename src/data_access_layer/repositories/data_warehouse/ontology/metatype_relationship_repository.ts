@@ -335,21 +335,18 @@ export default class MetatypeRelationshipRepository extends Repository implement
         return super.count()
     }
 
-    async list(loadKeys: boolean = true, options?: QueryOptions): Promise<Result<MetatypeRelationship[]>> {
-        const results = await super.findAll<object>(options)
-
+    async list(loadKeys: boolean = true, options?: QueryOptions, transaction?: PoolClient): Promise<Result<MetatypeRelationship[]>> {
+        const results = await super.findAll<MetatypeRelationship>(options, {transaction, resultClass: MetatypeRelationship})
         if(results.isError) return Promise.resolve(Result.Pass(results))
 
-        const metatypes = plainToClass(MetatypeRelationship, results.value)
-
         if(loadKeys) {
-            await Promise.all(metatypes.map(async (metatype) => {
-                const keys = await MetatypeRelationshipKeyMapper.Instance.ListForRelationship(metatype.id!)
+            await Promise.all(results.value.map(async (relationship) => {
+                const keys = await MetatypeRelationshipKeyMapper.Instance.ListForRelationship(relationship.id!)
 
-                return metatype.addKey(...keys.value)
+                return relationship.addKey(...keys.value)
             }))
         }
 
-        return Promise.resolve(Result.Success(metatypes))
+        return Promise.resolve(Result.Success(results.value))
     }
 }

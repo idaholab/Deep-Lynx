@@ -3,6 +3,7 @@ import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import Result from "../../../../result";
 import MetatypeKeyMapper from "../../../mappers/data_warehouse/ontology/metatype_key_mapper";
 import {User} from "../../../../access_management/user";
+import MetatypeRepository from "./metatype_repository";
 
 // we have the bare minimum of functions in this repository, and it only exists
 // for backwards compatibility. Key manipulation should be handled when dealing
@@ -10,9 +11,11 @@ import {User} from "../../../../access_management/user";
 // layer due to this cache being out of date with the Metatype one
 export default class MetatypeKeyRepository extends  Repository implements RepositoryInterface<MetatypeKey> {
     #mapper : MetatypeKeyMapper = MetatypeKeyMapper.Instance
+    #metatypeRepo : MetatypeRepository = new MetatypeRepository()
 
     delete(k: MetatypeKey): Promise<Result<boolean>> {
         if(k.id) {
+            this.#metatypeRepo.deleteCached(k.metatype_id!);
             return this.#mapper.PermanentlyDelete(k.id)
         }
 
@@ -21,6 +24,7 @@ export default class MetatypeKeyRepository extends  Repository implements Reposi
 
     archive(user: User, k: MetatypeKey): Promise<Result<boolean>> {
         if(k.id) {
+            this.#metatypeRepo.deleteCached(k.metatype_id!);
             return this.#mapper.Archive(k.id, user.id!)
         }
 
@@ -37,6 +41,9 @@ export default class MetatypeKeyRepository extends  Repository implements Reposi
             return Promise.resolve(Result.Failure(`key does not pass validation ${errors.join(",")}`))
         }
 
+        // clear the parent metatype's cache
+        this.#metatypeRepo.deleteCached(k.metatype_id!)
+
         if(k.id) {
             const updated = await this.#mapper.Update(user.id!, k)
             if(updated.isError) return Promise.resolve(Result.Pass(updated))
@@ -47,6 +54,7 @@ export default class MetatypeKeyRepository extends  Repository implements Reposi
 
         const result = await this.#mapper.Create(user.id!, k)
         if(result.isError) return Promise.resolve(Result.Pass(result))
+
 
         Object.assign(k, result.value)
         return Promise.resolve(Result.Success(true))
@@ -62,6 +70,10 @@ export default class MetatypeKeyRepository extends  Repository implements Reposi
             if(errors) {
                 return Promise.resolve(Result.Failure(`some keys do not pass validation ${errors.join(',')}`))
             }
+
+            // clear the parent metatype's cache
+            this.#metatypeRepo.deleteCached(key.metatype_id!);
+            (key.id) ? toUpdate.push(key) : toCreate.push(key)
         }
 
 

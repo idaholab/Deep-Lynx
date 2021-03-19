@@ -31,10 +31,10 @@ describe('A Metatype Relationship Repository', async() => {
 
         const userResult = await UserMapper.Instance.Create("test suite", new User(
             {
-                identityProviderID: faker.random.uuid(),
-                identityProvider: "username_password",
+                identity_provider_id: faker.random.uuid(),
+                identity_provider: "username_password",
                 admin: false,
-                displayName: faker.name.findName(),
+                display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ["superuser"]
             }));
@@ -52,7 +52,7 @@ describe('A Metatype Relationship Repository', async() => {
 
     it('can save a Metatype Relationship', async()=> {
         const repository = new MetatypeRelationshipRepository()
-        const relationship = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const relationship = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
         let results = await repository.save(user, relationship)
         expect(results.isError).false
@@ -75,8 +75,8 @@ describe('A Metatype Relationship Repository', async() => {
 
     it('can save a Metatype Relationship with keys', async()=> {
         const repository = new MetatypeRelationshipRepository()
-        const relationship = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
-        const key = new MetatypeRelationshipKey({name: faker.name.findName(), description: faker.random.alphaNumeric(), required: true, propertyName: "test_property", dataType: "string"})
+        const relationship = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const key = new MetatypeRelationshipKey({name: faker.name.findName(), description: faker.random.alphaNumeric(), required: true, property_name: "test_property", data_type: "string"})
         relationship.addKey(key)
 
         let results = await repository.save(user, relationship)
@@ -117,8 +117,8 @@ describe('A Metatype Relationship Repository', async() => {
 
     it('can save multiple Metatype Relationships', async()=> {
         const repository = new MetatypeRelationshipRepository()
-        const relationship1 = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
-        const relationship2 = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const relationship1 = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const relationship2 = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
         let results = await repository.bulkSave(user, [relationship1, relationship2])
         expect(results.isError).false
@@ -147,11 +147,11 @@ describe('A Metatype Relationship Repository', async() => {
 
     it('can save multiple Metatype Relationships with keys', async()=> {
         const repository = new MetatypeRelationshipRepository()
-        const relationship1 = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
-        const relationship2 = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const relationship1 = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const relationship2 = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
         // we'll use the same key for ease of use
-        const key = new MetatypeRelationshipKey({name: faker.name.findName(), description: faker.random.alphaNumeric(), required: true, propertyName: "test_property", dataType: "string"})
+        const key = new MetatypeRelationshipKey({name: faker.name.findName(), description: faker.random.alphaNumeric(), required: true, property_name: "test_property", data_type: "string"})
         relationship1.addKey(key)
         relationship2.addKey(key)
 
@@ -195,7 +195,7 @@ describe('A Metatype Relationship Repository', async() => {
 
     it('can find a Metatype Relationship by id', async()=> {
         const repository = new MetatypeRelationshipRepository()
-        const relationship = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const relationship = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
         let results = await repository.save(user, relationship)
         expect(results.isError).false
@@ -210,7 +210,7 @@ describe('A Metatype Relationship Repository', async() => {
 
     it('can archive a Metatype Relationship', async()=> {
         const repository = new MetatypeRelationshipRepository()
-        const relationship = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const relationship = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
         const results = await repository.save(user, relationship)
         expect(results.isError).false
@@ -224,8 +224,8 @@ describe('A Metatype Relationship Repository', async() => {
 
     it('can query and list Metatype Relationships', async()=> {
         const repository = new MetatypeRelationshipRepository()
-        const relationship1 = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
-        const relationship2 = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const relationship1 = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const relationship2 = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
         const saved = await repository.bulkSave(user, [relationship1, relationship2])
         expect(saved.isError).false

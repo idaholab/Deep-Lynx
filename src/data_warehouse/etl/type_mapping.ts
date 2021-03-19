@@ -1,5 +1,4 @@
 import {TypeMappingT, TypeTransformationConditionT, TypeTransformationT} from "../../types/import/typeMappingT";
-import {nodeT, NodeT} from "../../types/graph/nodeT";
 import Result from "../../result";
 import {edgeT, EdgeT} from "../../types/graph/edgeT";
 import {getNestedValue} from "../../utilities";
@@ -7,18 +6,19 @@ import MetatypeKeyMapper from "../../data_access_layer/mappers/data_warehouse/on
 import MetatypeRelationshipKeyMapper from "../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper";
 import {DataStagingT} from "../../types/import/dataStagingT";
 import Logger from "../../services/logger"
+import Node from "../data/node"
 
 // ApplyTransformation will take a mapping, a transformation, and a data record
 // in order to generate an array of nodes or edges based on the transformation type
-export async function ApplyTransformation(mapping: TypeMappingT, transformation: TypeTransformationT, data: DataStagingT): Promise<Result<NodeT[] | EdgeT[]>> {
+export async function ApplyTransformation(mapping: TypeMappingT, transformation: TypeTransformationT, data: DataStagingT): Promise<Result<Node[] | EdgeT[]>> {
    return transform(mapping, transformation, data)
 }
 
 // transform is used to recursively generate node/edges based on the transformation
 // this allows us to handle the root array portion of type transformations and to
 // generate nodes/edges based on nested data.
-async function transform(mapping: TypeMappingT, transformation: TypeTransformationT, data: DataStagingT, index?: number[]): Promise<Result<NodeT[] | EdgeT[]>> {
-   let results: NodeT[] | EdgeT[] = []
+async function transform(mapping: TypeMappingT, transformation: TypeTransformationT, data: DataStagingT, index?: number[]): Promise<Result<Node[] | EdgeT[]>> {
+   let results: Node[] | EdgeT[] = []
    // if no root array, act normally
    if(!transformation.root_array) {
       const results = await generateResults(mapping, transformation, data)
@@ -124,7 +124,7 @@ async function transform(mapping: TypeMappingT, transformation: TypeTransformati
 // generate results is the actual node/edge creation. While this only ever returns
 // a single node/edge, it returns it in an array for ease of use in the recursive
 // transform function
-async function generateResults(mapping: TypeMappingT, transformation: TypeTransformationT, data: DataStagingT, index?: number[]): Promise<Result<NodeT[] | EdgeT[]>> {
+async function generateResults(mapping: TypeMappingT, transformation: TypeTransformationT, data: DataStagingT, index?: number[]): Promise<Result<Node[] | EdgeT[]>> {
    const newPayload: {[key:string]: any}  = {}
    const newPayloadRelationship: {[key:string]: any} = {}
 
@@ -161,15 +161,15 @@ async function generateResults(mapping: TypeMappingT, transformation: TypeTransf
 
    // create a node if metatype id is set
    if(transformation.metatype_id && !transformation.metatype_relationship_pair_id) {
-      const node = {
-         metatype_id: transformation.metatype_id,
+      const node = new Node({
+         metatype: transformation.metatype_id,
          properties: newPayload,
          type_mapping_transformation_id: transformation.id,
          data_source_id: mapping.data_source_id,
          container_id: mapping.container_id,
          data_staging_id: data.id,
          import_data_id: data.import_id,
-      } as NodeT
+      })
 
       if(transformation.unique_identifier_key) {
          node.original_data_id = `${getNestedValue(transformation.unique_identifier_key!, data.data, index)}`
@@ -280,16 +280,16 @@ function compare(operator: string, value: any, expected?: any): boolean {
 
 
 // type guard for differentiating an array of nodes from either array of nodes or edges
-export function IsNodes(set: NodeT[] | EdgeT[]): set is NodeT[] {
+export function IsNodes(set: Node[] | EdgeT[]): set is Node[] {
    // technically an empty array could be a set of NodeT
    if(Array.isArray(set) && set.length === 0) return true;
 
-   return nodeT.is(set[0])
+   return set[0] instanceof Node
 }
 
 
 // type guard for differentiating an array of edges from either array of nodes or edges
-export function IsEdges(set: NodeT[] | EdgeT[]): set is EdgeT[] {
+export function IsEdges(set: Node[] | EdgeT[]): set is EdgeT[] {
    // technically an empty array could be a set of EdgeT
    if(Array.isArray(set) && set.length === 0) return true;
 

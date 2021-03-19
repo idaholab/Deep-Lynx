@@ -50,14 +50,14 @@ export default class MetatypeKey extends BaseDomainClass {
     default_value?: string | boolean | number | any[]
 
     constructor(input: {
-        metatypeID?: string,
+        metatype_id?: string,
         name: string,
         description: string,
         required:boolean,
-        propertyName: string,
-        dataType: string,
+        property_name: string,
+        data_type: string,
         options?: any[],
-        defaultValue?: any,
+        default_value?: any,
         validation?: {
             regex: string,
             max?: number,
@@ -71,12 +71,12 @@ export default class MetatypeKey extends BaseDomainClass {
             this.required = input.required
             this.name = input.name
             this.description = input.description
-            this.property_name = input.propertyName
-            this.data_type = input.dataType
+            this.property_name = input.property_name
+            this.data_type = input.data_type
             if(input.options) this.options = input.options
             if(input.validation) this.validation = input.validation
-            if(input.metatypeID) this.metatype_id = input.metatypeID
-            if(input.defaultValue) this.default_value = input.defaultValue
+            if(input.metatype_id) this.metatype_id = input.metatype_id
+            if(input.default_value) this.default_value = input.default_value
         }
 
     }

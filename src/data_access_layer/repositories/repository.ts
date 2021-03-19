@@ -1,5 +1,5 @@
 import Result from "../../result";
-import Mapper from "../mappers/mapper";
+import Mapper, {Options} from "../mappers/mapper";
 import {User} from "../../access_management/user";
 
 export default interface RepositoryInterface<T> {
@@ -130,24 +130,24 @@ export class Repository {
         return this
     }
 
-    findAll<T>(options?: QueryOptions): Promise<Result<T[]>> {
+    findAll<T>(queryOptions?: QueryOptions, options?: Options<T>): Promise<Result<T[]>> {
         const storage = new Mapper()
 
-        if(options && options.sortBy) {
-            if(options.sortDesc) {
-                this._rawQuery.push(`ORDER BY "${options.sortBy}" DESC`)
+        if(queryOptions && queryOptions.sortBy) {
+            if(queryOptions.sortDesc) {
+                this._rawQuery.push(`ORDER BY "${queryOptions.sortBy}" DESC`)
             } else {
-                this._rawQuery.push(`ORDER BY "${options.sortBy}" ASC`)
+                this._rawQuery.push(`ORDER BY "${queryOptions.sortBy}" ASC`)
             }
         }
 
-        if(options && options.offset) {
-            this._values.push(options.offset)
+        if(queryOptions && queryOptions.offset) {
+            this._values.push(queryOptions.offset)
             this._rawQuery.push(`OFFSET $${this._values.length}`)
         }
 
-        if(options && options.limit) {
-            this._values.push(options.limit)
+        if(queryOptions && queryOptions.limit) {
+            this._values.push(queryOptions.limit)
             this._rawQuery.push(`LIMIT $${this._values.length}`)
         }
 

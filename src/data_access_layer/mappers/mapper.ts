@@ -290,7 +290,11 @@ export default class Mapper {
     }
 }
 
-type Options<T> = {
+export type Options<T> = {
     resultClass?: ClassConstructor<T>,
     transaction?: PoolClient
+    limit?: number | undefined
+    offset?: number | undefined
+    sortBy?: string | undefined
+    sortDesc?: boolean | undefined
 }

@@ -5,6 +5,7 @@ import * as t from "io-ts";
 import Result from "../../result";
 import {pipe} from "fp-ts/pipeable";
 import {fold} from "fp-ts/Either";
+import {Type} from "class-transformer";
 
 export default class MetatypeRelationship extends BaseDomainClass {
     @IsOptional()
@@ -29,17 +30,18 @@ export default class MetatypeRelationship extends BaseDomainClass {
 
     // because we need to track removed keys in case of update, keys is made private
     // and only accessible through a getter.
+    @Type(() => MetatypeRelationshipKey)
     keys: MetatypeRelationshipKey[] | undefined
     // for tracking removed keys for update
     #removedKeys: MetatypeRelationshipKey[] | undefined
 
-    constructor(input: {containerID?: string, name: string, description: string}) {
+    constructor(input: {container_id?: string, name: string, description: string}) {
         super();
 
         // we have to do this because class-transformer doesn't know to create
         // an object with our specifications for the parameter
         if(input) {
-            if(input.containerID) this.container_id = input.containerID
+            if(input.container_id) this.container_id = input.container_id
             this.name = input.name
             this.description = input.description
         }

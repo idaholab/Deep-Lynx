@@ -5,8 +5,8 @@ import MetatypeKeyMapper from "../../../data_access_layer/mappers/data_warehouse
 import MetatypeMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
-import GraphStorage from "../../../data_access_layer/mappers/data_warehouse/data/graph_storage";
-import NodeStorage from "../../../data_access_layer/mappers/data_warehouse/data/node_storage";
+import GraphMapper from "../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
+import NodeMapper from "../../../data_access_layer/mappers/data_warehouse/data/node_mapper";
 import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import EdgeStorage from "../../../data_access_layer/mappers/data_warehouse/data/edge_storage";
 import MetatypeRelationshipMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper";
@@ -19,6 +19,7 @@ import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/o
 import MetatypeRelationship from "../../../data_warehouse/ontology/metatype_relationship";
 import MetatypeRelationshipPair from "../../../data_warehouse/ontology/metatype_relationship_pair";
 import MetatypeKey from "../../../data_warehouse/ontology/metatype_key";
+import Node from "../../../data_warehouse/data/node";
 
 describe('Gremlin Exporter', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -51,10 +52,10 @@ describe('Gremlin Exporter', async() => {
 
     it('can initiate export by copying nodes and edges', async(done)=> {
         const storage = EdgeStorage.Instance;
-        const nStorage = NodeStorage.Instance;
+        const nStorage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphStorage.Instance;
+        const gStorage = GraphMapper.Instance;
         const rMapper = MetatypeRelationshipMapper.Instance;
         const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
@@ -66,8 +67,8 @@ describe('Gremlin Exporter', async() => {
 
         const metatype = await mMapper.BulkCreate( "test suite",
             [
-                new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
-                new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
+                new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
+                new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
             ]);
 
         expect(metatype.isError).false;
@@ -83,19 +84,23 @@ describe('Gremlin Exporter', async() => {
         const keys2 = await kStorage.BulkCreate("test suite", testKeys2);
         expect(keys2.isError).false;
 
-        const mixed = [{
-            metatype_id: metatype.value[0].id!,
+        const mixed = [new Node({
+            container_id: containerID,
+            graph_id: graph.value.id!,
+            metatype: metatype.value[0].id!,
             properties: payload
-        },{
-            metatype_id: metatype.value[1].id!,
+        }), new Node({
+            container_id: containerID,
+            graph_id: graph.value.id!,
+            metatype: metatype.value[1].id!,
             properties: payload
-        }];
+        })];
 
-        const node = await nStorage.CreateOrUpdate(containerID, graph.value.id,  mixed);
+        const node = await nStorage.BulkCreateOrUpdateByCompositeID("test suite",  mixed);
         expect(node.isError, metatype.error?.error).false;
 
         let relationship = await rMapper.Create("test suite",
-            new MetatypeRelationship({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}))
+            new MetatypeRelationship({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -103,15 +108,15 @@ describe('Gremlin Exporter', async() => {
         let pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
             "name": faker.name.findName(),
             "description": faker.random.alphaNumeric(),
-            "originMetatype": metatype.value[0].id!,
-            "destinationMetatype": metatype.value[1].id!,
+            "origin_metatype": metatype.value[0].id!,
+            "destination_metatype": metatype.value[1].id!,
             "relationship": relationship.value.id!,
-            "relationshipType": "one:one",
-            containerID
+            "relationship_type": "one:one",
+            container_id: containerID
         }));
 
         // EDGE SETUP
-        let edge = await storage.CreateOrUpdate(containerID, graph.value.id,  {
+        let edge = await storage.CreateOrUpdate(containerID, graph.value.id!,  {
             relationship_pair_id: pair.value.id,
             properties: payload,
             origin_node_id: node.value[0].id,
@@ -183,9 +188,9 @@ const malformed_payload: {[key:string]:any} = {
 };
 
 export const test_keys: MetatypeKey[] = [
-    new MetatypeKey({name: "Test", description: "flower name", required: true, propertyName: "flower_name", dataType: "string"}),
-    new MetatypeKey({name: "Test2", description: "color of flower allowed", required: true, propertyName: "color", dataType: "enumeration", options: ["yellow", "blue"]}),
-    new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"}),
+    new MetatypeKey({name: "Test", description: "flower name", required: true, property_name: "flower_name", data_type: "string"}),
+    new MetatypeKey({name: "Test2", description: "color of flower allowed", required: true, property_name: "color", data_type: "enumeration", options: ["yellow", "blue"]}),
+    new MetatypeKey({name: "Test Not Required", description: "not required", required: false, property_name: "notRequired", data_type: "number"}),
 ];
 
-export const single_test_key: MetatypeKey = new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"})
+export const single_test_key: MetatypeKey = new MetatypeKey({name: "Test Not Required", description: "not required", required: false, property_name: "notRequired", data_type: "number"})

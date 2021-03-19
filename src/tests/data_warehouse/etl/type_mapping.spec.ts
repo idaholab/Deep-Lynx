@@ -10,9 +10,8 @@ import TypeMappingStorage from "../../../data_access_layer/mappers/data_warehous
 import {TypeMappingT, TypeTransformationConditionT, TypeTransformationT} from "../../../types/import/typeMappingT";
 import {ApplyTransformation, ValidTransformationCondition} from "../../../data_warehouse/etl/type_mapping";
 import {objectToShapeHash} from "../../../utilities";
-import {NodeT} from "../../../types/graph/nodeT";
-import NodeStorage from "../../../data_access_layer/mappers/data_warehouse/data/node_storage";
-import GraphStorage from "../../../data_access_layer/mappers/data_warehouse/data/graph_storage";
+import NodeMapper from "../../../data_access_layer/mappers/data_warehouse/data/node_mapper";
+import GraphMapper from "../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
 import {DataStagingT} from "../../../types/import/dataStagingT";
 import ImportStorage from "../../../data_access_layer/mappers/data_warehouse/import/import_storage";
 import DataStagingStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
@@ -30,6 +29,7 @@ import MetatypeKey from "../../../data_warehouse/ontology/metatype_key";
 import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
 import MetatypeRepository from "../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 import {User} from "../../../access_management/user";
+import Node from "../../../data_warehouse/data/node"
 
 describe('A Data Type Mapping can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -45,152 +45,152 @@ describe('A Data Type Mapping can', async() => {
     const car_metatype_keys: MetatypeKey[] = [
         new MetatypeKey({
             name: "id",
-            propertyName: "id",
+            property_name: "id",
             description: "id of car",
-            dataType: "string",
+            data_type: "string",
             required: true
         }),new MetatypeKey({
             name: "name",
-            propertyName: "name",
+            property_name: "name",
             description: "name of car",
-            dataType: "string",
+            data_type: "string",
             required: true})]
 
 
     const component_metatype_keys: MetatypeKey[] = [
         new MetatypeKey({
             name: "id",
-            propertyName: "id",
+            property_name: "id",
             description: "id of car",
-            dataType: "number",
+            data_type: "number",
             required: true
         }),new MetatypeKey({
             name: "name",
-            propertyName: "name",
+            property_name: "name",
             description: "name of car",
-            dataType: "string",
+            data_type: "string",
             required: true})]
 
     const manufacturer_metatype_keys: MetatypeKey[] = [
         new MetatypeKey({
             name: "id",
-            propertyName: "id",
+            property_name: "id",
             description: "id of car",
-            dataType: "string",
+            data_type: "string",
             required: true
         }),new MetatypeKey({
             name: "name",
-            propertyName: "name",
+            property_name: "name",
             description: "name of car",
-            dataType: "string",
+            data_type: "string",
             required: true
         }),new MetatypeKey({
             name: "location",
-            propertyName: "location",
+            property_name: "location",
             description: "location of manufacturer",
-            dataType: "string",
+            data_type: "string",
             required: true})]
 
 
     const tire_pressure_metatype_keys: MetatypeKey[] = [
         new MetatypeKey({
             name: "id",
-            propertyName: "id",
+            property_name: "id",
             description: "id of car",
-            dataType: "string",
+            data_type: "string",
             required: true
         }), new MetatypeKey({
             name: "measurement",
-            propertyName: "measurement",
+            property_name: "measurement",
             description: "measurement",
-            dataType: "number",
+            data_type: "number",
             required: true
         }),new MetatypeKey({
             name: "measurement unit",
-            propertyName: "measurement_unit",
+            property_name: "measurement_unit",
             description: "unit of measurement",
-            dataType: "string",
+            data_type: "string",
             required: true
         }),new MetatypeKey({
             name: "measurement name",
-            propertyName: "measurement_name",
+            property_name: "measurement_name",
             description: "name of measurement",
-            dataType: "string",
+            data_type: "string",
             required: true})]
 
 
     const car_maintenance_metatype_keys: MetatypeKey[] = [
         new MetatypeKey({
             name: "id",
-            propertyName: "id",
+            property_name: "id",
             description: "id of car",
-            dataType: "string",
+            data_type: "string",
             required: true
         }),new MetatypeKey({
             name: "name",
-            propertyName: "name",
+            property_name: "name",
             description: "name",
-            dataType: "string",
+            data_type: "string",
             required: true
         }),new MetatypeKey({
             name: "start date",
-            propertyName: "start_date",
+            property_name: "start_date",
             description: "start date",
-            dataType: "date",
+            data_type: "date",
             required: true
         }),new MetatypeKey({
             name: "average visits per year",
-            propertyName: "average_visits",
+            property_name: "average_visits",
             description: "average visits per yera",
-            dataType: "number",
+            data_type: "number",
             required: true
         })]
 
     const maintenance_entry_metatype_keys: MetatypeKey[] = [
         new MetatypeKey({
             name: "id",
-            propertyName: "id",
+            property_name: "id",
             description: "id",
-            dataType: "number",
+            data_type: "number",
             required: true
         }),new MetatypeKey({
             name: "check engine light flag",
-            propertyName: "check_engine_light_flag",
+            property_name: "check_engine_light_flag",
             description: "check engine light flag",
-            dataType: "boolean",
+            data_type: "boolean",
             required: true
         }), new MetatypeKey({
             name: "type",
-            propertyName: "type",
+            property_name: "type",
             description: "type",
-            dataType: "string",
+            data_type: "string",
             required: true
         })]
 
     const partKeys: MetatypeKey[] = [
         new MetatypeKey({
             name: "id",
-            propertyName: "id",
+            property_name: "id",
             description: "id of car",
-            dataType: "string",
+            data_type: "string",
             required: true
         }),new MetatypeKey({
             name: "name",
-            propertyName: "name",
+            property_name: "name",
             description: "name",
-            dataType: "string",
+            data_type: "string",
             required: true
         }), new MetatypeKey({
             name: "price",
-            propertyName: "price",
+            property_name: "price",
             description: "price",
-            dataType: "number",
+            data_type: "number",
             required: true
         }), new MetatypeKey({
             name: "quantity",
-            propertyName: "quantity",
+            property_name: "quantity",
             description: "quantity",
-            dataType: "number",
+            data_type: "number",
             required: true
         })]
 
@@ -223,10 +223,10 @@ describe('A Data Type Mapping can', async() => {
 
         const userResult = await UserMapper.Instance.Create("test suite", new User(
             {
-                identityProviderID: faker.random.uuid(),
-                identityProvider: "username_password",
+                identity_provider_id: faker.random.uuid(),
+                identity_provider: "username_password",
                 admin: false,
-                displayName: faker.name.findName(),
+                display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ["superuser"]
             }));
@@ -235,9 +235,9 @@ describe('A Data Type Mapping can', async() => {
         expect(userResult.value).not.empty;
         user = userResult.value
 
-        let graph = await GraphStorage.Instance.Create(containerID, "test suite")
+        let graph = await GraphMapper.Instance.Create(containerID, "test suite")
         expect(graph.isError).false;
-        graphID = graph.value.id
+        graphID = graph.value.id!
 
         let dstorage = DataSourceStorage.Instance;
         let relationshipMapper = MetatypeRelationshipMapper.Instance;
@@ -249,7 +249,7 @@ describe('A Data Type Mapping can', async() => {
         expect(created.isError).false
 
         const test_metatype_relationships: MetatypeRelationship[] = [
-            new MetatypeRelationship({containerID, name: "parent", description: "item is another's parent"})
+            new MetatypeRelationship({container_id: containerID, name: "parent", description: "item is another's parent"})
         ];
 
         // create the relationships
@@ -262,11 +262,11 @@ describe('A Data Type Mapping can', async() => {
         let pairs = await MetatypeRelationshipPairMapper.Instance.Create("test suite", new MetatypeRelationshipPair({
             "name": "owns",
             "description": "owns another entity",
-            "originMetatype": test_metatypes.find(m => m.name === "Maintenance")!.id!,
-            "destinationMetatype": test_metatypes.find(m => m.name === "Maintenance Entry")!.id!,
+            "origin_metatype": test_metatypes.find(m => m.name === "Maintenance")!.id!,
+            "destination_metatype": test_metatypes.find(m => m.name === "Maintenance Entry")!.id!,
             "relationship": resultMetatypeRelationships.find(m => m.name === "parent")!.id!,
-            "relationshipType": "one:one",
-            containerID
+            "relationship_type": "one:one",
+            container_id: containerID
         }));
 
         expect(pairs.isError).false;
@@ -318,6 +318,7 @@ describe('A Data Type Mapping can', async() => {
     })
 
     it('can generate a car node', async() => {
+        const car = test_metatypes.find(metatype => metatype.name === "Car")
         const carKeys = test_metatypes.find(metatype => metatype.name === "Car")!.keys!
         const carTransformation = {
            keys: [{
@@ -333,29 +334,36 @@ describe('A Data Type Mapping can', async() => {
 
         const results = await ApplyTransformation(typeMapping!, carTransformation, data!)
 
-        expect((results.value as NodeT[])[0].properties).to.have.property('name', 'test car')
-        expect((results.value as NodeT[])[0].properties).to.have.property('id', 'UUID')
+        expect((results.value as Node[])[0].properties).to.have.property('name', 'test car')
+        expect((results.value as Node[])[0].properties).to.have.property('id', 'UUID')
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[0].original_data_id).eq("UUID")
-        expect((results.value as NodeT[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car.id+UUID`)
+        expect((results.value as Node[])[0].original_data_id).eq("UUID")
+        expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car.id+UUID`)
 
-        const inserted = await NodeStorage.Instance.CreateOrUpdate(containerID, graphID, results.value)
+        // run through and set the right metatype and container
+        results.value.forEach((node: Node | EdgeT) => {
+            (node as Node).container_id = containerID;
+            (node as Node).graph_id = graphID;
+            (node as Node).metatype = car;
+        })
+
+        const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[])
         expect(inserted.isError).false
 
-        return NodeStorage.Instance.PermanentlyDelete(inserted.value[0].id!)
+        return NodeMapper.Instance.PermanentlyDelete(inserted.value[0].id!)
     })
 
     it('can generate a car node with constant values', async() => {
-        const carKeys = test_metatypes.find(metatype => metatype.name === "Car")!.keys!
+        const car = test_metatypes.find(metatype => metatype.name === "Car")
         const carTransformation = {
             keys: [{
                 value: "TEST UUID",
-                metatype_key_id: carKeys.find(key => key.name === "id")!.id
+                metatype_key_id: car!.keys!.find(key => key.name === "id")!.id
             }, {
                 value: "MOTOROLA",
-                metatype_key_id: carKeys.find(key => key.name === "name")!.id
+                metatype_key_id: car!.keys!.find(key => key.name === "name")!.id
             }],
-            metatype_id: test_metatypes.find(m => m.name === "Car")!.id,
+            metatype_id: car!.id,
             unique_identifier_key: "car.id"
         } as TypeTransformationT
 
@@ -364,33 +372,40 @@ describe('A Data Type Mapping can', async() => {
         expect(Array.isArray(results.value)).true
         expect(results.value).not.empty
 
-        expect((results.value as NodeT[])[0].properties).to.have.property('name', 'MOTOROLA')
-        expect((results.value as NodeT[])[0].properties).to.have.property('id', 'TEST UUID')
+        expect((results.value as Node[])[0].properties).to.have.property('name', 'MOTOROLA')
+        expect((results.value as Node[])[0].properties).to.have.property('id', 'TEST UUID')
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[0].original_data_id).eq("UUID")
-        expect((results.value as NodeT[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car.id+UUID`)
+        expect((results.value as Node[])[0].original_data_id).eq("UUID")
+        expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car.id+UUID`)
 
-        const inserted = await NodeStorage.Instance.CreateOrUpdate(containerID, graphID, results.value)
+        // run through and set the right metatype and container
+        results.value.forEach((node: Node | EdgeT) => {
+            (node as Node).container_id = containerID;
+            (node as Node).graph_id = graphID;
+            (node as Node).metatype = car;
+        })
+
+        const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[])
         expect(inserted.isError).false
 
-        return NodeStorage.Instance.PermanentlyDelete(inserted.value[0].id!)
+        return NodeMapper.Instance.PermanentlyDelete(inserted.value[0].id!)
     })
 
     // this will handle testing the root array function
     it('can generate car maintenance entries', async() => {
-        const entryKeys = test_metatypes.find(metatype => metatype.name === "Maintenance Entry")!.keys!
+        const entry = test_metatypes.find(metatype => metatype.name === "Maintenance Entry")
         const maintenanceTransformation = {
             keys: [{
                 key: "car_maintenance.maintenance_entries.[].id",
-                metatype_key_id: entryKeys.find(key => key.name === "id")!.id
+                metatype_key_id: entry!.keys!.find(key => key.name === "id")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].type",
-                metatype_key_id: entryKeys.find(key => key.name === "type")!.id
+                metatype_key_id: entry!.keys!.find(key => key.name === "type")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].check_engine_light_flag",
-                metatype_key_id: entryKeys.find(key => key.name === "check engine light flag")!.id
+                metatype_key_id: entry!.keys!.find(key => key.name === "check engine light flag")!.id
             }],
-            metatype_id: test_metatypes.find(m => m.name === "Maintenance Entry")!.id,
+            metatype_id: entry!.id,
             unique_identifier_key: "car_maintenance.maintenance_entries.[].id",
             root_array: "car_maintenance.maintenance_entries"
         } as TypeTransformationT
@@ -400,45 +415,52 @@ describe('A Data Type Mapping can', async() => {
         expect(Array.isArray(results.value)).true
         expect(results.value.length).eq(2) // a total of two nodes should be created
 
-        expect((results.value as NodeT[])[0].properties).to.have.property('id', 1)
-        expect((results.value as NodeT[])[0].properties).to.have.property('type', 'oil change')
-        expect((results.value as NodeT[])[0].properties).to.have.property('check_engine_light_flag', true)
+        expect((results.value as Node[])[0].properties).to.have.property('id', 1)
+        expect((results.value as Node[])[0].properties).to.have.property('type', 'oil change')
+        expect((results.value as Node[])[0].properties).to.have.property('check_engine_light_flag', true)
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[0].original_data_id).eq("1") // original IDs are strings
-        expect((results.value as NodeT[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+1`)
+        expect((results.value as Node[])[0].original_data_id).eq("1") // original IDs are strings
+        expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+1`)
 
-        expect((results.value as NodeT[])[1].properties).to.have.property('id', 2)
-        expect((results.value as NodeT[])[1].properties).to.have.property('type', 'tire rotation')
-        expect((results.value as NodeT[])[1].properties).to.have.property('check_engine_light_flag', false)
+        expect((results.value as Node[])[1].properties).to.have.property('id', 2)
+        expect((results.value as Node[])[1].properties).to.have.property('type', 'tire rotation')
+        expect((results.value as Node[])[1].properties).to.have.property('check_engine_light_flag', false)
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[1].original_data_id).eq("2") // original IDs are strings
-        expect((results.value as NodeT[])[1].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+2`)
+        expect((results.value as Node[])[1].original_data_id).eq("2") // original IDs are strings
+        expect((results.value as Node[])[1].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+2`)
 
 
-        const inserted = await NodeStorage.Instance.CreateOrUpdate(containerID, graphID, results.value)
+        // run through and set the right metatype and container
+        results.value.forEach((node: Node | EdgeT) => {
+            (node as Node).container_id = containerID;
+            (node as Node).graph_id = graphID;
+            (node as Node).metatype = entry;
+        })
+
+        const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[])
         expect(inserted.isError).false
 
-        await NodeStorage.Instance.PermanentlyDelete(inserted.value[0].id!)
-        return NodeStorage.Instance.PermanentlyDelete(inserted.value[1].id!)
+        await NodeMapper.Instance.PermanentlyDelete(inserted.value[0].id!)
+        return NodeMapper.Instance.PermanentlyDelete(inserted.value[1].id!)
     })
 
     it('can generate parts lists entries', async() => {
-        const partKeys = test_metatypes.find(metatype => metatype.name === "Part")!.keys!
+        const part = test_metatypes.find(metatype => metatype.name === "Part")
         const maintenanceTransformation = {
             keys: [{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].id",
-                metatype_key_id: partKeys.find(key => key.name === "id")!.id
+                metatype_key_id: part!.keys!.find(key => key.name === "id")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].name",
-                metatype_key_id: partKeys.find(key => key.name === "name")!.id
+                metatype_key_id: part!.keys!.find(key => key.name === "name")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].quantity",
-                metatype_key_id: partKeys.find(key => key.name === "quantity")!.id
+                metatype_key_id: part!.keys!.find(key => key.name === "quantity")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].price",
-                metatype_key_id: partKeys.find(key => key.name === "price")!.id
+                metatype_key_id: part!.keys!.find(key => key.name === "price")!.id
             }],
-            metatype_id: test_metatypes.find(m => m.name === "Part")!.id,
+            metatype_id: part!.id,
             unique_identifier_key: "car_maintenance.maintenance_entries.[].parts_list.[].id",
             root_array: "car_maintenance.maintenance_entries.[].parts_list"
         } as TypeTransformationT
@@ -448,59 +470,65 @@ describe('A Data Type Mapping can', async() => {
         expect(Array.isArray(results.value)).true
         expect(results.value.length).eq(5) // a total of two nodes should be created
 
-        expect((results.value as NodeT[])[0].properties).to.have.property('id', "oil")
-        expect((results.value as NodeT[])[0].properties).to.have.property('name', 'synthetic oil')
-        expect((results.value as NodeT[])[0].properties).to.have.property('price', 45.66)
-        expect((results.value as NodeT[])[0].properties).to.have.property('quantity', 1)
+        expect((results.value as Node[])[0].properties).to.have.property('id', "oil")
+        expect((results.value as Node[])[0].properties).to.have.property('name', 'synthetic oil')
+        expect((results.value as Node[])[0].properties).to.have.property('price', 45.66)
+        expect((results.value as Node[])[0].properties).to.have.property('quantity', 1)
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[0].original_data_id).eq("oil")
-        expect((results.value as NodeT[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+oil`)
+        expect((results.value as Node[])[0].original_data_id).eq("oil")
+        expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+oil`)
 
-        expect((results.value as NodeT[])[1].properties).to.have.property('id', "pan")
-        expect((results.value as NodeT[])[1].properties).to.have.property('name', 'oil pan')
-        expect((results.value as NodeT[])[1].properties).to.have.property('price', 15.50)
-        expect((results.value as NodeT[])[1].properties).to.have.property('quantity', 1)
+        expect((results.value as Node[])[1].properties).to.have.property('id', "pan")
+        expect((results.value as Node[])[1].properties).to.have.property('name', 'oil pan')
+        expect((results.value as Node[])[1].properties).to.have.property('price', 15.50)
+        expect((results.value as Node[])[1].properties).to.have.property('quantity', 1)
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[1].original_data_id).eq("pan")
-        expect((results.value as NodeT[])[1].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+pan`)
+        expect((results.value as Node[])[1].original_data_id).eq("pan")
+        expect((results.value as Node[])[1].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+pan`)
 
-        expect((results.value as NodeT[])[2].properties).to.have.property('id', "tire")
-        expect((results.value as NodeT[])[2].properties).to.have.property('name', 'all terrain tire')
-        expect((results.value as NodeT[])[2].properties).to.have.property('price', 150.99)
-        expect((results.value as NodeT[])[2].properties).to.have.property('quantity', 4)
+        expect((results.value as Node[])[2].properties).to.have.property('id', "tire")
+        expect((results.value as Node[])[2].properties).to.have.property('name', 'all terrain tire')
+        expect((results.value as Node[])[2].properties).to.have.property('price', 150.99)
+        expect((results.value as Node[])[2].properties).to.have.property('quantity', 4)
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[2].original_data_id).eq("tire")
-        expect((results.value as NodeT[])[2].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+tire`)
+        expect((results.value as Node[])[2].original_data_id).eq("tire")
+        expect((results.value as Node[])[2].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+tire`)
 
-        expect((results.value as NodeT[])[3].properties).to.have.property('id', "wrench")
-        expect((results.value as NodeT[])[3].properties).to.have.property('name', 'wrench')
-        expect((results.value as NodeT[])[3].properties).to.have.property('price', 4.99)
-        expect((results.value as NodeT[])[3].properties).to.have.property('quantity', 1)
+        expect((results.value as Node[])[3].properties).to.have.property('id', "wrench")
+        expect((results.value as Node[])[3].properties).to.have.property('name', 'wrench')
+        expect((results.value as Node[])[3].properties).to.have.property('price', 4.99)
+        expect((results.value as Node[])[3].properties).to.have.property('quantity', 1)
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[3].original_data_id).eq("wrench")
-        expect((results.value as NodeT[])[3].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+wrench`)
+        expect((results.value as Node[])[3].original_data_id).eq("wrench")
+        expect((results.value as Node[])[3].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+wrench`)
 
-        expect((results.value as NodeT[])[4].properties).to.have.property('id', "bolts")
-        expect((results.value as NodeT[])[4].properties).to.have.property('name', 'bolts')
-        expect((results.value as NodeT[])[4].properties).to.have.property('price', 1.99)
-        expect((results.value as NodeT[])[4].properties).to.have.property('quantity', 5)
+        expect((results.value as Node[])[4].properties).to.have.property('id', "bolts")
+        expect((results.value as Node[])[4].properties).to.have.property('name', 'bolts')
+        expect((results.value as Node[])[4].properties).to.have.property('price', 1.99)
+        expect((results.value as Node[])[4].properties).to.have.property('quantity', 5)
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[4].original_data_id).eq("bolts")
-        expect((results.value as NodeT[])[4].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+bolts`)
+        expect((results.value as Node[])[4].original_data_id).eq("bolts")
+        expect((results.value as Node[])[4].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+bolts`)
 
+        // run through and set the right metatype and container
+        results.value.forEach((node: Node | EdgeT) => {
+            (node as Node).container_id = containerID;
+            (node as Node).graph_id = graphID;
+            (node as Node).metatype = part;
+        })
 
-        const inserted = await NodeStorage.Instance.CreateOrUpdate(containerID, graphID, results.value)
+        const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[])
         expect(inserted.isError).false
 
-        await NodeStorage.Instance.PermanentlyDelete(inserted.value[0].id!)
-        await NodeStorage.Instance.PermanentlyDelete(inserted.value[1].id!)
-        await NodeStorage.Instance.PermanentlyDelete(inserted.value[2].id!)
-        await NodeStorage.Instance.PermanentlyDelete(inserted.value[3].id!)
-        return NodeStorage.Instance.PermanentlyDelete(inserted.value[4].id!)
+        await NodeMapper.Instance.PermanentlyDelete(inserted.value[0].id!)
+        await NodeMapper.Instance.PermanentlyDelete(inserted.value[1].id!)
+        await NodeMapper.Instance.PermanentlyDelete(inserted.value[2].id!)
+        await NodeMapper.Instance.PermanentlyDelete(inserted.value[3].id!)
+        return NodeMapper.Instance.PermanentlyDelete(inserted.value[4].id!)
     })
 
     it('can generate parts lists entries based on conditions', async() => {
-        const partKeys = test_metatypes.find(metatype => metatype.name === "Part")!.keys!
+        const part = test_metatypes.find(metatype => metatype.name === "Part")
         const maintenanceTransformation = {
             conditions: [
                 {
@@ -517,18 +545,18 @@ describe('A Data Type Mapping can', async() => {
             ],
             keys: [{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].id",
-                metatype_key_id: partKeys.find(key => key.name === "id")!.id
+                metatype_key_id: part!.keys!.find(key => key.name === "id")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].name",
-                metatype_key_id: partKeys.find(key => key.name === "name")!.id
+                metatype_key_id: part!.keys!.find(key => key.name === "name")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].quantity",
-                metatype_key_id: partKeys.find(key => key.name === "quantity")!.id
+                metatype_key_id: part!.keys!.find(key => key.name === "quantity")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].price",
-                metatype_key_id: partKeys.find(key => key.name === "price")!.id
+                metatype_key_id: part!.keys!.find(key => key.name === "price")!.id
             }],
-            metatype_id: test_metatypes.find(m => m.name === "Part")!.id,
+            metatype_id: part!.id,
             unique_identifier_key: "car_maintenance.maintenance_entries.[].parts_list.[].id",
             root_array: "car_maintenance.maintenance_entries.[].parts_list"
         } as TypeTransformationT
@@ -538,33 +566,40 @@ describe('A Data Type Mapping can', async() => {
         expect(Array.isArray(results.value)).true
         expect(results.value.length).eq(1) // a total of two nodes should be created
 
-        expect((results.value as NodeT[])[0].properties).to.have.property('id', "oil")
-        expect((results.value as NodeT[])[0].properties).to.have.property('name', 'synthetic oil')
-        expect((results.value as NodeT[])[0].properties).to.have.property('price', 45.66)
-        expect((results.value as NodeT[])[0].properties).to.have.property('quantity', 1)
+        expect((results.value as Node[])[0].properties).to.have.property('id', "oil")
+        expect((results.value as Node[])[0].properties).to.have.property('name', 'synthetic oil')
+        expect((results.value as Node[])[0].properties).to.have.property('price', 45.66)
+        expect((results.value as Node[])[0].properties).to.have.property('quantity', 1)
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[0].original_data_id).eq("oil")
-        expect((results.value as NodeT[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+oil`)
+        expect((results.value as Node[])[0].original_data_id).eq("oil")
+        expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+oil`)
 
-        const inserted = await NodeStorage.Instance.CreateOrUpdate(containerID, graphID, results.value)
+        // run through and set the right metatype and container
+        results.value.forEach((node: Node | EdgeT) => {
+            (node as Node).container_id = containerID;
+            (node as Node).graph_id = graphID;
+            (node as Node).metatype = part;
+        })
+
+        const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[])
         expect(inserted.isError).false
 
-        return NodeStorage.Instance.PermanentlyDelete(inserted.value[0].id!)
+        return NodeMapper.Instance.PermanentlyDelete(inserted.value[0].id!)
     })
 
 
     // generally testing that our root array can indeed go more than 2 layers deep
     it('can generate component entries', async() => {
-        const keys = test_metatypes.find(metatype => metatype.name === "Component")!.keys!
+        const component = test_metatypes.find(metatype => metatype.name === "Component")
         const componentTransformation = {
             keys: [{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].components.[].id",
-                metatype_key_id: keys.find(key => key.name === "id")!.id
+                metatype_key_id: component!.keys!.find(key => key.name === "id")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].parts_list.[].components.[].name",
-                metatype_key_id: keys.find(key => key.name === "name")!.id
+                metatype_key_id: component!.keys!.find(key => key.name === "name")!.id
             }],
-            metatype_id: test_metatypes.find(m => m.name === "Component")!.id,
+            metatype_id: component!.id,
             unique_identifier_key: "car_maintenance.maintenance_entries.[].parts_list.[].components.[].id",
             root_array: "car_maintenance.maintenance_entries.[].parts_list.[].components"
         } as TypeTransformationT
@@ -574,37 +609,44 @@ describe('A Data Type Mapping can', async() => {
         expect(Array.isArray(results.value)).true
         expect(results.value.length).eq(1) // a total of two nodes should be created
 
-        expect((results.value as NodeT[])[0].properties).to.have.property('id', 1)
-        expect((results.value as NodeT[])[0].properties).to.have.property('name', 'oil')
+        expect((results.value as Node[])[0].properties).to.have.property('id', 1)
+        expect((results.value as Node[])[0].properties).to.have.property('name', 'oil')
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[0].original_data_id).eq("1")
-        expect((results.value as NodeT[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].components.[].id+1`)
+        expect((results.value as Node[])[0].original_data_id).eq("1")
+        expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].components.[].id+1`)
 
-        const inserted = await NodeStorage.Instance.CreateOrUpdate(containerID, graphID, results.value)
+        // run through and set the right metatype and container
+        results.value.forEach((node: Node | EdgeT) => {
+            (node as Node).container_id = containerID;
+            (node as Node).graph_id = graphID;
+            (node as Node).metatype = component;
+        })
+
+        const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[])
         expect(inserted.isError).false
 
-        return NodeStorage.Instance.PermanentlyDelete(inserted.value[0].id!)
+        return NodeMapper.Instance.PermanentlyDelete(inserted.value[0].id!)
     })
 
 
     // this will handle testing the root array function
     it('can generate car maintenance entries, and connect them to a maintenance record through edges', async() => {
-        const maintenanceKeys = test_metatypes.find(metatype => metatype.name === "Maintenance")!.keys!
+        const maintenance = test_metatypes.find(metatype => metatype.name === "Maintenance")
         const maintenanceTransformation = {
             keys: [{
                 key: "car_maintenance.id",
-                metatype_key_id: maintenanceKeys.find(key => key.name === "id")!.id
+                metatype_key_id: maintenance!.keys!.find(key => key.name === "id")!.id
             },{
                 key: "car_maintenance.name",
-                metatype_key_id: maintenanceKeys.find(key => key.name === "name")!.id
+                metatype_key_id: maintenance!.keys!.find(key => key.name === "name")!.id
             },{
                 key: "car_maintenance.start_date",
-                metatype_key_id: maintenanceKeys.find(key => key.name === "start date")!.id
+                metatype_key_id: maintenance!.keys!.find(key => key.name === "start date")!.id
             },{
                 key: "car_maintenance.average_visits_per_year",
-                metatype_key_id: maintenanceKeys.find(key => key.name === "average visits per year")!.id
+                metatype_key_id: maintenance!.keys!.find(key => key.name === "average visits per year")!.id
             }],
-            metatype_id: test_metatypes.find(m => m.name === "Maintenance")!.id,
+            metatype_id: maintenance!.id,
             unique_identifier_key: "car_maintenance.id",
         } as TypeTransformationT
 
@@ -613,30 +655,37 @@ describe('A Data Type Mapping can', async() => {
         expect(Array.isArray(maintenanceResult.value)).true
         expect(maintenanceResult.value.length).eq(1) // a total of two nodes should be created
 
-        expect((maintenanceResult.value as NodeT[])[0].properties).to.have.property('id', "UUID")
-        expect((maintenanceResult.value as NodeT[])[0].properties).to.have.property('name', "test car's maintenance")
-        expect((maintenanceResult.value as NodeT[])[0].properties).to.have.property('start_date', "1/1/2020 12:00:00")
-        expect((maintenanceResult.value as NodeT[])[0].properties).to.have.property('average_visits', 4)
+        expect((maintenanceResult.value as Node[])[0].properties).to.have.property('id', "UUID")
+        expect((maintenanceResult.value as Node[])[0].properties).to.have.property('name', "test car's maintenance")
+        expect((maintenanceResult.value as Node[])[0].properties).to.have.property('start_date', "1/1/2020 12:00:00")
+        expect((maintenanceResult.value as Node[])[0].properties).to.have.property('average_visits', 4)
         // validate the original and composite ID fields worked correctly
-        expect((maintenanceResult.value as NodeT[])[0].original_data_id).eq("UUID") // original IDs are strings
-        expect((maintenanceResult.value as NodeT[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.id+UUID`)
+        expect((maintenanceResult.value as Node[])[0].original_data_id).eq("UUID") // original IDs are strings
+        expect((maintenanceResult.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.id+UUID`)
 
-        const maintenanceInserted = await NodeStorage.Instance.CreateOrUpdate(containerID, graphID, maintenanceResult.value)
+        // run through and set the right metatype and container
+        maintenanceResult.value.forEach((node: Node | EdgeT) => {
+            (node as Node).container_id = containerID;
+            (node as Node).graph_id = graphID;
+            (node as Node).metatype = maintenance;
+        })
+
+        const maintenanceInserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, maintenanceResult.value as Node[])
         expect(maintenanceInserted.isError).false
 
-        const entryKeys = test_metatypes.find(metatype => metatype.name === "Maintenance Entry")!.keys!
+        const entry = test_metatypes.find(metatype => metatype.name === "Maintenance Entry")
         const maintenanceEntryTransformation = {
             keys: [{
                 key: "car_maintenance.maintenance_entries.[].id",
-                metatype_key_id: entryKeys.find(key => key.name === "id")!.id
+                metatype_key_id: entry!.keys!.find(key => key.name === "id")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].type",
-                metatype_key_id: entryKeys.find(key => key.name === "type")!.id
+                metatype_key_id: entry!.keys!.find(key => key.name === "type")!.id
             },{
                 key: "car_maintenance.maintenance_entries.[].check_engine_light_flag",
-                metatype_key_id: entryKeys.find(key => key.name === "check engine light flag")!.id
+                metatype_key_id: entry!.keys!.find(key => key.name === "check engine light flag")!.id
             }],
-            metatype_id: test_metatypes.find(m => m.name === "Maintenance Entry")!.id,
+            metatype_id: entry!.id,
             unique_identifier_key: "car_maintenance.maintenance_entries.[].id",
             root_array: "car_maintenance.maintenance_entries"
         } as TypeTransformationT
@@ -646,22 +695,28 @@ describe('A Data Type Mapping can', async() => {
         expect(Array.isArray(results.value)).true
         expect(results.value.length).eq(2) // a total of two nodes should be created
 
-        expect((results.value as NodeT[])[0].properties).to.have.property('id', 1)
-        expect((results.value as NodeT[])[0].properties).to.have.property('type', 'oil change')
-        expect((results.value as NodeT[])[0].properties).to.have.property('check_engine_light_flag', true)
+        expect((results.value as Node[])[0].properties).to.have.property('id', 1)
+        expect((results.value as Node[])[0].properties).to.have.property('type', 'oil change')
+        expect((results.value as Node[])[0].properties).to.have.property('check_engine_light_flag', true)
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[0].original_data_id).eq("1") // original IDs are strings
-        expect((results.value as NodeT[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+1`)
+        expect((results.value as Node[])[0].original_data_id).eq("1") // original IDs are strings
+        expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+1`)
 
-        expect((results.value as NodeT[])[1].properties).to.have.property('id', 2)
-        expect((results.value as NodeT[])[1].properties).to.have.property('type', 'tire rotation')
-        expect((results.value as NodeT[])[1].properties).to.have.property('check_engine_light_flag', false)
+        expect((results.value as Node[])[1].properties).to.have.property('id', 2)
+        expect((results.value as Node[])[1].properties).to.have.property('type', 'tire rotation')
+        expect((results.value as Node[])[1].properties).to.have.property('check_engine_light_flag', false)
         // validate the original and composite ID fields worked correctly
-        expect((results.value as NodeT[])[1].original_data_id).eq("2") // original IDs are strings
-        expect((results.value as NodeT[])[1].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+2`)
+        expect((results.value as Node[])[1].original_data_id).eq("2") // original IDs are strings
+        expect((results.value as Node[])[1].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+2`)
 
+        // run through and set the right metatype and container
+        results.value.forEach((node: Node | EdgeT) => {
+            (node as Node).container_id = containerID;
+            (node as Node).metatype = entry;
+            (node as Node).graph_id = graphID;
+        })
 
-        const inserted = await NodeStorage.Instance.CreateOrUpdate(containerID, graphID, results.value)
+        const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[])
         expect(inserted.isError).false
 
 
@@ -686,9 +741,9 @@ describe('A Data Type Mapping can', async() => {
         const maintenanceEdgeInserted = await EdgeStorage.Instance.CreateOrUpdate(containerID, graphID, maintenanceEdgeResult.value)
         expect(maintenanceEdgeInserted.isError).false
 
-        await NodeStorage.Instance.PermanentlyDelete(maintenanceInserted.value[0].id!)
-        await NodeStorage.Instance.PermanentlyDelete(inserted.value[0].id!)
-        return NodeStorage.Instance.PermanentlyDelete(inserted.value[1].id!)
+        await NodeMapper.Instance.PermanentlyDelete(maintenanceInserted.value[0].id!)
+        await NodeMapper.Instance.PermanentlyDelete(inserted.value[0].id!)
+        return NodeMapper.Instance.PermanentlyDelete(inserted.value[1].id!)
     })
 
 

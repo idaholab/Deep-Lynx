@@ -7,16 +7,21 @@ import Logger from "../../../../services/logger";
 import ContainerImport from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_import"
 import fs from 'fs'
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import NodeStorage from '../../../../data_access_layer/mappers/data_warehouse/data/node_storage';
+import NodeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import EdgeStorage from '../../../../data_access_layer/mappers/data_warehouse/data/edge_storage';
 import MetatypeRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 import MetatypeRelationshipPairRepository
     from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository";
 import UserMapper from "../../../../data_access_layer/mappers/access_management/user_mapper";
 import {User} from "../../../../access_management/user";
+import Node from "../../../../data_warehouse/data/node";
+import ContainerRepository
+    from "../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository";
 
 describe('A Container Import', async() => {
     let user: User
+    const containerRepo = new ContainerRepository()
+
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
             Logger.debug("skipping container import tests, no storage layer");
@@ -26,10 +31,10 @@ describe('A Container Import', async() => {
 
         const userResult = await UserMapper.Instance.Create("test suite", new User(
             {
-                identityProviderID: faker.random.uuid(),
-                identityProvider: "username_password",
+                identity_provider_id: faker.random.uuid(),
+                identity_provider: "username_password",
                 admin: false,
-                displayName: faker.name.findName(),
+                display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ["superuser"]
             }));
@@ -87,7 +92,7 @@ describe('A Container Import', async() => {
         let containerImport = ContainerImport.Instance;
         let storage = ContainerMapper.Instance;
         let metatypeRepository = new MetatypeRepository()
-        let nodeStorage = NodeStorage.Instance;
+        let nodeStorage = NodeMapper.Instance;
 
         let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
         let containerID: string
@@ -97,7 +102,11 @@ describe('A Container Import', async() => {
 
         expect(container.isError).false;
         expect(container.value).not.empty;
-        containerID = container.value
+
+        // retrieve container so we get the graph itself
+        const retrievedContainer = await containerRepo.findByID(container.value)
+        expect(retrievedContainer.isError).false
+        containerID = retrievedContainer.value.id!
 
         let metatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Document").list(false)
 
@@ -105,7 +114,12 @@ describe('A Container Import', async() => {
         expect(metatype.value).not.empty;
 
         let metatypeID = metatype.value[0].id
-        let nodeCreate = await nodeStorage.CreateOrUpdateByActiveGraph(containerID, {metatype_id: metatypeID, properties: {'name': 'test document'}})
+        let nodeCreate = await nodeStorage.CreateOrUpdateByCompositeID("test suite",
+            new Node({
+                container_id: containerID,
+                graph_id: retrievedContainer.value.active_graph_id,
+                metatype: metatypeID!,
+                properties: {'name': 'test document'}}))
 
         expect(nodeCreate.isError).false;
 
@@ -122,7 +136,7 @@ describe('A Container Import', async() => {
         let containerImport = ContainerImport.Instance;
         let storage = ContainerMapper.Instance;
         let metatypeRepository = new MetatypeRepository()
-        let nodeStorage = NodeStorage.Instance;
+        let nodeStorage = NodeMapper.Instance;
 
         let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
         let containerID: string
@@ -132,7 +146,11 @@ describe('A Container Import', async() => {
 
         expect(container.isError).false;
         expect(container.value).not.empty;
-        containerID = container.value
+
+        // retrieve container so we get the graph itself
+        const retrievedContainer = await containerRepo.findByID(container.value)
+        expect(retrievedContainer.isError).false
+        containerID = retrievedContainer.value.id!
 
         let metatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Document").list(false)
 
@@ -140,7 +158,12 @@ describe('A Container Import', async() => {
         expect(metatype.value).not.empty;
 
         let metatypeID = metatype.value[0].id
-        let nodeCreate = await nodeStorage.CreateOrUpdateByActiveGraph(containerID, {metatype_id: metatypeID, properties: {'name': 'test document'}})
+        let nodeCreate = await nodeStorage.CreateOrUpdateByCompositeID("test suite",
+            new Node({
+                graph_id: retrievedContainer.value.active_graph_id!,
+                container_id: containerID,
+                metatype: metatypeID!,
+                properties: {'name': 'test document'}}))
 
         expect(nodeCreate.isError).false;
 
@@ -158,7 +181,7 @@ describe('A Container Import', async() => {
         let storage = ContainerMapper.Instance;
         let metatypeRepository = new MetatypeRepository()
         let pairRepo = new MetatypeRelationshipPairRepository()
-        let nodeStorage = NodeStorage.Instance;
+        let nodeStorage = NodeMapper.Instance;
         let edgeStorage = EdgeStorage.Instance;
 
         let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
@@ -170,7 +193,11 @@ describe('A Container Import', async() => {
 
         expect(container.isError).false;
         expect(container.value).not.empty;
-        containerID = container.value
+
+        // retrieve container so we get the graph itself
+        const retrievedContainer = await containerRepo.findByID(container.value)
+        expect(retrievedContainer.isError).false
+        containerID = retrievedContainer.value.id!
 
         let metatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Action").list(false)
 
@@ -178,11 +205,19 @@ describe('A Container Import', async() => {
         expect(metatype.value).not.empty;
 
         let metatypeID = metatype.value[0].id
-        let nodeCreate = await nodeStorage.CreateOrUpdateByActiveGraph(containerID, {metatype_id: metatypeID, properties: {'name': 'test action 1'}})
-        let nodeCreate2 = await nodeStorage.CreateOrUpdateByActiveGraph(containerID, {metatype_id: metatypeID, properties: {'name': 'test action 2'}})
+        let nodeCreate = await nodeStorage.BulkCreateOrUpdateByCompositeID("test suite",[
+           new Node({
+               container_id: containerID,
+               graph_id: retrievedContainer.value.active_graph_id!,
+               metatype: metatypeID!,
+               properties: {'name': 'test action 1'}}),
+            new Node({
+                container_id: containerID,
+                graph_id: retrievedContainer.value.active_graph_id!,
+                metatype: metatypeID!,
+                properties: {'name': 'test action 2'}})])
 
         expect(nodeCreate.isError).false;
-        expect(nodeCreate2.isError).false;
 
         // retrieve Action metatype ID
         let actionMetatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Action").list(false)
@@ -202,7 +237,7 @@ describe('A Container Import', async() => {
 
         let relationshipPairID = relationshipPair.id
         let originID = nodeCreate.value[0].id
-        let destinationID = nodeCreate2.value[0].id
+        let destinationID = nodeCreate.value[1].id
 
         let edgeCreate = await edgeStorage.CreateOrUpdateByActiveGraph(containerID,
             {

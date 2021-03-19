@@ -5,8 +5,6 @@ import MetatypeStorage from "./metatype_mapper"
 import MetatypeRelationshipPairMapper from "./metatype_relationship_pair_mapper"
 import MetatypeKeyMapper from "./metatype_key_mapper"
 import Result from "../../../../result";
-import { ContainerImportT } from "../../../../types/import/containerImportT"
-import NodeStorage from "../data/node_storage"
 import EdgeStorage from "../data/edge_storage"
 import Logger from "../../../../services/logger"
 import ContainerRepository from "../../../repositories/data_warehouse/ontology/container_respository";
@@ -19,6 +17,7 @@ import MetatypeRelationshipPairRepository from "../../../repositories/data_wareh
 import MetatypeRelationshipPair from "../../../../data_warehouse/ontology/metatype_relationship_pair";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import {User} from "../../../../access_management/user";
+import NodeRepository from "../../../repositories/data_warehouse/data/node_repository";
 const convert = require('xml-js');
 
 const containerStorage = ContainerStorage.Instance;
@@ -26,8 +25,15 @@ const metatypeRelationshipStorage = MetatypeRelationshipMapper.Instance;
 const metatypeStorage = MetatypeStorage.Instance;
 const metatypeRelationshipPairStorage = MetatypeRelationshipPairMapper.Instance;
 const metatypeKeyStorage = MetatypeKeyMapper.Instance;
-const nodeStorage = NodeStorage.Instance;
+const nodeRepo = new NodeRepository()
 const edgeStorage = EdgeStorage.Instance;
+
+// vestigial type for ease of use
+export type ContainerImportT = {
+  name: string
+  description?: string | undefined
+  path?: string | undefined
+}
 
 export default class ContainerImport {
   private static instance: ContainerImport;
@@ -388,7 +394,7 @@ export default class ContainerImport {
           for (const metatype of oldMetatypes) {
             // metatype has been removed
             if (!classListMap.has(metatype.name)) {
-              const nodes = (await nodeStorage.ListByMetatypeID(metatype.id!, 0, 10)).value
+              const nodes = (await nodeRepo.where().metatypeID("eq", metatype.id!).list(false, {limit: 10})).value
 
               if (nodes.length > 0) {
                 resolve(Result.Failure(`Attempting to remove metatype ${metatype.name}.
@@ -415,7 +421,7 @@ export default class ContainerImport {
               for (const key of oldMetatypeKeys) {
 
                 if (!newMetatypeKeys.includes(key.name)) {
-                  const nodes = (await nodeStorage.ListByMetatypeID(metatype.id!, 0, 10)).value
+                  const nodes = (await nodeRepo.where().metatypeID("eq", metatype.id!).list(false, {limit: 10})).value
 
                   if (nodes.length > 0) {
                     resolve(Result.Failure(`Attempting to remove metatype ${metatype.name} key ${key.name}.
@@ -487,9 +493,9 @@ export default class ContainerImport {
         relationshipMap.forEach(relationship => {
           // if not marked for update, create
           if (!relationship.update) {
-            relationshipPromises.push(metatypeRelationshipStorage.BulkCreate(user.id!,[new MetatypeRelationship({containerID, name: relationship.name, description:relationship.description})]))
+            relationshipPromises.push(metatypeRelationshipStorage.BulkCreate(user.id!,[new MetatypeRelationship({container_id: containerID, name: relationship.name, description:relationship.description})]))
           } else {
-            const data = new MetatypeRelationship({containerID, name:relationship.name, description: relationship.description})
+            const data = new MetatypeRelationship({container_id: containerID, name:relationship.name, description: relationship.description})
             data.id = relationship.db_id
 
             relationshipUpdates.push(data)
@@ -532,10 +538,10 @@ export default class ContainerImport {
         classListMap.forEach((thisClass: MetatypeExtendT) => {
           // if not marked for update, create
           if (!thisClass.update) {
-            classPromises.push(metatypeStorage.BulkCreate(user.id!, [new Metatype({containerID, name: thisClass.name, description: thisClass.description})]))
+            classPromises.push(metatypeStorage.BulkCreate(user.id!, [new Metatype({container_id: containerID, name: thisClass.name, description: thisClass.description})]))
           } else {
             // else add to batch update
-            const data = new Metatype({containerID, name: thisClass.name, description: thisClass.description})
+            const data = new Metatype({container_id: containerID, name: thisClass.name, description: thisClass.description})
             data.id = thisClass.db_id
 
             metatypeUpdates.push(data)
@@ -590,11 +596,11 @@ export default class ContainerImport {
             const data = new MetatypeRelationshipPair({
               name: relationshipName,
               description: relationship.description,
-              originMetatype: thisClass.db_id!,
-              destinationMetatype: classIDMap.get(thisClass.parent_id).db_id,
+              origin_metatype: thisClass.db_id!,
+              destination_metatype: classIDMap.get(thisClass.parent_id).db_id,
               relationship: relationship.db_id,
-              relationshipType: "many:one",
-              containerID
+              relationship_type: "many:one",
+              container_id: containerID
             });
 
             if (thisClass.updateKeyNames.includes(relationshipName)) {
@@ -642,12 +648,12 @@ export default class ContainerImport {
 
               const propName = dataProp.name.split(" ").join('_')
               const data = new MetatypeKey({
-                metatypeID: thisClass.db_id,
+                metatype_id: thisClass.db_id,
                 name: dataProp.name,
                 required: false,
-                propertyName: propName,
+                property_name: propName,
                 description: dataProp.description,
-                dataType: property.target,
+                data_type: property.target,
                 validation: {
                   regex: "",
                   min,
@@ -672,11 +678,11 @@ export default class ContainerImport {
               const data = new MetatypeRelationshipPair({
                 name: relationshipName,
                 description: relationship.description,
-                originMetatype: thisClass.db_id!,
-                destinationMetatype: classIDMap.get(property.target).db_id,
+                origin_metatype: thisClass.db_id!,
+                destination_metatype: classIDMap.get(property.target).db_id,
                 relationship: relationshipID,
-                relationshipType: "many:many",
-                containerID
+                relationship_type: "many:many",
+                container_id: containerID
               });
 
               if (thisClass.updateKeyNames.includes(relationshipName)) {

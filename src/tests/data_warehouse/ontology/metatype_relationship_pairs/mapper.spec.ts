@@ -45,15 +45,15 @@ describe('A Metatype Relationship Pair Mapper can', async() => {
 
         const metatype = await mMapper.BulkCreate("test suite",
             [
-                new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
-                new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
+                new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
+                new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
             ]);
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
         let relationship = await rMapper.Create("test suite",
-            new MetatypeRelationship({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}))
+            new MetatypeRelationship({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -61,11 +61,11 @@ describe('A Metatype Relationship Pair Mapper can', async() => {
         let pair = await rpMapper.Create("test suite",new MetatypeRelationshipPair({
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
-            relationshipType: "one:one",
-            originMetatype: metatype.value[0],
-            destinationMetatype: metatype.value[1],
+            relationship_type: "one:one",
+            origin_metatype: metatype.value[0],
+            destination_metatype: metatype.value[1],
             relationship: relationship.value,
-            containerID : containerID
+            container_id : containerID
         }))
         expect(pair.isError).false;
 
@@ -79,15 +79,15 @@ describe('A Metatype Relationship Pair Mapper can', async() => {
 
         const metatype = await mMapper.BulkCreate( "test suite",
             [
-                new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
-                new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
+                new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
+                new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
             ]);
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
         let relationship = await rMapper.Create("test suite",
-            new MetatypeRelationship({containerID,name: faker.name.findName(), description: faker.random.alphaNumeric()}))
+            new MetatypeRelationship({container_id: containerID,name: faker.name.findName(), description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -95,11 +95,11 @@ describe('A Metatype Relationship Pair Mapper can', async() => {
         let pair = await rpMapper.Create("test suite",new MetatypeRelationshipPair({
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
-            relationshipType: "one:one",
-            originMetatype: metatype.value[0],
-            destinationMetatype: metatype.value[1],
+            relationship_type: "one:one",
+            origin_metatype: metatype.value[0],
+            destination_metatype: metatype.value[1],
             relationship: relationship.value,
-            containerID : containerID
+            container_id : containerID
         }))
 
         expect(pair.isError).false;

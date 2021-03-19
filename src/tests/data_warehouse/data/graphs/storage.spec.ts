@@ -2,7 +2,7 @@
 import faker from 'faker'
 import { expect } from 'chai'
 import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
-import GraphStorage from "../../../../data_access_layer/mappers/data_warehouse/data/graph_storage";
+import GraphMapper from "../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
 import Logger from "../../../../services/logger";
 import ContainerStorage from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import Container from "../../../../data_warehouse/ontology/container";
@@ -34,7 +34,7 @@ describe('A Graph', async() => {
     })
 
     it('can be saved to storage', async()=> {
-        let storage = GraphStorage.Instance;
+        let storage = GraphMapper.Instance;
 
         let graph = await storage.Create(containerID, "test suite");
 
@@ -45,21 +45,21 @@ describe('A Graph', async() => {
     });
 
     it('can be set active for container', async()=> {
-        let storage = GraphStorage.Instance;
+        let storage = GraphMapper.Instance;
 
         let graph = await storage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        let active = await storage.SetActiveForContainer(containerID, graph.value.id)
+        let active = await storage.SetActiveForContainer(containerID, graph.value.id!)
         expect(active.isError).false
 
         return storage.PermanentlyDelete(graph.value.id!)
     });
 
     it('can be retrieved from  storage', async()=> {
-        let storage = GraphStorage.Instance;
+        let storage = GraphMapper.Instance;
 
         let graph = await storage.Create(containerID, "test suite");
 
@@ -74,7 +74,7 @@ describe('A Graph', async() => {
     });
 
     it('can be listed from storage', async()=> {
-        let storage = GraphStorage.Instance;
+        let storage = GraphMapper.Instance;
 
         let graph = await storage.Create(containerID, "test suite");
 

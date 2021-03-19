@@ -19,7 +19,7 @@ import {
     metatypeRelationshipContext,
     metatypeRelationshipPairContext,
     metatypeKeyContext,
-    metatypeRelationshipKeyContext, currentUser, userContext, oauthAppContext
+    metatypeRelationshipKeyContext, currentUser, userContext, oauthAppContext, nodeContext
 } from "../middleware";
 import ContainerRoutes from "./data_warehouse/ontology/container_routes"
 import MetatypeRoutes from "./data_warehouse/ontology/metatype_routes"
@@ -88,7 +88,7 @@ export class Router {
     MetatypeRelationshipKeyRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipContext(), metatypeRelationshipKeyContext()]);
     MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipPairContext()]);
     QueryRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
-    GraphRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    GraphRoutes.mount(this.app, [authenticateRoute(), containerContext(), nodeContext()]);
     EventRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
 
     // OAuth and Identity Provider routes - these are the only routes that serve up

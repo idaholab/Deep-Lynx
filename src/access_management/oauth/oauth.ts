@@ -86,24 +86,24 @@ export class OAuthRequest extends BaseDomainClass {
     code_challenge_method?: string
 
     constructor(input: {
-        responseType: string,
-        clientID: string,
-        redirectURI: string,
+        response_type: string,
+        client_id: string,
+        redirect_uri: string,
         state: string,
         scope: string,
-        userID?: string,
-        codeChallenge?: string,
-        codeChallengeMethod?: string
+        user_id?: string,
+        code_challenge?: string,
+        code_challenge_method?: string
     }) {
         super();
 
         if(input) {
-            if(input.userID) this.user_id = input.userID
-            if(input.codeChallenge) this.code_challenge = input.codeChallenge
-            if(input.codeChallengeMethod) this.code_challenge_method = input.codeChallengeMethod
-            this.response_type = input.responseType
-            this.client_id = input.clientID
-            this.redirect_uri = input.redirectURI
+            if(input.user_id) this.user_id = input.user_id
+            if(input.code_challenge) this.code_challenge = input.code_challenge
+            if(input.code_challenge_method) this.code_challenge_method = input.code_challenge_method
+            this.response_type = input.response_type
+            this.client_id = input.client_id
+            this.redirect_uri = input.redirect_uri
             this.state = input.state
             this.scope = input.scope
         }

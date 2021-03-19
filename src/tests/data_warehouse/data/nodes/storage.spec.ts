@@ -5,15 +5,15 @@ import MetatypeKeyMapper from "../../../../data_access_layer/mappers/data_wareho
 import MetatypeMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
-import GraphStorage from "../../../../data_access_layer/mappers/data_warehouse/data/graph_storage";
-import NodeStorage from "../../../../data_access_layer/mappers/data_warehouse/data/node_storage";
+import GraphMapper from "../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
+import NodeMapper from "../../../../data_access_layer/mappers/data_warehouse/data/node_mapper";
 import ContainerStorage from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import DataSourceStorage from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
-import {NodeT} from "../../../../types/graph/nodeT";
 import Container from "../../../../data_warehouse/ontology/container";
 import Metatype from "../../../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
+import Node from "../../../../data_warehouse/data/node";
 
 describe('Graph Node Creation', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -40,47 +40,11 @@ describe('Graph Node Creation', async() => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 
-    // more advanced tests on payload rejection based on automatic types happen
-    // in test/metatype_keys/compile
-    it('can reject malformed payload', async()=> {
-        const storage = NodeStorage.Instance;
-        const kStorage = MetatypeKeyMapper.Instance;
-        const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphStorage.Instance;
-
-        // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
-
-        expect(graph.isError, graph.error?.error).false;
-        expect(graph.value).not.empty;
-
-        let metatype = await mMapper.Create( "test suite",
-            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
-
-        expect(metatype.isError).false;
-        expect(metatype.value).not.empty;
-
-
-        const testKeys = [...test_keys]
-        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
-
-        let keys = await kStorage.BulkCreate("test suite", testKeys);
-        expect(keys.isError).false;
-
-        const node = await storage.CreateOrUpdate(containerID, graph.value.id, malformed_payload);
-        expect(node.isError, metatype.error?.error).true;
-
-
-        await mMapper.PermanentlyDelete(metatype.value.id!);
-        await gStorage.PermanentlyDelete(graph.value.id);
-        return Promise.resolve()
-    });
-
     it('can save mixed node types', async()=> {
-        const storage = NodeStorage.Instance;
+        const storage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphStorage.Instance;
+        const gStorage = GraphMapper.Instance;
 
         // SETUP
         let graph = await gStorage.Create(containerID, "test suite");
@@ -89,7 +53,7 @@ describe('Graph Node Creation', async() => {
         expect(graph.value).not.empty;
 
         let metatype = await mMapper.Create( "test suite",
-            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
+            new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
 
         expect(metatype.isError).false;
@@ -101,23 +65,25 @@ describe('Graph Node Creation', async() => {
         let keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        const mixed = {
-            metatype_id: metatype.value.id!,
+        const mixed = new Node({
+            container_id: containerID,
+            graph_id: graph.value.id,
+            metatype: metatype.value.id!,
             properties: payload
-        };
+        });
 
-        const node = await storage.CreateOrUpdate(containerID, graph.value.id,  mixed);
+        const node = await storage.CreateOrUpdateByCompositeID("test suite",  mixed);
         expect(node.isError, metatype.error?.error).false;
 
         await mMapper.PermanentlyDelete(metatype.value.id!);
-        return gStorage.PermanentlyDelete(graph.value.id);
+        return gStorage.PermanentlyDelete(graph.value.id!);
     });
 
     it('can update mixed node types', async()=> {
-        const storage = NodeStorage.Instance;
+        const storage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphStorage.Instance;
+        const gStorage = GraphMapper.Instance;
 
         // SETUP
         let graph = await gStorage.Create(containerID, "test suite");
@@ -126,7 +92,7 @@ describe('Graph Node Creation', async() => {
         expect(graph.value).not.empty;
 
         let metatype = await mMapper.Create( "test suite",
-            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
+            new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
 
         expect(metatype.isError).false;
@@ -138,76 +104,32 @@ describe('Graph Node Creation', async() => {
         let keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        const mixed = {
-            metatype_id: metatype.value.id!,
+        const mixed = new Node({
+            container_id: containerID,
+            graph_id: graph.value.id,
+            metatype: metatype.value.id!,
             properties: payload
-        };
+        });
 
-        const node = await storage.CreateOrUpdate(containerID, graph.value.id,  mixed);
+        const node = await storage.CreateOrUpdateByCompositeID("test suite",  mixed);
         expect(node.isError, metatype.error?.error).false;
 
         // Run the update test
+        node.value.properties = updatedPayload;
 
-        node.value[0].properties = updatedPayload;
-        node.value[0].modified_at = new Date().toISOString();
-
-        const updatedNode = await storage.CreateOrUpdate(containerID, graph.value.id,  node.value[0]);
+        const updatedNode = await storage.Update("test suite",  node.value);
         expect(updatedNode.isError, updatedNode.error?.error).false;
 
         await mMapper.PermanentlyDelete(metatype.value.id!);
-        await gStorage.PermanentlyDelete(graph.value.id);
+        await gStorage.PermanentlyDelete(graph.value.id!);
 
     });
 
-    it('won\'t update mixed node types with malformed payload', async()=> {
-        const storage = NodeStorage.Instance;
-        const kStorage = MetatypeKeyMapper.Instance;
-        const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphStorage.Instance;
-
-        // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
-
-        expect(graph.isError, graph.error?.error).false;
-        expect(graph.value).not.empty;
-
-        let metatype = await mMapper.Create( "test suite",
-            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
-
-
-        expect(metatype.isError).false;
-        expect(metatype.value).not.empty;
-
-        const testKeys = [...test_keys]
-        testKeys.forEach(key => key.metatype_id = metatype.value.id!)
-
-        let keys = await kStorage.BulkCreate("test suite", testKeys);
-        expect(keys.isError).false;
-
-        const mixed = {
-            metatype_id: metatype.value.id!,
-            properties: payload
-        };
-
-        const node = await storage.CreateOrUpdate(containerID, graph.value.id,  mixed);
-        expect(node.isError, metatype.error?.error).false;
-
-        // Run the update test
-        node.value[0].properties = malformed_payload;
-        node.value[0].modified_at = new Date().toISOString();
-        const updatedNode = await storage.CreateOrUpdate(containerID, graph.value.id,  node.value[0]);
-        expect(updatedNode.isError, updatedNode.error?.error).true;
-
-        await mMapper.PermanentlyDelete(metatype.value.id!);
-        return gStorage.PermanentlyDelete(graph.value.id);
-    })
-
-
     it('can retrieve by original ID', async()=> {
-        const storage = NodeStorage.Instance;
+        const storage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphStorage.Instance;
+        const gStorage = GraphMapper.Instance;
         const dStorage = DataSourceStorage.Instance
 
         let dataSource = await dStorage.Create(containerID, "test suite",
@@ -225,7 +147,7 @@ describe('Graph Node Creation', async() => {
         expect(graph.value).not.empty;
 
         let metatype = await mMapper.Create( "test suite",
-            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
+            new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
 
         expect(metatype.isError).false;
@@ -237,14 +159,17 @@ describe('Graph Node Creation', async() => {
         let keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        const mixed = {
-            metatype_id: metatype.value.id!,
+        const mixed = new Node({
             data_source_id: dataSource.value.id!,
             composite_original_id: "test",
+            container_id: containerID,
+            graph_id: graph.value.id,
+            metatype: metatype.value.id!,
             properties: payload
-        } as NodeT;
+        });
 
-        const node = await storage.CreateOrUpdate(containerID, graph.value.id,  mixed);
+
+        const node = await storage.CreateOrUpdateByCompositeID("test suite",  mixed);
         expect(node.isError, metatype.error?.error).false;
 
         const fetchedNode = await storage.RetrieveByCompositeOriginalID("test", dataSource.value.id!)
@@ -252,14 +177,14 @@ describe('Graph Node Creation', async() => {
         expect(fetchedNode.value.data_source_id).equals(dataSource.value.id!)
 
         await mMapper.PermanentlyDelete(metatype.value.id!);
-        return gStorage.PermanentlyDelete(graph.value.id);
+        return gStorage.PermanentlyDelete(graph.value.id!);
     });
 
     it('can update by original ID', async()=> {
-        const storage = NodeStorage.Instance;
+        const storage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphStorage.Instance;
+        const gStorage = GraphMapper.Instance;
         const dStorage = DataSourceStorage.Instance
 
         let dataSource = await dStorage.Create(containerID, "test suite",
@@ -277,7 +202,7 @@ describe('Graph Node Creation', async() => {
         expect(graph.value).not.empty;
 
         let metatype = await mMapper.Create( "test suite",
-            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
+            new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
 
         expect(metatype.isError).false;
@@ -289,34 +214,34 @@ describe('Graph Node Creation', async() => {
         let keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        const mixed = {
-            metatype_id: metatype.value.id!,
+        const mixed = new Node({
             data_source_id: dataSource.value.id!,
             original_data_id: "test",
+            container_id: containerID,
+            graph_id: graph.value.id,
+            metatype: metatype.value.id!,
             properties: payload
-        } as NodeT;
+        });
 
-        const node = await storage.CreateOrUpdate(containerID, graph.value.id,  mixed);
+        const node = await storage.CreateOrUpdateByCompositeID("test suite",  mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        node.value[0].properties = updatedPayload;
-        node.value[0].modified_at = new Date().toISOString();
-        node.value[0].id = undefined
+        node.value.properties = updatedPayload;
+        node.value.id = undefined
 
-        const updatedNode = await storage.CreateOrUpdate(containerID, graph.value.id,  node.value[0]);
+        const updatedNode = await storage.CreateOrUpdateByCompositeID("test suite",  node.value);
         expect(updatedNode.isError).false;
 
-
         await mMapper.PermanentlyDelete(metatype.value.id!);
-        return gStorage.PermanentlyDelete(graph.value.id);
+        return gStorage.PermanentlyDelete(graph.value.id!);
     })
 
 
     it('can save with default values', async()=> {
-        const storage = NodeStorage.Instance;
+        const storage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphStorage.Instance;
+        const gStorage = GraphMapper.Instance;
 
         // SETUP
         let graph = await gStorage.Create(containerID, "test suite");
@@ -325,7 +250,7 @@ describe('Graph Node Creation', async() => {
         expect(graph.value).not.empty;
 
         let metatype = await mMapper.Create( "test suite",
-            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
+            new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
 
         expect(metatype.isError).false;
@@ -337,71 +262,19 @@ describe('Graph Node Creation', async() => {
         let keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        const mixed = {
-            metatype_id: metatype.value.id!,
+        const mixed = new Node({
+            container_id: containerID,
+            graph_id: graph.value.id,
+            metatype: metatype.value.id!,
             properties: payload
-        };
+        });
 
-        const node = await storage.CreateOrUpdate(containerID, graph.value.id,  mixed);
+
+        const node = await storage.CreateOrUpdateByCompositeID("test suite",  mixed);
         expect(node.isError, metatype.error?.error).false;
 
         await mMapper.PermanentlyDelete(metatype.value.id!);
-        return gStorage.PermanentlyDelete(graph.value.id);
-    });
-
-    it('can save with regex matched payloads', async()=> {
-        const storage = NodeStorage.Instance;
-        const kStorage = MetatypeKeyMapper.Instance;
-        const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphStorage.Instance;
-
-        // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
-
-        expect(graph.isError, graph.error?.error).false;
-        expect(graph.value).not.empty;
-
-        let metatype = await mMapper.Create( "test suite",
-            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
-
-
-        expect(metatype.isError).false;
-        expect(metatype.value).not.empty;
-
-
-        const regex_test_key: MetatypeKey = new MetatypeKey({
-            name: "Test Key Regex",
-            propertyName: "regex",
-            required: true,
-            description: "testing key regex",
-            dataType: "string",
-            // validation is a pattern match verifying that the value has at least 6 characters
-            // with 1 uppercase, 1 lowercase, 1 number and no spaces test at https://regex101.com/r/fX8dY0/1
-            validation: {regex: "^((?=\\S*?[A-Z])(?=\\S*?[a-z])(?=\\S*?[0-9]).{6,})\\S$"},
-            metatypeID: metatype.value.id
-        })
-
-        const keys = await kStorage.Create("test suite", regex_test_key);
-        expect(keys.isError).false;
-
-        const mixed = {
-            metatype_id: metatype.value.id!,
-            properties: regex_payload
-        };
-
-        const node = await storage.CreateOrUpdate(containerID, graph.value.id,  mixed);
-        expect(node.isError, metatype.error?.error).false;
-
-        const fails = {
-            metatype_id: metatype.value.id!,
-            properties: regex_payload_fails
-        };
-
-        const node2 = await storage.CreateOrUpdate(containerID, graph.value.id,  fails);
-        expect(node2.isError, metatype.error?.error).true;
-
-        await mMapper.PermanentlyDelete(metatype.value.id!);
-        return gStorage.PermanentlyDelete(graph.value.id);
+        return gStorage.PermanentlyDelete(graph.value.id!);
     });
 });
 
@@ -423,67 +296,58 @@ const malformed_payload: {[key:string]:any} = {
 };
 
 export const test_keys: MetatypeKey[] = [
-    new MetatypeKey({name: "Test", description: "flower name", required: true, propertyName: "flower_name", dataType: "string"}),
-    new MetatypeKey({name: "Test2", description: "color of flower allowed", required: true, propertyName: "color", dataType: "enumeration", options: ["yellow", "blue"]}),
-    new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"}),
+    new MetatypeKey({name: "Test", description: "flower name", required: true, property_name: "flower_name", data_type: "string"}),
+    new MetatypeKey({name: "Test2", description: "color of flower allowed", required: true, property_name: "color", data_type: "enumeration", options: ["yellow", "blue"]}),
+    new MetatypeKey({name: "Test Not Required", description: "not required", required: false, property_name: "notRequired", data_type: "number"}),
 ];
 
 
 const test_key_defaultValue: MetatypeKey[] = [
     new MetatypeKey({
     name: "Test",
-    propertyName: "flower_name",
+    property_name: "flower_name",
     required: true,
     description: "flower name",
-    dataType: "string"
+    data_type: "string"
 }),
    new MetatypeKey({
         name: "Test 2",
-        propertyName: "color",
+        property_name: "color",
         required: true,
         description: "color of flower allowed",
-        dataType: "enumeration",
+        data_type: "enumeration",
         options: ["yellow", "blue"]
     }),
     new MetatypeKey({
         name: "Test Default Value Number",
-        propertyName: "default",
+        property_name: "default",
         required: true,
         description: "not required",
-        dataType: "number",
-        defaultValue: 1
+        data_type: "number",
+        default_value: 1
     }), new MetatypeKey({
         name: "Test Default Value String",
-        propertyName: "defaultString",
+        property_name: "defaultString",
         required: true,
         description: "not required",
-        dataType: "string",
-        defaultValue: "test"
+        data_type: "string",
+        default_value: "test"
     }),new MetatypeKey({
         name: "Test Default Value Enum",
-        propertyName: "defaultEnum",
+        property_name: "defaultEnum",
         required: true,
         description: "not required",
-        dataType: "enumeration",
-        defaultValue: "yellow",
+        data_type: "enumeration",
+        default_value: "yellow",
         options: ["yellow", "blue"]
     }),new MetatypeKey({
         name: "Test Default Value Boolean",
-        propertyName: "defaultBoolean",
+        property_name: "defaultBoolean",
         required: true,
         description: "not required",
-        dataType: "boolean",
-        defaultValue: true,
+        data_type: "boolean",
+        default_value: true,
     })
 ];
 
-export const single_test_key: MetatypeKey = new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"})
-
-
-const regex_payload : {[key:string]:any} = {
-    regex: "Catcat1"
-};
-
-const regex_payload_fails : {[key:string]:any} = {
-    regex: "catcat"
-};
+export const single_test_key: MetatypeKey = new MetatypeKey({name: "Test Not Required", description: "not required", required: false, property_name: "notRequired", data_type: "number"})

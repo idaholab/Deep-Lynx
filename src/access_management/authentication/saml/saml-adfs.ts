@@ -47,9 +47,9 @@ export function SetSamlAdfs(app: express.Application) {
                         storage.List()
                             .then(users => {
                                 storage.Create('saml-adfs login', new User({
-                                    identityProviderID: profile["http://schemas.microsoft.com/identity/claims/objectidentifier"],
-                                    identityProvider: "saml_adfs",
-                                    displayName: profile["http://schemas.microsoft.com/identity/claims/displayname"],
+                                    identity_provider_id: profile["http://schemas.microsoft.com/identity/claims/objectidentifier"],
+                                    identity_provider: "saml_adfs",
+                                    display_name: profile["http://schemas.microsoft.com/identity/claims/displayname"],
                                     email: profile.nameID,
                                     admin: users.value.length === 0
                                 }))

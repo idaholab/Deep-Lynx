@@ -38,10 +38,10 @@ describe('A Metatype Relationship Pair Repository', async() => {
 
         const userResult = await UserMapper.Instance.Create("test suite", new User(
             {
-                identityProviderID: faker.random.uuid(),
-                identityProvider: "username_password",
+                identity_provider_id: faker.random.uuid(),
+                identity_provider: "username_password",
                 admin: false,
-                displayName: faker.name.findName(),
+                display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ["superuser"]
             }));
@@ -63,13 +63,13 @@ describe('A Metatype Relationship Pair Repository', async() => {
         const relationshipRepo = new MetatypeRelationshipRepository()
 
         // for this test we'll save/create the metatypes and relationships separately
-        const metatype1 = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
-        const metatype2 = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
+        const metatype1 = new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
+        const metatype2 = new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
 
         let metatypeResult = await metatypeRepo.bulkSave(user, [metatype1, metatype2])
         expect(metatypeResult.isError).false
 
-        const relationship = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const relationship = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
         let relationshipResult = await relationshipRepo.save(user, relationship)
         expect(relationshipResult.isError).false
@@ -77,11 +77,11 @@ describe('A Metatype Relationship Pair Repository', async() => {
         let pair = new MetatypeRelationshipPair({
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
-            relationshipType: "one:one",
-            originMetatype: metatype1,
-            destinationMetatype: metatype2,
+            relationship_type: "one:one",
+            origin_metatype: metatype1,
+            destination_metatype: metatype2,
             relationship: relationship,
-            containerID : containerID
+            container_id : containerID
         })
 
         let saved = await repo.save(user, pair)
@@ -98,18 +98,18 @@ describe('A Metatype Relationship Pair Repository', async() => {
         const repo = new MetatypeRelationshipPairRepository()
 
         // for this test we'll save/create the metatypes and relationships separately
-        const metatype1 = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
-        const metatype2 = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
-        const relationship = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const metatype1 = new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
+        const metatype2 = new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
+        const relationship = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
         let pair = new MetatypeRelationshipPair({
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
-            relationshipType: "one:one",
-            originMetatype: metatype1,
-            destinationMetatype: metatype2,
+            relationship_type: "one:one",
+            origin_metatype: metatype1,
+            destination_metatype: metatype2,
             relationship: relationship,
-            containerID : containerID
+            container_id : containerID
         })
 
         let saved = await repo.save(user, pair, true)
@@ -127,17 +127,17 @@ describe('A Metatype Relationship Pair Repository', async() => {
 
         // for this test we'll save/create the metatypes and relationships separately
         const metatype1 = new Metatype({
-            containerID,
+            container_id: containerID,
             name: faker.name.findName(),
             description: faker.random.alphaNumeric()
         })
         const metatype2 = new Metatype({
-            containerID,
+            container_id: containerID,
             name: faker.name.findName(),
             description: faker.random.alphaNumeric()
         })
         const relationship = new MetatypeRelationship({
-            containerID,
+            container_id: containerID,
             name: faker.name.findName(),
             description: faker.random.alphaNumeric()
         })
@@ -145,25 +145,25 @@ describe('A Metatype Relationship Pair Repository', async() => {
         let pair = new MetatypeRelationshipPair({
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
-            relationshipType: "one:one",
-            originMetatype: metatype1,
-            destinationMetatype: metatype2,
+            relationship_type: "one:one",
+            origin_metatype: metatype1,
+            destination_metatype: metatype2,
             relationship: relationship,
-            containerID: containerID
+            container_id: containerID
         })
 
         const metatype3 = new Metatype({
-            containerID,
+            container_id: containerID,
             name: faker.name.findName(),
             description: faker.random.alphaNumeric()
         })
         const metatype4 = new Metatype({
-            containerID,
+            container_id: containerID,
             name: faker.name.findName(),
             description: faker.random.alphaNumeric()
         })
         const relationship2 = new MetatypeRelationship({
-            containerID,
+            container_id: containerID,
             name: faker.name.findName(),
             description: faker.random.alphaNumeric()
         })
@@ -171,11 +171,11 @@ describe('A Metatype Relationship Pair Repository', async() => {
         let pair2 = new MetatypeRelationshipPair({
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
-            relationshipType: "many:many",
-            originMetatype: metatype3,
-            destinationMetatype: metatype4,
+            relationship_type: "many:many",
+            origin_metatype: metatype3,
+            destination_metatype: metatype4,
             relationship: relationship2,
-            containerID: containerID
+            container_id: containerID
         })
 
         const saved = await repo.bulkSave(user, [pair, pair2], true)
@@ -197,18 +197,18 @@ describe('A Metatype Relationship Pair Repository', async() => {
         const repo = new MetatypeRelationshipPairRepository()
 
         // for this test we'll save/create the metatypes and relationships separately
-        const metatype1 = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
-        const metatype2 = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
-        const relationship = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const metatype1 = new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
+        const metatype2 = new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
+        const relationship = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
         let pair = new MetatypeRelationshipPair({
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
-            relationshipType: "one:one",
-            originMetatype: metatype1,
-            destinationMetatype: metatype2,
+            relationship_type: "one:one",
+            origin_metatype: metatype1,
+            destination_metatype: metatype2,
             relationship: relationship,
-            containerID : containerID
+            container_id : containerID
         })
 
         let saved = await repo.save(user, pair, true)
@@ -218,18 +218,18 @@ describe('A Metatype Relationship Pair Repository', async() => {
         expect(pair.destination_metatype_id).not.undefined
         expect(pair.relationship_id).not.undefined
 
-        const metatype3 = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
-        const metatype4 = new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
-        const relationship2 = new MetatypeRelationship({containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const metatype3 = new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
+        const metatype4 = new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
+        const relationship2 = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
         let pair2 = new MetatypeRelationshipPair({
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
-            relationshipType: "many:many",
-            originMetatype: metatype3,
-            destinationMetatype: metatype4,
+            relationship_type: "many:many",
+            origin_metatype: metatype3,
+            destination_metatype: metatype4,
             relationship: relationship2,
-            containerID : containerID
+            container_id : containerID
         })
 
         saved = await repo.save(user, pair2, true)

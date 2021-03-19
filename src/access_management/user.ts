@@ -8,15 +8,15 @@ import {
     IsOptional,
     IsString,
     IsUUID,
-    MinLength
+    MinLength, registerDecorator, ValidationArguments, ValidationOptions
 } from "class-validator";
 import Config from "../services/config"
 import uuid from "uuid";
 import {Exclude, Expose, plainToClass, Transform, Type} from "class-transformer";
-import {ContainerID} from "../services/validators";
 import Container from "../data_warehouse/ontology/container";
 import bcrypt from "bcrypt";
 import Result from "../result";
+const validator = require('validator')
 
 export class User extends BaseDomainClass {
     @IsOptional()
@@ -75,9 +75,9 @@ export class User extends BaseDomainClass {
     #removedKeys: KeyPair[] | undefined
 
     constructor(input: {
-        identityProvider: string,
-        identityProviderID?: string,
-        displayName: string,
+        identity_provider: string,
+        identity_provider_id?: string,
+        display_name: string,
         email: string,
         password?: string,
         admin?: boolean,
@@ -89,9 +89,9 @@ export class User extends BaseDomainClass {
         super();
 
         if(input) {
-            this.identity_provider = input.identityProvider
-            if(input.identityProviderID) this.identity_provider_id = input.identityProviderID
-            this.display_name = input.displayName
+            this.identity_provider = input.identity_provider
+            if(input.identity_provider_id) this.identity_provider_id = input.identity_provider_id
+            this.display_name = input.display_name
             this.email = input.email
             if(input.password) this.password = input.password
             if(input.admin) this.admin = input.admin
@@ -270,10 +270,27 @@ export class ContainerUserInvite extends  BaseDomainClass {
 
 export const SuperUser = new User({
     id: uuid.v4(),
-    identityProvider: "username_password",
-    displayName: "Super User",
+    identity_provider: "username_password",
+    display_name: "Super User",
     email: Config.superuser_email,
     password: Config.superuser_password,
     active: true,
     admin: true
 })
+
+export function ContainerID(validationOptions?: ValidationOptions) {
+    return (object: object, propertyName: string) => {
+        registerDecorator({
+            name: 'ContainerID',
+            target: object.constructor,
+            propertyName,
+            constraints: [],
+            options: validationOptions,
+            validator: {
+                validate(value: any, args: ValidationArguments) {
+                    return value instanceof Container && validator.isUUID(value.id)
+                },
+            },
+        });
+    };
+}

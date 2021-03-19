@@ -5,6 +5,7 @@ import * as t from "io-ts";
 import Result from "../../result";
 import {pipe} from "fp-ts/pipeable";
 import {fold} from "fp-ts/Either";
+import {Expose, Transform, Type} from "class-transformer";
 
 export default class Metatype extends BaseDomainClass {
     @IsOptional()
@@ -27,17 +28,18 @@ export default class Metatype extends BaseDomainClass {
     @IsString()
     description: string = ""
 
+    @Type(() => MetatypeKey)
     keys: MetatypeKey[] | undefined
     // for tracking removed keys for update
     #removedKeys: MetatypeKey[] | undefined
 
-    constructor(input: {containerID?: string, name: string, description: string, keys?: MetatypeKey[]}) {
+    constructor(input: {container_id?: string, name: string, description: string, keys?: MetatypeKey[]}) {
         super();
 
         // we have to do this because class-transformer doesn't know to create
         // an object with our specifications for the parameter
         if(input) {
-            if(input.containerID) this.container_id = input.containerID
+            if(input.container_id) this.container_id = input.container_id
             if(input.keys) this.keys = input.keys
             this.name = input.name
             this.description = input.description

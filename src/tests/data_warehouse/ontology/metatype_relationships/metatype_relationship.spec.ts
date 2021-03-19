@@ -49,7 +49,7 @@ describe('A Metatype Relationship should', async() => {
     })
 
     it('be able to compile keys and pass/fail payloads', (done) => {
-        const metatype = new MetatypeRelationship({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
+        const metatype = new MetatypeRelationship({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
         metatype.addKey(...test_keys)
 
         pipe(metatype.compileKeys().decode(payload), fold(onLeft, onRight));
@@ -71,9 +71,9 @@ const malformed_payload: {[key:string]:any} = {
 };
 
 export const test_keys: MetatypeRelationshipKey[] = [
-    new MetatypeRelationshipKey({name: "Test", description: "flower name", required: true, propertyName: "flower_name", dataType: "string"}),
-    new MetatypeRelationshipKey({name: "Test2", description: "color of flower allowed", required: true, propertyName: "color", dataType: "enumeration", options: ["yellow", "blue"]}),
-    new MetatypeRelationshipKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"}),
+    new MetatypeRelationshipKey({name: "Test", description: "flower name", required: true, property_name: "flower_name", data_type: "string"}),
+    new MetatypeRelationshipKey({name: "Test2", description: "color of flower allowed", required: true, property_name: "color", data_type: "enumeration", options: ["yellow", "blue"]}),
+    new MetatypeRelationshipKey({name: "Test Not Required", description: "not required", required: false, property_name: "notRequired", data_type: "number"}),
 ];
 
-export const single_test_key: MetatypeRelationshipKey = new MetatypeRelationshipKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"})
+export const single_test_key: MetatypeRelationshipKey = new MetatypeRelationshipKey({name: "Test Not Required", description: "not required", required: false, property_name: "notRequired", data_type: "number"})

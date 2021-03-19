@@ -4,7 +4,7 @@ import Result from "../../../../result";
 import ContainerMapper from "../../../mappers/data_warehouse/ontology/container_mapper";
 import Authorization from "../../../../access_management/authorization/authorization";
 import Logger from "../../../../services/logger"
-import GraphStorage from "../../../mappers/data_warehouse/data/graph_storage";
+import GraphMapper from "../../../mappers/data_warehouse/data/graph_mapper";
 import Cache from "../../../../services/cache/cache";
 import {plainToClass, serialize} from "class-transformer";
 import Config from "../../../../services/config";
@@ -12,6 +12,7 @@ import {User} from "../../../../access_management/user";
 
 export default class ContainerRepository implements RepositoryInterface<Container> {
     #mapper: ContainerMapper = ContainerMapper.Instance
+    #graphMapper: GraphMapper = GraphMapper.Instance
 
     async save(user: User, c: Container): Promise<Result<boolean>> {
         const errors = await c.validationErrors()
@@ -38,17 +39,15 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         const set = await result.value.setPermissions()
         if(set.isError) Logger.error(`unable to set container ${result.value.id}'s permissions ${set.error}`)
 
-        GraphStorage.Instance.Create(result.value.id!, user.id!).then(async (graph) => {
-            // set active graph from graph ID
-            if (graph.isError) {
-                Logger.error(result.error?.error!);
-            } else {
-                const activeGraph = await GraphStorage.Instance.SetActiveForContainer(result.value.id!, graph.value.id);
-                if (activeGraph.isError || !activeGraph.value) {
-                    Logger.error(activeGraph.error?.error!);
-                }
-            }
-        }).catch(e => Logger.error(e))
+        const graph = await this.#graphMapper.Create(result.value.id!, user.id!)
+        if(graph.isError) {
+            Logger.error(result.error?.error!);
+        } else {
+            const activeGraph = await this.#graphMapper.SetActiveForContainer(result.value.id!, graph.value.id!);
+            if (activeGraph.isError || !activeGraph.value) {
+                Logger.error(activeGraph.error?.error!);
+            } else {result.value.active_graph_id = graph.value.id}
+        }
 
         // set the original object to the returned one
         Object.assign(c, result.value)
@@ -104,17 +103,16 @@ export default class ContainerRepository implements RepositoryInterface<Containe
                 const set = await container.setPermissions()
                 if(set.isError) Logger.error(`unable to set container ${container.id}'s permissions ${set.error}`)
 
-                GraphStorage.Instance.Create(container.id!, user.id!).then(async (result) => {
-                    // set active graph from graph ID
-                    if (result.isError) {
-                        Logger.error(result.error?.error!);
-                    } else {
-                        const activeGraph = await GraphStorage.Instance.SetActiveForContainer(container.id!, result.value.id);
-                        if (activeGraph.isError || !activeGraph.value) {
-                            Logger.error(activeGraph.error?.error!);
-                        }
-                    }
-                }).catch(e => Logger.error(e))
+                const graph = await this.#graphMapper.Create(container.id!, user.id!)
+                // set active graph from graph ID
+                if (graph.isError) {
+                    Logger.error(graph.error?.error!);
+                } else {
+                    const activeGraph = await this.#graphMapper.SetActiveForContainer(container.id!, graph.value.id!);
+                    if (activeGraph.isError || !activeGraph.value) {
+                        Logger.error(activeGraph.error?.error!);
+                    } else {container.active_graph_id = graph.value.id}
+                }
             }
 
             toReturn.push(...results.value)
@@ -122,12 +120,12 @@ export default class ContainerRepository implements RepositoryInterface<Containe
 
         const committed = await this.#mapper.completeTransaction(transaction.value)
         if(committed.isError) {
-           this.#mapper.rollbackTransaction(transaction.value)
-           return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`))
+            this.#mapper.rollbackTransaction(transaction.value)
+            return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`))
         }
 
         toReturn.forEach((result, i) => {
-           Object.assign(c[i], result)
+            Object.assign(c[i], result)
         })
 
         return Promise.resolve(Result.Success(true));

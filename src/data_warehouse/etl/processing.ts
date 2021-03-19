@@ -5,16 +5,17 @@ import Result from "../../result";
 import DataStagingStorage from "../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
 import ImportStorage from "../../data_access_layer/mappers/data_warehouse/import/import_storage";
 import {EdgeT, edgeT} from "../../types/graph/edgeT";
-import {NodeT, nodeT} from "../../types/graph/nodeT";
 import TypeMappingStorage from "../../data_access_layer/mappers/data_warehouse/etl/type_mapping_storage";
-import NodeStorage from "../../data_access_layer/mappers/data_warehouse/data/node_storage";
-import GraphStorage from "../../data_access_layer/mappers/data_warehouse/data/graph_storage";
+import NodeMapper from "../../data_access_layer/mappers/data_warehouse/data/node_mapper";
+import GraphMapper from "../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
 import EdgeStorage from "../../data_access_layer/mappers/data_warehouse/data/edge_storage";
 import DataSourceStorage from "../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
 import TypeTransformationStorage from "../../data_access_layer/mappers/data_warehouse/etl/type_transformation_storage";
 import {ApplyTransformation, IsEdges, IsNodes} from "./type_mapping";
 import {ImportT} from "../../types/import/importT";
 import {PoolClient} from "pg";
+import Node from "../data/node";
+import NodeRepository from "../../data_access_layer/repositories/data_warehouse/data/node_repository";
 
 // DataSourceProcessor starts an unending processing loop for a data source. This
 // loop is what takes mapped data from data_staging and inserts it into the actual
@@ -101,6 +102,7 @@ export class DataSourceProcessor {
 
     public async process(dataImport: ImportT, transactionClient: PoolClient): Promise<Result<boolean>> {
         const ds = DataStagingStorage.Instance
+        const nodeRepository = new NodeRepository()
 
         // attempt to process only those records which have active type mappings
         // with transformations
@@ -144,7 +146,7 @@ export class DataSourceProcessor {
                     return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to fetch type mapping transformations ${transformations.error?.error}`)))
                 }
 
-                const nodesToInsert: NodeT[] = []
+                const nodesToInsert: Node[] = []
                 const edgesToInsert: EdgeT[] = []
 
                 // for each transformation run the transformation process. Results will either be an array of nodes or an array of edges
@@ -154,7 +156,7 @@ export class DataSourceProcessor {
                     const results = await ApplyTransformation(mapping.value, transformation, row)
                     if(results.isError) {
                         await DataStagingStorage.Instance.AddError(row.id, `unable to apply transformation ${transformation.id} to data ${row.id}: ${results.error}`)
-                        await GraphStorage.Instance.rollbackTransaction(transactionClient)
+                        await GraphMapper.Instance.rollbackTransaction(transactionClient)
 
                         return new Promise(resolve => resolve(Result.SilentFailure(`unable to apply transformation ${transformation.id} to data ${row.id}: ${results.error}`)))
                     }
@@ -166,29 +168,17 @@ export class DataSourceProcessor {
 
                 // insert all nodes first, then edges
                 if(nodesToInsert.length > 0) {
-                    for(const node of nodesToInsert) {
-                        const insertedNodes = await NodeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, [node])
-                        if (insertedNodes.isError) {
-                            await GraphStorage.Instance.rollbackTransaction(transactionClient)
+                    // TODO: get transformation to pull the active graph and container ID automatically
+                    nodesToInsert.forEach(node => {
+                        node.container_id = this.dataSource.container_id!
+                        node.graph_id = this.graphID!
+                    })
 
-                            // update the individual data row which failed
-                            await DataStagingStorage.Instance.AddError(node.data_staging_id!, `error attempting to insert nodes ${insertedNodes.error?.error}` )
-
-                            return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to insert nodes ${insertedNodes.error?.error}`)))
-                        }
-
-                        const inserted = await GraphStorage.Instance.runInTransaction(transactionClient, ...insertedNodes.value)
-                        if (inserted.isError) {
-                            await GraphStorage.Instance.rollbackTransaction(transactionClient)
-
-                            // update the individual data row which failed
-                            await DataStagingStorage.Instance.AddError(node.data_staging_id!, `error attempting to insert nodes ${inserted.error?.error}` )
-
-                            return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to insert nodes ${inserted.error?.error}`)))
-
-                        }
+                    const inserted = await nodeRepository.bulkSave(this.dataSource.modified_by!, nodesToInsert, transactionClient)
+                    if(inserted.isError) {
+                        await GraphMapper.Instance.rollbackTransaction(transactionClient)
+                        return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to insert nodes ${inserted.error?.error}`)))
                     }
-
                 }
 
                 if(edgesToInsert.length > 0) {
@@ -197,7 +187,7 @@ export class DataSourceProcessor {
                         // node can take place even if there are new nodes coming in that are part of this transaction
                         const insertedEdges = await EdgeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, [edge], transactionClient)
                         if(insertedEdges.isError) {
-                            await GraphStorage.Instance.rollbackTransaction(transactionClient)
+                            await GraphMapper.Instance.rollbackTransaction(transactionClient)
 
                             // update the individual data row which failed
                             await DataStagingStorage.Instance.AddError(edge.data_staging_id!, `error attempting to insert edges ${insertedEdges.error?.error}` )
@@ -205,9 +195,9 @@ export class DataSourceProcessor {
                             return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to insert edges ${insertedEdges.error?.error}`)))
                         }
 
-                        const inserted = await GraphStorage.Instance.runInTransaction(transactionClient, ...insertedEdges.value)
+                        const inserted = await GraphMapper.Instance.runInTransaction(transactionClient, ...insertedEdges.value)
                         if (inserted.isError) {
-                            await GraphStorage.Instance.rollbackTransaction(transactionClient)
+                            await GraphMapper.Instance.rollbackTransaction(transactionClient)
 
                             // update the individual data row which failed
                             await DataStagingStorage.Instance.AddError(edge.data_staging_id!, `error attempting to insert edges ${inserted.error?.error}` )
@@ -218,9 +208,9 @@ export class DataSourceProcessor {
                     }
                 }
 
-                const transactionComplete = await GraphStorage.Instance.completeTransaction(transactionClient)
+                const transactionComplete = await GraphMapper.Instance.completeTransaction(transactionClient)
                 if (transactionComplete.isError || !transactionComplete.value) {
-                    await GraphStorage.Instance.rollbackTransaction(transactionClient)
+                    await GraphMapper.Instance.rollbackTransaction(transactionClient)
 
                     // update the individual data row which failed
                     await DataStagingStorage.Instance.AddError(row.id, `error attempting to finalize transaction of inserting nodes/edges` )
@@ -282,29 +272,29 @@ export async function StartDataProcessing(): Promise<Result<boolean>> {
         // we must have a graph record created for the container each data source belongs to, this ensures that it
         // exists before processing begins.
         for(const dataSource of dataSources) {
-            let activeGraph = await GraphStorage.Instance.ActiveForContainer(dataSource.container_id!)
+            let activeGraph = await GraphMapper.Instance.ActiveForContainer(dataSource.container_id!)
             if(activeGraph.isError || !activeGraph.value) {
-                const graph = await GraphStorage.Instance.Create(dataSource.container_id!, "system")
+                const graph = await GraphMapper.Instance.Create(dataSource.container_id!, "system")
 
                 if(graph.isError) {
                     Logger.error(`unable to create graph for container ${dataSource.container_id} for data processing loop`)
                     continue;
                 }
 
-                const set = await GraphStorage.Instance.SetActiveForContainer(dataSource.container_id!, graph.value.id!)
+                const set = await GraphMapper.Instance.SetActiveForContainer(dataSource.container_id!, graph.value.id!)
                 if(set.isError) {
                     Logger.error(`unable to set active graph for container ${dataSource.container_id} for data processing loop`)
                     continue;
                 }
 
-                activeGraph = await GraphStorage.Instance.ActiveForContainer(dataSource.container_id!)
+                activeGraph = await GraphMapper.Instance.ActiveForContainer(dataSource.container_id!)
                 if(activeGraph.isError) {
                     Logger.error(`unable to get active graph for container ${dataSource.container_id}`)
                     continue
                 }
             }
 
-            const processor = new DataSourceProcessor(dataSource, activeGraph.value.graph_id)
+            const processor = new DataSourceProcessor(dataSource, activeGraph.value.graph_id!)
 
             Logger.debug(`beginning data processing loop for data source ${dataSource.id}`)
             // async function that we don't want to wait for

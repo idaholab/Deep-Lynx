@@ -5,22 +5,6 @@ import Container from "../data_warehouse/ontology/container";
 import {User} from "../access_management/user";
 const validator = require('validator')
 
-export function ContainerID(validationOptions?: ValidationOptions) {
-    return (object: object, propertyName: string) => {
-        registerDecorator({
-            name: 'ContainerID',
-            target: object.constructor,
-            propertyName,
-            constraints: [],
-            options: validationOptions,
-            validator: {
-                validate(value: any, args: ValidationArguments) {
-                    return value instanceof Container && validator.isUUID(value.id)
-                },
-            },
-        });
-    };
-}
 
 export function UserID(validationOptions?: ValidationOptions) {
     return (object: object, propertyName: string) => {

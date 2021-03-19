@@ -36,7 +36,7 @@ describe('A Metatype Mapper', async() => {
         let mapper = MetatypeMapper.Instance;
 
         const metatype = await mapper.Create("test suite",
-            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
+            new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -48,7 +48,7 @@ describe('A Metatype Mapper', async() => {
         let mapper = MetatypeMapper.Instance;
 
         const metatype = await mapper.Create("test suite",
-            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
+            new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -63,7 +63,7 @@ describe('A Metatype Mapper', async() => {
         let mapper = MetatypeMapper.Instance;
 
         const metatype = await mapper.Create("test suite",
-            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
+            new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -75,7 +75,7 @@ describe('A Metatype Mapper', async() => {
         let mapper = MetatypeMapper.Instance;
 
         const metatype = await mapper.Create( "test suite",
-            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
+            new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
@@ -91,7 +91,7 @@ describe('A Metatype Mapper', async() => {
         let mapper = MetatypeMapper.Instance;
 
         const metatype = await mapper.Create("test suite",
-            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
+            new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;

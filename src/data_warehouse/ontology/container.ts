@@ -22,6 +22,12 @@ export default class Container extends BaseDomainClass {
     @IsString()
     description: string = ""
 
+    // this is a piece of information we often fetch in lockstep with containers
+    // therefore I'm including it on the main class for convenience
+    @IsOptional()
+    @IsUUID()
+    active_graph_id?: string
+
     /**
      *
      * @param input

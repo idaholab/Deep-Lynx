@@ -3,14 +3,14 @@ import {PoolClient, Query, QueryConfig} from "pg";
 import {edgesT, EdgesT, EdgeT} from "../../../../types/graph/edgeT";
 import * as t from "io-ts";
 import Result from "../../../../result";
-import {NodeT} from "../../../../types/graph/nodeT";
-import NodeStorage from "./node_storage";
+import NodeMapper from "./node_mapper";
 import MetatypeRelationshipPairMapper from "../ontology/metatype_relationship_pair_mapper";
-import GraphStorage from "./graph_storage";
+import GraphMapper from "./graph_mapper";
 import Logger from "../../../../services/logger";
 import MetatypeRelationshipRepository from "../../../repositories/data_warehouse/ontology/metatype_relationship_repository";
 import MetatypeRelationshipPairRepository from "../../../repositories/data_warehouse/ontology/metatype_relationship_pair_repository";
 import MetatypeRelationshipPair from "../../../../data_warehouse/ontology/metatype_relationship_pair";
+import Node from "../../../../data_warehouse/data/node"
 
 /*
 * EdgeStorage allows the user to create a graph relationship (edge) between two nodes of data
@@ -30,11 +30,11 @@ export default class EdgeStorage extends Mapper{
     }
 
     public async CreateOrUpdateByActiveGraph(containerID: string, input: any | EdgesT, preQueries?: QueryConfig[], postQueries?: QueryConfig[]): Promise<Result<EdgesT>> {
-        const activeGraph = await GraphStorage.Instance.ActiveForContainer(containerID);
+        const activeGraph = await GraphMapper.Instance.ActiveForContainer(containerID);
         if (activeGraph.isError || !activeGraph.value) {
             Logger.error(activeGraph.error?.error!);
         }
-        const graphID: string = activeGraph.value.graph_id;
+        const graphID: string = activeGraph.value.graph_id!;
 
         return EdgeStorage.Instance.CreateOrUpdate(containerID, graphID, input);
     }
@@ -83,9 +83,9 @@ export default class EdgeStorage extends Mapper{
                     }
 
                     // Verifies that a relationship pair actually exists for these two nodes
-                    let origin: NodeT
+                    let origin: Node
                     if(es[e].origin_node_id){
-                        const request = await NodeStorage.Instance.Retrieve(es[e].origin_node_id!);
+                        const request = await NodeMapper.Instance.Retrieve(es[e].origin_node_id!);
                         if(request.isError) {
                             resolve(Result.Failure("origin node not found"));
                             return
@@ -93,7 +93,7 @@ export default class EdgeStorage extends Mapper{
 
                         origin = request.value
                     } else if(es[e].origin_node_composite_original_id && es[e].data_source_id) {
-                        const request = await NodeStorage.Instance.RetrieveByCompositeOriginalID(es[e].origin_node_composite_original_id!, es[e].data_source_id!);
+                        const request = await NodeMapper.Instance.RetrieveByCompositeOriginalID(es[e].origin_node_composite_original_id!, es[e].data_source_id!);
                         if(request.isError) {
                             resolve(Result.Failure("origin node not found"));
                             return
@@ -107,9 +107,9 @@ export default class EdgeStorage extends Mapper{
                     }
 
 
-                    let destination: NodeT
+                    let destination: Node
                     if(es[e].destination_node_id) {
-                        const request = await NodeStorage.Instance.Retrieve(es[e].destination_node_id!);
+                        const request = await NodeMapper.Instance.Retrieve(es[e].destination_node_id!);
                         if(request.isError) {
                             resolve(Result.Failure("destination node not found"));
                             return
@@ -117,7 +117,7 @@ export default class EdgeStorage extends Mapper{
 
                         destination = request.value
                     } else if(es[e].destination_node_composite_original_id && es[e].data_source_id) {
-                        const request = await NodeStorage.Instance.RetrieveByCompositeOriginalID(es[e].destination_node_composite_original_id!, es[e].data_source_id!);
+                        const request = await NodeMapper.Instance.RetrieveByCompositeOriginalID(es[e].destination_node_composite_original_id!, es[e].data_source_id!);
                         if(request.isError) {
                             resolve(Result.Failure("destination node not found"));
                             return
@@ -219,16 +219,16 @@ export default class EdgeStorage extends Mapper{
             }
 
             // Verifies that a relationship pair actually exists for these two nodes
-            let origin: NodeT
+            let origin: Node
             if(es[e].origin_node_id){
-                const request = await NodeStorage.Instance.Retrieve(es[e].origin_node_id!, client);
+                const request = await NodeMapper.Instance.Retrieve(es[e].origin_node_id!, client);
                 if(request.isError) {
                     return new Promise(resolve => resolve(Result.Failure("origin node not found")));
                 }
 
                 origin = request.value
             } else if(es[e].origin_node_composite_original_id && es[e].data_source_id) {
-                const request = await NodeStorage.Instance.RetrieveByCompositeOriginalID(es[e].origin_node_composite_original_id!, es[e].data_source_id!, client);
+                const request = await NodeMapper.Instance.RetrieveByCompositeOriginalID(es[e].origin_node_composite_original_id!, es[e].data_source_id!, client);
                 if(request.isError) {
                     return new Promise(resolve => resolve(Result.Failure("origin node not found")));
                 }
@@ -240,16 +240,16 @@ export default class EdgeStorage extends Mapper{
             }
 
 
-            let destination: NodeT
+            let destination: Node
             if(es[e].destination_node_id) {
-                const request = await NodeStorage.Instance.Retrieve(es[e].destination_node_id!, client);
+                const request = await NodeMapper.Instance.Retrieve(es[e].destination_node_id!, client);
                 if(request.isError) {
                     return new Promise(resolve => resolve(Result.Failure("destination node not found")));
                 }
 
                 destination = request.value
             } else if(es[e].destination_node_composite_original_id && es[e].data_source_id) {
-                const request = await NodeStorage.Instance.RetrieveByCompositeOriginalID(es[e].destination_node_composite_original_id!, es[e].data_source_id!, client);
+                const request = await NodeMapper.Instance.RetrieveByCompositeOriginalID(es[e].destination_node_composite_original_id!, es[e].data_source_id!, client);
                 if(request.isError) {
                     return new Promise(resolve => resolve(Result.Failure("destination node not found")));
                 }
@@ -325,7 +325,7 @@ export default class EdgeStorage extends Mapper{
         return super.rows<EdgeT>(EdgeStorage.retrieveByOriginAndDestinationStatement(originID, destinationID))
     }
 
-    private async validateRelationship(pair: MetatypeRelationshipPair, origin: NodeT, destination: NodeT): Promise<Result<boolean>> {
+    private async validateRelationship(pair: MetatypeRelationshipPair, origin: Node, destination: Node): Promise<Result<boolean>> {
         if(pair.origin_metatype_id !== origin.metatype_id || pair.destination_metatype_id !== destination.metatype_id) {
             return Promise.resolve(Result.Failure('origin and destination node types do not match relationship pair'))
         }

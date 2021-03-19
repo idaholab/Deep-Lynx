@@ -5,10 +5,9 @@ import MetatypeKeyMapper from "../../../../data_access_layer/mappers/data_wareho
 import MetatypeMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper";
 import faker from "faker";
 import {expect} from "chai";
-import GraphStorage from "../../../../data_access_layer/mappers/data_warehouse/data/graph_storage";
-import NodeStorage from "../../../../data_access_layer/mappers/data_warehouse/data/node_storage";
+import GraphMapper from "../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
+import NodeMapper from "../../../../data_access_layer/mappers/data_warehouse/data/node_mapper";
 import ContainerStorage from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import {NodeT} from "../../../../types/graph/nodeT";
 import {graphql} from "graphql";
 import resolversRoot from "../../../../data_warehouse/data/query/resolvers";
 import {schema} from "../../../../data_warehouse/data/query/schema"
@@ -16,10 +15,11 @@ import Container from "../../../../data_warehouse/ontology/container";
 import Metatype from "../../../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
+import Node from "../../../../data_warehouse/data/node";
 
 describe('Using a GraphQL Query on nodes we', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
-    var node: NodeT
+    var node: Node
     var metatype: Metatype
 
     before(async function() {
@@ -37,10 +37,10 @@ describe('Using a GraphQL Query on nodes we', async() => {
         expect(container.value.id).not.null
         containerID = container.value.id!;
 
-        const nodeStorage = NodeStorage.Instance;
+        const nodeStorage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphStorage.Instance;
+        const gStorage = GraphMapper.Instance;
 
         // SETUP
         let graph = await gStorage.Create(containerID, "test suite");
@@ -49,7 +49,7 @@ describe('Using a GraphQL Query on nodes we', async() => {
         expect(graph.value).not.empty;
 
         const metatypeResult = await mMapper.Create( "test suite",
-            new Metatype({containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
+            new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatypeResult.isError).false;
         expect(metatypeResult.value).not.empty;
@@ -60,15 +60,17 @@ describe('Using a GraphQL Query on nodes we', async() => {
         const keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        const mixed = {
-            metatype_id: metatypeResult.value.id!,
+        const mixed = new Node({
+            graph_id: graph.value.id!,
+            container_id: containerID,
+            metatype: metatypeResult.value.id!,
             properties: payload
-        };
+        });
 
-        const nodes = await nodeStorage.CreateOrUpdate(containerID, graph.value.id,  mixed);
+        const nodes = await nodeStorage.CreateOrUpdateByCompositeID("test suite",  mixed);
         expect(nodes.isError, metatypeResult.error?.error).false;
 
-        node = nodes.value[0]
+        node = nodes.value
 
         return Promise.resolve()
     });
@@ -326,9 +328,9 @@ const payload: {[key:string]:any} = {
 };
 
 export const test_keys: MetatypeKey[] = [
-    new MetatypeKey({name: "Test", description: "flower name", required: true, propertyName: "flower_name", dataType: "string"}),
-    new MetatypeKey({name: "Test2", description: "color of flower allowed", required: true, propertyName: "color", dataType: "enumeration", options: ["yellow", "blue"]}),
-    new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"}),
+    new MetatypeKey({name: "Test", description: "flower name", required: true, property_name: "flower_name", data_type: "string"}),
+    new MetatypeKey({name: "Test2", description: "color of flower allowed", required: true, property_name: "color", data_type: "enumeration", options: ["yellow", "blue"]}),
+    new MetatypeKey({name: "Test Not Required", description: "not required", required: false, property_name: "notRequired", data_type: "number"}),
 ];
 
-export const single_test_key: MetatypeKey = new MetatypeKey({name: "Test Not Required", description: "not required", required: false, propertyName: "notRequired", dataType: "number"})
+export const single_test_key: MetatypeKey = new MetatypeKey({name: "Test Not Required", description: "not required", required: false, property_name: "notRequired", data_type: "number"})

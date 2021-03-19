@@ -109,14 +109,20 @@ export default class ContainerMapper extends Mapper{
 
     private retrieveStatement(id:string): QueryConfig {
         return {
-            text:`SELECT * FROM containers WHERE id = $1 AND NOT ARCHIVED`,
+            text:`SELECT c.*, active_graphs.graph_id as active_graph_id
+                    FROM containers c
+                    LEFT JOIN active_graphs ON active_graphs.container_id = c.id
+                    WHERE c.id = $1 AND NOT c.archived`,
             values: [id]
         }
     }
 
     private listStatement(): QueryConfig {
         return {
-            text: `SELECT * FROM containers WHERE NOT archived`,
+            text: `SELECT c.*, active_graphs.graph_id as active_graph_id
+                    FROM containers c
+                    LEFT JOIN active_graphs ON active_graphs.container_id = c.id
+                    WHERE NOT c.archived`,
         }
     }
 
@@ -125,7 +131,10 @@ export default class ContainerMapper extends Mapper{
         ids.map(id => `'${id}'`)
 
         return {
-            text: `SELECT * FROM containers WHERE id IN($1)`,
+            text: `SELECT c.*, active_graphs.graph_id as active_graph_id
+                    FROM containers c
+                    LEFT JOIN active_graphs ON active_graphs.container_id = c.id
+                    WHERE c.id IN($1)`,
             values: ids
         }
     }

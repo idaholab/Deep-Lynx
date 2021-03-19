@@ -32,9 +32,9 @@ describe('A User Container Invite can', async() => {
         containerID = container.value.id!;
 
         const created = await UserMapper.Instance.Create("test suite", new User({
-                identityProviderID: faker.random.uuid(),
-                identityProvider: "username_password",
-                displayName: faker.name.findName(),
+                identity_provider_id: faker.random.uuid(),
+                identity_provider: "username_password",
+                display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ["superuser"],
                 admin: false,
