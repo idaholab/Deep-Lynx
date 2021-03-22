@@ -15,7 +15,7 @@ import ContainerMapper from "../../../../data_access_layer/mappers/data_warehous
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import Node from "../../../../data_warehouse/data/node";
 
-describe('Graph Node Creation', async() => {
+describe('A Node Mapper', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {

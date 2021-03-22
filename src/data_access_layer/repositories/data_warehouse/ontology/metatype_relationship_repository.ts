@@ -11,6 +11,7 @@ import MetatypeRelationshipKey from "../../../../data_warehouse/ontology/metatyp
 import {PoolClient} from "pg";
 import {QueryOptions} from "../../repository";
 import {User} from "../../../../access_management/user";
+import {load} from "dotenv";
 
 export default class MetatypeRelationshipRepository extends Repository implements RepositoryInterface<MetatypeRelationship> {
     #mapper: MetatypeRelationshipMapper = MetatypeRelationshipMapper.Instance
@@ -264,11 +265,10 @@ export default class MetatypeRelationshipRepository extends Repository implement
 
         const retrieved = await this.#mapper.Retrieve(id)
 
-        if(!retrieved.isError) {
-            if(loadKeys) {
-                const keys = await this.#keyMapper.ListForRelationship(retrieved.value.id!)
-                if(!keys.isError) retrieved.value.addKey(...keys.value)
-            }
+        // we do not want to store this in cache unless we do so with the full object
+        if(!retrieved.isError && loadKeys) {
+            const keys = await this.#keyMapper.ListForRelationship(retrieved.value.id!)
+            if(!keys.isError) retrieved.value.addKey(...keys.value)
 
             // don't fail out on cache set failure, log and move on
             this.setCache(retrieved.value)
@@ -288,10 +288,10 @@ export default class MetatypeRelationshipRepository extends Repository implement
     }
 
     private async setCache(m: MetatypeRelationship): Promise<boolean> {
-       const set = await Cache.set(`${MetatypeRelationshipMapper.tableName}:${m.id}`, serialize(m), Config.cache_default_ttl)
-       if(!set) Logger.error(`unable to set cache for metatype relationship ${m.id}`)
+        const set = await Cache.set(`${MetatypeRelationshipMapper.tableName}:${m.id}`, serialize(m), Config.cache_default_ttl)
+        if(!set) Logger.error(`unable to set cache for metatype relationship ${m.id}`)
 
-       return Promise.resolve(set)
+        return Promise.resolve(set)
     }
 
     private async deleteCached(id: string): Promise<boolean> {

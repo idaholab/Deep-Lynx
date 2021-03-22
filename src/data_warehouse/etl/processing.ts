@@ -4,11 +4,8 @@ import Config from "../../services/config"
 import Result from "../../result";
 import DataStagingStorage from "../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
 import ImportStorage from "../../data_access_layer/mappers/data_warehouse/import/import_storage";
-import {EdgeT, edgeT} from "../../types/graph/edgeT";
 import TypeMappingStorage from "../../data_access_layer/mappers/data_warehouse/etl/type_mapping_storage";
-import NodeMapper from "../../data_access_layer/mappers/data_warehouse/data/node_mapper";
 import GraphMapper from "../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
-import EdgeStorage from "../../data_access_layer/mappers/data_warehouse/data/edge_storage";
 import DataSourceStorage from "../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
 import TypeTransformationStorage from "../../data_access_layer/mappers/data_warehouse/etl/type_transformation_storage";
 import {ApplyTransformation, IsEdges, IsNodes} from "./type_mapping";
@@ -16,6 +13,8 @@ import {ImportT} from "../../types/import/importT";
 import {PoolClient} from "pg";
 import Node from "../data/node";
 import NodeRepository from "../../data_access_layer/repositories/data_warehouse/data/node_repository";
+import EdgeRepository from "../../data_access_layer/repositories/data_warehouse/data/edge_repository";
+import Edge from "../data/edge";
 
 // DataSourceProcessor starts an unending processing loop for a data source. This
 // loop is what takes mapped data from data_staging and inserts it into the actual
@@ -103,6 +102,7 @@ export class DataSourceProcessor {
     public async process(dataImport: ImportT, transactionClient: PoolClient): Promise<Result<boolean>> {
         const ds = DataStagingStorage.Instance
         const nodeRepository = new NodeRepository()
+        const edgeRepository = new EdgeRepository()
 
         // attempt to process only those records which have active type mappings
         // with transformations
@@ -147,7 +147,7 @@ export class DataSourceProcessor {
                 }
 
                 const nodesToInsert: Node[] = []
-                const edgesToInsert: EdgeT[] = []
+                const edgesToInsert: Edge[] = []
 
                 // for each transformation run the transformation process. Results will either be an array of nodes or an array of edges
                 // if we run into errors, add the error to the data staging row, and immediately return. Do not attempt to
@@ -172,6 +172,7 @@ export class DataSourceProcessor {
                     nodesToInsert.forEach(node => {
                         node.container_id = this.dataSource.container_id!
                         node.graph_id = this.graphID!
+                        node.data_source_id = this.dataSource.id!
                     })
 
                     const inserted = await nodeRepository.bulkSave(this.dataSource.modified_by!, nodesToInsert, transactionClient)
@@ -182,29 +183,17 @@ export class DataSourceProcessor {
                 }
 
                 if(edgesToInsert.length > 0) {
-                    for(const edge of edgesToInsert) {
-                        // we must also pass the transaction client to this function so that the edge verification of origin/destination
-                        // node can take place even if there are new nodes coming in that are part of this transaction
-                        const insertedEdges = await EdgeStorage.Instance.CreateOrUpdateStatement(this.dataSource.container_id!, this.graphID, [edge], transactionClient)
-                        if(insertedEdges.isError) {
-                            await GraphMapper.Instance.rollbackTransaction(transactionClient)
+                    // TODO: get transformation to pull the active graph and container ID automatically
+                    edgesToInsert.forEach(edge => {
+                        edge.container_id = this.dataSource.container_id!
+                        edge.graph_id = this.graphID!
+                        edge.data_source_id = this.dataSource.id!
+                    })
 
-                            // update the individual data row which failed
-                            await DataStagingStorage.Instance.AddError(edge.data_staging_id!, `error attempting to insert edges ${insertedEdges.error?.error}` )
-
-                            return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to insert edges ${insertedEdges.error?.error}`)))
-                        }
-
-                        const inserted = await GraphMapper.Instance.runInTransaction(transactionClient, ...insertedEdges.value)
-                        if (inserted.isError) {
-                            await GraphMapper.Instance.rollbackTransaction(transactionClient)
-
-                            // update the individual data row which failed
-                            await DataStagingStorage.Instance.AddError(edge.data_staging_id!, `error attempting to insert edges ${inserted.error?.error}` )
-
-                            return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to insert edges ${inserted.error?.error}`)))
-
-                        }
+                    const inserted = await edgeRepository.bulkSave(this.dataSource.modified_by!, edgesToInsert, transactionClient)
+                    if(inserted.isError) {
+                        await GraphMapper.Instance.rollbackTransaction(transactionClient)
+                        return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to insert nodes ${inserted.error?.error}`)))
                     }
                 }
 

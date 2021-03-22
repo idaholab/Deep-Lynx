@@ -1,4 +1,4 @@
-import {IsDate, IsOptional, validateOrReject} from "class-validator";
+import {IsDate, IsOptional, validate, validateOrReject} from "class-validator";
 import {Type} from "class-transformer";
 import 'reflect-metadata';
 import {Errors, ValidationError} from "io-ts";
@@ -22,12 +22,10 @@ export class BaseDomainClass {
     modified_at?: Date
 
     async validationErrors(): Promise<string[] | null> {
-        try {
-            await validateOrReject(this)
-            return null
-        } catch(errors) {
-            return errors
-        }
+        const errors = await validate(this)
+        if(errors.length > 0) return Promise.resolve(errors.map(e => e.toString(true)))
+
+        return Promise.resolve(null)
     }
 
     onDecodeError(resolve:((check: any) => void) ): ((e: Errors ) => void) {

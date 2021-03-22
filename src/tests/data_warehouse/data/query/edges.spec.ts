@@ -14,8 +14,7 @@ import {schema} from "../../../../data_warehouse/data/query/schema"
 import MetatypeRelationshipMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper";
 import MetatypeRelationshipKeyMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper";
 import MetatypeRelationshipPairMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
-import EdgeStorage from "../../../../data_access_layer/mappers/data_warehouse/data/edge_storage";
-import {EdgeT} from "../../../../types/graph/edgeT";
+import EdgeMapper from "../../../../data_access_layer/mappers/data_warehouse/data/edge_mapper";
 import Container from "../../../../data_warehouse/ontology/container";
 import Metatype from "../../../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
@@ -24,11 +23,12 @@ import MetatypeRelationshipPair from "../../../../data_warehouse/ontology/metaty
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import MetatypeRelationshipKey from "../../../../data_warehouse/ontology/metatype_relationship_key";
 import Node from "../../../../data_warehouse/data/node"
+import Edge from "../../../../data_warehouse/data/edge";
 
 describe('Using a GraphQL Query for a nodes edges', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
     var node: Node
-    var edge: EdgeT
+    var edge: Edge
     var metatype: Metatype
 
     before(async function() {
@@ -46,7 +46,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         expect(container.value.id).not.null
         containerID = container.value.id!;
 
-        const edgeStorage = EdgeStorage.Instance
+        const edgeStorage = EdgeMapper.Instance
         const nodeStorage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
@@ -110,16 +110,18 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         }));
 
         // EDGE SETUP
-        let edges = await edgeStorage.CreateOrUpdate(containerID, graph.value.id!,  {
-            relationship_pair_id: pair.value.id,
+        let edges = await edgeStorage.CreateOrUpdateByCompositeID("test suite", new Edge({
+            container_id: containerID,
+            graph_id: graph.value.id!,
+            metatype_relationship_pair: pair.value.id!,
             properties: payload,
             origin_node_id: node.id,
             destination_node_id: node.id
-        });
+        }));
 
         expect(edges.isError).false;
 
-        edge = edges.value[0]
+        edge = edges.value
 
         return Promise.resolve()
     });

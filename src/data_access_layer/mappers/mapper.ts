@@ -117,6 +117,7 @@ export default class Mapper {
                         resolve(Result.Success(results.rows as T[]))
                     })
                     .catch(e => {
+                        console.log("FAILED" + e)
                         Logger.error(`query failed - ${(e as Error).message}`);
                         resolve(Result.Failure(e))
                     })

@@ -258,11 +258,10 @@ export default class MetatypeRepository extends Repository implements Repository
 
         const retrieved = await this.#mapper.Retrieve(id)
 
-        if(!retrieved.isError) {
-            if(loadKeys) {
-                const keys = await this.#keyMapper.ListForMetatype(retrieved.value.id!)
-                if(!keys.isError) retrieved.value.addKey(...keys.value)
-            }
+        // we do not want to cache this unless we have the entire object, keys included
+        if(!retrieved.isError && loadKeys) {
+            const keys = await this.#keyMapper.ListForMetatype(retrieved.value.id!)
+            if(!keys.isError) retrieved.value.addKey(...keys.value)
 
             // don't fail out on cache set failure, log and move on
             this.setCache(retrieved.value)

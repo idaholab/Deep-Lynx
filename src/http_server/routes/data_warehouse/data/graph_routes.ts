@@ -1,20 +1,21 @@
-import EdgeStorage from "../../../../data_access_layer/mappers/data_warehouse/data/edge_storage";
-
-import {Request, Response, NextFunction, Application} from "express";
+import {Application, NextFunction, Request, Response} from "express";
 import {authInContainer} from "../../../middleware";
 import NodeRepository from "../../../../data_access_layer/repositories/data_warehouse/data/node_repository";
 import Result from "../../../../result";
 import {plainToClass} from "class-transformer";
 import Node from "../../../../data_warehouse/data/node";
+import EdgeRepository from "../../../../data_access_layer/repositories/data_warehouse/data/edge_repository";
+import Edge from "../../../../data_warehouse/data/edge";
 
 const nodeRepo = new NodeRepository()
-const edgeStorage = EdgeStorage.Instance;
+const edgeRepo = new EdgeRepository()
 
 export default class GraphRoutes {
     public static mount(app: Application, middleware: any[]) {
         app.get("/containers/:containerID/graphs/nodes/metatype/:metatypeID", ...middleware, authInContainer("read", "containers"), this.listNodesByMetatypeID);
         app.get("/containers/:containerID/graphs/nodes/", ...middleware, authInContainer("read", "containers"), this.listNodes);
         app.get("/containers/:containerID/graphs/nodes/:nodeID", ...middleware, authInContainer("read", "containers"), this.retrieveNode);
+        app.get("/containers/:containerID/graphs/nodes/:edgeID", ...middleware, authInContainer("read", "containers"), this.retrieveEdge);
         app.get("/containers/:containerID/graphs/edges/", ...middleware, authInContainer("read", "containers"),this.listEdges);
         app.post("/containers/:containerID/graphs/nodes/", ...middleware, authInContainer("write", "containers"), this.createOrUpdateNodes);
         app.post("/containers/:containerID/graphs/edges/", ...middleware, authInContainer("write", "containers"), this.createOrUpdateEdges);
@@ -55,6 +56,16 @@ export default class GraphRoutes {
         }
     }
 
+    private static async retrieveEdge(req: Request, res: Response, next: NextFunction) {
+        if(req.edge) {
+            Result.Success(req.edge).asResponse(res)
+            next()
+        } else {
+            Result.Failure(`edge not found`, 404).asResponse(res)
+            next()
+        }
+    }
+
     private static async listNodesByMetatypeID(req: Request, res: Response, next: NextFunction) {
         // fresh instance of the repo to avoid filter issues
         if(req.container && req.metatype) {
@@ -80,34 +91,28 @@ export default class GraphRoutes {
     }
 
     private static listEdges(req: Request, res: Response, next: NextFunction) {
-        if (typeof req.query.originID !== "undefined" && typeof req.query.destinationID !== "undefined") {
-            edgeStorage.RetriveByOriginAndDestination(req.query.originID as string, req.query.destinationID as string)
-                .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-                    res.status(200).json(result)
-                })
-                .catch((err) => {
-                    res.status(404).send(err)
-                })
-                .finally(() => next())
-        } else if (typeof req.query.destinationID !== "undefined") {
-            edgeStorage.ListByDestination(req.query.destinationID as string)
-                .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-                    res.status(200).json(result)
-                })
-                .catch((err) => {
-                    res.status(404).send(err)
-                })
-                .finally(() => next())
-        } else if (typeof req.query.originID !== "undefined") {
-            edgeStorage.ListByOrigin(req.query.originID as string)
+        // new repository so we don't pollute the main one
+        let repository = new EdgeRepository()
+        repository = repository.where().containerID("eq", req.params.containerID)
+
+        if(typeof req.query.originID !== "undefined" && req.query.originID as string !== "") {
+            repository = repository.and().origin_node_id("eq", req.query.originID)
+        }
+
+        if(typeof req.query.destinationID !== "undefined" && req.query.destinationID as string !== "") {
+            repository = repository.and().destination_node_id("eq", req.query.destinationID)
+        }
+
+        if(typeof req.query.relationshipPairID !== "undefined" && req.query.relationshipPairID as string !== "") {
+            repository = repository.and().relationshipPairID("eq", req.query.relationshipPairID)
+        }
+
+        if(typeof req.query.relationshipPairName !== "undefined" && req.query.relationshipPairName as string !== "") {
+            repository = repository.and().relationshipName("eq", req.query.relationshipPairName)
+        }
+
+        if(req.query.count !== undefined && req.query.count === "true") {
+            repository.count()
                 .then((result) => {
                     if (result.isError && result.error) {
                         res.status(result.error.errorCode).json(result);
@@ -121,13 +126,12 @@ export default class GraphRoutes {
                 .finally(() => next())
         } else {
             // @ts-ignore
-            edgeStorage.List(req.params.id, +req.query.offset, +req.query.limit)
+            repository.list({
+                limit: (req.query.limit) ? +req.query.limit : undefined,
+                offset: (req.query.offset) ? +req.query.offset : undefined
+            })
                 .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-                    res.status(200).json(result)
+                   result.asResponse(res)
                 })
                 .catch((err) => {
                     res.status(404).send(err)
@@ -164,14 +168,25 @@ export default class GraphRoutes {
     }
 
     private static async createOrUpdateEdges(req: Request, res: Response, next: NextFunction) {
-        edgeStorage.CreateOrUpdateByActiveGraph(req.params.id, req.body)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
+        let toSave: Edge[] = []
 
-                res.status(201).json(result)
+        if(Array.isArray(req.body)) {
+           toSave = plainToClass(Edge, req.body)
+        } else {
+            toSave = [plainToClass(Edge, req.body as object)]
+        }
+
+        // update with containerID and current active graph if none specified
+        if(req.container) {
+           toSave.forEach(edge => {
+               edge.container_id = req.container!.id!
+               if(!edge.graph_id) edge.graph_id = req.container!.active_graph_id
+           })
+        }
+
+        edgeRepo.bulkSave(req.currentUser!, toSave)
+            .then((result) => {
+                result.asResponse(res)
             })
             .catch((err) => {
                 res.status(500).json(err.message)
@@ -180,16 +195,17 @@ export default class GraphRoutes {
     }
 
     private static archiveEdge(req: Request, res: Response, next: NextFunction) {
-        edgeStorage.Archive(req.params.edgeID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-                res.sendStatus(200)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
+        if(req.edge) {
+            edgeRepo.archive(req.currentUser! , req.edge)
+                .then((result) => {
+                    result.asResponse(res)
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        } else {
+            Result.Failure('edge not found', 404).asResponse(res)
+            next()
+        }
     }
 
     private static archiveNode(req: Request, res: Response, next: NextFunction) {

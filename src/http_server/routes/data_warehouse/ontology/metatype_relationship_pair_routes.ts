@@ -60,7 +60,7 @@ export default class MetatypeRelationshipPairRoutes {
     private static listMetatypeRelationshipPairs(req: Request, res: Response, next: NextFunction) {
         // new repository to insure we don't pollute the main one
         let repository = new MetatypeRelationshipPairRepository()
-        repository = repository.where().containerID("eq", req.params.id)
+        repository = repository.where().containerID("eq", req.params.containerID)
 
         if(typeof req.query.destinationID !== "undefined" && req.query.destinationID as string !== "") {
             repository = repository.and().destination_metatype_id("eq", req.query.destinationID)
@@ -102,11 +102,7 @@ export default class MetatypeRelationshipPairRoutes {
                 offset: (req.query.offset) ? +req.query.offset : undefined
             })
                 .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-                    res.status(200).json(result)
+                    result.asResponse(res)
                 })
                 .catch((err) => {
                     res.status(404).send(err)

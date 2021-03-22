@@ -8,7 +8,7 @@ import ContainerImport from "../../../../data_access_layer/mappers/data_warehous
 import fs from 'fs'
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import NodeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
-import EdgeStorage from '../../../../data_access_layer/mappers/data_warehouse/data/edge_storage';
+import EdgeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import MetatypeRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 import MetatypeRelationshipPairRepository
     from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository";
@@ -17,6 +17,7 @@ import {User} from "../../../../access_management/user";
 import Node from "../../../../data_warehouse/data/node";
 import ContainerRepository
     from "../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository";
+import Edge from "../../../../data_warehouse/data/edge";
 
 describe('A Container Import', async() => {
     let user: User
@@ -182,7 +183,7 @@ describe('A Container Import', async() => {
         let metatypeRepository = new MetatypeRepository()
         let pairRepo = new MetatypeRelationshipPairRepository()
         let nodeStorage = NodeMapper.Instance;
-        let edgeStorage = EdgeStorage.Instance;
+        let edgeStorage = EdgeMapper.Instance;
 
         let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
         let containerID: string
@@ -239,14 +240,15 @@ describe('A Container Import', async() => {
         let originID = nodeCreate.value[0].id
         let destinationID = nodeCreate.value[1].id
 
-        let edgeCreate = await edgeStorage.CreateOrUpdateByActiveGraph(containerID,
-            {
-                relationship_pair_id: relationshipPairID,
+        let edgeCreate = await edgeStorage.CreateOrUpdateByCompositeID(containerID,
+            new Edge({
                 container_id: containerID,
+                metatype_relationship_pair: relationshipPairID!,
+                graph_id: retrievedContainer.value.active_graph_id,
                 properties: {},
                 origin_node_id: originID,
                 destination_node_id: destinationID
-            })
+            }))
 
         expect(edgeCreate.isError).false;
 

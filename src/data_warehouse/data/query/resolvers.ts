@@ -17,8 +17,6 @@ import {
 } from "./types";
 import MetatypeRelationshipPairMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
 import Logger from "../../../services/logger";
-import {EdgeT} from "../../../types/graph/edgeT";
-import EdgeFilter from "../../../data_access_layer/mappers/data_warehouse/data/edge_filter";
 import FileStorage from "../../../data_access_layer/mappers/data_warehouse/data/file_storage";
 import Config from "../../../services/config";
 import {FileT} from "../../../types/fileT";
@@ -27,6 +25,8 @@ import MetatypeRepository from "../../../data_access_layer/repositories/data_war
 import MetatypeRelationshipRepository from "../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository";
 import Node from "../node";
 import NodeRepository from "../../../data_access_layer/repositories/data_warehouse/data/node_repository";
+import EdgeRepository from "../../../data_access_layer/repositories/data_warehouse/data/edge_repository";
+import Edge from "../edge";
 
 export default function resolversRoot(containerID: string):any {
     return {
@@ -305,9 +305,9 @@ async function MetatypeRelationshipByPairResolver(relationshipPairID: string): P
 
 async function EdgeResolver(nodeID: string, direction: "incoming" | "outgoing"): Promise<(where: EdgeWhereQL) => Promise<EdgeQL[]>> {
     return Promise.resolve(async (where: EdgeWhereQL): Promise<EdgeQL[]> => {
-        let edges: EdgeT[] = []
+        let edges: Edge[] = []
 
-        let filter = new EdgeFilter().where()
+        let filter = new EdgeRepository().where()
 
         if(direction === "incoming") {
             filter = filter.destination_node_id("eq", nodeID)
@@ -355,7 +355,7 @@ async function EdgeResolver(nodeID: string, direction: "incoming" | "outgoing"):
             }
         }
 
-        const result = await filter.all()
+        const result = await filter.list()
         if(result.isError) return Promise.resolve([])
 
         edges = result.value
@@ -533,7 +533,7 @@ function buildNodeFilter(f: NodeRepository, fql: NodeFilterQL): NodeRepository{
 // In order to utilize GraphQL's error type we must throw errors instead of
 // returning a Result type for this function. This is one of the few places in
 // the application in which throwing errors is encouraged.
-function buildEdgeFilter(f: EdgeFilter, eql: EdgeFilterQL): EdgeFilter {
+function buildEdgeFilter(f: EdgeRepository, eql: EdgeFilterQL): EdgeRepository{
     if(Object.keys(eql).length > 1) {
         throw Error('filter object must only contain a single field')
     }

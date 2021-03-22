@@ -19,8 +19,7 @@ import MetatypeRelationshipMapper
     from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper";
 import MetatypeRelationshipPairMapper
     from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
-import EdgeStorage from "../../../data_access_layer/mappers/data_warehouse/data/edge_storage";
-import {EdgeT} from "../../../types/graph/edgeT";
+import EdgeMapper from "../../../data_access_layer/mappers/data_warehouse/data/edge_mapper";
 import Container from "../../../data_warehouse/ontology/container";
 import Metatype from "../../../data_warehouse/ontology/metatype";
 import MetatypeRelationship from "../../../data_warehouse/ontology/metatype_relationship";
@@ -30,6 +29,7 @@ import UserMapper from "../../../data_access_layer/mappers/access_management/use
 import MetatypeRepository from "../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 import {User} from "../../../access_management/user";
 import Node from "../../../data_warehouse/data/node"
+import Edge from "../../../data_warehouse/data/edge";
 
 describe('A Data Type Mapping can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -341,7 +341,7 @@ describe('A Data Type Mapping can', async() => {
         expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car.id+UUID`)
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | EdgeT) => {
+        results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).graph_id = graphID;
             (node as Node).metatype = car;
@@ -379,7 +379,7 @@ describe('A Data Type Mapping can', async() => {
         expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car.id+UUID`)
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | EdgeT) => {
+        results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).graph_id = graphID;
             (node as Node).metatype = car;
@@ -431,7 +431,7 @@ describe('A Data Type Mapping can', async() => {
 
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | EdgeT) => {
+        results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).graph_id = graphID;
             (node as Node).metatype = entry;
@@ -511,7 +511,7 @@ describe('A Data Type Mapping can', async() => {
         expect((results.value as Node[])[4].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+bolts`)
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | EdgeT) => {
+        results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).graph_id = graphID;
             (node as Node).metatype = part;
@@ -575,7 +575,7 @@ describe('A Data Type Mapping can', async() => {
         expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+oil`)
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | EdgeT) => {
+        results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).graph_id = graphID;
             (node as Node).metatype = part;
@@ -616,7 +616,7 @@ describe('A Data Type Mapping can', async() => {
         expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].components.[].id+1`)
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | EdgeT) => {
+        results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).graph_id = graphID;
             (node as Node).metatype = component;
@@ -664,7 +664,7 @@ describe('A Data Type Mapping can', async() => {
         expect((maintenanceResult.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.id+UUID`)
 
         // run through and set the right metatype and container
-        maintenanceResult.value.forEach((node: Node | EdgeT) => {
+        maintenanceResult.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).graph_id = graphID;
             (node as Node).metatype = maintenance;
@@ -710,7 +710,7 @@ describe('A Data Type Mapping can', async() => {
         expect((results.value as Node[])[1].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+2`)
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | EdgeT) => {
+        results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = entry;
             (node as Node).graph_id = graphID;
@@ -732,13 +732,20 @@ describe('A Data Type Mapping can', async() => {
         expect(Array.isArray(maintenanceEdgeResult.value)).true
         expect(maintenanceEdgeResult.value.length).eq(2) // a total of two nodes should be created
 
-        // validate the original and composite ID fields worked correctly
-        expect((maintenanceEdgeResult.value as EdgeT[])[0].origin_node_composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.id+UUID`)
-        expect((maintenanceEdgeResult.value as EdgeT[])[0].destination_node_composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+1`)
-        expect((maintenanceEdgeResult.value as EdgeT[])[1].origin_node_composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.id+UUID`)
-        expect((maintenanceEdgeResult.value as EdgeT[])[1].destination_node_composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+2`)
+        // run through and set the right metatype relationship pair and container
+        maintenanceEdgeResult.value.forEach((edge: Node | Edge) => {
+            (edge as Edge).container_id = containerID;
+            (edge as Edge).metatypeRelationshipPair= maintenancePair;
+            (edge as Edge).graph_id = graphID;
+        })
 
-        const maintenanceEdgeInserted = await EdgeStorage.Instance.CreateOrUpdate(containerID, graphID, maintenanceEdgeResult.value)
+        // validate the original and composite ID fields worked correctly
+        expect((maintenanceEdgeResult.value as Edge[])[0].origin_node_composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.id+UUID`)
+        expect((maintenanceEdgeResult.value as Edge[])[0].destination_node_composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+1`)
+        expect((maintenanceEdgeResult.value as Edge[])[1].origin_node_composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.id+UUID`)
+        expect((maintenanceEdgeResult.value as Edge[])[1].destination_node_composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+2`)
+
+        const maintenanceEdgeInserted = await EdgeMapper.Instance.BulkCreateOrUpdateByCompositeID("test suite", maintenanceEdgeResult.value as Edge[])
         expect(maintenanceEdgeInserted.isError).false
 
         await NodeMapper.Instance.PermanentlyDelete(maintenanceInserted.value[0].id!)

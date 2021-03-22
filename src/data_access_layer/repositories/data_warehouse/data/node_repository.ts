@@ -2,7 +2,7 @@ import RepositoryInterface, {QueryOptions, Repository} from "../../repository";
 import Node from "../../../../data_warehouse/data/node"
 import Result from "../../../../result";
 import NodeMapper from "../../../mappers/data_warehouse/data/node_mapper";
-import {PoolClient} from "pg";
+import {Pool, PoolClient} from "pg";
 import {User} from "../../../../access_management/user";
 import MetatypeRepository from "../ontology/metatype_repository";
 import Logger from "../../../../services/logger"
@@ -37,8 +37,20 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Failure('node must have id'))
     }
 
-    async findByID(id: string): Promise<Result<Node>> {
-        const node = await this.#mapper.Retrieve(id)
+    async findByID(id: string, transaction?: PoolClient): Promise<Result<Node>> {
+        const node = await this.#mapper.Retrieve(id, transaction)
+        if(!node.isError) {
+            const metatype = await this.#metatypeRepo.findByID(node.value.metatype!.id!)
+            if(metatype.isError) Logger.error(`unable to load node's metatype`)
+            else Object.assign(node.value.metatype, metatype.value)
+        }
+
+        return Promise.resolve(node)
+    }
+
+    // composite id's are only unique when paired with a data source as well
+    async findByCompositeID(id: string, dataSourceID: string, transaction?: PoolClient): Promise<Result<Node>> {
+        const node = await this.#mapper.RetrieveByCompositeOriginalID(id, dataSourceID, transaction)
         if(!node.isError) {
             const metatype = await this.#metatypeRepo.findByID(node.value.metatype!.id!)
             if(metatype.isError) Logger.error(`unable to load node's metatype`)
@@ -63,7 +75,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         }
 
         // the metatype should fetch with all its keys
-        const metatype = await this.#metatypeRepo.findByID(n.metatype!.id!)
+        const metatype = await this.#metatypeRepo.findByID(n.metatype!.id!, true)
         if(metatype.isError) {
             if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
             return Promise.resolve(Result.Failure(`unable to retrieve node's metatype ${metatype.error?.error}`))
@@ -137,6 +149,8 @@ export default class NodeRepository extends Repository implements RepositoryInte
                                     resolve(Result.Failure(`unable fetch metatype for node ${metatype.error?.error}`))
                                     return
                                 }
+
+                                node.metatype = metatype.value
 
                                 metatype.value.validateAndTransformProperties(node.properties)
                                     .then(transformed => {
@@ -246,19 +260,27 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return this
     }
 
-    count(): Promise<Result<number>> {
-        return super.count()
-    }
-
-    async list(loadMetatypes?: boolean, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<Node[]>> {
-        const results = await super.findAll<Node>(queryOptions, {transaction, resultClass: Node})
-        if(results.isError) return Promise.resolve(Result.Pass(results))
-
+    async count(): Promise<Result<number>> {
+        const results = await super.count()
         // reset the query
         this._rawQuery = [
             `SELECT nodes.*, metatypes.name as metatype_name FROM ${NodeMapper.tableName}`,
             `LEFT JOIN metatypes ON metatypes.id = nodes.metatype_id`
         ]
+
+        if(results.isError) return Promise.resolve(Result.Pass(results))
+        return Promise.resolve(Result.Success(results.value))
+    }
+
+    async list(loadMetatypes?: boolean, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<Node[]>> {
+        const results = await super.findAll<Node>(queryOptions, {transaction, resultClass: Node})
+        // reset the query
+        this._rawQuery = [
+            `SELECT nodes.*, metatypes.name as metatype_name FROM ${NodeMapper.tableName}`,
+            `LEFT JOIN metatypes ON metatypes.id = nodes.metatype_id`
+        ]
+
+        if(results.isError) return Promise.resolve(Result.Pass(results))
 
         if(loadMetatypes) {
             await Promise.all(results.value.map(node => {

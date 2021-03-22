@@ -18,6 +18,7 @@ import UserRepository from "../data_access_layer/repositories/access_management/
 import OAuthRepository from "../data_access_layer/repositories/access_management/oauth_repository";
 import EventRegistrationRepository from "../data_access_layer/repositories/event_system/event_registration_repository";
 import NodeRepository from "../data_access_layer/repositories/data_warehouse/data/node_repository";
+import EdgeRepository from "../data_access_layer/repositories/data_warehouse/data/edge_repository";
 
 // PerformanceMiddleware uses the provided logger to display the time each route
 // took to process and send a response to the requester. This leverages node.js's
@@ -477,6 +478,37 @@ export function nodeContext(): any {
                 }
 
                 req.node = result.value
+                next()
+            })
+            .catch(error => {
+                resp.status(500).json(error)
+                return
+            })
+    }
+}
+
+
+// edgeContext will attempt to fetch a node by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "edgeID"
+export function edgeContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have an id , don't fail, just pass without action
+        if(!req.params.edgeID) {
+            next()
+            return
+        }
+
+        const repo = new EdgeRepository()
+
+        repo.findByID(req.params.edgeID)
+            .then(result => {
+                if(result.isError) {
+                    resp.status(result.error?.errorCode!).json(result)
+                    return
+                }
+
+                req.edge = result.value
                 next()
             })
             .catch(error => {

@@ -46,12 +46,12 @@ export default class NodeMapper extends Mapper{
         return super.run(this.fullUpdateStatement(userID, ...nodes), {transaction, resultClass})
     }
 
-    public PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.runStatement(this.deleteStatement(id))
+    public PermanentlyDelete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.deleteStatement(id), {transaction})
     }
 
-    public Archive(userID: string, id: string): Promise<Result<boolean>> {
-        return super.runStatement(this.archiveStatement(userID, id))
+    public Archive(userID: string, id: string, transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.archiveStatement(userID, id), {transaction})
     }
 
     public async Retrieve(id: string, transaction?:PoolClient): Promise<Result<Node>> {

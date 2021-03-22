@@ -20,7 +20,6 @@ import {DataSourceT} from "../../../types/import/dataSourceT";
 import TypeTransformationStorage
     from "../../../data_access_layer/mappers/data_warehouse/etl/type_transformation_storage";
 import {DataSourceProcessor} from "../../../data_warehouse/etl/processing";
-import EdgeFilter from "../../../data_access_layer/mappers/data_warehouse/data/edge_filter";
 import Container from "../../../data_warehouse/ontology/container";
 import Metatype from "../../../data_warehouse/ontology/metatype";
 import MetatypeRelationship from "../../../data_warehouse/ontology/metatype_relationship";
@@ -29,8 +28,8 @@ import MetatypeKey from "../../../data_warehouse/ontology/metatype_key";
 import MetatypeRepository from "../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
 import {User} from "../../../access_management/user";
-import Node from "../../../data_warehouse/data/node";
 import NodeRepository from "../../../data_access_layer/repositories/data_warehouse/data/node_repository";
+import EdgeRepository from "../../../data_access_layer/repositories/data_warehouse/data/edge_repository";
 
 describe('A Data Processor', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -429,8 +428,8 @@ describe('A Data Processor', async() => {
             }
         }
 
-        let edgeFilter = new EdgeFilter()
-        const edges = await edgeFilter.where().importDataID("eq", dataImportID).all()
+        let edgeRepo = new EdgeRepository()
+        const edges = await edgeRepo.where().importDataID("eq", dataImportID).list()
 
         expect(edges.isError).false
         expect(edges.value.length).eq(2)

@@ -8,7 +8,7 @@ import {expect} from "chai";
 import GraphMapper from "../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
 import NodeMapper from "../../../data_access_layer/mappers/data_warehouse/data/node_mapper";
 import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import EdgeStorage from "../../../data_access_layer/mappers/data_warehouse/data/edge_storage";
+import EdgeMapper from "../../../data_access_layer/mappers/data_warehouse/data/edge_mapper";
 import MetatypeRelationshipMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper";
 import MetatypeRelationshipPairMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
 import ExportStorage from "../../../data_access_layer/mappers/data_warehouse/export/export_storage";
@@ -20,6 +20,7 @@ import MetatypeRelationship from "../../../data_warehouse/ontology/metatype_rela
 import MetatypeRelationshipPair from "../../../data_warehouse/ontology/metatype_relationship_pair";
 import MetatypeKey from "../../../data_warehouse/ontology/metatype_key";
 import Node from "../../../data_warehouse/data/node";
+import Edge from "../../../data_warehouse/data/edge";
 
 describe('Gremlin Exporter', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -51,7 +52,7 @@ describe('Gremlin Exporter', async() => {
     })
 
     it('can initiate export by copying nodes and edges', async(done)=> {
-        const storage = EdgeStorage.Instance;
+        const storage = EdgeMapper.Instance;
         const nStorage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
@@ -116,12 +117,14 @@ describe('Gremlin Exporter', async() => {
         }));
 
         // EDGE SETUP
-        let edge = await storage.CreateOrUpdate(containerID, graph.value.id!,  {
-            relationship_pair_id: pair.value.id,
+        let edge = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+            container_id: containerID,
+            graph_id: graph.value.id!,
+            metatype_relationship_pair: pair.value.id!,
             properties: payload,
             origin_node_id: node.value[0].id,
             destination_node_id: node.value[1].id
-        });
+        }));
 
         expect(edge.isError).false;
 

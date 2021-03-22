@@ -5,7 +5,7 @@ import MetatypeStorage from "./metatype_mapper"
 import MetatypeRelationshipPairMapper from "./metatype_relationship_pair_mapper"
 import MetatypeKeyMapper from "./metatype_key_mapper"
 import Result from "../../../../result";
-import EdgeStorage from "../data/edge_storage"
+import EdgeMapper from "../data/edge_mapper"
 import Logger from "../../../../services/logger"
 import ContainerRepository from "../../../repositories/data_warehouse/ontology/container_respository";
 import Container from "../../../../data_warehouse/ontology/container";
@@ -18,6 +18,7 @@ import MetatypeRelationshipPair from "../../../../data_warehouse/ontology/metaty
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import {User} from "../../../../access_management/user";
 import NodeRepository from "../../../repositories/data_warehouse/data/node_repository";
+import EdgeRepository from "../../../repositories/data_warehouse/data/edge_repository";
 const convert = require('xml-js');
 
 const containerStorage = ContainerStorage.Instance;
@@ -26,7 +27,7 @@ const metatypeStorage = MetatypeStorage.Instance;
 const metatypeRelationshipPairStorage = MetatypeRelationshipPairMapper.Instance;
 const metatypeKeyStorage = MetatypeKeyMapper.Instance;
 const nodeRepo = new NodeRepository()
-const edgeStorage = EdgeStorage.Instance;
+const edgeStorage = EdgeMapper.Instance;
 
 // vestigial type for ease of use
 export type ContainerImportT = {
@@ -447,7 +448,9 @@ export default class ContainerImport {
           for (const relationshipPair of oldMetatypeRelationshipPairs) {
             if (!allRelationshipPairNames.includes(relationshipPair.name)) {
 
-              const edges = (await edgeStorage.ListByRelationshipPairID(relationshipPair.id!, 0, 10)).value
+              const edgeRepo = new EdgeRepository()
+
+              const edges = (await edgeRepo.where().relationshipPairID("eq", relationshipPair.id!).list(true,{limit: 10 })).value
               if (edges.length > 0) {
                 resolve(Result.Failure(`Attempting to remove metatype relationship pair ${relationshipPair.name}.
                   This relationship pair has associated data, please delete the data before container update.`));

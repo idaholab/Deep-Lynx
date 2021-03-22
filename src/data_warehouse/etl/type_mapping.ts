@@ -1,24 +1,24 @@
 import {TypeMappingT, TypeTransformationConditionT, TypeTransformationT} from "../../types/import/typeMappingT";
 import Result from "../../result";
-import {edgeT, EdgeT} from "../../types/graph/edgeT";
 import {getNestedValue} from "../../utilities";
 import MetatypeKeyMapper from "../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper";
 import MetatypeRelationshipKeyMapper from "../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper";
 import {DataStagingT} from "../../types/import/dataStagingT";
 import Logger from "../../services/logger"
 import Node from "../data/node"
+import Edge from "../data/edge";
 
 // ApplyTransformation will take a mapping, a transformation, and a data record
 // in order to generate an array of nodes or edges based on the transformation type
-export async function ApplyTransformation(mapping: TypeMappingT, transformation: TypeTransformationT, data: DataStagingT): Promise<Result<Node[] | EdgeT[]>> {
+export async function ApplyTransformation(mapping: TypeMappingT, transformation: TypeTransformationT, data: DataStagingT): Promise<Result<Node[] | Edge[]>> {
    return transform(mapping, transformation, data)
 }
 
 // transform is used to recursively generate node/edges based on the transformation
 // this allows us to handle the root array portion of type transformations and to
 // generate nodes/edges based on nested data.
-async function transform(mapping: TypeMappingT, transformation: TypeTransformationT, data: DataStagingT, index?: number[]): Promise<Result<Node[] | EdgeT[]>> {
-   let results: Node[] | EdgeT[] = []
+async function transform(mapping: TypeMappingT, transformation: TypeTransformationT, data: DataStagingT, index?: number[]): Promise<Result<Node[] | Edge[]>> {
+   let results: Node[] | Edge[] = []
    // if no root array, act normally
    if(!transformation.root_array) {
       const results = await generateResults(mapping, transformation, data)
@@ -124,7 +124,7 @@ async function transform(mapping: TypeMappingT, transformation: TypeTransformati
 // generate results is the actual node/edge creation. While this only ever returns
 // a single node/edge, it returns it in an array for ease of use in the recursive
 // transform function
-async function generateResults(mapping: TypeMappingT, transformation: TypeTransformationT, data: DataStagingT, index?: number[]): Promise<Result<Node[] | EdgeT[]>> {
+async function generateResults(mapping: TypeMappingT, transformation: TypeTransformationT, data: DataStagingT, index?: number[]): Promise<Result<Node[] | Edge[]>> {
    const newPayload: {[key:string]: any}  = {}
    const newPayloadRelationship: {[key:string]: any} = {}
 
@@ -181,8 +181,8 @@ async function generateResults(mapping: TypeMappingT, transformation: TypeTransf
 
    // create an edge if the relationship id is set
    if(transformation.metatype_relationship_pair_id && !transformation.metatype_id) {
-       const edge = {
-          relationship_pair_id: transformation.metatype_relationship_pair_id,
+       const edge = new Edge({
+          metatype_relationship_pair: transformation.metatype_relationship_pair_id,
           properties: newPayloadRelationship,
           type_mapping_transformation_id: transformation.id,
           data_source_id: mapping.data_source_id,
@@ -193,7 +193,7 @@ async function generateResults(mapping: TypeMappingT, transformation: TypeTransf
           destination_node_original_id: `${getNestedValue(transformation.destination_id_key!, data.data, index)}`,
           origin_node_composite_original_id: `${mapping.container_id}+${mapping.data_source_id}+${transformation.origin_id_key}+${getNestedValue(transformation.origin_id_key!, data.data, index)}`,
           destination_node_composite_original_id: `${mapping.container_id}+${mapping.data_source_id}+${transformation.destination_id_key}+${getNestedValue(transformation.destination_id_key!, data.data, index)}`
-       } as EdgeT
+       })
 
        if(transformation.unique_identifier_key) {
          edge.original_data_id = `${getNestedValue(transformation.unique_identifier_key!, data.data, index)}`
@@ -280,7 +280,7 @@ function compare(operator: string, value: any, expected?: any): boolean {
 
 
 // type guard for differentiating an array of nodes from either array of nodes or edges
-export function IsNodes(set: Node[] | EdgeT[]): set is Node[] {
+export function IsNodes(set: Node[] | Edge[]): set is Node[] {
    // technically an empty array could be a set of NodeT
    if(Array.isArray(set) && set.length === 0) return true;
 
@@ -289,9 +289,9 @@ export function IsNodes(set: Node[] | EdgeT[]): set is Node[] {
 
 
 // type guard for differentiating an array of edges from either array of nodes or edges
-export function IsEdges(set: Node[] | EdgeT[]): set is EdgeT[] {
+export function IsEdges(set: Node[] | Edge[]): set is Edge[] {
    // technically an empty array could be a set of EdgeT
    if(Array.isArray(set) && set.length === 0) return true;
 
-   return edgeT.is(set[0])
+   return set[0] instanceof Edge
 }

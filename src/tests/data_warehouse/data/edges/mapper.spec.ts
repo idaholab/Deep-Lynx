@@ -7,8 +7,7 @@ import faker from "faker";
 import {expect} from "chai";
 import MetatypeRelationshipMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper";
 import MetatypeRelationshipPairMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
-import EdgeStorage from "../../../../data_access_layer/mappers/data_warehouse/data/edge_storage";
-import {EdgeT} from "../../../../types/graph/edgeT";
+import EdgeMapper from "../../../../data_access_layer/mappers/data_warehouse/data/edge_mapper";
 import DataSourceStorage from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
 import MetatypeRelationshipKeyMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper";
 import Container from "../../../../data_warehouse/ontology/container";
@@ -21,8 +20,9 @@ import MetatypeRelationshipKey from "../../../../data_warehouse/ontology/metatyp
 import NodeMapper from "../../../../data_access_layer/mappers/data_warehouse/data/node_mapper";
 import GraphMapper from "../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
 import Node from "../../../../data_warehouse/data/node";
+import Edge from "../../../../data_warehouse/data/edge";
 
-describe('A Graph Edge can', async() => {
+describe('An Edge Mapper', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
@@ -30,7 +30,6 @@ describe('A Graph Edge can', async() => {
             Logger.debug("skipping nodes graph tests, no storage layer");
             this.skip()
         }
-
 
         await PostgresAdapter.Instance.init();
         let mapper = ContainerMapper.Instance;
@@ -50,8 +49,8 @@ describe('A Graph Edge can', async() => {
     })
 
 
-    it('can be created', async()=> {
-        const storage = EdgeStorage.Instance;
+    it('can save/create an Edge', async()=> {
+        const storage = EdgeMapper.Instance;
         const nStorage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
@@ -122,22 +121,23 @@ describe('A Graph Edge can', async() => {
         }));
 
         // EDGE SETUP
-        let edge = await storage.CreateOrUpdate(containerID, graph.value.id!,  {
-            relationship_pair_id: pair.value.id,
+        let edge = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+            container_id: containerID,
+            graph_id: graph.value.id!,
+            metatype_relationship_pair: pair.value.id!,
             properties: payload,
             origin_node_id: node.value[0].id,
             destination_node_id: node.value[1].id
-        });
+        }));
 
         expect(edge.isError).false;
-
 
         await mMapper.PermanentlyDelete(metatype.value[0].id!);
         return gStorage.PermanentlyDelete(graph.value.id!)
     });
 
     it('can be created with original IDs in place of nodeIDS', async()=> {
-        const storage = EdgeStorage.Instance;
+        const storage = EdgeMapper.Instance;
         const nStorage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
@@ -219,13 +219,15 @@ describe('A Graph Edge can', async() => {
         }));
 
         // EDGE SETUP
-        let edge = await storage.CreateOrUpdate(containerID, graph.value.id!,  {
-            relationship_pair_id: pair.value.id,
+        let edge = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+            container_id: containerID,
+            graph_id: graph.value.id,
+            metatype_relationship_pair: pair.value.id!,
             properties: payload,
             origin_node_composite_original_id: node.value[0].composite_original_id,
             destination_node_composite_original_id: node.value[1].composite_original_id,
             data_source_id: exp.value.id!
-        } as EdgeT);
+        }));
 
         expect(edge.isError).false;
 
@@ -235,7 +237,7 @@ describe('A Graph Edge can', async() => {
     });
 
     it('can be archived and permanently deleted', async()=> {
-        const storage = EdgeStorage.Instance;
+        const storage = EdgeMapper.Instance;
         const nStorage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
@@ -299,19 +301,21 @@ describe('A Graph Edge can', async() => {
         }));
 
         // EDGE SETUP
-        let edge = await storage.CreateOrUpdate(containerID, graph.value.id!, {
-            relationship_pair_id: pair.value.id,
+        let edge = await storage.CreateOrUpdateByCompositeID("test suite", new Edge({
+            container_id: containerID,
+            graph_id: graph.value.id,
+            metatype_relationship_pair: pair.value.id!,
             properties: payload,
             origin_node_id: node.value[0].id,
             destination_node_id: node.value[1].id
-        });
+        }));
 
         expect(edge.isError).false;
 
-        let archived = await storage.Archive(edge.value[0].id!);
+        let archived = await storage.Archive("test suite", edge.value.id!);
         expect(archived.isError).false;
 
-        let deleted = await storage.PermanentlyDelete(edge.value[0].id!);
+        let deleted = await storage.PermanentlyDelete(edge.value.id!);
         expect(deleted.isError).false;
 
         await mMapper.PermanentlyDelete(metatype.value[0].id!);
@@ -319,7 +323,7 @@ describe('A Graph Edge can', async() => {
     });
 
     it('can be updated', async()=> {
-        const storage = EdgeStorage.Instance;
+        const storage = EdgeMapper.Instance;
         const nStorage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
@@ -385,19 +389,23 @@ describe('A Graph Edge can', async() => {
         }));
 
         // EDGE SETUP
-        let edge = await storage.CreateOrUpdate(containerID, graph.value.id!,  {
-            relationship_pair_id: pair.value.id,
+        let edge = await storage.CreateOrUpdateByCompositeID("test suite", new Edge({
+            container_id: containerID,
+            graph_id: graph.value.id,
+            metatype_relationship_pair: pair.value.id!,
             properties: payload,
             origin_node_id: node.value[0].id,
             destination_node_id: node.value[1].id
-        });
+        }));
 
         expect(edge.isError).false;
+        expect(edge.value.properties).to.have.deep.property('flower_name', "Daisy")
 
-        edge.value[0].modified_at = new Date().toISOString();
+        edge.value.properties = updatePayload
 
-        let updatedEdge = await storage.CreateOrUpdate(containerID, graph.value.id!,  edge.value[0]);
+        let updatedEdge = await storage.Update("test suite",  edge.value);
         expect(updatedEdge.isError, updatedEdge.error?.error).false;
+        expect(updatedEdge.value.properties).to.have.deep.property('flower_name', "Violet")
 
         await mMapper.PermanentlyDelete(metatype.value[0].id!);
         return gStorage.PermanentlyDelete(graph.value.id!)

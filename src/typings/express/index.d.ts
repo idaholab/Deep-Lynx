@@ -8,6 +8,7 @@ import {User as DLUser} from "../../access_management/user"
 import {OAuthApplication} from "../../access_management/oauth/oauth";
 import EventRegistration from "../../event_system/event_registration";
 import Node from "../../data_warehouse/data/node";
+import Edge from "../../data_warehouse/data/edge";
 
 
 declare global {
@@ -23,7 +24,8 @@ declare global {
             routeUser?: DLUser,
             oauthApp?: OAuthApplication,
             eventRegistration?: EventRegistration,
-            node: Node
+            node?: Node,
+            edge?: Edge
         }
    }
 }

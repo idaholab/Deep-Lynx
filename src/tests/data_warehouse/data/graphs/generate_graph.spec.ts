@@ -10,7 +10,7 @@ import NodeMapper from "../../../../data_access_layer/mappers/data_warehouse/dat
 import ContainerStorage from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import MetatypeRelationshipMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper";
 import MetatypeRelationshipPairMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
-import EdgeStorage from "../../../../data_access_layer/mappers/data_warehouse/data/edge_storage";
+import EdgeMapper from "../../../../data_access_layer/mappers/data_warehouse/data/edge_mapper";
 import Container from "../../../../data_warehouse/ontology/container";
 import Metatype from "../../../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
@@ -18,6 +18,7 @@ import MetatypeRelationship from "../../../../data_warehouse/ontology/metatype_r
 import MetatypeRelationshipPair from "../../../../data_warehouse/ontology/metatype_relationship_pair";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import Node from "../../../../data_warehouse/data/node";
+import Edge from "../../../../data_warehouse/data/edge";
 
 // This is both test and utility for creating a full realized, semi-complex
 // graphs. As such this test _does not_ delete its data after running
@@ -48,7 +49,7 @@ describe('A Complex Graph can be created', async() => {
 
 
     it('can be created', async()=> {
-        const storage = EdgeStorage.Instance;
+        const storage = EdgeMapper.Instance;
         const nStorage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
@@ -161,76 +162,92 @@ describe('A Complex Graph can be created', async() => {
         expect(pair2.isError).false
 
        // EDGE SETUP
-        let edge1 = await storage.CreateOrUpdate(containerID, graph.value.id!,  {
-            relationship_pair_id: pair.value.id,
+        let edge1 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+            container_id: containerID,
+            graph_id: graph.value.id!,
+            metatype_relationship_pair: pair.value.id!,
             properties: payload,
             origin_node_id: nodePair.value[0].id,
             destination_node_id: nodePair.value[1].id
-        });
+        }));
 
         expect(edge1.isError, "edge 1").false;
 
-        let edge2 = await storage.CreateOrUpdate(containerID, graph.value.id!,  {
-            relationship_pair_id: pair.value.id,
+        let edge2 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+            container_id: containerID,
+            graph_id: graph.value.id!,
+            metatype_relationship_pair: pair.value.id!,
             properties: payload,
             origin_node_id: nodePair.value[0].id,
             destination_node_id: nodePair.value[5].id
-        });
+        }));
 
         expect(edge2.isError, "edge 2").false;
 
-        let edge3 = await storage.CreateOrUpdate(containerID, graph.value.id!,  {
-            relationship_pair_id: pair2.value.id,
+        let edge3 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+            container_id: containerID,
+            graph_id: graph.value.id!,
+            metatype_relationship_pair: pair2.value.id!,
             properties: payload,
             origin_node_id: nodePair.value[5].id,
             destination_node_id: nodePair.value[0].id
-        });
+        }));
 
         expect(edge3.isError, "edge 3").false;
 
-        let edge4 = await storage.CreateOrUpdate(containerID, graph.value.id!,  {
-            relationship_pair_id: pair2.value.id,
+        let edge4 =  await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+            container_id: containerID,
+            graph_id: graph.value.id!,
+            metatype_relationship_pair: pair2.value.id!,
             properties: payload,
             origin_node_id: nodePair.value[5].id,
             destination_node_id: nodePair.value[6].id
-        });
+        }));
 
         expect(edge4.isError, "edge 4").false;
 
-        let edge5 = await storage.CreateOrUpdate(containerID, graph.value.id!,  {
-            relationship_pair_id: pair2.value.id,
+        let edge5 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+            container_id: containerID,
+            graph_id: graph.value.id!,
+            metatype_relationship_pair: pair2.value.id!,
             properties: payload,
             origin_node_id: nodePair.value[1].id,
             destination_node_id: nodePair.value[4].id
-        });
+        }));
 
         expect(edge5.isError, "edge 5").false;
 
-        let edge6 = await storage.CreateOrUpdate(containerID, graph.value.id!,  {
-            relationship_pair_id: pair2.value.id,
+        let edge6 =  await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+            container_id: containerID,
+            graph_id: graph.value.id!,
+            metatype_relationship_pair: pair2.value.id!,
             properties: payload,
             origin_node_id: nodePair.value[1].id,
             destination_node_id: nodePair.value[6].id
-        });
+        }));
 
         expect(edge6.isError, "edge 6").false;
 
-        let edge7 = await storage.CreateOrUpdate(containerID, graph.value.id!,  {
-            relationship_pair_id: pair.value.id,
+        let edge7 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+            container_id: containerID,
+            graph_id: graph.value.id!,
+            metatype_relationship_pair: pair.value.id!,
             properties: payload,
             origin_node_id: nodePair.value[4].id,
             destination_node_id: nodePair.value[5].id
-        });
+        }));
 
         expect(edge7.isError, "edge 7").false;
 
 
-        let edge8 = await storage.CreateOrUpdate(containerID, graph.value.id!,  {
-            relationship_pair_id: pair2.value.id,
+        let edge8 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+            container_id: containerID,
+            graph_id: graph.value.id!,
+            metatype_relationship_pair: pair2.value.id!,
             properties: payload,
             origin_node_id: nodePair.value[7].id,
             destination_node_id: nodePair.value[0].id
-        });
+        }));
 
         expect(edge8.isError, "edge 8").false;
 

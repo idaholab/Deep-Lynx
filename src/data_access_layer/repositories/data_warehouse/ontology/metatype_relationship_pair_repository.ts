@@ -36,20 +36,23 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return Promise.resolve(Result.Failure('metatype relationship pair has no id'))
     }
 
-    async findByID(id: string): Promise<Result<MetatypeRelationshipPair>> {
+    async findByID(id: string, loadRelationships: boolean = true): Promise<Result<MetatypeRelationshipPair>> {
         const cached = await this.getCached(id)
-        if(cached) {
+        if(cached) {          // log on relationship load, but don't fail
+            const loaded = await this.loadRelationships(cached)
+            if(loaded.isError) Logger.error(loaded.error?.error!)
+
             return Promise.resolve(Result.Success(cached))
         }
 
         const retrieved = await this.#mapper.Retrieve(id)
 
-        if(!retrieved.isError) {
-            this.setCache(retrieved.value)
-
+        if(!retrieved.isError && loadRelationships) {
             // log on relationship load, but don't fail
             const loaded = await this.loadRelationships(retrieved.value)
             if(loaded.isError) Logger.error(loaded.error?.error!)
+
+            this.setCache(retrieved.value)
         }
 
         return Promise.resolve(retrieved)
@@ -324,20 +327,8 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return this
     }
 
-    count(): Promise<Result<number>> {
-        return super.count()
-    }
-
-    async list(loadRelationships: boolean = false, options?: QueryOptions, transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair[]>> {
-        const results = await super.findAll<MetatypeRelationshipPair>(options, {transaction, resultClass: MetatypeRelationshipPair})
-        if(results.isError) return Promise.resolve(Result.Pass(results))
-
-        if(loadRelationships) {
-            // logger will take care of informing user of problems
-            await Promise.all(results.value.map((pair) => {
-                return this.loadRelationships(pair)
-            }))
-        }
+    async count(): Promise<Result<number>> {
+        const results = await super.count()
 
         // reset the query
         this._rawQuery = [
@@ -346,6 +337,30 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             `LEFT JOIN metatypes destination ON metatype_relationship_pairs.destination_metatype_id = destination.id`,
             `LEFT JOIN metatype_relationships relationships ON metatype_relationship_pairs.relationship_id = relationships.id`,
         ]
+
+        if(results.isError) return Promise.resolve(Result.Pass(results))
+
+        return Promise.resolve(Result.Success(results.value))
+    }
+
+    async list(loadRelationships: boolean = false, options?: QueryOptions, transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair[]>> {
+        const results = await super.findAll<MetatypeRelationshipPair>(options, {transaction, resultClass: MetatypeRelationshipPair})
+        // reset the query
+        this._rawQuery = [
+            `SELECT metatype_relationship_pairs.*, origin.name as origin_metatype_name , destination.name AS destination_metatype_name, relationships.name AS relationship_pair_name FROM ${MetatypeRelationshipPairMapper.tableName}`,
+            `LEFT JOIN metatypes origin ON metatype_relationship_pairs.origin_metatype_id = origin.id`,
+            `LEFT JOIN metatypes destination ON metatype_relationship_pairs.destination_metatype_id = destination.id`,
+            `LEFT JOIN metatype_relationships relationships ON metatype_relationship_pairs.relationship_id = relationships.id`,
+        ]
+
+        if(results.isError) return Promise.resolve(Result.Pass(results))
+
+        if(loadRelationships) {
+            // logger will take care of informing user of problems
+            await Promise.all(results.value.map((pair) => {
+                return this.loadRelationships(pair)
+            }))
+        }
 
         return Promise.resolve(Result.Success(results.value))
     }
