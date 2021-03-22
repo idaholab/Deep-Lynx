@@ -10,10 +10,12 @@ import Container from "../../../../data_warehouse/ontology/container";
 import {User} from "../../../../access_management/user";
 import UserMapper from "../../../../data_access_layer/mappers/access_management/user_mapper";
 import File from "../../../../data_warehouse/data/file";
+import FileRepository from "../../../../data_access_layer/repositories/data_warehouse/data/file_repository";
 
-describe('A File can', async() => {
+describe('A File Repository can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
     var dataSourceID: string = ""
+    let user: User
 
     before(async function() {
        if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -24,13 +26,27 @@ describe('A File can', async() => {
         await PostgresAdapter.Instance.init();
         let mapper = ContainerStorage.Instance;
 
-        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
+        const userResult = await UserMapper.Instance.Create("test suite", new User(
+            {
+                identity_provider_id: faker.random.uuid(),
+                identity_provider: "username_password",
+                admin: false,
+                display_name: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"]
+            }));
+
+        expect(userResult.isError).false;
+        expect(userResult.value).not.empty;
+        user = userResult.value
+
+        const container = await mapper.Create(user.id!, new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
         expect(container.isError).false;
         expect(container.value.id).not.null
         containerID = container.value.id!;
 
-        let exp = await DataSourceStorage.Instance.Create(containerID, "test suite",
+        let exp = await DataSourceStorage.Instance.Create(containerID, user.id!,
             {
                 name: "Test Data Source",
                 active:false,
@@ -52,10 +68,10 @@ describe('A File can', async() => {
         return ContainerStorage.Instance.Delete(containerID)
     })
 
-    it('can be saved to storage', async()=> {
-        let mapper = FileMapper.Instance;
+    it('can save a File', async()=> {
+        const fileRepo = new FileRepository()
 
-        let file = await mapper.Create("test suite", new File({
+        let file = new File({
             file_name: faker.name.findName(),
             file_size: 200,
             md5hash: "",
@@ -63,58 +79,20 @@ describe('A File can', async() => {
             adapter: "filesystem",
             data_source_id: dataSourceID,
             container_id: containerID
-        }))
+        })
 
-        expect(file.isError).false
-        expect(file.value).not.empty
+        let saved = await fileRepo.save(user, file)
+        expect(saved.isError).false
+        expect(file.id).not.undefined
 
+        // run an update
+        const updatedName = faker.name.findName()
+        file.file_name = updatedName
 
-        return mapper.PermanentlyDelete(file.value.id!)
+        saved = await fileRepo.save(user, file)
+        expect(saved.isError).false
+        expect(file.file_name).eq(updatedName)
+
+        return fileRepo.delete(file)
     });
-
-    it('can be retrieved from  storage', async()=> {
-        let mapper = FileMapper.Instance;
-
-        let file = await mapper.Create("test suite", new File({
-            file_name: faker.name.findName(),
-            file_size: 200,
-            md5hash: "",
-            adapter_file_path: faker.name.findName(),
-            adapter: "filesystem",
-            data_source_id: dataSourceID,
-            container_id: containerID
-        }))
-
-        let retrieved = await mapper.Retrieve(file.value.id!);
-        expect(retrieved.isError).false;
-        expect(retrieved.value.id).eq(file.value.id);
-
-        return mapper.PermanentlyDelete(file.value.id!)
-    });
-
-    it('can be updated in storage', async()=> {
-        let mapper = FileMapper.Instance;
-
-        let file = await mapper.Create("test suite",new File({
-            file_name: faker.name.findName(),
-            file_size: 200,
-            md5hash: "",
-            adapter_file_path: faker.name.findName(),
-            adapter: "filesystem",
-            data_source_id: dataSourceID,
-            container_id: containerID
-        }))
-
-        expect(file.isError).false
-        file.value.adapter = "azure_blob"
-
-        let updateResult = await mapper.Update("test-suite", file.value)
-        expect(updateResult.isError).false;
-
-        let retrieved = await mapper.Retrieve(file.value.id!);
-        expect(retrieved.isError).false;
-        expect(retrieved.value.id).eq(file.value.id);
-
-        return mapper.PermanentlyDelete(file.value.id!)
-    })
 });

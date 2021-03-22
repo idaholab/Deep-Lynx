@@ -1,7 +1,6 @@
-import {Request, Response, NextFunction, Application} from "express"
+import {Application, NextFunction, Request, Response} from "express"
 import {authInContainer} from "../../../middleware";
 import {
-    DataSourceUploadFile,
     ManualJsonImport,
     NewDataSource,
     SetDataSourceActive,
@@ -11,17 +10,20 @@ import DataSourceStorage from "../../../../data_access_layer/mappers/data_wareho
 import ImportStorage from "../../../../data_access_layer/mappers/data_warehouse/import/import_storage";
 import DataStagingStorage from "../../../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
 import {Readable} from "stream";
-import FileDataStorage from "../../../../data_access_layer/mappers/data_warehouse/data/file_storage";
+import FileDataStorage from "../../../../data_access_layer/mappers/data_warehouse/data/file_mapper";
 import {BlobStorage} from "../../../../services/blob_storage/blob_storage";
 import AzureBlobImpl from "../../../../services/blob_storage/azure_blob_impl";
 import Config from "../../../../services/config";
 import Filesystem from "../../../../services/blob_storage/filesystem_impl";
 import MockFileStorageImpl from "../../../../services/blob_storage/mock_impl";
 import Result from "../../../../result";
-import {FileT} from "../../../../types/fileT";
+import File from "../../../../data_warehouse/data/file";
+import FileRepository from "../../../../data_access_layer/repositories/data_warehouse/data/file_repository";
+
 const Busboy = require('busboy');
 const fileUpload = require('express-fileupload')
 const csv=require('csvtojson')
+const fileRepo = new FileRepository()
 
 // This contains all routes pertaining to DataSources.
 export default class DataSourceRoutes {
@@ -387,52 +389,31 @@ export default class DataSourceRoutes {
     }
 
     private static downloadFile(req: Request, res: Response, next: NextFunction) {
-        FileDataStorage.Instance.DomainRetrieve(req.params.fileID, req.params.id)
+        fileRepo.findByIDAndContainer(req.params.fileID, req.params.id)
             .then(file => {
                 if (file.isError) {
-                    res.status(500).send(file.error)
+                    file.asResponse(res)
                     return
                 }
 
-                let fileStorageInstance: BlobStorage
+                res.attachment(file.value.file_name)
+                fileRepo.downloadFile(file.value)
+                    .then((stream) => {
+                        if (!stream) {
+                            res.sendStatus(500)
+                            return
+                        }
 
-                switch (file.value.adapter) {
-                    case "azure_blob": {
-                        fileStorageInstance = new AzureBlobImpl(Config.azure_blob_connection_string, Config.azure_blob_container_name)
-
-                        res.attachment(file.value.file_name)
-                        fileStorageInstance.downloadStream(`${file.value.adapter_file_path}${file.value.file_name}`)
-                            .then((stream) => stream?.pipe(res))
-                        break;
-                    }
-
-                    case "filesystem": {
-                        fileStorageInstance = new Filesystem(Config.filesystem_storage_directory, Config.is_windows)
-
-                        res.attachment(file.value.file_name)
-                        fileStorageInstance.downloadStream(`${file.value.adapter_file_path}${file.value.file_name}`)
-                            .then((stream) => stream?.pipe(res))
-                        break;
-                    }
-
-                    case "mock": {
-                        fileStorageInstance = new MockFileStorageImpl()
-
-                        res.attachment(file.value.file_name)
-                        fileStorageInstance.downloadStream(`${file.value.adapter_file_path}${file.value.file_name}`)
-                            .then((stream) => stream?.pipe(res))
-                        break;
-                    }
-
-                }
-
+                        stream.pipe(res)
+                    })
+                    .catch((err) => res.status(500).send(err))
             })
-            .catch((err) => res.status(500).send(err))
+            .catch(() => Result.Failure(`unable to find file`).asResponse(res))
     }
 
     private static async uploadFile(req: Request, res: Response, next: NextFunction) {
         const fileNames: string[] = []
-        const files: Promise<Result<FileT>>[] = []
+        const files: Promise<Result<File>>[] = []
         const busboy = new Busboy({headers: req.headers})
         const metadata: { [key: string]: any } = {}
         let metadataFieldCount = 0;
@@ -443,7 +424,7 @@ export default class DataSourceRoutes {
         // because of this we're treating the file upload as fairly standalone
         busboy.on('file', async (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
             const user = req.currentUser!
-            files.push(DataSourceUploadFile(req.params.id, req.params.sourceID, user.id!, filename, encoding, mimeType, file as Readable))
+            files.push(new FileRepository().uploadFile(req.params.id, req.params.sourceID, req.currentUser!, filename, encoding, mimeType, file as Readable))
             fileNames.push(filename)
         })
 

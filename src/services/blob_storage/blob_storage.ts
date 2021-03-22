@@ -23,7 +23,7 @@ export type BlobUploadResponse = {
 
 // Returns an instantiated FileStorage provider if provider method is set, or user
 // can provide a specific adapter name to fetch an instance of specified adapter
-export default function FileStorageProvider(adapterName?: string): BlobStorage | null {
+export default function BlobStorageProvider(adapterName?: string): BlobStorage | null {
     switch ((adapterName) ? adapterName : Config.file_storage_method) {
         case "azure_blob": {
             return new AzureBlobImpl(Config.azure_blob_connection_string, Config.azure_blob_container_name)

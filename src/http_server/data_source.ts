@@ -10,16 +10,11 @@ import {fold} from "fp-ts/lib/Either";
 import {objectToShapeHash, onDecodeError} from "../utilities";
 import ImportStorage from "../data_access_layer/mappers/data_warehouse/import/import_storage";
 import {DataSource} from "../data_warehouse/import/data_source"
-import {Readable} from "stream";
-import {FileT} from "../types/fileT";
-import FileStorageProvider, {BlobUploadResponse} from "../services/blob_storage/blob_storage";
-import FileStorage from "../data_access_layer/mappers/data_warehouse/data/file_storage";
 import Logger from "../services/logger";
 import DataStagingStorage from "../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
 import TypeMappingStorage from "../data_access_layer/mappers/data_warehouse/etl/type_mapping_storage";
 import {TypeMappingT} from "../types/import/typeMappingT";
 import {User} from "../access_management/user";
-
 
 
 // Each data source might have its own particular startup needs. Make sure your data source
@@ -137,27 +132,3 @@ export async function SetDataSourceActive(dataSourceID: string): Promise<Result<
 
     return new Promise(resolve => resolve(Result.Success(true)))
 }
-
-// Upload a file and create a File record in the database. Even if the file record creation fails, we need to maintain
-// the file in cold storage as both insurance against data loss and versioning
-export async function DataSourceUploadFile(containerID: string, dataSourceID: string, userID:string, filename: string, encoding: string, mimetype: string, stream: Readable): Promise<Result<FileT>> {
-    const provider = FileStorageProvider()
-
-    if(!provider) return Promise.resolve(Result.Failure("no storage provider set"))
-
-    // run the actual file upload the storage provider
-    const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID}/`,filename, stream);
-    if(result.isError) return Promise.resolve(Result.Pass(result))
-
-    const file = {
-        file_name: filename,
-        file_size: result.value.size,
-        md5hash: result.value.md5hash,
-        adapter_file_path: result.value.filepath,
-        adapter: provider.name(),
-        metadata: result.value.metadata,
-    } as FileT
-
-    return FileStorage.Instance.Create(userID, containerID, dataSourceID, file)
-}
-

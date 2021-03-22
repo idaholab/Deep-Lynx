@@ -17,16 +17,16 @@ import {
 } from "./types";
 import MetatypeRelationshipPairMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
 import Logger from "../../../services/logger";
-import FileStorage from "../../../data_access_layer/mappers/data_warehouse/data/file_storage";
+import FileMapper from "../../../data_access_layer/mappers/data_warehouse/data/file_mapper";
 import Config from "../../../services/config";
-import {FileT} from "../../../types/fileT";
-import FileFilter from "../../../data_access_layer/mappers/data_warehouse/data/file_filter";
 import MetatypeRepository from "../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 import MetatypeRelationshipRepository from "../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository";
 import Node from "../node";
 import NodeRepository from "../../../data_access_layer/repositories/data_warehouse/data/node_repository";
 import EdgeRepository from "../../../data_access_layer/repositories/data_warehouse/data/edge_repository";
+import FileRepository from "../../../data_access_layer/repositories/data_warehouse/data/file_repository";
 import Edge from "../edge";
+import File from "../file";
 
 export default function resolversRoot(containerID: string):any {
     return {
@@ -118,7 +118,7 @@ export default function resolversRoot(containerID: string):any {
            }
 
            if(!where) {
-               const files = await FileStorage.Instance.List(containerID, offset, limit)
+               const files = await new FileRepository().where().containerID("eq", containerID).list({offset, limit})
                if(files.isError) return Promise.resolve([])
 
                const output: Promise<FileQL>[] = []
@@ -131,7 +131,7 @@ export default function resolversRoot(containerID: string):any {
            }
 
            const fileWhere = where as FileWhereQL;
-           let filter = new FileFilter().where().containerID("eq", containerID).and();
+           let filter = new FileRepository().where().containerID("eq", containerID).and();
 
            for(const n in fileWhere.AND) {
                 // in order to utilize the GraphQL error handling we wrap everything
@@ -169,7 +169,7 @@ export default function resolversRoot(containerID: string):any {
             }
 
 
-           const results = await filter.all(limit, offset)
+           const results = await filter.list({limit, offset})
            if(results.isError) return Promise.resolve([])
 
            const output: Promise<FileQL>[] = []
@@ -184,7 +184,7 @@ export default function resolversRoot(containerID: string):any {
 }
 
 async function FileResolverByID(fileID: string, containerID: string): Promise<FileQL> {
-    const result = await FileStorage.Instance.DomainRetrieve(fileID, containerID)
+    const result = await FileMapper.Instance.DomainRetrieve(fileID, containerID)
     if(result.isError) return Promise.resolve({} as FileQL)
 
     const createdAt = (result.value.created_at) ? result.value.created_at.toString() : ""
@@ -204,7 +204,7 @@ async function FileResolverByID(fileID: string, containerID: string): Promise<Fi
 }
 
 
-async function FileResolver(file: FileT, containerID: string): Promise<FileQL> {
+async function FileResolver(file: File, containerID: string): Promise<FileQL> {
     const createdAt = (file.created_at) ? file.created_at.toString() : ""
     const modifiedAt = (file.modified_at) ? file.modified_at.toString() : ""
 
@@ -674,7 +674,7 @@ function buildEdgeFilter(f: EdgeRepository, eql: EdgeFilterQL): EdgeRepository{
 // In order to utilize GraphQL's error type we must throw errors instead of
 // returning a Result type for this function. This is one of the few places in
 // the application in which throwing errors is encouraged.
-function buildFileFilter(f: FileFilter, fql: FileFilterQL): FileFilter{
+function buildFileFilter(f: FileRepository, fql: FileFilterQL): FileRepository{
     if(Object.keys(fql).length > 1) {
         throw Error('filter object must only contain a single field')
     }

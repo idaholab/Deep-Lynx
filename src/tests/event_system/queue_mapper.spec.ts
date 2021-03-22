@@ -10,11 +10,12 @@ import { DataSourceT } from "../../types/import/dataSourceT";
 import DataStagingStorage from "../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
 import ImportStorage from "../../data_access_layer/mappers/data_warehouse/import/import_storage";
 import ExportStorage from "../../data_access_layer/mappers/data_warehouse/export/export_storage";
-import FileStorage from "../../data_access_layer/mappers/data_warehouse/data/file_storage";
+import FileMapper from "../../data_access_layer/mappers/data_warehouse/data/file_mapper";
 import {objectToShapeHash} from "../../utilities";
 import TypeMappingStorage from "../../data_access_layer/mappers/data_warehouse/etl/type_mapping_storage";
 import ContainerStorage from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import Container from "../../data_warehouse/ontology/container";
+import File from "../../data_warehouse/data/file";
 
 describe('An Event Queue Mapper can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -135,16 +136,18 @@ describe('An Event Queue Mapper can', async() => {
 
     it('can send event on file create and modify', async()=> {
         const storage = EventQueueMapper.Instance;
-        const fStorage = FileStorage.Instance;
+        const fStorage = FileMapper.Instance;
 
-        const file = await fStorage.Create("test suite", containerID, dataSourceID,
-            {
+        const file = await fStorage.Create("test suite",
+            new File({
+                data_source_id: dataSourceID,
+                container_id: containerID,
                 file_name: faker.name.findName(),
                 file_size: 200,
                 md5hash: "",
                 adapter_file_path: faker.name.findName(),
                 adapter: "filesystem",
-            }
+            })
         );
 
         expect(file.isError).false
@@ -156,8 +159,9 @@ describe('An Event Queue Mapper can', async() => {
         let deletedTask = await storage.PermanentlyDelete(task[0].id!)
         expect(deletedTask.value).true
 
-        let updateResult = await fStorage.Update(file.value.id!, "test-suite",
-            {adapter : 'aws_s3'});
+        file.value.adapter = "azure_blob"
+
+        let updateResult = await fStorage.Update("test-suite", file.value)
         expect(updateResult.isError).false;
 
         task = await storage.List();
