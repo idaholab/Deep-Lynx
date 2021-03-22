@@ -278,6 +278,25 @@ export const SuperUser = new User({
     admin: true
 })
 
+// any specific validators should be specified here
+export function UserID(validationOptions?: ValidationOptions) {
+    return (object: object, propertyName: string) => {
+        registerDecorator({
+            name: 'UserID',
+            target: object.constructor,
+            propertyName,
+            constraints: [],
+            options: validationOptions,
+            validator: {
+                validate(value: any, args: ValidationArguments) {
+                    return value instanceof User && validator.isUUID(value.id)
+                },
+            },
+        });
+    };
+}
+
+// weh have to copy the container validator as to avoid cyclical imports
 export function ContainerID(validationOptions?: ValidationOptions) {
     return (object: object, propertyName: string) => {
         registerDecorator({
@@ -288,7 +307,7 @@ export function ContainerID(validationOptions?: ValidationOptions) {
             options: validationOptions,
             validator: {
                 validate(value: any, args: ValidationArguments) {
-                    return value instanceof Container && validator.isUUID(value.id)
+                    return value instanceof Container && validator.isUUID(value.id!)
                 },
             },
         });

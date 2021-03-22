@@ -1,9 +1,8 @@
 import {BaseDomainClass} from "../../base_domain_class";
 import {IsBoolean, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, IsUUID, ValidateIf} from "class-validator";
-import {MetatypeRelationshipPairID} from "../../services/validators";
 import {Expose, plainToClass, Transform} from "class-transformer";
 import Container from "../ontology/container";
-import MetatypeRelationshipPair from "../ontology/metatype_relationship_pair";
+import MetatypeRelationshipPair, {MetatypeRelationshipPairID} from "../ontology/metatype_relationship_pair";
 
 export default class Edge extends BaseDomainClass {
     @IsOptional()

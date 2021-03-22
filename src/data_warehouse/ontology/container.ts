@@ -1,8 +1,18 @@
 import {BaseDomainClass} from "../../base_domain_class";
-import {IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength} from "class-validator";
+import {
+    IsBoolean,
+    IsNotEmpty,
+    IsOptional,
+    IsString,
+    IsUUID,
+    MinLength,
+    registerDecorator, ValidationArguments,
+    ValidationOptions
+} from "class-validator";
 import Result from "../../result";
 import Authorization from "../../access_management/authorization/authorization";
 import Logger from "../../services/logger";
+import validator from "validator";
 
 export default class Container extends BaseDomainClass {
     @IsOptional()
@@ -102,4 +112,22 @@ export default class Container extends BaseDomainClass {
 
         return new Promise(resolve => resolve(Result.Success(true)))
     }
+}
+
+// any specific validators should be specified here
+export function ContainerID(validationOptions?: ValidationOptions) {
+    return (object: object, propertyName: string) => {
+        registerDecorator({
+            name: 'ContainerID',
+            target: object.constructor,
+            propertyName,
+            constraints: [],
+            options: validationOptions,
+            validator: {
+                validate(value: any, args: ValidationArguments) {
+                    return value instanceof Container && validator.isUUID(value.id!)
+                },
+            },
+        });
+    };
 }

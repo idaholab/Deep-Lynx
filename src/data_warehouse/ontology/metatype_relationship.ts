@@ -1,11 +1,21 @@
 import {BaseDomainClass} from "../../base_domain_class";
-import {IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength} from "class-validator";
+import {
+    IsBoolean,
+    IsNotEmpty,
+    IsOptional,
+    IsString,
+    IsUUID,
+    MinLength,
+    registerDecorator, ValidationArguments,
+    ValidationOptions
+} from "class-validator";
 import MetatypeRelationshipKey from "./metatype_relationship_key";
 import * as t from "io-ts";
 import Result from "../../result";
 import {pipe} from "fp-ts/pipeable";
 import {fold} from "fp-ts/Either";
 import {Type} from "class-transformer";
+import validator from "validator";
 
 export default class MetatypeRelationship extends BaseDomainClass {
     @IsOptional()
@@ -218,4 +228,22 @@ export default class MetatypeRelationship extends BaseDomainClass {
         })
     }
 
+}
+
+// any specific validators should be specified here
+export function MetatypeRelationshipID(validationOptions?: ValidationOptions) {
+    return (object: object, propertyName: string) => {
+        registerDecorator({
+            name: 'MetatypeRelationshipID',
+            target: object.constructor,
+            propertyName,
+            constraints: [],
+            options: validationOptions,
+            validator: {
+                validate(value: any, args: ValidationArguments) {
+                    return value instanceof MetatypeRelationship && validator.isUUID(value.id!)
+                },
+            },
+        });
+    };
 }

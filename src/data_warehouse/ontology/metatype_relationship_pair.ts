@@ -1,9 +1,19 @@
 import {BaseDomainClass} from "../../base_domain_class";
-import {IsBoolean, IsIn, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength} from "class-validator";
+import {
+    IsBoolean,
+    IsIn,
+    IsNotEmpty,
+    IsOptional,
+    IsString,
+    IsUUID,
+    MinLength,
+    registerDecorator, ValidationArguments,
+    ValidationOptions
+} from "class-validator";
 import {Expose, plainToClass, Transform} from "class-transformer"
 import Metatype, {MetatypeID} from "./metatype";
-import MetatypeRelationship from "./metatype_relationship";
-import {MetatypeRelationshipID} from "../../services/validators";
+import MetatypeRelationship, {MetatypeRelationshipID} from "./metatype_relationship";
+import validator from "validator";
 
 export default class MetatypeRelationshipPair extends BaseDomainClass {
     @IsOptional()
@@ -119,4 +129,22 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
             if(input.container_id) this.container_id = input.container_id
         }
     }
+}
+
+// any specific validators should be specified here
+export function MetatypeRelationshipPairID(validationOptions?: ValidationOptions) {
+    return (object: object, propertyName: string) => {
+        registerDecorator({
+            name: 'MetatypeRelationshipPairID',
+            target: object.constructor,
+            propertyName,
+            constraints: [],
+            options: validationOptions,
+            validator: {
+                validate(value: any, args: ValidationArguments) {
+                    return value instanceof MetatypeRelationshipPair && validator.isUUID(value.id!)
+                },
+            },
+        });
+    };
 }
