@@ -1,11 +1,21 @@
 import {BaseDomainClass} from "../../base_domain_class";
-import {IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength} from "class-validator";
+import {
+    IsBoolean,
+    IsNotEmpty,
+    IsOptional,
+    IsString,
+    IsUUID,
+    MinLength,
+    registerDecorator, ValidationArguments,
+    ValidationOptions
+} from "class-validator";
 import MetatypeKey from "./metatype_key";
 import * as t from "io-ts";
 import Result from "../../result";
 import {pipe} from "fp-ts/pipeable";
 import {fold} from "fp-ts/Either";
 import {Expose, Transform, Type} from "class-transformer";
+import validator from "validator";
 
 export default class Metatype extends BaseDomainClass {
     @IsOptional()
@@ -217,4 +227,21 @@ export default class Metatype extends BaseDomainClass {
         })
     }
 
+}
+
+export function MetatypeID(validationOptions?: ValidationOptions) {
+    return (object: object, propertyName: string) => {
+        registerDecorator({
+            name: 'MetatypeID',
+            target: object.constructor,
+            propertyName,
+            constraints: [],
+            options: validationOptions,
+            validator: {
+                validate(value: any, args: ValidationArguments) {
+                    return value instanceof Metatype && validator.isUUID(value.id!)
+                },
+            },
+        });
+    };
 }

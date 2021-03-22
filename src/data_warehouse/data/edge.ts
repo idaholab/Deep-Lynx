@@ -56,7 +56,7 @@ export default class Edge extends BaseDomainClass {
 
     // if we have an composite id, we must provide a data source as we can only
     // guarantee uniqueness based on that combination of values
-    @ValidateIf(o => typeof o.composite_original_id !== "undefined")
+    @ValidateIf(o =>  typeof o.composite_original_id !== "undefined" && o.composite_original_id !== null)
     @IsUUID()
     data_source_id?: string
 
@@ -67,20 +67,20 @@ export default class Edge extends BaseDomainClass {
     @IsUUID()
     graph_id?: string
 
-    @ValidateIf(o => typeof o.origin_node_composite_original_id === "undefined")
+    @ValidateIf(o => o.origin_node_composite_original_id === null && typeof o.origin_node_composite_original_id === "undefined")
     @IsUUID()
     origin_node_id?: string
 
-    @ValidateIf(o => typeof o.destination_node_composite_original_id === "undefined")
+    @ValidateIf(o => o.destination_node_composite_original_id === null && typeof o.destination_node_composite_original_id === "undefined")
     @IsUUID()
     destination_node_id?: string
 
-    @ValidateIf(o => typeof o.origin_node_id === "undefined")
+    @ValidateIf(o => o.origin_node_id === null && typeof o.origin_node_id === "undefined")
     @IsString()
     @IsNotEmpty()
     origin_node_composite_original_id?: string
 
-    @ValidateIf(o => typeof o.destination_node_id === "undefined")
+    @ValidateIf(o => o.destination_node_id === null && typeof o.destination_node_id === "undefined")
     @IsString()
     @IsNotEmpty()
     destination_node_composite_original_id?: string

@@ -170,19 +170,15 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                                         this.validateRelationship(edge, transaction)
                                             .then(valid => {
                                                if(valid.isError) {
-                                                   resolve(Result.Pass(valid))
+                                                   resolve(Result.Failure(valid.error?.error!))
                                                    return
                                                }
 
                                                resolve(Result.Success(true))
                                             })
                                             .catch(error => resolve(Result.Failure(`unable to relationships for edge${error}`)))
-
-                                        resolve(Promise.resolve(Result.Success(true)))
-
                                     })
                                     .catch(error => resolve(Result.Failure(`unable to validate properties for edge ${error}`)))
-
                             })
                             .catch(error => resolve(Result.Failure(`unable to fetch relationship pair for edge${error}`)))
                     })
@@ -299,26 +295,26 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         // we're not making new edges when doing so would violate a clause like one:one
         // we just have to be careful how we build our query and to ignore something
         // that already exits if it shares the same ID
-        let destinationQuery = edgeRepo
+        let destinationQuery = new EdgeRepository()
             .where()
             .destination_node_id("eq", destination.id!)
             .and()
             .relationshipPairID("eq", e.metatypeRelationshipPair!.id!)
 
-        let originQuery= edgeRepo
+        let originQuery= new EdgeRepository()
             .where()
             .origin_node_id("eq", origin.id!)
             .and()
             .relationshipPairID("eq", e.metatypeRelationshipPair!.id!)
 
         if(e.composite_original_id) {
-            destinationQuery = destinationQuery.composite_original_id("eq", e.composite_original_id)
-            originQuery = originQuery.composite_original_id("eq", e.composite_original_id)
+            destinationQuery = destinationQuery.and().composite_original_id("eq", e.composite_original_id)
+            originQuery = originQuery.and().composite_original_id("eq", e.composite_original_id)
         }
 
         if(e.id) {
-            destinationQuery = destinationQuery.id("eq", e.id)
-            originQuery = originQuery.id("eq", e.id)
+            destinationQuery = destinationQuery.and().id("eq", e.id)
+            originQuery = originQuery.and().id("eq", e.id)
         }
 
         const destinationRelationships = await destinationQuery.count()

@@ -136,8 +136,6 @@ export default class EdgeMapper extends Mapper{
             e.destination_node_original_id,
             userID, userID])
 
-        const bob = format(text,values)
-
         return format(text, values)
     }
 

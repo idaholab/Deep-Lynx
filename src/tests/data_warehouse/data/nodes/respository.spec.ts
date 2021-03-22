@@ -14,6 +14,7 @@ import MetatypeKeyMapper from "../../../../data_access_layer/mappers/data_wareho
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import NodeRepository from "../../../../data_access_layer/repositories/data_warehouse/data/node_repository";
 import Node from "../../../../data_warehouse/data/node";
+import DataSourceStorage from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
 
 describe('A Node Repository', async() => {
     let containerID: string = process.env.TEST_CONTAINER_ID || "";
@@ -21,6 +22,7 @@ describe('A Node Repository', async() => {
     let graphID: string = ""
     let metatype: Metatype
     let regexMetatype: Metatype
+    let dataSourceID: string = ""
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -56,6 +58,18 @@ describe('A Node Repository', async() => {
         expect(userResult.value).not.empty;
         user = userResult.value
 
+        const dataStorage = DataSourceStorage.Instance;
+
+        let exp = await dataStorage.Create(containerID, "test suite",
+            {
+                name: "Test Data Source",
+                active:false,
+                adapter_type:"manual",
+            });
+
+        expect(exp.isError).false;
+        expect(exp.value).not.empty;
+        dataSourceID = exp.value.id!
 
         // SETUP
         let graph = await gMapper.Create(containerID, "test suite");
@@ -121,7 +135,9 @@ describe('A Node Repository', async() => {
             container_id: containerID,
             graph_id: graphID,
             metatype: metatype,
-            properties: payload
+            properties: payload,
+            composite_original_id: faker.name.findName(),
+            data_source_id: dataSourceID
         });
 
         let saved = await nodeRepo.save(user, mixed)
@@ -136,7 +152,69 @@ describe('A Node Repository', async() => {
         expect(saved.isError).false
         expect(mixed.properties).to.have.deep.property('flower_name', "Violet")
 
+        // update by composite_original_id
+        const originalID = mixed.id
+        mixed.id = undefined
+
+        saved = await nodeRepo.save(user, mixed)
+        expect(saved.isError).false
+        expect(mixed.id).eq(originalID)
+
         return nodeRepo.delete(mixed)
+    })
+
+    it('can bulk save Nodes', async()=> {
+        const nodeRepo = new NodeRepository()
+
+        const mixed = [new Node({
+            container_id: containerID,
+            graph_id: graphID,
+            metatype: metatype,
+            properties: payload,
+            composite_original_id: faker.name.findName(),
+            data_source_id: dataSourceID
+        }), new Node({
+            container_id: containerID,
+            graph_id: graphID,
+            metatype: metatype,
+            properties: payload,
+            composite_original_id: faker.name.findName(),
+            data_source_id: dataSourceID
+        })];
+
+        let saved = await nodeRepo.bulkSave(user, mixed)
+        expect(saved.isError).false
+        mixed.forEach(node => {
+            expect(node.id).not.undefined
+            expect(node.properties).to.have.deep.property('flower_name', "Daisy")
+        })
+
+        // update the node's payload
+        mixed[0].properties = updatedPayload
+        mixed[1].properties = updatedPayload
+
+        saved = await nodeRepo.bulkSave(user, mixed)
+        expect(saved.isError).false
+        mixed.forEach(node => {
+            expect(node.id).not.undefined
+            expect(node.properties).to.have.deep.property('flower_name', "Violet")
+        })
+
+        // check composite id bulk save
+        const originalID1 = mixed[0].id
+        const originalID2 = mixed[1].id
+        mixed[0].id = undefined
+        mixed[1].id = undefined
+
+        saved = await nodeRepo.bulkSave(user, mixed)
+        expect(saved.isError).false
+        mixed.forEach(node => {
+            expect(node.id).not.undefined
+            expect(node.id).oneOf([originalID1, originalID2])
+        })
+
+        await nodeRepo.delete(mixed[0])
+        return nodeRepo.delete(mixed[1])
     })
 
     it('can fail saving Nodes if properties are malformed', async()=> {

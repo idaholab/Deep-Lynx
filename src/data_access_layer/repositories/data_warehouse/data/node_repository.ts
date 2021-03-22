@@ -164,7 +164,6 @@ export default class NodeRepository extends Repository implements RepositoryInte
 
                                     })
                                     .catch(error => resolve(Result.Failure(`unable to validate properties for node ${error}`)))
-
                             })
                             .catch(error => resolve(Result.Failure(`unable to fetch metatype for node ${error}`)))
                     })

@@ -1,8 +1,7 @@
 import {BaseDomainClass} from "../../base_domain_class";
-import {IsBoolean, IsNumber, IsObject, IsOptional, IsString, IsUUID} from "class-validator";
-import {MetatypeID} from "../../services/validators";
-import {Exclude, Expose, plainToClass, Transform} from "class-transformer";
-import Metatype from "../ontology/metatype";
+import {IsBoolean, IsNumber, IsObject, IsOptional, IsString, IsUUID, ValidateIf} from "class-validator";
+import {Expose, plainToClass, Transform} from "class-transformer";
+import Metatype, {MetatypeID} from "../ontology/metatype";
 import Container from "../ontology/container";
 
 export default class Node extends BaseDomainClass {
@@ -57,8 +56,8 @@ export default class Node extends BaseDomainClass {
     @IsOptional()
     data_staging_id?: number
 
+    @ValidateIf(o => typeof o.composite_original_id !== "undefined" && o.composite_original_id !== null)
     @IsUUID()
-    @IsOptional()
     data_source_id?: string
 
     @IsUUID()

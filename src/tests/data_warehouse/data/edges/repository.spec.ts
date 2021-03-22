@@ -162,7 +162,7 @@ describe('An Edge Repository', async() => {
             "origin_metatype": metatype.value[0].id!,
             "destination_metatype": metatype.value[1].id!,
             "relationship": relationship.value.id!,
-            "relationship_type": "one:one",
+            "relationship_type": "many:many",
             container_id: containerID,
         }));
 
@@ -232,6 +232,51 @@ describe('An Edge Repository', async() => {
         expect(saved.isError).true
 
         return edgeRepo.delete(edge)
+    })
+
+    it('can bulk save an Edge', async() => {
+        const edgeRepo = new EdgeRepository()
+
+        let edges =  [new Edge({
+            container_id: containerID,
+            graph_id: graphID,
+            metatype_relationship_pair: pair.id!,
+            properties: payload,
+            origin_node_id: nodes[0].id,
+            destination_node_id: nodes[1].id
+        }), new Edge({
+            container_id: containerID,
+            graph_id: graphID,
+            metatype_relationship_pair: pair.id!,
+            properties: payload,
+            origin_node_id: nodes[0].id,
+            destination_node_id: nodes[1].id
+        })];
+
+        // normal save first
+        let saved = await edgeRepo.bulkSave(user, edges)
+        expect(saved.isError).false
+        edges.forEach(edge => {
+            expect(edge.id).not.undefined
+            expect(edge.properties).to.have.deep.property('flower_name', "Daisy")
+        })
+
+        edges[0].properties = updatePayload
+        edges[1].properties = updatePayload
+
+        saved = await edgeRepo.bulkSave(user, edges)
+        expect(saved.isError).false
+        edges.forEach(edge => {
+            expect(edge.properties).to.have.deep.property('flower_name', "Violet")
+        })
+
+        edges[0].properties = malformed_payload
+
+        saved = await edgeRepo.bulkSave(user, edges)
+        expect(saved.isError).true
+
+        await edgeRepo.delete(edges[0])
+        return edgeRepo.delete(edges[1])
     })
 })
 
