@@ -9,6 +9,8 @@ import {OAuthApplication} from "../../access_management/oauth/oauth";
 import EventRegistration from "../../event_system/event_registration";
 import Node from "../../data_warehouse/data/node";
 import Edge from "../../data_warehouse/data/edge";
+import TypeMapping from "../../data_warehouse/etl/type_mapping";
+import TypeTransformation from "../../data_warehouse/etl/type_transformation";
 
 
 declare global {
@@ -25,7 +27,9 @@ declare global {
             oauthApp?: OAuthApplication,
             eventRegistration?: EventRegistration,
             node?: Node,
-            edge?: Edge
+            edge?: Edge,
+            typeMapping?: TypeMapping,
+            typeTransformation?: TypeTransformation
         }
    }
 }

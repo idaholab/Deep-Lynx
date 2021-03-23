@@ -4,23 +4,7 @@ import 'reflect-metadata';
 import {Errors, ValidationError} from "io-ts";
 import Result from "./result";
 
-export class BaseDomainClass {
-    @IsOptional()
-    created_by?: string
-
-    @IsOptional()
-    modified_by? : string
-
-    @IsOptional()
-    @IsDate()
-    @Type(() => Date)
-    created_at?: Date
-
-    @IsOptional()
-    @IsDate()
-    @Type(() => Date)
-    modified_at?: Date
-
+export class NakedDomainClass {
     async validationErrors(): Promise<string[] | null> {
         const errors = await validate(this)
         if(errors.length > 0) return Promise.resolve(errors.map(e => e.toString(true)))
@@ -40,4 +24,22 @@ export class BaseDomainClass {
             resolve(Result.Failure(errorStrings.join(",")))
         })
     }
+}
+
+export class BaseDomainClass extends NakedDomainClass {
+    @IsOptional()
+    created_by?: string
+
+    @IsOptional()
+    modified_by? : string
+
+    @IsOptional()
+    @IsDate()
+    @Type(() => Date)
+    created_at?: Date
+
+    @IsOptional()
+    @IsDate()
+    @Type(() => Date)
+    modified_at?: Date
 }

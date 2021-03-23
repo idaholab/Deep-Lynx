@@ -4,17 +4,16 @@ import Config from "../../services/config"
 import Result from "../../result";
 import DataStagingStorage from "../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
 import ImportStorage from "../../data_access_layer/mappers/data_warehouse/import/import_storage";
-import TypeMappingStorage from "../../data_access_layer/mappers/data_warehouse/etl/type_mapping_storage";
+import TypeMappingMapper from "../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper";
 import GraphMapper from "../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
 import DataSourceStorage from "../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
-import TypeTransformationStorage from "../../data_access_layer/mappers/data_warehouse/etl/type_transformation_storage";
-import {ApplyTransformation, IsEdges, IsNodes} from "./type_mapping";
+import TypeTransformationMapper from "../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper";
 import {ImportT} from "../../types/import/importT";
 import {PoolClient} from "pg";
-import Node from "../data/node";
+import Node, {IsNodes} from "../data/node";
 import NodeRepository from "../../data_access_layer/repositories/data_warehouse/data/node_repository";
 import EdgeRepository from "../../data_access_layer/repositories/data_warehouse/data/edge_repository";
-import Edge from "../data/edge";
+import Edge, {IsEdges} from "../data/edge";
 
 // DataSourceProcessor starts an unending processing loop for a data source. This
 // loop is what takes mapped data from data_staging and inserts it into the actual
@@ -136,12 +135,12 @@ export class DataSourceProcessor {
             for(const row of toProcess.value) {
                 // pull the mapping and transformations for the individual data row. Then transform the data prior to
                 // insert
-                const mapping = await TypeMappingStorage.Instance.Retrieve(row.mapping_id)
+                const mapping = await TypeMappingMapper.Instance.Retrieve(row.mapping_id)
                 if(mapping.isError) {
                     return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to fetch type mapping ${mapping.error?.error}`)))
                 }
 
-                const transformations = await TypeTransformationStorage.Instance.ListForTypeMapping(mapping.value.id!)
+                const transformations = await TypeTransformationMapper.Instance.ListForTypeMapping(mapping.value.id!)
                 if(transformations.isError) {
                     return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to fetch type mapping transformations ${transformations.error?.error}`)))
                 }
@@ -153,7 +152,7 @@ export class DataSourceProcessor {
                 // if we run into errors, add the error to the data staging row, and immediately return. Do not attempt to
                 // run any more transformations
                 for(const transformation of transformations.value) {
-                    const results = await ApplyTransformation(mapping.value, transformation, row)
+                    const results = await transformation.applyTransformation(row)
                     if(results.isError) {
                         await DataStagingStorage.Instance.AddError(row.id, `unable to apply transformation ${transformation.id} to data ${row.id}: ${results.error}`)
                         await GraphMapper.Instance.rollbackTransaction(transactionClient)
@@ -168,7 +167,6 @@ export class DataSourceProcessor {
 
                 // insert all nodes first, then edges
                 if(nodesToInsert.length > 0) {
-                    // TODO: get transformation to pull the active graph and container ID automatically
                     nodesToInsert.forEach(node => {
                         node.container_id = this.dataSource.container_id!
                         node.graph_id = this.graphID!
@@ -183,7 +181,6 @@ export class DataSourceProcessor {
                 }
 
                 if(edgesToInsert.length > 0) {
-                    // TODO: get transformation to pull the active graph and container ID automatically
                     edgesToInsert.forEach(edge => {
                         edge.container_id = this.dataSource.container_id!
                         edge.graph_id = this.graphID!

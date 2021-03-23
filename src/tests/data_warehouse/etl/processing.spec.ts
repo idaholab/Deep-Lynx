@@ -6,9 +6,7 @@ import Logger from "../../../services/logger";
 import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import DataSourceStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
-import TypeMappingStorage from "../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_storage";
-import {TypeMappingT, TypeTransformationT} from "../../../types/import/typeMappingT";
-import {objectToShapeHash} from "../../../utilities";
+import TypeMappingMapper from "../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper";
 import GraphMapper from "../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
 import ImportStorage from "../../../data_access_layer/mappers/data_warehouse/import/import_storage";
 import DataStagingStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
@@ -17,8 +15,8 @@ import MetatypeRelationshipMapper
 import MetatypeRelationshipPairMapper
     from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
 import {DataSourceT} from "../../../types/import/dataSourceT";
-import TypeTransformationStorage
-    from "../../../data_access_layer/mappers/data_warehouse/etl/type_transformation_storage";
+import TypeTransformationMapper
+    from "../../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper";
 import {DataSourceProcessor} from "../../../data_warehouse/etl/processing";
 import Container from "../../../data_warehouse/ontology/container";
 import Metatype from "../../../data_warehouse/ontology/metatype";
@@ -30,12 +28,15 @@ import UserMapper from "../../../data_access_layer/mappers/access_management/use
 import {User} from "../../../access_management/user";
 import NodeRepository from "../../../data_access_layer/repositories/data_warehouse/data/node_repository";
 import EdgeRepository from "../../../data_access_layer/repositories/data_warehouse/data/edge_repository";
+import TypeMapping from "../../../data_warehouse/etl/type_mapping";
+import TypeTransformation, {KeyMapping} from "../../../data_warehouse/etl/type_transformation";
+import TypeMappingRepository from "../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 
 describe('A Data Processor', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
     var graphID: string = ""
     var typeMappingID: string = ""
-    var typeMapping: TypeMappingT | undefined = undefined
+    var typeMapping: TypeMapping | undefined = undefined
     var dataSource: DataSourceT | undefined = undefined
     var dataImportID: string = ""
     var resultMetatypeRelationships: MetatypeRelationship[] = []
@@ -242,7 +243,7 @@ describe('A Data Processor', async() => {
 
         let dstorage = DataSourceStorage.Instance;
         let relationshipMapper = MetatypeRelationshipMapper.Instance;
-        let mappingStorage = TypeMappingStorage.Instance
+        let mappingStorage = TypeMappingMapper.Instance
 
 
         let metatypeRepo = new MetatypeRepository()
@@ -290,14 +291,21 @@ describe('A Data Processor', async() => {
 
         dataSource = exp.value
 
-        const shapeHash = objectToShapeHash(test_payload[0])
 
-        let mapping = await mappingStorage.Create(containerID, exp.value.id!,shapeHash, test_payload[0])
+        let mapping = new TypeMapping({
+            container_id: containerID,
+            data_source_id: exp.value.id!,
+            sample_payload: test_payload[0]
+        })
 
-        expect(mapping.isError).false
+        const repo = new TypeMappingRepository()
 
-        typeMappingID = mapping.value.id
-        typeMapping = mapping.value
+        const saved = await repo.save(user, mapping)
+
+        expect(saved.isError).false
+
+        typeMappingID = mapping.id!
+        typeMapping = mapping
 
         // now import the data
         const newImport = await ImportStorage.Instance.InitiateImport(exp.value.id!, "test suite", "testing suite upload")
@@ -320,60 +328,69 @@ describe('A Data Processor', async() => {
     it('properly process an import', async() => {
         const carMaintenanceKeys = test_metatypes.find(m => m.name === "Maintenance")!.keys
         // first generate all transformations for the type mapping, and set active
-        const maintenanceTransformation = {
-            keys: [{
+        const maintenanceTransformation = new TypeTransformation({
+            container_id: containerID,
+            data_source_id: dataSource!.id!,
+            type_mapping_id: typeMappingID,
+            keys: [new KeyMapping({
                 key: "car_maintenance.id",
                 metatype_key_id: carMaintenanceKeys!.find(key => key.name === "id")!.id
-            },{
+            }), new KeyMapping({
                 key: "car_maintenance.name",
                 metatype_key_id: carMaintenanceKeys!.find(key => key.name === "name")!.id
-            },{
+            }), new KeyMapping({
                 key: "car_maintenance.start_date",
                 metatype_key_id: carMaintenanceKeys!.find(key => key.name === "start date")!.id
-            },{
+            }), new KeyMapping({
                 key: "car_maintenance.average_visits_per_year",
                 metatype_key_id: carMaintenanceKeys!.find(key => key.name === "average visits per year")!.id
-            }],
+            })],
             metatype_id: test_metatypes.find(m => m.name === "Maintenance")!.id,
             unique_identifier_key: "car_maintenance.id",
-        } as TypeTransformationT
+        })
 
-        let result = await TypeTransformationStorage.Instance.Create(typeMappingID, "test suite", maintenanceTransformation)
+        let result = await TypeTransformationMapper.Instance.Create("test suite", maintenanceTransformation)
         expect(result.isError).false
 
         const entryKeys = test_metatypes.find(m => m.name === "Maintenance Entry")!.keys
 
-        const maintenanceEntryTransformation = {
-            keys: [{
+        const maintenanceEntryTransformation = new TypeTransformation({
+            container_id: containerID,
+            data_source_id: dataSource!.id!,
+            type_mapping_id: typeMappingID,
+            keys: [new KeyMapping({
                 key: "car_maintenance.maintenance_entries.[].id",
                 metatype_key_id: entryKeys!.find(key => key.name === "id")!.id
-            },{
+            }), new KeyMapping({
                 key: "car_maintenance.maintenance_entries.[].type",
                 metatype_key_id: entryKeys!.find(key => key.name === "type")!.id
-            },{
+            }), new KeyMapping({
                 key: "car_maintenance.maintenance_entries.[].check_engine_light_flag",
                 metatype_key_id: entryKeys!.find(key => key.name === "check engine light flag")!.id
-            }],
+            })],
             metatype_id: test_metatypes.find(m => m.name === "Maintenance Entry")!.id,
             unique_identifier_key: "car_maintenance.maintenance_entries.[].id",
             root_array: "car_maintenance.maintenance_entries"
-        } as TypeTransformationT
+        })
 
-        result = await TypeTransformationStorage.Instance.Create(typeMappingID, "test suite", maintenanceEntryTransformation)
+        result = await TypeTransformationMapper.Instance.Create("test suite", maintenanceEntryTransformation)
         expect(result.isError).false
 
-        const maintenanceEdgeTransformation = {
+        const maintenanceEdgeTransformation = new TypeTransformation({
+            container_id: containerID,
+            data_source_id: dataSource!.id!,
+            type_mapping_id: typeMappingID,
             metatype_relationship_pair_id: maintenancePair!.id,
             origin_id_key: "car_maintenance.id",
             destination_id_key: "car_maintenance.maintenance_entries.[].id",
             root_array: "car_maintenance.maintenance_entries",
             keys: []
-        } as TypeTransformationT
+        })
 
-        result = await TypeTransformationStorage.Instance.Create(typeMappingID, "test suite", maintenanceEdgeTransformation)
+        result = await TypeTransformationMapper.Instance.Create("test suite", maintenanceEdgeTransformation)
         expect(result.isError).false
 
-        const active = await TypeMappingStorage.Instance.SetActive(typeMappingID)
+        const active = await TypeMappingMapper.Instance.SetActive(typeMappingID)
         expect(active.isError).false
 
         const transaction = await ImportStorage.Instance.startTransaction()

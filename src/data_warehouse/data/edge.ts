@@ -3,6 +3,7 @@ import {IsBoolean, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, IsUUID,
 import {Expose, plainToClass, Transform} from "class-transformer";
 import Container from "../ontology/container";
 import MetatypeRelationshipPair, {MetatypeRelationshipPairID} from "../ontology/metatype_relationship_pair";
+import Node from "./node";
 
 export default class Edge extends BaseDomainClass {
     @IsOptional()
@@ -137,4 +138,12 @@ export default class Edge extends BaseDomainClass {
         }
     }
 
+}
+
+// type guard for differentiating an array of edges from either array of nodes or edges
+export function IsEdges(set: Node[] | Edge[]): set is Edge[] {
+    // technically an empty array could be a set of EdgeT
+    if(Array.isArray(set) && set.length === 0) return true;
+
+    return set[0] instanceof Edge
 }

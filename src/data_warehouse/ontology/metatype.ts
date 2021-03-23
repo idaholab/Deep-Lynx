@@ -14,7 +14,7 @@ import * as t from "io-ts";
 import Result from "../../result";
 import {pipe} from "fp-ts/pipeable";
 import {fold} from "fp-ts/Either";
-import {Expose, Transform, Type} from "class-transformer";
+import {Type} from "class-transformer";
 import validator from "validator";
 
 export default class Metatype extends BaseDomainClass {

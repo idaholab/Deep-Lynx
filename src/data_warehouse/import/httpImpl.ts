@@ -5,7 +5,7 @@ import {
     HttpConfigT,
 } from "../../types/import/httpConfigT";
 
-import {objectToShapeHash, onDecodeError} from "../../utilities";
+import {onDecodeError} from "../../utilities";
 import Logger from "../../services/logger"
 import Config from "../../services/config";
 import {DataSourceT} from "../../types/import/dataSourceT";
@@ -17,8 +17,10 @@ import {fold} from "fp-ts/lib/Either";
 import NodeRSA from "node-rsa";
 import axios, {AxiosResponse} from "axios"
 import DataStagingStorage from "../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
-import {TypeMappingT} from "../../types/import/typeMappingT";
-import TypeMappingStorage from "../../data_access_layer/mappers/data_warehouse/etl/type_mapping_storage";
+import TypeMapping from "../etl/type_mapping";
+import TypeMappingRepository from "../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
+import {SuperUser, User} from "../../access_management/user";
+import UserRepository from "../../data_access_layer/repositories/access_management/user_repository";
 
 // HttpImpl is a data source which polls and HTTP source for data every x seconds
 // this implementation allows the user to query both basic authentication and
@@ -26,6 +28,7 @@ import TypeMappingStorage from "../../data_access_layer/mappers/data_warehouse/e
 export class HttpImpl implements DataSource {
     public dataSourceT: DataSourceT = {} as DataSourceT; // encrypted record
     private config: HttpConfigT = {} as HttpConfigT; // unencrypted record
+    private user?: User
 
     // update the HTTP configuration type in storage.
     SetConfiguration(userID:string, config:any): Promise<Result<boolean>> {
@@ -68,6 +71,7 @@ export class HttpImpl implements DataSource {
     public static async New(containerID: string, userID: string, name:string, config: any | HttpConfigT, active: boolean): Promise<Result<HttpImpl>> {
         if(!httpConfigT.is(config)) return new Promise(resolve => resolve(Result.Failure('unable to validate configuration')));
 
+        const userRepo = new UserRepository()
         const dataSourceStorage = DataSourceStorage.Instance;
         const instance = new HttpImpl(config);
 
@@ -90,6 +94,10 @@ export class HttpImpl implements DataSource {
             active
        });
 
+        const user = await userRepo.findByID(userID)
+        if(user.isError) instance.user = SuperUser
+        else instance.user = user.value
+
         return new Promise(resolve => {
            if(dataSourceRecord.isError) resolve(Result.Pass(dataSourceRecord));
 
@@ -110,6 +118,7 @@ export class HttpImpl implements DataSource {
     // Creates a new HttpImpl from only the import adapter id. Will also decrypt
     // the user credentials as other functionality of the class depends on it.
     public static async NewFromDataSourceID(importAdapterID: string): Promise<Result<HttpImpl>> {
+        const userRepo = new UserRepository()
         const dataSourceStorage = DataSourceStorage.Instance;
 
         const imp = await dataSourceStorage.Retrieve(importAdapterID);
@@ -138,6 +147,11 @@ export class HttpImpl implements DataSource {
         imp.value.config = config;
 
         instance.dataSourceT = imp.value;
+
+        const user = await userRepo.findByID(imp.value.created_by!)
+        if(user.isError) instance.user = SuperUser
+        else instance.user = user.value
+
 
         return new Promise(resolve => resolve(Result.Success(instance)))
     }
@@ -187,6 +201,7 @@ export class HttpImpl implements DataSource {
     // processing the data is not the responsibility of this portion of the application
     public async Poll(): Promise<void> {
         while(true) {
+            const typeMappingRepo: TypeMappingRepository = new TypeMappingRepository()
             // check if source is active
             const active = await DataSourceStorage.Instance.IsActive(this.dataSourceT.id!)
 
@@ -285,25 +300,32 @@ export class HttpImpl implements DataSource {
 
 
                     for(const data of resp.data) {
-                        const shapeHash = objectToShapeHash(data)
+                        const shapeHash = TypeMapping.objectToShapeHash(data)
 
-                        let mapping: TypeMappingT
+                        let mapping: TypeMapping
 
-                        const retrieved = await TypeMappingStorage.Instance.RetrieveByShapeHash(this.dataSourceT.id!, shapeHash)
+                        const retrieved = await typeMappingRepo.findByShapeHash(shapeHash, this.dataSourceT.id!)
                         if(retrieved.isError) {
-                            const newMapping = await TypeMappingStorage.Instance.Create(this.dataSourceT.container_id!, this.dataSourceT.id!, shapeHash, data)
+                            const newMapping = new TypeMapping({
+                                container_id: this.dataSourceT.container_id!,
+                                data_source_id: this.dataSourceT.id!,
+                                shape_hash: shapeHash,
+                                sample_payload: data
+                            })
 
-                            if(newMapping.isError) {
-                                Logger.error(`unable to create new type mapping for imported data ${newMapping.error}`)
+                            const saved = await typeMappingRepo.saveTransformations(this.user!, newMapping)
+
+                            if(saved.isError) {
+                                Logger.error(`unable to create new type mapping for imported data ${saved.error}`)
                                 continue
                             }
 
-                            mapping = newMapping.value
+                            mapping = newMapping
                         } else {
                             mapping = retrieved.value
                         }
 
-                        const inserted = await DataStagingStorage.Instance.Create(this.dataSourceT.id!, importRecord.value, mapping.id, data)
+                        const inserted = await DataStagingStorage.Instance.Create(this.dataSourceT.id!, importRecord.value, mapping.id!, data)
                         if(inserted.isError) {
                             Logger.error(`error inserting data for import ${inserted}`)
                         }

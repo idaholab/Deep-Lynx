@@ -1,6 +1,7 @@
 /* tslint:disable */
 import { expect } from 'chai'
-import {getNestedValue, objectToShapeHash} from "../../utilities";
+import {getNestedValue} from "../../utilities";
+import TypeMapping from "../../data_warehouse/etl/type_mapping";
 
 describe('Utility functions can', async() => {
     it('fetch keys from payload using dot notation', async() => {
@@ -23,10 +24,10 @@ describe('Utility functions can', async() => {
 
 
     it('create valid shape hash of objects with array of objects', async() => {
-        let normalHash = objectToShapeHash(test_payload)
+        let normalHash = TypeMapping.objectToShapeHash(test_payload)
         expect(normalHash).not.null
 
-        let arrayHash = objectToShapeHash(test_payload_single_array)
+        let arrayHash = TypeMapping.objectToShapeHash(test_payload_single_array)
         expect(arrayHash).eq(normalHash)
     })
 });

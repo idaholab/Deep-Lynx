@@ -38,7 +38,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
             Object.assign(m, result.value)
 
-            // assign the new id to them all
+            // assign the id to all the keys
             if(m.keys) m.keys.forEach(key => key.metatype_id = m.id)
 
             if(saveKeys) {
@@ -171,7 +171,7 @@ export default class MetatypeRepository extends Repository implements Repository
         }
 
         if(m.removedKeys && m.removedKeys.length > 0) {
-            const removedKeys = await this.#keyMapper.BulkDelete(m.removedKeys)
+            const removedKeys = await this.#keyMapper.BulkDelete(m.removedKeys, transaction)
             if(removedKeys.isError) {
                 if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
                 return Promise.resolve(Result.Failure(`unable to delete keys ${removedKeys.error?.error}`))
@@ -257,13 +257,12 @@ export default class MetatypeRepository extends Repository implements Repository
         }
 
         const retrieved = await this.#mapper.Retrieve(id)
-
         // we do not want to cache this unless we have the entire object, keys included
         if(!retrieved.isError && loadKeys) {
             const keys = await this.#keyMapper.ListForMetatype(retrieved.value.id!)
             if(!keys.isError) retrieved.value.addKey(...keys.value)
 
-            // don't fail out on cache set failure, log and move on
+            // don't fail out on cache set failure, it will log and move on
             this.setCache(retrieved.value)
         }
 

@@ -5,3 +5,5 @@ ALTER TABLE nodes ADD COLUMN created_by varchar(255);
 ALTER TABLE nodes ADD COLUMN modified_by varchar(255);
 ALTER TABLE edges ADD COLUMN created_by varchar(255);
 ALTER TABLE edges ADD COLUMN modified_by varchar(255);
+ALTER TABLE data_type_mappings ADD COLUMN created_by varchar(255);
+ALTER TABLE data_type_mappings ADD COLUMN modified_by varchar(255);

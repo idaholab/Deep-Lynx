@@ -6,14 +6,18 @@ import Logger from "../../../services/logger";
 import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import DataSourceStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
 import ImportStorage from "../../../data_access_layer/mappers/data_warehouse/import/import_storage";
-import {objectToShapeHash} from "../../../utilities";
-import TypeMappingStorage from "../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_storage";
+import TypeMappingMapper from "../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper";
 import DataStagingStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
 import Container from "../../../data_warehouse/ontology/container";
 import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
+import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
+import {User} from "../../../access_management/user";
+import TypeMapping from "../../../data_warehouse/etl/type_mapping";
+import TypeMappingRepository from "../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 
 describe('A data import', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
+    var user: User
 
     before(async function() {
        if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -29,6 +33,20 @@ describe('A data import', async() => {
         expect(container.isError).false;
         expect(container.value.id).not.null
         containerID = container.value.id!;
+
+        const userResult = await UserMapper.Instance.Create("test suite", new User(
+            {
+                identity_provider_id: faker.random.uuid(),
+                identity_provider: "username_password",
+                admin: false,
+                display_name: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"]
+            }));
+
+        expect(userResult.isError).false;
+        expect(userResult.value).not.empty;
+        user = userResult.value
 
         return Promise.resolve()
     });
@@ -80,12 +98,16 @@ describe('A data import', async() => {
         expect(newImport.isError).false;
 
         // mapping needs to be completed in order to get inserted
-        const shapeHash = objectToShapeHash(test_payload)
-        const mapping = await TypeMappingStorage.Instance.Create(containerID, exp.value.id!, shapeHash, test_payload)
+        const mapping = new TypeMapping({
+            container_id: containerID,
+            data_source_id: exp.value.id!,
+            sample_payload: test_payload
+        })
 
-        expect(mapping.isError).false
+        const saved = await new TypeMappingRepository().save(user, mapping)
+        expect(saved.isError).false
 
-        const inserted = await DataStagingStorage.Instance.Create(exp.value.id!, newImport.value, mapping.value.id, test_payload)
+        const inserted = await DataStagingStorage.Instance.Create(exp.value.id!, newImport.value, mapping.id!, test_payload)
         expect(inserted.isError).false
 
         let imports = await importStorage.ListIncompleteWithUninsertedData(exp.value.id!);
@@ -120,12 +142,16 @@ describe('A data import', async() => {
         expect(newImport.isError).false;
 
         // mapping needs to be completed in order to get inserted
-        const shapeHash = objectToShapeHash(test_payload)
-        const mapping = await TypeMappingStorage.Instance.Create(containerID, exp.value.id!, shapeHash, test_payload)
+        const mapping = new TypeMapping({
+            container_id: containerID,
+            data_source_id: exp.value.id!,
+            sample_payload: test_payload
+        })
 
-        expect(mapping.isError).false
+        const saved = await new TypeMappingRepository().save(user, mapping)
+        expect(saved.isError).false
 
-        const inserted = await DataStagingStorage.Instance.Create(exp.value.id!, newImport.value, mapping.value.id, test_payload)
+        const inserted = await DataStagingStorage.Instance.Create(exp.value.id!, newImport.value, mapping.id!, test_payload)
         expect(inserted.isError).false
 
         let data = await DataStagingStorage.Instance.List(newImport.value, 0, 1)

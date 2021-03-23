@@ -3,6 +3,7 @@ import {IsBoolean, IsNumber, IsObject, IsOptional, IsString, IsUUID, ValidateIf}
 import {Expose, plainToClass, Transform} from "class-transformer";
 import Metatype, {MetatypeID} from "../ontology/metatype";
 import Container from "../ontology/container";
+import Edge from "./edge";
 
 export default class Node extends BaseDomainClass {
     @IsOptional()
@@ -99,4 +100,12 @@ export default class Node extends BaseDomainClass {
         }
     }
 
+}
+
+// type guard for differentiating an array of nodes from either array of nodes or edges
+export function IsNodes(set: Node[] | Edge[]): set is Node[] {
+    // technically an empty array could be a set of NodeT
+    if(Array.isArray(set) && set.length === 0) return true;
+
+    return set[0] instanceof Node
 }

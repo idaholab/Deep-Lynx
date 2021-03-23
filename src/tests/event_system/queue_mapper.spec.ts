@@ -11,15 +11,18 @@ import DataStagingStorage from "../../data_access_layer/mappers/data_warehouse/i
 import ImportStorage from "../../data_access_layer/mappers/data_warehouse/import/import_storage";
 import ExportStorage from "../../data_access_layer/mappers/data_warehouse/export/export_storage";
 import FileMapper from "../../data_access_layer/mappers/data_warehouse/data/file_mapper";
-import {objectToShapeHash} from "../../utilities";
-import TypeMappingStorage from "../../data_access_layer/mappers/data_warehouse/etl/type_mapping_storage";
 import ContainerStorage from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import Container from "../../data_warehouse/ontology/container";
 import File from "../../data_warehouse/data/file";
+import TypeMapping from "../../data_warehouse/etl/type_mapping";
+import TypeMappingRepository from "../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
+import {User} from "../../access_management/user";
+import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
 
 describe('An Event Queue Mapper can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
     var dataSourceID:string = process.env.TEST_DATASOURCE_ID || "";
+    let user: User
 
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -49,6 +52,20 @@ describe('An Event Queue Mapper can', async() => {
         const deletedTask = await qStorage.PermanentlyDelete(task[0].id!)
         expect(deletedTask.value).true
 
+        const userResult = await UserMapper.Instance.Create("test suite", new User(
+            {
+                identity_provider_id: faker.random.uuid(),
+                identity_provider: "username_password",
+                admin: false,
+                display_name: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ["superuser"]
+            }));
+
+        expect(userResult.isError).false;
+        expect(userResult.value).not.empty;
+        user = userResult.value
+
         return Promise.resolve()
     });
 
@@ -77,17 +94,21 @@ describe('An Event Queue Mapper can', async() => {
         const storage = EventQueueMapper.Instance;
         const dsStorage = DataStagingStorage.Instance;
         const importStorage = ImportStorage.Instance
+        const mappingRepo = new TypeMappingRepository()
 
         let imports = await importStorage.InitiateImport(dataSourceID, "test suite", "test")
 
+        let mapping = new TypeMapping({
+            container_id: containerID,
+            data_source_id: dataSourceID,
+            sample_payload: test_raw_payload
+        })
 
-        const shapeHash = objectToShapeHash(test_raw_payload)
+        const saved = await mappingRepo.save(user, mapping)
 
-        let mapping = await TypeMappingStorage.Instance.Create(containerID, dataSourceID,shapeHash, test_raw_payload)
+        expect(saved.isError).false
 
-        expect(mapping.isError).false
-
-        await dsStorage.Create(dataSourceID, imports.value, mapping.value.id, test_raw_payload)
+        await dsStorage.Create(dataSourceID, imports.value, mapping.id!, test_raw_payload)
 
         let task = await storage.List();
         expect(task).not.empty;
