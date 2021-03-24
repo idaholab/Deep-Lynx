@@ -1,5 +1,5 @@
 import RepositoryInterface, {QueryOptions, Repository} from "../../repository";
-import Export, {Exporter} from "../../../../data_warehouse/export/export";
+import ExportRecord, {Exporter} from "../../../../data_warehouse/export/export";
 import {GremlinImpl} from "../../../../data_warehouse/export/gremlin_export_impl";
 import ExportMapper from "../../../mappers/data_warehouse/export/export_mapper";
 import {SuperUser, User} from "../../../../access_management/user";
@@ -10,13 +10,13 @@ export default class ExporterRepository extends Repository implements Repository
     #mapper = ExportMapper.Instance
 
     async delete(t: Exporter, user?: User): Promise<Result<boolean>> {
-        if(!t.Export) return Promise.resolve(Result.Failure(`cannot delete export: no export record present`))
+        if(!t.ExportRecord) return Promise.resolve(Result.Failure(`cannot delete export: no export record present`))
         if(!user) user = SuperUser
 
         const stopped = await t.Stop(user)
         if(stopped.isError) return Promise.resolve(Result.Failure(`unable to delete export, cannot stop export process ${stopped.error}`))
 
-        return this.#mapper.PermanentlyDelete(t.Export!.id!)
+        return this.#mapper.PermanentlyDelete(t.ExportRecord!.id!)
     }
 
     async findByID(id: string): Promise<Result<Exporter>> {
@@ -33,16 +33,16 @@ export default class ExporterRepository extends Repository implements Repository
 
     async save(user: User, t: Exporter): Promise<Result<boolean>> {
         const exporterFactory = new ExporterFactory()
-        if(!t.Export) return Promise.resolve(Result.Failure(`Exporter must have export record instantiated`))
+        if(!t.ExportRecord) return Promise.resolve(Result.Failure(`Exporter must have export record instantiated`))
 
-        const errors = await t.Export.validationErrors()
+        const errors = await t.ExportRecord.validationErrors()
         if(errors) return Promise.resolve(Result.Failure(`attached export record does not pass validation ${errors.join(",")}`))
 
         // the exporter might need to perform encryption before saving in the database
         // this method allows us to not modify the underlying exporter, but still save
         // a proper record
         const toSave = await t.ToSave()
-        let savedRecord: Export
+        let savedRecord: ExportRecord
 
         if(toSave.id) {
             const updated = await this.#mapper.Update(user.id!, toSave)
@@ -91,7 +91,7 @@ export default class ExporterRepository extends Repository implements Repository
     async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<(Exporter | undefined)[]>> {
         const factory = new ExporterFactory()
 
-        const results = await super.findAll<Export>(options, {transaction, resultClass: Export})
+        const results = await super.findAll<ExportRecord>(options, {transaction, resultClass: ExportRecord})
         if (results.isError) return Promise.resolve(Result.Pass(results))
 
         return Promise.resolve(Result.Success(results.value.map(record => factory.fromExport(record))))
@@ -101,7 +101,7 @@ export default class ExporterRepository extends Repository implements Repository
 // as part of the export repository we also include the Exporter factory, used
 // to take export records and generate exporter interfaces from them.
 export class ExporterFactory {
-    fromExport(exportRecord: Export): Exporter | undefined {
+    fromExport(exportRecord: ExportRecord): Exporter | undefined {
         switch(exportRecord.adapter) {
             case "gremlin": {
                 return new GremlinImpl(exportRecord)

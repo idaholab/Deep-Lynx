@@ -1,4 +1,4 @@
-import Export, {Exporter, GremlinExportConfig} from "./export";
+import ExportRecord, {Exporter, GremlinExportConfig} from "./export";
 import GremlinAdapter from "../../services/gremlin/gremlin";
 import Config from "../../services/config";
 import ExportMapper from "../../data_access_layer/mappers/data_warehouse/export/export_mapper";
@@ -108,13 +108,13 @@ export class GremlinNode extends NakedDomainClass {
 // the service using the Gremlin driver and on secure connection, export the data using
 // the same driver.
 export class GremlinImpl implements Exporter {
-    public Export?: Export
+    public ExportRecord?: ExportRecord
     public client?: GremlinAdapter;
 
     // creating a new GremlinImpl assumes the configuration being passed in is not
     // encrypted in anyway. The exporter itself will handle encryption and storage
     // after successfully creating a client.
-    constructor(exportRecord: Export) {
+    constructor(exportRecord: ExportRecord) {
         // again we have to check for param existence because we might potentially be using class-transformer
         if(exportRecord) {
             // if this is coming from the database it will have an id - this indicates
@@ -135,18 +135,18 @@ export class GremlinImpl implements Exporter {
                     return
                 }
             }
-            this.Export = exportRecord
+            this.ExportRecord = exportRecord
 
             // init and save the client
-            this.client = new GremlinAdapter(this.Export.config as GremlinExportConfig)
+            this.client = new GremlinAdapter(this.ExportRecord.config as GremlinExportConfig)
         }
     }
 
-    async ToSave(): Promise<Export> {
+    async ToSave(): Promise<ExportRecord> {
         const key = new NodeRSA(Config.encryption_key_secret);
 
-        const output = plainToClass(Export, {}) // we do this to avoid having to use the constructor
-        Object.assign(output, this.Export);
+        const output = plainToClass(ExportRecord, {}) // we do this to avoid having to use the constructor
+        Object.assign(output, this.ExportRecord);
 
         // copy over the record first, so that we're not accidentally encrypting
         // the data needed for the exporter to function
@@ -157,63 +157,63 @@ export class GremlinImpl implements Exporter {
     }
 
     async Initiate(user: User): Promise<Result<boolean>> {
-        if(!this.Export || !this.Export.id) {
+        if(!this.ExportRecord || !this.ExportRecord.id) {
             return Promise.resolve(Result.Failure(`this export must be saved before initiating`))
         }
 
-        let result = await GremlinExportMapper.Instance.InitiateExport(this.Export.id!, this.Export.container_id!)
+        let result = await GremlinExportMapper.Instance.InitiateExport(this.ExportRecord.id!, this.ExportRecord.container_id!)
         if(result.isError) return Promise.resolve(Result.Pass(result))
 
-        result = await ExportMapper.Instance.SetStatus(user.id!, this.Export.id!, "processing")
+        result = await ExportMapper.Instance.SetStatus(user.id!, this.ExportRecord.id!, "processing")
         this.export()
 
         return Promise.resolve(Result.Pass(result))
     }
 
     async Restart(user: User): Promise<Result<boolean>>{
-        if(!this.Export || !this.Export.id) {
+        if(!this.ExportRecord || !this.ExportRecord.id) {
             return Promise.resolve(Result.Failure(`this export must be saved before restarting`))
         }
 
-        await ExportMapper.Instance.SetStatus(user.id!, this.Export!.id!, "processing")
+        await ExportMapper.Instance.SetStatus(user.id!, this.ExportRecord!.id!, "processing")
         this.export();
 
         return new Promise(resolve => resolve(Result.Success(true)));
     }
 
     Status(): string {
-        return this.Export!.status || "failed";
+        return this.ExportRecord!.status || "failed";
     }
 
     async Stop(user: User): Promise<Result<boolean>>{
-        if(!this.Export || !this.Export.id) {
+        if(!this.ExportRecord || !this.ExportRecord.id) {
             return Promise.resolve(Result.Failure(`this export must be saved before stopping`))
         }
 
-        return ExportMapper.Instance.SetStatus(user.id!, this.Export.id!, "paused")
+        return ExportMapper.Instance.SetStatus(user.id!, this.ExportRecord.id!, "paused")
     }
 
     private async export(){
-        if(!this.Export || !this.Export.id) {
+        if(!this.ExportRecord || !this.ExportRecord.id) {
             Logger.error(`unable to start export, export must be saved before attempting to process`)
             return
         }
 
         if(!this.client) {
-            Logger.error(`unable to initiate gremlin client for exort ${this.Export.id}`)
+            Logger.error(`unable to initiate gremlin client for exort ${this.ExportRecord.id}`)
             return
         }
 
         const metatypeRepo = new MetatypeRepository()
-        Logger.debug(`restarting gremlin export ${this.Export.id}`);
+        Logger.debug(`restarting gremlin export ${this.ExportRecord.id}`);
         const gremlinExportStorage = GremlinExportMapper.Instance;
 
         // Insert node with properties into gremlin for each node in snapshot
         while(true) {
             // Verify that the process hasn't stopped, then continue
-            const check = await ExportMapper.Instance.Retrieve(this.Export.id!);
+            const check = await ExportMapper.Instance.Retrieve(this.ExportRecord.id!);
             if(check.isError || check.value.status !== "processing") {
-                Logger.error(`gremlin export ${this.Export.id} unable to verify status or status stopped, exiting`);
+                Logger.error(`gremlin export ${this.ExportRecord.id} unable to verify status or status stopped, exiting`);
                 return
             }
 
@@ -228,9 +228,9 @@ export class GremlinImpl implements Exporter {
             // we can't get a lock so that we don't error out, we'll perform a check
             // later on to verify a node hasn't been inserted
             const unassociatedNodes = await gremlinExportStorage.ListUnassociatedNodesAndLock(
-                this.Export.id!,
+                this.ExportRecord.id!,
                 0,
-                (this.Export.config as GremlinExportConfig).writes_per_second,
+                (this.ExportRecord.config as GremlinExportConfig).writes_per_second,
                 transaction.value,
                 true);
             if(unassociatedNodes.isError) {
@@ -271,13 +271,13 @@ export class GremlinImpl implements Exporter {
         }
 
         // Insert edges with properties
-        Logger.debug(`gremlin export ${this.Export.id} successfully added nodes, starting edges`);
+        Logger.debug(`gremlin export ${this.ExportRecord.id} successfully added nodes, starting edges`);
 
         while(true) {
             // Verify that the process hasn't stopped, then continue
-            const check = await ExportMapper.Instance.Retrieve(this.Export.id!);
+            const check = await ExportMapper.Instance.Retrieve(this.ExportRecord.id!);
             if(check.isError || check.value.status !== "processing") {
-                Logger.error(`gremlin export ${this.Export.id} unable to verify status or status stopped, exiting`);
+                Logger.error(`gremlin export ${this.ExportRecord.id} unable to verify status or status stopped, exiting`);
                 return
             }
 
@@ -291,9 +291,9 @@ export class GremlinImpl implements Exporter {
             // error out, we'll perform a check later on to verify a node hasn't
             // been inserted
             const unassociatedEdges = await gremlinExportStorage.ListUnassociatedEdgesAndLock(
-                this.Export.id!,
+                this.ExportRecord.id!,
                 0,
-                (this.Export.config as GremlinExportConfig).writes_per_second,
+                (this.ExportRecord.config as GremlinExportConfig).writes_per_second,
                 transaction.value, true);
             if(unassociatedEdges.isError) {
                 Logger.error(`gremlin export failing: ${unassociatedEdges.error?.error}`);
@@ -337,9 +337,9 @@ export class GremlinImpl implements Exporter {
             await this.delay(1000)
         }
 
-        Logger.debug(`gremlin export ${this.Export.id} completed, cleaning up snapshot`);
-        await ExportMapper.Instance.SetStatus("system", this.Export.id!, "completed");
-        await gremlinExportStorage.DeleteForExport(this.Export.id!)
+        Logger.debug(`gremlin export ${this.ExportRecord.id} completed, cleaning up snapshot`);
+        await ExportMapper.Instance.SetStatus("system", this.ExportRecord.id!, "completed");
+        await gremlinExportStorage.DeleteForExport(this.ExportRecord.id!)
     }
 
     private delay(ms: number) {
@@ -349,11 +349,11 @@ export class GremlinImpl implements Exporter {
     // reset will wipe out the gremlin nodes/edges database and then re-instantiate
     // them
     async Reset(user: User): Promise<Result<boolean>> {
-        if(!this.Export || !this.Export.id) {
+        if(!this.ExportRecord || !this.ExportRecord.id) {
             return Promise.resolve(Result.Failure(`this export must be saved before stopping`))
         }
 
-        const deleted = await GremlinExportMapper.Instance.DeleteForExport(this.Export.id!)
+        const deleted = await GremlinExportMapper.Instance.DeleteForExport(this.ExportRecord.id!)
 
         if(deleted.isError) {
             Logger.error(`error deleting gremlin nodes and edges for export ${deleted.error}`)

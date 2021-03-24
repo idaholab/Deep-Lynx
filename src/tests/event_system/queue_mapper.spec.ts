@@ -18,7 +18,7 @@ import TypeMapping from "../../data_warehouse/etl/type_mapping";
 import TypeMappingRepository from "../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 import {User} from "../../access_management/user";
 import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
-import Export, {StandardConfig} from "../../data_warehouse/export/export";
+import ExportRecord, {StandardConfig} from "../../data_warehouse/export/export";
 
 describe('An Event Queue Mapper can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -141,7 +141,7 @@ describe('An Event Queue Mapper can', async() => {
         const storage = EventQueueMapper.Instance;
         const eStorage = ExportMapper.Instance;
 
-        const dataExport = await eStorage.Create("test suite", new Export({
+        const dataExport = await eStorage.Create("test suite", new ExportRecord({
             container_id: containerID,
             adapter:"gremlin",
             config: new StandardConfig()}))

@@ -8,7 +8,7 @@ import {Exclude, Type} from "class-transformer";
 // for data export and implement it with minimum amount of work. The repository
 // should always return the interface vs. the export record itself
 export interface Exporter {
-    Export?: Export
+    ExportRecord?: ExportRecord
     Initiate(user: User): Promise<Result<boolean>>
     Restart(user: User): Promise<Result<boolean>>
     Stop(user: User): Promise<Result<boolean>>
@@ -17,7 +17,7 @@ export interface Exporter {
 
     // this final method is so that the exporter can run any encryption or exporter
     // specific functions prior to the export record being saved into the database
-    ToSave(): Promise<Export>
+    ToSave(): Promise<ExportRecord>
 }
 
 // add new configurations by converting kind to a union type in the BaseConfig
@@ -96,7 +96,7 @@ export function IsGremlinConfig(config:GremlinExportConfig | StandardConfig): co
     return config.kind === "gremlin"
 }
 
-export default class Export extends BaseDomainClass {
+export default class ExportRecord extends BaseDomainClass {
     @IsOptional()
     id?: string
 

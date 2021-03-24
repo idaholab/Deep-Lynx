@@ -3,12 +3,12 @@ import Mapper from "../../mapper";
 import {PoolClient, QueryConfig} from "pg";
 import {QueueProcessor} from "../../../../event_system/processor";
 import Event from "../../../../event_system/event";
-import Export from "../../../../data_warehouse/export/export";
+import ExportRecord from "../../../../data_warehouse/export/export";
 import uuid from "uuid";
 
 
 const format = require('pg-format')
-const resultClass = Export
+const resultClass = ExportRecord
 
 /*
 * ExportStorage encompasses all logic dealing with the manipulation of the Export
@@ -27,29 +27,29 @@ export default class ExportMapper extends Mapper{
         return ExportMapper.instance
     }
 
-    public async Create(userID: string, input: Export, transaction?: PoolClient): Promise<Result<Export>> {
+    public async Create(userID: string, input: ExportRecord, transaction?: PoolClient): Promise<Result<ExportRecord>> {
         const r = await super.run(this.createStatement(userID, input), {resultClass, transaction})
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
         return Promise.resolve(Result.Success(r.value[0]))
     }
 
-    public async BulkCreate(userID: string, input: Export[], transaction?: PoolClient): Promise<Result<Export[]>> {
+    public async BulkCreate(userID: string, input: ExportRecord[], transaction?: PoolClient): Promise<Result<ExportRecord[]>> {
         return super.run(this.createStatement(userID, ...input), {resultClass, transaction})
     }
 
-    public async Update(userID: string, input: Export, transaction?: PoolClient): Promise<Result<Export>> {
+    public async Update(userID: string, input: ExportRecord, transaction?: PoolClient): Promise<Result<ExportRecord>> {
         const r = await super.run(this.fullUpdateStatement(userID, input), {resultClass, transaction})
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
         return Promise.resolve(Result.Success(r.value[0]))
     }
 
-    public async BulkUpdate(userID: string, input: Export[], transaction?: PoolClient): Promise<Result<Export[]>> {
+    public async BulkUpdate(userID: string, input: ExportRecord[], transaction?: PoolClient): Promise<Result<ExportRecord[]>> {
         return super.run(this.fullUpdateStatement(userID, ...input), {resultClass, transaction})
     }
 
-    public Retrieve(id: string): Promise<Result<Export>> {
+    public Retrieve(id: string): Promise<Result<ExportRecord>> {
         return super.retrieve(this.retrieveStatement(id), {resultClass})
     }
 
@@ -74,7 +74,7 @@ export default class ExportMapper extends Mapper{
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
-    private createStatement(userID: string, ...exports: Export[]): string {
+    private createStatement(userID: string, ...exports: ExportRecord[]): string {
         const text = `INSERT INTO exports(
             id,
             container_id,
@@ -98,7 +98,7 @@ export default class ExportMapper extends Mapper{
         return format(text, values)
     }
 
-    private fullUpdateStatement(userID: string, ...exports: Export[]): string {
+    private fullUpdateStatement(userID: string, ...exports: ExportRecord[]): string {
         const text = `UPDATE exports AS e SET
             container_id = u.container_id::uuid,
                     adapter = u.adapter,

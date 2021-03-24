@@ -3,7 +3,7 @@ import ExportMapper from "../../../../data_access_layer/mappers/data_warehouse/e
 import {authInContainer} from "../../../middleware";
 import ExporterRepository, {ExporterFactory} from "../../../../data_access_layer/repositories/data_warehouse/export/export_repository";
 import {plainToClass} from "class-transformer";
-import Export from "../../../../data_warehouse/export/export";
+import ExportRecord from "../../../../data_warehouse/export/export";
 import Result from "../../../../result";
 import {QueryOptions} from "../../../../data_access_layer/repositories/repository";
 
@@ -25,7 +25,7 @@ export default class ExportRoutes {
     private static exportDataFromContainer(req: Request, res: Response, next: NextFunction) {
         if(req.container) {
             const currentUser = req.currentUser!
-            const payload = plainToClass(Export, req.body as object)
+            const payload = plainToClass(ExportRecord, req.body as object)
 
             const exporter = exporterFactory.fromExport(payload)
             if(!exporter) {
@@ -57,7 +57,7 @@ export default class ExportRoutes {
 
     private static getExport(req: Request, res: Response, next: NextFunction) {
         if(req.exporter) {
-            Result.Success(req.exporter.Export).asResponse(res)
+            Result.Success(req.exporter.ExportRecord).asResponse(res)
             next()
         } else {
             Result.Failure(`unable to find export record`).asResponse(res)
@@ -94,7 +94,7 @@ export default class ExportRoutes {
                         return
                     }
 
-                    Result.Success(result.value.map(exporter => exporter?.Export)).asResponse(res)
+                    Result.Success(result.value.map(exporter => exporter?.ExportRecord)).asResponse(res)
                 })
                 .catch((err) => {
                     res.status(404).send(err)
