@@ -1,72 +1,71 @@
 import Result from "../../../../result"
 import Mapper from "../../mapper";
 import {PoolClient, QueryConfig} from "pg";
-import {GremlinNodeT} from "../../../../types/export/gremlinNodeT";
-import {GremlinEdgeT} from "../../../../types/export/gremlinEdgeT";
+import {GremlinEdge, GremlinNode} from "../../../../data_warehouse/export/gremlin_export_impl";
 
 /*
 * GremlinExportStorage contains all storage operations for the gremlin_export_nodes
 * and gremlin_export_edges tables.
 */
-export default class GremlinExportStorage extends Mapper{
+export default class GremlinExportMapper extends Mapper{
 
-    private static instance: GremlinExportStorage;
+    private static instance: GremlinExportMapper;
 
-    public static get Instance(): GremlinExportStorage {
-        if(!GremlinExportStorage.instance) {
-            GremlinExportStorage.instance = new GremlinExportStorage()
+    public static get Instance(): GremlinExportMapper {
+        if(!GremlinExportMapper.instance) {
+            GremlinExportMapper.instance = new GremlinExportMapper()
         }
 
-        return GremlinExportStorage.instance
+        return GremlinExportMapper.instance
     }
 
     public InitiateExport(exportID: string, containerID: string): Promise<Result<boolean>>{
-        return super.runAsTransaction(...GremlinExportStorage.initiateExportStatement(exportID, containerID))
+        return super.runAsTransaction(...this.initiateExportStatement(exportID, containerID))
     }
 
     public DeleteForExport(exportID: string): Promise<Result<boolean>>{
-        return super.runAsTransaction(...GremlinExportStorage.deleteAllForExport(exportID))
+        return super.runAsTransaction(...this.deleteAllForExport(exportID))
     }
 
     public SetGremlinNodeID(nodeID: string, gremlinNodeID: string): Promise<Result<boolean>> {
-        return super.runStatement(GremlinExportStorage.setGremlinNodeIDStatement(nodeID, gremlinNodeID))
+        return super.runStatement(this.setGremlinNodeIDStatement(nodeID, gremlinNodeID))
     }
 
     public SetGremlinEdgeID(edgeID: string, gremlinEdgeID: string): Promise<Result<boolean>> {
-        return super.runStatement(GremlinExportStorage.setGremlinEdgeIDStatement(edgeID, gremlinEdgeID))
+        return super.runStatement(this.setGremlinEdgeIDStatement(edgeID, gremlinEdgeID))
     }
 
-    public RetrieveNode(id: string): Promise<Result<GremlinNodeT>> {
-        return super.retrieve<GremlinNodeT>(GremlinExportStorage.retrieveNodeStatement(id))
+    public RetrieveNode(id: string): Promise<Result<GremlinNode>> {
+        return super.retrieve(this.retrieveNodeStatement(id), {resultClass: GremlinNode})
     }
 
-    public RetrieveEdge(id: string): Promise<Result<GremlinEdgeT>> {
-        return super.retrieve<GremlinEdgeT>(GremlinExportStorage.retrieveEdgeStatement(id))
+    public RetrieveEdge(id: string): Promise<Result<GremlinEdge>> {
+        return super.retrieve(this.retrieveEdgeStatement(id), {resultClass: GremlinEdge})
     }
 
-    public ListUnassociatedNodesAndLock(exportID: string, offset: number, limit: number, transaction?: PoolClient, wait?: boolean): Promise<Result<GremlinNodeT[]>> {
-        return super.rows<GremlinNodeT>(GremlinExportStorage.listUnassociatedAndLockNodesStatement(exportID, offset, limit, wait), {transaction})
+    public ListUnassociatedNodesAndLock(exportID: string, offset: number, limit: number, transaction?: PoolClient, wait?: boolean): Promise<Result<GremlinNode[]>> {
+        return super.rows(this.listUnassociatedAndLockNodesStatement(exportID, offset, limit, wait), {transaction, resultClass: GremlinNode})
     }
 
-    public ListAssociatedNodes(exportID: string, offset: number, limit: number ): Promise<Result<GremlinNodeT[]>> {
-        return super.rows<GremlinNodeT>(GremlinExportStorage.listAssociatedNodesStatement(exportID, offset, limit))
+    public ListAssociatedNodes(exportID: string, offset: number, limit: number ): Promise<Result<GremlinNode[]>> {
+        return super.rows(this.listAssociatedNodesStatement(exportID, offset, limit), {resultClass: GremlinNode})
     }
 
-    public ListUnassociatedEdgesAndLock(exportID: string, offset: number, limit: number, transaction?: PoolClient, wait?: boolean ): Promise<Result<GremlinEdgeT[]>> {
-        return super.rows<GremlinEdgeT>(GremlinExportStorage.listUnassociatedAndLockEdgesStatement(exportID, offset, limit, wait), {transaction})
+    public ListUnassociatedEdgesAndLock(exportID: string, offset: number, limit: number, transaction?: PoolClient, wait?: boolean ): Promise<Result<GremlinEdge[]>> {
+        return super.rows(this.listUnassociatedAndLockEdgesStatement(exportID, offset, limit, wait), {transaction, resultClass: GremlinEdge})
     }
 
-    public ListAssociatedEdges(exportID: string, offset: number, limit: number ): Promise<Result<GremlinEdgeT[]>> {
-        return super.rows<GremlinEdgeT>(GremlinExportStorage.listAssociatedEdgesStatement(exportID, offset, limit))
+    public ListAssociatedEdges(exportID: string, offset: number, limit: number ): Promise<Result<GremlinEdge[]>> {
+        return super.rows(this.listAssociatedEdgesStatement(exportID, offset, limit), {resultClass: GremlinEdge})
     }
 
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
-        return super.runStatement(GremlinExportStorage.deleteStatement(id))
+        return super.runStatement(this.deleteStatement(id))
     }
 
     // this set of statements copies all current nodes and edges to the gremlin_* tables
     // and attaches the proper export ID
-    private static initiateExportStatement(exportID: string, containerID: string): QueryConfig[] {
+    private initiateExportStatement(exportID: string, containerID: string): QueryConfig[] {
         return [
             {
                 text: `INSERT INTO gremlin_export_nodes(id, export_id, container_id, metatype_id,  properties)
@@ -87,7 +86,7 @@ export default class GremlinExportStorage extends Mapper{
         ]
     }
 
-    private static deleteAllForExport(exportID: string): QueryConfig[]{
+    private deleteAllForExport(exportID: string): QueryConfig[]{
         return[
             {
                 text: `DELETE FROM gremlin_export_nodes WHERE export_id = $1`,
@@ -100,42 +99,42 @@ export default class GremlinExportStorage extends Mapper{
         ]
     }
 
-    private static deleteStatement(exportID: string): QueryConfig {
+    private deleteStatement(exportID: string): QueryConfig {
         return {
             text:`DELETE FROM exports WHERE id = $1`,
             values: [exportID]
         }
     }
 
-    private static setGremlinNodeIDStatement(nodeID: string, gremlinNodeID: string): QueryConfig {
+    private setGremlinNodeIDStatement(nodeID: string, gremlinNodeID: string): QueryConfig {
         return {
             text:`UPDATE gremlin_export_nodes SET gremlin_node_id = $1 WHERE id = $2`,
             values: [gremlinNodeID, nodeID]
         }
     }
 
-    private static setGremlinEdgeIDStatement(edgeID: string, gremlinEdgeID: string): QueryConfig {
+    private setGremlinEdgeIDStatement(edgeID: string, gremlinEdgeID: string): QueryConfig {
         return {
             text:`UPDATE gremlin_export_edges SET gremlin_edge_id = $1 WHERE id = $2`,
             values: [gremlinEdgeID, edgeID]
         }
     }
 
-    private static retrieveEdgeStatement(id:string): QueryConfig {
+    private retrieveEdgeStatement(id:string): QueryConfig {
         return {
             text:`SELECT * FROM gremlin_export_edges WHERE id = $1`,
             values: [id]
         }
     }
 
-    private static retrieveNodeStatement(id:string): QueryConfig {
+    private retrieveNodeStatement(id:string): QueryConfig {
         return {
             text:`SELECT * FROM gremlin_export_nodes WHERE id = $1`,
             values: [id]
         }
     }
 
-    private static listUnassociatedAndLockNodesStatement(exportID: string, offset: number, limit: number, wait?: boolean): QueryConfig {
+    private listUnassociatedAndLockNodesStatement(exportID: string, offset: number, limit: number, wait?: boolean): QueryConfig {
         if(wait) {
             return {
                 text: `SELECT * FROM gremlin_export_nodes WHERE export_id = $1 AND gremlin_node_id IS NULL OFFSET $2 LIMIT $3 FOR UPDATE`,
@@ -149,14 +148,14 @@ export default class GremlinExportStorage extends Mapper{
         }
     }
 
-    private static listAssociatedNodesStatement(exportID: string, offset: number, limit: number): QueryConfig {
+    private listAssociatedNodesStatement(exportID: string, offset: number, limit: number): QueryConfig {
         return {
             text: `SELECT * FROM gremlin_export_nodes WHERE export_id = $1 AND gremlin_node_id NOT NULL OFFSET $2 LIMIT $3`,
             values: [exportID, offset, limit]
         }
     }
 
-    private static listUnassociatedAndLockEdgesStatement(exportID: string, offset: number, limit: number, wait?: boolean): QueryConfig {
+    private listUnassociatedAndLockEdgesStatement(exportID: string, offset: number, limit: number, wait?: boolean): QueryConfig {
         if(wait) {
             return {
                 text: `SELECT * FROM gremlin_export_edges WHERE export_id = $1 AND gremlin_edge_id IS NULL OFFSET $2 LIMIT $3 FOR UPDATE`,
@@ -169,7 +168,7 @@ export default class GremlinExportStorage extends Mapper{
         }
     }
 
-    private static listAssociatedEdgesStatement(exportID: string, offset: number, limit: number): QueryConfig {
+    private listAssociatedEdgesStatement(exportID: string, offset: number, limit: number): QueryConfig {
         return {
             text: `SELECT * FROM gremlin_export_edges WHERE export_id = $1 AND gremlin_edge_id NOT NULL OFFSET $2 LIMIT $3`,
             values: [exportID, offset, limit]

@@ -4,6 +4,7 @@ import { expect } from 'chai'
 import { structure } from 'gremlin'
 import GremlinAdapter from "../../../services/gremlin/gremlin"
 import Logger from "../../../services/logger";
+import {GremlinExportConfig} from "../../../data_warehouse/export/export";
 
 describe('A Gremlin Adapter', async () => {
     var g: GremlinAdapter | undefined = undefined
@@ -14,7 +15,7 @@ describe('A Gremlin Adapter', async () => {
             this.skip()
         }
 
-        g = new GremlinAdapter({
+        g = new GremlinAdapter(new GremlinExportConfig({
             traversal_source: "g",
             graphson_v1: (process.env.GREMLIN_PLUGIN_GRAPHSON_V1 === "true"),
             user: process.env.GREMLIN_PLUGIN_USER || "",
@@ -23,7 +24,7 @@ describe('A Gremlin Adapter', async () => {
             port: process.env.GREMLIN_PLUGIN_PORT || "8182",
             path: process.env.GREMLIN_PLUGIN_ROOT_PATH || "/gremlin",
             writes_per_second: +process.env.GREMLIN_WRITES_PER_SECOND! || 300
-        });
+        }));
     });
 
 

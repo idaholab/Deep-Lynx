@@ -1,10 +1,13 @@
 import {Logger} from "../logger"
-
 import {driver, process} from "gremlin"
 import Vertices from './vertices';
 import Edges from "./edges";
 import {GraphSONReaderV1} from "./graphson_v1_reader/reader";
-import {GremlinConfigT} from "../../types/export/gremlinConfigT";
+import {IsBoolean, IsNumber, IsOptional, IsString, IsUrl} from "class-validator";
+import {BaseConfig, GremlinExportConfig, StandardConfig} from "../../data_warehouse/export/export";
+import {Exclude} from "class-transformer";
+
+
 
 const traversal = process.AnonymousTraversalSource.traversal;
 
@@ -23,7 +26,7 @@ export default class GremlinAdapter {
         if (logger) this.logger = logger
     }
 
-    public constructor(config: GremlinConfigT) {
+    public constructor(config: GremlinExportConfig) {
         const internalConfig: any = {};
 
         internalConfig.traversalsource = config.traversal_source;

@@ -22,6 +22,7 @@ import EdgeRepository from "../data_access_layer/repositories/data_warehouse/dat
 import TypeMappingRepository from "../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 import TypeTransformationRepository
     from "../data_access_layer/repositories/data_warehouse/etl/type_transformation_repository";
+import ExporterRepository from "../data_access_layer/repositories/data_warehouse/export/export_repository";
 
 // PerformanceMiddleware uses the provided logger to display the time each route
 // took to process and send a response to the requester. This leverages node.js's
@@ -573,6 +574,38 @@ export function typeTransformationContext(): any {
                 }
 
                 req.typeTransformation = result.value
+                next()
+            })
+            .catch(error => {
+                resp.status(500).json(error)
+                return
+            })
+    }
+}
+
+
+
+// exporterContext will attempt to fetch an exporter by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "exportID"
+export function exporterContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have an id , don't fail, just pass without action
+        if(!req.params.exportID) {
+            next()
+            return
+        }
+
+        const repo = new ExporterRepository()
+
+        repo.findByID(req.params.exportID)
+            .then(result => {
+                if(result.isError) {
+                    resp.status(result.error?.errorCode!).json(result)
+                    return
+                }
+
+                req.exporter = result.value
                 next()
             })
             .catch(error => {

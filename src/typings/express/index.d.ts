@@ -11,6 +11,7 @@ import Node from "../../data_warehouse/data/node";
 import Edge from "../../data_warehouse/data/edge";
 import TypeMapping from "../../data_warehouse/etl/type_mapping";
 import TypeTransformation from "../../data_warehouse/etl/type_transformation";
+import {Exporter} from "../../data_warehouse/export/export";
 
 
 declare global {
@@ -29,7 +30,8 @@ declare global {
             node?: Node,
             edge?: Edge,
             typeMapping?: TypeMapping,
-            typeTransformation?: TypeTransformation
+            typeTransformation?: TypeTransformation,
+            exporter?: Exporter
         }
    }
 }

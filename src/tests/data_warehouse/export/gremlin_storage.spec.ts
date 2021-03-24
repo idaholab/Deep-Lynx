@@ -11,8 +11,8 @@ import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/
 import EdgeMapper from "../../../data_access_layer/mappers/data_warehouse/data/edge_mapper";
 import MetatypeRelationshipMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper";
 import MetatypeRelationshipPairMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
-import ExportStorage from "../../../data_access_layer/mappers/data_warehouse/export/export_storage";
-import GremlinExportStorage from "../../../data_access_layer/mappers/data_warehouse/export/gremlin_export_storage";
+import ExportMapper from "../../../data_access_layer/mappers/data_warehouse/export/export_mapper";
+import GremlinExportMapper from "../../../data_access_layer/mappers/data_warehouse/export/gremlin_export_mapper";
 import Container from "../../../data_warehouse/ontology/container";
 import Metatype from "../../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
@@ -21,6 +21,7 @@ import MetatypeRelationshipPair from "../../../data_warehouse/ontology/metatype_
 import MetatypeKey from "../../../data_warehouse/ontology/metatype_key";
 import Node from "../../../data_warehouse/data/node";
 import Edge from "../../../data_warehouse/data/edge";
+import Export, {StandardConfig} from "../../../data_warehouse/export/export";
 
 describe('Gremlin Exporter', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -129,20 +130,20 @@ describe('Gremlin Exporter', async() => {
         expect(edge.isError).false;
 
         // INITIATE AND CHECK UNASSOCIATED
-        let exportStorage = ExportStorage.Instance;
+        let exportStorage = ExportMapper.Instance;
 
-        let exp = await exportStorage.Create(containerID, "test suite",
-            {container_id: containerID, adapter:"gremlin", config: {}});
+        let exp = await exportStorage.Create("test suite",
+            new Export({container_id: containerID, adapter:"gremlin", config: new StandardConfig()}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let gremlinExportStorage = GremlinExportStorage.Instance;
+        let gremlinExportStorage = GremlinExportMapper.Instance;
 
         let initiated = await gremlinExportStorage.InitiateExport(exp.value.id!, containerID);
         expect(initiated.isError).false;
 
-        const transaction = await GremlinExportStorage.Instance.startTransaction()
+        const transaction = await GremlinExportMapper.Instance.startTransaction()
 
         gremlinExportStorage.ListUnassociatedNodesAndLock(exp.value.id!, 0, 100, transaction.value)
             .then((res: any) => {
@@ -176,17 +177,6 @@ describe('Gremlin Exporter', async() => {
 const payload: {[key:string]:any} = {
     "flower": "Daisy",
     "color": "yellow",
-    "notRequired": 1
-};
-
-const updatedPayload: {[key:string]:any} = {
-    "flower": "Violet",
-    "color": "blue",
-    "notRequired": 1
-};
-
-const malformed_payload: {[key:string]:any} = {
-    "flower": "Daisy",
     "notRequired": 1
 };
 

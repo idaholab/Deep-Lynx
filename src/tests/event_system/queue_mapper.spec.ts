@@ -9,7 +9,7 @@ import DataSourceStorage from "../../data_access_layer/mappers/data_warehouse/im
 import { DataSourceT } from "../../types/import/dataSourceT";
 import DataStagingStorage from "../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
 import ImportStorage from "../../data_access_layer/mappers/data_warehouse/import/import_storage";
-import ExportStorage from "../../data_access_layer/mappers/data_warehouse/export/export_storage";
+import ExportMapper from "../../data_access_layer/mappers/data_warehouse/export/export_mapper";
 import FileMapper from "../../data_access_layer/mappers/data_warehouse/data/file_mapper";
 import ContainerStorage from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import Container from "../../data_warehouse/ontology/container";
@@ -18,6 +18,7 @@ import TypeMapping from "../../data_warehouse/etl/type_mapping";
 import TypeMappingRepository from "../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 import {User} from "../../access_management/user";
 import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
+import Export, {StandardConfig} from "../../data_warehouse/export/export";
 
 describe('An Event Queue Mapper can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -138,13 +139,19 @@ describe('An Event Queue Mapper can', async() => {
 
     it('can send event on data export', async()=> {
         const storage = EventQueueMapper.Instance;
-        const eStorage = ExportStorage.Instance;
+        const eStorage = ExportMapper.Instance;
 
-        const dataExport = await eStorage.Create(containerID, "test suite",
-            {container_id: containerID, adapter:"gremlin", config: {}})
+        const dataExport = await eStorage.Create("test suite", new Export({
+            container_id: containerID,
+            adapter:"gremlin",
+            config: new StandardConfig()}))
 
         expect(dataExport.isError).false;
         expect(dataExport.value).not.empty;
+
+        // we only emit status on completed, so set the export to completed
+        const set = await eStorage.SetStatus("test suite", dataExport.value.id!, "completed")
+        expect(set.isError).false
 
         let task = await storage.List();
         expect(task).not.empty;

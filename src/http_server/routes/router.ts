@@ -25,7 +25,7 @@ import {
     oauthAppContext,
     nodeContext,
     typeTransformationContext,
-    typeMappingContext
+    typeMappingContext, exporterContext
 } from "../middleware";
 import ContainerRoutes from "./data_warehouse/ontology/container_routes"
 import MetatypeRoutes from "./data_warehouse/ontology/metatype_routes"
@@ -85,7 +85,7 @@ export class Router {
     // Mount application controllers, middleware is passed in as an array of functions
     UserRoutes.mount(this.app, [authenticateRoute(), containerContext(), userContext()]);
     ContainerRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
-    ExportRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    ExportRoutes.mount(this.app, [authenticateRoute(), containerContext(), exporterContext()]);
     DataSourceRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
     TypeMappingRoutes.mount(this.app, [authenticateRoute(), containerContext(), typeTransformationContext(), typeMappingContext()])
     MetatypeRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeContext()]);

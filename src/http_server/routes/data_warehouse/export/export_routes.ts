@@ -1,132 +1,147 @@
 import {Request, Response, NextFunction, Application} from "express"
-import {NewDataExport, StartExport, StopExport} from "../../../../data_warehouse/export/exporter";
-import ExportStorage from "../../../../data_access_layer/mappers/data_warehouse/export/export_storage";
+import ExportMapper from "../../../../data_access_layer/mappers/data_warehouse/export/export_mapper";
 import {authInContainer} from "../../../middleware";
+import ExporterRepository, {ExporterFactory} from "../../../../data_access_layer/repositories/data_warehouse/export/export_repository";
+import {plainToClass} from "class-transformer";
+import Export from "../../../../data_warehouse/export/export";
+import Result from "../../../../result";
+import {QueryOptions} from "../../../../data_access_layer/repositories/repository";
 
-const exportStorage = ExportStorage.Instance;
+const exportStorage = ExportMapper.Instance;
+const exporterRepo = new ExporterRepository()
+const exporterFactory = new ExporterFactory()
 
 // Endpoints specific to data exporting
 export default class ExportRoutes {
     public static mount(app: Application, middleware:any[]) {
-        app.get("/containers/:id/data/export", ...middleware, authInContainer("read", "data"), this.listExports)
-        app.post("/containers/:id/data/export",...middleware, authInContainer("write", "data"), this.exportDataFromContainer);
-        app.get("/containers/:id/data/export/:exportID",...middleware, authInContainer("read", "data"), this.getExport);
-        app.post("/containers/:id/data/export/:exportID",...middleware, authInContainer("write", "data"), this.startExport);
-        app.put("/containers/:id/data/export/:exportID",...middleware, authInContainer("write", "data"), this.stopExport);
-        app.delete("/containers/:id/data/export/:exportID",...middleware, authInContainer("write", "data"), this.deleteExport);
+        app.get("/containers/:containerID/data/export", ...middleware, authInContainer("read", "data"), this.listExports)
+        app.post("/containers/:containerID/data/export",...middleware, authInContainer("write", "data"), this.exportDataFromContainer);
+        app.get("/containers/:containerID/data/export/:exportID",...middleware, authInContainer("read", "data"), this.getExport);
+        app.post("/containers/:containerID/data/export/:exportID",...middleware, authInContainer("write", "data"), this.restartExport);
+        app.put("/containers/:containerID/data/export/:exportID",...middleware, authInContainer("write", "data"), this.stopExport);
+        app.delete("/containers/:containerID/data/export/:exportID",...middleware, authInContainer("write", "data"), this.deleteExport);
     }
 
     private static exportDataFromContainer(req: Request, res: Response, next: NextFunction) {
-        NewDataExport(req.currentUser! ,req.params.id, req.body)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
+        if(req.container) {
+            const currentUser = req.currentUser!
+            const payload = plainToClass(Export, req.body as object)
 
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
+            const exporter = exporterFactory.fromExport(payload)
+            if(!exporter) {
+                res.sendStatus(500)
+                next()
+                return
+            }
+
+            exporterRepo.save(currentUser, exporter)
+                .then((result) => {
+                    if (result.isError) {
+                        result.asResponse(res)
+                        return
+                    }
+
+                    exporter.Initiate(currentUser)
+                        .then(result => {
+                            result.asResponse(res)
+                        })
+                        .catch((err) => res.status(500).send(err))
+                        .finally(() => next())
+                })
+                .catch((err) => res.status(500).send(err))
+        } else {
+            Result.Failure(`unable to find container to created export on`).asResponse(res)
+            next()
+        }
     }
 
     private static getExport(req: Request, res: Response, next: NextFunction) {
-        exportStorage.Retrieve(req.params.exportID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
+        if(req.exporter) {
+            Result.Success(req.exporter.Export).asResponse(res)
+            next()
+        } else {
+            Result.Failure(`unable to find export record`).asResponse(res)
+            next()
+        }
     }
 
     private static listExports(req: Request, res: Response, next: NextFunction) {
-        // @ts-ignore
-        if(req.query.sortBy) {
-            // @ts-ignore
-            exportStorage.List(req.params.id, +req.query.offset, +req.query.limit, req.query.sortBy, req.query.sortDesc === 'true')
-                .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-
-                    res.status(200).json(result)
-                })
-                .catch((err) => res.status(404).send(err))
-                .finally(() => next())
-        } else if(req.query.count) {
-            // @ts-ignore
-            exportStorage.Count(req.params.id)
-                .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-
-                    res.status(200).json(result)
-                })
-                .catch((err) => res.status(404).send(err))
-                .finally(() => next())
+        // we'll use a fresh repository to insure no leftover queries
+        const repository = new ExporterRepository()
+        if (req.query.count !== undefined) {
+            if (req.query.count === "true") {
+                repository.count()
+                    .then((result) => {
+                        result.asResponse(res)
+                    })
+                    .catch((err) => {
+                        res.status(404).send(err)
+                    })
+                    .finally(() => next())
+            }
         } else {
             // @ts-ignore
-            exportStorage.List(req.params.id, +req.query.offset, +req.query.limit)
+            repository.list(req.query.loadKeys === undefined || req.query.loadKeys === "true",
+                {
+                    limit: (req.query.limit) ? +req.query.limit : undefined,
+                    offset: (req.query.offset) ? +req.query.offset : undefined,
+                    sortBy: req.query.sortBy,
+                    sortDesc: (req.query.sortDesc) ? req.query.sortDesc === "true" : undefined
+                } as QueryOptions)
                 .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
+                    if(result.isError) {
+                        result.asResponse(res)
                         return
                     }
 
-                    res.status(200).json(result)
+                    Result.Success(result.value.map(exporter => exporter?.Export)).asResponse(res)
                 })
-                .catch((err) => res.status(404).send(err))
+                .catch((err) => {
+                    res.status(404).send(err)
+                })
                 .finally(() => next())
         }
     }
 
-    private static startExport(req: Request, res: Response, next: NextFunction) {
-        StartExport(req.currentUser! ,req.params.exportID, req.query.restart === 'true')
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
+    private static restartExport(req: Request, res: Response, next: NextFunction) {
+        if(req.exporter) {
+            req.exporter.Restart(req.currentUser!)
+                .then(started => {
+                    started.asResponse(res)
+                })
+                .catch(e => res.status(500).send(e))
+                .finally(() => next())
+        } else {
+            Result.Failure(`unable to find export record`).asResponse(res)
+            next()
+        }
     }
 
     private static stopExport(req: Request, res: Response, next: NextFunction) {
-        StopExport(req.currentUser! ,req.params.exportID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
+        if(req.exporter) {
+            req.exporter.Stop(req.currentUser!)
+                .then(started => {
+                    started.asResponse(res)
+                })
+                .catch(e => res.status(500).send(e))
+                .finally(() => next())
+        } else {
+            Result.Failure(`unable to find export record`).asResponse(res)
+            next()
+        }
     }
 
     private static deleteExport(req: Request, res: Response, next: NextFunction) {
-        exportStorage.PermanentlyDelete(req.params.exportID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
+        if(req.exporter) {
+            exporterRepo.delete(req.exporter, req.currentUser!)
+                .then(started => {
+                    started.asResponse(res)
+                })
+                .catch(e => res.status(500).send(e))
+                .finally(() => next())
+        } else {
+            Result.Failure(`unable to find export record`).asResponse(res)
+            next()
+        }
     }
 }

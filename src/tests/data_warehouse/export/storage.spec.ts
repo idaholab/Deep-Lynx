@@ -4,9 +4,10 @@ import { expect } from 'chai'
 import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import Logger from "../../../services/logger";
 import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import ExportStorage from "../../../data_access_layer/mappers/data_warehouse/export/export_storage";
+import ExportMapper from "../../../data_access_layer/mappers/data_warehouse/export/export_mapper";
 import Container from "../../../data_warehouse/ontology/container";
 import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
+import Export, {StandardConfig} from "../../../data_warehouse/export/export";
 
 describe('An Export', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -34,10 +35,10 @@ describe('An Export', async() => {
     })
 
     it('can be saved to storage', async()=> {
-        let storage = ExportStorage.Instance;
+        let storage = ExportMapper.Instance;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {container_id: containerID, adapter:"gremlin", config: {}});
+        let exp = await storage.Create("test suite",
+            new Export({container_id: containerID, adapter:"gremlin", config: new StandardConfig()}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -46,10 +47,10 @@ describe('An Export', async() => {
     });
 
     it('can be retrieved from  storage', async()=> {
-        let storage = ExportStorage.Instance;
+        let storage = ExportMapper.Instance;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {container_id: containerID, adapter:"gremlin", config: {}});
+        let exp = await storage.Create("test suite",
+            new Export({container_id: containerID, adapter:"gremlin", config: new StandardConfig()}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -62,48 +63,32 @@ describe('An Export', async() => {
     });
 
     it('can be have its status set', async()=> {
-        let storage = ExportStorage.Instance;
+        let storage = ExportMapper.Instance;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {container_id: containerID, adapter:"gremlin", config: {}});
+        let exp = await storage.Create("test suite",
+            new Export({container_id: containerID, adapter:"gremlin", config: new StandardConfig()}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let set = await storage.SetStatus(exp.value.id!, "processing");
+        let set = await storage.SetStatus("test suite", exp.value.id!, "processing");
         expect(set.isError).false;
 
         return storage.PermanentlyDelete(exp.value.id!)
     });
 
-    it('can be listed from storage', async()=> {
-        let storage = ExportStorage.Instance;
-
-        let exp = await storage.Create(containerID, "test suite",
-            {container_id: containerID, adapter:"gremlin", config: {}});
-
-        expect(exp.isError).false;
-        expect(exp.value).not.empty;
-
-        let retrieved = await storage.List(containerID);
-        expect(retrieved.isError).false;
-        expect(retrieved.value).not.empty;
-
-        return storage.PermanentlyDelete(exp.value.id!)
-    });
-
     it('can be updated in storage', async()=> {
-        let storage = ExportStorage.Instance;
+        let storage = ExportMapper.Instance;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {container_id: containerID, adapter:"gremlin", config: {}});
+        let exp = await storage.Create("test suite",
+            new Export({container_id: containerID, adapter:"gremlin", config: new StandardConfig()}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
+        exp.value.status = "processing"
 
-        let updateResult = await storage.Update(exp.value.id!, "test-suite",
-            {status:"processing"});
+        let updateResult = await storage.Update("test-suite", exp.value);
         expect(updateResult.isError).false;
 
         let retrieved = await storage.Retrieve(exp.value.id!);
