@@ -108,7 +108,6 @@ export class Router {
 
   private mountPreMiddleware() {
       this.app.use(methodOverride('_method'))
-      this.app.use(currentUser())
 
       // templating engine
       this.app.engine('.hbs', exphbs({extname: '.hbs'}))
@@ -190,6 +189,7 @@ export class Router {
     // finalize passport.js usage
     this.app.use(passport.initialize());
     this.app.use(passport.session());
+    this.app.use(currentUser()) // current user can be pulled after passport runs
   }
 
   private mountPostMiddleware() {

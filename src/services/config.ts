@@ -104,8 +104,8 @@ export class Config {
     this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || "";
     this._db_name = process.env.DB_NAME || "deep_lynx";
 
-    this._template_dir = process.env.TEMPLATE_DIR || "./../dist/api/views"
-    this._asset_dir = process.env.ASSET_DIR || "./../dist/assets"
+    this._template_dir = process.env.TEMPLATE_DIR || "./dist/http_server/views"
+    this._asset_dir = process.env.ASSET_DIR || "./dist/http_server/assets"
 
     this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
 

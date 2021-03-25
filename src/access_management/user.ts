@@ -39,7 +39,7 @@ export class User extends BaseDomainClass {
 
     @IsString()
     @IsOptional()
-    @Exclude() // we never want this to show up in a return
+    @Exclude({toPlainOnly: true}) // we never want this to show up in a return
     password?: string
 
     @IsBoolean()

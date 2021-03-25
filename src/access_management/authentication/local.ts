@@ -17,7 +17,7 @@ export  function SetLocalAuthMethod(app: express.Application) {
 
                 bcrypt.compare(password, result.value.password!)
                     .then((match) => {
-                        if(match) return done(null, serialize(result.value))
+                        if(match) return done(null, result.value)
 
                         return done(null, false)
                     })

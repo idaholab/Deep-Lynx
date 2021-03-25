@@ -48,7 +48,6 @@ export default class ContainerMapper extends Mapper{
         return Promise.resolve(Result.Success(r.value[0]))
     }
 
-
     public async BulkUpdate(userID: string, c: Container[], transaction?: PoolClient): Promise<Result<Container[]>> {
         return super.run(this.fullUpdateStatement(userID, ...c), {transaction, resultClass})
     }

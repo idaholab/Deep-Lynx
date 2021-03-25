@@ -29,7 +29,6 @@ export default class Result<TSuccess> {
         return new Result<any>(null, true, e)
     }
 
-
     public static Pass(res:Result<any>) {
         return res;
     }

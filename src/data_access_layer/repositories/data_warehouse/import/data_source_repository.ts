@@ -6,7 +6,6 @@ import StandardDataSourceImpl from "../../../../data_warehouse/import/standard_d
 import Result from "../../../../result";
 import {User} from "../../../../access_management/user";
 import {PoolClient} from "pg";
-import ExportRecord, {Exporter} from "../../../../data_warehouse/export/export";
 
 export default class DataSourceRepository extends Repository implements RepositoryInterface<DataSource> {
     #mapper = DataSourceMapper.Instance

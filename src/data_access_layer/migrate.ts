@@ -3,10 +3,10 @@
 // script is treated as a transaction. Configuration comes from the same config
 // file that the main application uses.
 
-import PostgresAdapter from "./data_access_layer/mappers/db_adapters/postgres/postgres";
-import Config from "./services/config"
+import PostgresAdapter from "./mappers/db_adapters/postgres/postgres";
+import Config from "../services/config"
 import * as fs from "fs";
-import Logger from "./services/logger"
+import Logger from "../services/logger"
 import pgtools from "pgtools";
 import * as path from "path";
 

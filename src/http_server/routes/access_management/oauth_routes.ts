@@ -11,10 +11,10 @@ import jwt from "jsonwebtoken";
 import uuid from "uuid"
 import UserRepository from "../../../data_access_layer/repositories/access_management/user_repository";
 import {KeyPair, ResetUserPasswordPayload, User} from "../../../access_management/user";
-import {plainToClass, serialize} from "class-transformer";
+import {classToPlain, plainToClass, serialize} from "class-transformer";
 import KeyPairRepository from "../../../data_access_layer/repositories/access_management/keypair_repository";
 import OAuthRepository from "../../../data_access_layer/repositories/access_management/oauth_repository";
-import {OAuthApplication, OAuthRequest, OAuthTokenExchangeRequest} from "../../../access_management/oauth/oauth";
+import {OAuthApplication, OAuthTokenExchangeRequest} from "../../../access_management/oauth/oauth";
 const csurf = require('csurf')
 const buildUrl = require('build-url')
 
@@ -97,20 +97,16 @@ export default class OAuthRoutes {
     }
 
     private static oauthApplicationPage(req: Request, res: Response) {
-        oauthRepo.findByID(req.params.applicationID)
-            .then(application => {
-                if(application.isError) {
-                    res.redirect(buildUrl('/oauth/applications', {queryParams: {error: application.error}}))
-                    return
-                }
-                res.render('oauth_application_single', {
-                    // @ts-ignore
-                    _csrfToken: req.csrfToken(),
-                    application: serialize(application.value)
-                })
-
-                return
+        if(req.oauthApp) {
+            res.render('oauth_application_single', {
+                // @ts-ignore
+                _csrfToken: req.csrfToken(),
+                application: classToPlain(req.oauthApp)
             })
+        } else {
+            res.redirect(buildUrl('/oauth/applications', {queryParams: {error: `uanble to find oauth application`}}))
+            return
+        }
     }
 
     private static generateKeyPair(req: Request, res: Response, next: NextFunction) {
@@ -367,7 +363,7 @@ export default class OAuthRoutes {
                     // some parameters come from the create routes successful redirect
                     application_id: req.query.application_id,
                     application_secret: req.query.application_secret,
-                    applications: serialize(result.value),
+                    applications: classToPlain(result.value),
                     _error: req.query.error,
                     _success: req.query.success})
             })
