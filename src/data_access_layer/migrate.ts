@@ -54,7 +54,7 @@ class Migrator {
 
 
         // read the migrations directory
-        fs.readdir(path.resolve(__dirname,`../src/data_access_layer/migrations`),
+        fs.readdir(path.resolve(__dirname,`../../src/data_access_layer/migrations`),
             async (err, files)=>{
             if(err){
                 Logger.error('unable to read migration directory');
@@ -80,7 +80,7 @@ class Migrator {
                     Logger.info(`beginning migration of ${file}`);
 
                     await this.pool.query({text:`INSERT INTO migrations(name) VALUES($1)`, values:[file]});
-                    const statements = fs.readFileSync(path.resolve(__dirname,`../src/data_access_layer/migrations/${file}`)).toString();
+                    const statements = fs.readFileSync(path.resolve(__dirname,`../../src/data_access_layer/migrations/${file}`)).toString();
 
                     await this.pool.query(statements)
 

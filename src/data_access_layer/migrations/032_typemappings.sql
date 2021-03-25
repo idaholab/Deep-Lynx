@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS data_type_mappings CASCADE;
 DROP FUNCTION IF EXISTS set_type_mapping_trigger;
 
+DROP TYPE IF EXISTS on_conflict_type;
 CREATE TYPE on_conflict_type AS ENUM ('create', 'update', 'ignore');
 
 CREATE TABLE IF NOT EXISTS data_type_mappings (

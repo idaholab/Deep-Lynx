@@ -1,3 +1,4 @@
+DROP TYPE IF EXISTS file_upload_adapters;
 CREATE TYPE file_upload_adapters as ENUM('aws_s3', 'filesystem', 'azure_blob');
 
 CREATE TABLE IF NOT EXISTS files(
