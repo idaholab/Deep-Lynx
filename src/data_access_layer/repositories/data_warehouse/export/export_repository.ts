@@ -8,9 +8,10 @@ import {PoolClient} from "pg";
 
 export default class ExporterRepository extends Repository implements RepositoryInterface<Exporter> {
     #mapper = ExportMapper.Instance
+    #factory = new ExporterFactory()
 
     async delete(t: Exporter, user?: User): Promise<Result<boolean>> {
-        if(!t.ExportRecord) return Promise.resolve(Result.Failure(`cannot delete export: no export record present`))
+        if(!t.ExportRecord || !t.ExportRecord.id) return Promise.resolve(Result.Failure(`cannot delete export: no export record present or export record lacking id`))
         if(!user) user = SuperUser
 
         const stopped = await t.Stop(user)
@@ -23,8 +24,7 @@ export default class ExporterRepository extends Repository implements Repository
         const exportRecord = await this.#mapper.Retrieve(id)
         if(exportRecord.isError) return Promise.resolve(Result.Pass(exportRecord))
 
-        const exporterFactory = new ExporterFactory()
-        const exporter = exporterFactory.fromExport(exportRecord.value)
+        const exporter = this.#factory.fromExport(exportRecord.value)
 
         if(!exporter) return Promise.resolve(Result.Failure(`unable to create exporter from export record`))
 
@@ -32,7 +32,6 @@ export default class ExporterRepository extends Repository implements Repository
     }
 
     async save(t: Exporter, user: User): Promise<Result<boolean>> {
-        const exporterFactory = new ExporterFactory()
         if(!t.ExportRecord) return Promise.resolve(Result.Failure(`Exporter must have export record instantiated`))
 
         const errors = await t.ExportRecord.validationErrors()
@@ -56,7 +55,7 @@ export default class ExporterRepository extends Repository implements Repository
             savedRecord = created.value
         }
 
-        const newExporter = exporterFactory.fromExport(savedRecord)
+        const newExporter = this.#factory.fromExport(savedRecord)
         if(!newExporter) return Promise.resolve(Result.Failure(`unable to instantiate new exporter from saved export record`))
 
         Object.assign(t, newExporter)
@@ -89,12 +88,10 @@ export default class ExporterRepository extends Repository implements Repository
     }
 
     async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<(Exporter | undefined)[]>> {
-        const factory = new ExporterFactory()
-
         const results = await super.findAll<ExportRecord>(options, {transaction, resultClass: ExportRecord})
         if (results.isError) return Promise.resolve(Result.Pass(results))
 
-        return Promise.resolve(Result.Success(results.value.map(record => factory.fromExport(record))))
+        return Promise.resolve(Result.Success(results.value.map(record => this.#factory.fromExport(record))))
     }
 }
 

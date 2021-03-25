@@ -5,7 +5,7 @@ import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/post
 import Logger from "../../../services/logger";
 import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import DataSourceStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
+import DataSourceMapper from "../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
 import TypeMappingMapper from "../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper";
 import MetatypeMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper";
 import MetatypeKeyMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper";
@@ -13,6 +13,7 @@ import Container from "../../../data_warehouse/ontology/container";
 import Metatype from "../../../data_warehouse/ontology/metatype";
 import TypeMapping from "../../../data_warehouse/etl/type_mapping";
 import MetatypeKey from "../../../data_warehouse/ontology/metatype_key";
+import DataSourceRecord from "../../../data_warehouse/import/data_source";
 
 describe('A Data Type Mapping', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -40,7 +41,7 @@ describe('A Data Type Mapping', async() => {
     })
 
     it('can be saved to storage', async()=> {
-        let storage = DataSourceStorage.Instance;
+        let storage = DataSourceMapper.Instance;
         let mMapper = MetatypeMapper.Instance;
         let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingMapper.Instance
@@ -57,13 +58,13 @@ describe('A Data Type Mapping', async() => {
         let keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let exp = await DataSourceMapper.Instance.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"manual",
-                data_format: "json",
-                config: {}});
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -81,7 +82,7 @@ describe('A Data Type Mapping', async() => {
     });
 
     it('can be retrieved from storage', async()=> {
-        let storage = DataSourceStorage.Instance;
+        let storage = DataSourceMapper.Instance;
         let mMapper = MetatypeMapper.Instance;
         let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingMapper.Instance
@@ -98,13 +99,13 @@ describe('A Data Type Mapping', async() => {
         let keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let exp = await DataSourceMapper.Instance.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"manual",
-                data_format: "json",
-                config: {}});
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -125,7 +126,7 @@ describe('A Data Type Mapping', async() => {
     });
 
     it('can set active', async()=> {
-        let storage = DataSourceStorage.Instance;
+        let storage = DataSourceMapper.Instance;
         let mMapper = MetatypeMapper.Instance;
         let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingMapper.Instance
@@ -142,13 +143,13 @@ describe('A Data Type Mapping', async() => {
         let keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let exp = await DataSourceMapper.Instance.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"manual",
-                data_format: "json",
-                config: {}});
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -170,7 +171,7 @@ describe('A Data Type Mapping', async() => {
     });
 
     it('can be listed from storage by container and data source', async()=> {
-        let storage = DataSourceStorage.Instance;
+        let storage = DataSourceMapper.Instance;
         let mMapper = MetatypeMapper.Instance;
         let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingMapper.Instance
@@ -187,13 +188,13 @@ describe('A Data Type Mapping', async() => {
         let keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let exp = await DataSourceMapper.Instance.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"manual",
-                data_format: "json",
-                config: {}});
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -219,7 +220,7 @@ describe('A Data Type Mapping', async() => {
     });
 
     it('can be deleted from storage', async()=> {
-        let storage = DataSourceStorage.Instance;
+        let storage = DataSourceMapper.Instance;
         let mMapper = MetatypeMapper.Instance;
         let keyStorage = MetatypeKeyMapper.Instance
         let mappingStorage = TypeMappingMapper.Instance
@@ -236,13 +237,13 @@ describe('A Data Type Mapping', async() => {
         let keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let exp = await DataSourceMapper.Instance.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"manual",
-                data_format: "json",
-                config: {}});
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;

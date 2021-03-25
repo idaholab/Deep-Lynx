@@ -4,7 +4,7 @@ import Vertices from './vertices';
 import Edges from "./edges";
 import {GraphSONReaderV1} from "./graphson_v1_reader/reader";
 import {IsBoolean, IsNumber, IsOptional, IsString, IsUrl} from "class-validator";
-import {BaseConfig, GremlinExportConfig, StandardConfig} from "../../data_warehouse/export/export";
+import {BaseExporterConfig, GremlinExportConfig, StandardExporterConfig} from "../../data_warehouse/export/export";
 import {Exclude} from "class-transformer";
 
 

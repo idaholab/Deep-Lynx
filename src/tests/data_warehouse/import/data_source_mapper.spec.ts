@@ -4,9 +4,10 @@ import { expect } from 'chai'
 import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import Logger from "../../../services/logger";
 import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import DataSourceStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
+import DataSourceMapper from "../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
 import Container from "../../../data_warehouse/ontology/container";
 import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
+import DataSourceRecord from "../../../data_warehouse/import/data_source";
 
 describe('A Data Source', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -35,14 +36,15 @@ describe('A Data Source', async() => {
     })
 
     it('can be saved to storage', async()=> {
-        let storage = DataSourceStorage.Instance;
+        let storage = DataSourceMapper.Instance;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let exp = await storage.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"manual",
-                data_format: "json"});
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -51,14 +53,14 @@ describe('A Data Source', async() => {
     });
 
     it('can be retrieved from  storage', async()=> {
-        let storage = DataSourceStorage.Instance;
-
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let storage = DataSourceMapper.Instance;
+        let exp = await storage.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"manual",
-                data_format: "json"});
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -70,57 +72,29 @@ describe('A Data Source', async() => {
         return storage.PermanentlyDelete(exp.value.id!)
     });
 
-    it('can be listed from storage', async()=> {
-        let storage = DataSourceStorage.Instance;
-
-        let exp = await storage.Create(containerID, "test suite",
-            {
-                name: "Test Data Source",
-                active:false,
-                adapter_type:"manual",
-                data_format: "json",
-                poll_interval:2,
-                config: {}});
-
-        expect(exp.isError).false;
-        expect(exp.value).not.empty;
-
-        let retrieved = await storage.ListForContainer(containerID);
-        expect(retrieved.isError).false;
-        expect(retrieved.value).not.empty;
-
-        return storage.PermanentlyDelete(exp.value.id!)
-    });
-
     it('can list active after date from storage', async()=> {
-        let storage = DataSourceStorage.Instance;
+        let storage = DataSourceMapper.Instance;
         let currentTime = new Date()
 
         let activeSince = await storage.ListActiveSince(currentTime)
         expect(activeSince.isError).false
         expect(activeSince.value).empty
 
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let exp = await storage.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
-                active:true ,
-                adapter_type:"manual",
-                data_format: "json",
-                poll_interval:2,
-                config: {}});
+                active: true,
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
         // check if is active
         let active = await storage.IsActive(exp.value.id!)
-
         expect(active.isError).false
         expect(active.value).true
-
-        let retrieved = await storage.ListForContainer(containerID);
-        expect(retrieved.isError).false;
-        expect(retrieved.value).not.empty;
 
         activeSince = await storage.ListActiveSince(currentTime)
         expect(activeSince.isError).false
@@ -135,28 +109,25 @@ describe('A Data Source', async() => {
     });
 
     it('can be updated in storage', async()=> {
-        let storage = DataSourceStorage.Instance;
+        let storage = DataSourceMapper.Instance;
 
-
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let exp = await storage.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"manual",
-                data_format: "json",
-                config: {}});
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
 
-        let updateResult = await storage.Update(exp.value.id!, "test-suite",
-            {active:false});
-        expect(updateResult.isError).false;
+        exp.value.name = "New Name"
 
-        let retrieved = await storage.Retrieve(exp.value.id!);
-        expect(retrieved.isError).false;
-        expect(retrieved.value.active).false;
+        let updateResult = await storage.Update("test-suite", exp.value);
+        expect(updateResult.isError).false;
+        expect(updateResult.value.name).eq("New Name")
 
         return storage.PermanentlyDelete(exp.value.id!)
     })

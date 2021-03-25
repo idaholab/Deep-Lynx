@@ -25,6 +25,7 @@ import TypeTransformationRepository
 import ExporterRepository from "../data_access_layer/repositories/data_warehouse/export/export_repository";
 import ImportRepository from "../data_access_layer/repositories/data_warehouse/import/import_repository";
 import DataStagingRepository from "../data_access_layer/repositories/data_warehouse/import/data_staging_repository";
+import DataSourceRepository from "../data_access_layer/repositories/data_warehouse/import/data_source_repository";
 
 // PerformanceMiddleware uses the provided logger to display the time each route
 // took to process and send a response to the requester. This leverages node.js's
@@ -666,6 +667,36 @@ export function dataStagingContext(): any {
                 }
 
                 req.dataStagingRecord = result.value
+                next()
+            })
+            .catch(error => {
+                resp.status(500).json(error)
+                return
+            })
+    }
+}
+
+// dataSource context will attempt to fetch a data source interface by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "sourceID"
+export function dataSourceContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have an id , don't fail, just pass without action
+        if(!req.params.sourceID) {
+            next()
+            return
+        }
+
+        const repo = new DataSourceRepository()
+
+        repo.findByID(req.params.sourceID)
+            .then(result => {
+                if(result.isError) {
+                    resp.status(result.error?.errorCode!).json(result)
+                    return
+                }
+
+                req.dataSource = result.value
                 next()
             })
             .catch(error => {

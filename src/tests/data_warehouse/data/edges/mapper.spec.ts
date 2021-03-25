@@ -8,7 +8,7 @@ import {expect} from "chai";
 import MetatypeRelationshipMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper";
 import MetatypeRelationshipPairMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
 import EdgeMapper from "../../../../data_access_layer/mappers/data_warehouse/data/edge_mapper";
-import DataSourceStorage from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
+import DataSourceMapper from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
 import MetatypeRelationshipKeyMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper";
 import Container from "../../../../data_warehouse/ontology/container";
 import Metatype from "../../../../data_warehouse/ontology/metatype";
@@ -21,6 +21,7 @@ import NodeMapper from "../../../../data_access_layer/mappers/data_warehouse/dat
 import GraphMapper from "../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
 import Node from "../../../../data_warehouse/data/node";
 import Edge from "../../../../data_warehouse/data/edge";
+import DataSourceRecord from "../../../../data_warehouse/import/data_source";
 
 describe('An Edge Mapper', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -146,14 +147,15 @@ describe('An Edge Mapper', async() => {
         const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // we must create a valid data source for this test
-        const dataStorage = DataSourceStorage.Instance;
+        const dataStorage = DataSourceMapper.Instance;
 
-        let exp = await dataStorage.Create(containerID, "test suite",
-            {
+        let exp = await dataStorage.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
-                active:false,
-                adapter_type:"manual",
-            });
+                active: true,
+                adapter_type:"standard",
+                data_format: "json"}))
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;

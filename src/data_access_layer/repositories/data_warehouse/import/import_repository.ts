@@ -5,7 +5,7 @@ import ImportMapper from "../../../mappers/data_warehouse/import/import_mapper";
 import {PoolClient} from "pg";
 import {User} from "../../../../access_management/user";
 import DataStagingRepository from "./data_staging_repository";
-import DataSourceStorage from "../../../mappers/data_warehouse/import/data_source_storage";
+import DataSourceMapper from "../../../mappers/data_warehouse/import/data_source_mapper";
 import TypeMappingRepository from "../etl/type_mapping_repository";
 import TypeMapping from "../../../../data_warehouse/etl/type_mapping";
 import Logger from "../../../../services/logger";
@@ -59,61 +59,6 @@ export default class ImportRepository extends Repository implements RepositoryIn
         }
 
         return Promise.resolve(Result.Success(true))
-    }
-
-    // TODO: this will need to be reworked to handle larger payloads at some point, and to take advantage of Postgres's file copy
-    async jsonImport(user:User, dataSourceID: string, payload:any): Promise<Result<Import>> {
-        const stagingRepo = new DataStagingRepository()
-        const dataSource = await DataSourceStorage.Instance.Retrieve(dataSourceID)
-        const mappingRepo = new TypeMappingRepository()
-        if(dataSource.isError) return new Promise(resolve => resolve(Result.Pass(dataSource)))
-
-        if(!Array.isArray(payload)) return new Promise(resolve => resolve(Result.Failure("payload must be an array of JSON objects")))
-
-        const newImport = await ImportMapper.Instance.CreateImport(user.id!, new Import({
-            data_source_id: dataSourceID,
-            reference: "manual upload"
-        }))
-
-        const records : DataStaging[] = []
-
-        for(const data of payload) {
-            const shapeHash = TypeMapping.objectToShapeHash(data)
-
-            let mapping: TypeMapping
-
-            const retrieved = await mappingRepo.findByShapeHash(shapeHash, dataSourceID)
-            if(retrieved.isError) {
-                const newMapping = new TypeMapping({
-                    container_id: dataSource.value.container_id!,
-                    data_source_id: dataSourceID,
-                    sample_payload: data
-                })
-
-                const saved = await mappingRepo.save(newMapping, user)
-
-                if(saved.isError) {
-                    Logger.error(`unable to create new type mapping for imported data ${saved.error}`)
-                    continue
-                }
-
-                mapping = newMapping
-            } else {
-                mapping = retrieved.value
-            }
-
-            records.push(new DataStaging({
-                data_source_id: dataSourceID,
-                import_id: newImport.value.id!,
-                mapping_id: mapping.id!,
-                data
-            }))
-        }
-
-        const saved = await stagingRepo.bulkSave(records)
-        if(saved.isError) return Promise.resolve(Result.Pass(saved))
-
-        return new Promise(resolve => resolve(Result.Success(newImport.value)))
     }
 
     constructor() {

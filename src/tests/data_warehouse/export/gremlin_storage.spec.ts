@@ -21,7 +21,7 @@ import MetatypeRelationshipPair from "../../../data_warehouse/ontology/metatype_
 import MetatypeKey from "../../../data_warehouse/ontology/metatype_key";
 import Node from "../../../data_warehouse/data/node";
 import Edge from "../../../data_warehouse/data/edge";
-import ExportRecord, {StandardConfig} from "../../../data_warehouse/export/export";
+import ExportRecord, {StandardExporterConfig} from "../../../data_warehouse/export/export";
 
 describe('Gremlin Exporter', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -133,7 +133,7 @@ describe('Gremlin Exporter', async() => {
         let exportStorage = ExportMapper.Instance;
 
         let exp = await exportStorage.Create("test suite",
-            new ExportRecord({container_id: containerID, adapter:"gremlin", config: new StandardConfig()}));
+            new ExportRecord({container_id: containerID, adapter:"gremlin", config: new StandardExporterConfig()}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;

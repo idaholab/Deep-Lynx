@@ -5,7 +5,7 @@ import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/post
 import Logger from "../../../services/logger";
 import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import DataSourceStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
+import DataSourceMapper from "../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
 import ImportMapper from "../../../data_access_layer/mappers/data_warehouse/import/import_mapper";
 import DataStagingMapper from "../../../data_access_layer/mappers/data_warehouse/import/data_staging_mapper";
 import Container from "../../../data_warehouse/ontology/container";
@@ -14,6 +14,7 @@ import {User} from "../../../access_management/user";
 import TypeMapping from "../../../data_warehouse/etl/type_mapping";
 import TypeMappingRepository from "../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 import Import, {DataStaging} from "../../../data_warehouse/import/import";
+import DataSourceRecord from "../../../data_warehouse/import/data_source";
 
 describe('A data import', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -57,15 +58,16 @@ describe('A data import', async() => {
 
     // need to test if we can query imports that are incomplete with uninserted data
     it('can be listed by incomplete and uninserted', async()=> {
-        let storage = DataSourceStorage.Instance;
+        let storage = DataSourceMapper.Instance;
         let importStorage = ImportMapper.Instance;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let exp = await storage.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
-                active:false,
-                adapter_type:"manual",
-                config: {}});
+                active: true,
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -109,15 +111,16 @@ describe('A data import', async() => {
     });
 
     it('have individual data records errors set', async()=> {
-        let storage = DataSourceStorage.Instance;
+        let storage = DataSourceMapper.Instance;
         let importStorage = ImportMapper.Instance;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let exp = await storage.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
-                active:true,
-                adapter_type:"manual",
-                config: {}});
+                active: true,
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -169,15 +172,16 @@ describe('A data import', async() => {
     });
 
     it('can be stopped', async()=> {
-        let storage = DataSourceStorage.Instance;
+        let storage = DataSourceMapper.Instance;
         let importStorage = ImportMapper.Instance;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let exp = await storage.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
-                active:false,
-                adapter_type:"manual",
-                config: {}});
+                active: true,
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -199,15 +203,16 @@ describe('A data import', async() => {
     });
 
     it('can be updated with errors', async()=> {
-        let storage = DataSourceStorage.Instance;
+        let storage = DataSourceMapper.Instance;
         let importStorage = ImportMapper.Instance;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let exp = await storage.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
-                active:false,
-                adapter_type:"manual",
-                config: {}});
+                active: true,
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -229,15 +234,16 @@ describe('A data import', async() => {
     });
 
     it('can be locked for processing', async()=> {
-        let storage = DataSourceStorage.Instance;
+        let storage = DataSourceMapper.Instance;
         let importStorage = ImportMapper.Instance;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let exp = await storage.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
-                active:false,
-                adapter_type:"manual",
-                config: {}});
+                active: true,
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -270,15 +276,16 @@ describe('A data import', async() => {
     });
 
     it('can be retrieved by last stopped', async()=> {
-        let storage = DataSourceStorage.Instance;
+        let storage = DataSourceMapper.Instance;
         let importStorage = ImportMapper.Instance;
 
-        let exp = await storage.Create(containerID, "test suite",
-            {
+        let exp = await storage.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
-                active:false,
-                adapter_type:"manual",
-                config: {}});
+                active: true,
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;

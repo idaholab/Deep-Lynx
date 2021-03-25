@@ -1,7 +1,13 @@
 import {Application, NextFunction, Request, Response} from "express"
 import {authInContainer} from "../../../middleware";
-import {NewDataSource, SetDataSourceActive, SetDataSourceConfiguration} from "../../../data_source";
-import DataSourceStorage from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
+import {plainToClass} from "class-transformer";
+import DataSourceRecord from "../../../../data_warehouse/import/data_source";
+import Result from "../../../../result";
+import DataSourceRepository, {DataSourceFactory} from "../../../../data_access_layer/repositories/data_warehouse/import/data_source_repository";
+import {QueryOptions} from "../../../../data_access_layer/repositories/repository";
+
+const dataSourceRepo = new DataSourceRepository()
+const dataSourceFactory = new DataSourceFactory()
 
 // This contains all routes pertaining to DataSources.
 export default class DataSourceRoutes {
@@ -9,7 +15,7 @@ export default class DataSourceRoutes {
         app.post("/containers/:containerID/import/datasources", ...middleware, authInContainer("write", "data"), this.createDataSource);
         app.get("/containers/:containerID/import/datasources", ...middleware, authInContainer("read", "data"), this.listDataSources);
         app.get("/containers/:containerID/import/datasources/:sourceID", ...middleware, authInContainer("read", "data"), this.retrieveDataSource);
-        app.put("/containers/:containerID/import/datasources/:sourceID", ...middleware, authInContainer("read", "data"), this.setConfiguration);
+        app.put("/containers/:containerID/import/datasources/:sourceID", ...middleware, authInContainer("read", "data"), this.updateDataSource);
         app.delete("/containers/:containerID/import/datasources/:sourceID", ...middleware, authInContainer("read", "data"), this.deleteDataSource);
 
         app.post("/containers/:containerID/import/datasources/:sourceID/active", ...middleware, authInContainer("read", "data"), this.setActive);
@@ -17,131 +23,147 @@ export default class DataSourceRoutes {
     }
 
     private static createDataSource(req: Request, res: Response, next: NextFunction) {
-        NewDataSource(req.currentUser! , req.params.id, req.body)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
+        if(req.container) {
+            const currentUser = req.currentUser!
 
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
+            const payload = plainToClass(DataSourceRecord, req.body as object)
+            payload.container_id = req.container.id!
+
+            const dataSource = dataSourceFactory.fromDataSourceRecord(payload)
+            if(!dataSource) {
+                res.sendStatus(500)
+                next()
+                return
+            }
+
+            dataSourceRepo.save(dataSource, currentUser)
+                .then((result) => {
+                    if (result.isError) {
+                        result.asResponse(res)
+                        return
+                    }
+
+                    Result.Success(dataSource.DataSourceRecord).asResponse(res)
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        } else {
+            Result.Failure(`unable to find container`).asResponse(res)
+            next()
+        }
     }
 
-    private static setConfiguration(req: Request, res: Response, next: NextFunction) {
-        SetDataSourceConfiguration(req.currentUser! , req.params.sourceID, req.body)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
+    private static updateDataSource(req: Request, res: Response, next: NextFunction) {
+        if(req.container && req.dataSource) {
+            const currentUser = req.currentUser!
 
-                res.status(201).json(result)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
+            Object.assign(req.dataSource.DataSourceRecord, req.body as object)
+
+            dataSourceRepo.save(req.dataSource, currentUser)
+                .then((result) => {
+                    if (result.isError) {
+                        result.asResponse(res)
+                        return
+                    }
+
+                    Result.Success(req.dataSource!.DataSourceRecord).asResponse(res)
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        } else {
+            Result.Failure(`unable to find container or data source `).asResponse(res)
+            next()
+        }
     }
 
     private static retrieveDataSource(req: Request, res: Response, next: NextFunction) {
-        DataSourceStorage.Instance.Retrieve(req.params.sourceID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                // TODO: slightly hacky, might be a better way of doing this.
-                // this is needed to remove encrypted data from the return
-                if (result.value.config) {
-                    // @ts-ignore
-                    delete result.value.config.token
-                    // @ts-ignore
-                    delete result.value.config.username
-                    // @ts-ignore
-                    delete result.value.config.password
-                }
-
-                res.status(200).json(result)
-            })
-            .catch((err) => {
-                res.status(404).send(err)
-            })
-            .finally(() => next())
+        if(req.dataSource) {
+            Result.Success(req.dataSource.DataSourceRecord).asResponse(res)
+            next()
+        } else {
+            Result.Failure(`unable to find data source`, 404).asResponse(res)
+            next()
+        }
     }
 
     private static setActive(req: Request, res: Response, next: NextFunction) {
-        SetDataSourceActive(req.params.sourceID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.sendStatus(200)
-            })
-            .catch((err) => res.status(404).send(err))
-            .finally(() => next())
+        if(req.dataSource) {
+            dataSourceRepo.setActive(req.dataSource, req.currentUser!)
+                .then((result) => {
+                    result.asResponse(res)
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        } else {
+            Result.Failure(`unable to find data source`, 404).asResponse(res)
+            next()
+        }
     }
 
     private static setInactive(req: Request, res: Response, next: NextFunction) {
-        DataSourceStorage.Instance.SetInactive(req.params.sourceID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-
-                res.sendStatus(200)
-            })
-            .catch((err) => {
-                res.status(404).send(err)
-            })
-            .finally(() => next())
+        if(req.dataSource) {
+            dataSourceRepo.setActive(req.dataSource, req.currentUser!)
+                .then((result) => {
+                    result.asResponse(res)
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        } else {
+            Result.Failure(`unable to find data source`, 404).asResponse(res)
+            next()
+        }
     }
 
     private static listDataSources(req: Request, res: Response, next: NextFunction) {
-        DataSourceStorage.Instance.ListForContainer(req.params.id)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
+        let repository = new DataSourceRepository()
+        repository = repository.where().containerID("eq", req.container!.id!)
 
-                for (const i in result.value) {
-                    // TODO: slightly hacky, might be a better way of doing this.
-                    // this is needed to remove encrypted data from the return
-                    if (result.value[i].config) {
-                        // @ts-ignore
-                        delete result.value[i].config.token
-                        // @ts-ignore
-                        delete result.value[i].config.username
-                        // @ts-ignore
-                        delete result.value[i].config.password
+        if (req.query.count !== undefined) {
+            if (req.query.count === "true") {
+                repository.count()
+                    .then((result) => {
+                        result.asResponse(res)
+                    })
+                    .catch((err) => {
+                        res.status(404).send(err)
+                    })
+                    .finally(() => next())
+            }
+        } else {
+            // @ts-ignore
+            repository.list({
+                limit: (req.query.limit) ? +req.query.limit : undefined,
+                offset: (req.query.offset) ? +req.query.offset : undefined,
+                sortBy: req.query.sortBy,
+                sortDesc: (req.query.sortDesc) ? req.query.sortDesc === "true" : undefined
+            } as QueryOptions)
+                .then((result) => {
+                    if (result.isError) {
+                        result.asResponse(res)
+                        return
                     }
 
-                }
-
-                res.status(200).json(result)
-            })
-            .catch((err) => {
-                res.status(404).send(err)
-            })
-            .finally(() => next())
+                    Result.Success(result.value.map(source => source?.DataSourceRecord)).asResponse(res)
+                })
+                .catch((err) => {
+                    res.status(404).send(err)
+                })
+                .finally(() => next())
+        }
     }
 
     private static deleteDataSource(req: Request, res: Response, next: NextFunction) {
-        DataSourceStorage.Instance.PermanentlyDelete(req.params.sourceID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-                res.sendStatus(200)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
+        if(req.dataSource) {
+            dataSourceRepo.delete(req.dataSource)
+                .then((result) => {
+                    result.asResponse(res)
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        } else {
+            Result.Failure(`unable to find data source`, 404).asResponse(res)
+            next()
+        }
     }
 }
 

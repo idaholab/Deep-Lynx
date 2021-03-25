@@ -13,6 +13,7 @@ import TypeMapping from "../../data_warehouse/etl/type_mapping";
 import TypeTransformation from "../../data_warehouse/etl/type_transformation";
 import {Exporter} from "../../data_warehouse/export/export";
 import Import, {DataStaging} from "../../data_warehouse/import/import";
+import {DataSource} from "../../data_warehouse/import/data_source";
 
 
 declare global {
@@ -25,16 +26,17 @@ declare global {
             metatypeKey?: MetatypeKey
             metatypeRelationshipKey?: MetatypeRelationshipKey
             currentUser?: DLUser
-            routeUser?: DLUser,
-            oauthApp?: OAuthApplication,
-            eventRegistration?: EventRegistration,
-            node?: Node,
-            edge?: Edge,
-            typeMapping?: TypeMapping,
-            typeTransformation?: TypeTransformation,
-            exporter?: Exporter,
-            dataImport?: Import,
+            routeUser?: DLUser
+            oauthApp?: OAuthApplication
+            eventRegistration?: EventRegistration
+            node?: Node
+            edge?: Edge
+            typeMapping?: TypeMapping
+            typeTransformation?: TypeTransformation
+            exporter?: Exporter
+            dataImport?: Import
             dataStagingRecord?: DataStaging
+            dataSource?: DataSource
         }
    }
 }

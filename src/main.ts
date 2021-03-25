@@ -27,19 +27,6 @@ storage.boot()
             console.log(data.toString().trim())
         })
 
-        // Start the proactive data sources, e.g the HTTP poller data source type
-        const dataSourcePolling = spawn('node', [`${Config.project_dir}/data_polling.js`])
-
-        // we want the stdout and stderr output of the function to combine logging
-        dataSourcePolling.stdout.on('data', (data: any) => {
-            console.log(data.toString().trim())
-        })
-
-        dataSourcePolling.stderr.on('data', (data: any) => {
-            console.log(data.toString().trim())
-        })
-
-
         // Start Data Processing loop
         const dataProcessing = spawn('node', [`${Config.project_dir}/data_processing.js`])
 

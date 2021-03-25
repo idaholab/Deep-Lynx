@@ -4,13 +4,14 @@ import { expect } from 'chai'
 import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import Logger from "../../../../services/logger";
 import ContainerStorage from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import DataSourceStorage from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
+import DataSourceMapper from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
 import FileMapper from "../../../../data_access_layer/mappers/data_warehouse/data/file_mapper";
 import Container from "../../../../data_warehouse/ontology/container";
 import {User} from "../../../../access_management/user";
 import UserMapper from "../../../../data_access_layer/mappers/access_management/user_mapper";
 import File from "../../../../data_warehouse/data/file";
 import FileRepository from "../../../../data_access_layer/repositories/data_warehouse/data/file_repository";
+import DataSourceRecord from "../../../../data_warehouse/import/data_source";
 
 describe('A File Repository can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -46,13 +47,13 @@ describe('A File Repository can', async() => {
         expect(container.value.id).not.null
         containerID = container.value.id!;
 
-        let exp = await DataSourceStorage.Instance.Create(containerID, user.id!,
-            {
+        let exp = await DataSourceMapper.Instance.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"http",
-                data_format: "json",
-                config: {}});
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -63,7 +64,7 @@ describe('A File Repository can', async() => {
     });
 
     after(async function() {
-       await DataSourceStorage.Instance.PermanentlyDelete(dataSourceID)
+       await DataSourceMapper.Instance.PermanentlyDelete(dataSourceID)
 
         return ContainerStorage.Instance.Delete(containerID)
     })

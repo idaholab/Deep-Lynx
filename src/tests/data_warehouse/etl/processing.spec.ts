@@ -5,7 +5,7 @@ import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/post
 import Logger from "../../../services/logger";
 import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import DataSourceStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
+import DataSourceMapper from "../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
 import TypeMappingMapper from "../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper";
 import GraphMapper from "../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
 import ImportMapper from "../../../data_access_layer/mappers/data_warehouse/import/import_mapper";
@@ -14,10 +14,8 @@ import MetatypeRelationshipMapper
     from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper";
 import MetatypeRelationshipPairMapper
     from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
-import {DataSourceT} from "../../../types/import/dataSourceT";
 import TypeTransformationMapper
     from "../../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper";
-import {DataSourceProcessor} from "../../../data_warehouse/etl/processing";
 import Container from "../../../data_warehouse/ontology/container";
 import Metatype from "../../../data_warehouse/ontology/metatype";
 import MetatypeRelationship from "../../../data_warehouse/ontology/metatype_relationship";
@@ -32,13 +30,15 @@ import TypeMapping from "../../../data_warehouse/etl/type_mapping";
 import TypeTransformation, {KeyMapping} from "../../../data_warehouse/etl/type_transformation";
 import TypeMappingRepository from "../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 import Import, {DataStaging} from "../../../data_warehouse/import/import";
+import DataSourceRecord, {DataSource} from "../../../data_warehouse/import/data_source";
+import {DataSourceFactory} from "../../../data_access_layer/repositories/data_warehouse/import/data_source_repository";
 
 describe('A Data Processor', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
     var graphID: string = ""
     var typeMappingID: string = ""
     var typeMapping: TypeMapping | undefined = undefined
-    var dataSource: DataSourceT | undefined = undefined
+    var dataSource: DataSource | undefined = undefined
     var dataImportID: string = ""
     var resultMetatypeRelationships: MetatypeRelationship[] = []
     var user: User
@@ -242,11 +242,8 @@ describe('A Data Processor', async() => {
         expect(graph.isError).false;
         graphID = graph.value.id!
 
-        let dstorage = DataSourceStorage.Instance;
+        let dStorage = DataSourceMapper.Instance;
         let relationshipMapper = MetatypeRelationshipMapper.Instance;
-        let mappingStorage = TypeMappingMapper.Instance
-
-
         let metatypeRepo = new MetatypeRepository()
         let created = await metatypeRepo.bulkSave(user, test_metatypes)
 
@@ -279,18 +276,19 @@ describe('A Data Processor', async() => {
 
         maintenancePair = pairs.value
 
-        let exp = await dstorage.Create(containerID, "test suite",
-            {
+        let exp = await dStorage.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active: true,
-                adapter_type:"http",
-                data_format: "json",
-                config: {}});
+                adapter_type:"standard",
+                data_format: "json"}))
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        dataSource = exp.value
+        const dfactory = new DataSourceFactory()
+        dataSource = dfactory.fromDataSourceRecord(exp.value)
 
 
         let mapping = new TypeMapping({
@@ -339,7 +337,7 @@ describe('A Data Processor', async() => {
         // first generate all transformations for the type mapping, and set active
         const maintenanceTransformation = new TypeTransformation({
             container_id: containerID,
-            data_source_id: dataSource!.id!,
+            data_source_id: dataSource!.DataSourceRecord!.id!,
             type_mapping_id: typeMappingID,
             keys: [new KeyMapping({
                 key: "car_maintenance.id",
@@ -365,7 +363,7 @@ describe('A Data Processor', async() => {
 
         const maintenanceEntryTransformation = new TypeTransformation({
             container_id: containerID,
-            data_source_id: dataSource!.id!,
+            data_source_id: dataSource!.DataSourceRecord!.id!,
             type_mapping_id: typeMappingID,
             keys: [new KeyMapping({
                 key: "car_maintenance.maintenance_entries.[].id",
@@ -387,7 +385,7 @@ describe('A Data Processor', async() => {
 
         const maintenanceEdgeTransformation = new TypeTransformation({
             container_id: containerID,
-            data_source_id: dataSource!.id!,
+            data_source_id: dataSource!.DataSourceRecord!.id!,
             type_mapping_id: typeMappingID,
             metatype_relationship_pair_id: maintenancePair!.id,
             origin_id_key: "car_maintenance.id",
@@ -402,16 +400,7 @@ describe('A Data Processor', async() => {
         const active = await TypeMappingMapper.Instance.SetActive(typeMappingID)
         expect(active.isError).false
 
-        const transaction = await ImportMapper.Instance.startTransaction()
-
-        const dataImport = await ImportMapper.Instance.RetrieveAndLock(dataImportID, transaction.value)
-        expect(dataImport.isError).false
-
-        const processor = new DataSourceProcessor(dataSource!,graphID)
-
-        let processed = await processor.process(dataImport.value, transaction.value)
-        expect(processed.isError).false
-        expect(processed.value).true
+        await dataSource!.Process(true)
 
         let nodeRepo = new NodeRepository()
         const nodes = await nodeRepo.where().importDataID("eq", dataImportID).list()
@@ -424,7 +413,7 @@ describe('A Data Processor', async() => {
         // but I wanted to make sure they work in the larger scope of the process loop
         for(const node of nodes.value) {
             switch(node.composite_original_id) {
-                case `${containerID}+${dataSource!.id}+car_maintenance.id+UUID`: {
+                case `${containerID}+${dataSource!.DataSourceRecord!.id}+car_maintenance.id+UUID`: {
                     expect(node.properties).to.have.property('name', "test car's maintenance")
                     expect(node.properties).to.have.property('start_date', "1/1/2020 12:00:00")
                     expect(node.properties).to.have.property('average_visits', 4)
@@ -433,7 +422,7 @@ describe('A Data Processor', async() => {
                     break;
                 }
 
-                case `${containerID}+${dataSource!.id}+car_maintenance.maintenance_entries.[].id+1`: {
+                case `${containerID}+${dataSource!.DataSourceRecord!.id}+car_maintenance.maintenance_entries.[].id+1`: {
                     expect(node.properties).to.have.property('id', 1)
                     expect(node.properties).to.have.property('type', 'oil change')
                     expect(node.properties).to.have.property('check_engine_light_flag', true)
@@ -442,7 +431,7 @@ describe('A Data Processor', async() => {
                     break;
                 }
 
-                case `${containerID}+${dataSource!.id}+car_maintenance.maintenance_entries.[].id+2`: {
+                case `${containerID}+${dataSource!.DataSourceRecord!.id}+car_maintenance.maintenance_entries.[].id+2`: {
                     expect(node.properties).to.have.property('id', 2)
                     expect(node.properties).to.have.property('type', 'tire rotation')
                     expect(node.properties).to.have.property('check_engine_light_flag', false)
@@ -462,13 +451,13 @@ describe('A Data Processor', async() => {
 
         for(const edge of edges.value) {
             switch(edge.destination_node_composite_original_id){
-                case `${containerID}+${dataSource!.id}+car_maintenance.maintenance_entries.[].id+1` : {
-                    expect(edge.origin_node_composite_original_id).eq(`${containerID}+${dataSource!.id}+car_maintenance.id+UUID`)
+                case `${containerID}+${dataSource!.DataSourceRecord!.id}+car_maintenance.maintenance_entries.[].id+1` : {
+                    expect(edge.origin_node_composite_original_id).eq(`${containerID}+${dataSource!.DataSourceRecord!.id}+car_maintenance.id+UUID`)
                     break;
                 }
 
-                case `${containerID}+${dataSource!.id}+car_maintenance.maintenance_entries.[].id+2` : {
-                    expect(edge.origin_node_composite_original_id).eq(`${containerID}+${dataSource!.id}+car_maintenance.id+UUID`)
+                case `${containerID}+${dataSource!.DataSourceRecord!.id}+car_maintenance.maintenance_entries.[].id+2` : {
+                    expect(edge.origin_node_composite_original_id).eq(`${containerID}+${dataSource!.DataSourceRecord!.id}+car_maintenance.id+UUID`)
                     break;
                 }
             }

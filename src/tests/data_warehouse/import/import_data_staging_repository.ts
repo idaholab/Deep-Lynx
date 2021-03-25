@@ -8,13 +8,14 @@ import faker from "faker";
 import {expect} from "chai";
 import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
 import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import DataSourceStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
+import DataSourceMapper from "../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
 import TypeMapping from "../../../data_warehouse/etl/type_mapping";
 import TypeMappingRepository from "../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 import Import, {DataStaging} from "../../../data_warehouse/import/import";
 import ImportRepository from "../../../data_access_layer/repositories/data_warehouse/import/import_repository";
 import DataStagingRepository
     from "../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository";
+import DataSourceRecord from "../../../data_warehouse/import/data_source";
 
 // we're combining the data staging and import repository tests because these
 // two systems are very intertwined, and that there isn't much functionality
@@ -55,12 +56,14 @@ describe('An Import or Data Staging Repository can', async() => {
         expect(userResult.value).not.empty;
         user = userResult.value
 
-        let exp = await DataSourceStorage.Instance.Create(containerID, "test suite",
-            {
+        let exp = await DataSourceMapper.Instance.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"manual",
-                config: {}});
+                adapter_type:"standard",
+                data_format: "json"}));
+
 
         expect(exp.isError).false;
         dataSourceID = exp.value.id!

@@ -25,7 +25,8 @@ import MetatypeRelationshipKeyMapper
     from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper";
 import Edge from "../../../../data_warehouse/data/edge";
 import EdgeRepository from "../../../../data_access_layer/repositories/data_warehouse/data/edge_repository";
-import DataSourceStorage from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
+import DataSourceMapper from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
+import DataSourceRecord from "../../../../data_warehouse/import/data_source";
 
 describe('An Edge Repository', async() => {
     let containerID: string = process.env.TEST_CONTAINER_ID || "";
@@ -73,14 +74,13 @@ describe('An Edge Repository', async() => {
         expect(userResult.value).not.empty;
         user = userResult.value
 
-        const dataStorage = DataSourceStorage.Instance;
-
-        let exp = await dataStorage.Create(containerID, "test suite",
-            {
+        let exp = await DataSourceMapper.Instance.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"manual",
-            });
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;

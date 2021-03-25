@@ -5,8 +5,7 @@ import faker from "faker";
 import {expect} from "chai";
 import ContainerMapper from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import EventQueueMapper from "../../data_access_layer/mappers/event_system/event_queue_mapper";
-import DataSourceStorage from "../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
-import { DataSourceT } from "../../types/import/dataSourceT";
+import DataSourceMapper from "../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
 import DataStagingMapper from "../../data_access_layer/mappers/data_warehouse/import/data_staging_mapper";
 import ImportMapper from "../../data_access_layer/mappers/data_warehouse/import/import_mapper";
 import ExportMapper from "../../data_access_layer/mappers/data_warehouse/export/export_mapper";
@@ -18,8 +17,9 @@ import TypeMapping from "../../data_warehouse/etl/type_mapping";
 import TypeMappingRepository from "../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 import {User} from "../../access_management/user";
 import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
-import ExportRecord, {StandardConfig} from "../../data_warehouse/export/export";
+import ExportRecord, {StandardExporterConfig} from "../../data_warehouse/export/export";
 import Import, {DataStaging} from "../../data_warehouse/import/import";
+import DataSourceRecord from "../../data_warehouse/import/data_source";
 
 describe('An Event Queue Mapper can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -33,7 +33,7 @@ describe('An Event Queue Mapper can', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        const dStorage = DataSourceStorage.Instance;
+        const dStorage = DataSourceMapper.Instance;
         const qStorage = EventQueueMapper.Instance;
 
         let mapper = ContainerStorage.Instance;
@@ -43,7 +43,10 @@ describe('An Event Queue Mapper can', async() => {
         expect(container.isError).false;
         expect(container.value.id).not.null
         containerID = container.value.id!;
-        const datasource = await dStorage.Create(containerID, "test suite", newDatasource);
+
+        newDatasource.container_id = containerID
+
+        const datasource = await dStorage.Create("test suite", newDatasource);
         expect(datasource.isError).false;
         expect(datasource.value).not.empty;
         dataSourceID = datasource.value.id!
@@ -78,10 +81,14 @@ describe('An Event Queue Mapper can', async() => {
 
     it('can send event on datasource modify', async()=> {
         const storage = EventQueueMapper.Instance;
-        const dStorage = DataSourceStorage.Instance;
+        const dStorage = DataSourceMapper.Instance;
 
-        const updatedDatasource = await dStorage.Update(dataSourceID, "test suite", updateDatasource);
-        expect(updatedDatasource.value).true;
+        updateDatasource.id = dataSourceID
+        updateDatasource.container_id = containerID
+
+
+        const updatedDatasource = await dStorage.Update("test suite", updateDatasource);
+        expect(updatedDatasource.isError).false;
 
         const task = await storage.List();
         expect(task).not.empty;
@@ -156,7 +163,7 @@ describe('An Event Queue Mapper can', async() => {
         const dataExport = await eStorage.Create("test suite", new ExportRecord({
             container_id: containerID,
             adapter:"gremlin",
-            config: new StandardConfig()}))
+            config: new StandardExporterConfig()}))
 
         expect(dataExport.isError).false;
         expect(dataExport.value).not.empty;
@@ -216,19 +223,19 @@ describe('An Event Queue Mapper can', async() => {
     });
 });
 
-const newDatasource: DataSourceT = {
+const newDatasource: DataSourceRecord = new DataSourceRecord({
+    container_id: "",
     name: "Daisy",
     adapter_type: "manual",
     active: true,
-    config: {}
-};
+});
 
-const updateDatasource: DataSourceT = {
+const updateDatasource: DataSourceRecord = new DataSourceRecord({
+    container_id: "",
     name: "Daisy2",
     adapter_type: "manual",
     active: true,
-    config: {}
-};
+});
 
 const test_raw_payload = {
     "RAD": 0.1,

@@ -7,7 +7,7 @@ import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/
 import ExportMapper from "../../../data_access_layer/mappers/data_warehouse/export/export_mapper";
 import Container from "../../../data_warehouse/ontology/container";
 import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import ExportRecord, {StandardConfig} from "../../../data_warehouse/export/export";
+import ExportRecord, {StandardExporterConfig} from "../../../data_warehouse/export/export";
 
 describe('An Export', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -38,7 +38,7 @@ describe('An Export', async() => {
         let storage = ExportMapper.Instance;
 
         let exp = await storage.Create("test suite",
-            new ExportRecord({container_id: containerID, adapter:"gremlin", config: new StandardConfig()}));
+            new ExportRecord({container_id: containerID, adapter:"gremlin", config: new StandardExporterConfig()}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -50,7 +50,7 @@ describe('An Export', async() => {
         let storage = ExportMapper.Instance;
 
         let exp = await storage.Create("test suite",
-            new ExportRecord({container_id: containerID, adapter:"gremlin", config: new StandardConfig()}));
+            new ExportRecord({container_id: containerID, adapter:"gremlin", config: new StandardExporterConfig()}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -66,7 +66,7 @@ describe('An Export', async() => {
         let storage = ExportMapper.Instance;
 
         let exp = await storage.Create("test suite",
-            new ExportRecord({container_id: containerID, adapter:"gremlin", config: new StandardConfig()}));
+            new ExportRecord({container_id: containerID, adapter:"gremlin", config: new StandardExporterConfig()}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
@@ -81,7 +81,7 @@ describe('An Export', async() => {
         let storage = ExportMapper.Instance;
 
         let exp = await storage.Create("test suite",
-            new ExportRecord({container_id: containerID, adapter:"gremlin", config: new StandardConfig()}));
+            new ExportRecord({container_id: containerID, adapter:"gremlin", config: new StandardExporterConfig()}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;

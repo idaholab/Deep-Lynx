@@ -8,12 +8,13 @@ import {expect} from "chai";
 import GraphMapper from "../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
 import NodeMapper from "../../../../data_access_layer/mappers/data_warehouse/data/node_mapper";
 import ContainerStorage from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import DataSourceStorage from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
+import DataSourceMapper from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
 import Container from "../../../../data_warehouse/ontology/container";
 import Metatype from "../../../../data_warehouse/ontology/metatype";
 import ContainerMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import Node from "../../../../data_warehouse/data/node";
+import DataSourceRecord from "../../../../data_warehouse/import/data_source";
 
 describe('A Node Mapper', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -130,15 +131,15 @@ describe('A Node Mapper', async() => {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphMapper.Instance;
-        const dStorage = DataSourceStorage.Instance
+        const dStorage = DataSourceMapper.Instance
 
-        let dataSource = await dStorage.Create(containerID, "test suite",
-            {
+        let dataSource = await dStorage.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
-                active:false,
-                adapter_type:"http",
-                data_format: "json",
-                config: {}});
+                active: true,
+                adapter_type:"standard",
+                data_format: "json"}))
 
         // SETUP
         let graph = await gStorage.Create(containerID, "test suite");
@@ -185,15 +186,15 @@ describe('A Node Mapper', async() => {
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
         const gStorage = GraphMapper.Instance;
-        const dStorage = DataSourceStorage.Instance
+        const dStorage = DataSourceMapper.Instance
 
-        let dataSource = await dStorage.Create(containerID, "test suite",
-            {
+        let dataSource = await dStorage.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
-                active:false,
-                adapter_type:"http",
-                data_format: "json",
-                config: {}});
+                active: true,
+                adapter_type:"standard",
+                data_format: "json"}))
 
         // SETUP
         let graph = await gStorage.Create(containerID, "test suite");

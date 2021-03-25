@@ -26,6 +26,7 @@ export default class ExportRoutes {
         if(req.container) {
             const currentUser = req.currentUser!
             const payload = plainToClass(ExportRecord, req.body as object)
+            payload.container_id = req.container.id!
 
             const exporter = exporterFactory.fromExport(payload)
             if(!exporter) {

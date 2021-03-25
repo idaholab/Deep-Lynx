@@ -5,7 +5,7 @@ import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/post
 import Logger from "../../../services/logger";
 import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import DataSourceStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
+import DataSourceMapper from "../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
 import TypeMappingMapper from "../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper";
 import NodeMapper from "../../../data_access_layer/mappers/data_warehouse/data/node_mapper";
 import GraphMapper from "../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
@@ -32,6 +32,7 @@ import TypeTransformation, {Condition, KeyMapping} from "../../../data_warehouse
 import Import, {DataStaging} from "../../../data_warehouse/import/import";
 import DataStagingRepository
     from "../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository";
+import DataSourceRecord from "../../../data_warehouse/import/data_source";
 
 describe('A Data Type Mapping can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -241,7 +242,7 @@ describe('A Data Type Mapping can', async() => {
         expect(graph.isError).false;
         graphID = graph.value.id!
 
-        let dstorage = DataSourceStorage.Instance;
+        let dstorage = DataSourceMapper.Instance;
         let relationshipMapper = MetatypeRelationshipMapper.Instance;
         let mappingStorage = TypeMappingMapper.Instance
 
@@ -276,13 +277,13 @@ describe('A Data Type Mapping can', async() => {
 
         maintenancePair = pairs.value
 
-        let exp = await dstorage.Create(containerID, "test suite",
-            {
+        let exp = await DataSourceMapper.Instance.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"manual",
-                data_format: "json",
-                config: {}});
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;

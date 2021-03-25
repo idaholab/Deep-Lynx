@@ -7,7 +7,7 @@ import Container from "../../../data_warehouse/ontology/container";
 import faker from "faker";
 import {expect} from "chai";
 import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
-import DataSourceStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
+import DataSourceMapper from "../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
 import TypeMapping from "../../../data_warehouse/etl/type_mapping";
 import TypeMappingRepository from "../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 import MetatypeKey from "../../../data_warehouse/ontology/metatype_key";
@@ -15,6 +15,7 @@ import Metatype from "../../../data_warehouse/ontology/metatype";
 import MetatypeMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper";
 import MetatypeKeyMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper";
 import TypeTransformation, {Condition, KeyMapping} from "../../../data_warehouse/etl/type_transformation";
+import DataSourceRecord from "../../../data_warehouse/import/data_source";
 
 describe('A Type Mapping Repository', async() => {
     let containerID: string = process.env.TEST_CONTAINER_ID || "";
@@ -66,13 +67,13 @@ describe('A Type Mapping Repository', async() => {
         expect(keyCreated.isError).false;
         key = keyCreated.value
 
-        let exp = await DataSourceStorage.Instance.Create(containerID, "test suite",
-            {
+        let exp = await DataSourceMapper.Instance.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"manual",
-                data_format: "json",
-                config: {}});
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;

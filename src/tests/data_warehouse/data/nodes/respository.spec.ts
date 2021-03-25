@@ -14,7 +14,8 @@ import MetatypeKeyMapper from "../../../../data_access_layer/mappers/data_wareho
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import NodeRepository from "../../../../data_access_layer/repositories/data_warehouse/data/node_repository";
 import Node from "../../../../data_warehouse/data/node";
-import DataSourceStorage from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
+import DataSourceMapper from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
+import DataSourceRecord from "../../../../data_warehouse/import/data_source";
 
 describe('A Node Repository', async() => {
     let containerID: string = process.env.TEST_CONTAINER_ID || "";
@@ -58,14 +59,13 @@ describe('A Node Repository', async() => {
         expect(userResult.value).not.empty;
         user = userResult.value
 
-        const dataStorage = DataSourceStorage.Instance;
-
-        let exp = await dataStorage.Create(containerID, "test suite",
-            {
+        let exp = await DataSourceMapper.Instance.Create("test suite",
+            new DataSourceRecord({
+                container_id: containerID,
                 name: "Test Data Source",
                 active:false,
-                adapter_type:"manual",
-            });
+                adapter_type:"standard",
+                data_format: "json"}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;

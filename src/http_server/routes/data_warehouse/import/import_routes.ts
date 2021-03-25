@@ -1,6 +1,6 @@
 import {Application, NextFunction, Request, Response} from "express"
 import {authInContainer} from "../../../middleware";
-import DataSourceStorage from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
+import DataSourceMapper from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
 import ImportMapper from "../../../../data_access_layer/mappers/data_warehouse/import/import_mapper";
 import {Readable} from "stream";
 import FileDataStorage from "../../../../data_access_layer/mappers/data_warehouse/data/file_mapper";
@@ -114,52 +114,44 @@ export default class ImportRoutes {
 
     // creeateManualImport will accept either a file or a raw JSON body
     private static createManualImport(req: Request, res: Response, next: NextFunction) {
-        if (Object.keys(req.body).length !== 0) {
-            importRepo.jsonImport(req.currentUser! , req.params.sourceID, req.body)
-                .then((result) => {
-                    result.asResponse(res)
-                })
-                .catch((err) => res.status(404).send(err))
-                .finally(() => next())
-            // @ts-ignore
-        } else if (req.files.import.mimetype === "application/json") {
-            // @ts-ignore
-            importRepo.jsonImport(req.currentUser! , req.params.sourceID, JSON.parse(req.files.import.data))
-                .then((result) => {
-                    result.asResponse(res)
-                })
-                .catch((err) => res.status(404).send(err))
-                .finally(() => next())
-        }
-        // @ts-ignore - we have to handle microsoft's excel csv type, as when you save a csv file using excel the mimetype is different than text/csv
-        else if (req.files.import.mimetype === "text/csv" || req.files.import.mimetype === "application/vnd.ms-excel") {
-            // @ts-ignore
-            csv().fromString(req.files.import.data.toString())
-                .then((json: any) => {
-                    importRepo.jsonImport(req.currentUser! , req.params.sourceID, json)
-                        .then((result) => {
-                            result.asResponse(res)
-                        })
-                        .catch((err) => res.status(404).send(err))
-                        .finally(() => next())
-                })
+        if(req.dataSource){
+            if (Object.keys(req.body).length !== 0) {
+                req.dataSource.ReceiveData(req.body, req.currentUser!)
+                    .then((result) => {
+                        result.asResponse(res)
+                    })
+                    .catch((err) => res.status(404).send(err))
+                    .finally(() => next())
+                // @ts-ignore
+            } else if (req.files.import.mimetype === "application/json") {
+                // @ts-ignore
+                req.dataSource.ReceiveData(JSON.parse(req.files.import.data), req.currentUser!)
+                    .then((result) => {
+                        result.asResponse(res)
+                    })
+                    .catch((err) => res.status(404).send(err))
+                    .finally(() => next())
+            }
+            // @ts-ignore - we have to handle microsoft's excel csv type, as when you save a csv file using excel the mimetype is different than text/csv
+            else if (req.files.import.mimetype === "text/csv" || req.files.import.mimetype === "application/vnd.ms-excel") {
+                // @ts-ignore
+                csv().fromString(req.files.import.data.toString())
+                    .then((json: any) => {
+                        req.dataSource?.ReceiveData(json, req.currentUser!)
+                            .then((result) => {
+                                result.asResponse(res)
+                            })
+                            .catch((err) => res.status(404).send(err))
+                            .finally(() => next())
+                    })
+            } else {
+                res.sendStatus(500)
+                next()
+            }
         } else {
-            res.sendStatus(500)
+            Result.Failure(`unable to find data source`, 404).asResponse(res)
             next()
         }
-    }
-
-    private static deleteDataSource(req: Request, res: Response, next: NextFunction) {
-        DataSourceStorage.Instance.PermanentlyDelete(req.params.sourceID)
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return
-                }
-                res.sendStatus(200)
-            })
-            .catch((err) => res.status(500).send(err))
-            .finally(() => next())
     }
 
     private static deleteImportData(req: Request, res: Response, next: NextFunction) {
@@ -258,6 +250,12 @@ export default class ImportRoutes {
         const metadata: { [key: string]: any } = {}
         let metadataFieldCount = 0;
 
+        if(!req.dataSource) {
+            Result.Failure(`unable to find data source`, 404).asResponse(res)
+            next()
+            return
+        }
+
         // upload the file to the relevant file storage provider, saving the file name
         // we can't actually wait on the full upload to finish, so there is no way we
         // can take information about the upload and pass it later on in the busboy parsing
@@ -294,7 +292,7 @@ export default class ImportRoutes {
 
                 // create an "import" with a single object, the metadata and file information
                 // the user will then handle the mapping of this via the normal type mapping channels
-                importRepo.jsonImport(user, req.params.sourceID, metadata)
+                req.dataSource?.ReceiveData(metadata, user)
                     .then((result) => {
                         result.asResponse(res)
                     })

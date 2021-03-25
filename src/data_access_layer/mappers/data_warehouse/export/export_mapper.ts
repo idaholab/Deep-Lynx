@@ -100,7 +100,7 @@ export default class ExportMapper extends Mapper{
 
     private fullUpdateStatement(userID: string, ...exports: ExportRecord[]): string {
         const text = `UPDATE exports AS e SET
-            container_id = u.container_id::uuid,
+                    container_id = u.container_id::uuid,
                     adapter = u.adapter,
                     status = u.status,
                     config = u.config::jsonb,

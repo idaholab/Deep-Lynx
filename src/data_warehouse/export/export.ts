@@ -23,17 +23,17 @@ export interface Exporter {
 // add new configurations by converting kind to a union type in the BaseConfig
 // and making sure the value you have in your config is the same unique string you
 // used to extend kind - these are called discriminator properties
-export class BaseConfig extends NakedDomainClass {
+export class BaseExporterConfig extends NakedDomainClass {
     kind?: "gremlin" | "standard"
 }
 
 // shared configurations values, or for normal exporter should be defined here
-export class StandardConfig extends BaseConfig {
-    kind?: "standard"
+export class StandardExporterConfig extends BaseExporterConfig {
+    kind: "standard" = "standard"
 }
 
-export class GremlinExportConfig extends BaseConfig {
-    kind?: "gremlin"
+export class GremlinExportConfig extends BaseExporterConfig {
+    kind: "gremlin" = "gremlin"
 
     @IsString()
     traversal_source: string = "g"
@@ -92,7 +92,7 @@ export class GremlinExportConfig extends BaseConfig {
     }
 }
 
-export function IsGremlinConfig(config:GremlinExportConfig | StandardConfig): config is GremlinExportConfig {
+export function IsGremlinConfig(config:GremlinExportConfig | StandardExporterConfig): config is GremlinExportConfig {
     return config.kind === "gremlin"
 }
 
@@ -106,17 +106,17 @@ export default class ExportRecord extends BaseDomainClass {
 
     // this allows use to create and validate the correct class on the transformer pulling from db
     @ValidateNested()
-    @Type(() => BaseConfig, {
+    @Type(() => BaseExporterConfig, {
         keepDiscriminatorProperty: true,
         discriminator: {
             property: 'kind',
             subTypes: [
                 {value: GremlinExportConfig, name: "gremlin"},
-                {value: StandardConfig, name: "standard"}
+                {value: StandardExporterConfig, name: "standard"}
             ]
         }
     })
-    config?: StandardConfig | GremlinExportConfig
+    config?: StandardExporterConfig | GremlinExportConfig
 
     @IsUUID()
     container_id?: string
@@ -135,7 +135,7 @@ export default class ExportRecord extends BaseDomainClass {
     constructor(input:{
         container_id: string,
         adapter: string,
-        config?: StandardConfig | GremlinExportConfig,
+        config?: StandardExporterConfig | GremlinExportConfig,
         destination_type?: string,
     }) {
         super();
