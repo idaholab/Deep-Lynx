@@ -1,4 +1,4 @@
-import {BaseDomainClass} from "../base_domain_class";
+import {BaseDomainClass} from "../common_classes/base_domain_class";
 import {
     IsArray,
     IsBoolean,
@@ -8,14 +8,14 @@ import {
     IsOptional,
     IsString,
     IsUUID,
-    MinLength, registerDecorator, ValidationArguments, ValidationOptions
+    MinLength, registerDecorator, ValidateIf, ValidationArguments, ValidationOptions
 } from "class-validator";
 import Config from "../services/config"
 import uuid from "uuid";
 import {Exclude, Expose, plainToClass, Transform, Type} from "class-transformer";
 import Container from "../data_warehouse/ontology/container";
 import bcrypt from "bcrypt";
-import Result from "../result";
+import Result from "../common_classes/result";
 const validator = require('validator')
 
 export class User extends BaseDomainClass {
@@ -27,6 +27,7 @@ export class User extends BaseDomainClass {
     @IsIn(["saml_adfs", "username_password"])
     identity_provider: string = "username_password"
 
+    @ValidateIf(o => o.identity_provider !== "username_password")
     @IsString()
     identity_provider_id?: string
 

@@ -1,4 +1,4 @@
-import {BaseDomainClass} from "../../base_domain_class";
+import {BaseDomainClass} from "../../common_classes/base_domain_class";
 import {IsBoolean, IsDefined, IsOptional, IsString, IsUUID} from "class-validator";
 import TypeTransformation from "./type_transformation";
 import {Type} from "class-transformer";

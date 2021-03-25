@@ -1,4 +1,4 @@
-import Result from "../../result"
+import Result from "../../common_classes/result"
 import {Readable} from "stream";
 import Config from "../config"
 import AzureBlobImpl from "./azure_blob_impl";

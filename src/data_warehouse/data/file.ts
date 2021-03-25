@@ -1,4 +1,4 @@
-import {BaseDomainClass} from "../../base_domain_class";
+import {BaseDomainClass} from "../../common_classes/base_domain_class";
 import {IsIn, IsNumber, IsObject, IsOptional, IsString, IsUUID} from "class-validator";
 
 export default class File extends BaseDomainClass {

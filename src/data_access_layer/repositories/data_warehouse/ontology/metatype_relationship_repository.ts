@@ -1,6 +1,6 @@
 import RepositoryInterface, {Repository} from "../../repository";
 import MetatypeRelationship from "../../../../data_warehouse/ontology/metatype_relationship";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import Cache from "../../../../services/cache/cache";
 import Config from "../../../../services/config";
 import Logger from "../../../../services/logger";

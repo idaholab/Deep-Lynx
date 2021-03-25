@@ -1,5 +1,5 @@
 import RepositoryInterface, {QueryOptions, Repository} from "../../repository";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import NodeMapper from "../../../mappers/data_warehouse/data/node_mapper";
 import {PoolClient} from "pg";
 import {User} from "../../../../access_management/user";

@@ -1,4 +1,4 @@
-import {BaseDomainClass} from "../../base_domain_class";
+import {BaseDomainClass} from "../../common_classes/base_domain_class";
 import {IsBoolean, IsOptional, IsUUID} from "class-validator";
 
 export default class Graph extends BaseDomainClass {

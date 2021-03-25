@@ -1,6 +1,6 @@
 import RepositoryInterface, {QueryOptions, Repository} from "../../repository";
 import Import, {DataStaging} from "../../../../data_warehouse/import/import";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import ImportMapper from "../../../mappers/data_warehouse/import/import_mapper";
 import {PoolClient} from "pg";
 import {User} from "../../../../access_management/user";

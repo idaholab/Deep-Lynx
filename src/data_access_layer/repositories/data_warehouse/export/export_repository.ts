@@ -3,7 +3,7 @@ import ExportRecord, {Exporter} from "../../../../data_warehouse/export/export";
 import {GremlinImpl} from "../../../../data_warehouse/export/gremlin_export_impl";
 import ExportMapper from "../../../mappers/data_warehouse/export/export_mapper";
 import {SuperUser, User} from "../../../../access_management/user";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import {PoolClient} from "pg";
 
 export default class ExporterRepository extends Repository implements RepositoryInterface<Exporter> {

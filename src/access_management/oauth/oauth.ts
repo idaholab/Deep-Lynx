@@ -1,7 +1,7 @@
-import {BaseDomainClass} from "../../base_domain_class";
+import {BaseDomainClass} from "../../common_classes/base_domain_class";
 import {IsIn, IsOptional, IsString, IsUrl, IsUUID} from "class-validator";
 import uuid from "uuid";
-import Result from "../../result";
+import Result from "../../common_classes/result";
 import bcrypt from "bcrypt";
 import {User} from "../user";
 import {Exclude} from "class-transformer";

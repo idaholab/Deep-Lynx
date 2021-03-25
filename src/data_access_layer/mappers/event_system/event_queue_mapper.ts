@@ -1,4 +1,4 @@
-import Result from "../../../result"
+import Result from "../../../common_classes/result"
 import Mapper from "../mapper";
 import {QueryConfig} from "pg";
 import Task from "../../../event_system/task";

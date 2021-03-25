@@ -1,6 +1,6 @@
 import RepositoryInterface, {Repository} from "../../repository";
 import TypeTransformation from "../../../../data_warehouse/etl/type_transformation";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import {User} from "../../../../access_management/user";
 import TypeTransformationMapper from "../../../mappers/data_warehouse/etl/type_transformation_mapper";
 import Cache from "../../../../services/cache/cache";

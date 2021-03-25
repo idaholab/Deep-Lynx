@@ -4,7 +4,7 @@ import DataSourceMapper from "../../../../data_access_layer/mappers/data_warehou
 import ImportMapper from "../../../../data_access_layer/mappers/data_warehouse/import/import_mapper";
 import {Readable} from "stream";
 import FileDataStorage from "../../../../data_access_layer/mappers/data_warehouse/data/file_mapper";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import File from "../../../../data_warehouse/data/file";
 import FileRepository from "../../../../data_access_layer/repositories/data_warehouse/data/file_repository";
 import DataStagingRepository

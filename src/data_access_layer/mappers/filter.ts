@@ -1,7 +1,7 @@
 // Filter is the base class for data storage object filters. Filter will allow
 // you to build a class for an individual data type so that you can write complex
 // queries.
-import Result from "../../result";
+import Result from "../../common_classes/result";
 import Mapper from "./mapper";
 
 export default abstract class Filter {

@@ -1,13 +1,12 @@
 // we've created a standalone loop for the Data Processing Loop so as to maximize
 // system resources. The main loop of Deep Lynx will spawn this process
+import Logger from "../../../../services/logger"
+import DataSourceRepository from "./data_source_repository";
+import PostgresAdapter from "../../../mappers/db_adapters/postgres/postgres";
 
-import {Storage} from "./boot_storage";
-import Logger from "./services/logger"
-import DataSourceRepository from "./data_access_layer/repositories/data_warehouse/import/data_source_repository";
+const postgresAdapter = PostgresAdapter.Instance
 
-const storage = new Storage();
-
-storage.boot()
+postgresAdapter.init()
     .then(() => {
         const repo = new DataSourceRepository()
 

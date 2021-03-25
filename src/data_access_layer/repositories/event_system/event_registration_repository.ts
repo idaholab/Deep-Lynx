@@ -1,7 +1,7 @@
 import RepositoryInterface, {QueryOptions, Repository} from "../repository";
 import EventRegistration from "../../../event_system/event_registration";
 import EventRegistrationMapper from "../../mappers/event_system/event_registration_mapper";
-import Result from "../../../result";
+import Result from "../../../common_classes/result";
 import {plainToClass} from "class-transformer";
 import {User} from "../../../access_management/user";
 

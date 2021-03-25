@@ -3,7 +3,7 @@ import passport from "passport";
 import * as fs from "fs";
 import Config from "../../../services/config"
 import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
-import Result from "../../../result";
+import Result from "../../../common_classes/result";
 import {User} from "../../user";
 import {serialize} from "class-transformer";
 

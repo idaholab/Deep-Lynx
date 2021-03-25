@@ -1,4 +1,4 @@
-import Result from "../../../../result"
+import Result from "../../../../common_classes/result"
 import Mapper from "../../mapper";
 import {PoolClient, QueryConfig} from "pg";
 import Node from "../../../../data_warehouse/data/node"

@@ -5,7 +5,7 @@ import {
     KeyPair,
     ResetUserPasswordPayload, User
 } from "../../../access_management/user";
-import Result, {ErrorUnauthorized} from "../../../result";
+import Result, {ErrorUnauthorized} from "../../../common_classes/result";
 import bcrypt from "bcrypt";
 import UserMapper from "../../mappers/access_management/user_mapper";
 import Logger from "../../../services/logger";
@@ -80,7 +80,7 @@ export default class UserRepository extends Repository implements RepositoryInte
         }
 
         if(u.id) {
-            const result = await this.#mapper.Update(user.id!, u)
+            const result = await this.#mapper.Update(user.id!, u, transaction.value)
             if(result.isError) {
                 await this.#mapper.rollbackTransaction(transaction.value)
                 return Promise.resolve(Result.Pass(result))
@@ -88,7 +88,7 @@ export default class UserRepository extends Repository implements RepositoryInte
 
             Object.assign(u, result.value)
         } else {
-            const result = await this.#mapper.Create(user.id!, u)
+            const result = await this.#mapper.Create(user.id!, u, transaction.value)
             if(result.isError) {
                 await this.#mapper.rollbackTransaction(transaction.value)
                 return Promise.resolve(Result.Pass(result))
@@ -210,7 +210,6 @@ export default class UserRepository extends Repository implements RepositoryInte
 
         Logger.info("creating default superuser")
         const superUser = new User({
-            id: uuid.v4(),
             identity_provider: "username_password",
             display_name: "Super User",
             email: Config.superuser_email,
@@ -226,14 +225,17 @@ export default class UserRepository extends Repository implements RepositoryInte
 
         // create a keypair for the new user and print to console, this only happens
         // once per super user creation. Make sure you write it down!
-        const keyPair = await KeyPairMapper.Instance.Create(new KeyPair(superUser.id!))
-        if(keyPair.isError) {
-            return new Promise(resolve => resolve(Result.Pass(keyPair)))
+        const keyPair = new KeyPair(superUser.id!)
+        await keyPair.setSecret()
+
+        const saved = await KeyPairMapper.Instance.Create(keyPair)
+        if(saved.isError) {
+            return new Promise(resolve => resolve(Result.Pass(saved)))
         }
 
         Logger.info("This is the API Key/Secret pair for the newly created Super User. This is the only time you will be given this pair, please write it down.")
-        Logger.info(`API Key: ${keyPair.value.key}`)
-        Logger.info(`API Secret: ${keyPair.value.secret_raw}`)
+        Logger.info(`API Key: ${keyPair.key}`)
+        Logger.info(`API Secret: ${keyPair.secret_raw}`)
 
         return new Promise(resolve => resolve(Result.Success(superUser)))
     }

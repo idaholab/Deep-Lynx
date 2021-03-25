@@ -1,5 +1,5 @@
 import Mapper from "../../mapper";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import {PoolClient, QueryConfig} from "pg";
 import uuid from "uuid";
 import {QueueProcessor} from "../../../../event_system/processor";

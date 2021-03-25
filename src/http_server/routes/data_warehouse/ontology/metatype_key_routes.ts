@@ -3,7 +3,7 @@ import {authInContainer} from "../../../middleware";
 import MetatypeKeyRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_key_repository";
 import {plainToClass} from "class-transformer";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 
 const repo = new MetatypeKeyRepository()
 

@@ -1,6 +1,6 @@
 import {Application, NextFunction, Request, Response} from "express"
 import {authInContainer} from "../../middleware";
-import Result from "../../../result";
+import Result from "../../../common_classes/result";
 import {plainToClass} from "class-transformer";
 import EventRegistration from "../../../event_system/event_registration";
 import EventRegistrationRepository

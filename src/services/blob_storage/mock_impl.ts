@@ -1,5 +1,5 @@
 import {Readable} from "stream";
-import Result from "../../result";
+import Result from "../../common_classes/result";
 import fs from "fs";
 import Logger from "./../logger";
 import {BlobStorage, BlobUploadResponse} from "./blob_storage";

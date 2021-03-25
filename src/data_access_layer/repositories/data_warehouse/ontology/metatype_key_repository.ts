@@ -1,6 +1,6 @@
 import RepositoryInterface, {Repository} from "../../repository";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import MetatypeKeyMapper from "../../../mappers/data_warehouse/ontology/metatype_key_mapper";
 import {User} from "../../../../access_management/user";
 import MetatypeRepository from "./metatype_repository";

@@ -1,4 +1,4 @@
-import Result from "../../result";
+import Result from "../../common_classes/result";
 import Mapper, {Options} from "../mappers/mapper";
 import {User} from "../../access_management/user";
 import {PoolClient} from "pg";

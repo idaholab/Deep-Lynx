@@ -3,7 +3,7 @@ import DataSourceRecord, {DataSource} from "../../../../data_warehouse/import/da
 import DataSourceMapper from "../../../mappers/data_warehouse/import/data_source_mapper";
 import HttpDataSourceImpl from "../../../../data_warehouse/import/http_data_source_impl";
 import StandardDataSourceImpl from "../../../../data_warehouse/import/standard_data_source_impl";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import {User} from "../../../../access_management/user";
 import {PoolClient} from "pg";
 

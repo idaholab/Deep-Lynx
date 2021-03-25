@@ -2,13 +2,13 @@ import ExportRecord, {Exporter, GremlinExportConfig} from "./export";
 import GremlinAdapter from "../../services/gremlin/gremlin";
 import Config from "../../services/config";
 import ExportMapper from "../../data_access_layer/mappers/data_warehouse/export/export_mapper";
-import Result from "../../result";
+import Result from "../../common_classes/result";
 import GremlinExportMapper from "../../data_access_layer/mappers/data_warehouse/export/gremlin_export_mapper";
 import Logger from "../../services/logger"
 import MetatypeRelationshipPairMapper from "../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper";
 import NodeRSA from "node-rsa"
 import MetatypeRepository from "../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
-import {NakedDomainClass} from "../../base_domain_class";
+import {NakedDomainClass} from "../../common_classes/base_domain_class";
 import {IsObject, IsOptional, IsUUID} from "class-validator";
 import {plainToClass} from "class-transformer";
 import {User} from "../../access_management/user";

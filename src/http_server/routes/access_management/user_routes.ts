@@ -3,7 +3,7 @@ import {authInContainer, authRequest} from "../../middleware";
 import ContainerUserInviteMapper
     from "../../../data_access_layer/mappers/access_management/container_user_invite_mapper";
 import UserRepository from "../../../data_access_layer/repositories/access_management/user_repository";
-import Result from "../../../result";
+import Result from "../../../common_classes/result";
 import {plainToClass} from "class-transformer";
 import {AssignUserRolePayload, ContainerUserInvite, User} from "../../../access_management/user";
 import {QueryOptions} from "../../../data_access_layer/repositories/repository";

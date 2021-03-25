@@ -4,7 +4,7 @@ import MetatypeRelationshipMapper from "./metatype_relationship_mapper"
 import MetatypeStorage from "./metatype_mapper"
 import MetatypeRelationshipPairMapper from "./metatype_relationship_pair_mapper"
 import MetatypeKeyMapper from "./metatype_key_mapper"
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import EdgeMapper from "../data/edge_mapper"
 import Logger from "../../../../services/logger"
 import ContainerRepository from "../../../repositories/data_warehouse/ontology/container_respository";

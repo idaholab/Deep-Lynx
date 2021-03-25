@@ -1,7 +1,7 @@
 import {Application, NextFunction, Request, Response} from "express"
 import {authInContainer} from "../../../middleware";
 import TypeMappingMapper from "../../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import TypeMappingRepository
     from "../../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 import {plainToClass} from "class-transformer";

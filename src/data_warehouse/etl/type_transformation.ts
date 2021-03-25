@@ -1,11 +1,10 @@
-import Result from "../../result";
-import {getNestedValue} from "../../utilities";
+import Result from "../../common_classes/result";
 import MetatypeKeyMapper from "../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper";
 import MetatypeRelationshipKeyMapper from "../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper";
 import Logger from "../../services/logger"
 import Node from "../data/node"
 import Edge from "../data/edge";
-import {BaseDomainClass, NakedDomainClass} from "../../base_domain_class";
+import {BaseDomainClass, NakedDomainClass} from "../../common_classes/base_domain_class";
 import {IsDefined, IsIn, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested} from "class-validator";
 import {Type} from "class-transformer";
 import {DataStaging} from "../import/import";
@@ -215,7 +214,7 @@ export default class TypeTransformation extends BaseDomainClass {
          // fetch the root array
          const key = (arrays[0].charAt(arrays[0].length -1) === ".") ? arrays[0].substr(0, arrays[0].length -1 ) : arrays[0]
 
-         const rootArray = getNestedValue(key, data.data)
+         const rootArray = TypeTransformation.getNestedValue(key, data.data)
 
          if(!Array.isArray(rootArray)) return new Promise(resolve => resolve(Result.Failure("provided root array key does not extract array from payload")))
 
@@ -241,7 +240,7 @@ export default class TypeTransformation extends BaseDomainClass {
          const rawKey = arrays.slice(0, index.length + 1).join("[]")
          const key = (rawKey.charAt(rawKey.length - 1) === ".") ? rawKey.substr(0, rawKey.length - 1) : rawKey
 
-         const nestedArray = getNestedValue(key, data.data, [...index])
+         const nestedArray = TypeTransformation.getNestedValue(key, data.data, [...index])
 
          if(!Array.isArray(nestedArray)) return new Promise(resolve => resolve(Result.Failure("provided nested array key does not extract array from payload")))
 
@@ -312,7 +311,7 @@ export default class TypeTransformation extends BaseDomainClass {
             let value:any = k.value
 
             if(k.key) {
-               value = getNestedValue(k.key!, data.data, index)
+               value = TypeTransformation.getNestedValue(k.key!, data.data, index)
             }
             if (typeof value === "undefined") continue;
 
@@ -349,8 +348,8 @@ export default class TypeTransformation extends BaseDomainClass {
          })
 
          if(this.unique_identifier_key) {
-            node.original_data_id = `${getNestedValue(this.unique_identifier_key!, data.data, index)}`
-            node.composite_original_id = `${this.container_id}+${this.data_source_id}+${this.unique_identifier_key}+${getNestedValue(this.unique_identifier_key!, data.data, index)}`
+            node.original_data_id = `${TypeTransformation.getNestedValue(this.unique_identifier_key!, data.data, index)}`
+            node.composite_original_id = `${this.container_id}+${this.data_source_id}+${this.unique_identifier_key}+${TypeTransformation.getNestedValue(this.unique_identifier_key!, data.data, index)}`
          }
 
          return new Promise(resolve => resolve(Result.Success([node])))
@@ -366,15 +365,15 @@ export default class TypeTransformation extends BaseDomainClass {
             container_id: this.container_id!,
             data_staging_id: data.id,
             import_data_id: data.import_id,
-            origin_node_original_id: `${getNestedValue(this.origin_id_key!, data.data, index)}`,
-            destination_node_original_id: `${getNestedValue(this.destination_id_key!, data.data, index)}`,
-            origin_node_composite_original_id: `${this.container_id}+${this.data_source_id}+${this.origin_id_key}+${getNestedValue(this.origin_id_key!, data.data, index)}`,
-            destination_node_composite_original_id: `${this.container_id}+${this.data_source_id}+${this.destination_id_key}+${getNestedValue(this.destination_id_key!, data.data, index)}`
+            origin_node_original_id: `${TypeTransformation.getNestedValue(this.origin_id_key!, data.data, index)}`,
+            destination_node_original_id: `${TypeTransformation.getNestedValue(this.destination_id_key!, data.data, index)}`,
+            origin_node_composite_original_id: `${this.container_id}+${this.data_source_id}+${this.origin_id_key}+${TypeTransformation.getNestedValue(this.origin_id_key!, data.data, index)}`,
+            destination_node_composite_original_id: `${this.container_id}+${this.data_source_id}+${this.destination_id_key}+${TypeTransformation.getNestedValue(this.destination_id_key!, data.data, index)}`
          })
 
          if(this.unique_identifier_key) {
-            edge.original_data_id = `${getNestedValue(this.unique_identifier_key!, data.data, index)}`
-            edge.composite_original_id = `${this.container_id}+${this.data_source_id}+${this.unique_identifier_key}+${getNestedValue(this.unique_identifier_key!, data.data, index)}`
+            edge.original_data_id = `${TypeTransformation.getNestedValue(this.unique_identifier_key!, data.data, index)}`
+            edge.composite_original_id = `${this.container_id}+${this.data_source_id}+${this.unique_identifier_key}+${TypeTransformation.getNestedValue(this.unique_identifier_key!, data.data, index)}`
          }
 
          return new Promise(resolve => resolve(Result.Success([edge])))
@@ -386,7 +385,7 @@ export default class TypeTransformation extends BaseDomainClass {
 
    // will return whether or not a transformation condition is valid for a given payload
    static validTransformationCondition(condition: Condition, payload: {[key:string]: any}, index?: number[]): boolean {
-      const value = getNestedValue(condition.key!, payload, index)
+      const value = this.getNestedValue(condition.key!, payload, index)
 
       if(!value) return false
       let rootExpressionResult = TypeTransformation.compare(condition.operator!, value, condition.value)
@@ -394,7 +393,7 @@ export default class TypeTransformation extends BaseDomainClass {
       // handle subexpressions
       if(condition.subexpressions && condition.subexpressions.length > 0) {
          for(const sub of condition.subexpressions) {
-            const subValue = getNestedValue(sub.key!, payload, index)
+            const subValue = this.getNestedValue(sub.key!, payload, index)
 
             if(sub.expression === "OR" && !rootExpressionResult) {
                rootExpressionResult = TypeTransformation.compare(sub.operator!, subValue, sub.value)
@@ -453,6 +452,24 @@ export default class TypeTransformation extends BaseDomainClass {
             return false
          }
       }
+   }
+
+   static getNestedValue(key:string, payload: any, index?: number[]): any {
+      const copiedIndex = (index) ? [...index] : undefined
+      if(key.split(".").length > 1) {
+         const keys = key.split(".")
+         const parent = keys.shift()
+
+         if(Array.isArray(payload)) {
+            const currentIndex = copiedIndex?.shift()
+
+            return this.getNestedValue(keys.join("."), payload[currentIndex!], copiedIndex)
+         }
+
+         return this.getNestedValue(keys.join("."), payload[parent!], copiedIndex)
+      }
+
+      return payload[key]
    }
 
 }

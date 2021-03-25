@@ -1,7 +1,7 @@
 import RepositoryInterface, {QueryOptions, Repository} from "../../repository";
 import FileMapper from "../../../mappers/data_warehouse/data/file_mapper";
 import {User} from "../../../../access_management/user";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import File from "../../../../data_warehouse/data/file";
 import {PoolClient} from "pg";
 import {Readable} from "stream";

@@ -1,4 +1,4 @@
-import {BaseDomainClass} from "../base_domain_class";
+import {BaseDomainClass} from "../common_classes/base_domain_class";
 import {IsNumber, IsOptional, IsString, IsUUID} from "class-validator";
 import Event from "./event"
 import {Type} from "class-transformer";

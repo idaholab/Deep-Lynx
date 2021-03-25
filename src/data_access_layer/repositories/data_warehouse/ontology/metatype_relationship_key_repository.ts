@@ -1,6 +1,6 @@
 import RepositoryInterface, {Repository} from "../../repository";
 import MetatypeRelationshipKey from "../../../../data_warehouse/ontology/metatype_relationship_key";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import MetatypeRelationshipKeyMapper from "../../../mappers/data_warehouse/ontology/metatype_relationship_key_mapper";
 import {User} from "../../../../access_management/user";
 

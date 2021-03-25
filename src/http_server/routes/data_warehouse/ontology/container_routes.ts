@@ -5,7 +5,7 @@ import ContainerRepository
     from "../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository";
 import {plainToClass} from "class-transformer";
 import Container from "../../../../data_warehouse/ontology/container";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 
 const Busboy = require('busboy');
 const Buffer = require('buffer').Buffer;

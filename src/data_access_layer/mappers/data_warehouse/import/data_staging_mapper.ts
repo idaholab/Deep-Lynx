@@ -5,7 +5,7 @@
 * for taking data from the imports table and parsing it into the data_staging table.
  */
 import Mapper from "../../mapper";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import {PoolClient, QueryConfig} from "pg";
 import {DataStaging} from "../../../../data_warehouse/import/import";
 

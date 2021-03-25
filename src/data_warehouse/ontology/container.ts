@@ -1,4 +1,4 @@
-import {BaseDomainClass} from "../../base_domain_class";
+import {BaseDomainClass} from "../../common_classes/base_domain_class";
 import {
     IsBoolean,
     IsNotEmpty,
@@ -9,7 +9,7 @@ import {
     registerDecorator, ValidationArguments,
     ValidationOptions
 } from "class-validator";
-import Result from "../../result";
+import Result from "../../common_classes/result";
 import Authorization from "../../access_management/authorization/authorization";
 import Logger from "../../services/logger";
 import validator from "validator";

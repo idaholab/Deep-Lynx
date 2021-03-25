@@ -1,4 +1,4 @@
-import Result from "../../../result"
+import Result from "../../../common_classes/result"
 import EventRegistration from "../../../event_system/event_registration";
 import Mapper from "../mapper";
 import {PoolClient, QueryConfig} from "pg";

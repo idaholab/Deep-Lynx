@@ -1,6 +1,6 @@
 import RepositoryInterface from "../../repository";
 import Container from "../../../../data_warehouse/ontology/container";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import ContainerMapper from "../../../mappers/data_warehouse/ontology/container_mapper";
 import Authorization from "../../../../access_management/authorization/authorization";
 import Logger from "../../../../services/logger"

@@ -1,6 +1,6 @@
 import RepositoryInterface, {Repository} from "../repository";
 import OAuthMapper from "../../mappers/access_management/oauth_mapper";
-import Result from "../../../result";
+import Result from "../../../common_classes/result";
 import uuid from "uuid";
 import Cache from "../../../services/cache/cache";
 import UserRepository from "./user_repository";

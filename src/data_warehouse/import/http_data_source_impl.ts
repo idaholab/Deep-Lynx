@@ -1,5 +1,5 @@
 import DataSourceRecord, {DataSource, HttpDataSourceConfig} from "./data_source";
-import Result from "../../result";
+import Result from "../../common_classes/result";
 import Logger from "../../services/logger"
 import Config from "../../services/config";
 import DataSourceMapper from "../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";

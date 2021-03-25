@@ -1,6 +1,6 @@
-import Result from "../../result";
+import Result from "../../common_classes/result";
 import {User} from "../../access_management/user";
-import {BaseDomainClass, NakedDomainClass} from "../../base_domain_class";
+import {BaseDomainClass, NakedDomainClass} from "../../common_classes/base_domain_class";
 import {IsBoolean, IsIn, IsNumber, IsOptional, IsString, IsUrl, IsUUID, ValidateNested} from "class-validator";
 import {Exclude, Type} from "class-transformer";
 

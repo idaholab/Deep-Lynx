@@ -3,7 +3,7 @@ import {authInContainer} from "../../../middleware";
 import MetatypeRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
 import {plainToClass} from "class-transformer";
 import Metatype from "../../../../data_warehouse/ontology/metatype";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import {QueryOptions} from "../../../../data_access_layer/repositories/repository";
 
 const repo = new MetatypeRepository()

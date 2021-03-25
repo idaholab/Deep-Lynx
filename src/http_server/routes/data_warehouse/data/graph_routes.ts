@@ -1,7 +1,7 @@
 import {Application, NextFunction, Request, Response} from "express";
 import {authInContainer} from "../../../middleware";
 import NodeRepository from "../../../../data_access_layer/repositories/data_warehouse/data/node_repository";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import {plainToClass} from "class-transformer";
 import Node from "../../../../data_warehouse/data/node";
 import EdgeRepository from "../../../../data_access_layer/repositories/data_warehouse/data/edge_repository";

@@ -1,4 +1,4 @@
-import {BaseDomainClass, NakedDomainClass} from "../../base_domain_class";
+import {BaseDomainClass, NakedDomainClass} from "../../common_classes/base_domain_class";
 import {IsDate, IsDefined, IsNumber, IsOptional, IsString, IsUUID} from "class-validator";
 import {Type} from "class-transformer";
 

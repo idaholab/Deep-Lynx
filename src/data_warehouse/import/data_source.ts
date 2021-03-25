@@ -1,4 +1,4 @@
-import {BaseDomainClass, NakedDomainClass} from "../../base_domain_class";
+import {BaseDomainClass, NakedDomainClass} from "../../common_classes/base_domain_class";
 import {
     IsBoolean,
     IsDefined,
@@ -13,7 +13,7 @@ import {
 import {Exclude, Type} from "class-transformer";
 import {User} from "../../access_management/user";
 import Import from "./import";
-import Result from "../../result";
+import Result from "../../common_classes/result";
 
 export interface DataSource {
     DataSourceRecord?: DataSourceRecord

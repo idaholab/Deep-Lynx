@@ -1,4 +1,4 @@
-import Logger from "./services/logger";
+import Logger from "../services/logger";
 import express from "express";
 import {serialize} from "class-transformer";
 

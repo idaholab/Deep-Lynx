@@ -7,7 +7,7 @@ import Logger from "../../services/logger";
 import Config from "../../services/config";
 import Import, {DataStaging} from "./import";
 import {PoolClient} from "pg";
-import Result from "../../result";
+import Result from "../../common_classes/result";
 import TypeMappingRepository from "../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 import NodeRepository from "../../data_access_layer/repositories/data_warehouse/data/node_repository";
 import EdgeRepository from "../../data_access_layer/repositories/data_warehouse/data/edge_repository";

@@ -1,6 +1,6 @@
 import * as t from "io-ts";
 import {Errors, ValidationError} from "io-ts";
-import Result, {ErrorNotFound} from "../../result";
+import Result, {ErrorNotFound} from "../../common_classes/result";
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
 import {PoolClient, QueryConfig} from "pg";

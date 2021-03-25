@@ -1,5 +1,5 @@
 import {driver, process} from "gremlin";
-import Result from "../../result";
+import Result from "../../common_classes/result";
 import {Edge, Property} from "./types";
 import GremlinAdapter from "./gremlin";
 

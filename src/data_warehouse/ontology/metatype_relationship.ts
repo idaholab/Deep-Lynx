@@ -1,4 +1,4 @@
-import {BaseDomainClass} from "../../base_domain_class";
+import {BaseDomainClass} from "../../common_classes/base_domain_class";
 import {
     IsBoolean,
     IsNotEmpty,
@@ -11,7 +11,7 @@ import {
 } from "class-validator";
 import MetatypeRelationshipKey from "./metatype_relationship_key";
 import * as t from "io-ts";
-import Result from "../../result";
+import Result from "../../common_classes/result";
 import {pipe} from "fp-ts/pipeable";
 import {fold} from "fp-ts/Either";
 import {Type} from "class-transformer";

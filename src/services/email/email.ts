@@ -2,7 +2,7 @@ import nodemailer from "nodemailer"
 import Config from "../config"
 import Logger from "../logger"
 import Mail from "nodemailer/lib/mailer";
-import Result from "../../result";
+import Result from "../../common_classes/result";
 
 export class Emailer {
     private static instance: Emailer

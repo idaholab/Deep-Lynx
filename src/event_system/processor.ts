@@ -2,7 +2,7 @@ import Queue = require('better-queue');
 import {ConnectionStringParser} from "connection-string-parser";
 import EventRegistrationMapper from "../data_access_layer/mappers/event_system/event_registration_mapper";
 import EventQueueMapper from "../data_access_layer/mappers/event_system/event_queue_mapper";
-import Result from "../result";
+import Result from "../common_classes/result";
 import Logger from "../services/logger";
 import axios from "axios";
 import Config from "../services/config";

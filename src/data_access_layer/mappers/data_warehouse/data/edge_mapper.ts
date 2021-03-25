@@ -1,6 +1,6 @@
 import Mapper from "../../mapper";
 import {PoolClient, QueryConfig} from "pg";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 import Edge from "../../../../data_warehouse/data/edge";
 import uuid from "uuid";
 

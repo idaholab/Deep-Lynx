@@ -265,6 +265,14 @@ describe('A Data Type Mapping', async() => {
 
         return storage.PermanentlyDelete(exp.value.id!)
     });
+
+    it('create valid shape hash of objects with array of objects', async() => {
+        let normalHash = TypeMapping.objectToShapeHash(test_payload)
+        expect(normalHash).not.null
+
+        let arrayHash = TypeMapping.objectToShapeHash(test_payload_single_array)
+        expect(arrayHash).eq(normalHash)
+    })
 });
 
 export const test_keys: MetatypeKey[] = [
@@ -283,3 +291,151 @@ const test_raw_payload = {
         "WHEELS": 1
     }
 }
+const test_payload = [
+    {
+        "car": {
+            "id": "UUID",
+            "name": "test car",
+            "manufacturer": {
+                "id": "UUID",
+                "name": "Test Cars Inc",
+                "location": "Seattle, WA"
+            },
+            "tire_pressures": [
+                {
+                    "id": "tire0",
+                    "measurement_unit": "PSI",
+                    "measurement": 35.08,
+                    "measurement_name": "tire pressure"
+                },
+                {
+                    "id": "tire1",
+                    "measurement_unit": "PSI",
+                    "measurement": 35.45,
+                    "measurement_name": "tire pressure"
+                },
+                {
+                    "id": "tire2",
+                    "measurement_unit": "PSI",
+                    "measurement": 34.87,
+                    "measurement_name": "tire pressure"
+                },
+                {
+                    "id": "tire3",
+                    "measurement_unit": "PSI",
+                    "measurement": 37.22,
+                    "measurement_name": "tire pressure"
+                }
+            ]
+        },
+        "car_maintenance": {
+            "id": "UUID",
+            "name": "test car's maintenance",
+            "start_date": "1/1/2020 12:00:00",
+            "average_visits_per_year": 4,
+            "maintenance_entries": [
+                {
+                    "id": 1,
+                    "check_engine_light_flag": true,
+                    "type": "oil change",
+                    "parts_list": [
+                        {
+                            "id": "oil",
+                            "name": "synthetic oil",
+                            "price": 45.66,
+                            "quantity": 1
+                        },
+                        {
+                            "id": "pan",
+                            "name": "oil pan",
+                            "price": 15.50,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                {
+                    "id": 2,
+                    "check_engine_light_flag": false,
+                    "type": "tire rotation",
+                    "parts_list": [
+                        {
+                            "id": "tire",
+                            "name": "all terrain tire",
+                            "price": 150.99,
+                            "quantity": 4
+                        },
+                        {
+                            "id": "wrench",
+                            "name": "wrench",
+                            "price": 4.99,
+                            "quantity": 1
+                        },
+                        {
+                            "id": "bolts",
+                            "name": "bolts",
+                            "price": 1.99,
+                            "quantity": 5
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+]
+
+
+const test_payload_single_array = [
+    {
+        "car": {
+            "id": "UUID",
+            "name": "test car",
+            "manufacturer": {
+                "id": "UUID",
+                "name": "Test Cars Inc",
+                "location": "Seattle, WA"
+            },
+            "tire_pressures": [
+                {
+                    "id": "tire0",
+                    "measurement_unit": "PSI",
+                    "measurement": 35.08,
+                    "measurement_name": "tire pressure"
+                }
+            ]
+        },
+        "car_maintenance": {
+            "id": "UUID",
+            "name": "test car's maintenance",
+            "start_date": "1/1/2020 12:00:00",
+            "average_visits_per_year": 4,
+            "maintenance_entries": [
+                {
+                    "id": 1,
+                    "check_engine_light_flag": true,
+                    "type": "oil change",
+                    "parts_list": [
+                        {
+                            "id": "oil",
+                            "name": "synthetic oil",
+                            "price": 45.66,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                {
+                    "id": 2,
+                    "check_engine_light_flag": false,
+                    "type": "tire rotation",
+                    "parts_list": [
+                        {
+                            "id": "tire",
+                            "name": "all terrain tire",
+                            "price": 150.99,
+                            "quantity": 4
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+]

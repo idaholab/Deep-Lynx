@@ -3,7 +3,7 @@ import {authInContainer} from "../../../middleware";
 import MetatypeRelationshipPairRepository from "../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository";
 import {plainToClass} from "class-transformer";
 import MetatypeRelationshipPair from "../../../../data_warehouse/ontology/metatype_relationship_pair";
-import Result from "../../../../result";
+import Result from "../../../../common_classes/result";
 
 const repo = new MetatypeRelationshipPairRepository()
 

@@ -5,7 +5,7 @@ import KeyPairMapper from "../../mappers/access_management/keypair_mapper";
 import bcrypt from "bcrypt"
 import RepositoryInterface from "../repository";
 import {KeyPair, User} from "../../../access_management/user";
-import Result from "../../../result";
+import Result from "../../../common_classes/result";
 
 export default class KeyPairRepository implements RepositoryInterface<KeyPair>{
     #mapper = KeyPairMapper.Instance
