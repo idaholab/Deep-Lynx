@@ -25,7 +25,7 @@ import {
     oauthAppContext,
     nodeContext,
     typeTransformationContext,
-    typeMappingContext, exporterContext
+    typeMappingContext, exporterContext, importContext, dataStagingContext
 } from "../middleware";
 import ContainerRoutes from "./data_warehouse/ontology/container_routes"
 import MetatypeRoutes from "./data_warehouse/ontology/metatype_routes"
@@ -49,6 +49,7 @@ import ExportRoutes from "./data_warehouse/export/export_routes";
 import TypeMappingRoutes from "./data_warehouse/etl/type_mapping_routes";
 import {serialize} from "class-transformer";
 import {SuperUser} from "../../access_management/user";
+import ImportRoutes from "./data_warehouse/import/import_routes";
 
 // Router is a self contained set of routes and middleware that the main express.js
 // application should call. It should be called only once.
@@ -87,6 +88,7 @@ export class Router {
     ContainerRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
     ExportRoutes.mount(this.app, [authenticateRoute(), containerContext(), exporterContext()]);
     DataSourceRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    ImportRoutes.mount(this.app, [authenticateRoute(), containerContext(), importContext(), dataStagingContext()])
     TypeMappingRoutes.mount(this.app, [authenticateRoute(), containerContext(), typeTransformationContext(), typeMappingContext()])
     MetatypeRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeContext()]);
     MetatypeKeyRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeContext(), metatypeKeyContext()]);

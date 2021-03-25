@@ -9,9 +9,8 @@ import DataSourceStorage from "../../../data_access_layer/mappers/data_warehouse
 import TypeMappingMapper from "../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper";
 import NodeMapper from "../../../data_access_layer/mappers/data_warehouse/data/node_mapper";
 import GraphMapper from "../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
-import {DataStagingT} from "../../../types/import/dataStagingT";
-import ImportStorage from "../../../data_access_layer/mappers/data_warehouse/import/import_storage";
-import DataStagingStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
+import ImportMapper from "../../../data_access_layer/mappers/data_warehouse/import/import_mapper";
+import DataStagingMapper from "../../../data_access_layer/mappers/data_warehouse/import/data_staging_mapper";
 import MetatypeRelationshipMapper
     from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper";
 import MetatypeRelationshipPairMapper
@@ -30,6 +29,9 @@ import Edge from "../../../data_warehouse/data/edge";
 import TypeMapping from "../../../data_warehouse/etl/type_mapping";
 import TypeMappingRepository from "../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 import TypeTransformation, {Condition, KeyMapping} from "../../../data_warehouse/etl/type_transformation";
+import Import, {DataStaging} from "../../../data_warehouse/import/import";
+import DataStagingRepository
+    from "../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository";
 
 describe('A Data Type Mapping can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -38,7 +40,7 @@ describe('A Data Type Mapping can', async() => {
     var typeMapping: TypeMapping | undefined = undefined
     var dataSourceID: string = ""
     var resultMetatypeRelationships: MetatypeRelationship[] = []
-    var data: DataStagingT | undefined = undefined
+    var data: DataStaging | undefined = undefined
     var user: User
 
     var maintenancePair: MetatypeRelationshipPair | undefined = undefined
@@ -293,7 +295,7 @@ describe('A Data Type Mapping can', async() => {
             sample_payload: test_payload[0]
         })
 
-        const saved = await new TypeMappingRepository().save(user, mapping)
+        const saved = await new TypeMappingRepository().save(mapping, user)
 
         expect(saved.isError).false
 
@@ -301,14 +303,24 @@ describe('A Data Type Mapping can', async() => {
         typeMapping = mapping
 
         // now import the data
-        const newImport = await ImportStorage.Instance.InitiateImport(dataSourceID, "test suite", "testing suite upload")
+        const newImport = await ImportMapper.Instance.CreateImport("test suite", new Import({
+            data_source_id: dataSourceID,
+            reference: "testing suite upload"
+        }))
         expect(newImport.isError).false
 
-        const inserted = await DataStagingStorage.Instance.Create(dataSourceID, newImport.value, typeMappingID, test_payload[0])
+        const inserted = await DataStagingMapper.Instance.Create(new DataStaging({
+            data_source_id: dataSourceID,
+            import_id: newImport.value.id!,
+            mapping_id: typeMappingID,
+            data: test_payload[0]
+        }))
         expect(inserted.isError).false
-        expect(inserted.value).true
+        expect(inserted.value.id).not.undefined
 
-        const insertedData = await DataStagingStorage.Instance.List(newImport.value, 0, 1)
+        const stagingRepo = new DataStagingRepository()
+
+        const insertedData = await stagingRepo.where().importID("eq", newImport.value.id).list({limit:1})
         expect(insertedData.isError).false
         expect(insertedData.value).not.empty
 

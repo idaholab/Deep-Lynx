@@ -30,29 +30,29 @@ export default class OAuthRepository extends Repository implements RepositoryInt
         return this.#mapper.Retrieve(id)
     }
 
-    async save(user: User, o: OAuthApplication): Promise<Result<boolean>> {
+    async save(t: OAuthApplication, user: User): Promise<Result<boolean>> {
         try{
-            const hashedSecret = await bcrypt.hash(o.client_secret_raw, 10)
-            o.client_secret = hashedSecret
+            const hashedSecret = await bcrypt.hash(t.client_secret_raw, 10)
+            t.client_secret = hashedSecret
         } catch(error) {
             return Promise.resolve(Result.Failure(`unable to encrypt client secret ${error}`))
         }
 
-        const errors = await o.validationErrors()
+        const errors = await t.validationErrors()
         if(errors) return Promise.resolve(Result.Failure(`oauth application fails validation ${errors.join(",")}`))
 
-        if(o.id) {
-            const updated = await this.#mapper.Update(user.id!, o)
+        if(t.id) {
+            const updated = await this.#mapper.Update(user.id!, t)
             if(updated.isError) return Promise.resolve(Result.Pass(updated))
 
-            Object.assign(o, updated.value)
+            Object.assign(t, updated.value)
             return Promise.resolve(Result.Success(true))
         }
 
-        const created = await this.#mapper.Create(user.id!, o)
+        const created = await this.#mapper.Create(user.id!, t)
         if(created.isError) return Promise.resolve(Result.Pass(created))
 
-        Object.assign(o, created.value)
+        Object.assign(t, created.value)
 
         return Promise.resolve(Result.Success(true))
     }

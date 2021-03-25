@@ -2,18 +2,18 @@ import {DataSourceT} from "../../types/import/dataSourceT";
 import Logger from "../../services/logger"
 import Config from "../../services/config"
 import Result from "../../result";
-import DataStagingStorage from "../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
-import ImportStorage from "../../data_access_layer/mappers/data_warehouse/import/import_storage";
-import TypeMappingMapper from "../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper";
+import ImportMapper from "../../data_access_layer/mappers/data_warehouse/import/import_mapper";
 import GraphMapper from "../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
 import DataSourceStorage from "../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
-import TypeTransformationMapper from "../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper";
-import {ImportT} from "../../types/import/importT";
 import {PoolClient} from "pg";
 import Node, {IsNodes} from "../data/node";
 import NodeRepository from "../../data_access_layer/repositories/data_warehouse/data/node_repository";
 import EdgeRepository from "../../data_access_layer/repositories/data_warehouse/data/edge_repository";
 import Edge, {IsEdges} from "../data/edge";
+import ImportRepository from "../../data_access_layer/repositories/data_warehouse/import/import_repository";
+import DataStagingRepository from "../../data_access_layer/repositories/data_warehouse/import/data_staging_repository";
+import Import from "../import/import";
+import TypeMappingRepository from "../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 
 // DataSourceProcessor starts an unending processing loop for a data source. This
 // loop is what takes mapped data from data_staging and inserts it into the actual
@@ -33,25 +33,27 @@ export class DataSourceProcessor {
     // handled.
     public async Process() {
         while(true) {
+            const importRepo = new ImportRepository()
+            const stagingRepo = new DataStagingRepository()
             const active = await DataSourceStorage.Instance.IsActive(this.dataSource.id!)
             if(active.isError || !active.value) break;
 
-            const incompleteImports = await ImportStorage.Instance.ListIncompleteWithUninsertedData(this.dataSource.id!)
+            const incompleteImports = await importRepo.listIncompleteWithUninsertedData(this.dataSource.id!)
             if(!incompleteImports.isError) {
                 for(const incompleteImport of incompleteImports.value) {
                     // we must wrap this insert as a transaction so that we are able to
                     // lock the individual row for processing.
                     // we won't pass the transaction into every function, only the updates
-                    const importTransaction = await ImportStorage.Instance.startTransaction()
+                    const importTransaction = await ImportMapper.Instance.startTransaction()
                     if(importTransaction.isError) {
                         Logger.debug(`error attempting to start db transaction for import ${importTransaction.error}`)
                         continue
                     }
 
                     // attempt to retrieve and lock the record for processing
-                    const dataImport = await ImportStorage.Instance.RetrieveAndLock(incompleteImport.id, importTransaction.value)
+                    const dataImport = await importRepo.findByIDAndLock(incompleteImport.id!, importTransaction.value)
                     if(dataImport.isError) {
-                        await ImportStorage.Instance.completeTransaction(importTransaction.value)
+                        await ImportMapper.Instance.completeTransaction(importTransaction.value)
 
                         Logger.debug(`error obtaining lock on import record ${dataImport.error}`)
                         continue
@@ -63,34 +65,34 @@ export class DataSourceProcessor {
                     if(processed.isError) {
                         Logger.debug(`import ${incompleteImport.id} incomplete: ${processed.error?.error!}`)
 
-                        const set = await ImportStorage.Instance.SetStatus(incompleteImport.id, "error", `error attempting to process import ${processed.error?.error}`, importTransaction.value)
+                        const set = await importRepo.setStatus(incompleteImport.id!, "error", `error attempting to process import ${processed.error?.error}`, importTransaction.value)
                         if(set.isError) Logger.debug(`error attempting to update import status ${set.error}`)
 
-                        await ImportStorage.Instance.completeTransaction(importTransaction.value)
+                        await ImportMapper.Instance.completeTransaction(importTransaction.value)
                         continue
                     }
 
                     // check to see if import is now complete. If so, mark completed.
-                    const count = await DataStagingStorage.Instance.CountUninsertedForImport(incompleteImport.id)
+                    const count = await stagingRepo.countUninsertedForImport(incompleteImport.id!)
                     if(count.isError) {
-                        const set = await ImportStorage.Instance.SetStatus(incompleteImport.id, "error", `error attempting to count records ${count.error}`, importTransaction.value)
+                        const set = await ImportMapper.Instance.SetStatus(incompleteImport.id!, "error", `error attempting to count records ${count.error}`, importTransaction.value)
                         if(set.isError) Logger.debug(`error attempting to update import status ${set.error}`)
 
-                        await ImportStorage.Instance.completeTransaction(importTransaction.value)
+                        await ImportMapper.Instance.completeTransaction(importTransaction.value)
                         continue
                     }
 
                     if(count.value === 0) {
-                        const set = await ImportStorage.Instance.SetStatus(incompleteImport.id, "completed", undefined, importTransaction.value)
+                        const set = await importRepo.setStatus(incompleteImport.id!, "completed", undefined, importTransaction.value)
                         if(set.isError) Logger.debug(`error attempting to update import status ${set.error}`)
 
-                        await ImportStorage.Instance.completeTransaction(importTransaction.value)
+                        await ImportMapper.Instance.completeTransaction(importTransaction.value)
                         continue
                     }
 
-                    const set = await  ImportStorage.Instance.SetStatus(incompleteImport.id, "processing", undefined, importTransaction.value)
+                    const set = await  importRepo.setStatus(incompleteImport.id!, "processing", undefined, importTransaction.value)
                     if(set.isError) Logger.debug(`error attempting to update import status ${set.error}`)
-                    await ImportStorage.Instance.completeTransaction(importTransaction.value)
+                    await ImportMapper.Instance.completeTransaction(importTransaction.value)
                 }
             }
 
@@ -98,14 +100,15 @@ export class DataSourceProcessor {
         }
     }
 
-    public async process(dataImport: ImportT, transactionClient: PoolClient): Promise<Result<boolean>> {
-        const ds = DataStagingStorage.Instance
+    public async process(dataImport: Import, transactionClient: PoolClient): Promise<Result<boolean>> {
+        const stagingRepo = new DataStagingRepository()
+        const mappingRepo = new TypeMappingRepository()
         const nodeRepository = new NodeRepository()
         const edgeRepository = new EdgeRepository()
 
         // attempt to process only those records which have active type mappings
         // with transformations
-        const totalToProcess = await ds.CountUninsertedActiveMapping(dataImport.id)
+        const totalToProcess = await stagingRepo.countUninsertedActiveMappingForImport(dataImport.id!, transactionClient)
         if(totalToProcess.isError) {
             return new Promise(resolve => resolve(Result.Pass(totalToProcess)))
         }
@@ -121,7 +124,7 @@ export class DataSourceProcessor {
         // nodes/edges per data record one a time, we still need to batch the listing process for
         // the data as we have no idea how large an import could be.
         for(let i = 0; i < Math.floor(totalToProcess.value / Config.data_source_batch_size) + 1 ; i++) {
-            const toProcess = await ds.ListUninsertedActiveMapping(dataImport.id, i * Config.data_source_batch_size, Config.data_source_batch_size)
+            const toProcess = await stagingRepo.listUninsertedActiveMapping(dataImport.id!, i * Config.data_source_batch_size, Config.data_source_batch_size, transactionClient)
             if(toProcess.isError) {
                 return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to fetch from data_staging ${toProcess.error?.error}`)))
             }
@@ -135,14 +138,9 @@ export class DataSourceProcessor {
             for(const row of toProcess.value) {
                 // pull the mapping and transformations for the individual data row. Then transform the data prior to
                 // insert
-                const mapping = await TypeMappingMapper.Instance.Retrieve(row.mapping_id)
+                const mapping = await mappingRepo.findByID(row.mapping_id!, true)
                 if(mapping.isError) {
                     return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to fetch type mapping ${mapping.error?.error}`)))
-                }
-
-                const transformations = await TypeTransformationMapper.Instance.ListForTypeMapping(mapping.value.id!)
-                if(transformations.isError) {
-                    return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to fetch type mapping transformations ${transformations.error?.error}`)))
                 }
 
                 const nodesToInsert: Node[] = []
@@ -151,10 +149,10 @@ export class DataSourceProcessor {
                 // for each transformation run the transformation process. Results will either be an array of nodes or an array of edges
                 // if we run into errors, add the error to the data staging row, and immediately return. Do not attempt to
                 // run any more transformations
-                for(const transformation of transformations.value) {
+                if(mapping.value.transformations) for(const transformation of mapping.value.transformations) {
                     const results = await transformation.applyTransformation(row)
                     if(results.isError) {
-                        await DataStagingStorage.Instance.AddError(row.id, `unable to apply transformation ${transformation.id} to data ${row.id}: ${results.error}`)
+                        await stagingRepo.addError(row.id!, `unable to apply transformation ${transformation.id} to data ${row.id}: ${results.error}`)
                         await GraphMapper.Instance.rollbackTransaction(transactionClient)
 
                         return new Promise(resolve => resolve(Result.SilentFailure(`unable to apply transformation ${transformation.id} to data ${row.id}: ${results.error}`)))
@@ -199,15 +197,15 @@ export class DataSourceProcessor {
                     await GraphMapper.Instance.rollbackTransaction(transactionClient)
 
                     // update the individual data row which failed
-                    await DataStagingStorage.Instance.AddError(row.id, `error attempting to finalize transaction of inserting nodes/edges` )
+                    await stagingRepo.addError(row.id!, `error attempting to finalize transaction of inserting nodes/edges` )
 
                     return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to finalize transaction of  inserting nodes/edges`)))
                 }
 
-                const marked = await DataStagingStorage.Instance.SetInserted(row.id)
+                const marked = await stagingRepo.setInserted(row, transactionClient)
                 if (marked.isError) {
                     // update the individual data row which failed
-                    await DataStagingStorage.Instance.AddError(row.id, `error attempting to mark data inserted ${marked.error}` )
+                    await stagingRepo.addError(row.id!, `error attempting to mark data inserted ${marked.error}` )
 
                     return new Promise(resolve => resolve(Result.SilentFailure(`error attempting to mark data inserted ${marked.error}`)))
                 }

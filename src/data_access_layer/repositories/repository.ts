@@ -1,10 +1,11 @@
 import Result from "../../result";
 import Mapper, {Options} from "../mappers/mapper";
 import {User} from "../../access_management/user";
+import {PoolClient} from "pg";
 
 export default interface RepositoryInterface<T> {
-    findByID(id: string): Promise<Result<T>>
-    save(user: User, t:T): Promise<Result<boolean>>
+    findByID(id: string | number): Promise<Result<T>>
+    save(t: T, user?: User): Promise<Result<boolean>>
     delete(t:T): Promise<Result<boolean>>
 }
 
@@ -133,6 +134,10 @@ export class Repository {
     findAll<T>(queryOptions?: QueryOptions, options?: Options<T>): Promise<Result<T[]>> {
         const storage = new Mapper()
 
+        if(queryOptions && queryOptions.groupBy) {
+            this._rawQuery.push(`GROUP BY ${queryOptions.groupBy}`)
+        }
+
         if(queryOptions && queryOptions.sortBy) {
             if(queryOptions.sortDesc) {
                 this._rawQuery.push(`ORDER BY "${queryOptions.sortBy}" DESC`)
@@ -163,7 +168,7 @@ export class Repository {
         return storage.rows<T>(query)
     }
 
-    count(): Promise<Result<number>> {
+    count(transaction?: PoolClient): Promise<Result<number>> {
         const storage = new Mapper()
 
         // modify the original query to be count
@@ -178,7 +183,7 @@ export class Repository {
         this._rawQuery = [`SELECT * FROM ${this._tableName}`]
         this._values = []
 
-        return storage.count(query)
+        return storage.count(query, transaction)
     }
 }
 
@@ -186,5 +191,7 @@ export type QueryOptions = {
     limit?: number | undefined
     offset?: number | undefined
     sortBy?: string | undefined
-    sortDesc?: boolean | undefined
+    sortDesc?: boolean | undefined,
+    // generally used if we have a complicated set of joins
+    groupBy?: string | undefined
 }

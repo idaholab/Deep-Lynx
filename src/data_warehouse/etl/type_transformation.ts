@@ -2,13 +2,13 @@ import Result from "../../result";
 import {getNestedValue} from "../../utilities";
 import MetatypeKeyMapper from "../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper";
 import MetatypeRelationshipKeyMapper from "../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper";
-import {DataStagingT} from "../../types/import/dataStagingT";
 import Logger from "../../services/logger"
 import Node from "../data/node"
 import Edge from "../data/edge";
 import {BaseDomainClass, NakedDomainClass} from "../../base_domain_class";
 import {IsDefined, IsIn, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested} from "class-validator";
 import {Type} from "class-transformer";
+import {DataStaging} from "../import/import";
 
 // we extend the naked class here because we don't need the metadata id, just
 // the class for validation
@@ -187,14 +187,14 @@ export default class TypeTransformation extends BaseDomainClass {
 
    // applyTransformation will take a mapping, a transformation, and a data record
    // in order to generate an array of nodes or edges based on the transformation type
-   async applyTransformation(data: DataStagingT): Promise<Result<Node[] | Edge[]>> {
+   async applyTransformation(data: DataStaging): Promise<Result<Node[] | Edge[]>> {
       return this.transform(data)
    }
 
    // transform is used to recursively generate node/edges based on the transformation
    // this allows us to handle the root array portion of type transformations and to
    // generate nodes/edges based on nested data.
-   private async transform(data: DataStagingT, index?: number[]): Promise<Result<Node[] | Edge[]>> {
+   private async transform(data: DataStaging, index?: number[]): Promise<Result<Node[] | Edge[]>> {
       let results: Node[] | Edge[] = []
       // if no root array, act normally
       if(!this.root_array) {
@@ -301,7 +301,7 @@ export default class TypeTransformation extends BaseDomainClass {
    // generate results is the actual node/edge creation. While this only ever returns
    // a single node/edge, it returns it in an array for ease of use in the recursive
    // transform function
-   private async generateResults(data: DataStagingT, index?: number[]): Promise<Result<Node[] | Edge[]>> {
+   private async generateResults(data: DataStaging, index?: number[]): Promise<Result<Node[] | Edge[]>> {
       const newPayload: {[key:string]: any}  = {}
       const newPayloadRelationship: {[key:string]: any} = {}
 

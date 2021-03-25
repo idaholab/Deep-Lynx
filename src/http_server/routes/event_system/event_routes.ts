@@ -23,7 +23,7 @@ export default class EventRoutes {
 
         const payload = plainToClass(EventRegistration, req.body as object)
 
-        repo.save(user, payload)
+        repo.save(payload, user)
             .then((result) => {
                 if (result.isError) {
                     result.asResponse(res)
@@ -82,7 +82,7 @@ export default class EventRoutes {
                 const payload = plainToClass(EventRegistration, req.body as object)
                 payload.id = req.eventRegistration.id
 
-                repo.save(user, payload)
+                repo.save(payload, user)
                     .then((updated: Result<boolean>) => {
                         if (updated.isError) {
                             updated.asResponse(res)

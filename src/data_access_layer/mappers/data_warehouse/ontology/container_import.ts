@@ -324,7 +324,7 @@ export default class ContainerImport {
           const repository = new ContainerRepository();
           const container = new Container({name, description: ontologyDescription})
 
-          const saved = await repository.save(user, container)
+          const saved = await repository.save(container, user)
           if (saved.isError) return resolve(Result.SilentFailure(saved.error!.error));
           containerID = container.id!;
         }

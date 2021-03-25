@@ -95,7 +95,7 @@ export default class UserRoutes {
             const payload = plainToClass(User, req.body as object)
             payload.id = req.routeUser.id!
 
-            userRepo.save(req.currentUser! , payload)
+            userRepo.save(payload, req.currentUser!)
                 .then((result) => {
                     result.asResponse(res)
                 })

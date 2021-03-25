@@ -55,7 +55,7 @@ describe('A Metatype Repository', async() => {
         const repository = new MetatypeRepository()
         const metatype = new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
 
-        let results = await repository.save(user, metatype)
+        let results = await repository.save(metatype, user)
         expect(results.isError).false
         expect(metatype.id).not.undefined
 
@@ -65,7 +65,7 @@ describe('A Metatype Repository', async() => {
         metatype.name = updatedName
         metatype.description = updatedDescription
 
-        results = await repository.save(user, metatype)
+        results = await repository.save(metatype, user)
         expect(results.isError).false
         expect(metatype.id).not.undefined
         expect(metatype.name).eq(updatedName)
@@ -83,7 +83,7 @@ describe('A Metatype Repository', async() => {
             ]
         metatype.addKey(...keys)
 
-        let results = await repository.save(user, metatype)
+        let results = await repository.save(metatype, user)
         expect(results.isError).false
         expect(metatype.id).not.undefined
         expect(metatype.keys!).not.empty
@@ -97,7 +97,7 @@ describe('A Metatype Repository', async() => {
         metatype.keys![0].name = updatedName
         metatype.keys![0].description = updatedDescription
 
-        results = await repository.save(user, metatype)
+        results = await repository.save(metatype, user)
         expect(results.isError).false
         expect(metatype.id).not.undefined
         expect(metatype.name).eq(updatedName)
@@ -109,7 +109,7 @@ describe('A Metatype Repository', async() => {
         metatype.removeKey(metatype.keys![0])
         expect(metatype.keys!.length).eq(1)
 
-        results = await repository.save(user, metatype)
+        results = await repository.save(metatype, user)
         expect(results.isError).false
         expect(metatype.id).not.undefined
         expect(metatype.name).eq(updatedName)
@@ -206,7 +206,7 @@ describe('A Metatype Repository', async() => {
         const repository = new MetatypeRepository()
         const metatype = new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
 
-        let results = await repository.save(user, metatype)
+        let results = await repository.save(metatype, user)
         expect(results.isError).false
         expect(metatype.id).not.undefined
 
@@ -221,7 +221,7 @@ describe('A Metatype Repository', async() => {
         const repository = new MetatypeRepository()
         const metatype = new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
 
-        const results = await repository.save(user, metatype)
+        const results = await repository.save(metatype, user)
         expect(results.isError).false
         expect(metatype.id).not.undefined
 

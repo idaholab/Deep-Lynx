@@ -66,7 +66,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
         return Promise.resolve(retrieved)
     }
 
-    async save(user: User, t: TypeMapping, saveTransformations:boolean = true, transaction?: PoolClient): Promise<Result<boolean>> {
+    async save(t: TypeMapping, user: User, saveTransformations:boolean = true, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction: boolean = false
 
         const errors = await t.validationErrors()

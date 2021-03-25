@@ -97,7 +97,7 @@ describe('A Type Mapping Repository', async() => {
         // verify the hash ran
         expect(mapping.shape_hash).not.undefined
 
-        let saved = await repo.save(user, mapping)
+        let saved = await repo.save(mapping, user)
         expect(saved.isError).false
         expect(mapping.id).not.undefined
 
@@ -105,7 +105,7 @@ describe('A Type Mapping Repository', async() => {
         mapping.sample_payload = updated_payload
         mapping.shape_hash = TypeMapping.objectToShapeHash(updated_payload)
 
-        saved = await repo.save(user, mapping)
+        saved = await repo.save(mapping, user)
         expect(saved.isError)
         expect(mapping.shape_hash).eq(TypeMapping.objectToShapeHash(updated_payload))
 
@@ -136,7 +136,7 @@ describe('A Type Mapping Repository', async() => {
 
         mapping.addTransformation(transformation)
 
-        let saved = await repo.save(user, mapping)
+        let saved = await repo.save(mapping, user)
         expect(saved.isError).false
         expect(mapping.id).not.undefined
         expect(mapping.transformations![0]!.id).not.undefined
@@ -144,7 +144,7 @@ describe('A Type Mapping Repository', async() => {
         // remove the transformation
         mapping.removeTransformation(mapping.transformations![0]!)
 
-        saved = await repo.save(user, mapping)
+        saved = await repo.save(mapping, user)
         expect(saved.isError)
         expect(mapping.transformations).empty
 

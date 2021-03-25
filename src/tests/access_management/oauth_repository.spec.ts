@@ -62,7 +62,7 @@ describe('An OAuth Repository', async() => {
             owner: user
         })
 
-        let saved = await repo.save(user, app)
+        let saved = await repo.save(app, user)
         expect(saved.isError).false
         expect(app.id).not.undefined
 
@@ -72,7 +72,7 @@ describe('An OAuth Repository', async() => {
         app.name = updatedName
         app.description = updatedDescription
 
-        saved = await repo.save(user, app)
+        saved = await repo.save(app, user)
         expect(saved.isError).false
         expect(app.name).eq(updatedName)
         expect(app.description).eq(updatedDescription)

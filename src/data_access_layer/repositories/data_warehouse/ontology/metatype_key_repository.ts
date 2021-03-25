@@ -35,28 +35,28 @@ export default class MetatypeKeyRepository extends  Repository implements Reposi
         return this.#mapper.Retrieve(id)
     }
 
-    async save(user: User, k: MetatypeKey): Promise<Result<boolean>> {
-        const errors = await k.validationErrors()
+    async save(m: MetatypeKey, user: User): Promise<Result<boolean>> {
+        const errors = await m.validationErrors()
         if(errors) {
             return Promise.resolve(Result.Failure(`key does not pass validation ${errors.join(",")}`))
         }
 
         // clear the parent metatype's cache
-        this.#metatypeRepo.deleteCached(k.metatype_id!)
+        this.#metatypeRepo.deleteCached(m.metatype_id!)
 
-        if(k.id) {
-            const updated = await this.#mapper.Update(user.id!, k)
+        if(m.id) {
+            const updated = await this.#mapper.Update(user.id!, m)
             if(updated.isError) return Promise.resolve(Result.Pass(updated))
 
-            Object.assign(k, updated.value)
+            Object.assign(m, updated.value)
             return Promise.resolve(Result.Success(true))
         }
 
-        const result = await this.#mapper.Create(user.id!, k)
+        const result = await this.#mapper.Create(user.id!, m)
         if(result.isError) return Promise.resolve(Result.Pass(result))
 
 
-        Object.assign(k, result.value)
+        Object.assign(m, result.value)
         return Promise.resolve(Result.Success(true))
     }
 

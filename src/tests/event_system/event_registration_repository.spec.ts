@@ -72,7 +72,7 @@ describe('An Event Registration Repository', async() => {
             eventType: "data_ingested"
         })
 
-        let saved = await repo.save(user, reg)
+        let saved = await repo.save(reg, user)
         expect(saved.isError).false
         expect(reg.id).not.undefined
 
@@ -82,7 +82,7 @@ describe('An Event Registration Repository', async() => {
         reg.app_name = updatedName
         reg.app_url = updatedURL
 
-        saved = await repo.save(user, reg)
+        saved = await repo.save(reg, user)
         expect(saved.isError).false
         expect(reg.app_name).eq(updatedName)
         expect(reg.app_url).eq(updatedURL)

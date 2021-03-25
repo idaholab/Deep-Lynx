@@ -12,6 +12,7 @@ import Edge from "../../data_warehouse/data/edge";
 import TypeMapping from "../../data_warehouse/etl/type_mapping";
 import TypeTransformation from "../../data_warehouse/etl/type_transformation";
 import {Exporter} from "../../data_warehouse/export/export";
+import Import, {DataStaging} from "../../data_warehouse/import/import";
 
 
 declare global {
@@ -31,7 +32,9 @@ declare global {
             edge?: Edge,
             typeMapping?: TypeMapping,
             typeTransformation?: TypeTransformation,
-            exporter?: Exporter
+            exporter?: Exporter,
+            dataImport?: Import,
+            dataStagingRecord?: DataStaging
         }
    }
 }

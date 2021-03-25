@@ -14,7 +14,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
     #mapper: ContainerMapper = ContainerMapper.Instance
     #graphMapper: GraphMapper = GraphMapper.Instance
 
-    async save(user: User, c: Container): Promise<Result<boolean>> {
+    async save(c: Container, user: User): Promise<Result<boolean>> {
         const errors = await c.validationErrors()
         if(errors) {
             return Promise.resolve(Result.Failure(`container does not pass validation ${errors.join(",")}`))

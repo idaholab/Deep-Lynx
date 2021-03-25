@@ -293,9 +293,6 @@ export default class Mapper {
 
 export type Options<T> = {
     resultClass?: ClassConstructor<T>,
-    transaction?: PoolClient
-    limit?: number | undefined
-    offset?: number | undefined
-    sortBy?: string | undefined
-    sortDesc?: boolean | undefined
+    transaction?: PoolClient,
+    tableName?: string // in case the listing queries need it
 }

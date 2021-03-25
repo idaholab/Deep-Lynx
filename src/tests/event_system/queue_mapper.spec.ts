@@ -7,8 +7,8 @@ import ContainerMapper from "../../data_access_layer/mappers/data_warehouse/onto
 import EventQueueMapper from "../../data_access_layer/mappers/event_system/event_queue_mapper";
 import DataSourceStorage from "../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
 import { DataSourceT } from "../../types/import/dataSourceT";
-import DataStagingStorage from "../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
-import ImportStorage from "../../data_access_layer/mappers/data_warehouse/import/import_storage";
+import DataStagingMapper from "../../data_access_layer/mappers/data_warehouse/import/data_staging_mapper";
+import ImportMapper from "../../data_access_layer/mappers/data_warehouse/import/import_mapper";
 import ExportMapper from "../../data_access_layer/mappers/data_warehouse/export/export_mapper";
 import FileMapper from "../../data_access_layer/mappers/data_warehouse/data/file_mapper";
 import ContainerStorage from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
@@ -19,6 +19,7 @@ import TypeMappingRepository from "../../data_access_layer/repositories/data_war
 import {User} from "../../access_management/user";
 import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
 import ExportRecord, {StandardConfig} from "../../data_warehouse/export/export";
+import Import, {DataStaging} from "../../data_warehouse/import/import";
 
 describe('An Event Queue Mapper can', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -93,11 +94,14 @@ describe('An Event Queue Mapper can', async() => {
 
     it('can send event on data staging import', async()=> {
         const storage = EventQueueMapper.Instance;
-        const dsStorage = DataStagingStorage.Instance;
-        const importStorage = ImportStorage.Instance
+        const dsStorage = DataStagingMapper.Instance;
+        const importStorage = ImportMapper.Instance
         const mappingRepo = new TypeMappingRepository()
 
-        let imports = await importStorage.InitiateImport(dataSourceID, "test suite", "test")
+        let imports = await importStorage.CreateImport("test suite", new Import({
+            data_source_id: dataSourceID,
+            reference: "testing suite upload"
+        }))
 
         let mapping = new TypeMapping({
             container_id: containerID,
@@ -105,11 +109,16 @@ describe('An Event Queue Mapper can', async() => {
             sample_payload: test_raw_payload
         })
 
-        const saved = await mappingRepo.save(user, mapping)
+        const saved = await mappingRepo.save(mapping, user)
 
         expect(saved.isError).false
 
-        await dsStorage.Create(dataSourceID, imports.value, mapping.id!, test_raw_payload)
+        await dsStorage.Create(new DataStaging({
+           data_source_id: dataSourceID,
+           import_id: imports.value.id!,
+           mapping_id: mapping.id!,
+           data: test_raw_payload
+        }))
 
         let task = await storage.List();
         expect(task).not.empty;
@@ -122,10 +131,13 @@ describe('An Event Queue Mapper can', async() => {
 
     it('can send event on import complete', async()=> {
         const storage = EventQueueMapper.Instance;
-        const importStorage = ImportStorage.Instance
+        const importStorage = ImportMapper.Instance
 
-        let imports = await importStorage.InitiateImport(dataSourceID, "test suite", "test");
-        const importSuccess = await importStorage.SetStatus(imports.value, "completed");
+        let imports = await importStorage.CreateImport("test suite", new Import({
+            data_source_id: dataSourceID,
+            reference: "testing suite upload"
+        }))
+        const importSuccess = await importStorage.SetStatus(imports.value.id!, "completed");
         expect(importSuccess.value).true;
 
         let task = await storage.List();

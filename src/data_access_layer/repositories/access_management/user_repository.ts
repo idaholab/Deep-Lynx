@@ -60,7 +60,7 @@ export default class UserRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(r.value))
     }
 
-    async save(user: User, u: User, saveKeys: boolean = true): Promise<Result<boolean>> {
+    async save(u: User, user: User, saveKeys: boolean = true): Promise<Result<boolean>> {
         const errors = await u.validationErrors()
         if(errors) {
             return Promise.resolve(Result.Failure(`user does not pass validation ${errors.join(",")}`))
@@ -219,7 +219,7 @@ export default class UserRepository extends Repository implements RepositoryInte
             admin: true
         })
 
-        const created = await this.save(plainToClass(User, {id: "system"}), superUser)
+        const created = await this.save(superUser, plainToClass(User, {id: "system"}))
         if(created.isError) {
             return new Promise(resolve => resolve(Result.Pass(created)))
         }

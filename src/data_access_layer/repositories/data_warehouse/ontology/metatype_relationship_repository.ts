@@ -17,7 +17,7 @@ export default class MetatypeRelationshipRepository extends Repository implement
     #mapper: MetatypeRelationshipMapper = MetatypeRelationshipMapper.Instance
     #keyMapper: MetatypeRelationshipKeyMapper = MetatypeRelationshipKeyMapper.Instance
 
-    async save(user: User, m: MetatypeRelationship, saveKeys: boolean = true): Promise<Result<boolean>> {
+    async save(m: MetatypeRelationship, user: User, saveKeys: boolean = true): Promise<Result<boolean>> {
         const errors = await m.validationErrors()
         if(errors) {
             return Promise.resolve(Result.Failure(`metatype relationship does not pass validation ${errors.join(",")}`))

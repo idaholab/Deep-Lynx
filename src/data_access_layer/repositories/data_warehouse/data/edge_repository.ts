@@ -63,7 +63,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     }
 
     // TODO: add this when edges and processing, imports and staging are done DataStagingStorage.Instance.AddError(node.data_staging_id!, `error attempting to insert nodes ${insertedNodes.error?.error}` )
-    async save(user: User, e: Edge, transaction?: PoolClient): Promise<Result<boolean>> {
+    async save(e: Edge, user: User, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction: boolean = false
         const errors = await e.validationErrors()
         if (errors) return Promise.resolve(Result.Failure(`node does not pass validation ${errors.join(",")}`))

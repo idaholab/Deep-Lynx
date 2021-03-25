@@ -19,7 +19,7 @@ export default class EventRegistrationRepository extends Repository implements R
         return this.#mapper.Retrieve(id)
     }
 
-    async save(user: User, e: EventRegistration): Promise<Result<boolean>> {
+    async save(e: EventRegistration, user: User): Promise<Result<boolean>> {
         const errors = await e.validationErrors()
         if(errors) {
             return Promise.resolve(Result.Failure(`event registration does not pass validation ${errors.join(",")}`))

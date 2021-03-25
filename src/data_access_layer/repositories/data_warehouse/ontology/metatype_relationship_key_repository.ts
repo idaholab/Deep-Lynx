@@ -31,24 +31,24 @@ export default class MetatypeRelationshipKeyRepository extends  Repository imple
         return this.#mapper.Retrieve(id)
     }
 
-    async save(user: User, k: MetatypeRelationshipKey): Promise<Result<boolean>> {
-        const errors = await k.validationErrors()
+    async save(relationshipKey: MetatypeRelationshipKey, user: User): Promise<Result<boolean>> {
+        const errors = await relationshipKey.validationErrors()
         if(errors) {
             return Promise.resolve(Result.Failure(`key does not pass validation ${errors.join(",")}`))
         }
 
-        if(k.id) {
-            const updated = await this.#mapper.Update(user.id!, k)
+        if(relationshipKey.id) {
+            const updated = await this.#mapper.Update(user.id!, relationshipKey)
             if(updated.isError) return Promise.resolve(Result.Pass(updated))
 
-            Object.assign(k, updated.value)
+            Object.assign(relationshipKey, updated.value)
             return Promise.resolve(Result.Success(true))
         }
 
-        const result = await this.#mapper.Create(user.id!, k)
+        const result = await this.#mapper.Create(user.id!, relationshipKey)
         if(result.isError) return Promise.resolve(Result.Pass(result))
 
-        Object.assign(k, result.value)
+        Object.assign(relationshipKey, result.value)
         return Promise.resolve(Result.Success(true))
     }
 

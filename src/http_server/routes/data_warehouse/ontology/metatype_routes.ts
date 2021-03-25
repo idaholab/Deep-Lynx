@@ -75,19 +75,16 @@ export default class MetatypeRoutes {
             repository = repository.and().archived("eq", false)
         }
 
-        if (req.query.count !== undefined) {
-            if (req.query.count === "true") {
-                repository.count()
-                    .then((result) => {
-                        result.asResponse(res)
-                    })
-                    .catch((err) => {
-                        res.status(404).send(err)
-                    })
-                    .finally(() => next())
-            }
+        if (req.query.count !== undefined && req.query.count === "true") {
+            repository.count()
+                .then((result) => {
+                    result.asResponse(res)
+                })
+                .catch((err) => {
+                    res.status(404).send(err)
+                })
+                .finally(() => next())
         } else {
-                // @ts-ignore
                 repository.list(req.query.loadKeys === undefined || req.query.loadKeys === "true",
                     {
                         limit: (req.query.limit) ? +req.query.limit : undefined,
@@ -112,7 +109,7 @@ export default class MetatypeRoutes {
             payload.id = req.metatype.id
             payload.container_id = req.container.id!
 
-            repo.save(req.currentUser! , payload)
+            repo.save(payload, req.currentUser!)
                 .then((result) => {
                     if(result.isError) {
                         result.asResponse(res)

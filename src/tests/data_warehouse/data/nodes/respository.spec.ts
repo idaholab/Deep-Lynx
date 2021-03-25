@@ -140,7 +140,7 @@ describe('A Node Repository', async() => {
             data_source_id: dataSourceID
         });
 
-        let saved = await nodeRepo.save(user, mixed)
+        let saved = await nodeRepo.save(mixed, user)
         expect(saved.isError).false
         expect(mixed.id).not.undefined
         expect(mixed.properties).to.have.deep.property('flower_name', "Daisy")
@@ -148,7 +148,7 @@ describe('A Node Repository', async() => {
         // update the node's payload
         mixed.properties = updatedPayload
 
-        saved = await nodeRepo.save(user, mixed)
+        saved = await nodeRepo.save(mixed, user)
         expect(saved.isError).false
         expect(mixed.properties).to.have.deep.property('flower_name', "Violet")
 
@@ -156,7 +156,7 @@ describe('A Node Repository', async() => {
         const originalID = mixed.id
         mixed.id = undefined
 
-        saved = await nodeRepo.save(user, mixed)
+        saved = await nodeRepo.save(mixed, user)
         expect(saved.isError).false
         expect(mixed.id).eq(originalID)
 
@@ -227,7 +227,7 @@ describe('A Node Repository', async() => {
             properties: malformed_payload
         });
 
-        let saved = await nodeRepo.save(user, mixed)
+        let saved = await nodeRepo.save(mixed, user)
         expect(saved.isError).true
 
         return Promise.resolve()
@@ -243,7 +243,7 @@ describe('A Node Repository', async() => {
             properties: payload
         });
 
-        let saved = await nodeRepo.save(user, mixed)
+        let saved = await nodeRepo.save(mixed, user)
         expect(saved.isError).false
         expect(mixed.id).not.undefined
         expect(mixed.properties).to.have.deep.property('flower_name', "Daisy")
@@ -251,7 +251,7 @@ describe('A Node Repository', async() => {
         // update the node's payload
         mixed.properties = malformed_payload
 
-        saved = await nodeRepo.save(user, mixed)
+        saved = await nodeRepo.save(mixed, user)
         expect(saved.isError).true
 
         return nodeRepo.delete(mixed)
@@ -267,13 +267,13 @@ describe('A Node Repository', async() => {
             properties: regex_payload
         });
 
-        let saved = await nodeRepo.save(user, mixed)
+        let saved = await nodeRepo.save(mixed, user)
         expect(saved.isError).false
         expect(mixed.id).not.undefined
 
         mixed.properties = regex_payload_fails
 
-        saved = await nodeRepo.save(user, mixed)
+        saved = await nodeRepo.save(mixed, user)
         expect(saved.isError).true
 
         return nodeRepo.delete(mixed)

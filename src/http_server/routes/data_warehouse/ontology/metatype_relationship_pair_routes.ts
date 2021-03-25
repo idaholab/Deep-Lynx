@@ -117,7 +117,7 @@ export default class MetatypeRelationshipPairRoutes {
             payload.id = req.metatypeRelationshipPair.id
             payload.container_id = req.metatypeRelationshipPair.container_id
 
-            repo.save(req.currentUser! , payload)
+            repo.save(payload, req.currentUser!)
                 .then((result) => {
                     if(result.isError){
                         result.asResponse(res)

@@ -35,7 +35,7 @@ export default class ContainerRoutes {
 
     private static createContainer(req: Request, res: Response, next: NextFunction) {
         const payload = plainToClass(Container, req.body as object)
-        repository.save(req.currentUser!, payload)
+        repository.save(payload, req.currentUser!)
             .then((result) => {
                 if(result.isError) {
                     result.asResponse(res)
@@ -94,7 +94,7 @@ export default class ContainerRoutes {
         const container = plainToClass(Container, req.body as object)
         container.id = req.params.containerID
 
-        repository.save(req.currentUser! , container)
+        repository.save(container, req.currentUser!)
             .then((updated) => {
                 if(updated.isError){
                     updated.asResponse(res)

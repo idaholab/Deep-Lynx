@@ -81,7 +81,7 @@ describe('A File Repository can', async() => {
             container_id: containerID
         })
 
-        let saved = await fileRepo.save(user, file)
+        let saved = await fileRepo.save(file, user)
         expect(saved.isError).false
         expect(file.id).not.undefined
 
@@ -89,7 +89,7 @@ describe('A File Repository can', async() => {
         const updatedName = faker.name.findName()
         file.file_name = updatedName
 
-        saved = await fileRepo.save(user, file)
+        saved = await fileRepo.save(file, user)
         expect(saved.isError).false
         expect(file.file_name).eq(updatedName)
 

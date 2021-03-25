@@ -34,7 +34,7 @@ export default class ExportRoutes {
                 return
             }
 
-            exporterRepo.save(currentUser, exporter)
+            exporterRepo.save(exporter, currentUser)
                 .then((result) => {
                     if (result.isError) {
                         result.asResponse(res)

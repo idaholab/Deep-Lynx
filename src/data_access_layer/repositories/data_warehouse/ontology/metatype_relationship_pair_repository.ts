@@ -61,7 +61,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
     // save will not save the origin/destination metatypes or metatype relationship unless the
     // user specifies. This is because we might be working with this object with a bare
     // minimum of info about those types
-    async save(user: User, p: MetatypeRelationshipPair, saveRelationships?: boolean): Promise<Result<boolean>> {
+    async save(p: MetatypeRelationshipPair, user: User, saveRelationships?: boolean): Promise<Result<boolean>> {
         // attempt to save the relationships first, if required - keep in mind that
         // we can't wrap these in transactions so it is possible that you update one
         // but not another of the relationships. This is why the saveRelationships is
@@ -71,9 +71,9 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             const relationshipRepo = new MetatypeRelationshipRepository()
 
             const results = await Promise.all([
-                metatypeRepo.save(user, p.originMetatype!),
-                metatypeRepo.save(user, p.destinationMetatype!),
-                relationshipRepo.save(user, p.relationship!),
+                metatypeRepo.save(p.originMetatype!, user),
+                metatypeRepo.save(p.destinationMetatype!, user),
+                relationshipRepo.save(p.relationship!, user),
             ])
 
             const errors: string[] = []
@@ -132,9 +132,9 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
                 const relationshipRepo = new MetatypeRelationshipRepository()
 
                 operations.push(...[
-                    metatypeRepo.save(user, pair.originMetatype!),
-                    metatypeRepo.save(user, pair.destinationMetatype!),
-                    relationshipRepo.save(user, pair.relationship!),
+                    metatypeRepo.save(pair.originMetatype!, user),
+                    metatypeRepo.save(pair.destinationMetatype!, user),
+                    relationshipRepo.save(pair.relationship!, user),
                 ])
             })
 

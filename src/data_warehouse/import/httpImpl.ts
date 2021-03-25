@@ -10,17 +10,20 @@ import Logger from "../../services/logger"
 import Config from "../../services/config";
 import {DataSourceT} from "../../types/import/dataSourceT";
 import DataSourceStorage from "../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
-import ImportStorage from "../../data_access_layer/mappers/data_warehouse/import/import_storage";
+import ImportMapper from "../../data_access_layer/mappers/data_warehouse/import/import_mapper";
 
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
 import NodeRSA from "node-rsa";
 import axios, {AxiosResponse} from "axios"
-import DataStagingStorage from "../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
+import DataStagingMapper from "../../data_access_layer/mappers/data_warehouse/import/data_staging_mapper";
 import TypeMapping from "../etl/type_mapping";
 import TypeMappingRepository from "../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
 import {SuperUser, User} from "../../access_management/user";
 import UserRepository from "../../data_access_layer/repositories/access_management/user_repository";
+import ImportRepository from "../../data_access_layer/repositories/data_warehouse/import/import_repository";
+import Import, {DataStaging} from "./import";
+import DataStagingRepository from "../../data_access_layer/repositories/data_warehouse/import/data_staging_repository";
 
 // HttpImpl is a data source which polls and HTTP source for data every x seconds
 // this implementation allows the user to query both basic authentication and
@@ -201,9 +204,13 @@ export class HttpImpl implements DataSource {
     // processing the data is not the responsibility of this portion of the application
     public async Poll(): Promise<void> {
         while(true) {
-            const typeMappingRepo: TypeMappingRepository = new TypeMappingRepository()
+            const importRepo = new ImportRepository()
+            const userRepo = new UserRepository()
+            const dataStagingRepo = new DataStagingRepository()
+            const typeMappingRepo= new TypeMappingRepository()
             // check if source is active
             const active = await DataSourceStorage.Instance.IsActive(this.dataSourceT.id!)
+            let user: User = SuperUser
 
             if(active.isError || !active.value) break;
 
@@ -222,11 +229,11 @@ export class HttpImpl implements DataSource {
             // retrieval because if we can successfully lock it it means that it's
             // not currently being processed or another export polling function is
             // acting on it
-            const lastImport = await ImportStorage.Instance.RetrieveLastAndLock(this.dataSourceT.id!, pollTransaction.value);
+            const lastImport = await importRepo.findLastAndLock(this.dataSourceT.id!, pollTransaction.value);
             if(lastImport.isError) {
                 Logger.error(`unable to retrieve and lock last import ${lastImport.error}`);
                 (this.config.poll_interval) ?  await this.delay((this.config.poll_interval! * 1000)) : await this.delay(1000)
-                await ImportStorage.Instance.completeTransaction(pollTransaction.value)
+                await ImportMapper.Instance.completeTransaction(pollTransaction.value)
 
                 continue
             }
@@ -238,7 +245,7 @@ export class HttpImpl implements DataSource {
 
             if(lastImport.value && lastImport.value.status !== "completed") {
                 (this.config.poll_interval) ?  await this.delay((this.config.poll_interval! * 1000)) : await this.delay(1000)
-                await ImportStorage.Instance.completeTransaction(pollTransaction.value)
+                await ImportMapper.Instance.completeTransaction(pollTransaction.value)
 
                 continue;
             }
@@ -276,28 +283,37 @@ export class HttpImpl implements DataSource {
 
                     if(!Array.isArray(resp.data)) {
                         Logger.error(`response from http importer must be an array of JSON objects`)
-                        await ImportStorage.Instance.completeTransaction(pollTransaction.value)
+                        await ImportMapper.Instance.completeTransaction(pollTransaction.value)
 
                         continue
                     }
+
+                    const retrievedUser = await userRepo.findByID(this.dataSourceT.created_by!)
+                    if(!retrievedUser.isError) user = retrievedUser.value
 
                     // create json import record
-                    const importRecord = await ImportStorage.Instance.InitiateImport(this.dataSourceT.id!, "polling system", reference)
-                    if(importRecord.isError) {
-                        Logger.error(`error creating import ${importRecord.error}`)
-                        await ImportStorage.Instance.completeTransaction(pollTransaction.value)
+                    const importRecord = new Import({
+                        data_source_id: this.dataSourceT.id!,
+                        reference
+                    })
+
+                    const saved = await importRepo.save(importRecord, user)
+                    if(saved.isError) {
+                        Logger.error(`error creating import ${saved.error}`)
+                        await ImportMapper.Instance.completeTransaction(pollTransaction.value)
 
                         continue
                     }
 
-                    const lockNewImport = await ImportStorage.Instance.RetrieveAndLock(importRecord.value, pollTransaction.value, true)
+                    const lockNewImport = await importRepo.findByIDAndLock(importRecord.id!, pollTransaction.value)
                     if(lockNewImport.isError) {
                         Logger.error(`unable to retrieve and lock new import ${lockNewImport.error}`)
-                        await ImportStorage.Instance.completeTransaction(pollTransaction.value)
+                        await ImportMapper.Instance.completeTransaction(pollTransaction.value)
 
                         continue
                     }
 
+                    const records : DataStaging[] = []
 
                     for(const data of resp.data) {
                         const shapeHash = TypeMapping.objectToShapeHash(data)
@@ -325,10 +341,18 @@ export class HttpImpl implements DataSource {
                             mapping = retrieved.value
                         }
 
-                        const inserted = await DataStagingStorage.Instance.Create(this.dataSourceT.id!, importRecord.value, mapping.id!, data)
-                        if(inserted.isError) {
-                            Logger.error(`error inserting data for import ${inserted}`)
-                        }
+                        records.push(new DataStaging({
+                            data_source_id: this.dataSourceT.id!,
+                            import_id: importRecord.id!,
+                            mapping_id: mapping.id!,
+                            data
+                        }))
+                    }
+
+                    const inserted = await dataStagingRepo.bulkSave(records)
+                    if(inserted.isError) {
+                        Logger.error(`unable to insert data records into data staging ${inserted.error?.error}`)
+                        continue
                     }
                 }
             } catch (err) {
@@ -340,7 +364,7 @@ export class HttpImpl implements DataSource {
 
             // call the transaction complete after the delay interval so that there is no way another export
             // function could possibly run an import while still in its cool-down
-            await ImportStorage.Instance.completeTransaction(pollTransaction.value)
+            await ImportMapper.Instance.completeTransaction(pollTransaction.value)
         }
 
         return Promise.resolve()

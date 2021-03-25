@@ -8,8 +8,8 @@ import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/o
 import DataSourceStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_source_storage";
 import TypeMappingMapper from "../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper";
 import GraphMapper from "../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
-import ImportStorage from "../../../data_access_layer/mappers/data_warehouse/import/import_storage";
-import DataStagingStorage from "../../../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
+import ImportMapper from "../../../data_access_layer/mappers/data_warehouse/import/import_mapper";
+import DataStagingMapper from "../../../data_access_layer/mappers/data_warehouse/import/data_staging_mapper";
 import MetatypeRelationshipMapper
     from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper";
 import MetatypeRelationshipPairMapper
@@ -31,6 +31,7 @@ import EdgeRepository from "../../../data_access_layer/repositories/data_warehou
 import TypeMapping from "../../../data_warehouse/etl/type_mapping";
 import TypeTransformation, {KeyMapping} from "../../../data_warehouse/etl/type_transformation";
 import TypeMappingRepository from "../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
+import Import, {DataStaging} from "../../../data_warehouse/import/import";
 
 describe('A Data Processor', async() => {
     var containerID:string = process.env.TEST_CONTAINER_ID || "";
@@ -300,7 +301,7 @@ describe('A Data Processor', async() => {
 
         const repo = new TypeMappingRepository()
 
-        const saved = await repo.save(user, mapping)
+        const saved = await repo.save(mapping, user)
 
         expect(saved.isError).false
 
@@ -308,14 +309,22 @@ describe('A Data Processor', async() => {
         typeMapping = mapping
 
         // now import the data
-        const newImport = await ImportStorage.Instance.InitiateImport(exp.value.id!, "test suite", "testing suite upload")
+        const newImport = await ImportMapper.Instance.CreateImport("test suite",  new Import({
+            data_source_id: exp.value.id!,
+            reference: "testing suite upload"
+        }))
         expect(newImport.isError).false
 
-        dataImportID = newImport.value
+        dataImportID = newImport.value.id!
 
-        const inserted = await DataStagingStorage.Instance.Create(exp.value.id!, newImport.value, typeMappingID, test_payload[0])
+        const inserted = await DataStagingMapper.Instance.Create(new DataStaging({
+            data_source_id: exp.value.id!,
+            import_id:newImport.value.id!,
+            mapping_id: typeMappingID,
+            data: test_payload[0]
+        }))
         expect(inserted.isError).false
-        expect(inserted.value).true
+        expect(inserted.value.id).not.undefined
 
         return Promise.resolve()
     })
@@ -393,9 +402,9 @@ describe('A Data Processor', async() => {
         const active = await TypeMappingMapper.Instance.SetActive(typeMappingID)
         expect(active.isError).false
 
-        const transaction = await ImportStorage.Instance.startTransaction()
+        const transaction = await ImportMapper.Instance.startTransaction()
 
-        const dataImport = await ImportStorage.Instance.RetrieveAndLock(dataImportID, transaction.value)
+        const dataImport = await ImportMapper.Instance.RetrieveAndLock(dataImportID, transaction.value)
         expect(dataImport.isError).false
 
         const processor = new DataSourceProcessor(dataSource!,graphID)

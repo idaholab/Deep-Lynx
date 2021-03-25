@@ -26,7 +26,7 @@ export default class FileRepository extends Repository implements RepositoryInte
         return this.#mapper.DomainRetrieve(id, containerID)
     }
 
-    async save(user: User, f: File, transaction?: PoolClient): Promise<Result<boolean>> {
+    async save(f: File, user: User, transaction?: PoolClient): Promise<Result<boolean>> {
         const errors = await f.validationErrors()
         if(errors) {
             return Promise.resolve(Result.Failure(`file does not pass validation ${errors.join(",")}`))
@@ -75,7 +75,7 @@ export default class FileRepository extends Repository implements RepositoryInte
             data_source_id: dataSourceID
         })
 
-        const saved = await this.save(user, file)
+        const saved = await this.save(file, user)
         if(saved.isError) return Promise.resolve(Result.Pass(saved))
 
         return Promise.resolve(Result.Success(file))

@@ -8,14 +8,14 @@ import DataSourceStorage from "../data_access_layer/mappers/data_warehouse/impor
 import {pipe} from "fp-ts/lib/pipeable";
 import {fold} from "fp-ts/lib/Either";
 import {onDecodeError} from "../utilities";
-import ImportStorage from "../data_access_layer/mappers/data_warehouse/import/import_storage";
+import ImportMapper from "../data_access_layer/mappers/data_warehouse/import/import_mapper";
 import {DataSource} from "../data_warehouse/import/data_source"
 import Logger from "../services/logger";
-import DataStagingStorage from "../data_access_layer/mappers/data_warehouse/import/data_staging_storage";
-import TypeMappingMapper from "../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper";
 import {User} from "../access_management/user";
 import TypeMapping from "../data_warehouse/etl/type_mapping";
 import TypeMappingRepository from "../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
+import Import, {DataStaging} from "../data_warehouse/import/import";
+import DataStagingRepository from "../data_access_layer/repositories/data_warehouse/import/data_staging_repository";
 
 
 // Each data source might have its own particular startup needs. Make sure your data source
@@ -52,49 +52,6 @@ export async function NewDataSource(user:User, containerID:string, input: any): 
 
         pipe(dataSourceT.decode(input), fold(onDecodeError(resolve), onSuccess(resolve)))
     })
-}
-
-// This import will create and insert data given the correct information and a payload of JSON objects.
-export async function ManualJsonImport(user:User, dataSourceID: string, payload:any): Promise<Result<string>> {
-    const dataSource = await DataSourceStorage.Instance.Retrieve(dataSourceID)
-    const mappingRepo = new TypeMappingRepository()
-    if(dataSource.isError) return new Promise(resolve => resolve(Result.Pass(dataSource)))
-
-    if(dataSource.value.adapter_type !== "manual") return new Promise(resolve => resolve(Result.Failure('cannot run manual import for non-manual data source')))
-    if(!Array.isArray(payload)) return new Promise(resolve => resolve(Result.Failure("payload must be an array of JSON objects")))
-
-    const newImport = await ImportStorage.Instance.InitiateImport(dataSourceID, user.id!, "manual upload")
-
-    for(const data of payload) {
-        const shapeHash = TypeMapping.objectToShapeHash(data)
-
-        let mapping: TypeMapping
-
-        const retrieved = await mappingRepo.findByShapeHash(shapeHash, dataSourceID)
-        if(retrieved.isError) {
-            const newMapping = new TypeMapping({
-                container_id: dataSource.value.container_id!,
-                data_source_id: dataSourceID,
-                sample_payload: data
-            })
-
-            const saved = await mappingRepo.save(user, newMapping)
-
-            if(saved.isError) {
-                Logger.error(`unable to create new type mapping for imported data ${saved.error}`)
-                continue
-            }
-
-            mapping = newMapping
-        } else {
-            mapping = retrieved.value
-        }
-
-        const inserted = await DataStagingStorage.Instance.Create(dataSourceID, newImport.value, mapping.id!, data)
-        if(inserted.isError) Logger.error(`unable to insert data for import ${inserted.error}`)
-    }
-
-    return new Promise(resolve => resolve(newImport))
 }
 
 // Each data source's configuration is different, this allows us to both set that configuration and perform

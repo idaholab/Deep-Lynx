@@ -75,7 +75,7 @@ describe('A User Repository', async() => {
         const repository = new UserRepository()
         const u = testUser()
 
-        let results = await repository.save(user, u)
+        let results = await repository.save(u, user)
         expect(results.isError).false
         expect(u.id).not.undefined
 
@@ -85,7 +85,7 @@ describe('A User Repository', async() => {
         u.email = updatedEmail
         u.display_name = updatedName
 
-        results = await repository.save(user, u)
+        results = await repository.save(u, user)
         expect(results.isError).false
         expect(u.display_name).eq(updatedName)
         expect(u.email).eq(updatedEmail)
@@ -103,7 +103,7 @@ describe('A User Repository', async() => {
 
         u.addKey(...keys)
 
-        let results = await repository.save(user, u)
+        let results = await repository.save(u, user)
         expect(results.isError).false
         expect(u.id).not.undefined
         expect(u.keys).not.empty
@@ -120,7 +120,7 @@ describe('A User Repository', async() => {
         u.email = updatedEmail
         u.display_name = updatedName
 
-        results = await repository.save(user, u)
+        results = await repository.save(u, user)
         expect(results.isError).false
         expect(u.display_name).eq(updatedName)
         expect(u.email).eq(updatedEmail)
@@ -179,7 +179,7 @@ describe('A User Repository', async() => {
         const repository = new UserRepository()
         let u = testUser()
 
-        let results = await repository.save(user, u)
+        let results = await repository.save(u, user)
         expect(results.isError).false
         expect(u.id).not.undefined
 

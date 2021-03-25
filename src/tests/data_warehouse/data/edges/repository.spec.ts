@@ -191,7 +191,7 @@ describe('An Edge Repository', async() => {
         });
 
         // normal save first
-        let saved = await edgeRepo.save(user, edge)
+        let saved = await edgeRepo.save(edge, user)
         expect(saved.isError).false
         expect(edge.id).not.undefined
 
@@ -207,14 +207,14 @@ describe('An Edge Repository', async() => {
             data_source_id: dataSourceID
         });
 
-        saved = await edgeRepo.save(user, edge)
+        saved = await edgeRepo.save(edge, user)
         expect(saved.isError).false
 
         // check that save works with a composite original id
         let originalID = edge.id!
         edge.id = undefined
 
-        saved = await edgeRepo.save(user, edge)
+        saved = await edgeRepo.save(edge, user)
         expect(saved.isError).false
         expect(edge.id).eq(originalID)
         expect(edge.properties).to.have.deep.property('flower_name', "Daisy")
@@ -222,13 +222,13 @@ describe('An Edge Repository', async() => {
         // update the properties
         edge.properties = updatePayload
 
-        saved = await edgeRepo.save(user, edge)
+        saved = await edgeRepo.save(edge, user)
         expect(saved.isError).false
         expect(edge.properties).to.have.deep.property('flower_name', "Violet")
 
         edge.properties = malformed_payload
 
-        saved = await edgeRepo.save(user, edge)
+        saved = await edgeRepo.save(edge, user)
         expect(saved.isError).true
 
         return edgeRepo.delete(edge)

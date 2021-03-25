@@ -72,7 +72,7 @@ export default class TypeMappingRoutes {
             toCreate.type_mapping_id = req.typeMapping.id!
         }
 
-        transformationRepo.save(user, toCreate)
+        transformationRepo.save(toCreate, user)
             .then((result) => {
                 if (result.isError) {
                     result.asResponse(res)
@@ -93,7 +93,7 @@ export default class TypeMappingRoutes {
             payload.id = req.typeTransformation.id!
             payload.type_mapping_id = req.typeMapping.id!
 
-            transformationRepo.save(user, payload)
+            transformationRepo.save(payload, user)
                 .then((result) => {
                     if (result.isError && result.error) {
                         result.asResponse(res)
@@ -134,7 +134,7 @@ export default class TypeMappingRoutes {
             payload.container_id = req.container.id!
             payload.data_source_id = req.params.sourceID
 
-            mappingRepo.save(user, payload)
+            mappingRepo.save(payload, user)
                 .then((result) => {
                     if (result.isError && result.error) {
                         result.asResponse(res)

@@ -38,7 +38,7 @@ export default class TypeTransformationRepository extends Repository implements 
         return Promise.resolve(retrieved)
     }
 
-    async save(user: User, t: TypeTransformation): Promise<Result<boolean>> {
+    async save(t: TypeTransformation, user: User): Promise<Result<boolean>> {
         const errors = await t.validationErrors()
         if(errors) {
             return Promise.resolve(Result.Failure(`type transformation does not pass validation ${errors.join(",")}`))

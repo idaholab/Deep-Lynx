@@ -2,11 +2,10 @@ import RepositoryInterface, {QueryOptions, Repository} from "../../repository";
 import Node from "../../../../data_warehouse/data/node"
 import Result from "../../../../result";
 import NodeMapper from "../../../mappers/data_warehouse/data/node_mapper";
-import {Pool, PoolClient} from "pg";
+import {PoolClient} from "pg";
 import {User} from "../../../../access_management/user";
 import MetatypeRepository from "../ontology/metatype_repository";
 import Logger from "../../../../services/logger"
-import DataStagingStorage from "../../../mappers/data_warehouse/import/data_staging_storage";
 
 export default class NodeRepository extends Repository implements RepositoryInterface<Node> {
     #mapper: NodeMapper = NodeMapper.Instance
@@ -61,7 +60,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
     }
 
     // TODO: add this when edges and processing, imports and staging are done DataStagingStorage.Instance.AddError(node.data_staging_id!, `error attempting to insert nodes ${insertedNodes.error?.error}` )
-    async save(user: User, n: Node, transaction?: PoolClient): Promise<Result<boolean>> {
+    async save(n: Node, user: User, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction: boolean = false
         const errors = await n.validationErrors()
         if(errors) return Promise.resolve(Result.Failure(`node does not pass validation ${errors.join(",")}`))

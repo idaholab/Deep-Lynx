@@ -24,25 +24,25 @@ export default class KeyPairRepository implements RepositoryInterface<KeyPair>{
         return this.#mapper.Retrieve(key)
     }
 
-    async save(user: User, k: KeyPair): Promise<Result<boolean>> {
+    async save(t: KeyPair, user: User): Promise<Result<boolean>> {
         // if we have the secret already set, assume we're dealing with a created
         // keypair
-        if(k.secret) return Promise.resolve(Result.Success(true))
+        if(t.secret) return Promise.resolve(Result.Success(true))
 
-        const errors = await k.validationErrors()
+        const errors = await t.validationErrors()
         if(errors) return Promise.resolve(Result.Failure(`keypair does not pass validation ${errors.join(',')}`))
 
         try {
-            const hashedSecret = await bcrypt.hash(k.secret_raw, 10)
-            k.secret = hashedSecret
+            const hashedSecret = await bcrypt.hash(t.secret_raw, 10)
+            t.secret = hashedSecret
         } catch(error) {
             return Promise.resolve(Result.Failure(`unable to hash key's secret ${error}`))
         }
 
-        const created = await this.#mapper.Create(k)
+        const created = await this.#mapper.Create(t)
         if(created.isError) return Promise.resolve(Result.Pass(created))
 
-        Object.assign(k, created.value)
+        Object.assign(t, created.value)
 
         return Promise.resolve(Result.Success(true))
     }

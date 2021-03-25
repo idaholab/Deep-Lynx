@@ -31,7 +31,7 @@ export default class ExporterRepository extends Repository implements Repository
         return Promise.resolve(Result.Success(exporter))
     }
 
-    async save(user: User, t: Exporter): Promise<Result<boolean>> {
+    async save(t: Exporter, user: User): Promise<Result<boolean>> {
         const exporterFactory = new ExporterFactory()
         if(!t.ExportRecord) return Promise.resolve(Result.Failure(`Exporter must have export record instantiated`))
 

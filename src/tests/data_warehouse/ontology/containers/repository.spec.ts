@@ -42,7 +42,7 @@ describe('A Container Repository', async() => {
         const repository = new ContainerRepository()
         const container = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()});
 
-        let results = await repository.save(user, container)
+        let results = await repository.save(container, user)
         expect(results.isError).false
         expect(container.id).not.undefined
 
@@ -52,7 +52,7 @@ describe('A Container Repository', async() => {
         container.name =  updatedName
         container.description =  updatedDescription
 
-        results = await repository.save(user, container)
+        results = await repository.save(container, user)
         expect(results.isError).false
         expect(container.id).not.undefined
         expect(container.name).eq(updatedName)
@@ -99,7 +99,7 @@ describe('A Container Repository', async() => {
         const repository = new ContainerRepository()
         let container = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
-        const result = await repository.save(user, container);
+        const result = await repository.save(container, user);
 
         expect(result.isError).false;
         expect(container.id).not.undefined;
@@ -142,7 +142,7 @@ describe('A Container Repository', async() => {
         const repository = new ContainerRepository()
         const container = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()});
 
-        const results = await repository.save(user, container)
+        const results = await repository.save(container, user)
         expect(results.isError).false
         expect(container.id).not.undefined
 

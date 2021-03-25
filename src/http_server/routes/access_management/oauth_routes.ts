@@ -117,7 +117,7 @@ export default class OAuthRoutes {
         const user = req.currentUser!
         const keyPair = new KeyPair(user.id!)
 
-        keyRepo.save(user, keyPair)
+        keyRepo.save(keyPair, user)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.redirect(buildUrl('/oauth/profile', {queryParams: {error: "Unable to generate key pair"}}))
@@ -230,7 +230,7 @@ export default class OAuthRoutes {
     private static createNewUser(req: Request, res: Response) {
         const oauthRequest = oauthRepo.authorizationFromRequest(req)
 
-        userRepo.save(req.currentUser!, plainToClass(User, req.body as object))
+        userRepo.save(plainToClass(User, req.body as object), req.currentUser!)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.redirect(buildUrl('/oauth/register', {queryParams: {error: "Unable to create a new user"}}))
@@ -333,7 +333,7 @@ export default class OAuthRoutes {
         const payload = plainToClass(OAuthApplication, req.body as object)
         payload.owner_id = user.id!
 
-        oauthRepo.save(user, payload)
+        oauthRepo.save(payload, user)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.redirect(buildUrl('/oauth/applications', {queryParams: {error: "Unable to successfully create OAuth application"}}))
@@ -386,7 +386,7 @@ export default class OAuthRoutes {
             const payload = plainToClass(OAuthApplication, req.body as object)
             payload.id = req.oauthApp.id
 
-            oauthRepo.save(user, payload)
+            oauthRepo.save(payload, user)
                 .then((result) => {
                     if (result.isError && result.error) {
                         res.redirect(buildUrl('/oauth/applications', {queryParams: {error: "Unable to update OAuth application"}}))

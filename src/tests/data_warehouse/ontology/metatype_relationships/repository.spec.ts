@@ -54,7 +54,7 @@ describe('A Metatype Relationship Repository', async() => {
         const repository = new MetatypeRelationshipRepository()
         const relationship = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
-        let results = await repository.save(user, relationship)
+        let results = await repository.save(relationship, user)
         expect(results.isError).false
         expect(relationship.id).not.undefined
 
@@ -64,7 +64,7 @@ describe('A Metatype Relationship Repository', async() => {
         relationship.name = updatedName
         relationship.description = updatedDescription
 
-        results = await repository.save(user, relationship)
+        results = await repository.save(relationship, user)
         expect(results.isError).false
         expect(relationship.id).not.undefined
         expect(relationship.name).eq(updatedName)
@@ -79,7 +79,7 @@ describe('A Metatype Relationship Repository', async() => {
         const key = new MetatypeRelationshipKey({name: faker.name.findName(), description: faker.random.alphaNumeric(), required: true, property_name: "test_property", data_type: "string"})
         relationship.addKey(key)
 
-        let results = await repository.save(user, relationship)
+        let results = await repository.save(relationship, user)
         expect(results.isError).false
         expect(relationship.id).not.undefined
         expect(relationship.keys!).not.empty
@@ -93,7 +93,7 @@ describe('A Metatype Relationship Repository', async() => {
         relationship.keys![0].name = updatedName
         relationship.keys![0].description = updatedDescription
 
-        results = await repository.save(user, relationship)
+        results = await repository.save(relationship, user)
         expect(results.isError).false
         expect(relationship.id).not.undefined
         expect(relationship.name).eq(updatedName)
@@ -105,7 +105,7 @@ describe('A Metatype Relationship Repository', async() => {
         relationship.removeKey(relationship.keys![0])
         expect(relationship.keys!.length).eq(0)
 
-        results = await repository.save(user, relationship)
+        results = await repository.save(relationship, user)
         expect(results.isError).false
         expect(relationship.id).not.undefined
         expect(relationship.name).eq(updatedName)
@@ -197,7 +197,7 @@ describe('A Metatype Relationship Repository', async() => {
         const repository = new MetatypeRelationshipRepository()
         const relationship = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
-        let results = await repository.save(user, relationship)
+        let results = await repository.save(relationship, user)
         expect(results.isError).false
         expect(relationship.id).not.undefined
 
@@ -212,7 +212,7 @@ describe('A Metatype Relationship Repository', async() => {
         const repository = new MetatypeRelationshipRepository()
         const relationship = new MetatypeRelationship({container_id: containerID,name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
-        const results = await repository.save(user, relationship)
+        const results = await repository.save(relationship, user)
         expect(results.isError).false
         expect(relationship.id).not.undefined
 

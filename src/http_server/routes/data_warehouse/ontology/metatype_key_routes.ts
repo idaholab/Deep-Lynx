@@ -78,7 +78,7 @@ export default class MetatypeKeyRoutes {
             payload.id = req.metatypeKey.id
             payload.metatype_id = req.metatype!.id!
 
-            repo.save(req.currentUser! , payload)
+            repo.save(payload, req.currentUser!)
                 .then((result) => {
                     if(result.isError) {
                         result.asResponse(res)
