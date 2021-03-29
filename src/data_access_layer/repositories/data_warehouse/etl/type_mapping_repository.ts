@@ -99,23 +99,23 @@ export default class TypeMappingRepository extends Repository implements Reposit
             if(saveTransformations) {
                 const transformations = await this.saveTransformations(user, t, transaction)
                 if(transformations.isError) {
-                    await this.#mapper.rollbackTransaction(transaction)
+                    if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
                     return Promise.resolve(Result.Failure(`unable to save mapping transformations ${transformations.error?.error}`))
                 }
             }
 
             const committed = await this.#mapper.completeTransaction(transaction)
             if(committed.isError) {
-                await this.#mapper.rollbackTransaction(transaction)
+                if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
                 return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`))
             }
 
             return Promise.resolve(Result.Success(true))
         }
 
-        const result = await this.#mapper.Create(user.id!, t, transaction)
+        const result = await this.#mapper.CreateOrUpdate(user.id!, t, transaction)
         if(result.isError) {
-            await this.#mapper.rollbackTransaction(transaction)
+            if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
             return Promise.resolve(Result.Pass(result))
         }
 
@@ -132,10 +132,12 @@ export default class TypeMappingRepository extends Repository implements Reposit
             }
         }
 
-        const committed = await this.#mapper.completeTransaction(transaction)
-        if(committed.isError) {
-            await this.#mapper.rollbackTransaction(transaction)
-            return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`))
+        if(internalTransaction) {
+            const committed = await this.#mapper.completeTransaction(transaction)
+            if(committed.isError) {
+                await this.#mapper.rollbackTransaction(transaction)
+                return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`))
+            }
         }
 
         return Promise.resolve(Result.Success(true))

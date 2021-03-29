@@ -17,6 +17,7 @@ import GraphMapper from "../../data_access_layer/mappers/data_warehouse/data/gra
 import ContainerRepository from "../../data_access_layer/repositories/data_warehouse/ontology/container_respository";
 import { User } from "../../access_management/user";
 import TypeMapping from "../etl/type_mapping";
+import TypeMappingMapper from "../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper";
 
 export default class StandardDataSourceImpl implements DataSource {
     DataSourceRecord?: DataSourceRecord
@@ -26,6 +27,7 @@ export default class StandardDataSourceImpl implements DataSource {
     #importRepo = new ImportRepository()
     #stagingRepo = new DataStagingRepository()
     #mappingRepo = new TypeMappingRepository()
+    #mappingMapper = new TypeMappingMapper()
 
     constructor(record: DataSourceRecord) {
         // again we have to check for param existence because we might potentially be using class-transformer
@@ -72,53 +74,53 @@ export default class StandardDataSourceImpl implements DataSource {
             return Promise.resolve(Result.Failure(`unable to retrieve and lock new import ${lockNewImport.error?.error}`))
         }
 
-        const records : DataStaging[] = []
+        const recordPromises : Promise<DataStaging>[] = []
 
         for(const data of payload) {
-            const shapeHash = TypeMapping.objectToShapeHash(data)
+            recordPromises.push(new Promise((resolve, reject) => {
+                // we call the mapping repo directly here because we don't need
+                // the pre-processing steps - and we're calling CreateOrUpdate in order
+                // to avoid having to try fetching or finding an existing mapping
+                this.#mappingMapper.CreateOrUpdate(user.id!, new TypeMapping({
+                    container_id: this.DataSourceRecord!.container_id!,
+                    data_source_id: this.DataSourceRecord!.id!,
+                    sample_payload: data,
+                    shape_hash: TypeMapping.objectToShapeHash(data)
+                }), transaction)
+                    .then(mapping => {
+                        if(mapping.isError) {
+                            reject(`unable to create or update type mapping ${mapping.error?.error}`)
+                        }
 
-            let mapping: TypeMapping
-
-            const retrieved = await this.#mappingRepo.findByShapeHash(shapeHash, this.DataSourceRecord.id!)
-            if(retrieved.isError) {
-                const newMapping = new TypeMapping({
-                    container_id: this.DataSourceRecord.container_id!,
-                    data_source_id: this.DataSourceRecord.id!,
-                    sample_payload: data
-                })
-
-                const saved = await this.#mappingRepo.save(newMapping, user, false, transaction)
-
-                if(saved.isError) {
-                    Logger.error(`unable to create new type mapping for imported data ${saved.error}`)
-                    continue
-                }
-
-                mapping = newMapping
-            } else {
-                mapping = retrieved.value
-            }
-
-            records.push(new DataStaging({
-                data_source_id: this.DataSourceRecord.id!,
-                import_id: newImport.value.id!,
-                mapping_id: mapping.id!,
-                data
+                        resolve(new DataStaging({
+                            data_source_id: this.DataSourceRecord!.id!,
+                            import_id: newImport.value.id!,
+                            mapping_id: mapping.value.id!,
+                            data
+                        }))
+                    })
+                    .catch(e => reject(`unable to create or update type mapping ${e}`))
             }))
         }
 
-        const saved = await this.#stagingRepo.bulkSave(records, transaction)
-        if(saved.isError) {
+        try {
+            const records = await Promise.all(recordPromises)
+            const saved = await this.#stagingRepo.bulkSave(records, transaction)
+            if(saved.isError) {
+                if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
+                return Promise.resolve(Result.Pass(saved))
+            }
+
+            if(internalTransaction) {
+                const commit = await this.#mapper.completeTransaction(transaction)
+                if(commit.isError) return Promise.resolve(Result.Pass(commit))
+            }
+
+            return new Promise(resolve => resolve(Result.Success(newImport.value)))
+        } catch(error) {
             if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
-            return Promise.resolve(Result.Pass(saved))
+            return Promise.resolve(Result.Failure(`error attempting to insert new data records for import ${error}`))
         }
-
-        if(internalTransaction) {
-            const commit = await this.#mapper.completeTransaction(transaction)
-            if(commit.isError) return Promise.resolve(Result.Pass(commit))
-        }
-
-        return new Promise(resolve => resolve(Result.Success(newImport.value)))
     }
 
     async Process(loopOnce?: boolean): Promise<void> {
@@ -282,7 +284,7 @@ export default class StandardDataSourceImpl implements DataSource {
                     nodesToInsert.forEach(node => {
                         node.container_id = this.DataSourceRecord!.container_id!
                         node.graph_id = graphID,
-                        node.data_source_id = this.DataSourceRecord!.id!
+                            node.data_source_id = this.DataSourceRecord!.id!
                     })
 
                     const inserted = await nodeRepository.bulkSave(this.DataSourceRecord!.modified_by!, nodesToInsert, transactionClient)
@@ -295,7 +297,7 @@ export default class StandardDataSourceImpl implements DataSource {
                     edgesToInsert.forEach(edge => {
                         edge.container_id = this.DataSourceRecord!.container_id!
                         edge.graph_id = graphID,
-                        edge.data_source_id = this.DataSourceRecord!.id!
+                            edge.data_source_id = this.DataSourceRecord!.id!
                     })
 
                     const inserted = await edgeRepository.bulkSave(this.DataSourceRecord!.modified_by!, edgesToInsert, transactionClient)

@@ -552,6 +552,7 @@ import DataTypeMapping from "@/components/dataTypeMapping.vue"
           }
 
           this.loadTypeMappings()
+          this.loadTypeMappingsNoTransformations()
         })
         .catch((e: any) => this.errorMessage = e)
       }

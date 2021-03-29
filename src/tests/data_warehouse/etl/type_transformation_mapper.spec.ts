@@ -66,7 +66,7 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(exp.value).not.empty;
 
 
-        let mapping = await mappingStorage.Create("test suite", new TypeMapping({
+        let mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
             sample_payload: test_raw_payload
@@ -122,7 +122,7 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(exp.value).not.empty;
 
 
-        let mapping = await mappingStorage.Create("test suite", new TypeMapping({
+        let mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
             sample_payload: test_raw_payload
@@ -180,7 +180,7 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(exp.value).not.empty;
 
 
-        let mapping = await mappingStorage.Create("test suite", new TypeMapping({
+        let mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
             sample_payload: test_raw_payload

@@ -197,7 +197,7 @@ export default class TypeMappingRoutes {
                 .finally(() => next())
         } else if (req.query.needsTransformations) {
             // @ts-ignore
-            TypeMappingMapper.Instance.ListNoTransformations(req.params.id, req.params.sourceID, +req.query.offset, +req.query.limit, req.query.sortBy, req.query.sortDesc === "true")
+            TypeMappingMapper.Instance.ListNoTransformations(req.params.containerID, req.params.sourceID, +req.query.offset, +req.query.limit, req.query.sortBy, req.query.sortDesc === "true")
                 .then((result) => {
                     if (result.isError && result.error) {
                         res.status(result.error.errorCode).json(result);
@@ -210,7 +210,7 @@ export default class TypeMappingRoutes {
                 .finally(() => next())
         } else {
             // @ts-ignore
-            TypeMappingMapper.Instance.List(req.params.id, req.params.sourceID, +req.query.offset, +req.query.limit, req.query.sortBy, req.query.sortDesc === "true")
+            TypeMappingMapper.Instance.List(req.params.containerID, req.params.sourceID, +req.query.offset, +req.query.limit, req.query.sortBy, req.query.sortDesc === "true")
                 .then((result) => {
                     if (result.isError && result.error) {
                         res.status(result.error.errorCode).json(result);

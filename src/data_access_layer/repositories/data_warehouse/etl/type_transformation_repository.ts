@@ -8,13 +8,16 @@ import {plainToClass, serialize} from "class-transformer";
 import Config from "../../../../services/config";
 import Logger from "../../../../services/logger";
 import TypeMappingMapper from "../../../mappers/data_warehouse/etl/type_mapping_mapper";
+import TypeMappingRepository from "./type_mapping_repository";
 
 export default class TypeTransformationRepository extends Repository implements RepositoryInterface<TypeTransformation> {
     #mapper: TypeTransformationMapper = TypeTransformationMapper.Instance
+    #mappingRepo: TypeMappingRepository = new TypeMappingRepository()
 
     delete(t: TypeTransformation): Promise<Result<boolean>> {
         if(t.id) {
             this.deleteCached(t)
+            this.#mappingRepo.deleteCached(t.type_mapping_id!)
 
             return this.#mapper.PermanentlyDelete(t.id)
         }
@@ -43,6 +46,8 @@ export default class TypeTransformationRepository extends Repository implements 
         if(errors) {
             return Promise.resolve(Result.Failure(`type transformation does not pass validation ${errors.join(",")}`))
         }
+
+        this.#mappingRepo.deleteCached(t.type_mapping_id!)
 
         if(t.id) {
            this.deleteCached(t)

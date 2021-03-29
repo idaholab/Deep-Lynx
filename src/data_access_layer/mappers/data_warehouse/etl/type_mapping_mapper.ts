@@ -25,15 +25,15 @@ export default class TypeMappingMapper extends Mapper{
         return TypeMappingMapper.instance
     }
 
-    public async Create(userID: string, t: TypeMapping, transaction?: PoolClient): Promise<Result<TypeMapping>> {
-        const r = await super.run(this.createStatement(userID, t,), {transaction, resultClass})
+    public async CreateOrUpdate(userID: string, t: TypeMapping, transaction?: PoolClient): Promise<Result<TypeMapping>> {
+        const r = await super.run(this.createOrUpdateStatement(userID, t,), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r))
 
         return Promise.resolve(Result.Success(r.value[0]))
     }
 
     public async BulkCreate(userID: string, t: TypeMapping[], transaction?: PoolClient): Promise<Result<TypeMapping[]>> {
-        return super.run(this.createStatement(userID, ...t,), {transaction, resultClass})
+        return super.run(this.createOrUpdateStatement(userID, ...t,), {transaction, resultClass})
     }
 
     public async Update(userID: string, t: TypeMapping, transaction?: PoolClient): Promise<Result<TypeMapping>> {
@@ -101,7 +101,12 @@ export default class TypeMappingMapper extends Mapper{
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
-    private createStatement(userID: string, ...mappings: TypeMapping[]): string{
+
+    // this allows us to more quickly process incoming data. By not trying to fetch
+    // a mapping first we can blindly insert based on shape_hash and data source and
+    // be assured we're getting the right ID back without changes. We do set the modified_at
+    // time however so that the system knows the last time the mapping was used
+    private createOrUpdateStatement(userID: string, ...mappings: TypeMapping[]): string{
         const text = `INSERT INTO data_type_mappings(
             id,
             container_id,
@@ -110,7 +115,12 @@ export default class TypeMappingMapper extends Mapper{
             active,
             sample_payload,
             created_by,
-            modified_by) VALUES %L RETURNING *`
+            modified_by) VALUES %L
+        ON CONFLICT (shape_hash, data_source_id, container_id)
+        DO
+        UPDATE SET
+            modified_at = NOW()
+        RETURNING *`
         const values = mappings.map(imp => [
             uuid.v4(),
             imp.container_id,

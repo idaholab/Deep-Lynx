@@ -128,7 +128,9 @@ export default class ImportRoutes {
                     .then((result) => {
                         result.asResponse(res)
                     })
-                    .catch((err) => res.status(404).send(err))
+                    .catch((err) => {
+                        res.status(404).send(err)
+                    })
                     .finally(() => next())
             }
             // @ts-ignore - we have to handle microsoft's excel csv type, as when you save a csv file using excel the mimetype is different than text/csv
