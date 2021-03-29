@@ -45,7 +45,9 @@ export default class DataSourceRoutes {
 
                     Result.Success(dataSource.DataSourceRecord).asResponse(res)
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    res.status(500).send(err)
+                })
                 .finally(() => next())
         } else {
             Result.Failure(`unable to find container`).asResponse(res)
@@ -102,7 +104,7 @@ export default class DataSourceRoutes {
 
     private static setInactive(req: Request, res: Response, next: NextFunction) {
         if(req.dataSource) {
-            dataSourceRepo.setActive(req.dataSource, req.currentUser!)
+            dataSourceRepo.setInactive(req.dataSource, req.currentUser!)
                 .then((result) => {
                     result.asResponse(res)
                 })

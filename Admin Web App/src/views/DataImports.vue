@@ -28,7 +28,7 @@
           class="elevation-1"
       >
         <template v-slot:top>
-          <v-col v-if="selectedDataSource.adapter_type === 'manual'">
+          <v-col v-if="selectedDataSource.adapter_type === 'standard'">
             <import-data-dialog
                 :dataSourceID="selectedDataSource.id"
                 :containerID="containerID"

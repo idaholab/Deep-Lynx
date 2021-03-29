@@ -328,7 +328,7 @@ export default class MetatypeRepository extends Repository implements Repository
     }
 
     async list(loadKeys: boolean = true, options?: QueryOptions, transaction?: PoolClient): Promise<Result<Metatype[]>> {
-        const results = await super.findAll<Metatype>(options, {transaction, resultClass: Metatype})
+        const results = await super.findAll(options, {transaction, resultClass: Metatype})
         if(results.isError) return Promise.resolve(Result.Pass(results))
 
         if(loadKeys) {

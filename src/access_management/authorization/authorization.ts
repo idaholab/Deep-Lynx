@@ -9,6 +9,16 @@ import {User} from "../user";
 export class Authorization {
     private e!: Enforcer;
 
+    private static instance: Authorization;
+
+    public static get Instance(): Authorization {
+        if(!Authorization.instance) {
+            Authorization.instance = new Authorization()
+        }
+
+        return Authorization.instance
+    }
+
     // In order to store the casbin configuration and policy files we use the
     // TypeORM ORM adapter. PLEASE only use it here.
     public async enforcer(): Promise<Enforcer> {
@@ -89,5 +99,5 @@ export class Authorization {
     }
 }
 
-export default new Authorization()
+export default Authorization.Instance
 

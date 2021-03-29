@@ -4,7 +4,7 @@ import {Strategy} from "passport-local"
 import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
 import bcrypt from "bcrypt";
 import Logger from "../../services/logger"
-import {serialize} from "class-transformer";
+import {classToPlain, serialize} from "class-transformer";
 import OAuthRepository from "../../data_access_layer/repositories/access_management/oauth_repository";
 const buildUrl = require('build-url');
 
@@ -47,7 +47,7 @@ export function LocalAuthMiddleware(req: express.Request, resp: express.Response
             if (err) { return resp.redirect(buildUrl('/', {queryParams: {error:err.toString()}})); }
 
             if(oauthRequest) {
-                return resp.redirect(buildUrl('/oauth/authorize', {queryParams: serialize(oauthRequest)}))
+                return resp.redirect(buildUrl('/oauth/authorize', {queryParams: classToPlain(oauthRequest)}))
             }
 
             return resp.redirect('/oauth/profile');

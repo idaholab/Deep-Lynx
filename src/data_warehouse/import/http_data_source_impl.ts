@@ -96,13 +96,6 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
             // not currently being processed or another export polling function is
             // acting on it
             const lastImport = await this.#importRepo.findLastAndLock(this.DataSourceRecord.id!, pollTransaction.value);
-            if(lastImport.isError) {
-                Logger.error(`unable to retrieve and lock last import ${lastImport.error}`);
-                (config.poll_interval) ?  await this.delay((config.poll_interval! * 1000)) : await this.delay(1000)
-                await ImportMapper.Instance.completeTransaction(pollTransaction.value)
-
-                continue
-            }
 
             let lastImportTime = "";
             if(!lastImport.isError && lastImport.value.status === "completed") {

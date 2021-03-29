@@ -6,7 +6,7 @@ import Cache from "../../../services/cache/cache";
 import UserRepository from "./user_repository";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import {plainToClass, serialize} from "class-transformer";
+import {classToPlain, plainToClass, serialize} from "class-transformer";
 import Config from "../../../services/config";
 import {Request} from "express";
 import {OAuthApplication, OAuthRequest, OAuthTokenExchangeRequest} from "../../../access_management/oauth/oauth";
@@ -127,7 +127,7 @@ export default class OAuthRepository extends Repository implements RepositoryInt
         // with all verification done generate and return a valid JWT after assigning user permissions
         await userRepo.retrievePermissions(user.value)
 
-        const token = jwt.sign(serialize(user.value), Config.encryption_key_secret, {expiresIn: '720m'})
+        const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, {expiresIn: '720m'})
 
         return new Promise(resolve => resolve(Result.Success(token)))
     }

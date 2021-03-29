@@ -110,7 +110,7 @@ export default class DataStagingRepository extends Repository implements Reposit
         }
 
         if(toCreate.length > 0) {
-            const saved = await this.#mapper.BulkCreate(toUpdate, transaction)
+            const saved = await this.#mapper.BulkCreate(toCreate, transaction)
             if(saved.isError){
                 if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
                 return Promise.resolve(Result.Pass(saved))

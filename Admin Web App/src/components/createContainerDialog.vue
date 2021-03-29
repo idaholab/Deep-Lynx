@@ -106,7 +106,7 @@
                 .then((container) => {
                   this.loading = false
                   this.clearNew()
-                  this.$emit("containerCreated", container)
+                  this.$emit("containerCreated", container[0].id)
 
                   this.dialog = false
                   this.errorMessage = ""

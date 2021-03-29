@@ -121,12 +121,13 @@
         authMethods = ["basic", "token"]
         dataTypes = ["json"]
 
-        adapterTypes = ["manual", "http"]
+        adapterTypes = ["standard", "http"]
         newDataSource = {
             name: "",
             adapter_type: "",
             active: false,
             config: {
+                kind: "",
                 endpoint: "",
                 poll_interval: 1,
                 data_type: "",
@@ -144,6 +145,7 @@
                 adapter_type: "",
                 active: false,
                 config: {
+                  kind: "",
                     poll_interval: 1,
                     endpoint: "",
                     data_type: "",
@@ -168,6 +170,22 @@
         }
 
         createDataSource() {
+          switch (this.newDataSource.adapter_type) {
+              case "standard": {
+                this.newDataSource.config.kind = "standard"
+                break;
+              }
+
+              case "http": {
+                this.newDataSource.config.kind = "http"
+                break;
+              }
+
+              default: {
+                this.newDataSource.config.kind = "standard"
+              }
+          }
+
             this.$client.createDataSource(this.containerID, this.newDataSource)
                 .then((dataSource)=> {
                     this.clearNewAdapter()

@@ -3,6 +3,7 @@ import MetatypeRelationshipKey from "../../../../data_warehouse/ontology/metatyp
 import Result from "../../../../common_classes/result";
 import MetatypeRelationshipKeyMapper from "../../../mappers/data_warehouse/ontology/metatype_relationship_key_mapper";
 import {User} from "../../../../access_management/user";
+import MetatypeRelationshipRepository from "./metatype_relationship_repository";
 
 // we have the bare minimum of functions in this repository, and it only exists
 // for backwards compatibility. Key manipulation should be handled when dealing
@@ -10,9 +11,11 @@ import {User} from "../../../../access_management/user";
 // layer due to this cache being out of date with the Metatype Relationship one
 export default class MetatypeRelationshipKeyRepository extends  Repository implements RepositoryInterface<MetatypeRelationshipKey> {
     #mapper : MetatypeRelationshipKeyMapper = MetatypeRelationshipKeyMapper.Instance
+    #relationshipRepo = new MetatypeRelationshipRepository()
 
     delete(k: MetatypeRelationshipKey): Promise<Result<boolean>> {
         if(k.id) {
+            this.#relationshipRepo.deleteCached(k.metatype_relationship_id!)
             return this.#mapper.PermanentlyDelete(k.id)
         }
 
@@ -21,6 +24,7 @@ export default class MetatypeRelationshipKeyRepository extends  Repository imple
 
     archive(user: User, k: MetatypeRelationshipKey): Promise<Result<boolean>> {
         if(k.id) {
+            this.#relationshipRepo.deleteCached(k.metatype_relationship_id!)
             return this.#mapper.Archive(k.id, user.id!)
         }
 
@@ -36,6 +40,8 @@ export default class MetatypeRelationshipKeyRepository extends  Repository imple
         if(errors) {
             return Promise.resolve(Result.Failure(`key does not pass validation ${errors.join(",")}`))
         }
+
+        this.#relationshipRepo.deleteCached(relationshipKey.metatype_relationship_id!)
 
         if(relationshipKey.id) {
             const updated = await this.#mapper.Update(user.id!, relationshipKey)
@@ -62,6 +68,9 @@ export default class MetatypeRelationshipKeyRepository extends  Repository imple
             if(errors) {
                 return Promise.resolve(Result.Failure(`some keys do not pass validation ${errors.join(',')}`))
             }
+
+            this.#relationshipRepo.deleteCached(key.metatype_relationship_id!);
+            (key.id) ? toUpdate.push(key) : toCreate.push(key)
         }
 
 

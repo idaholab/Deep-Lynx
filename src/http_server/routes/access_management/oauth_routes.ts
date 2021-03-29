@@ -465,7 +465,7 @@ export default class OAuthRoutes {
                                         return
                                     }
 
-                                    const token = jwt.sign(serialize(req.currentUser), Config.encryption_key_secret, {expiresIn: expiry})
+                                    const token = jwt.sign(classToPlain(req.currentUser), Config.encryption_key_secret, {expiresIn: expiry})
                                     res.status(200).json(token)
                                     return
                                 })

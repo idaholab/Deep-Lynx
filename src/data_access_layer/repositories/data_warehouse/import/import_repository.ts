@@ -68,7 +68,9 @@ export default class ImportRepository extends Repository implements RepositoryIn
         this._rawQuery = [
            `SELECT imports.*,
             SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
-            SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records`
+            SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
+            FROM imports
+            LEFT JOIN data_staging ON data_staging.import_id = imports.id`
         ]
     }
 
@@ -93,7 +95,9 @@ export default class ImportRepository extends Repository implements RepositoryIn
         this._rawQuery = [
             `SELECT imports.*,
             SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
-            SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records`
+            SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
+            FROM imports
+            LEFT JOIN data_staging ON data_staging.import_id = imports.id`
         ]
 
         return Promise.resolve(Result.Pass(results))

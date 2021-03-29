@@ -97,7 +97,7 @@ export default class MetatypeRelationshipPairRoutes {
                 .finally(() => next())
         } else {
             // @ts-ignore
-            repository.list({
+            repository.list(req.query.loadRelationships !== undefined && req.query.loadRelationships === "true", {
                 limit: (req.query.limit) ? +req.query.limit : undefined,
                 offset: (req.query.offset) ? +req.query.offset : undefined
             })

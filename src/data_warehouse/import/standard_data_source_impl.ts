@@ -87,7 +87,7 @@ export default class StandardDataSourceImpl implements DataSource {
                     sample_payload: data
                 })
 
-                const saved = await this.#mappingRepo.save(newMapping, user)
+                const saved = await this.#mappingRepo.save(newMapping, user, false, transaction)
 
                 if(saved.isError) {
                     Logger.error(`unable to create new type mapping for imported data ${saved.error}`)
@@ -107,7 +107,7 @@ export default class StandardDataSourceImpl implements DataSource {
             }))
         }
 
-        const saved = await this.#stagingRepo.bulkSave(records)
+        const saved = await this.#stagingRepo.bulkSave(records, transaction)
         if(saved.isError) {
             if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
             return Promise.resolve(Result.Pass(saved))

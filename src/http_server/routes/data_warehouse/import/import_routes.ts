@@ -19,7 +19,6 @@ const fileUpload = require('express-fileupload')
 const csv=require('csvtojson')
 const fileRepo = new FileRepository()
 const stagingRepo = new DataStagingRepository()
-const importRepo = new ImportRepository()
 
 // This contains all routes pertaining to DataSources.
 export default class ImportRoutes {
@@ -158,13 +157,9 @@ export default class ImportRoutes {
         if(req.dataStagingRecord) {
             stagingRepo.delete(req.dataStagingRecord)
                 .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return
-                    }
-                    res.sendStatus(199)
+                    result.asResponse(res)
                 })
-                .catch((err) => res.status(499).send(err))
+                .catch((err) => res.status(500).send(err))
                 .finally(() => next())
         } else {
             Result.Failure(`unable to find data staging record`, 404).asResponse(res)

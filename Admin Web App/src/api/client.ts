@@ -50,8 +50,8 @@ export class Client {
       return this.get<ContainerT>(`/containers/${containerID}`)
    }
 
-   createContainer(container: ContainerT | any): Promise<ContainerT> {
-      return this.post<ContainerT>("/containers", container)
+   createContainer(container: ContainerT | any): Promise<ContainerT[]> {
+      return this.post<ContainerT[]>("/containers", container)
    }
 
    // like create container but instead uses a multipart form with a potential

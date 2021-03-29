@@ -25,7 +25,7 @@ import {
     oauthAppContext,
     nodeContext,
     typeTransformationContext,
-    typeMappingContext, exporterContext, importContext, dataStagingContext, dataSourceContext
+    typeMappingContext, exporterContext, importContext, dataStagingContext, dataSourceContext, eventRegistrationContext
 } from "../middleware";
 import ContainerRoutes from "./data_warehouse/ontology/container_routes"
 import MetatypeRoutes from "./data_warehouse/ontology/metatype_routes"
@@ -84,20 +84,20 @@ export class Router {
     this.mountPreMiddleware();
 
     // Mount application controllers, middleware is passed in as an array of functions
-    UserRoutes.mount(this.app, [authenticateRoute(), containerContext(), userContext()]);
-    ContainerRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
-    ExportRoutes.mount(this.app, [authenticateRoute(), containerContext(), exporterContext()]);
-    DataSourceRoutes.mount(this.app, [authenticateRoute(), containerContext(),dataSourceContext()]);
-    ImportRoutes.mount(this.app, [authenticateRoute(), containerContext(), importContext(), dataStagingContext(), dataSourceContext()])
-    TypeMappingRoutes.mount(this.app, [authenticateRoute(), containerContext(), typeTransformationContext(), typeMappingContext(), dataSourceContext()])
-    MetatypeRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeContext()]);
-    MetatypeKeyRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeContext(), metatypeKeyContext()]);
-    MetatypeRelationshipRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipContext()]);
-    MetatypeRelationshipKeyRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipContext(), metatypeRelationshipKeyContext()]);
-    MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipPairContext()]);
-    QueryRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
-    GraphRoutes.mount(this.app, [authenticateRoute(), containerContext(), nodeContext()]);
-    EventRoutes.mount(this.app, [authenticateRoute(), containerContext()]);
+    UserRoutes.mount(this.app, [authenticateRoute(), containerContext(), userContext(), currentUser()]);
+    ContainerRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
+    ExportRoutes.mount(this.app, [authenticateRoute(), containerContext(), exporterContext(), currentUser()]);
+    DataSourceRoutes.mount(this.app, [authenticateRoute(), containerContext(),dataSourceContext(), currentUser()]);
+    ImportRoutes.mount(this.app, [authenticateRoute(), containerContext(), importContext(), dataStagingContext(), dataSourceContext(), currentUser()])
+    TypeMappingRoutes.mount(this.app, [authenticateRoute(), containerContext(), typeTransformationContext(), typeMappingContext(), dataSourceContext(), currentUser()])
+    MetatypeRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeContext(), currentUser()]);
+    MetatypeKeyRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeContext(), metatypeKeyContext(), currentUser()]);
+    MetatypeRelationshipRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipContext(), currentUser()]);
+    MetatypeRelationshipKeyRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipContext(), metatypeRelationshipKeyContext(), currentUser()]);
+    MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipPairContext(), currentUser()]);
+    QueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
+    GraphRoutes.mount(this.app, [authenticateRoute(), containerContext(), nodeContext(), currentUser()]);
+    EventRoutes.mount(this.app, [authenticateRoute(), containerContext(),eventRegistrationContext(), currentUser()]);
 
     // OAuth and Identity Provider routes - these are the only routes that serve up
     // webpages. WE ALSO MOUNT THE '/' ENDPOINT HERE

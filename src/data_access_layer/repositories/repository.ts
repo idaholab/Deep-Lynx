@@ -165,7 +165,7 @@ export class Repository {
         this._rawQuery = [`SELECT * FROM ${this._tableName}`]
         this._values = []
 
-        return storage.rows<T>(query)
+        return storage.rows<T>(query, options)
     }
 
     count(transaction?: PoolClient): Promise<Result<number>> {

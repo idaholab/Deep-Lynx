@@ -34,15 +34,22 @@ export default class ContainerRoutes {
     }
 
     private static createContainer(req: Request, res: Response, next: NextFunction) {
-        const payload = plainToClass(Container, req.body as object)
-        repository.save(payload, req.currentUser!)
+        let toCreate: Container[] = []
+
+        if(Array.isArray(req.body)) {
+            toCreate = plainToClass(Container, req.body)
+        } else {
+            toCreate = [plainToClass(Container, req.body as object)]
+        }
+
+        repository.bulkSave(req.currentUser!, toCreate)
             .then((result) => {
                 if(result.isError) {
                     result.asResponse(res)
                     return
                 }
 
-                Result.Success(payload).asResponse(res)
+                Result.Success(toCreate).asResponse(res)
             })
             .catch((err) => res.status(500).send(err))
             .finally(() => next())

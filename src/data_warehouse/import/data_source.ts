@@ -36,7 +36,7 @@ export interface DataSource {
 // and making sure the value you have in your config is the same unique string you
 // used to extend kind - these are called discriminator properties
 export class BaseDataSourceConfig extends NakedDomainClass {
-    kind?: "http" | "standard"
+    kind: "http" | "standard" = "standard"
 }
 
 export class StandardDataSourceConfig extends BaseDataSourceConfig {
@@ -136,6 +136,7 @@ export default class DataSourceRecord extends BaseDomainClass {
         data_format?: string,
     }) {
         super();
+        this.config = new StandardDataSourceConfig()
 
         if(input) {
             this.container_id = input.container_id

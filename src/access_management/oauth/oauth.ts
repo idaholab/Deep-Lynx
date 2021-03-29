@@ -64,7 +64,8 @@ export class OAuthRequest extends BaseDomainClass {
     @IsString()
     client_id?: string
 
-    @IsUrl()
+    // for some reason the IsURL validator fails here, even on valid values so we stuck with IsString
+    @IsString()
     redirect_uri?: string
 
     @IsString()

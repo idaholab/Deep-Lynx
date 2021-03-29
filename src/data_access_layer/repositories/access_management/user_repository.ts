@@ -17,7 +17,6 @@ import {ContainerInviteEmailTemplate} from "../../../services/email/templates/co
 import ContainerRepository from "../data_warehouse/ontology/container_respository";
 import Config from "../../../services/config";
 import KeyPairMapper from "../../mappers/access_management/keypair_mapper";
-import uuid from "uuid";
 import {plainToClass} from "class-transformer";
 import {PoolClient} from "pg";
 import {ValidateEmailTemplate} from "../../../services/email/templates/validate_email";
@@ -61,6 +60,12 @@ export default class UserRepository extends Repository implements RepositoryInte
     }
 
     async save(u: User, user: User, saveKeys: boolean = true): Promise<Result<boolean>> {
+        let userID: string = "system"
+
+        if(user) {
+            userID = user.id!
+        }
+
         const errors = await u.validationErrors()
         if(errors) {
             return Promise.resolve(Result.Failure(`user does not pass validation ${errors.join(",")}`))
@@ -80,7 +85,7 @@ export default class UserRepository extends Repository implements RepositoryInte
         }
 
         if(u.id) {
-            const result = await this.#mapper.Update(user.id!, u, transaction.value)
+            const result = await this.#mapper.Update(userID, u, transaction.value)
             if(result.isError) {
                 await this.#mapper.rollbackTransaction(transaction.value)
                 return Promise.resolve(Result.Pass(result))
@@ -88,7 +93,7 @@ export default class UserRepository extends Repository implements RepositoryInte
 
             Object.assign(u, result.value)
         } else {
-            const result = await this.#mapper.Create(user.id!, u, transaction.value)
+            const result = await this.#mapper.Create(userID, u, transaction.value)
             if(result.isError) {
                 await this.#mapper.rollbackTransaction(transaction.value)
                 return Promise.resolve(Result.Pass(result))

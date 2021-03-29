@@ -299,18 +299,18 @@ export function metatypeRelationshipContext(): any {
 
 // metatypeKeyContext will attempt to fetch a metatype key by id specified by the
 // id query parameter. If one is fetched it will pass it on in request context.
-// route must contain the param labeled "metatypeRelationshipKeyID"
+// route must contain the param labeled "relationshipKeyID"
 export function metatypeRelationshipKeyContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id, don't fail, just pass without action
-        if(!req.params.metatypeRelationshipKeyID) {
+        if(!req.params.relationshipKeyID) {
             next()
             return
         }
 
         const repo = new MetatypeRelationshipKeyRepository()
 
-        repo.findByID(req.params.metatypeRelationshipKeyID)
+        repo.findByID(req.params.relationshipKeyID)
             .then(result => {
                 if(result.isError) {
                     resp.status(result.error?.errorCode!).json(result)

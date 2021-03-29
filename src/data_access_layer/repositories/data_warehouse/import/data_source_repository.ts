@@ -12,7 +12,7 @@ export default class DataSourceRepository extends Repository implements Reposito
     #factory = new DataSourceFactory()
 
     delete(t: DataSource): Promise<Result<boolean>> {
-        if(!t.DataSourceRecord || t.DataSourceRecord.id) return Promise.resolve(Result.Failure(`cannot delete data source: no data source record or record lacking id`))
+        if(!t.DataSourceRecord || !t.DataSourceRecord.id) return Promise.resolve(Result.Failure(`cannot delete data source: no data source record or record lacking id`))
 
         return this.#mapper.PermanentlyDelete(t.DataSourceRecord.id!)
     }
