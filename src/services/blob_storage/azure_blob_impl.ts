@@ -5,6 +5,10 @@ import {BlobServiceClient, ContainerClient, RestError} from "@azure/storage-blob
 import Logger from "./../logger"
 const digestStream = require('digest-stream')
 
+/*
+    AzureBlobImpl allows Deep Lynx to store and retrieve any kind of file using
+    Microsoft Azure's Blob storage.
+ */
 export default class AzureBlobImpl implements BlobStorage {
     private _BlobServiceClient: BlobServiceClient
     private _ContainerClient: ContainerClient

@@ -27,9 +27,12 @@ import ImportRepository from "../data_access_layer/repositories/data_warehouse/i
 import DataStagingRepository from "../data_access_layer/repositories/data_warehouse/import/data_staging_repository";
 import DataSourceRepository from "../data_access_layer/repositories/data_warehouse/import/data_source_repository";
 
-// PerformanceMiddleware uses the provided logger to display the time each route
-// took to process and send a response to the requester. This leverages node.js's
-// performance API. At time of writing this middleware is only compatible with express.js.
+
+/*
+ PerformanceMiddleware uses the provided logger to display the time each route
+ took to process and send a response to the requester. This leverages node.js's
+ performance API. At time of writing this middleware is only compatible with express.js.
+*/
 export class PerformanceMiddleware {
     public constructor() {
         this.performanceObserver.observe({ entryTypes: ["measure"] })

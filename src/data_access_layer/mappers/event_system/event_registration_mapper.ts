@@ -3,12 +3,17 @@ import EventRegistration from "../../../event_system/event_registration";
 import Mapper from "../mapper";
 import {PoolClient, QueryConfig} from "pg";
 import uuid from "uuid";
-import {plainToClass} from "class-transformer";
+
 const format = require('pg-format')
 
 /*
-* EventRegistrationMapper interacts with registered events in the database to
-* handle events registered by other applications
+    EventRegistrationMapper extends the Postgres database Mapper class and allows
+    the user to map a data structure to and from the attached database. The mappers
+    are designed to be as simple as possible and should not contain things like
+    validation or transformation of the data prior to storage - those operations
+    should live in a Repository or on the data structure's class itself. Also
+    try to avoid listing functions, as those are generally covered by the Repository
+    class/interface as well.
 */
 export default class EventRegistrationMapper extends Mapper{
     public static tableName = "registered_events";

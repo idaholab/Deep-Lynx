@@ -8,8 +8,13 @@ const format = require('pg-format')
 const resultClass = Node
 
 /*
-* NodeStorage encompasses all logic dealing with the manipulation of the data nodes
-* class in a data storage layer.
+    NodeMapper extends the Postgres database Mapper class and allows
+    the user to map a data structure to and from the attached database. The mappers
+    are designed to be as simple as possible and should not contain things like
+    validation or transformation of the data prior to storage - those operations
+    should live in a Repository or on the data structure's class itself. Also
+    try to avoid listing functions, as those are generally covered by the Repository
+    class/interface as well.
 */
 export default class NodeMapper extends Mapper{
     public static tableName = "nodes";
@@ -24,6 +29,10 @@ export default class NodeMapper extends Mapper{
         return NodeMapper.instance
     }
 
+    // In order to facilitate updates from external data sources (after having
+    // been processed) we have modified the standard create statements to also
+    // potentially update records if the composite id and data source match a known
+    // record
     public async CreateOrUpdateByCompositeID(userID: string, node: Node, transaction?: PoolClient): Promise<Result<Node>> {
         const r = await super.run(this.createOrUpdateStatement(userID, node), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r))

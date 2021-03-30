@@ -4,13 +4,17 @@ import Config from "../../services/config"
 import {User} from "../user";
 
 
-// Authorization in Deep Lynx uses the https://casbin.org/ library. Please use
-// their documentation when attempting to make changes to the authorization layer.
+/*
+ Authorization in Deep Lynx uses the https://casbin.org/ library. Please use
+ their documentation when attempting to make changes to the authorization layer.
+*/
 export class Authorization {
     private e!: Enforcer;
 
     private static instance: Authorization;
 
+    // This class is a singleton due to the fact that we cannot create multiple
+    // connections to the database for the casbin enforcer
     public static get Instance(): Authorization {
         if(!Authorization.instance) {
             Authorization.instance = new Authorization()
@@ -36,6 +40,9 @@ export class Authorization {
         return new Promise(resolve => resolve(this.e))
     }
 
+    // Verifies that the provided user has the appropriate permissions for performing
+    // an action. Note that the "domain" generally refers to a container and should
+    // be the desired container's id
     async AuthUser(user: User | any, action: "write" | "read", resource:string, domain?: string): Promise<boolean>{
         await this.enforcer() // insure it's connected
         if(user instanceof  User){
@@ -56,11 +63,17 @@ export class Authorization {
         await this.enforcer() // insure it's connected
         if(!domain) domain = "all";
 
+        // due to how casbin works, we need to remove all previous roles in the
+        // domain in order to avoid double assignments. In the future this might
+        // need to be updated if we do composite permissions based on multiple
+        // roles - it is sufficient for now though
         await this.DeleteAllRoles(userID, domain)
 
         return this.e.addRoleForUser(userID, role, domain)
     }
 
+    // fetch roles for user given a domain ( a reminder that domains are generally
+    // containers and this parameter should be a containerID generally)
     async RolesForUser(userID: string, domainID: string): Promise<string[]> {
         await this.enforcer() // insure it's connected
         return this.e.getRolesForUser(userID, domainID)

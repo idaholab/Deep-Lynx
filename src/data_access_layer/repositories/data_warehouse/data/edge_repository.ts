@@ -1,6 +1,5 @@
 import RepositoryInterface, {QueryOptions, Repository} from "../../repository";
 import Result from "../../../../common_classes/result";
-import NodeMapper from "../../../mappers/data_warehouse/data/node_mapper";
 import {PoolClient} from "pg";
 import {User} from "../../../../access_management/user";
 import Logger from "../../../../services/logger"
@@ -10,6 +9,13 @@ import Node from "../../../../data_warehouse/data/node";
 import MetatypeRelationshipPairRepository from "../ontology/metatype_relationship_pair_repository";
 import NodeRepository from "./node_repository";
 
+/*
+    EdgeRepository contains methods for persisting and retrieving edges
+    to storage as well as managing things like relationship validation and management.
+    Users should interact with repositories when possible and not
+    the mappers as the repositories contain additional logic such as validation
+    or transformation prior to storage or returning.
+ */
 export default class EdgeRepository extends Repository implements RepositoryInterface<Edge> {
     #mapper: EdgeMapper = EdgeMapper.Instance
     #nodeRepo: NodeRepository = new NodeRepository()
@@ -18,6 +24,9 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     constructor() {
         super(EdgeMapper.tableName);
 
+        // we must rewrite the initial query to accept LEFT JOINS so that we can
+        // get additional information for edges without having to run additional
+        // queries
         this._rawQuery = []
         this._rawQuery.push(`SELECT edges.* FROM ${EdgeMapper.tableName}`)
         this._rawQuery.push(`LEFT JOIN metatype_relationship_pairs ON edges.relationship_pair_id = metatype_relationship_pairs.id`)
@@ -62,7 +71,6 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         return Promise.resolve(edge)
     }
 
-    // TODO: add this when edges and processing, imports and staging are done DataStagingStorage.Instance.AddError(node.data_staging_id!, `error attempting to insert nodes ${insertedNodes.error?.error}` )
     async save(e: Edge, user: User, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction: boolean = false
         const errors = await e.validationErrors()
@@ -229,16 +237,15 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(true))
     }
 
-    // validates whether or not the edge can be created between two nodes - this checks
-    // nodes' metatypes against the proposed relationship type and if existing relationships
-    // would violate a one:many or one:one clause - because this is validation only, we don't
-    // attempt to rollback a transaction if it exists - but we do have to use it
-    // as the nodes we're validating against might have been inserted earlier as part
-    // of the transaction
+    /*
+     validateRelationship validates whether or not the edge can be created between two nodes - this checks
+     nodes' metatypes against the proposed relationship type and if existing relationships
+     would violate a one:many or one:one clause - because this is validation only, we don't
+     attempt to rollback a transaction if it exists - but we do have to use it
+     as the nodes we're validating against might have been inserted earlier as part
+     of the transaction
+     */
     private async validateRelationship(e: Edge, transaction?: PoolClient): Promise<Result<boolean>> {
-        // we have to run a separate instance of the edge repository so we can access the filter
-        // without having to worry about a parallel process accessing the same one
-        const edgeRepo = new EdgeRepository()
         let origin: Node
         if(e.origin_node_id){
             const request = await this.#nodeRepo.findByID(e.origin_node_id!, transaction);
@@ -295,13 +302,13 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         // we're not making new edges when doing so would violate a clause like one:one
         // we just have to be careful how we build our query and to ignore something
         // that already exits if it shares the same ID
-        let destinationQuery = new EdgeRepository()
+        let destinationQuery = new EdgeRepository() // new repository to avoid corrupting the filter
             .where()
             .destination_node_id("eq", destination.id!)
             .and()
             .relationshipPairID("eq", e.metatypeRelationshipPair!.id!)
 
-        let originQuery= new EdgeRepository()
+        let originQuery= new EdgeRepository() // new respository to avoid corrupting the filter
             .where()
             .origin_node_id("eq", origin.id!)
             .and()

@@ -4,9 +4,12 @@ import { Logger } from "../services/logger";
 import DefaultLogger from "../services/logger";
 import { Router } from "./routes/router"
 
-// Server is a singleton and wraps the express.js library and application. This
-// class should be entirely self contained and should not rely solely on the callee
-// for its configuration.
+
+/*
+ Server is a singleton and wraps the express.js library and application. This
+ class should be entirely self contained and should not rely solely on the callee
+ for its configuration.
+*/
 export class Server {
   private static instance: Server;
   private logger: Logger;

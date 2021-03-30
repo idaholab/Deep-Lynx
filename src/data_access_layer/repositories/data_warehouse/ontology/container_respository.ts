@@ -10,6 +10,12 @@ import {plainToClass, serialize} from "class-transformer";
 import Config from "../../../../services/config";
 import {User} from "../../../../access_management/user";
 
+/*
+    ContainerRepository contains methods for persisting and retrieving a container
+    to storage. Users should interact with repositories when possible and not
+    the mappers as the repositories contain additional logic such as validation
+    or transformation prior to storage or returning.
+ */
 export default class ContainerRepository implements RepositoryInterface<Container> {
     #mapper: ContainerMapper = ContainerMapper.Instance
     #graphMapper: GraphMapper = GraphMapper.Instance
@@ -131,6 +137,8 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         return Promise.resolve(Result.Success(true));
     }
 
+    // this function is used to find all the containers that the provided user
+    // has an active role on - used primarily by the http_server
     async listForUser(user: User): Promise<Result<Container[]>> {
         // casbin enforcer
         const e = await Authorization.enforcer()

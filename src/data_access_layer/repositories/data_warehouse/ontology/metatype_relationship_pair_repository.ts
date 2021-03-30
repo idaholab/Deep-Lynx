@@ -13,6 +13,12 @@ import MetatypeRelationship from "../../../../data_warehouse/ontology/metatype_r
 import {User} from "../../../../access_management/user";
 import {PoolClient} from "pg";
 
+/*
+    MetatypeRelationshpPair contains methods for persisting and retrieving a metatype relationship pair
+    to storage. Users should interact with repositories when possible and not
+    the mappers as the repositories contain additional logic such as validation
+    or transformation prior to storage or returning.
+ */
 export default class MetatypeRelationshipPairRepository extends Repository implements RepositoryInterface<MetatypeRelationshipPair> {
     #mapper : MetatypeRelationshipPairMapper = MetatypeRelationshipPairMapper.Instance
 

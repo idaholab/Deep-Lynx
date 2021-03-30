@@ -1,4 +1,4 @@
-import RepositoryInterface, {Repository} from "../../repository";
+import RepositoryInterface, {QueryOptions, Repository} from "../../repository";
 import MetatypeRelationship from "../../../../data_warehouse/ontology/metatype_relationship";
 import Result from "../../../../common_classes/result";
 import Cache from "../../../../services/cache/cache";
@@ -9,10 +9,14 @@ import {plainToClass, serialize} from "class-transformer";
 import MetatypeRelationshipKeyMapper from "../../../mappers/data_warehouse/ontology/metatype_relationship_key_mapper";
 import MetatypeRelationshipKey from "../../../../data_warehouse/ontology/metatype_relationship_key";
 import {PoolClient} from "pg";
-import {QueryOptions} from "../../repository";
 import {User} from "../../../../access_management/user";
-import {load} from "dotenv";
 
+/*
+    MetatypeRelationshipRepository contains methods for persisting and retrieving a metatype relationship
+    to storage. Users should interact with repositories when possible and not
+    the mappers as the repositories contain additional logic such as validation
+    or transformation prior to storage or returning.
+ */
 export default class MetatypeRelationshipRepository extends Repository implements RepositoryInterface<MetatypeRelationship> {
     #mapper: MetatypeRelationshipMapper = MetatypeRelationshipMapper.Instance
     #keyMapper: MetatypeRelationshipKeyMapper = MetatypeRelationshipKeyMapper.Instance

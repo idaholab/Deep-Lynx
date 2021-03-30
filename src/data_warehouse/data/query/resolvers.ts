@@ -30,8 +30,6 @@ import File from "../file";
 
 export default function resolversRoot(containerID: string):any {
     return {
-        // the depth parameter isn't used by GraphQL, rather its an option
-        // for when other functions use the node resolver
         nodes: async ({nodeID, limit, offset, where}: any) => {
             const nodeRepo = new NodeRepository()
             if(nodeID) {

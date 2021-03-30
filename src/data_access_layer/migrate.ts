@@ -1,7 +1,9 @@
-// This is a very simple migration system. It reads all .sql scripts inside
-// the "migrations" directory and executes them in alphanumeric order. Each
-// script is treated as a transaction. Configuration comes from the same config
-// file that the main application uses.
+/*
+ This is a very simple migration system. It reads all .sql scripts inside
+ the "migrations" directory and executes them in alphanumeric order. Each
+ script is treated as a transaction. Configuration comes from the same config
+ file that the main application uses.
+*/
 
 import PostgresAdapter from "./mappers/db_adapters/postgres/postgres";
 import Config from "../services/config"
@@ -14,6 +16,9 @@ class Migrator {
     private pool!: any;
 
     constructor() {
+        // we will attempt to create the database named by the environment variables prior to migration
+        // this allows us to work on a pristine instance of Postgres without having to have the user
+        // perform any database operations manually
         pgtools.createdb(Config.core_db_connection_string, Config.db_name, (err: any, res: string) => {
             if (err) {
                 if (err.name === 'duplicate_database') {

@@ -5,6 +5,10 @@ import Container from "../ontology/container";
 import MetatypeRelationshipPair, {MetatypeRelationshipPairID} from "../ontology/metatype_relationship_pair";
 import Node from "./node";
 
+/*
+    Edge represents an edge record in the Deep Lynx database and the various
+    validations required for said record to be considered valid.
+ */
 export default class Edge extends BaseDomainClass {
     @IsOptional()
     @IsUUID()

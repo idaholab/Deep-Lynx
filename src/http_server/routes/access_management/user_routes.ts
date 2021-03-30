@@ -10,8 +10,10 @@ import {QueryOptions} from "../../../data_access_layer/repositories/repository";
 
 const userRepo = new UserRepository()
 
-// These routes pertain to User management. Currently user creation is reserved
-// for SAML authentication routes. You cannot manually create a user as of June 2020.
+/*
+ These routes pertain to User management. Currently user creation is reserved
+ for SAML authentication routes. You cannot manually create a user as of June 2020.
+*/
 export default class UserRoutes {
     public static mount(app: Application, middleware: any[]) {
         app.get("/users",...middleware,authRequest("read", "users"), this.listUsers);

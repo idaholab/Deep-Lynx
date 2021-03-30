@@ -15,6 +15,12 @@ import Metatype, {MetatypeID} from "./metatype";
 import MetatypeRelationship, {MetatypeRelationshipID} from "./metatype_relationship";
 import validator from "validator";
 
+/*
+    MetatypeRelationshipPair  represents a metatype relationship pair  record in
+    the Deep Lynx database and the various validations required for said record
+    to be considered valid. It also containn operations for managing the pair's
+    origin/destination and pair type.
+ */
 export default class MetatypeRelationshipPair extends BaseDomainClass {
     @IsOptional()
     @IsUUID()

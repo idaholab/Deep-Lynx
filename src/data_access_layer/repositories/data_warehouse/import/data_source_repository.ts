@@ -7,6 +7,15 @@ import Result from "../../../../common_classes/result";
 import {User} from "../../../../access_management/user";
 import {PoolClient} from "pg";
 
+/*
+    DataSourceRepository contains methods for persisting and retrieving data sources
+    to storage as well as managing things like validation and the starting/stopping
+    of said data source's process loops.Users should interact with repositories
+    when possible and not the mappers as the repositories contain additional logic
+    such as validation or transformation prior to storage or returning. This
+    repository especially returns an interface vs. concrete class and exposes
+    more operations than exist if you just use the mapper.
+ */
 export default class DataSourceRepository extends Repository implements RepositoryInterface<DataSource> {
     #mapper = DataSourceMapper.Instance
     #factory = new DataSourceFactory()
@@ -33,6 +42,9 @@ export default class DataSourceRepository extends Repository implements Reposito
         const errors = await t.DataSourceRecord.validationErrors()
         if(errors) return Promise.resolve(Result.Failure(`attached data source record does not pass validation ${errors.join(",")}`))
 
+        // the data source might need to run encryption of configurations or cleanup
+        // operations prior to saving the record - always call the interfaces ToSave
+        // method
         const toSave = await t.ToSave()
         let savedRecord: DataSourceRecord
 
@@ -56,6 +68,7 @@ export default class DataSourceRepository extends Repository implements Reposito
         return Promise.resolve(Result.Success(true))
     }
 
+    // setting a data source to inactive will automatically stop the process loop
     async setInactive(t: DataSource, user: User): Promise<Result<boolean>> {
         if(t.DataSourceRecord && t.DataSourceRecord.id) {
             return this.#mapper.SetInactive(t.DataSourceRecord.id, user.id!)
@@ -111,7 +124,8 @@ export default class DataSourceRepository extends Repository implements Reposito
 }
 
 // as part of the data source repository we also include the Data Source factory, used
-// to take data source records and generate data source interfaces from them.
+// to take data source records and generate data source interfaces from them. Currently
+// the only implementations are the Http and Standard data sources.
 export class DataSourceFactory {
     fromDataSourceRecord(sourceRecord: DataSourceRecord): StandardDataSourceImpl | HttpDataSourceImpl | undefined {
         switch(sourceRecord.adapter_type) {

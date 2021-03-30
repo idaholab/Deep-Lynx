@@ -1,9 +1,14 @@
-import {IsDate, IsOptional, validate, validateOrReject} from "class-validator";
+import {IsDate, IsOptional, validate} from "class-validator";
 import {Type} from "class-transformer";
 import 'reflect-metadata';
 import {Errors, ValidationError} from "io-ts";
 import Result from "./result";
 
+/*
+ NakedDomainClass should be used by all domain objects who don't need the metadata
+ properties included in the BaseDomainClass. This class allows us to include often
+ used functions such as the validation functionality
+*/
 export class NakedDomainClass {
     async validationErrors(): Promise<string[] | null> {
         const errors = await validate(this)
@@ -26,6 +31,11 @@ export class NakedDomainClass {
     }
 }
 
+/*
+ BaseDomainClass is a very small extension of the NakedDomainClass, but it is
+ the more often used of the two as it contains the metadata properties such as
+ created_by, created_at etc.
+*/
 export class BaseDomainClass extends NakedDomainClass {
     @IsOptional()
     created_by?: string

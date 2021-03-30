@@ -5,6 +5,10 @@ import Metatype, {MetatypeID} from "../ontology/metatype";
 import Container from "../ontology/container";
 import Edge from "./edge";
 
+/*
+    Node represents a node record in the Deep Lynx database and the various
+    validations required for said record to be considered valid.
+ */
 export default class Node extends BaseDomainClass {
     @IsOptional()
     @IsUUID()

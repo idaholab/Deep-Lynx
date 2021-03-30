@@ -7,6 +7,12 @@ import {PoolClient} from "pg";
 import {Readable} from "stream";
 import BlobStorageProvider from "../../../../services/blob_storage/blob_storage";
 
+/*
+    FileRepository contains methods for persisting and retrieving file records
+    to storage. Users should interact with repositories when possible and not
+    the mappers as the repositories contain additional logic such as validation
+    or transformation prior to storage or returning.
+ */
 export default class FileRepository extends Repository implements RepositoryInterface<File> {
     #mapper: FileMapper = FileMapper.Instance
 
@@ -55,6 +61,11 @@ export default class FileRepository extends Repository implements RepositoryInte
         return blobStorage.downloadStream(f.adapter_file_path!)
     }
 
+    /*
+        uploadFile should be used when uploading an actual file, not for manipulating
+        a file record in storage. This should hopefully be obvious as the function
+        signature requires a Readable stream
+     */
     async uploadFile(containerID: string, dataSourceID: string, user: User, filename: string, encoding: string, mimetype: string, stream: Readable): Promise<Result<File>> {
         const provider = BlobStorageProvider()
 

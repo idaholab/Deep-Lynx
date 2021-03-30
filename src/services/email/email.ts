@@ -4,6 +4,11 @@ import Logger from "../logger"
 import Mail from "nodemailer/lib/mailer";
 import Result from "../../common_classes/result";
 
+/*
+    Emailer uses nodemailer under the hood to communicate with an SMTP server.
+    This service cannot send email on it's own, you must configure an SMTP source
+    for it.c
+ */
 export class Emailer {
     private static instance: Emailer
     private _mail: Mail

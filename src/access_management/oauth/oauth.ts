@@ -6,6 +6,10 @@ import bcrypt from "bcrypt";
 import {User} from "../user";
 import {Exclude} from "class-transformer";
 
+/*
+ OAuthApplication represents the registration of an application in Deep Lynx's
+ OAuth2 compliant identity service.
+*/
 export class OAuthApplication extends BaseDomainClass{
     @IsOptional()
     @IsUUID()
@@ -40,6 +44,8 @@ export class OAuthApplication extends BaseDomainClass{
             this.name = input.name;
             this.description = input.description;
             (input.owner instanceof User) ? this.owner_id = input.owner.id! : this.owner_id = input.owner as string;
+            // while we generally create the secret to be stored ourselves, we do
+            // give the programmer the ability to set manually if needed for some reason
             if(input.secret) this.client_secret_raw = input.secret
         }
     }
@@ -56,6 +62,12 @@ export class OAuthApplication extends BaseDomainClass{
     }
 }
 
+
+/*
+ OAuthRequest represents both authorization request and response from Deep Lynx's
+ OAuth2 compliant identity service. See - https://www.oauth.com/oauth2-servers/authorization/the-authorization-request/
+ for more information regarding OAuth2 and the request/response structure
+*/
 export class OAuthRequest extends BaseDomainClass {
     @IsString()
     @IsIn(["code"])
@@ -111,6 +123,12 @@ export class OAuthRequest extends BaseDomainClass {
     }
 }
 
+
+/*
+ OAuthTokenExchangeRequest represents a user's request to exchange a previously
+ obtained authorization code for the final authorization token to be used as a
+ JWT in the case of Deep Lynx. See - https://www.oauth.com/oauth2-servers/accessing-data/obtaining-an-access-token/
+*/
 export class OAuthTokenExchangeRequest extends BaseDomainClass {
     @IsString()
     @IsIn(["authorization_code"])

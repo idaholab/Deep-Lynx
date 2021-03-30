@@ -10,6 +10,16 @@ import Logger from "../../../../services/logger";
 import TypeMappingMapper from "../../../mappers/data_warehouse/etl/type_mapping_mapper";
 import TypeMappingRepository from "./type_mapping_repository";
 
+
+/*
+    TypeTransformationRepository contains methods for persisting and retrieving
+    type transformations to storage as well as managing things like validation.
+    Users should interact with repositories when possible and not
+    the mappers as the repositories contain additional logic such as validation
+    or transformation prior to storage or returning. Try to avoid using this
+    repository in favor of the TypeMapping repository and the TypeMapping domain
+    object's methods for managing its tranformations
+ */
 export default class TypeTransformationRepository extends Repository implements RepositoryInterface<TypeTransformation> {
     #mapper: TypeTransformationMapper = TypeTransformationMapper.Instance
     #mappingRepo: TypeMappingRepository = new TypeMappingRepository()

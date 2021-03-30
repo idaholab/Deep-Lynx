@@ -4,9 +4,12 @@ import {BaseDomainClass, NakedDomainClass} from "../../common_classes/base_domai
 import {IsBoolean, IsIn, IsNumber, IsOptional, IsString, IsUrl, IsUUID, ValidateNested} from "class-validator";
 import {Exclude, Type} from "class-transformer";
 
-// The exporter interface allows the user to create a standard implementation
-// for data export and implement it with minimum amount of work. The repository
-// should always return the interface vs. the export record itself
+
+/*
+ The Exporter interface allows the user to create a standard implementation
+ for data export and implement it with minimum amount of work. The repository
+ should always return the interface vs. the export record itself
+*/
 export interface Exporter {
     ExportRecord?: ExportRecord
     Initiate(user: User): Promise<Result<boolean>>
@@ -20,9 +23,14 @@ export interface Exporter {
     ToSave(): Promise<ExportRecord>
 }
 
-// add new configurations by converting kind to a union type in the BaseConfig
-// and making sure the value you have in your config is the same unique string you
-// used to extend kind - these are called discriminator properties
+
+/*
+ Add new configurations by converting kind to a union type in the BaseConfig
+ and making sure the value you have in your config is the same unique string you
+ used to extend kind - these are called discriminator properties and allow the
+ class-transformer package to determine which configuration class to create and
+ validate against
+*/
 export class BaseExporterConfig extends NakedDomainClass {
     kind: "gremlin" | "standard" = "standard"
 }
@@ -32,6 +40,11 @@ export class StandardExporterConfig extends BaseExporterConfig {
     kind: "standard" = "standard"
 }
 
+/*
+    GremlinExportConfig contains all values necessary for the GremlinImpl of
+    Exporter to successfully export a container's data out to a Gremlin enabled
+    graph database.
+ */
 export class GremlinExportConfig extends BaseExporterConfig {
     kind: "gremlin" = "gremlin"
 
@@ -92,10 +105,10 @@ export class GremlinExportConfig extends BaseExporterConfig {
     }
 }
 
-export function IsGremlinConfig(config:GremlinExportConfig | StandardExporterConfig): config is GremlinExportConfig {
-    return config.kind === "gremlin"
-}
-
+/*
+    ExportRecord represents an export record in the Deep Lynx database and the various
+    validations required for said record to be considered valid.
+ */
 export default class ExportRecord extends BaseDomainClass {
     @IsOptional()
     id?: string

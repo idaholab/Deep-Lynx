@@ -11,6 +11,12 @@ import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import {PoolClient} from "pg";
 import {User} from "../../../../access_management/user";
 
+/*
+    MetatypeRepository contains methods for persisting and retrieving a metatype
+    to storage. Users should interact with repositories when possible and not
+    the mappers as the repositories contain additional logic such as validation
+    or transformation prior to storage or returning.
+ */
 export default class MetatypeRepository extends Repository implements RepositoryInterface<Metatype> {
     #mapper: MetatypeMapper = MetatypeMapper.Instance
     #keyMapper: MetatypeKeyMapper = MetatypeKeyMapper.Instance

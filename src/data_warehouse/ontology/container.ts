@@ -14,6 +14,10 @@ import Authorization from "../../access_management/authorization/authorization";
 import Logger from "../../services/logger";
 import validator from "validator";
 
+/*
+    Container represents a container record in the Deep Lynx database and the various
+    validations required for said record to be considered valid.
+ */
 export default class Container extends BaseDomainClass {
     @IsOptional()
     @IsUUID()

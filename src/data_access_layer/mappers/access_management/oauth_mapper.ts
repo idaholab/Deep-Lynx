@@ -6,9 +6,15 @@ import {OAuthApplication} from "../../../access_management/oauth/oauth";
 
 const format = require('pg-format')
 const resultClass = OAuthApplication
+
 /*
-* The OAuthMapper actually contains mapping functions for itself and the application
-* tracking portions. This is done to be more easily understood and convenient to the user
+    OAuthMapper extends the Postgres database Mapper class and allows
+    the user to map a data structure to and from the attached database. The mappers
+    are designed to be as simple as possible and should not contain things like
+    validation or transformation of the data prior to storage - those operations
+    should live in a Repository or on the data structure's class itself. Also
+    try to avoid listing functions, as those are generally covered by the Repository
+    class/interface as well.
 */
 export default class OAuthMapper extends Mapper{
     public static tableName = "oauth_applications";

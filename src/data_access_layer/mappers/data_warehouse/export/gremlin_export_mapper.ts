@@ -4,8 +4,15 @@ import {PoolClient, QueryConfig} from "pg";
 import {GremlinEdge, GremlinNode} from "../../../../data_warehouse/export/gremlin_export_impl";
 
 /*
-* GremlinExportStorage contains all storage operations for the gremlin_export_nodes
-* and gremlin_export_edges tables.
+    GremlinExportMapper extends the Postgres database Mapper class and allows
+    the user to map a data structure to and from the attached database. The mappers
+    are designed to be as simple as possible and should not contain things like
+    validation or transformation of the data prior to storage - those operations
+    should live in a Repository or on the data structure's class itself. Also
+    try to avoid listing functions, as those are generally covered by the Repository
+    class/interface as well. In this particular mapper we actually communicate
+    to two individual tables, basically copies of the existing container's data
+    so that we can insert to Gremlin enabled graph databases at our leisure.
 */
 export default class GremlinExportMapper extends Mapper{
 

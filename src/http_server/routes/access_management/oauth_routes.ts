@@ -1,4 +1,4 @@
-import {Request, Response, NextFunction, Application} from "express"
+import {Application, NextFunction, Request, Response} from "express"
 import OAuthMapper from "../../../data_access_layer/mappers/access_management/oauth_mapper";
 import {LocalAuthMiddleware} from "../../../access_management/authentication/local";
 import UserMapper from "../../../data_access_layer/mappers/access_management/user_mapper";
@@ -15,6 +15,7 @@ import {classToPlain, plainToClass, serialize} from "class-transformer";
 import KeyPairRepository from "../../../data_access_layer/repositories/access_management/keypair_repository";
 import OAuthRepository from "../../../data_access_layer/repositories/access_management/oauth_repository";
 import {OAuthApplication, OAuthTokenExchangeRequest} from "../../../access_management/oauth/oauth";
+
 const csurf = require('csurf')
 const buildUrl = require('build-url')
 
@@ -22,6 +23,11 @@ const userRepo = new UserRepository()
 const keyRepo = new KeyPairRepository()
 const oauthRepo = new OAuthRepository()
 
+/*
+    OAuthRoutes contain all routes pertaining to oauth application management and
+    the OAuth2 compliant identity provider system of Deep Lynx's http server. These
+    are the only routes in the application which serve actual web pages.
+ */
 export default class OAuthRoutes {
     public static mount(app: Application, middleware: any[]) {
         // OAuth application management

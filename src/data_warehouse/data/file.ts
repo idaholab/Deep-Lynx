@@ -1,6 +1,10 @@
 import {BaseDomainClass} from "../../common_classes/base_domain_class";
 import {IsIn, IsNumber, IsObject, IsOptional, IsString, IsUUID} from "class-validator";
 
+/*
+    File represents a file record in the Deep Lynx database and the various
+    validations required for said record to be considered valid.
+ */
 export default class File extends BaseDomainClass {
     @IsOptional()
     @IsUUID()

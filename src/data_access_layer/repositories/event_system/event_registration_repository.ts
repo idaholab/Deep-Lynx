@@ -5,6 +5,13 @@ import Result from "../../../common_classes/result";
 import {plainToClass} from "class-transformer";
 import {User} from "../../../access_management/user";
 
+/*
+    EventRegistrationRepository contains methods for persisting and retrieving an event registration
+    to storage. Users should interact with repositories when possible and not
+    the mappers as the repositories contain additional logic such as validation
+    or transformation prior to storage or returning. This is not used to actually
+    emit events, only manage registrations.
+ */
 export default class EventRegistrationRepository extends Repository implements RepositoryInterface<EventRegistration> {
     #mapper: EventRegistrationMapper = EventRegistrationMapper.Instance
     delete(e: EventRegistration): Promise<Result<boolean>> {

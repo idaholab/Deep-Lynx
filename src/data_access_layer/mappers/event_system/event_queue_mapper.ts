@@ -4,6 +4,17 @@ import {QueryConfig} from "pg";
 import Task from "../../../event_system/task";
 import {plainToClass} from "class-transformer";
 
+const resultClass = Task
+
+/*
+    EventQueueMapper extends the Postgres database Mapper class and allows
+    the user to map a data structure to and from the attached database. The mappers
+    are designed to be as simple as possible and should not contain things like
+    validation or transformation of the data prior to storage - those operations
+    should live in a Repository or on the data structure's class itself. Also
+    try to avoid listing functions, as those are generally covered by the Repository
+    class/interface as well.
+*/
 export default class EventQueueMapper extends Mapper{
     public static tableName = "queue_tasks";
 
@@ -17,13 +28,9 @@ export default class EventQueueMapper extends Mapper{
         return EventQueueMapper.instance
     }
 
-
     public async Retrieve(id: string): Promise<Result<Task>> {
-        const task = await super.retrieve<object>(this.retrieveStatement(id))
-        if(task.isError) return Promise.resolve(Result.Pass(task))
-
         // TODO verify it's setting the right values on the included event task
-        return Promise.resolve(Result.Success(plainToClass(Task, task.value)))
+        return super.retrieve<Task>(this.retrieveStatement(id), {resultClass})
     }
 
     public async List(): Promise<Task[]> {

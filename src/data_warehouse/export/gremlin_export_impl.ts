@@ -103,10 +103,13 @@ export class GremlinNode extends NakedDomainClass {
 }
 
 
-// The Gremlin implementation of the Exporter interface allows the application to export
-// all data to a Gremlin enabled graph database. The exporter will attempt to connect to
-// the service using the Gremlin driver and on secure connection, export the data using
-// the same driver.
+
+/*
+ The Gremlin implementation of the Exporter interface allows the application to export
+ all data to a Gremlin enabled graph database. The exporter will attempt to connect to
+ the service using the Gremlin driver and on secure connection, export the data using
+ the same driver.
+*/
 export class GremlinImpl implements Exporter {
     public ExportRecord?: ExportRecord
     public client?: GremlinAdapter;

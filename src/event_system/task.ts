@@ -3,6 +3,10 @@ import {IsNumber, IsOptional, IsString, IsUUID} from "class-validator";
 import Event from "./event"
 import {Type} from "class-transformer";
 
+/*
+    Task is a queue specific data structure - the queue processor stores events
+    to be emitted in the database using this structure.
+ */
 export default class Task extends BaseDomainClass {
     @IsOptional()
     @IsUUID()

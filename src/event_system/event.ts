@@ -1,6 +1,10 @@
 import {BaseDomainClass} from "../common_classes/base_domain_class";
 import {IsIn, IsObject, IsString} from "class-validator";
 
+/*
+    Event represents an event record in the Deep Lynx database and the various
+    validations required for said record to be considered valid.
+ */
 export default class Event extends BaseDomainClass {
     @IsString()
     @IsIn([

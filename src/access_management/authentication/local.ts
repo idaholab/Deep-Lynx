@@ -4,10 +4,11 @@ import {Strategy} from "passport-local"
 import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
 import bcrypt from "bcrypt";
 import Logger from "../../services/logger"
-import {classToPlain, serialize} from "class-transformer";
+import {classToPlain} from "class-transformer";
 import OAuthRepository from "../../data_access_layer/repositories/access_management/oauth_repository";
 const buildUrl = require('build-url');
 
+// just a wrapper for the passport.js local authentication method
 export  function SetLocalAuthMethod(app: express.Application) {
     passport.use(new Strategy({passReqToCallback: true},(req, username, password, done) => {
         UserMapper.Instance.RetrieveByEmail(username)
@@ -29,6 +30,11 @@ export  function SetLocalAuthMethod(app: express.Application) {
     }))
 }
 
+/*
+ This middleware will attempt to authenticate a user using the local authentication method
+ if the user has already been authenticated it will pass them to the next handler
+ in the chain - http://www.passportjs.org/packages/passport-local/
+*/
 export function LocalAuthMiddleware(req: express.Request, resp: express.Response, next: express.NextFunction): any {
     const oauthRepo = new OAuthRepository()
     const oauthRequest = oauthRepo.authorizationFromRequest(req)

@@ -6,9 +6,15 @@ import Graph, {ActiveGraph} from "../../../../data_warehouse/data/graph";
 
 const format = require('pg-format')
 const resultClass = Graph
+
 /*
-* TypeStorage encompasses all logic dealing with the manipulation of the Metatype
-* class in a data storage layer.
+    GraphMapper extends the Postgres database Mapper class and allows
+    the user to map a data structure to and from the attached database. The mappers
+    are designed to be as simple as possible and should not contain things like
+    validation or transformation of the data prior to storage - those operations
+    should live in a Repository or on the data structure's class itself. Also
+    try to avoid listing functions, as those are generally covered by the Repository
+    class/interface as well.
 */
 export default class GraphMapper extends Mapper {
     public static tableName = "graphs";
@@ -47,7 +53,7 @@ export default class GraphMapper extends Mapper {
         return super.rows(this.listStatement(containerID, offset, limit), {resultClass})
     }
 
-    // the only thing you can update on a graph is its container
+    // the only thing you can update on a graph is its container, so we lock it down
     public async Update(graphID: string, containerID: string, userID: string, transaction?: PoolClient): Promise<Result<Graph>> {
         const r = await super.run(this.updateStatement(userID, containerID, graphID), {transaction, resultClass})
         if (r.isError) return Promise.resolve(Result.Pass(r))

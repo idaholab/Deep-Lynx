@@ -2,9 +2,12 @@ import Result from "../../common_classes/result"
 import {Readable} from "stream";
 import Config from "../config"
 import AzureBlobImpl from "./azure_blob_impl";
-import MockFileStorageImpl from "./mock_impl";
 import Filesystem from "./filesystem_impl";
 
+/*
+    BlobStorage is an interface that Deep Lynx uses to accept and store user uploads.
+    Implementations should be able to handle any file type.
+ */
 export interface BlobStorage {
     uploadPipe(filepath:string, filename: string, stream: Readable | null, contentType?:string, encoding?:string,): Promise<Result<BlobUploadResponse>>
     deleteFile(filepath:string): Promise<Result<boolean>>
@@ -12,6 +15,7 @@ export interface BlobStorage {
     name(): string
 }
 
+// a specific response type for convenience
 export type BlobUploadResponse = {
     filename: string
     filepath: string
@@ -32,11 +36,6 @@ export default function BlobStorageProvider(adapterName?: string): BlobStorage |
         case "filesystem": {
             return new Filesystem(Config.filesystem_storage_directory, Config.is_windows)
         }
-
-        case "mock": {
-            return new MockFileStorageImpl()
-        }
-
     }
 
     return null

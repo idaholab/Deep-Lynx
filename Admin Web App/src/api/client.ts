@@ -133,7 +133,6 @@ export class Client {
    }
 
    listMetatypes(containerID: string, {name, description, limit, offset, sortBy, sortDesc, count}: {name?: string; description?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; count?: boolean}): Promise<MetatypeT[] | number> {
-      console.log(description)
       const query: {[key: string]: any} = {}
 
       if(name) query.name = name

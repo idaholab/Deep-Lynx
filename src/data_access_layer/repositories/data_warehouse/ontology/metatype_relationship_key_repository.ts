@@ -5,10 +5,12 @@ import MetatypeRelationshipKeyMapper from "../../../mappers/data_warehouse/ontol
 import {User} from "../../../../access_management/user";
 import MetatypeRelationshipRepository from "./metatype_relationship_repository";
 
-// we have the bare minimum of functions in this repository, and it only exists
-// for backwards compatibility. Key manipulation should be handled when dealing
-// with the metatype itself directly. We also do not implement caching on the key
-// layer due to this cache being out of date with the Metatype Relationship one
+/*
+ We have the bare minimum of functions in this repository, and it only exists
+ for backwards compatibility. Key manipulation should be handled when dealing
+ with the metatype itself directly. We also do not implement caching on the key
+ layer due to this cache being out of date with the MetatypeRelationship one
+ */
 export default class MetatypeRelationshipKeyRepository extends  Repository implements RepositoryInterface<MetatypeRelationshipKey> {
     #mapper : MetatypeRelationshipKeyMapper = MetatypeRelationshipKeyMapper.Instance
     #relationshipRepo = new MetatypeRelationshipRepository()

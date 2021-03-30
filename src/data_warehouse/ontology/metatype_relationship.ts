@@ -17,6 +17,12 @@ import {fold} from "fp-ts/Either";
 import {Type} from "class-transformer";
 import validator from "validator";
 
+/*
+    MetatypeRelationship represents a metatype relationship record in the Deep Lynx database and the various
+    validations required for said record to be considered valid. It also contains
+    operations for managing the metatype relationship's keys and validating an
+    unknown object against all keys.
+ */
 export default class MetatypeRelationship extends BaseDomainClass {
     @IsOptional()
     @IsUUID()
@@ -61,6 +67,9 @@ export default class MetatypeRelationship extends BaseDomainClass {
         return this.#removedKeys
     }
 
+    // Please use these operations when manipulating the keys of a metatype
+    // even though the MetatypeKey property is not private, avoid mutating it - it's
+    // not private due to limitations with the class-transformer package
     addKey(...keys: MetatypeRelationshipKey[]) {
         if(!this.keys) this.keys = []
         this.keys.push(...keys)

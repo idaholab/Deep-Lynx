@@ -6,6 +6,11 @@ import {Type} from "class-transformer";
 const crypto = require('crypto')
 const flatten = require('flat');
 
+/*
+    TypeMapping represents a data type mapping record in the Deep Lynx database and the various
+    validations required for said record to be considered valid. It also includes
+    functions for managing a data type mapping's transformations.
+ */
 export default class TypeMapping extends BaseDomainClass {
     @IsOptional()
     @IsUUID()

@@ -1,6 +1,11 @@
 import {BaseDomainClass} from "../../common_classes/base_domain_class";
 import {IsArray, IsBoolean, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, IsUUID, MinLength} from "class-validator";
 
+/*
+    MetatypeRelationshipKey represents a metatype relationship key record in the
+    Deep Lynx database and the various validations required for said record to be
+    considered valid.
+ */
 export default class MetatypeRelationshipKey extends BaseDomainClass {
     @IsOptional()
     @IsUUID()

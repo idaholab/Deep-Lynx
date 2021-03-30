@@ -18,6 +18,9 @@ import {DataSource} from "../../data_warehouse/import/data_source";
 
 declare global {
     namespace Express {
+        // we're going to extend the standard Request in order to facilitate
+        // the context middleware - this allows us to pass instantiated classes
+        // based on url parameters - really a QoL change
         export interface Request {
             container?: Container
             metatype?: Metatype

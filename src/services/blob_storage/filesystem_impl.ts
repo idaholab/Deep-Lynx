@@ -5,6 +5,11 @@ import * as fs from "fs";
 import Logger from "./../logger";
 const digestStream = require('digest-stream')
 
+/*
+    Filesystem is a very simple implementation of BlobStorage and allows Deep Lynx
+    to store and retrieve files on the host system. Note: using this in a sharded
+    environment could have unintended consequences
+ */
 export default class Filesystem implements BlobStorage {
     private _directory: string
     private _isWindows: boolean | undefined

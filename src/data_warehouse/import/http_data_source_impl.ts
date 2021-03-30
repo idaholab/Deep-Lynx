@@ -12,9 +12,11 @@ import ImportRepository from "../../data_access_layer/repositories/data_warehous
 import StandardDataSourceImpl from "./standard_data_source_impl";
 import {plainToClass} from "class-transformer";
 
-// HttpImpl is a data source which polls and HTTP source for data every x seconds
-// this implementation allows the user to query both basic authentication and
-// bearer token secured endpoints for JSON data.
+/*
+ HttpImpl is a data source which polls and HTTP source for data every x seconds
+ this implementation allows the user to query both basic authentication and
+ bearer token secured endpoints for JSON data.
+*/
 export default class HttpDataSourceImpl extends StandardDataSourceImpl implements DataSource {
     #mapper = DataSourceMapper.Instance
     #userRepo = new UserRepository()

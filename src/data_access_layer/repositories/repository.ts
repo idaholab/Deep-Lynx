@@ -3,14 +3,24 @@ import Mapper, {Options} from "../mappers/mapper";
 import {User} from "../../access_management/user";
 import {PoolClient} from "pg";
 
+/*
+    RepositoryInterface allows us to create an expectation for how the various
+    Repositories can and should be used. This interface is purposely thin so as to
+    avoid pigeonholing future development
+ */
 export default interface RepositoryInterface<T> {
     findByID(id: string | number): Promise<Result<T>>
     save(t: T, user?: User): Promise<Result<boolean>>
     delete(t:T): Promise<Result<boolean>>
 }
 
-// Repository should be used as the base class so the parent can access the filter
-// functions for pulling from the db
+
+/*
+ Repository should be used as the base class so the parent can access the filter
+ functions for listing and/or searching from the database. These functions are almost
+ all meant to facilitate a query building pattern where the end user would chain
+ methods together and then terminate with either a count() or list() call
+*/
 export class Repository {
     private readonly _tableName: string
     public _rawQuery: string[] = []

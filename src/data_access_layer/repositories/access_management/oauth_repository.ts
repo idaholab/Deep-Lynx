@@ -6,7 +6,7 @@ import Cache from "../../../services/cache/cache";
 import UserRepository from "./user_repository";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import {classToPlain, plainToClass, serialize} from "class-transformer";
+import {classToPlain, plainToClass} from "class-transformer";
 import Config from "../../../services/config";
 import {Request} from "express";
 import {OAuthApplication, OAuthRequest, OAuthTokenExchangeRequest} from "../../../access_management/oauth/oauth";
@@ -15,6 +15,13 @@ import base64url from "base64url";
 
 const crypto = require('crypto');
 
+/*
+    OAuthRepository contains methods for persisting and retrieving OAuthApplications
+    to storage as well as managing OAuth Request/Responses from Deep Lynx's OAuth2
+    compliant identity service. Users should interact with repositories when
+    possible and not the mappers as the repositories contain additional logic such
+    as validation or transformation prior to storage or returning.
+ */
 export default class OAuthRepository extends Repository implements RepositoryInterface<OAuthApplication> {
     #mapper: OAuthMapper = OAuthMapper.Instance
 
@@ -31,6 +38,8 @@ export default class OAuthRepository extends Repository implements RepositoryInt
     }
 
     async save(t: OAuthApplication, user: User): Promise<Result<boolean>> {
+        // we never store the raw secret of the oauth application so as to
+        // avoid security issues.
         try{
             const hashedSecret = await bcrypt.hash(t.client_secret_raw, 10)
             t.client_secret = hashedSecret
@@ -61,6 +70,8 @@ export default class OAuthRepository extends Repository implements RepositoryInt
         super(OAuthMapper.tableName);
     }
 
+    // operations specific to managing whether or not a user has approved an
+    // applications access to their information for login/authentication
     async markApprovedForUser(u: User, o: OAuthApplication): Promise<Result<boolean>> {
         return this.#mapper.MarkApplicationApproved(o.id!, u.id!)
     }
@@ -167,7 +178,7 @@ export default class OAuthRepository extends Repository implements RepositoryInt
         return (Object.keys(r).length > 0) ? plainToClass(OAuthRequest, r) : undefined
     }
 
-
+    // retrieve an OAuthRequest from the cache by using the provided token
     async authorizationFromToken(token: string): Promise<OAuthRequest| undefined> {
         const cached = Cache.get<object>(token)
         if(!cached) return Promise.resolve(undefined)

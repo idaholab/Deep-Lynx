@@ -1,5 +1,10 @@
-// we've created a standalone loop for the Data Export Loop so as to maximize
-// system resources. The main loop of Deep Lynx will spawn this process
+/*
+ Standalone loop for the Data Export Loop so as to maximize system resources.
+ The main loop of Deep Lynx will spawn this process. This process should restart
+ any exports that were in the process of running when Deep Lynx shut down. The actual
+ implementation of the exporter uses database locks to insure that you can run
+ as many instances of this process as you'd like and not have data duplication issues
+*/
 import Logger from "../../../../services/logger";
 import ExporterRepository from "./export_repository";
 import {SuperUser} from "../../../../access_management/user";

@@ -5,10 +5,12 @@ import MetatypeKeyMapper from "../../../mappers/data_warehouse/ontology/metatype
 import {User} from "../../../../access_management/user";
 import MetatypeRepository from "./metatype_repository";
 
-// we have the bare minimum of functions in this repository, and it only exists
-// for backwards compatibility. Key manipulation should be handled when dealing
-// with the metatype itself directly. We also do not implement caching on the key
-// layer due to this cache being out of date with the Metatype one
+/*
+ We have the bare minimum of functions in this repository, and it only exists
+ for backwards compatibility. Key manipulation should be handled when dealing
+ with the metatype itself directly. We also do not implement caching on the key
+ layer due to this cache being out of date with the Metatype one
+ */
 export default class MetatypeKeyRepository extends  Repository implements RepositoryInterface<MetatypeKey> {
     #mapper : MetatypeKeyMapper = MetatypeKeyMapper.Instance
     #metatypeRepo : MetatypeRepository = new MetatypeRepository()

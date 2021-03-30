@@ -3,10 +3,7 @@ import {driver, process} from "gremlin"
 import Vertices from './vertices';
 import Edges from "./edges";
 import {GraphSONReaderV1} from "./graphson_v1_reader/reader";
-import {IsBoolean, IsNumber, IsOptional, IsString, IsUrl} from "class-validator";
-import {BaseExporterConfig, GremlinExportConfig, StandardExporterConfig} from "../../data_warehouse/export/export";
-import {Exclude} from "class-transformer";
-
+import {GremlinExportConfig} from "../../data_warehouse/export/export";
 
 
 const traversal = process.AnonymousTraversalSource.traversal;

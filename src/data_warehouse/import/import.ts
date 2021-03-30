@@ -2,6 +2,10 @@ import {BaseDomainClass, NakedDomainClass} from "../../common_classes/base_domai
 import {IsDate, IsDefined, IsNumber, IsOptional, IsString, IsUUID} from "class-validator";
 import {Type} from "class-transformer";
 
+/*
+    Import represents an import record in the Deep Lynx database and the various
+    validations required for said record to be considered valid.
+ */
 export default class Import extends BaseDomainClass {
     @IsOptional()
     @IsUUID()
@@ -44,9 +48,12 @@ export default class Import extends BaseDomainClass {
     }
 }
 
-// data staging refers to the individual points of data coming in from an import
-// I regret naming it this, but we are now too far into the project to rename an
-// entire table for sake of looks
+
+/*
+ DataStaging refers to the individual points of data coming in from an import
+ I regret naming it this, but we are now too far into the project to rename an
+ entire table for sake of looks
+*/
 export class DataStaging extends NakedDomainClass {
     @IsOptional()
     @IsNumber()

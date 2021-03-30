@@ -24,6 +24,13 @@ import {ValidateEmailTemplate} from "../../../services/email/templates/validate_
 const UIDGenerator = require('uid-generator');
 const uidgen = new UIDGenerator();
 
+/*
+    UserRepository contains methods for persisting and retrieving users and key-pairs
+    to storage as well as managing things like password forgot/reset and email
+    validation. Users should interact with repositories when possible and not
+    the mappers as the repositories contain additional logic such as validation
+    or transformation prior to storage or returning.
+ */
 export default class UserRepository extends Repository implements RepositoryInterface<User> {
     #mapper: UserMapper = UserMapper.Instance
     #keyMapper: KeyPairMapper = KeyPairMapper.Instance
@@ -45,6 +52,10 @@ export default class UserRepository extends Repository implements RepositoryInte
     }
 
     async findByID(id: string, requestingUser?: User): Promise<Result<User>> {
+        // generally the route authorization methods in http_server would handle
+        // authentication, but I've found that in a few places we need this additional
+        // check as the route might not have all the information needed to make a
+        // permissions check when retrieving a user.
         if(requestingUser) {
             const authed = await Authorization.AuthUser(requestingUser, 'read', 'users');
             if(!authed) return Promise.resolve(Result.Error(ErrorUnauthorized));
@@ -53,12 +64,14 @@ export default class UserRepository extends Repository implements RepositoryInte
         const r = await this.#mapper.Retrieve(id)
         if(r.isError) return Promise.resolve(Result.Failure(`unable to find user`, 404))
 
+        // always load the KeyPairs
         const keysLoaded = await this.loadKeys(r.value)
         if(keysLoaded.isError) Logger.error(`unable to load key pairs for user ${r.value.id}: ${keysLoaded.error?.error}`)
 
         return Promise.resolve(Result.Success(r.value))
     }
 
+    // save will automatically save the user's KeyPairs unless told otherwise
     async save(u: User, user: User, saveKeys: boolean = true): Promise<Result<boolean>> {
         let userID: string = "system"
 
@@ -76,6 +89,8 @@ export default class UserRepository extends Repository implements RepositoryInte
         const transaction = await this.#mapper.startTransaction()
         if(transaction.isError) return Promise.resolve(Result.Failure(`unable to initiate db transaction`))
 
+        // we must wrap the hashing in a try/catch block as we're using await when
+        // attempting to hash the password
         try {
             if(u.password !== "") u.password = await bcrypt.hash(u.password, 10)
             u.email_validation_token = await uidgen.generate()
@@ -131,8 +146,6 @@ export default class UserRepository extends Repository implements RepositoryInte
     }
 
     private async saveKeys(u: User, transaction?: PoolClient): Promise<Result<boolean>> {
-        // you have to hash the secret before saving
-        // const hashedSecret = await bcrypt.hash(secret.toString('base64'), 10)
         let internalTransaction: boolean = false
         const keysCreate: KeyPair[] = []
 
@@ -207,6 +220,8 @@ export default class UserRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(true))
     }
 
+    // allows us to use the environment variables to create a default admin on
+    // initial startup
     async createDefaultSuperUser(): Promise<Result<User>> {
         const user = await UserMapper.Instance.RetrieveByEmail(Config.superuser_email);
         if(!user.isError || user.value) {
@@ -245,6 +260,8 @@ export default class UserRepository extends Repository implements RepositoryInte
         return new Promise(resolve => resolve(Result.Success(superUser)))
     }
 
+    // note that this is the final step in the reset password chain, you must have
+    // the reset token in order to use this function
     async resetPassword(payload: ResetUserPasswordPayload): Promise<Result<boolean>> {
         const errors = await payload.validationErrors()
         if (errors) return Promise.resolve(Result.Failure(`reset user password payload fails validation ${errors.join(",")}`))
@@ -257,6 +274,7 @@ export default class UserRepository extends Repository implements RepositoryInte
         })
     }
 
+    // password reset tokens are only valid for 10 minutes
     async initiateResetPassword(email: string): Promise<Result<boolean>> {
         const user = await UserMapper.Instance.RetrieveByEmail(email)
         if (user.isError) return new Promise(resolve => resolve(Result.Success(true)))
@@ -274,10 +292,12 @@ export default class UserRepository extends Repository implements RepositoryInte
             return new Promise(resolve => resolve(Result.Success(true)))
         }
 
+        // we won't error out if the email sends, just inform the log of the problem
+        // we don't want an outside caller to know whether or not a user's email
+        // is valid by virtue of it failing to send
         const sentEmail = await Emailer.Instance.send(resetUser.value.email, 'Reset Password Deep Lynx', ResetPasswordEmailTemplate(resetUser.value.email, resetUser.value.reset_token!));
         if (sentEmail.isError) {
             Logger.error(`unable to send password reset email ${sentEmail.error}`)
-            return new Promise(resolve => resolve(Result.Success(true)))
         }
 
         return new Promise(resolve => resolve(Result.Success(true)))
@@ -287,6 +307,10 @@ export default class UserRepository extends Repository implements RepositoryInte
         const errors = await payload.validationErrors()
         if (errors) return Promise.resolve(Result.Failure(`assign user role payload fails validation ${errors.join(",")}`))
 
+        // generally the route authorization methods in http_server would handle
+        // authentication, but I've found that in a few places we need this additional
+        // check as the route might not have all the information needed to make a
+        // permissions check when assigning roles
         const authed = await Authorization.AuthUser(user, 'write', 'users');
         if(!authed) return Promise.resolve(Result.Error(ErrorUnauthorized));
 
@@ -294,6 +318,10 @@ export default class UserRepository extends Repository implements RepositoryInte
     }
 
     async removeAllRoles(user: User, domain:string): Promise<Result<boolean>> {
+        // generally the route authorization methods in http_server would handle
+        // authentication, but I've found that in a few places we need this additional
+        // check as the route might not have all the information needed to make a
+        // permissions check when removing roles
         const authed = await Authorization.AuthUser(user, 'write', 'users');
         if(!authed) return Promise.resolve(Result.Error(ErrorUnauthorized));
 
@@ -308,12 +336,17 @@ export default class UserRepository extends Repository implements RepositoryInte
         return new Promise(resolve => resolve(Result.Success(roles)))
     }
 
+    // visit the Authorization domain object to see exactly what the permission
+    // return consists of when dealing with this function
     async retrievePermissions(user: User): Promise<Result<boolean>> {
         user.permissions = await Authorization.PermissionsForUser(user.id!)
 
         return Promise.resolve(Result.Success(true))
     }
 
+    // this allows authorized users to invite either registered or new users to an
+    // existing Deep Lynx container by providing their email. Currently this is only
+    // used by the Admin Web App
     async inviteUserToContainer(user: User, invite: ContainerUserInvite): Promise<Result<boolean>> {
         const containerRepo = new ContainerRepository()
         // set the token first, if it's not already created or empty string
@@ -330,6 +363,9 @@ export default class UserRepository extends Repository implements RepositoryInte
 
         const container = await containerRepo.findByID(created.value.container!.id!)
 
+        // like most emails, don't error out if this doesn't send. API methods
+        // exist for retrieving a user's invites if they somehow didn't get the
+        // invite
         Emailer.Instance.send(created.value.email,
             'Invitation to Deep Lynx Container',
             ContainerInviteEmailTemplate(created.value.token!, (container.isError) ? created.value.container!.id! : container.value.name )
@@ -341,6 +377,8 @@ export default class UserRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(true))
     }
 
+    // allows the current user to accept a container invite, assigning the default
+    // user role on acceptance
     async acceptContainerInvite(user: User, inviteToken: string): Promise<Result<boolean>> {
         const invite = await ContainerUserInviteMapper.Instance.RetrieveByTokenAndEmail(inviteToken, user.email)
 

@@ -36,6 +36,10 @@ export type ContainerImportT = {
   path?: string | undefined
 }
 
+/*
+  ContainerImport is a set of functions which allow the user to create and populate
+  or update an existing container using an .owl ontology file
+*/
 export default class ContainerImport {
   private static instance: ContainerImport;
 

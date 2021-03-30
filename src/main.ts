@@ -52,6 +52,7 @@ postgresAdapter.init()
 
         // if enabled, create an initial SuperUser for easier system management
         // if SAML is configured, the initial SAML user will be assigned admin status
+        // if this super user hasn't been created
         if(Config.initial_super_user) {
             const userRepo = new UserRepository()
             userRepo.createDefaultSuperUser()

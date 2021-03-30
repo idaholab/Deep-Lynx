@@ -2,10 +2,12 @@ import Logger from "../services/logger";
 import express from "express";
 import {serialize} from "class-transformer";
 
-// Result was created to solve the problem of constantly throwing and catching
-// errors in the node.js promise ecosystem. Instead of throwing an error, we
-// prefer that the user return an instance of the Result class, whose values
-// and methods reflect success/failure and any success/failure values.
+/*
+ Result was created to solve the problem of constantly throwing and catching
+ errors in the node.js promise ecosystem. Instead of throwing an error, we
+ prefer that the user return an instance of the Result class, whose values
+ and methods reflect success/failure and any success/failure values.
+*/
 export default class Result<TSuccess> {
     value: TSuccess;
     error?: Error;
@@ -29,6 +31,9 @@ export default class Result<TSuccess> {
         return new Result<any>(null, true, e)
     }
 
+    // calling this allows the user to pass a Result class - this is done to avoid
+    // compilation errors when the return type of a Result's value doesn't match
+    // the parent operation's type.
     public static Pass(res:Result<any>) {
         return res;
     }
@@ -71,7 +76,10 @@ class Error {
     }
 }
 
-// Pre-built error classes might come in handy in a few situations. Consider adding
-// your own error if you find yourself typing the same thing over and over.
+
+/*
+ Pre-built error classes might come in handy in a few situations. Consider adding
+ your own error if you find yourself typing the same thing over and over.
+*/
 export const ErrorNotFound = new Error('resource not found', 404);
-export const ErrorUnauthorized = new Error('unauthorized', 400);
+export const ErrorUnauthorized = new Error('unauthorized', 401);

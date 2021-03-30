@@ -1,15 +1,16 @@
 import RepositoryInterface, {QueryOptions, Repository} from "../../repository";
-import Import, {DataStaging} from "../../../../data_warehouse/import/import";
+import Import from "../../../../data_warehouse/import/import";
 import Result from "../../../../common_classes/result";
 import ImportMapper from "../../../mappers/data_warehouse/import/import_mapper";
 import {PoolClient} from "pg";
 import {User} from "../../../../access_management/user";
-import DataStagingRepository from "./data_staging_repository";
-import DataSourceMapper from "../../../mappers/data_warehouse/import/data_source_mapper";
-import TypeMappingRepository from "../etl/type_mapping_repository";
-import TypeMapping from "../../../../data_warehouse/etl/type_mapping";
-import Logger from "../../../../services/logger";
 
+/*
+    Imports contains methods for persisting and retrieving an import
+    to storage. Users should interact with repositories when possible and not
+    the mappers as the repositories contain additional logic such as validation
+    or transformation prior to storage or returning.
+ */
 export default class ImportRepository extends Repository implements RepositoryInterface<Import> {
     #mapper = ImportMapper.Instance
     delete(t: Import): Promise<Result<boolean>> {

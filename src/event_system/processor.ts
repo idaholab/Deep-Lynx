@@ -10,6 +10,10 @@ import Event from "./event";
 import Task from "./task";
 import EventRegistration from "./event_registration";
 
+/*
+  QueueProcessor class manages the emission of events to their various registered
+  sources.
+ */
 export class QueueProcessor {
 
   private static instance: QueueProcessor;

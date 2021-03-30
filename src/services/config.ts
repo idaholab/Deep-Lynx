@@ -1,10 +1,13 @@
 /* tslint:disable:variable-name */
-// Config is a singleton class representing the application's configuration and
-// environment at time of original construction. If at all possible, all properties
-// should have sane defaults assigned.
 import * as path from "path";
 import * as fs from "fs";
 
+
+/*
+ Config is a singleton class representing the application's configuration and
+ environment at time of original construction. If at all possible, all properties
+ should have sane defaults assigned.
+*/
 export class Config {
   private static instance: Config;
 
@@ -24,9 +27,6 @@ export class Config {
   private readonly _cache_provider: string;
   private readonly _cache_default_ttl: number;
   private readonly _cache_redis_connection_string: string
-
-  private readonly _mongo_source_uri : string;
-  private readonly _mongo_source_db : string;
 
   private readonly _core_db_connection_string: string;
   private readonly _db_name: string;
@@ -97,9 +97,6 @@ export class Config {
     this._cache_default_ttl = (process.env.CACHE_DEFAULT_TTL) ? parseInt(process.env.CACHE_DEFAULT_TTL!, 10): 21600
     // default to a local, non-password-protected instance of redis
     this._cache_redis_connection_string = process.env.CACHE_REDIS_CONNECTION_STRING || "//localhost:6379"
-
-    this._mongo_source_uri= process.env.MONGO_SOURCE_URI || "localhost:8081";
-    this._mongo_source_db = process.env.MONGO_SOURCE_DB || "inl-core-m";
 
     this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || "";
     this._db_name = process.env.DB_NAME || "deep_lynx";
@@ -269,14 +266,6 @@ export class Config {
 
   get encryption_key_path(): string {
     return this._encryption_key_path!
-  }
-
-  get mongo_source_uri(): string {
-      return this._mongo_source_uri
-  }
-
-  get mongo_source_db(): string {
-    return this._mongo_source_db
   }
 
   get log_level(): string {

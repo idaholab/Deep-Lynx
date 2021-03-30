@@ -19,14 +19,20 @@ import { User } from "../../access_management/user";
 import TypeMapping from "../etl/type_mapping";
 import TypeMappingMapper from "../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper";
 
+/*
+    StandardDataSourceImpl is the most basic of data sources, and serves as the base
+    for the Http data source. Users will generally interact with the DataSource interface
+    over the implementation directly.
+ */
 export default class StandardDataSourceImpl implements DataSource {
     DataSourceRecord?: DataSourceRecord
+    // we're dealing with mappers directly because we don't need any validation
+    // or the additional processing overhead the repository could cause
     #mapper = DataSourceMapper.Instance
     #graphMapper = GraphMapper.Instance
     #containerRepo = new ContainerRepository()
     #importRepo = new ImportRepository()
     #stagingRepo = new DataStagingRepository()
-    #mappingRepo = new TypeMappingRepository()
     #mappingMapper = new TypeMappingMapper()
 
     constructor(record: DataSourceRecord) {
@@ -123,6 +129,11 @@ export default class StandardDataSourceImpl implements DataSource {
         }
     }
 
+    /*
+        Process verifies that a data source is active and then starts a never-ending
+        loop which takes recieved data and converts it to nodes and edges, prior
+        to inserting it into the database.
+     */
     async Process(loopOnce?: boolean): Promise<void> {
         if(this.DataSourceRecord) while(true) {
             let graphID: string

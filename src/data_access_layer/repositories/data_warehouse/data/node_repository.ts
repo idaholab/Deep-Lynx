@@ -7,6 +7,13 @@ import {User} from "../../../../access_management/user";
 import MetatypeRepository from "../ontology/metatype_repository";
 import Logger from "../../../../services/logger"
 
+/*
+    NodeRepository contains methods for persisting and retrieving nodes
+    to storage as well as managing things like validation.
+    Users should interact with repositories when possible and not
+    the mappers as the repositories contain additional logic such as validation
+    or transformation prior to storage or returning.
+ */
 export default class NodeRepository extends Repository implements RepositoryInterface<Node> {
     #mapper: NodeMapper = NodeMapper.Instance
     #metatypeRepo: MetatypeRepository = new MetatypeRepository()
@@ -14,6 +21,9 @@ export default class NodeRepository extends Repository implements RepositoryInte
     constructor() {
         super(NodeMapper.tableName);
 
+        // we must rewrite the initial query in order to accept LEFT JOINS so that
+        // can avoid making more database queries for often required additional
+        // information
         this._rawQuery = [
             `SELECT nodes.*, metatypes.name as metatype_name FROM ${NodeMapper.tableName}`,
             `LEFT JOIN metatypes ON metatypes.id = nodes.metatype_id`
@@ -59,7 +69,6 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return Promise.resolve(node)
     }
 
-    // TODO: add this when edges and processing, imports and staging are done DataStagingStorage.Instance.AddError(node.data_staging_id!, `error attempting to insert nodes ${insertedNodes.error?.error}` )
     async save(n: Node, user: User, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction: boolean = false
         const errors = await n.validationErrors()
@@ -80,6 +89,10 @@ export default class NodeRepository extends Repository implements RepositoryInte
             return Promise.resolve(Result.Failure(`unable to retrieve node's metatype ${metatype.error?.error}`))
         }
 
+        // we decided to keep the validation and transformation of object properties
+        // on the metatype vs. pulling it into the node - as we might be performing
+        // that validation/transformation elsewhere and we would always need the
+        // metatype and it's keys anyways
         const validPayload = await metatype.value.validateAndTransformProperties(n.properties);
         if(validPayload.isError) {
             if(internalTransaction) await this.#mapper.rollbackTransaction(transaction)
@@ -151,6 +164,10 @@ export default class NodeRepository extends Repository implements RepositoryInte
 
                                 node.metatype = metatype.value
 
+                                // we decided to keep the validation and transformation of object properties
+                                // on the metatype vs. pulling it into the node - as we might be performing
+                                // that validation/transformation elsewhere and we would always need the
+                                // metatype and it's keys anyways
                                 metatype.value.validateAndTransformProperties(node.properties)
                                     .then(transformed => {
                                         if (transformed.isError) {

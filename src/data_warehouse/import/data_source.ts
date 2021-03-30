@@ -15,6 +15,11 @@ import {User} from "../../access_management/user";
 import Import from "./import";
 import Result from "../../common_classes/result";
 
+/*
+    The DataSource interface represents basic functionality of a data source. All
+    data sources must be able to receive and process received information. Currently
+    there are two implementations - the Http data source and Standard data source.
+ */
 export interface DataSource {
     DataSourceRecord?: DataSourceRecord
 
@@ -32,9 +37,13 @@ export interface DataSource {
     ToSave(): Promise<DataSourceRecord>
 }
 
-// add new configurations by converting kind to a union type in the BaseConfig
-// and making sure the value you have in your config is the same unique string you
-// used to extend kind - these are called discriminator properties
+/*
+ Add new configurations by converting kind to a union type in the BaseConfig
+ and making sure the value you have in your config is the same unique string you
+ used to extend kind - these are called discriminator properties and allow the
+ class-transformer package to determine which configuration class to create and
+ validate against
+*/
 export class BaseDataSourceConfig extends NakedDomainClass {
     kind: "http" | "standard" = "standard"
 }
@@ -93,6 +102,10 @@ export class HttpDataSourceConfig extends BaseDataSourceConfig {
     }
 }
 
+/*
+    DataSourceRecord represents a data source record in the Deep Lynx database and the various
+    validations required for said record to be considered valid.
+ */
 export default class DataSourceRecord extends BaseDomainClass {
     @IsOptional()
     id?: string

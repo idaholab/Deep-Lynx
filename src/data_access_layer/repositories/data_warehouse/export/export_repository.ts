@@ -6,6 +6,16 @@ import {SuperUser, User} from "../../../../access_management/user";
 import Result from "../../../../common_classes/result";
 import {PoolClient} from "pg";
 
+/*
+    ExportRepository contains methods for persisting and retrieving data exports
+    to storage as well as managing things like validation and the starting/stopping
+    of said data exports. Currently the only export source accepted is a Gremlin
+    enabled graph database. Users should interact with repositories when possible and not
+    the mappers as the repositories contain additional logic such as validation
+    or transformation prior to storage or returning. This repository especially
+    returns an interface vs. concrete class and exposes more operations than exist
+    if you just use the mapper.
+ */
 export default class ExporterRepository extends Repository implements RepositoryInterface<Exporter> {
     #mapper = ExportMapper.Instance
     #factory = new ExporterFactory()
@@ -14,6 +24,8 @@ export default class ExporterRepository extends Repository implements Repository
         if(!t.ExportRecord || !t.ExportRecord.id) return Promise.resolve(Result.Failure(`cannot delete export: no export record present or export record lacking id`))
         if(!user) user = SuperUser
 
+        // must stop the export prior to deletion - this allows the exporter to run
+        // any needed cleanup prior to deletion.
         const stopped = await t.Stop(user)
         if(stopped.isError) return Promise.resolve(Result.Failure(`unable to delete export, cannot stop export process ${stopped.error}`))
 
@@ -96,7 +108,8 @@ export default class ExporterRepository extends Repository implements Repository
 }
 
 // as part of the export repository we also include the Exporter factory, used
-// to take export records and generate exporter interfaces from them.
+// to take export records and generate exporter interfaces from them. Currently
+// only the GremlinImple is supported
 export class ExporterFactory {
     fromExport(exportRecord: ExportRecord): Exporter | undefined {
         switch(exportRecord.adapter) {

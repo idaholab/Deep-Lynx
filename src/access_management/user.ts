@@ -18,6 +18,10 @@ import bcrypt from "bcrypt";
 import Result from "../common_classes/result";
 const validator = require('validator')
 
+/*
+ User represents a registered Deep Lynx user along with their registered API
+ KeyPairs and information regarding password reset and email validation
+*/
 export class User extends BaseDomainClass {
     @IsOptional()
     @IsUUID()
@@ -71,6 +75,8 @@ export class User extends BaseDomainClass {
     @IsArray()
     roles: string[] = []
 
+    // These are the user's registered API Key/Secret pairs and are used to gain
+    // an access token for authentication
     keys: KeyPair[] | undefined
     // for tracking removed keys for update
     #removedKeys: KeyPair[] | undefined
@@ -106,6 +112,9 @@ export class User extends BaseDomainClass {
         return this.#removedKeys
     }
 
+    // Please use these operations when manipulating the keypairs of a user
+    // even though the KeyPair property is not private, avoid mutating it - it's
+    // not private due to limitations with the class-transformer package
     addKey(...keys: KeyPair[]) {
         if(!this.keys) this.keys = []
 
@@ -146,6 +155,11 @@ export class User extends BaseDomainClass {
     }
 }
 
+
+/*
+ KeyPair represents an API Key/Secret combination used by outside services to
+ gain an access token for authentication against Deep Lynx
+*/
 export class KeyPair extends BaseDomainClass {
     @IsString()
     key: string = Buffer.from(uuid.v4()).toString('base64')
@@ -179,7 +193,10 @@ export class KeyPair extends BaseDomainClass {
     }
 }
 
-// here are some additional user classes and exports for convenience
+// here are some additional user classes for convenience - this allowed us to
+// more easily accept specific data structures as payloads from the http_server layer
+
+// request for a user to finalize a password reset process
 export class ResetUserPasswordPayload extends BaseDomainClass {
     @IsEmail()
     email?: string
@@ -198,6 +215,7 @@ export class ResetUserPasswordPayload extends BaseDomainClass {
     }
 }
 
+// request for assigning roles to a user within the context of a container
 export class AssignUserRolePayload extends BaseDomainClass {
     @IsUUID()
     user_id?: string
@@ -269,6 +287,9 @@ export class ContainerUserInvite extends  BaseDomainClass {
     }
 }
 
+// use wisely as the ID is generated each time it's called - this is mainly used
+// in testing and if, for whatever reason, you're running Deep Lynx with only
+// basic authentication or no authentication on the http_server
 export const SuperUser = new User({
     id: uuid.v4(),
     identity_provider: "username_password",
@@ -279,7 +300,9 @@ export const SuperUser = new User({
     admin: true
 })
 
-// any specific validators should be specified here
+/*
+ These final operations are class-validator specific property validations
+*/
 export function UserID(validationOptions?: ValidationOptions) {
     return (object: object, propertyName: string) => {
         registerDecorator({
@@ -297,7 +320,7 @@ export function UserID(validationOptions?: ValidationOptions) {
     };
 }
 
-// weh have to copy the container validator as to avoid cyclical imports
+// we have to copy the container validator as to avoid cyclical imports
 export function ContainerID(validationOptions?: ValidationOptions) {
     return (object: object, propertyName: string) => {
         registerDecorator({

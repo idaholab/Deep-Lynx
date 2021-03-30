@@ -46,6 +46,9 @@ export function SetSamlAdfs(app: express.Application) {
                     if(result.isError && result.error?.errorCode === 404) {
                         storage.List()
                             .then(users => {
+                                // if there are no other users of this Deep Lynx instance
+                                // we go ahead and assign admin status to this newly created
+                                // user
                                 storage.Create('saml-adfs login', new User({
                                     identity_provider_id: profile["http://schemas.microsoft.com/identity/claims/objectidentifier"],
                                     identity_provider: "saml_adfs",

@@ -9,8 +9,12 @@ import {IsDefined, IsIn, IsOptional, IsString, IsUUID, ValidateIf, ValidateNeste
 import {Type} from "class-transformer";
 import {DataStaging} from "../import/import";
 
-// we extend the naked class here because we don't need the metadata id, just
-// the class for validation
+/*
+   Condition represents a logical operation which can determine whether or not
+   Deep Lynx should apply this transformation to a given payload.
+   We extend the naked class here because we don't need the metadata id, just
+   the class for validation
+ */
 export class Condition extends NakedDomainClass {
    @IsOptional()
    @IsIn(["AND", "OR"])
@@ -48,8 +52,10 @@ export class Condition extends NakedDomainClass {
    }
 }
 
-// KeyMapping contains fields for both metatype and metatype relationship in order
-// // to handle a type mapping that results in both a NodeT and EdgeT final product.
+/*
+   KeyMapping contains fields for both metatype and metatype relationship in order
+   to handle a type mapping that results in both a Node and Edge final product.
+ */
 export class KeyMapping extends NakedDomainClass {
    @IsOptional()
    @IsString()
@@ -90,6 +96,12 @@ export class KeyMapping extends NakedDomainClass {
    }
 }
 
+/*
+    TypeTransformation represents a data type transformation record in the
+    Deep Lynx database and the various validations required for said record to
+    be considered valid. It also contains all functions necessary for converting
+    an object to an Edge or Node class depending on the transformation's properties
+ */
 export default class TypeTransformation extends BaseDomainClass {
    @IsOptional()
    @IsUUID()

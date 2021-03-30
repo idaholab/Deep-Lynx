@@ -1,10 +1,14 @@
 const NodeCache = require("node-cache")
 const Redis = require("ioredis")
-// @ts-ignore
+// @ts-ignore - needed because ioredis's types haven't been updated
 import {RedisStatic} from "ioredis";
 import Config from "../config"
 import Logger from "../logger"
 
+/*
+    Presenting Cache as a singleton class allows us to avoid creating many instances
+    of the same cache adapter.
+ */
 class Cache {
     public cache: CacheInterface
     private static instance: Cache
@@ -37,12 +41,20 @@ class Cache {
     }
 }
 
+/*
+    CacheInterface is a very simple interface which the above class uses
+    so that it doesn't have to worry about which implementation to use
+ */
 export interface CacheInterface {
     set(key: string, val: any, ttl?: number): Promise<boolean>
     del(key: string): Promise<boolean>
     get<T>(key: string): Promise<T | undefined>
 }
 
+/*
+    MemoryCacheImpl is a simple in-memory cache provider. Note: using this in
+    a sharded environment is highly discouraged.
+ */
 export class MemoryCacheImpl implements CacheInterface {
     private _cache: any
     get<T>(key: string): Promise<T | undefined> {
@@ -77,6 +89,9 @@ export class MemoryCacheImpl implements CacheInterface {
     }
 }
 
+/*
+    A Redis backed implementation of the cache interface
+ */
 export class RedisCacheImpl implements CacheInterface {
     private _redis: RedisStatic
     async get<T>(key: string): Promise<T | undefined> {

@@ -51,8 +51,11 @@ import {serialize} from "class-transformer";
 import {SuperUser} from "../../access_management/user";
 import ImportRoutes from "./data_warehouse/import/import_routes";
 
-// Router is a self contained set of routes and middleware that the main express.js
-// application should call. It should be called only once.
+
+/*
+ Router is a self contained set of routes and middleware that the main express.js
+ application should call. It should be called only once.
+*/
 export class Router {
   // This may little convoluted, but it allows use to keep the `app` name.
   // I'm choosing to do this so that new developers to the project to use

@@ -1,14 +1,18 @@
-// this is an extremely simple repository as keys should normally be added and
-// saved in the context of a User. There are a few operations however, that don't
-// really fit in that repository so they live here
 import KeyPairMapper from "../../mappers/access_management/keypair_mapper";
 import bcrypt from "bcrypt"
 import RepositoryInterface from "../repository";
 import {KeyPair, User} from "../../../access_management/user";
 import Result from "../../../common_classes/result";
 
+/*
+ KeyPairRepository is an extremely simple repository as keys should normally be added and
+ saved in the context of a User. There are a few operations however, that don't
+ really fit in that repository so they live here
+*/
 export default class KeyPairRepository implements RepositoryInterface<KeyPair>{
     #mapper = KeyPairMapper.Instance
+
+    // verify that a user provided key/pair matches the one in the database
     async validateKeyPair(key: string, secretRaw: string): Promise<boolean> {
         const retrieved = await this.#mapper.Retrieve(key)
         if(retrieved.isError) return Promise.resolve(false)

@@ -11,6 +11,13 @@ import {plainToClass, serialize} from "class-transformer";
 import Config from "../../../../services/config";
 import Logger from "../../../../services/logger";
 
+/*
+    TypeMappingRepository contains methods for persisting and retrieving nodes
+    to storage as well as managing things like validation and payload transformation
+    based on the mapping and it's transformations. Users should interact with
+    repositories when possible and not the mappers as the repositories contain
+    additional logic such as validation or transformation prior to storage or returning.
+ */
 export default class TypeMappingRepository extends Repository implements RepositoryInterface<TypeMapping> {
     #mapper: TypeMappingMapper = TypeMappingMapper.Instance
     #transformationMapper: TypeTransformationMapper = TypeTransformationMapper.Instance
@@ -143,6 +150,8 @@ export default class TypeMappingRepository extends Repository implements Reposit
         return Promise.resolve(Result.Success(true))
     }
 
+    // this is how users should be managing a type mapping's transformations - not
+    // through the opposite repository if possible.
     async saveTransformations(user: User, t:TypeMapping, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction: boolean = false
         const transformationsUpdate: TypeTransformation[] = []

@@ -8,8 +8,13 @@ const format = require('pg-format')
 const resultClass = MetatypeKey
 
 /*
-* MetatypeKeyMapper encompasses all logic dealing with the manipulation of the
-* MetatypeKey class in a data storage layer.
+    MetatypeKeyMapper extends the Postgres database Mapper class and allows
+    the user to map a data structure to and from the attached database. The mappers
+    are designed to be as simple as possible and should not contain things like
+    validation or transformation of the data prior to storage - those operations
+    should live in a Repository or on the data structure's class itself. Also
+    try to avoid listing functions, as those are generally covered by the Repository
+    class/interface as well.
 */
 export default class MetatypeKeyMapper extends Mapper{
     public static tableName = "metatype_keys";

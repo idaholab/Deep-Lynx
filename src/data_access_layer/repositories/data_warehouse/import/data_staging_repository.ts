@@ -5,6 +5,14 @@ import Result from "../../../../common_classes/result";
 import {PoolClient} from "pg";
 import {User} from "../../../../access_management/user";
 
+/*
+    DataStaging contains methods for persisting and retrieving an import's data
+    to storage. Users should interact with repositories when possible and not
+    the mappers as the repositories contain additional logic such as validation
+    or transformation prior to storage or returning. While some domain objects are
+    saved by their parents, in the case of data staging we avoid having the import
+    save it do to the massive size an import could be.
+ */
 export default class DataStagingRepository extends Repository implements RepositoryInterface<DataStaging> {
     #mapper = DataStagingMapper.Instance
 
@@ -168,6 +176,8 @@ export default class DataStagingRepository extends Repository implements Reposit
         return this
     }
 
+    // these listing functions are separate from the main filter due to some more
+    // complicated query behavior than the filter can currently handle
     listUninsertedActiveMapping(importID: string, offset:number, limit: number, transaction?: PoolClient): Promise<Result<DataStaging[]>> {
         return this.#mapper.ListUninsertedActiveMapping(importID, offset, limit, transaction)
     }

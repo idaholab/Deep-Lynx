@@ -7,9 +7,13 @@ const format = require('pg-format')
 const resultClass = KeyPair
 
 /*
-* TypeStorage encompasses all logic dealing with the manipulation of the KeyPair
-* class in a data storage layer. This also contains functions for validating
-* the key pair.
+    KeyPairMapper extends the Postgres database Mapper class and allows
+    the user to map a data structure to and from the attached database. The mappers
+    are designed to be as simple as possible and should not contain things like
+    validation or transformation of the data prior to storage - those operations
+    should live in a Repository or on the data structure's class itself. Also
+    try to avoid listing functions, as those are generally covered by the Repository
+    class/interface as well.
 */
 export default class KeyPairMapper extends Mapper{
     public static tableName = "users";
@@ -24,8 +28,8 @@ export default class KeyPairMapper extends Mapper{
         return KeyPairMapper.instance
     }
 
-    // Create's return value will also contain the unhashed key's secret. This is by design as the end user
-    // will need that secret in order validate against the hashed secret. The unhashed secret is stored nowhere in the
+    // Create's return value will also contain the un-hashed key's secret. This is by design as the end user
+    // will need that secret in order validate against the hashed secret. The un-hashed secret is stored nowhere in the
     // application
     public async Create(key: KeyPair, transaction?: PoolClient): Promise<Result<KeyPair>> {
         const r = await super.run(this.createStatement(key), {transaction, resultClass})
