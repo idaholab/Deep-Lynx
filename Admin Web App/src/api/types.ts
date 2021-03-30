@@ -219,6 +219,7 @@ export type ExportT = {
 }
 
 export type GremlinExportConfigT = {
+    kind: "gremlin";
     traversal_source: string;
     user: string;
     key: string;

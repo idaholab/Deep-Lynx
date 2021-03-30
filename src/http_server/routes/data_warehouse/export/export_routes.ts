@@ -1,5 +1,4 @@
 import {Request, Response, NextFunction, Application} from "express"
-import ExportMapper from "../../../../data_access_layer/mappers/data_warehouse/export/export_mapper";
 import {authInContainer} from "../../../middleware";
 import ExporterRepository, {ExporterFactory} from "../../../../data_access_layer/repositories/data_warehouse/export/export_repository";
 import {plainToClass} from "class-transformer";
@@ -7,7 +6,6 @@ import ExportRecord from "../../../../data_warehouse/export/export";
 import Result from "../../../../common_classes/result";
 import {QueryOptions} from "../../../../data_access_layer/repositories/repository";
 
-const exportStorage = ExportMapper.Instance;
 const exporterRepo = new ExporterRepository()
 const exporterFactory = new ExporterFactory()
 
@@ -68,7 +66,9 @@ export default class ExportRoutes {
 
     private static listExports(req: Request, res: Response, next: NextFunction) {
         // we'll use a fresh repository to insure no leftover queries
-        const repository = new ExporterRepository()
+        let repository = new ExporterRepository()
+        repository = repository.where().containerID("eq", req.params.containerID)
+
         if (req.query.count !== undefined) {
             if (req.query.count === "true") {
                 repository.count()
@@ -82,8 +82,7 @@ export default class ExportRoutes {
             }
         } else {
             // @ts-ignore
-            repository.list(req.query.loadKeys === undefined || req.query.loadKeys === "true",
-                {
+            repository.list({
                     limit: (req.query.limit) ? +req.query.limit : undefined,
                     offset: (req.query.offset) ? +req.query.offset : undefined,
                     sortBy: req.query.sortBy,

@@ -120,7 +120,7 @@ export default class TypeTransformationMapper extends Mapper{
             destination_id_key = u.destination_id_key,
             unique_identifier_key = u.unique_identifier_key,
             root_array = u.root_array,
-            modified_by = u.modified_by
+            modified_by = u.modified_by,
             modified_at = NOW()
             FROM (VALUES %L) as u(
                             id,
@@ -142,7 +142,7 @@ export default class TypeTransformationMapper extends Mapper{
                mapping.shape_hash as shape_hash,
                metatypes.name as metatype_name,
                metatype_relationship_pairs.name as metatype_relationship_pair_name
-        FROM
+        FROM ins
                  LEFT JOIN data_type_mappings as mapping ON ins.type_mapping_id = mapping.id
                  LEFT JOIN metatypes ON ins.metatype_id = metatypes.id
                  LEFT JOIN metatype_relationship_pairs ON ins.metatype_relationship_pair_id = metatype_relationship_pairs.id`

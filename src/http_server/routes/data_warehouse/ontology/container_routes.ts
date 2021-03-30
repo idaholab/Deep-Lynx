@@ -89,7 +89,7 @@ export default class ContainerRoutes {
     }
 
     private static async listContainers(req: Request, res: Response, next: NextFunction) {
-        repository.listForUser(req.currentUser! )
+        repository.listForUser(req.currentUser!)
             .then((result) => {
                 result.asResponse(res)
             })

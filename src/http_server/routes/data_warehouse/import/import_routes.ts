@@ -259,7 +259,7 @@ export default class ImportRoutes {
         // because of this we're treating the file upload as fairly standalone
         busboy.on('file', async (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
             const user = req.currentUser!
-            files.push(new FileRepository().uploadFile(req.params.id, req.params.sourceID, req.currentUser!, filename, encoding, mimeType, file as Readable))
+            files.push(new FileRepository().uploadFile(req.params.containerID, req.params.sourceID, req.currentUser!, filename, encoding, mimeType, file as Readable))
             fileNames.push(filename)
         })
 
@@ -289,7 +289,7 @@ export default class ImportRoutes {
 
                 // create an "import" with a single object, the metadata and file information
                 // the user will then handle the mapping of this via the normal type mapping channels
-                req.dataSource?.ReceiveData(metadata, user)
+                req.dataSource?.ReceiveData([metadata], user)
                     .then((result) => {
                         result.asResponse(res)
                     })

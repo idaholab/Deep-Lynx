@@ -118,7 +118,7 @@ export function authUser() {
     }
 }
 
-// authDomain assumes the request paramater 'id' refers to the current domain of the user
+// authDomain assumes the request paramater 'containerID' refers to the current domain of the user
 export function authInContainer(action: "read" | "write", resource: string) {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // pass auth if user is an admin
@@ -127,7 +127,7 @@ export function authInContainer(action: "read" | "write", resource: string) {
             return
         }
 
-        Authorization.AuthUser(req.currentUser, action, resource, req.params.id)
+        Authorization.AuthUser(req.currentUser, action, resource, req.params.containerID)
             .then(result => {
                 if(result) {
                     next();

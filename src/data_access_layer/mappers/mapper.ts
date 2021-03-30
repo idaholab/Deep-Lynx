@@ -208,7 +208,7 @@ export default class Mapper {
     }
 
     // run query and return all rows, cast to T
-    rows<T>(q:QueryConfig, options?: Options<T>): Promise<Result<T[]>> {
+    rows<T>(q:QueryConfig | string, options?: Options<T>): Promise<Result<T[]>> {
         if(options && options.transaction) {
             return new Promise<Result<any[]>>(resolve => {
                 options!.transaction!.query<T>(q)

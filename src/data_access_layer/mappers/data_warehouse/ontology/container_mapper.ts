@@ -125,16 +125,13 @@ export default class ContainerMapper extends Mapper{
         }
     }
 
-    private listFromIDsStatement(ids: string[]): QueryConfig {
-        // have to add the quotations in order for postgres to treat the uuid correctly
-        ids.map(id => `'${id}'`)
-
-        return {
-            text: `SELECT c.*, active_graphs.graph_id as active_graph_id
+    private listFromIDsStatement(ids: string[]): string {
+            const text = `SELECT c.*, active_graphs.graph_id as active_graph_id
                     FROM containers c
                     LEFT JOIN active_graphs ON active_graphs.container_id = c.id
-                    WHERE c.id IN($1)`,
-            values: ids
-        }
+                    WHERE c.id IN(%L)`
+            const values = ids
+
+            return format(text, values)
     }
 }

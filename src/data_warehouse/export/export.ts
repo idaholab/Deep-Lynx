@@ -24,7 +24,7 @@ export interface Exporter {
 // and making sure the value you have in your config is the same unique string you
 // used to extend kind - these are called discriminator properties
 export class BaseExporterConfig extends NakedDomainClass {
-    kind?: "gremlin" | "standard"
+    kind: "gremlin" | "standard" = "standard"
 }
 
 // shared configurations values, or for normal exporter should be defined here
@@ -139,6 +139,8 @@ export default class ExportRecord extends BaseDomainClass {
         destination_type?: string,
     }) {
         super();
+
+        this.config = new StandardExporterConfig()
 
         if(input){
             this.container_id = input.container_id

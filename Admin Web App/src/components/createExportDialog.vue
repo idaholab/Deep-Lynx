@@ -165,6 +165,7 @@ export default class CreateExportDialog extends Vue {
   destination_type = ""
   adapter = ""
   gremlinConfig: GremlinExportConfigT = {
+    kind: "gremlin",
     traversal_source: "",
     user: "",
     key: "",
@@ -187,6 +188,7 @@ export default class CreateExportDialog extends Vue {
     this.destination_type = ""
     this.adapter = ""
     this.gremlinConfig = {
+      kind: "gremlin",
       traversal_source: "",
       user: "",
       key: "",

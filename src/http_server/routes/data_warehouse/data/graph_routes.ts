@@ -26,7 +26,7 @@ export default class GraphRoutes {
         // fresh instance of the repo to avoid filter issues
         if(req.container) {
             const repo = new NodeRepository()
-            repo.where().containerID("eq", req.container.id!)
+            repo.where().containerID("eq", req.container.id!).and().archived("eq", false)
                 .list(req.query.loadMetatypes === "true", {
                     limit: (req.query.limit) ? +req.query.limit : undefined,
                     offset: (req.query.offset) ? +req.query.offset : undefined
@@ -70,7 +70,7 @@ export default class GraphRoutes {
         // fresh instance of the repo to avoid filter issues
         if(req.container && req.metatype) {
             const repo = new NodeRepository()
-            repo.where().containerID("eq", req.container.id!).and().metatypeID("eq", req.metatype.id)
+            repo.where().containerID("eq", req.container.id!).and().metatypeID("eq", req.metatype.id).and().archived("eq", false)
                 .list(req.query.loadMetatypes === "true", {
                     limit: (req.query.limit) ? +req.query.limit : undefined,
                     offset: (req.query.offset) ? +req.query.offset : undefined
