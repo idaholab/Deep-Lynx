@@ -77,7 +77,18 @@ export default class MetatypeRelationshipKeyMapper extends Mapper{
     // queries more easily.
     private createStatement(userID: string, ...keys: MetatypeRelationshipKey[]): string {
         const text =`INSERT INTO
-                        metatype_relationship_keys(metatype_relationship_id, id, name, description, property_name, required, data_type, options, default_value, validation, created_by, modified_by)
+                        metatype_relationship_keys(metatype_relationship_id,
+                                                   id,
+                                                   name,
+                                                   description,
+                                                   property_name,
+                                                   required,
+                                                   data_type,
+                                                   options,
+                                                   default_value,
+                                                   validation,
+                                                   created_by,
+                                                   modified_by)
                         VALUES %L RETURNING *`
         const values = keys.map(key => [key.metatype_relationship_id, uuid.v4(), key.name, key.description,
             key.property_name, key.required, key.data_type, JSON.stringify(key.options),

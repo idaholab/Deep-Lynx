@@ -46,18 +46,6 @@ export default class EventRegistrationMapper extends Mapper{
        return super.retrieve(this.retrieveStatement(id), {resultClass: EventRegistration})
     }
 
-    public async List(): Promise<Result<EventRegistration[]>> {
-       return super.rows(this.listStatement(), {resultClass: EventRegistration})
-    }
-
-    public async ListByDataSource(eventType: string, dataSourceID: string): Promise<Result<EventRegistration[]>> {
-        return super.rows(this.datasourceSearchStatement(dataSourceID, eventType), {resultClass: EventRegistration})
-    }
-
-    public async ListByContainer(eventType: string, containerID: string): Promise<Result<EventRegistration[]>> {
-        return super.rows(this.containerSearchStatement(containerID, eventType), {resultClass: EventRegistration})
-    }
-
     public PermanentlyDelete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id))
     }
@@ -142,26 +130,4 @@ export default class EventRegistrationMapper extends Mapper{
             values: [id]
         }
     }
-
-    private listStatement(): QueryConfig {
-        return {
-            text: `SELECT * FROM registered_events`,
-            values: []
-        }
-    }
-
-    private datasourceSearchStatement(dataSourceID: string, eventType: string): QueryConfig {
-        return {
-            text: `SELECT * FROM registered_events WHERE data_source_id = $1 AND event_type = $2 AND active`,
-            values: [dataSourceID, eventType],
-        }
-    }
-
-    private containerSearchStatement(containerID: string, eventType: string): QueryConfig {
-        return {
-            text: `SELECT * FROM registered_events WHERE container_id = $1 AND event_type = $2 AND active`,
-            values: [containerID, eventType],
-        }
-    }
-
 }

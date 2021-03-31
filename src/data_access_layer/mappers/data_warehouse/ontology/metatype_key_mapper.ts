@@ -77,7 +77,19 @@ export default class MetatypeKeyMapper extends Mapper{
     // queries more easily.
     private createStatement(userID: string, ...keys: MetatypeKey[]): string {
             const text =`INSERT INTO
-                        metatype_keys(metatype_id, id, name, description, property_name, required, data_type, options, default_value, validation, created_by, modified_by)
+                        metatype_keys(
+                                      metatype_id,
+                                      id,
+                                      name,
+                                      description,
+                                      property_name,
+                                      required,
+                                      data_type,
+                                      options,
+                                      default_value,
+                                      validation,
+                                      created_by,
+                                      modified_by)
                         VALUES %L RETURNING *`
             const values = keys.map(key => [key.metatype_id, uuid.v4(), key.name, key.description,
                 key.property_name, key.required, key.data_type, JSON.stringify(key.options),

@@ -9,6 +9,7 @@ import Config from "../services/config";
 import Event from "./event";
 import Task from "./task";
 import EventRegistration from "./event_registration";
+import EventRegistrationRepository from "../data_access_layer/repositories/event_system/event_registration_repository";
 
 /*
   QueueProcessor class manages the emission of events to their various registered
@@ -60,14 +61,16 @@ export async function StartQueue(): Promise<Result<boolean>> {
         for (const event of events) {
 
           let registeredEvents: EventRegistration[];
+          let eventRepo = new EventRegistrationRepository()
+          eventRepo = eventRepo.where().eventType("eq", event.type!)
 
           if (event.source_type === 'data_source') {
-            const regResult = await EventRegistrationMapper.Instance.ListByDataSource(event.type!, event.source_id!)
+            const regResult = await eventRepo.and().dataSourceID("eq", event.source_id!).list()
             if (regResult.isError) Logger.debug(`error listing registered events for event type ${event.type} and ID ${event.source_id}`)
 
             registeredEvents = regResult.value
           } else {
-            const regResult = await EventRegistrationMapper.Instance.ListByContainer(event.type!, event.source_id!)
+            const regResult = await eventRepo.and().containerID("eq", event.source_id!).list()
             if (regResult.isError) Logger.debug(`error listing registered events for event type ${event.type} and ID ${event.source_id}`)
 
             registeredEvents = regResult.value

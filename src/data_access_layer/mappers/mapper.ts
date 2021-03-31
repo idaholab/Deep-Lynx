@@ -41,22 +41,6 @@ export default class Mapper {
         })
     }
 
-    async runInTransaction(transactionClient: PoolClient, ...statements:QueryConfig[]): Promise<Result<boolean>> {
-        const i = 0
-        try {
-            for(const j in statements) {
-                await transactionClient.query(statements[j])
-            }
-        } catch (e) {
-            return new Promise(resolve => {
-                Logger.error(`transaction failed - ${(e as Error).message} for values ${statements[i].values}`);
-                resolve(Result.Failure(`${(e as Error).message} for values ${statements[i].values} `))
-            })
-        }
-
-        return new Promise(resolve => resolve(Result.Success(true)))
-    }
-
     async completeTransaction(transactionClient: PoolClient): Promise<Result<boolean>> {
         try {
             await transactionClient.query('COMMIT')
@@ -291,6 +275,9 @@ export default class Mapper {
     }
 }
 
+// Options is a hard type allowing us to pass some configurations values back
+// to the mapper - we don't need validation or a full class here so we stuck
+// with a hard type
 export type Options<T> = {
     resultClass?: ClassConstructor<T>,
     transaction?: PoolClient,
