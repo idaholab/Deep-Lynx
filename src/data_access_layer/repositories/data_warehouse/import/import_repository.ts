@@ -35,7 +35,6 @@ export default class ImportRepository extends Repository implements RepositoryIn
         return this.#mapper.RetrieveLastAndLock(dataSourceID, transaction)
     }
 
-    // locking is only done in the context of a transaction, so one must be included
     findLast(dataSourceID: string): Promise<Result<Import>> {
         return this.#mapper.RetrieveLast(dataSourceID)
     }

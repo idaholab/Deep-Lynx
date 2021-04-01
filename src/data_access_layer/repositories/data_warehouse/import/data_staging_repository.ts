@@ -31,7 +31,7 @@ export default class DataStagingRepository extends Repository implements Reposit
     async save(record: DataStaging, user?: User, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction: boolean = false
         const errors = await record.validationErrors()
-        if(errors) return Promise.resolve(Result.Failure(`node does not pass validation ${errors.join(",")}`))
+        if(errors) return Promise.resolve(Result.Failure(`import data does not pass validation ${errors.join(",")}`))
 
         if(!transaction) {
             const newTransaction = await this.#mapper.startTransaction()

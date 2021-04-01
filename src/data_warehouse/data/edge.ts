@@ -21,7 +21,7 @@ export default class Edge extends BaseDomainClass {
     @IsBoolean()
     archived?: boolean
 
-    // we often need the metatype's name, it's keys, or access to other properties
+    // we often need the metatype relationship's name, it's keys, or access to other properties
     // when we deal with nodes, so for ease of use we're going to use the whole
     // class, not just the id
     @MetatypeRelationshipPairID({message: "Metatype relationship pair must have valid ID"})
@@ -66,7 +66,7 @@ export default class Edge extends BaseDomainClass {
 
     @IsUUID()
     @IsOptional()
-    type_mapping_transformation_id?: string // TODO: fetch the full type mapping object
+    type_mapping_transformation_id?: string
 
     @IsUUID()
     graph_id?: string

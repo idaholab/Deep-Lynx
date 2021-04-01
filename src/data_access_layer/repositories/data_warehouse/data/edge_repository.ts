@@ -184,7 +184,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
 
                                                resolve(Result.Success(true))
                                             })
-                                            .catch(error => resolve(Result.Failure(`unable to relationships for edge${error}`)))
+                                            .catch(error => resolve(Result.Failure(`unable to validate relationships for edge${error}`)))
                                     })
                                     .catch(error => resolve(Result.Failure(`unable to validate properties for edge ${error}`)))
                             })

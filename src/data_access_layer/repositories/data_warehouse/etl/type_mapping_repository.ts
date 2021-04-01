@@ -45,7 +45,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
             const transformations = await this.#transformationMapper.ListForTypeMapping(retrieved.value.id!)
             if(!transformations.isError) retrieved.value.addTransformation(...transformations.value)
 
-            // don't fail on cache set failed, it will log itself and move one
+            // don't fail on cache set failed, it will log itself and move on
             this.setCache(retrieved.value)
         }
 
@@ -151,7 +151,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
     }
 
     // this is how users should be managing a type mapping's transformations - not
-    // through the opposite repository if possible.
+    // through the type transformation repository if possible.
     async saveTransformations(user: User, t:TypeMapping, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction: boolean = false
         const transformationsUpdate: TypeTransformation[] = []

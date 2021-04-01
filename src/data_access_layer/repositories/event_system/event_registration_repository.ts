@@ -14,6 +14,7 @@ import {User} from "../../../access_management/user";
  */
 export default class EventRegistrationRepository extends Repository implements RepositoryInterface<EventRegistration> {
     #mapper: EventRegistrationMapper = EventRegistrationMapper.Instance
+
     delete(e: EventRegistration): Promise<Result<boolean>> {
         if(e.id){
            return this.#mapper.PermanentlyDelete(e.id)
