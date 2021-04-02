@@ -72,44 +72,6 @@ describe('A Data Source', async() => {
         return storage.PermanentlyDelete(exp.value.id!)
     });
 
-    it('can list active after date from storage', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let currentTime = new Date()
-
-        let activeSince = await storage.ListActiveSince(currentTime)
-        expect(activeSince.isError).false
-        expect(activeSince.value).empty
-
-        let exp = await storage.Create("test suite",
-            new DataSourceRecord({
-                container_id: containerID,
-                name: "Test Data Source",
-                active: true,
-                adapter_type:"standard",
-                data_format: "json"}));
-
-        expect(exp.isError).false;
-        expect(exp.value).not.empty;
-
-        // check if is active
-        let active = await storage.IsActive(exp.value.id!)
-        expect(active.isError).false
-        expect(active.value).true
-
-        exp.value.modified_at?.setHours(exp.value.modified_at?.getHours() - 1)
-
-        activeSince = await storage.ListActiveSince(exp.value.modified_at!)
-        expect(activeSince.isError).false
-        expect(activeSince.value).not.empty
-
-        // should not happen now
-        activeSince = await storage.ListActiveSince(new Date((Date.now() + (60 * 1000))))
-        expect(activeSince.isError).false
-        expect(activeSince.value).empty
-
-        return storage.PermanentlyDelete(exp.value.id!)
-    });
-
     it('can be updated in storage', async()=> {
         let storage = DataSourceMapper.Instance;
 
