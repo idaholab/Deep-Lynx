@@ -96,7 +96,9 @@ describe('A Data Source', async() => {
         expect(active.isError).false
         expect(active.value).true
 
-        activeSince = await storage.ListActiveSince(currentTime)
+        exp.value.modified_at?.setHours(exp.value.modified_at?.getHours() - 1)
+
+        activeSince = await storage.ListActiveSince(exp.value.modified_at!)
         expect(activeSince.isError).false
         expect(activeSince.value).not.empty
 
