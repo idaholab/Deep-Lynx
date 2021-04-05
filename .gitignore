@@ -7,12 +7,12 @@ combined.log
 exceptions.log
 node_modules
 .vscode/
-/src/user_management/authentication/saml/*.crt
-/src/user_management/authentication/saml/*.key
+/src/access_management/authentication/saml/*.crt
+/src/access_management/authentication/saml/*.key
 .nyc_output
 /src/privateKey.key
-/src/user_management/authentication/saml/localhost.cert
-/src/user_management/authentication/saml/localhost.xml
+/src/access_management/authentication/saml/localhost.cert
+/src/access_management/authentication/saml/localhost.xml
 /tools/ontology_extractor/diamond.owl
 /private-key.pem
 /private-key.key

@@ -1,4 +1,4 @@
-import Config from "../../../config"
+import Config from "../../config"
 
 export function ValidateEmailTemplate(userID: string, emailValidationToken: string): string {
    return `<html>
