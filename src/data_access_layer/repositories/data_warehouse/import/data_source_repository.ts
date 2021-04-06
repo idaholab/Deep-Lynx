@@ -137,6 +137,10 @@ export class DataSourceFactory {
                 return new StandardDataSourceImpl(sourceRecord)
             }
 
+            case "manual": { // this is to handle backwards compatibility with already existing records
+               return new StandardDataSourceImpl(sourceRecord)
+            }
+
             default: {
                 return undefined
             }

@@ -45,14 +45,14 @@ export interface DataSource {
  validate against
 */
 export class BaseDataSourceConfig extends NakedDomainClass {
-    kind: "http" | "standard" = "standard"
+    kind: "http" | "standard" | "manual" = "standard"
 }
 
 export class StandardDataSourceConfig extends BaseDataSourceConfig {
-    kind: "standard" = "standard"
+    kind: "standard" | "manual" = "standard"
 
     @IsDefined()
-    data_type?: "json" | "csv"
+    data_type: "json" | "csv" = "json"
 }
 
 export class HttpDataSourceConfig extends BaseDataSourceConfig {
@@ -117,7 +117,7 @@ export default class DataSourceRecord extends BaseDomainClass {
     name?: string
 
     @IsString()
-    @IsIn(["http", "standard"])
+    @IsIn(["http", "standard", "manual"])
     adapter_type: string = "standard"
 
     @IsOptional()
@@ -134,11 +134,12 @@ export default class DataSourceRecord extends BaseDomainClass {
            property: 'kind',
            subTypes: [
                {value: StandardDataSourceConfig, name: "standard"},
+               {value: StandardDataSourceConfig, name: "manual"},
                {value: HttpDataSourceConfig, name: "http"}
            ]
        }
     })
-    config?: StandardDataSourceConfig | HttpDataSourceConfig
+    config?: StandardDataSourceConfig | HttpDataSourceConfig = new StandardDataSourceConfig()
 
     constructor(input: {
         container_id: string,
