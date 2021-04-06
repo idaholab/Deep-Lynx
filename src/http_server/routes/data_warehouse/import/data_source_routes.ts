@@ -31,7 +31,9 @@ export default class DataSourceRoutes {
 
             const dataSource = dataSourceFactory.fromDataSourceRecord(payload)
             if(!dataSource) {
-                res.sendStatus(500)
+                // we make an assumption here as to why this fails - it's a fairly
+                // safe assumption as that's the only way this could actually fail
+                Result.Failure(`unknown data source adapter type`).asResponse(res)
                 next()
                 return
             }
