@@ -74,7 +74,7 @@ export class Router {
 
   public mount() {
     // DO NOT REMOVE - this is required for some auth methods to work correctly
-    this.app.use(express.urlencoded({ extended: false }));
+    this.app.use(express.urlencoded({ extended: false, limit: `${Config.max_request_body_size}mb` }));
 
     // single, raw endpoint for a health check
     this.app.get("/health", (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -128,7 +128,7 @@ export class Router {
       origin: '*'
     }))
 
-      this.app.use(express.json());
+      this.app.use(express.json({limit: `${Config.max_request_body_size}mb`}));
 
     // basic session storage to postgres - keep in mind that this is currently
     // not used. It's here to facilitate future extension of the application and

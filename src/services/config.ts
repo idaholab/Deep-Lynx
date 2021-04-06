@@ -40,6 +40,7 @@ export class Config {
 
   private readonly _server_port: string;
   private readonly _log_level: string;
+  private readonly _max_request_body_size: string;
 
   private readonly  _basic_user: string;
   private readonly _basic_password: string;
@@ -113,6 +114,7 @@ export class Config {
 
     this._server_port = process.env.SERVER_PORT || "8090";
     this._log_level = process.env.LOG_LEVEL || "debug";
+    this._max_request_body_size = process.env.MAX_REQUEST_BODY_SIZE || "50"
     this._session_secret = process.env.SESSION_SECRET || "changeme";
     this._basic_user = process.env.BASIC_USER || "";
     this._basic_password = process.env.BASIC_PASSWORD || "";
@@ -270,6 +272,10 @@ export class Config {
 
   get log_level(): string {
     return this._log_level
+  }
+
+  get max_request_body_size(): string {
+    return this._max_request_body_size
   }
 
   get basic_user(): string {
