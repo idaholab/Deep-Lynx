@@ -22,7 +22,6 @@ export default class MetatypeKey extends BaseDomainClass {
     @MinLength(1)
     name: string =""
 
-    @IsNotEmpty()
     @IsString()
     description: string = ""
 

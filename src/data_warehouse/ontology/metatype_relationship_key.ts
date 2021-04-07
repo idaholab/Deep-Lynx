@@ -23,7 +23,6 @@ export default class MetatypeRelationshipKey extends BaseDomainClass {
     @MinLength(1)
     name: string = ""
 
-    @IsNotEmpty()
     @IsString()
     description: string = ""
 
