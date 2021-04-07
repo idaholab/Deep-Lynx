@@ -27,27 +27,27 @@ export class Config {
     }
 
     get appUrl(): string {
-        return this._app_url;
+        return process.env.VUE_APP_APP_URL
     }
 
     get deepLynxAppID(): string {
-        return this._deep_lynx_app_id;
+        return process.env.VUE_APP_DEEP_LYNX_APP_ID;
     }
 
     get deepLynxApiUri(): string {
-        return this._deep_lynx_api_uri;
+        return process.env.VUE_APP_DEEP_LYNX_API_URL;
     }
 
     get deepLynxApiAuth(): string | undefined {
-        return this._deep_lynx_api_auth_method
+        return process.env.VUE_APP_DEEP_LYNX_API_AUTH_METHOD || "token"
     }
 
     get deepLynxApiAuthBasicUser(): string | undefined {
-       return this._deep_lynx_api_auth_basic_user
+       return process.env.VUE_APP_DEEP_LYNX_API_AUTH_BASIC_USER
     }
 
     get deepLynxApiAuthBasicPass(): string | undefined {
-        return this._deep_lynx_api_auth_basic_pass
+        return process.env.VUE_APP_DEEP_LYNX_API_AUTH_BASIC_PASS
     }
 
     public static Instance(): Config {
