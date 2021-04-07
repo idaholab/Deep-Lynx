@@ -1,33 +1,29 @@
 import axios, { AxiosRequestConfig } from "axios";
-import ContainerStorage from "./container_mapper";
-import MetatypeRelationshipMapper from "./metatype_relationship_mapper"
-import MetatypeStorage from "./metatype_mapper"
-import MetatypeRelationshipPairMapper from "./metatype_relationship_pair_mapper"
 import MetatypeKeyMapper from "./metatype_key_mapper"
 import Result from "../../../../common_classes/result";
-import EdgeMapper from "../data/edge_mapper"
 import Logger from "../../../../services/logger"
 import ContainerRepository from "../../../repositories/data_warehouse/ontology/container_respository";
 import Container from "../../../../data_warehouse/ontology/container";
-import Metatype from "../../../../data_warehouse/ontology/metatype";
 import MetatypeRepository from "../../../repositories/data_warehouse/ontology/metatype_repository";
+import Metatype from "../../../../data_warehouse/ontology/metatype";
 import MetatypeRelationshipRepository from "../../../repositories/data_warehouse/ontology/metatype_relationship_repository";
 import MetatypeRelationship from "../../../../data_warehouse/ontology/metatype_relationship";
 import MetatypeRelationshipPairRepository from "../../../repositories/data_warehouse/ontology/metatype_relationship_pair_repository";
 import MetatypeRelationshipPair from "../../../../data_warehouse/ontology/metatype_relationship_pair";
+import MetatypeKeyRepository from "../../../repositories/data_warehouse/ontology/metatype_key_repository";
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import {User} from "../../../../access_management/user";
 import NodeRepository from "../../../repositories/data_warehouse/data/node_repository";
 import EdgeRepository from "../../../repositories/data_warehouse/data/edge_repository";
 const convert = require('xml-js');
 
-const containerStorage = ContainerStorage.Instance;
-const metatypeRelationshipStorage = MetatypeRelationshipMapper.Instance;
-const metatypeStorage = MetatypeStorage.Instance;
-const metatypeRelationshipPairStorage = MetatypeRelationshipPairMapper.Instance;
-const metatypeKeyStorage = MetatypeKeyMapper.Instance;
-const nodeRepo = new NodeRepository()
-const edgeStorage = EdgeMapper.Instance;
+const containerRepo = new ContainerRepository();
+const metatypeRelationshipRepo = new MetatypeRelationshipRepository();
+const metatypeRepo = new MetatypeRepository();
+const metatypeRelationshipPairRepo = new MetatypeRelationshipPairRepository();
+const metatypeKeyRepo = new MetatypeKeyRepository();
+const nodeRepo = new NodeRepository();
+const edgeRepo = new EdgeRepository();
 
 // vestigial type for ease of use
 export type ContainerImportT = {
@@ -79,9 +75,9 @@ export default class ContainerImport {
     return target;
   }
 
-  private rollbackOntology(containerID: string) {
+  private rollbackOntology(container: Container) {
     return new Promise((resolve, reject) => {
-      containerStorage.Delete(containerID)
+      containerRepo.delete(container)
           .then(_ => {
             resolve("Ontology rolled back successfully.")
           })
@@ -93,6 +89,7 @@ export default class ContainerImport {
 
   public async ImportOntology(user: User, input: ContainerImportT, file: Buffer, dryrun: boolean, update: boolean, containerID: string): Promise<Result<string>> {
     if (file.length === 0) {
+      // configure and make an http request to retrieve the ontology file then parse ontology
       const axiosConfig: AxiosRequestConfig = {
         headers: {
           "Content-Type": "application/xml;charset=UTF-8"
@@ -121,6 +118,7 @@ export default class ContainerImport {
       })
           .catch((e) => { return Promise.reject(Result.Failure(e)) })
     } else {
+      // ontology file has been supplied, convert to json and parse ontology
       const jsonData = convert.xml2json(file.toString('utf8'), {
         compact: true,
         ignoreComment: true,
@@ -137,31 +135,29 @@ export default class ContainerImport {
     return new Promise<Result<string>>(async (resolve) => {
       json = json["rdf:RDF"]
       const ontologyHead = json["owl:Ontology"];
-      const annotationProperties = json["owl:AnnotationProperty"];
       const objectProperties = json["owl:ObjectProperty"];
       const datatypeProperties = json["owl:DatatypeProperty"];
       const classes = json["owl:Class"];
-      const contributor = ontologyHead["dc:contributor"];
 
       // Declare an intersection type to add needed fields to MetatypeT
       type MetatypeExtendT = {
-            name: string,
-            description: string,
-            id?: string,
-            container_id?: string,
-            archived?: boolean,
-            created_by?: string,
-            modified_by?: string,
-            created_at?: string | Date | undefined,
-            modified_at?: string | Date | undefined,
-            db_id?: string,
-            parent_id?: string,
-            properties: { [key: string]: any },
-            keys: { [key: string]: any },
-            updateKeys: Map<string, any>,
-            updateKeyNames: { [key: string]: any },
-            update: boolean
-          }
+        name: string,
+        description: string,
+        id?: string,
+        container_id?: string,
+        archived?: boolean,
+        created_by?: string,
+        modified_by?: string,
+        created_at?: string | Date | undefined,
+        modified_at?: string | Date | undefined,
+        db_id?: string,
+        parent_id?: string,
+        properties: { [key: string]: any },
+        keys: { [key: string]: any },
+        updateKeys: Map<string, any>,
+        updateKeyNames: { [key: string]: any },
+        update: boolean
+      }
 
       type PropertyT = {
         value: string,
@@ -310,8 +306,15 @@ export default class ContainerImport {
       }
 
       let ontologyDescription = description || "";
+      // grab the ontology description if the provided description matches
+      // an attribute of the ontology head
       if (ontologyHead[description]) {
         ontologyDescription = ontologyHead[description]._text ? ontologyHead[description]._text : description;
+      }
+
+      // grab the default ontology description if available and none provided
+      if (ontologyDescription === "" || ontologyDescription === "null" && ontologyHead["obo:IAO_0000115"]) {
+        ontologyDescription = ontologyHead["obo:IAO_0000115"]._text ? ontologyHead["obo:IAO_0000115"]._text : description;
       }
 
       if (dryrun) {
@@ -323,14 +326,20 @@ export default class ContainerImport {
         explainString += "# of relationships: " + relationshipMap.size + "<br/>";
         resolve(Result.Success(explainString));
       } else {
+        let container: Container
+
         // If performing a create, need to create container and retrieve container ID
         if (!update) {
-          const repository = new ContainerRepository();
-          const container = new Container({name, description: ontologyDescription})
+          container = new Container({name, description: ontologyDescription})
 
-          const saved = await repository.save(container, user)
+          const saved = await containerRepo.save(container, user)
           if (saved.isError) return resolve(Result.SilentFailure(saved.error!.error));
           containerID = container.id!;
+        } else {
+          const containerResult = await containerRepo.findByID(containerID)
+          if (containerResult.isError) return resolve(Result.Failure(`Unable to retrieve container ${containerID}`))
+
+          container = containerResult.value
         }
 
         const allRelationshipPairNames: string[] = [];
@@ -383,14 +392,11 @@ export default class ContainerImport {
           let oldMetatypeRelationshipPairs : MetatypeRelationshipPair[]
 
           // retrieve existing container, relationships, metatypes, and relationship pairs
-          const relationshipRepository = new MetatypeRelationshipRepository()
-          oldMetatypeRelationships = (await relationshipRepository.where().containerID("eq", containerID).list(false)).value
+          oldMetatypeRelationships = (await metatypeRelationshipRepo.where().containerID("eq", containerID).list(false)).value
 
-          const metatypeRepository = new MetatypeRepository()
-          oldMetatypes = (await metatypeRepository.where().containerID("eq", containerID).list(false)).value
+          oldMetatypes = (await metatypeRepo.where().containerID("eq", containerID).list(false)).value
 
-          const pairRepository = new MetatypeRelationshipPairRepository()
-          oldMetatypeRelationshipPairs = (await pairRepository.where().containerID("eq", containerID).list()).value
+          oldMetatypeRelationshipPairs = (await metatypeRelationshipPairRepo.where().containerID("eq", containerID).list()).value
 
           // loop through above, checking if there is anything in old that has been removed
           // if anything has been removed, check for associated nodes/edges
@@ -407,7 +413,7 @@ export default class ContainerImport {
               } else {
                 // no associated data, remove metatype
                 Logger.info(`Removing metatype ${metatype.name}`)
-                const removal = await metatypeStorage.PermanentlyDelete(metatype.id!)
+                const removal = await metatypeRepo.delete(metatype)
                 if (removal.error) return resolve(Result.Failure(`Unable to delete metatype ${metatype.name}`))
               }
 
@@ -434,7 +440,7 @@ export default class ContainerImport {
                   } else {
                     // no associated data, remove key
                     Logger.info(`Removing metatype key ${key.name}`)
-                    const removal = await metatypeKeyStorage.PermanentlyDelete(key.id!)
+                    const removal = await metatypeKeyRepo.delete(key)
                     if (removal.error) return resolve(Result.Failure(`Unable to delete metatype key ${key.name}`))
                   }
 
@@ -452,8 +458,6 @@ export default class ContainerImport {
           for (const relationshipPair of oldMetatypeRelationshipPairs) {
             if (!allRelationshipPairNames.includes(relationshipPair.name)) {
 
-              const edgeRepo = new EdgeRepository()
-
               const edges = (await edgeRepo.where().relationshipPairID("eq", relationshipPair.id!).list(true,{limit: 10 })).value
               if (edges.length > 0) {
                 resolve(Result.Failure(`Attempting to remove metatype relationship pair ${relationshipPair.name}.
@@ -461,7 +465,7 @@ export default class ContainerImport {
               } else {
                 // no associated data, remove relationship pair
                 Logger.info(`Removing relationship pair ${relationshipPair.name}`)
-                const removal = await metatypeRelationshipPairStorage.Delete(relationshipPair.id!)
+                const removal = await metatypeRelationshipPairRepo.delete(relationshipPair)
                 if (removal.error) return resolve(Result.Failure(`Unable to delete metatype relationship pair ${relationshipPair.name}`))
               }
 
@@ -484,7 +488,7 @@ export default class ContainerImport {
               // we don't need to dig into them again for metatype relationships
               // any edges instantiated from relationship pairs that depend on the relationship would have already been found
               Logger.info(`Removing relationship ${relationship.name}`)
-              const removal = await metatypeRelationshipStorage.PermanentlyDelete(relationship.id!)
+              const removal = await metatypeRelationshipRepo.delete(relationship)
               if (removal.error) return resolve(Result.Failure(`Unable to delete relationship ${relationship.name}`))
             } else {
               const thisRelationship = relationshipMap.get(relationship.name)
@@ -494,100 +498,83 @@ export default class ContainerImport {
           }
         }
 
-        const relationshipPromises: Promise<Result<MetatypeRelationship[]>>[] = [];
-        const relationshipUpdates: MetatypeRelationship[] = [];
+        const metatypeRelationships: MetatypeRelationship[] = [];
 
         relationshipMap.forEach(relationship => {
-          // if not marked for update, create
-          if (!relationship.update) {
-            relationshipPromises.push(metatypeRelationshipStorage.BulkCreate(user.id!,[new MetatypeRelationship({container_id: containerID, name: relationship.name, description:relationship.description})]))
-          } else {
-            const data = new MetatypeRelationship({container_id: containerID, name:relationship.name, description: relationship.description})
-            data.id = relationship.db_id
+          const data = new MetatypeRelationship({container_id: containerID, name:relationship.name, description: relationship.description})
 
-            relationshipUpdates.push(data)
+          // if marked for update, assign relationship id
+          if (relationship.update) {
+            data.id = relationship.db_id
           }
+
+          // push to array. repository handles updates or creates
+          metatypeRelationships.push(data)
         })
 
-        if (relationshipUpdates.length > 0) {
-          relationshipPromises.push(metatypeRelationshipStorage.BulkUpdate(user.id!, relationshipUpdates))
+        const relationshipPromise = await metatypeRelationshipRepo.bulkSave(user, metatypeRelationships)
+        // check for an error and rollback if necessary
+        if (relationshipPromise.isError) {
+          const rollback = await this.rollbackOntology(container)
+              .then((result) => {
+                return result + " " + relationshipPromise.error?.error
+              })
+              .catch((err: string) => {
+                return err + " " + relationshipPromise.error?.error
+              })
+          resolve(Result.SilentFailure(rollback))
+          return
         }
 
-        const relationshipResult: Result<MetatypeRelationship[]>[] = await Promise.all(relationshipPromises)
-
-        // loop through promise results ensuring no errors and adding database IDs
-        relationshipResult.forEach(async resultEntry => {
-          if (resultEntry.isError) {
-            const rollback = await this.rollbackOntology(containerID)
-                .then((result) => {
-                  return result + " " + resultEntry.error?.error
-                })
-                .catch((err: string) => {
-                  return err + " " + resultEntry.error?.error
-                })
-            resolve(Result.SilentFailure(rollback))
-            return
-          } else {
-            // need to handle BatchUpdate returns with >1 entries in Result.value
-            resultEntry.value.forEach(resultValue => {
-              if (resultValue.id) {
-                const mapValue = relationshipMap.get(resultValue.name)
-                mapValue.db_id = resultValue.id
-                relationshipMap.set(mapValue.name, mapValue)
-              }
-            })
+        // loop through relationships (with new IDs if created)
+        metatypeRelationships.forEach(relationship => {
+          if (relationship.id) {
+            const mapValue = relationshipMap.get(relationship.name)
+            mapValue.db_id = relationship.id
+            relationshipMap.set(mapValue.name, mapValue)
           }
         })
 
-        const classPromises: Promise<Result<Metatype[]>>[] = [];
-        const metatypeUpdates: Metatype[] = [];
+        const metatypes: Metatype[] = [];
 
         classListMap.forEach((thisClass: MetatypeExtendT) => {
-          // if not marked for update, create
-          if (!thisClass.update) {
-            classPromises.push(metatypeStorage.BulkCreate(user.id!, [new Metatype({container_id: containerID, name: thisClass.name, description: thisClass.description})]))
-          } else {
-            // else add to batch update
-            const data = new Metatype({container_id: containerID, name: thisClass.name, description: thisClass.description})
-            data.id = thisClass.db_id
+          const data = new Metatype({container_id: containerID, name: thisClass.name, description: thisClass.description})
 
-            metatypeUpdates.push(data)
+          // if marked for update, assign metatype id
+          if (thisClass.update) {
+            data.id = thisClass.db_id
           }
+
+          // push to array. repository handles updates or creates
+          metatypes.push(data)
         })
 
-        if (metatypeUpdates.length > 0) {
-          classPromises.push(metatypeStorage.BulkUpdate(user.id!, metatypeUpdates))
+        const metatypePromise = await metatypeRepo.bulkSave(user, metatypes)
+        // check for an error and rollback if necessary
+        if (metatypePromise.isError) {
+          const rollback = await this.rollbackOntology(container)
+              .then((result) => {
+                return result + " " + metatypePromise.error?.error
+              })
+              .catch((err: string) => {
+                return err + " " + metatypePromise.error?.error
+              })
+          resolve(Result.SilentFailure(rollback))
+          return
         }
 
-        const classResult: Result<Metatype[]>[] = await Promise.all(classPromises)
+        // loop through metatypes adding new database IDs
+        metatypes.forEach(metatype => {
+          if (metatype.id) {
+            const mapValue = classListMap.get(metatype.name)
+            mapValue.db_id = metatype.id
 
-        // loop through promise results ensuring no errors and adding database IDs
-        classResult.forEach(async resultEntry => {
-          if (resultEntry.isError) {
-            const rollback = await this.rollbackOntology(containerID)
-                .then((result) => {
-                  return result + " " + resultEntry.error?.error
-                })
-                .catch((err: string) => {
-                  return err + " " + resultEntry.error?.error
-                })
-            resolve(Result.SilentFailure(rollback))
-            return
-          } else {
-            // need to handle BatchUpdate returns with >1 entries in Result.value
-            resultEntry.value.forEach(resultValue => {
-              const mapValue = classListMap.get(resultValue.name)
-              if (resultValue.id) {
-                mapValue.db_id = resultValue.id
-
-                classListMap.set(mapValue.name, mapValue)
-                classIDMap.set(mapValue.id, mapValue)
-              }
-            })
+            classListMap.set(mapValue.name, mapValue)
+            classIDMap.set(mapValue.id, mapValue)
           }
         })
 
-        const propertyPromises: Promise<Result<MetatypeKey[] | MetatypeRelationshipPair[]>>[] = [];
+        const propertyPromises: Promise<Result<boolean>>[] = [];
         // Add metatype keys (properties) and relationship pairs
         classListMap.forEach(async (thisClass: MetatypeExtendT) => {
 
@@ -615,7 +602,7 @@ export default class ContainerImport {
               data.id = originalKeyData.id
               updateRelationships.push(data)
             } else {
-              propertyPromises.push(metatypeRelationshipPairStorage.BulkCreate(user.id!, [data]))
+              propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, [data]))
             }
 
           }
@@ -674,7 +661,7 @@ export default class ContainerImport {
                 data.id = originalKeyData.id
                 updateKeys.push(data)
               } else {
-                propertyPromises.push(metatypeKeyStorage.BulkCreate(user.id!, [data]));
+                propertyPromises.push(metatypeKeyRepo.bulkSave(user, [data]));
               }
 
             } else if (property.property_type === 'relationship') {
@@ -697,24 +684,24 @@ export default class ContainerImport {
                 data.id = originalKeyData.id
                 updateRelationships.push(data)
               } else {
-                propertyPromises.push(metatypeRelationshipPairStorage.BulkCreate(user.id!, [data]))
+                propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, [data]))
               }
             }
           }
 
           if (updateKeys.length > 0) {
-            propertyPromises.push(metatypeKeyStorage.BulkUpdate(user.id!, updateKeys));
+            propertyPromises.push(metatypeKeyRepo.bulkSave(user, updateKeys));
           }
 
           if (updateRelationships.length > 0) {
-            propertyPromises.push(metatypeRelationshipPairStorage.BulkUpdate(user.id!, updateRelationships))
+            propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, updateRelationships))
           }
 
         })
-        const propertyResults: Result<MetatypeKey[] | MetatypeRelationshipPair[]>[] = await Promise.all(propertyPromises)
+        const propertyResults: Result<boolean>[] = await Promise.all(propertyPromises)
         for (const propResult of propertyResults) {
           if (propResult.isError) {
-            const rollback = await this.rollbackOntology(containerID)
+            const rollback = await this.rollbackOntology(container)
                 .then((result) => {
                   return result + " " + propResult.error?.error
                 })
