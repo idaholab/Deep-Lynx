@@ -1,4 +1,3 @@
-/* tslint:disable */
 import Logger from "../../services/logger";
 import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import faker from "faker";
@@ -10,7 +9,7 @@ import ContainerMapper from "../../data_access_layer/mappers/data_warehouse/onto
 import EventRegistration from "../../event_system/event_registration";
 
 describe('An Event Registration Mapper Can', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -19,7 +18,7 @@ describe('An Event Registration Mapper Can', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -30,7 +29,7 @@ describe('An Event Registration Mapper Can', async() => {
         return Promise.resolve()
     });
 
-    after(async function() {
+    after(async () => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 
@@ -51,6 +50,9 @@ describe('An Event Registration Mapper Can', async() => {
         const updateEvent = await storage.Update("test suite", event.value);
         expect(updateEvent.isError).false;
         expect(updateEvent.value.app_url).eq("yellow/flower")
+
+        const deleteEvent = await storage.PermanentlyDelete(updateEvent.value.id!);
+        expect(deleteEvent.isError).false;
 
         return Promise.resolve()
     });

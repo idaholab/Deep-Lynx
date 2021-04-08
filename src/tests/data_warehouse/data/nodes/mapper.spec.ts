@@ -1,4 +1,3 @@
-/* tslint:disable */
 import Logger from "../../../../services/logger";
 import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import MetatypeKeyMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper";
@@ -17,7 +16,7 @@ import Node from "../../../../data_warehouse/data/node";
 import DataSourceRecord from "../../../../data_warehouse/import/data_source";
 
 describe('A Node Mapper', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -26,7 +25,7 @@ describe('A Node Mapper', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -37,7 +36,7 @@ describe('A Node Mapper', async() => {
         return Promise.resolve()
     });
 
-    after(async function() {
+    after(async () => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 
@@ -48,12 +47,12 @@ describe('A Node Mapper', async() => {
         const gStorage = GraphMapper.Instance;
 
         // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
+        const graph = await gStorage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        let metatype = await mMapper.Create( "test suite",
+        const metatype = await mMapper.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
 
@@ -63,7 +62,7 @@ describe('A Node Mapper', async() => {
         const testKeys = [...test_keys]
         testKeys.forEach(key => key.metatype_id = metatype.value.id!)
 
-        let keys = await kStorage.BulkCreate("test suite", testKeys);
+        const keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         const mixed = new Node({
@@ -87,12 +86,12 @@ describe('A Node Mapper', async() => {
         const gStorage = GraphMapper.Instance;
 
         // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
+        const graph = await gStorage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        let metatype = await mMapper.Create( "test suite",
+        const metatype = await mMapper.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
 
@@ -102,7 +101,7 @@ describe('A Node Mapper', async() => {
         const testKeys = [...test_keys]
         testKeys.forEach(key => key.metatype_id = metatype.value.id!)
 
-        let keys = await kStorage.BulkCreate("test suite", testKeys);
+        const keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         const mixed = new Node({
@@ -133,7 +132,7 @@ describe('A Node Mapper', async() => {
         const gStorage = GraphMapper.Instance;
         const dStorage = DataSourceMapper.Instance
 
-        let dataSource = await dStorage.Create("test suite",
+        const dataSource = await dStorage.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -142,12 +141,12 @@ describe('A Node Mapper', async() => {
                 data_format: "json"}))
 
         // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
+        const graph = await gStorage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        let metatype = await mMapper.Create( "test suite",
+        const metatype = await mMapper.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
 
@@ -157,7 +156,7 @@ describe('A Node Mapper', async() => {
         const testKeys = [...test_keys]
         testKeys.forEach(key => key.metatype_id = metatype.value.id!)
 
-        let keys = await kStorage.BulkCreate("test suite", testKeys);
+        const keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         const mixed = new Node({
@@ -188,7 +187,7 @@ describe('A Node Mapper', async() => {
         const gStorage = GraphMapper.Instance;
         const dStorage = DataSourceMapper.Instance
 
-        let dataSource = await dStorage.Create("test suite",
+        const dataSource = await dStorage.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -197,12 +196,12 @@ describe('A Node Mapper', async() => {
                 data_format: "json"}))
 
         // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
+        const graph = await gStorage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        let metatype = await mMapper.Create( "test suite",
+        const metatype = await mMapper.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
 
@@ -212,7 +211,7 @@ describe('A Node Mapper', async() => {
         const testKeys = [...test_keys]
         testKeys.forEach(key => key.metatype_id = metatype.value.id!)
 
-        let keys = await kStorage.BulkCreate("test suite", testKeys);
+        const keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         const mixed = new Node({
@@ -245,12 +244,12 @@ describe('A Node Mapper', async() => {
         const gStorage = GraphMapper.Instance;
 
         // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
+        const graph = await gStorage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        let metatype = await mMapper.Create( "test suite",
+        const metatype = await mMapper.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
 
@@ -260,7 +259,7 @@ describe('A Node Mapper', async() => {
         const testKeys = [...test_key_defaultValue]
         testKeys.forEach(key => key.metatype_id = metatype.value.id!)
 
-        let keys = await kStorage.BulkCreate("test suite", testKeys);
+        const keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         const mixed = new Node({

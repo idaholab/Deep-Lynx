@@ -1,4 +1,3 @@
-/* tslint:disable */
 import faker from 'faker'
 import { expect } from 'chai'
 import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/postgres/postgres";
@@ -10,7 +9,7 @@ import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/o
 import DataSourceRecord from "../../../data_warehouse/import/data_source";
 
 describe('A Data Source', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
        if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -19,26 +18,26 @@ describe('A Data Source', async() => {
        }
 
 
-        await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+       await PostgresAdapter.Instance.init();
+       const mapper = ContainerStorage.Instance;
 
-        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
+       const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
-        expect(container.isError).false;
-        expect(container.value.id).not.null
-        containerID = container.value.id!;
+       expect(container.isError).false;
+       expect(container.value.id).not.null
+       containerID = container.value.id!;
 
-        return Promise.resolve()
+       return Promise.resolve()
     });
 
-    after(async function() {
+    after(async () => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 
     it('can be saved to storage', async()=> {
-        let storage = DataSourceMapper.Instance;
+        const storage = DataSourceMapper.Instance;
 
-        let exp = await storage.Create("test suite",
+        const exp = await storage.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -53,8 +52,8 @@ describe('A Data Source', async() => {
     });
 
     it('can be retrieved from  storage', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let exp = await storage.Create("test suite",
+        const storage = DataSourceMapper.Instance;
+        const exp = await storage.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -65,7 +64,7 @@ describe('A Data Source', async() => {
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let retrieved = await storage.Retrieve(exp.value.id!);
+        const retrieved = await storage.Retrieve(exp.value.id!);
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(exp.value.id);
 
@@ -73,9 +72,9 @@ describe('A Data Source', async() => {
     });
 
     it('can be updated in storage', async()=> {
-        let storage = DataSourceMapper.Instance;
+        const storage = DataSourceMapper.Instance;
 
-        let exp = await storage.Create("test suite",
+        const exp = await storage.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -89,7 +88,7 @@ describe('A Data Source', async() => {
 
         exp.value.name = "New Name"
 
-        let updateResult = await storage.Update("test-suite", exp.value);
+        const updateResult = await storage.Update("test-suite", exp.value);
         expect(updateResult.isError).false;
         expect(updateResult.value.name).eq("New Name")
 

@@ -1,4 +1,3 @@
-/* tslint:disable */
 import Logger from "../../../../services/logger";
 import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import MetatypeKeyMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper";
@@ -24,7 +23,7 @@ import Edge from "../../../../data_warehouse/data/edge";
 import DataSourceRecord from "../../../../data_warehouse/import/data_source";
 
 describe('An Edge Mapper', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -33,7 +32,7 @@ describe('An Edge Mapper', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerMapper.Instance;
+        const mapper = ContainerMapper.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -45,7 +44,7 @@ describe('An Edge Mapper', async() => {
     });
 
 
-    after(async function() {
+    after(async () => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 
@@ -61,46 +60,46 @@ describe('An Edge Mapper', async() => {
         const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
+        const graph = await gStorage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        const metatype = await mMapper.BulkCreate( "test suite",
+        const metatypes = await mMapper.BulkCreate( "test suite",
             [
                 new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
                 new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}),
             ]);
 
-        expect(metatype.isError).false;
-        expect(metatype.value).not.empty;
+        expect(metatypes.isError).false;
+        expect(metatypes.value).not.empty;
 
         const testKeys1 = [...test_keys]
-        testKeys1.forEach(key => key.metatype_id = metatype.value[0].id!)
+        testKeys1.forEach(key => key.metatype_id = metatypes.value[0].id!)
         const keys = await kStorage.BulkCreate("test suite", testKeys1);
         expect(keys.isError).false;
 
         const testKeys2 = [...test_keys]
-        testKeys2.forEach(key => key.metatype_id = metatype.value[1].id!)
+        testKeys2.forEach(key => key.metatype_id = metatypes.value[1].id!)
         const keys2 = await kStorage.BulkCreate( "test suite", testKeys2);
         expect(keys2.isError).false;
 
         const mixed = [new Node({
             container_id: containerID,
             graph_id: graph.value.id!,
-            metatype: metatype.value[0].id!,
+            metatype: metatypes.value[0].id!,
             properties: payload
         }),new Node({
             container_id: containerID,
             graph_id: graph.value.id!,
-            metatype: metatype.value[1].id!,
+            metatype: metatypes.value[1].id!,
             properties: payload
         })];
 
-        const node = await nStorage.BulkCreateOrUpdateByCompositeID("test suite",  mixed);
-        expect(node.isError, metatype.error?.error).false;
+        const nodes = await nStorage.BulkCreateOrUpdateByCompositeID("test suite",  mixed);
+        expect(nodes.isError, metatypes.error?.error).false;
 
-        let relationship = await rMapper.Create("test suite",
+        const relationship = await rMapper.Create("test suite",
             new MetatypeRelationship({container_id: containerID,name: faker.name.findName(), description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
@@ -110,30 +109,30 @@ describe('An Edge Mapper', async() => {
         relationshipTestKeys.forEach(key => key.metatype_relationship_id = relationship.value.id!)
 
         const rkeys = await rkStorage.BulkCreate( "test suite", relationshipTestKeys)
+        expect(rkeys.isError).false;
 
-        let pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
+        const pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
             "name": faker.name.findName(),
             "description": faker.random.alphaNumeric(),
-            "origin_metatype": metatype.value[0].id!,
-            "destination_metatype": metatype.value[1].id!,
+            "origin_metatype": metatypes.value[0].id!,
+            "destination_metatype": metatypes.value[1].id!,
             "relationship": relationship.value.id!,
             "relationship_type": "one:one",
             container_id: containerID,
         }));
 
         // EDGE SETUP
-        let edge = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+        const edge = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
             container_id: containerID,
             graph_id: graph.value.id!,
             metatype_relationship_pair: pair.value.id!,
             properties: payload,
-            origin_node_id: node.value[0].id,
-            destination_node_id: node.value[1].id
+            origin_node_id: nodes.value[0].id,
+            destination_node_id: nodes.value[1].id
         }));
 
         expect(edge.isError).false;
 
-        await mMapper.PermanentlyDelete(metatype.value[0].id!);
         return gStorage.PermanentlyDelete(graph.value.id!)
     });
 
@@ -149,7 +148,7 @@ describe('An Edge Mapper', async() => {
         // we must create a valid data source for this test
         const dataStorage = DataSourceMapper.Instance;
 
-        let exp = await dataStorage.Create("test suite",
+        const exp = await dataStorage.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -161,7 +160,7 @@ describe('An Edge Mapper', async() => {
         expect(exp.value).not.empty;
 
         // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
+        const graph = await gStorage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
@@ -204,13 +203,13 @@ describe('An Edge Mapper', async() => {
         const node = await nStorage.BulkCreateOrUpdateByCompositeID("test suite",  mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        let relationship = await rMapper.Create("test suite",
+        const relationship = await rMapper.Create("test suite",
             new MetatypeRelationship({container_id: containerID,name: faker.name.findName(), description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
 
-        let pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
+        const pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
             "name": faker.name.findName(),
             "description": faker.random.alphaNumeric(),
             "origin_metatype": metatype.value[0].id!,
@@ -221,7 +220,7 @@ describe('An Edge Mapper', async() => {
         }));
 
         // EDGE SETUP
-        let edge = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+        const edge = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
             container_id: containerID,
             graph_id: graph.value.id,
             metatype_relationship_pair: pair.value.id!,
@@ -233,8 +232,6 @@ describe('An Edge Mapper', async() => {
 
         expect(edge.isError).false;
 
-
-        await mMapper.PermanentlyDelete(metatype.value[0].id!);
         return gStorage.PermanentlyDelete(graph.value.id!)
     });
 
@@ -248,7 +245,7 @@ describe('An Edge Mapper', async() => {
         const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
+        const graph = await gStorage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
 
@@ -286,13 +283,13 @@ describe('An Edge Mapper', async() => {
         const node = await nStorage.BulkCreateOrUpdateByCompositeID("test suite",  mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        let relationship = await rMapper.Create("test suite",
+        const relationship = await rMapper.Create("test suite",
             new MetatypeRelationship({container_id: containerID,name: faker.name.findName(), description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
 
-        let pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
+        const pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
             "name": faker.name.findName(),
             "description": faker.random.alphaNumeric(),
             "origin_metatype": metatype.value[0].id!,
@@ -303,7 +300,7 @@ describe('An Edge Mapper', async() => {
         }));
 
         // EDGE SETUP
-        let edge = await storage.CreateOrUpdateByCompositeID("test suite", new Edge({
+        const edge = await storage.CreateOrUpdateByCompositeID("test suite", new Edge({
             container_id: containerID,
             graph_id: graph.value.id,
             metatype_relationship_pair: pair.value.id!,
@@ -314,13 +311,12 @@ describe('An Edge Mapper', async() => {
 
         expect(edge.isError).false;
 
-        let archived = await storage.Archive("test suite", edge.value.id!);
+        const archived = await storage.Archive("test suite", edge.value.id!);
         expect(archived.isError).false;
 
-        let deleted = await storage.PermanentlyDelete(edge.value.id!);
+        const deleted = await storage.PermanentlyDelete(edge.value.id!);
         expect(deleted.isError).false;
 
-        await mMapper.PermanentlyDelete(metatype.value[0].id!);
         return gStorage.PermanentlyDelete(graph.value.id!)
     });
 
@@ -334,7 +330,7 @@ describe('An Edge Mapper', async() => {
         const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
+        const graph = await gStorage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
@@ -374,13 +370,13 @@ describe('An Edge Mapper', async() => {
         const node = await nStorage.BulkCreateOrUpdateByCompositeID("test suite",  mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        let relationship = await rMapper.Create("test suite",
+        const relationship = await rMapper.Create("test suite",
             new MetatypeRelationship({container_id: containerID,name: faker.name.findName(), description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
 
-        let pair = await rpStorage.Create( "test suite",  new MetatypeRelationshipPair({
+        const pair = await rpStorage.Create( "test suite",  new MetatypeRelationshipPair({
             "name": faker.name.findName(),
             "description": faker.random.alphaNumeric(),
             "origin_metatype": metatype.value[0].id!,
@@ -391,7 +387,7 @@ describe('An Edge Mapper', async() => {
         }));
 
         // EDGE SETUP
-        let edge = await storage.CreateOrUpdateByCompositeID("test suite", new Edge({
+        const edge = await storage.CreateOrUpdateByCompositeID("test suite", new Edge({
             container_id: containerID,
             graph_id: graph.value.id,
             metatype_relationship_pair: pair.value.id!,
@@ -405,11 +401,10 @@ describe('An Edge Mapper', async() => {
 
         edge.value.properties = updatePayload
 
-        let updatedEdge = await storage.Update("test suite",  edge.value);
+        const updatedEdge = await storage.Update("test suite",  edge.value);
         expect(updatedEdge.isError, updatedEdge.error?.error).false;
         expect(updatedEdge.value.properties).to.have.deep.property('flower_name', "Violet")
 
-        await mMapper.PermanentlyDelete(metatype.value[0].id!);
         return gStorage.PermanentlyDelete(graph.value.id!)
     })
 });

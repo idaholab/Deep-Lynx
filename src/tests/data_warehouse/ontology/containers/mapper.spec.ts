@@ -1,4 +1,3 @@
-/* tslint:disable */
 import faker from 'faker'
 import { expect } from 'chai'
 import 'reflect-metadata';
@@ -21,7 +20,7 @@ describe('A Container Mapper', async() => {
     });
 
     it('can save to storage', async()=> {
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -32,28 +31,31 @@ describe('A Container Mapper', async() => {
     });
 
     it('can bulk save to storage', async()=> {
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container1 = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()})
         const container2 = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
-        let container = await mapper.BulkCreate("test suite", [container1, container2]);
+        const containers = await mapper.BulkCreate("test suite", [container1, container2]);
 
-        expect(container.isError).false;
-        expect(container.value).not.empty;
+        expect(containers.isError).false;
+        expect(containers.value).not.empty;
 
-        return mapper.Delete(container.value[0].id!)
+        for (const container of containers.value) {
+            mapper.Delete(container.id!)
+        }
+        return Promise.resolve()
     });
 
     it('can be retrieve from storage', async()=> {
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
         expect(container.isError).false;
         expect(container.value).not.empty;
 
-        let retrieved = await mapper.Retrieve(container.value.id!);
+        const retrieved = await mapper.Retrieve(container.value.id!);
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(container.value.id);
 
@@ -61,14 +63,14 @@ describe('A Container Mapper', async() => {
     });
 
     it('can list from storage', async()=> {
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
         expect(container.isError).false;
         expect(container.value).not.empty;
 
-        let retrieved = await mapper.List();
+        const retrieved = await mapper.List();
         expect(retrieved.isError).false;
         expect(retrieved.value).not.empty;
 
@@ -76,22 +78,22 @@ describe('A Container Mapper', async() => {
     });
 
     it('can update in storage', async()=> {
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
         expect(container.isError).false;
         expect(container.value).not.empty;
 
-        let updatedName = faker.name.findName();
-        let updatedDescription = faker.random.alphaNumeric();
+        const updatedName = faker.name.findName();
+        const updatedDescription = faker.random.alphaNumeric();
         container.value.name = updatedName
         container.value.description = updatedDescription
 
-        let updateResult = await mapper.Update(" test suite",container.value);
+        const updateResult = await mapper.Update(" test suite",container.value);
         expect(updateResult.isError).false;
 
-        let retrieved = await mapper.Retrieve(container.value.id!);
+        const retrieved = await mapper.Retrieve(container.value.id!);
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(container.value.id);
         expect(retrieved.value.name).eq(updatedName);
@@ -101,26 +103,26 @@ describe('A Container Mapper', async() => {
     })
 
     it('can bulk update in storage', async()=> {
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container1 = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()})
         const container2 = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
-        let containers = await mapper.BulkCreate("test suite", [container1, container2]);
+        const containers = await mapper.BulkCreate("test suite", [container1, container2]);
 
         expect(containers.isError).false;
         expect(containers.value).not.empty;
 
-        let updatedName = faker.name.findName();
-        let updatedName2 = faker.name.findName();
-        let updatedDescription = faker.random.alphaNumeric();
-        let updatedDescription2 = faker.random.alphaNumeric();
+        const updatedName = faker.name.findName();
+        const updatedName2 = faker.name.findName();
+        const updatedDescription = faker.random.alphaNumeric();
+        const updatedDescription2 = faker.random.alphaNumeric();
         containers.value[0].name = updatedName
         containers.value[1].name = updatedName2
         containers.value[0].description = updatedDescription
         containers.value[1].description = updatedDescription2
 
-        let updateResult = await mapper.BulkUpdate(" test suite", containers.value);
+        const updateResult = await mapper.BulkUpdate(" test suite", containers.value);
         expect(updateResult.isError).false;
 
         for(const container of updateResult.value) {

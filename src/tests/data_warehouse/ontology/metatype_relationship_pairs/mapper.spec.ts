@@ -1,4 +1,3 @@
-/* tslint:disable */
 import Logger from "../../../../services/logger";
 import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import MetatypeMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper";
@@ -14,7 +13,7 @@ import MetatypeRelationship from "../../../../data_warehouse/ontology/metatype_r
 import MetatypeRelationshipPair from "../../../../data_warehouse/ontology/metatype_relationship_pair";
 
 describe('A Metatype Relationship Pair Mapper can', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -23,7 +22,7 @@ describe('A Metatype Relationship Pair Mapper can', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -34,7 +33,7 @@ describe('A Metatype Relationship Pair Mapper can', async() => {
         return Promise.resolve()
     });
 
-    after(async function() {
+    after(async () => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 
@@ -52,13 +51,13 @@ describe('A Metatype Relationship Pair Mapper can', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let relationship = await rMapper.Create("test suite",
+        const relationship = await rMapper.Create("test suite",
             new MetatypeRelationship({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
 
-        let pair = await rpMapper.Create("test suite",new MetatypeRelationshipPair({
+        const pair = await rpMapper.Create("test suite",new MetatypeRelationshipPair({
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
             relationship_type: "one:one",
@@ -69,7 +68,7 @@ describe('A Metatype Relationship Pair Mapper can', async() => {
         }))
         expect(pair.isError).false;
 
-       return mMapper.PermanentlyDelete(metatype.value[0].id!);
+        return mMapper.PermanentlyDelete(metatype.value[0].id!);
     });
 
     it('can be archived and permanently deleted', async()=> {
@@ -86,13 +85,13 @@ describe('A Metatype Relationship Pair Mapper can', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let relationship = await rMapper.Create("test suite",
+        const relationship = await rMapper.Create("test suite",
             new MetatypeRelationship({container_id: containerID,name: faker.name.findName(), description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
 
-        let pair = await rpMapper.Create("test suite",new MetatypeRelationshipPair({
+        const pair = await rpMapper.Create("test suite",new MetatypeRelationshipPair({
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
             relationship_type: "one:one",
@@ -104,10 +103,10 @@ describe('A Metatype Relationship Pair Mapper can', async() => {
 
         expect(pair.isError).false;
 
-        let archived = await rpMapper.Archive(pair.value.id!, "test suite");
+        const archived = await rpMapper.Archive(pair.value.id!, "test suite");
         expect(archived.isError).false;
 
-        let deleted = await rpMapper.Delete(pair.value.id!);
+        const deleted = await rpMapper.Delete(pair.value.id!);
         expect(deleted.isError).false;
 
         return Promise.resolve()

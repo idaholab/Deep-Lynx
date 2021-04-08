@@ -35,6 +35,10 @@ describe('A OAuth Application can', async() => {
         return Promise.resolve()
     });
 
+    after(async () => {
+        return UserMapper.Instance.PermanentlyDelete(user.id!)
+    })
+
     it('can be saved to storage', async() => {
         const storage = OAuthMapper.Instance
 

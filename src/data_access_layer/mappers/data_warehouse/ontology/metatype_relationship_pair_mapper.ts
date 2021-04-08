@@ -59,6 +59,7 @@ export default class MetatypeRelationshipPairMapper extends Mapper{
         return super.runStatement(this.archiveStatement(pairID, userID))
     }
 
+    // TODO: Should this be `PermanentlyDelete()`?
     public async Delete(pairID: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(pairID))
     }

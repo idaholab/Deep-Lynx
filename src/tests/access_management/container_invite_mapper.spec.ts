@@ -1,4 +1,3 @@
-/* tslint:disable */
 import Logger from "../../services/logger";
 import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import ContainerStorage from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
@@ -47,8 +46,9 @@ describe('A User Container Invite can', async() => {
         return Promise.resolve()
     });
 
-    after(async function() {
-        return ContainerMapper.Instance.Delete(containerID)
+    after(async () => {
+        await ContainerMapper.Instance.Delete(containerID)
+        return UserMapper.Instance.PermanentlyDelete(user.id!)
     })
 
     it('can be saved to storage', async() => {

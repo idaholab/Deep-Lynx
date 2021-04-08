@@ -1,21 +1,11 @@
-/* tslint:disable */
-import {
-    AssignUserRolePayload,
-    ContainerUserInvite,
-    KeyPair,
-    ResetUserPasswordPayload,
-    User
-} from "../../access_management/user";
+import {User} from "../../access_management/user";
 import Logger from "../../services/logger";
 import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import ContainerMapper from "../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 import Container from "../../data_warehouse/ontology/container";
 import faker from "faker";
 import {expect} from "chai";
-import UserRepository from "../../data_access_layer/repositories/access_management/user_repository";
 import UserMapper from "../../data_access_layer/mappers/access_management/user_mapper";
-import Config from "../../services/config"
-import KeyPairMapper from "../../data_access_layer/mappers/access_management/keypair_mapper";
 import EventRegistrationRepository
     from "../../data_access_layer/repositories/event_system/event_registration_repository";
 import EventRegistration from "../../event_system/event_registration";

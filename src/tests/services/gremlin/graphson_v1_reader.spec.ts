@@ -1,4 +1,3 @@
-/* tslint:disable */
 import { expect } from 'chai'
 import { structure } from "gremlin"
 import { GraphSONReaderV1 } from "../../../services/gremlin/graphson_v1_reader/reader"

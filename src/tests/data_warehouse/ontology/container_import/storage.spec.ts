@@ -1,4 +1,3 @@
-/* tslint:disable */
 import faker from 'faker'
 import {expect} from 'chai'
 import 'reflect-metadata';
@@ -47,14 +46,17 @@ describe('A Container Import', async() => {
         return Promise.resolve()
     });
 
+    after(async () => {
+        return UserMapper.Instance.PermanentlyDelete(user.id!)
+    })
 
     it('can create a container from a valid ontology file', async()=> {
-        let containerImport = ContainerImport.Instance;
-        let storage = ContainerMapper.Instance;
+        const containerImport = ContainerImport.Instance;
+        const storage = ContainerMapper.Instance;
 
-        let fileBuffer = await fs.readFileSync(`${__dirname}/test.owl`)
+        const fileBuffer = await fs.readFileSync(`${__dirname}/test.owl`)
 
-        let container = await containerImport.ImportOntology(user, {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}, fileBuffer, false, false, '');
+        const container = await containerImport.ImportOntology(user, {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}, fileBuffer, false, false, '');
 
         expect(container.isError, `container creation from ontology failed: ${container.error}`).false;
         expect(container.value).not.empty;
@@ -64,10 +66,10 @@ describe('A Container Import', async() => {
 
 
     it('can update a container with a valid ontology file', async()=> {
-        let containerImport = ContainerImport.Instance;
-        let storage = ContainerMapper.Instance;
+        const containerImport = ContainerImport.Instance;
+        const storage = ContainerMapper.Instance;
 
-        let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
+        const containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
         let containerID: string
 
         const original = fs.readFileSync(`${__dirname}/test.owl`)
@@ -90,12 +92,12 @@ describe('A Container Import', async() => {
 
     it('can prevent container update when a metatype to be removed has associated data', async()=> {
         // using the Document class/metatype
-        let containerImport = ContainerImport.Instance;
-        let storage = ContainerMapper.Instance;
-        let metatypeRepository = new MetatypeRepository()
-        let nodeStorage = NodeMapper.Instance;
+        const containerImport = ContainerImport.Instance;
+        const storage = ContainerMapper.Instance;
+        const metatypeRepository = new MetatypeRepository()
+        const nodeStorage = NodeMapper.Instance;
 
-        let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
+        const containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
         let containerID: string
 
         const original = fs.readFileSync(`${__dirname}/test.owl`)
@@ -109,13 +111,13 @@ describe('A Container Import', async() => {
         expect(retrievedContainer.isError).false
         containerID = retrievedContainer.value.id!
 
-        let metatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Document").list(false)
+        const metatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Document").list(false)
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let metatypeID = metatype.value[0].id
-        let nodeCreate = await nodeStorage.CreateOrUpdateByCompositeID("test suite",
+        const metatypeID = metatype.value[0].id
+        const nodeCreate = await nodeStorage.CreateOrUpdateByCompositeID("test suite",
             new Node({
                 container_id: containerID,
                 graph_id: retrievedContainer.value.active_graph_id,
@@ -134,12 +136,12 @@ describe('A Container Import', async() => {
 
     it('can prevent container update when a metatype key to be removed is for a metatype with associated data', async()=> {
         // using the Document class/metatype
-        let containerImport = ContainerImport.Instance;
-        let storage = ContainerMapper.Instance;
-        let metatypeRepository = new MetatypeRepository()
-        let nodeStorage = NodeMapper.Instance;
+        const containerImport = ContainerImport.Instance;
+        const storage = ContainerMapper.Instance;
+        const metatypeRepository = new MetatypeRepository()
+        const nodeStorage = NodeMapper.Instance;
 
-        let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
+        const containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
         let containerID: string
 
         const original = fs.readFileSync(`${__dirname}/test.owl`)
@@ -153,13 +155,13 @@ describe('A Container Import', async() => {
         expect(retrievedContainer.isError).false
         containerID = retrievedContainer.value.id!
 
-        let metatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Document").list(false)
+        const metatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Document").list(false)
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let metatypeID = metatype.value[0].id
-        let nodeCreate = await nodeStorage.CreateOrUpdateByCompositeID("test suite",
+        const metatypeID = metatype.value[0].id
+        const nodeCreate = await nodeStorage.CreateOrUpdateByCompositeID("test suite",
             new Node({
                 graph_id: retrievedContainer.value.active_graph_id!,
                 container_id: containerID,
@@ -178,14 +180,14 @@ describe('A Container Import', async() => {
 
     it('can prevent container update when a metatype relationship pair to be removed has associated data', async()=> {
         // using the Action class/metatype
-        let containerImport = ContainerImport.Instance;
-        let storage = ContainerMapper.Instance;
-        let metatypeRepository = new MetatypeRepository()
-        let pairRepo = new MetatypeRelationshipPairRepository()
-        let nodeStorage = NodeMapper.Instance;
-        let edgeStorage = EdgeMapper.Instance;
+        const containerImport = ContainerImport.Instance;
+        const storage = ContainerMapper.Instance;
+        const metatypeRepository = new MetatypeRepository()
+        const pairRepo = new MetatypeRelationshipPairRepository()
+        const nodeStorage = NodeMapper.Instance;
+        const edgeStorage = EdgeMapper.Instance;
 
-        let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
+        const containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
         let containerID: string
 
         const original = fs.readFileSync(`${__dirname}/test.owl`)
@@ -200,13 +202,13 @@ describe('A Container Import', async() => {
         expect(retrievedContainer.isError).false
         containerID = retrievedContainer.value.id!
 
-        let metatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Action").list(false)
+        const metatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Action").list(false)
 
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        let metatypeID = metatype.value[0].id
-        let nodeCreate = await nodeStorage.BulkCreateOrUpdateByCompositeID("test suite",[
+        const metatypeID = metatype.value[0].id
+        const nodeCreate = await nodeStorage.BulkCreateOrUpdateByCompositeID("test suite",[
            new Node({
                container_id: containerID,
                graph_id: retrievedContainer.value.active_graph_id!,
@@ -221,11 +223,11 @@ describe('A Container Import', async() => {
         expect(nodeCreate.isError).false;
 
         // retrieve Action metatype ID
-        let actionMetatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Action").list(false)
-        let actionMetatypeID = actionMetatype.value[0].id!
+        const actionMetatype = await metatypeRepository.where().containerID("eq", containerID).and().name("eq", "Action").list(false)
+        const actionMetatypeID = actionMetatype.value[0].id!
 
         // retrieve relationship pair
-        let pairs = await pairRepo.where()
+        const pairs = await pairRepo.where()
             .containerID("eq", containerID)
             .and()
             .origin_metatype_id("eq", actionMetatypeID)
@@ -234,13 +236,13 @@ describe('A Container Import', async() => {
             .list(false)
         expect(pairs.isError).false
 
-        let relationshipPair = pairs.value[0]
+        const relationshipPair = pairs.value[0]
 
-        let relationshipPairID = relationshipPair.id
-        let originID = nodeCreate.value[0].id
-        let destinationID = nodeCreate.value[1].id
+        const relationshipPairID = relationshipPair.id
+        const originID = nodeCreate.value[0].id
+        const destinationID = nodeCreate.value[1].id
 
-        let edgeCreate = await edgeStorage.CreateOrUpdateByCompositeID(containerID,
+        const edgeCreate = await edgeStorage.CreateOrUpdateByCompositeID(containerID,
             new Edge({
                 container_id: containerID,
                 metatype_relationship_pair: relationshipPairID!,
@@ -263,10 +265,10 @@ describe('A Container Import', async() => {
 
     it('can remove deleted metatypes, metatype keys, relationship pairs, and relationships from the container with no associated data', async()=> {
         // using Action, Document, and Equipment classes/metatypes and caused by/causes relationships
-        let containerImport = ContainerImport.Instance;
-        let storage = ContainerMapper.Instance;
+        const containerImport = ContainerImport.Instance;
+        const storage = ContainerMapper.Instance;
 
-        let containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
+        const containerInput = {"name": faker.name.findName(), "description": faker.random.alphaNumeric()}
         let containerID: string
 
         const original = fs.readFileSync(`${__dirname}/test.owl`)

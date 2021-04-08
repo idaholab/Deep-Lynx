@@ -1,4 +1,3 @@
-/* tslint:disable */
 import faker from 'faker'
 import {expect} from 'chai'
 import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/postgres/postgres";
@@ -35,16 +34,16 @@ import DataStagingRepository
 import DataSourceRecord from "../../../data_warehouse/import/data_source";
 
 describe('A Data Type Mapping can', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
-    var graphID: string = ""
-    var typeMappingID: string = ""
-    var typeMapping: TypeMapping | undefined = undefined
-    var dataSourceID: string = ""
-    var resultMetatypeRelationships: MetatypeRelationship[] = []
-    var data: DataStaging | undefined = undefined
-    var user: User
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let graphID: string = ""
+    let typeMappingID: string = ""
+    let typeMapping: TypeMapping | undefined
+    let dataSourceID: string = ""
+    let resultMetatypeRelationships: MetatypeRelationship[] = []
+    let data: DataStaging | undefined
+    let user: User
 
-    var maintenancePair: MetatypeRelationshipPair | undefined = undefined
+    let maintenancePair: MetatypeRelationshipPair | undefined
     const car_metatype_keys: MetatypeKey[] = [
         new MetatypeKey({
             name: "id",
@@ -213,18 +212,18 @@ describe('A Data Type Mapping can', async() => {
            this.skip()
        }
 
-        await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+       await PostgresAdapter.Instance.init();
+       const mapper = ContainerStorage.Instance;
 
-        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
+       const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
-        expect(container.isError).false;
-        expect(container.value.id).not.null
-        containerID = container.value.id!;
+       expect(container.isError).false;
+       expect(container.value.id).not.null
+       containerID = container.value.id!;
 
-        test_metatypes.forEach(metatype => metatype.container_id = containerID)
+       test_metatypes.forEach(metatype => metatype.container_id = containerID)
 
-        const userResult = await UserMapper.Instance.Create("test suite", new User(
+       const userResult = await UserMapper.Instance.Create("test suite", new User(
             {
                 identity_provider_id: faker.random.uuid(),
                 identity_provider: "username_password",
@@ -234,35 +233,35 @@ describe('A Data Type Mapping can', async() => {
                 roles: ["superuser"]
             }));
 
-        expect(userResult.isError).false;
-        expect(userResult.value).not.empty;
-        user = userResult.value
+       expect(userResult.isError).false;
+       expect(userResult.value).not.empty;
+       user = userResult.value
 
-        let graph = await GraphMapper.Instance.Create(containerID, "test suite")
-        expect(graph.isError).false;
-        graphID = graph.value.id!
+       const graph = await GraphMapper.Instance.Create(containerID, "test suite")
+       expect(graph.isError).false;
+       graphID = graph.value.id!
 
-        let dstorage = DataSourceMapper.Instance;
-        let relationshipMapper = MetatypeRelationshipMapper.Instance;
-        let mappingStorage = TypeMappingMapper.Instance
+       const dstorage = DataSourceMapper.Instance;
+       const relationshipMapper = MetatypeRelationshipMapper.Instance;
+       const mappingStorage = TypeMappingMapper.Instance
 
-        let metatypeRepo = new MetatypeRepository()
-        let created = await metatypeRepo.bulkSave(user, test_metatypes)
+       const metatypeRepo = new MetatypeRepository()
+       const created = await metatypeRepo.bulkSave(user, test_metatypes)
 
-        expect(created.isError).false
+       expect(created.isError).false
 
-        const test_metatype_relationships: MetatypeRelationship[] = [
+       const test_metatype_relationships: MetatypeRelationship[] = [
             new MetatypeRelationship({container_id: containerID, name: "parent", description: "item is another's parent"})
         ];
 
         // create the relationships
-        let metatypeRelationships = await relationshipMapper.BulkCreate("test suite", test_metatype_relationships)
-        expect(metatypeRelationships.isError).false;
-        expect(metatypeRelationships.value).not.empty;
+       const metatypeRelationships = await relationshipMapper.BulkCreate("test suite", test_metatype_relationships)
+       expect(metatypeRelationships.isError).false;
+       expect(metatypeRelationships.value).not.empty;
 
-        resultMetatypeRelationships = metatypeRelationships.value;
+       resultMetatypeRelationships = metatypeRelationships.value;
 
-        let pairs = await MetatypeRelationshipPairMapper.Instance.Create("test suite", new MetatypeRelationshipPair({
+       const pairs = await MetatypeRelationshipPairMapper.Instance.Create("test suite", new MetatypeRelationshipPair({
             "name": "owns",
             "description": "owns another entity",
             "origin_metatype": test_metatypes.find(m => m.name === "Maintenance")!.id!,
@@ -272,12 +271,12 @@ describe('A Data Type Mapping can', async() => {
             container_id: containerID
         }));
 
-        expect(pairs.isError).false;
-        expect(pairs.value).not.empty;
+       expect(pairs.isError).false;
+       expect(pairs.value).not.empty;
 
-        maintenancePair = pairs.value
+       maintenancePair = pairs.value
 
-        let exp = await DataSourceMapper.Instance.Create("test suite",
+       const exp = await DataSourceMapper.Instance.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -285,52 +284,53 @@ describe('A Data Type Mapping can', async() => {
                 adapter_type:"standard",
                 data_format: "json"}));
 
-        expect(exp.isError).false;
-        expect(exp.value).not.empty;
+       expect(exp.isError).false;
+       expect(exp.value).not.empty;
 
-        dataSourceID = exp.value.id!
+       dataSourceID = exp.value.id!
 
-        let mapping = new TypeMapping({
+       const mapping = new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
             sample_payload: test_payload[0]
         })
 
-        const saved = await new TypeMappingRepository().save(mapping, user)
+       const saved = await new TypeMappingRepository().save(mapping, user)
 
-        expect(saved.isError).false
+       expect(saved.isError).false
 
-        typeMappingID = mapping.id!
-        typeMapping = mapping
+       typeMappingID = mapping.id!
+       typeMapping = mapping
 
         // now import the data
-        const newImport = await ImportMapper.Instance.CreateImport("test suite", new Import({
+       const newImport = await ImportMapper.Instance.CreateImport("test suite", new Import({
             data_source_id: dataSourceID,
             reference: "testing suite upload"
         }))
-        expect(newImport.isError).false
+       expect(newImport.isError).false
 
-        const inserted = await DataStagingMapper.Instance.Create(new DataStaging({
+       const inserted = await DataStagingMapper.Instance.Create(new DataStaging({
             data_source_id: dataSourceID,
             import_id: newImport.value.id!,
             mapping_id: typeMappingID,
             data: test_payload[0]
         }))
-        expect(inserted.isError).false
-        expect(inserted.value.id).not.undefined
+       expect(inserted.isError).false
+       expect(inserted.value.id).not.undefined
 
-        const stagingRepo = new DataStagingRepository()
+       const stagingRepo = new DataStagingRepository()
 
-        const insertedData = await stagingRepo.where().importID("eq", newImport.value.id).list({limit:1})
-        expect(insertedData.isError).false
-        expect(insertedData.value).not.empty
+       const insertedData = await stagingRepo.where().importID("eq", newImport.value.id).list({limit:1})
+       expect(insertedData.isError).false
+       expect(insertedData.value).not.empty
 
-        data = insertedData.value[0]
+       data = insertedData.value[0]
 
-        return Promise.resolve()
+       return Promise.resolve()
     })
 
-    after(async function() {
+    after(async () => {
+        await UserMapper.Instance.PermanentlyDelete(user.id!)
         return ContainerMapper.Instance.Delete(containerID)
     })
 

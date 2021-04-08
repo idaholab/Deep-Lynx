@@ -1,15 +1,13 @@
-/* tslint:disable */
 import faker from 'faker'
 import { expect } from 'chai'
 import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import Logger from "../../../services/logger";
 import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import DataSourceMapper from "../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
 import Container from "../../../data_warehouse/ontology/container";
 import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 
 describe('An HTTP Data Source', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
         if (process.env.SKIP_DATA_SOURCE_TESTS === 'true') {
@@ -23,7 +21,7 @@ describe('An HTTP Data Source', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -34,7 +32,7 @@ describe('An HTTP Data Source', async() => {
         return Promise.resolve()
     });
 
-    after(async function() {
+    after(async () => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 

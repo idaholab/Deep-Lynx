@@ -1,4 +1,3 @@
-/* tslint:disable */
 import {expect} from 'chai'
 import * as faker from "faker";
 import Logger from "../../../../services/logger";
@@ -17,7 +16,7 @@ describe('A Metatype Relationship Pair should', async() => {
             this.skip()
         }
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerMapper.Instance;
+        const mapper = ContainerMapper.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -28,7 +27,7 @@ describe('A Metatype Relationship Pair should', async() => {
         return Promise.resolve()
     });
 
-    after(async function() {
+    after(async () => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 

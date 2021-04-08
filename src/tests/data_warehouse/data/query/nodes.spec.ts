@@ -1,4 +1,3 @@
-/* tslint:disable */
 import Logger from "../../../../services/logger";
 import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import MetatypeKeyMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper";
@@ -18,9 +17,9 @@ import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import Node from "../../../../data_warehouse/data/node";
 
 describe('Using a GraphQL Query on nodes we', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
-    var node: Node
-    var metatype: Metatype
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let node: Node
+    let metatype: Metatype
 
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -29,7 +28,7 @@ describe('Using a GraphQL Query on nodes we', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -43,7 +42,7 @@ describe('Using a GraphQL Query on nodes we', async() => {
         const gStorage = GraphMapper.Instance;
 
         // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
+        const graph = await gStorage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
@@ -75,17 +74,17 @@ describe('Using a GraphQL Query on nodes we', async() => {
         return Promise.resolve()
     });
 
-    after(async function() {
+    after(async () => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 
     it('can query by id, with all resolvers functioning', async()=> {
-        let response = await graphql(schema, `{
+        const response = await graphql(schema, `{
             nodes(nodeID: "${node.id}") {
                 id
                 metatype { id name description}
                 properties {key value type}
-                raw_properties 
+                raw_properties
                 container_id
                 original_data_id
                 data_source_id
@@ -130,7 +129,7 @@ describe('Using a GraphQL Query on nodes we', async() => {
     });
 
     it('can pass in a limit and offset parameter ', async()=> {
-        let response = await graphql(schema, `{
+        const response = await graphql(schema, `{
             nodes(limit: 1 offset: 0) {
                 id
             }

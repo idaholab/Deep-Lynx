@@ -1,4 +1,3 @@
-/* tslint:disable */
 import {expect} from 'chai'
 import {MemoryCacheImpl, RedisCacheImpl} from "../../../services/cache/cache"
 import Logger from "../../../services/logger";

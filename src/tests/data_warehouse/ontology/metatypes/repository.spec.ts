@@ -1,4 +1,3 @@
-/* tslint:disable */
 import faker from 'faker'
 import {expect} from 'chai'
 import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
@@ -20,16 +19,16 @@ describe('A Metatype Repository', async() => {
            Logger.debug("skipping metatype tests, no mapper layer");
            this.skip()
        }
-        await PostgresAdapter.Instance.init();
-        const mapper = ContainerMapper.Instance;
+       await PostgresAdapter.Instance.init();
+       const mapper = ContainerMapper.Instance;
 
-        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
+       const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
-        expect(container.isError).false;
-        expect(container.value.id).not.null
-        containerID = container.value.id!;
+       expect(container.isError).false;
+       expect(container.value.id).not.null
+       containerID = container.value.id!;
 
-        const userResult = await UserMapper.Instance.Create("test suite", new User(
+       const userResult = await UserMapper.Instance.Create("test suite", new User(
             {
                 identity_provider_id: faker.random.uuid(),
                 identity_provider: "username_password",
@@ -39,14 +38,14 @@ describe('A Metatype Repository', async() => {
                 roles: ["superuser"]
             }));
 
-        expect(userResult.isError).false;
-        expect(userResult.value).not.empty;
-        user = userResult.value
+       expect(userResult.isError).false;
+       expect(userResult.value).not.empty;
+       user = userResult.value
 
-        return Promise.resolve()
+       return Promise.resolve()
     });
 
-    after(async function() {
+    after(async () => {
         await UserMapper.Instance.PermanentlyDelete(user.id!)
         return ContainerMapper.Instance.Delete(containerID)
     })
@@ -206,11 +205,11 @@ describe('A Metatype Repository', async() => {
         const repository = new MetatypeRepository()
         const metatype = new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
 
-        let results = await repository.save(metatype, user)
+        const results = await repository.save(metatype, user)
         expect(results.isError).false
         expect(metatype.id).not.undefined
 
-        let retrieved = await repository.findByID(metatype.id!)
+        const retrieved = await repository.findByID(metatype.id!)
         expect(retrieved.isError).false
         expect(retrieved.value.id).eq(metatype.id)
 
@@ -236,7 +235,7 @@ describe('A Metatype Repository', async() => {
         const metatype1 = new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
         const metatype2 = new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()})
 
-        let updated = await repository.bulkSave(user, [metatype1, metatype2])
+        const updated = await repository.bulkSave(user, [metatype1, metatype2])
         expect(updated.isError).false
 
         // simple list first

@@ -1,4 +1,3 @@
-/* tslint:disable */
 import faker from 'faker'
 import {expect} from 'chai'
 import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/postgres/postgres";
@@ -34,16 +33,16 @@ import DataSourceRecord, {DataSource} from "../../../data_warehouse/import/data_
 import {DataSourceFactory} from "../../../data_access_layer/repositories/data_warehouse/import/data_source_repository";
 
 describe('A Data Processor', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
-    var graphID: string = ""
-    var typeMappingID: string = ""
-    var typeMapping: TypeMapping | undefined = undefined
-    var dataSource: DataSource | undefined = undefined
-    var dataImportID: string = ""
-    var resultMetatypeRelationships: MetatypeRelationship[] = []
-    var user: User
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let graphID: string = ""
+    let typeMappingID: string = ""
+    let typeMapping: TypeMapping | undefined
+    let dataSource: DataSource | undefined
+    let dataImportID: string = ""
+    let resultMetatypeRelationships: MetatypeRelationship[] = []
+    let user: User
 
-    var maintenancePair: MetatypeRelationshipPair | undefined = undefined
+    let maintenancePair: MetatypeRelationshipPair | undefined
 
     const car_metatype_keys: MetatypeKey[] = [
         new MetatypeKey({
@@ -214,7 +213,7 @@ describe('A Data Processor', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -238,14 +237,14 @@ describe('A Data Processor', async() => {
         expect(userResult.value).not.empty;
         user = userResult.value
 
-        let graph = await GraphMapper.Instance.Create(containerID, "test suite")
+        const graph = await GraphMapper.Instance.Create(containerID, "test suite")
         expect(graph.isError).false;
         graphID = graph.value.id!
 
-        let dStorage = DataSourceMapper.Instance;
-        let relationshipMapper = MetatypeRelationshipMapper.Instance;
-        let metatypeRepo = new MetatypeRepository()
-        let created = await metatypeRepo.bulkSave(user, test_metatypes)
+        const dStorage = DataSourceMapper.Instance;
+        const relationshipMapper = MetatypeRelationshipMapper.Instance;
+        const metatypeRepo = new MetatypeRepository()
+        const created = await metatypeRepo.bulkSave(user, test_metatypes)
 
         expect(created.isError).false;
 
@@ -254,14 +253,14 @@ describe('A Data Processor', async() => {
         ];
 
         // create the relationships
-        let metatypeRelationships = await relationshipMapper.BulkCreate("test suite", test_metatype_relationships)
+        const metatypeRelationships = await relationshipMapper.BulkCreate("test suite", test_metatype_relationships)
 
         expect(metatypeRelationships.isError).false;
         expect(metatypeRelationships.value).not.empty;
 
         resultMetatypeRelationships = metatypeRelationships.value;
 
-        let pairs = await MetatypeRelationshipPairMapper.Instance.Create("test suite", new MetatypeRelationshipPair({
+        const pairs = await MetatypeRelationshipPairMapper.Instance.Create("test suite", new MetatypeRelationshipPair({
             "name": "owns",
             "description": "owns another entity",
             "origin_metatype": test_metatypes.find(m => m.name === "Maintenance")!.id!,
@@ -276,7 +275,7 @@ describe('A Data Processor', async() => {
 
         maintenancePair = pairs.value
 
-        let exp = await dStorage.Create("test suite",
+        const exp = await dStorage.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -291,7 +290,7 @@ describe('A Data Processor', async() => {
         dataSource = dfactory.fromDataSourceRecord(exp.value)
 
 
-        let mapping = new TypeMapping({
+        const mapping = new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
             sample_payload: test_payload[0]
@@ -327,7 +326,8 @@ describe('A Data Processor', async() => {
         return Promise.resolve()
     })
 
-    after(async function() {
+    after(async () => {
+        await UserMapper.Instance.PermanentlyDelete(user.id!)
         return ContainerMapper.Instance.Delete(containerID)
     })
 
@@ -402,7 +402,7 @@ describe('A Data Processor', async() => {
 
         await dataSource!.Process(true)
 
-        let nodeRepo = new NodeRepository()
+        const nodeRepo = new NodeRepository()
         const nodes = await nodeRepo.where().importDataID("eq", dataImportID).list()
 
         expect(nodes.isError).false
@@ -443,7 +443,7 @@ describe('A Data Processor', async() => {
             }
         }
 
-        let edgeRepo = new EdgeRepository()
+        const edgeRepo = new EdgeRepository()
         const edges = await edgeRepo.where().importDataID("eq", dataImportID).list()
 
         expect(edges.isError).false

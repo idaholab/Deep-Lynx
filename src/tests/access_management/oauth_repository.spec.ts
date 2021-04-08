@@ -1,4 +1,3 @@
-/* tslint:disable */
 import {User} from "../../access_management/user";
 import Logger from "../../services/logger";
 import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgres/postgres";
