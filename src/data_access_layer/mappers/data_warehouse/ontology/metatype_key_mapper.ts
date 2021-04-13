@@ -59,7 +59,7 @@ export default class MetatypeKeyMapper extends Mapper{
        return super.run(this.fullUpdateStatement(userID, ...keys), {transaction, resultClass})
     }
 
-    public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public async Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id))
     }
 

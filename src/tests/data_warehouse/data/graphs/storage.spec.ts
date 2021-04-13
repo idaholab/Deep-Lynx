@@ -40,7 +40,7 @@ describe('A Graph', async() => {
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
 
-        return storage.PermanentlyDelete(graph.value.id!)
+        return storage.Delete(graph.value.id!)
     });
 
     it('can be set active for container', async()=> {
@@ -54,7 +54,7 @@ describe('A Graph', async() => {
         const active = await storage.SetActiveForContainer(containerID, graph.value.id!)
         expect(active.isError).false
 
-        return storage.PermanentlyDelete(graph.value.id!)
+        return storage.Delete(graph.value.id!)
     });
 
     it('can be retrieved from  storage', async()=> {
@@ -69,7 +69,7 @@ describe('A Graph', async() => {
         expect(retrieved.isError, graph.error?.error).false;
         expect(retrieved.value.id).eq(graph.value.id);
 
-        return storage.PermanentlyDelete(graph.value.id!)
+        return storage.Delete(graph.value.id!)
     });
 
     it('can be listed from storage', async()=> {
@@ -84,6 +84,6 @@ describe('A Graph', async() => {
         expect(retrieved.isError, graph.error?.error).false;
         expect(retrieved.value).not.empty;
 
-        return storage.PermanentlyDelete(graph.value.id!)
+        return storage.Delete(graph.value.id!)
     })
 });

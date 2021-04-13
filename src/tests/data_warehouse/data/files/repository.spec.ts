@@ -63,8 +63,8 @@ describe('A File Repository can', async() => {
     });
 
     after(async () => {
-       await DataSourceMapper.Instance.PermanentlyDelete(dataSourceID)
-       await UserMapper.Instance.PermanentlyDelete(user.id!)
+       await DataSourceMapper.Instance.Delete(dataSourceID)
+       await UserMapper.Instance.Delete(user.id!)
        return ContainerStorage.Instance.Delete(containerID)
     })
 

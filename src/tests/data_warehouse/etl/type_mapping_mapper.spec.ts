@@ -77,7 +77,7 @@ describe('A Data Type Mapping', async() => {
         expect(mapping.isError).false
 
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be retrieved from storage', async()=> {
@@ -121,7 +121,7 @@ describe('A Data Type Mapping', async() => {
         const fetched = await mappingStorage.Retrieve(mapping.value.id!)
         expect(fetched.isError).false
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can set active', async()=> {
@@ -166,7 +166,7 @@ describe('A Data Type Mapping', async() => {
         expect(fetched.isError).false
         expect(fetched.value.active).true
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be listed from storage by container and data source', async()=> {
@@ -215,7 +215,7 @@ describe('A Data Type Mapping', async() => {
         expect(fetched2.isError).false
         expect(fetched2.value).not.empty
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be deleted from storage', async()=> {
@@ -256,13 +256,13 @@ describe('A Data Type Mapping', async() => {
 
         expect(mapping.isError).false
 
-        const deleted = await mappingStorage.PermanentlyDelete(mapping.value.id!)
+        const deleted = await mappingStorage.Delete(mapping.value.id!)
         expect(deleted.value).true
 
         const fetched = await mappingStorage.Retrieve(mapping.value.id!)
         expect(fetched.isError).true
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('create valid shape hash of objects with array of objects', async() => {

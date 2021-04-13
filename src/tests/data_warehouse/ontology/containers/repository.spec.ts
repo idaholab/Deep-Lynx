@@ -38,7 +38,7 @@ describe('A Container Repository', async() => {
     });
 
     after(async () => {
-        return UserMapper.Instance.PermanentlyDelete(user.id!)
+        return UserMapper.Instance.Delete(user.id!)
     })
 
     it('can be saved', async()=> {

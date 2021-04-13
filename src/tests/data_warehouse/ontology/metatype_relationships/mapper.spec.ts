@@ -40,7 +40,7 @@ describe('A Metatype Relationship Mapper', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        return mapper.PermanentlyDelete(metatype.value.id!)
+        return mapper.Delete(metatype.value.id!)
     });
 
     it('can be deleted', async()=> {
@@ -52,7 +52,7 @@ describe('A Metatype Relationship Mapper', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        const deleted = await mapper.PermanentlyDelete(metatype.value.id!)
+        const deleted = await mapper.Delete(metatype.value.id!)
         expect(deleted.isError).false
 
         return Promise.resolve()
@@ -67,7 +67,7 @@ describe('A Metatype Relationship Mapper', async() => {
         expect(metatype.isError).false;
         expect(metatype.value).not.empty;
 
-        return mapper.PermanentlyDelete(metatype.value.id!)
+        return mapper.Delete(metatype.value.id!)
     });
 
     it('can be retrieved from  mapper', async()=> {
@@ -83,7 +83,7 @@ describe('A Metatype Relationship Mapper', async() => {
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(metatype.value.id);
 
-        return mapper.PermanentlyDelete(metatype.value.id!)
+        return mapper.Delete(metatype.value.id!)
     });
 
     it('can be updated in mapper', async()=> {
@@ -110,6 +110,6 @@ describe('A Metatype Relationship Mapper', async() => {
         expect(retrieved.value.name).eq(updatedName);
         expect(retrieved.value.description).eq(updatedDescription);
 
-        return mapper.PermanentlyDelete(metatype.value.id!)
+        return mapper.Delete(metatype.value.id!)
     })
 });

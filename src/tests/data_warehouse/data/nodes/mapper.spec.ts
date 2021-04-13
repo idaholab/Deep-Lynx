@@ -75,8 +75,8 @@ describe('A Node Mapper', async() => {
         const node = await storage.CreateOrUpdateByCompositeID("test suite",  mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        await mMapper.PermanentlyDelete(metatype.value.id!);
-        return gStorage.PermanentlyDelete(graph.value.id!);
+        await mMapper.Delete(metatype.value.id!);
+        return gStorage.Delete(graph.value.id!);
     });
 
     it('can update mixed node types', async()=> {
@@ -120,8 +120,8 @@ describe('A Node Mapper', async() => {
         const updatedNode = await storage.Update("test suite",  node.value);
         expect(updatedNode.isError, updatedNode.error?.error).false;
 
-        await mMapper.PermanentlyDelete(metatype.value.id!);
-        await gStorage.PermanentlyDelete(graph.value.id!);
+        await mMapper.Delete(metatype.value.id!);
+        await gStorage.Delete(graph.value.id!);
 
     });
 
@@ -176,8 +176,8 @@ describe('A Node Mapper', async() => {
         expect(fetchedNode.isError).false
         expect(fetchedNode.value.data_source_id).equals(dataSource.value.id!)
 
-        await mMapper.PermanentlyDelete(metatype.value.id!);
-        return gStorage.PermanentlyDelete(graph.value.id!);
+        await mMapper.Delete(metatype.value.id!);
+        return gStorage.Delete(graph.value.id!);
     });
 
     it('can update by original ID', async()=> {
@@ -232,8 +232,8 @@ describe('A Node Mapper', async() => {
         const updatedNode = await storage.CreateOrUpdateByCompositeID("test suite",  node.value);
         expect(updatedNode.isError).false;
 
-        await mMapper.PermanentlyDelete(metatype.value.id!);
-        return gStorage.PermanentlyDelete(graph.value.id!);
+        await mMapper.Delete(metatype.value.id!);
+        return gStorage.Delete(graph.value.id!);
     })
 
 
@@ -273,8 +273,8 @@ describe('A Node Mapper', async() => {
         const node = await storage.CreateOrUpdateByCompositeID("test suite",  mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        await mMapper.PermanentlyDelete(metatype.value.id!);
-        return gStorage.PermanentlyDelete(graph.value.id!);
+        await mMapper.Delete(metatype.value.id!);
+        return gStorage.Delete(graph.value.id!);
     });
 });
 

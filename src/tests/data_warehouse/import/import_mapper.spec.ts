@@ -52,7 +52,7 @@ describe('A data import', async() => {
     });
 
     after(async () => {
-        await UserMapper.Instance.PermanentlyDelete(user.id!)
+        await UserMapper.Instance.Delete(user.id!)
         return ContainerMapper.Instance.Delete(containerID)
     })
 
@@ -107,7 +107,7 @@ describe('A data import', async() => {
         expect(imports.isError).false;
         expect(imports.value).empty;
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('have individual data records errors set', async()=> {
@@ -168,7 +168,7 @@ describe('A data import', async() => {
         expect(retrievedData.value.errors.length).eq(0)
 
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be stopped', async()=> {
@@ -199,7 +199,7 @@ describe('A data import', async() => {
         expect(check.isError).false;
         expect(check.value.status).eq("stopped")
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be updated with errors', async()=> {
@@ -230,7 +230,7 @@ describe('A data import', async() => {
         expect(check.isError).false;
         expect(check.value.status_message!).not.empty
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be locked for processing', async()=> {
@@ -272,7 +272,7 @@ describe('A data import', async() => {
         importStorage.completeTransaction(transaction.value)
         importStorage.completeTransaction(transaction2.value)
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be retrieved by last stopped', async()=> {
@@ -306,7 +306,7 @@ describe('A data import', async() => {
         const last = await importStorage.RetrieveLast(exp.value.id!);
         expect(last.isError).false;
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 });
 

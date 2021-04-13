@@ -68,7 +68,7 @@ describe('A Metatype Relationship Pair Mapper can', async() => {
         }))
         expect(pair.isError).false;
 
-        return mMapper.PermanentlyDelete(metatype.value[0].id!);
+        return mMapper.Delete(metatype.value[0].id!);
     });
 
     it('can be archived and permanently deleted', async()=> {

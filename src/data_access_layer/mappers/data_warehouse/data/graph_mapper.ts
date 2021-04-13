@@ -61,7 +61,7 @@ export default class GraphMapper extends Mapper {
         return Promise.resolve(Result.Success(r.value[0]))
     }
 
-    public PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id))
     }
 

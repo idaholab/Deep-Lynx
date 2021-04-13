@@ -32,7 +32,7 @@ describe('A User', async() => {
         expect(user.isError).false;
         expect(user.value).not.empty;
 
-        return storage.PermanentlyDelete(user.value.id!)
+        return storage.Delete(user.value.id!)
     });
 
     it('can have their email validated', async()=> {
@@ -56,7 +56,7 @@ describe('A User', async() => {
         expect(validated.isError).false;
         expect(validated.value).true;
 
-        return storage.PermanentlyDelete(user.value.id!)
+        return storage.Delete(user.value.id!)
     });
 
     it('can have reset token set', async()=> {
@@ -80,7 +80,7 @@ describe('A User', async() => {
         expect(reset.isError).false;
         expect(reset.value).true;
 
-        return storage.PermanentlyDelete(user.value.id!)
+        return storage.Delete(user.value.id!)
     });
 
     it('can be retrieved from  storage', async()=> {
@@ -103,7 +103,7 @@ describe('A User', async() => {
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(user.value.id);
 
-        return storage.PermanentlyDelete(user.value.id!)
+        return storage.Delete(user.value.id!)
     });
 
     it('can be listed from storage', async()=> {
@@ -126,7 +126,7 @@ describe('A User', async() => {
         expect(retrieved.isError).false;
         expect(retrieved.value).not.empty;
 
-        return storage.PermanentlyDelete(user.value.id!)
+        return storage.Delete(user.value.id!)
     });
 
     it('can be updated in storage', async()=> {
@@ -159,6 +159,6 @@ describe('A User', async() => {
         expect(retrieved.value.display_name).eq(updatedName);
         expect(retrieved.value.email).eq(updatedEmail);
 
-        return storage.PermanentlyDelete(user.value.id!)
+        return storage.Delete(user.value.id!)
     })
 });

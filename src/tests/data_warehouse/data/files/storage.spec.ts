@@ -45,7 +45,7 @@ describe('A File can', async() => {
     });
 
     after(async () => {
-       await DataSourceMapper.Instance.PermanentlyDelete(dataSourceID)
+       await DataSourceMapper.Instance.Delete(dataSourceID)
 
        return ContainerStorage.Instance.Delete(containerID)
     })
@@ -67,7 +67,7 @@ describe('A File can', async() => {
         expect(file.value).not.empty
 
 
-        return mapper.PermanentlyDelete(file.value.id!)
+        return mapper.Delete(file.value.id!)
     });
 
     it('can be retrieved from  storage', async()=> {
@@ -87,7 +87,7 @@ describe('A File can', async() => {
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(file.value.id);
 
-        return mapper.PermanentlyDelete(file.value.id!)
+        return mapper.Delete(file.value.id!)
     });
 
     it('can be updated in storage', async()=> {
@@ -113,6 +113,6 @@ describe('A File can', async() => {
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(file.value.id);
 
-        return mapper.PermanentlyDelete(file.value.id!)
+        return mapper.Delete(file.value.id!)
     })
 });

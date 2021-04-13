@@ -51,7 +51,7 @@ describe('A Metatype Key', async() => {
         const keys = await storage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        return mMapper.PermanentlyDelete(metatype.value.id!)
+        return mMapper.Delete(metatype.value.id!)
     });
 
     it('can be saved to storage with valid regex', async()=> {
@@ -70,7 +70,7 @@ describe('A Metatype Key', async() => {
         const keys = await storage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        return mMapper.PermanentlyDelete(metatype.value.id!)
+        return mMapper.Delete(metatype.value.id!)
     });
 
 
@@ -99,7 +99,7 @@ describe('A Metatype Key', async() => {
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(key.value.id);
 
-        return mMapper.PermanentlyDelete(metatype.value.id!)
+        return mMapper.Delete(metatype.value.id!)
     });
 
     it('can be listed from storage', async()=> {
@@ -124,7 +124,7 @@ describe('A Metatype Key', async() => {
         expect(retrieved.value).not.empty;
         expect(retrieved.value).length(keys.value.length);
 
-        return mMapper.PermanentlyDelete(metatype.value.id!)
+        return mMapper.Delete(metatype.value.id!)
     })
 
     it('can be batch updated', async()=> {
@@ -146,7 +146,7 @@ describe('A Metatype Key', async() => {
         const updateKeys = await storage.BulkUpdate("test suite", keys.value);
         expect(updateKeys.isError).false;
 
-        return mMapper.PermanentlyDelete(metatype.value.id!)
+        return mMapper.Delete(metatype.value.id!)
     });
 });
 

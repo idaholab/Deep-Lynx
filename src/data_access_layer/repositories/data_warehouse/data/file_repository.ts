@@ -18,7 +18,7 @@ export default class FileRepository extends Repository implements RepositoryInte
 
     delete(f: File): Promise<Result<boolean>> {
         if(f.id) {
-            return this.#mapper.PermanentlyDelete(f.id)
+            return this.#mapper.Delete(f.id)
         }
 
         return Promise.resolve(Result.Failure(`file must have id`))

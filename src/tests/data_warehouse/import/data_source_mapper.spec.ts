@@ -48,7 +48,7 @@ describe('A Data Source', async() => {
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be retrieved from  storage', async()=> {
@@ -68,7 +68,7 @@ describe('A Data Source', async() => {
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(exp.value.id);
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be updated in storage', async()=> {
@@ -92,6 +92,6 @@ describe('A Data Source', async() => {
         expect(updateResult.isError).false;
         expect(updateResult.value.name).eq("New Name")
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     })
 });

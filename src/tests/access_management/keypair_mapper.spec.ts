@@ -40,10 +40,10 @@ describe('A KeyPair', async() => {
         const keypair = await KeyPairMapper.Instance.Create(kp)
         expect(keypair.isError).false
 
-        const keypairDelete = await KeyPairMapper.Instance.PermanentlyDelete(keypair.value.key)
+        const keypairDelete = await KeyPairMapper.Instance.Delete(keypair.value.key)
         expect(keypairDelete.isError).false
 
-        return storage.PermanentlyDelete(user.value.id!)
+        return storage.Delete(user.value.id!)
     });
 
     it('can be validated', async()=> {
@@ -76,9 +76,9 @@ describe('A KeyPair', async() => {
         const invalidated = await keyRepo.validateKeyPair(keypair.value.key, "fake key should fail")
         expect(invalidated).false
 
-        const keypairDelete = await KeyPairMapper.Instance.PermanentlyDelete(keypair.value.key)
+        const keypairDelete = await KeyPairMapper.Instance.Delete(keypair.value.key)
         expect(keypairDelete.isError).false
 
-        return storage.PermanentlyDelete(user.value.id!)
+        return storage.Delete(user.value.id!)
     }).timeout(5000); // bcrypt takes its time
 });

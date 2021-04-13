@@ -42,7 +42,7 @@ describe('An Export', async() => {
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be retrieved from  storage', async()=> {
@@ -58,7 +58,7 @@ describe('An Export', async() => {
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(exp.value.id);
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be have its status set', async()=> {
@@ -73,7 +73,7 @@ describe('An Export', async() => {
         const set = await storage.SetStatus("test suite", exp.value.id!, "processing");
         expect(set.isError).false;
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be updated in storage', async()=> {
@@ -94,6 +94,6 @@ describe('An Export', async() => {
         expect(retrieved.isError).false;
         expect(retrieved.value.status).eq("processing");
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     })
 });

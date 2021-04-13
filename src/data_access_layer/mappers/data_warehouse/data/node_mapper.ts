@@ -55,7 +55,7 @@ export default class NodeMapper extends Mapper{
         return super.run(this.fullUpdateStatement(userID, ...nodes), {transaction, resultClass})
     }
 
-    public PermanentlyDelete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
+    public Delete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id), {transaction})
     }
 

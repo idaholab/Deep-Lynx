@@ -18,7 +18,7 @@ export default class DataStagingRepository extends Repository implements Reposit
 
     delete(t: DataStaging): Promise<Result<boolean>> {
         if(t.id) {
-            return this.#mapper.PermanentlyDelete(t.id)
+            return this.#mapper.Delete(t.id)
         }
 
         return Promise.resolve(Result.Failure(`data record has no id`))

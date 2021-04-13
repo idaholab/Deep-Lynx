@@ -51,7 +51,7 @@ describe('An Event Registration Mapper Can', async() => {
         expect(updateEvent.isError).false;
         expect(updateEvent.value.app_url).eq("yellow/flower")
 
-        const deleteEvent = await storage.PermanentlyDelete(updateEvent.value.id!);
+        const deleteEvent = await storage.Delete(updateEvent.value.id!);
         expect(deleteEvent.isError).false;
 
         return Promise.resolve()

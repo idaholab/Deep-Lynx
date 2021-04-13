@@ -29,7 +29,7 @@ export default class TypeTransformationRepository extends Repository implements 
             this.deleteCached(t)
             this.#mappingRepo.deleteCached(t.type_mapping_id!)
 
-            return this.#mapper.PermanentlyDelete(t.id)
+            return this.#mapper.Delete(t.id)
         }
 
         return Promise.resolve(Result.Failure(`transformation must have id`))

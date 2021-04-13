@@ -36,7 +36,7 @@ describe('A OAuth Application can', async() => {
     });
 
     after(async () => {
-        return UserMapper.Instance.PermanentlyDelete(user.id!)
+        return UserMapper.Instance.Delete(user.id!)
     })
 
     it('can be saved to storage', async() => {
@@ -50,7 +50,7 @@ describe('A OAuth Application can', async() => {
 
         expect(application.isError).false
 
-        return storage.PermanentlyDelete(application.value.id!)
+        return storage.Delete(application.value.id!)
     })
 
     it('can be listed by user id', async() => {
@@ -68,7 +68,7 @@ describe('A OAuth Application can', async() => {
         expect(applications.isError).false
         expect(applications).not.empty
 
-        return storage.PermanentlyDelete(application.value.id!)
+        return storage.Delete(application.value.id!)
     })
 
     it('can be marked approved for user', async() => {
@@ -90,6 +90,6 @@ describe('A OAuth Application can', async() => {
         expect(isApproved.isError).false
         expect(isApproved.value).true
 
-        return storage.PermanentlyDelete(application.value.id!)
+        return storage.Delete(application.value.id!)
     })
 })

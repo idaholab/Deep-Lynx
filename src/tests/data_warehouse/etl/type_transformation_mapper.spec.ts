@@ -94,7 +94,7 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(transformation.isError).false
 
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be retrieved from storage', async()=> {
@@ -152,7 +152,7 @@ describe('A Data Type Mapping Transformation', async() => {
         retrieved = await TypeTransformationMapper.Instance.Retrieve(transformation.value.id!)
         expect(retrieved.isError).false
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can listed by type mapping id', async()=> {
@@ -212,7 +212,7 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(retrieved.value).not.empty
 
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('fetch keys from payload using dot notation', async() => {

@@ -245,7 +245,7 @@ export default class MetatypeRelationshipRepository extends Repository implement
         if(m.id) {
             this.deleteCached(m.id)
 
-            return this.#mapper.PermanentlyDelete(m.id)
+            return this.#mapper.Delete(m.id)
         }
 
         return Promise.resolve(Result.Failure('metatype relationship has no id'))

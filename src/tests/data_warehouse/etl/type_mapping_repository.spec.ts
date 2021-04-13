@@ -82,7 +82,7 @@ describe('A Type Mapping Repository', async() => {
     });
 
     after(async () => {
-        await UserMapper.Instance.PermanentlyDelete(user.id!)
+        await UserMapper.Instance.Delete(user.id!)
         return ContainerMapper.Instance.Delete(containerID)
     })
 

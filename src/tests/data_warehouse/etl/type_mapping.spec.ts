@@ -330,7 +330,7 @@ describe('A Data Type Mapping can', async() => {
     })
 
     after(async () => {
-        await UserMapper.Instance.PermanentlyDelete(user.id!)
+        await UserMapper.Instance.Delete(user.id!)
         return ContainerMapper.Instance.Delete(containerID)
     })
 
@@ -370,7 +370,7 @@ describe('A Data Type Mapping can', async() => {
         const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[])
         expect(inserted.isError).false
 
-        return NodeMapper.Instance.PermanentlyDelete(inserted.value[0].id!)
+        return NodeMapper.Instance.Delete(inserted.value[0].id!)
     })
 
     it('can generate a car node with constant values', async() => {
@@ -411,7 +411,7 @@ describe('A Data Type Mapping can', async() => {
         const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[])
         expect(inserted.isError).false
 
-        return NodeMapper.Instance.PermanentlyDelete(inserted.value[0].id!)
+        return NodeMapper.Instance.Delete(inserted.value[0].id!)
     })
 
     // this will handle testing the root array function
@@ -466,8 +466,8 @@ describe('A Data Type Mapping can', async() => {
         const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[])
         expect(inserted.isError).false
 
-        await NodeMapper.Instance.PermanentlyDelete(inserted.value[0].id!)
-        return NodeMapper.Instance.PermanentlyDelete(inserted.value[1].id!)
+        await NodeMapper.Instance.Delete(inserted.value[0].id!)
+        return NodeMapper.Instance.Delete(inserted.value[1].id!)
     })
 
     it('can generate parts lists entries', async() => {
@@ -549,11 +549,11 @@ describe('A Data Type Mapping can', async() => {
         const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[])
         expect(inserted.isError).false
 
-        await NodeMapper.Instance.PermanentlyDelete(inserted.value[0].id!)
-        await NodeMapper.Instance.PermanentlyDelete(inserted.value[1].id!)
-        await NodeMapper.Instance.PermanentlyDelete(inserted.value[2].id!)
-        await NodeMapper.Instance.PermanentlyDelete(inserted.value[3].id!)
-        return NodeMapper.Instance.PermanentlyDelete(inserted.value[4].id!)
+        await NodeMapper.Instance.Delete(inserted.value[0].id!)
+        await NodeMapper.Instance.Delete(inserted.value[1].id!)
+        await NodeMapper.Instance.Delete(inserted.value[2].id!)
+        await NodeMapper.Instance.Delete(inserted.value[3].id!)
+        return NodeMapper.Instance.Delete(inserted.value[4].id!)
     })
 
     it('can generate parts lists entries based on conditions', async() => {
@@ -616,7 +616,7 @@ describe('A Data Type Mapping can', async() => {
         const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[])
         expect(inserted.isError).false
 
-        return NodeMapper.Instance.PermanentlyDelete(inserted.value[0].id!)
+        return NodeMapper.Instance.Delete(inserted.value[0].id!)
     })
 
 
@@ -660,7 +660,7 @@ describe('A Data Type Mapping can', async() => {
         const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[])
         expect(inserted.isError).false
 
-        return NodeMapper.Instance.PermanentlyDelete(inserted.value[0].id!)
+        return NodeMapper.Instance.Delete(inserted.value[0].id!)
     })
 
 
@@ -792,9 +792,9 @@ describe('A Data Type Mapping can', async() => {
         const maintenanceEdgeInserted = await EdgeMapper.Instance.BulkCreateOrUpdateByCompositeID("test suite", maintenanceEdgeResult.value as Edge[])
         expect(maintenanceEdgeInserted.isError).false
 
-        await NodeMapper.Instance.PermanentlyDelete(maintenanceInserted.value[0].id!)
-        await NodeMapper.Instance.PermanentlyDelete(inserted.value[0].id!)
-        return NodeMapper.Instance.PermanentlyDelete(inserted.value[1].id!)
+        await NodeMapper.Instance.Delete(maintenanceInserted.value[0].id!)
+        await NodeMapper.Instance.Delete(inserted.value[0].id!)
+        return NodeMapper.Instance.Delete(inserted.value[1].id!)
     })
 
 

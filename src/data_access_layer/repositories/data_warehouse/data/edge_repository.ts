@@ -35,7 +35,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
 
     delete(e: Edge): Promise<Result<boolean>> {
         if(e.id) {
-            return this.#mapper.PermanentlyDelete(e.id!)
+            return this.#mapper.Delete(e.id!)
         }
 
         return Promise.resolve(Result.Failure('node must have id'))

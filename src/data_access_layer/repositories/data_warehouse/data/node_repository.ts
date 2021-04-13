@@ -32,7 +32,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
 
     delete(n: Node): Promise<Result<boolean>> {
         if(n.id) {
-            return this.#mapper.PermanentlyDelete(n.id!)
+            return this.#mapper.Delete(n.id!)
         }
 
         return Promise.resolve(Result.Failure('node must have id'))

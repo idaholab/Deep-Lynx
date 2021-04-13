@@ -50,7 +50,7 @@ describe('An Event Registration Repository', async() => {
     });
 
     after(async () => {
-        await UserMapper.Instance.PermanentlyDelete(user.id!)
+        await UserMapper.Instance.Delete(user.id!)
         return ContainerMapper.Instance.Delete(container.id!)
     })
 

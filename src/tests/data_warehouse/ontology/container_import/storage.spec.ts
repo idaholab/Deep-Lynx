@@ -47,7 +47,7 @@ describe('A Container Import', async() => {
     });
 
     after(async () => {
-        return UserMapper.Instance.PermanentlyDelete(user.id!)
+        return UserMapper.Instance.Delete(user.id!)
     })
 
     it('can create a container from a valid ontology file', async()=> {
@@ -131,6 +131,7 @@ describe('A Container Import', async() => {
 
         expect(container.isError).true;
 
+        await storage.Delete(containerID)
         return storage.Delete(container.value)
     });
 
@@ -175,6 +176,7 @@ describe('A Container Import', async() => {
 
         expect(container.isError).true;
 
+        await storage.Delete(containerID)
         return storage.Delete(container.value)
     });
 
@@ -260,6 +262,7 @@ describe('A Container Import', async() => {
 
         expect(container.isError).true;
 
+        await storage.Delete(containerID)
         return storage.Delete(container.value)
     })
 
@@ -284,6 +287,7 @@ describe('A Container Import', async() => {
         expect(container.isError).false;
         expect(container.value).not.empty;
 
+        await storage.Delete(containerID)
         return storage.Delete(container.value)
     });
 });

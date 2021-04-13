@@ -64,7 +64,7 @@ export default class KeyPairMapper extends Mapper{
         return super.rows(this.keysForUserStatement(userID), {resultClass})
     }
 
-    public PermanentlyDelete(key : string): Promise<Result<boolean>> {
+    public Delete(key : string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(key))
     }
 

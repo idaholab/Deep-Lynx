@@ -49,7 +49,7 @@ describe('An OAuth Repository', async() => {
     });
 
     after(async () => {
-        await UserMapper.Instance.PermanentlyDelete(user.id!)
+        await UserMapper.Instance.Delete(user.id!)
         return ContainerMapper.Instance.Delete(container.id!)
     })
 

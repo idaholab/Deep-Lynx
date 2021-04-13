@@ -88,7 +88,7 @@ export async function StartQueue(): Promise<Result<boolean>> {
         }
         // remove the task from the queue
         // task must be removed even if there was an error (potential for multiple listeners)
-        await EventQueueMapper.Instance.PermanentlyDelete(task.id!);
+        await EventQueueMapper.Instance.Delete(task.id!);
       }
       await delay(Config.queue_poll_interval)
     }

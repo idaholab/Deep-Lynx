@@ -48,7 +48,7 @@ describe('A User Container Invite can', async() => {
 
     after(async () => {
         await ContainerMapper.Instance.Delete(containerID)
-        return UserMapper.Instance.PermanentlyDelete(user.id!)
+        return UserMapper.Instance.Delete(user.id!)
     })
 
     it('can be saved to storage', async() => {
@@ -70,7 +70,7 @@ describe('A User Container Invite can', async() => {
         expect(invites.value).not.empty
 
         for(const invite of invites.value) {
-            await storage.PermanentlyDelete(invite.id!)
+            await storage.Delete(invite.id!)
         }
 
         return Promise.resolve()

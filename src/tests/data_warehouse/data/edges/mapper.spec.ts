@@ -133,7 +133,7 @@ describe('An Edge Mapper', async() => {
 
         expect(edge.isError).false;
 
-        return gStorage.PermanentlyDelete(graph.value.id!)
+        return gStorage.Delete(graph.value.id!)
     });
 
     it('can be created with original IDs in place of nodeIDS', async()=> {
@@ -232,7 +232,7 @@ describe('An Edge Mapper', async() => {
 
         expect(edge.isError).false;
 
-        return gStorage.PermanentlyDelete(graph.value.id!)
+        return gStorage.Delete(graph.value.id!)
     });
 
     it('can be archived and permanently deleted', async()=> {
@@ -314,10 +314,10 @@ describe('An Edge Mapper', async() => {
         const archived = await storage.Archive("test suite", edge.value.id!);
         expect(archived.isError).false;
 
-        const deleted = await storage.PermanentlyDelete(edge.value.id!);
+        const deleted = await storage.Delete(edge.value.id!);
         expect(deleted.isError).false;
 
-        return gStorage.PermanentlyDelete(graph.value.id!)
+        return gStorage.Delete(graph.value.id!)
     });
 
     it('can be updated', async()=> {
@@ -405,7 +405,7 @@ describe('An Edge Mapper', async() => {
         expect(updatedEdge.isError, updatedEdge.error?.error).false;
         expect(updatedEdge.value.properties).to.have.deep.property('flower_name', "Violet")
 
-        return gStorage.PermanentlyDelete(graph.value.id!)
+        return gStorage.Delete(graph.value.id!)
     })
 });
 
