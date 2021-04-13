@@ -1,4 +1,3 @@
-/* tslint:disable */
 import Logger from "../../../services/logger";
 import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import ContainerStorage from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
@@ -15,9 +14,10 @@ import TypeTransformationMapper from "../../../data_access_layer/mappers/data_wa
 import TypeTransformation, {Condition, KeyMapping} from "../../../data_warehouse/etl/type_transformation";
 import MetatypeKey from "../../../data_warehouse/ontology/metatype_key";
 import DataSourceRecord from "../../../data_warehouse/import/data_source";
+import ContainerMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
 
 describe('A Data Type Mapping Transformation', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -26,7 +26,7 @@ describe('A Data Type Mapping Transformation', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -36,13 +36,18 @@ describe('A Data Type Mapping Transformation', async() => {
 
         return Promise.resolve()
     });
-    it('can be saved to storage', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyMapper.Instance
-        let mappingStorage = TypeMappingMapper.Instance
 
-        let metatype = await mMapper.Create( "test suite",
+    after(async () => {
+        return ContainerMapper.Instance.Delete(containerID)
+    })
+
+    it('can be saved to storage', async()=> {
+        const storage = DataSourceMapper.Instance;
+        const mMapper = MetatypeMapper.Instance;
+        const keyStorage = MetatypeKeyMapper.Instance
+        const mappingStorage = TypeMappingMapper.Instance
+
+        const metatype = await mMapper.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatype.isError).false;
@@ -51,10 +56,10 @@ describe('A Data Type Mapping Transformation', async() => {
         const testKeys = [...test_keys]
         testKeys.forEach(key => key.metatype_id = metatype.value.id!)
 
-        let keys = await keyStorage.BulkCreate("test suite", testKeys);
+        const keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        let exp = await DataSourceMapper.Instance.Create("test suite",
+        const exp = await DataSourceMapper.Instance.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -66,13 +71,13 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(exp.value).not.empty;
 
 
-        let mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
+        const mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
             sample_payload: test_raw_payload
         }))
 
-        let transformation = await TypeTransformationMapper.Instance.Create("test suite", new TypeTransformation({
+        const transformation = await TypeTransformationMapper.Instance.Create("test suite", new TypeTransformation({
             type_mapping_id: mapping.value.id!,
             metatype_id: metatype.value.id,
             conditions: [new Condition({
@@ -89,16 +94,16 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(transformation.isError).false
 
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be retrieved from storage', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyMapper.Instance
-        let mappingStorage = TypeMappingMapper.Instance
+        const storage = DataSourceMapper.Instance;
+        const mMapper = MetatypeMapper.Instance;
+        const keyStorage = MetatypeKeyMapper.Instance
+        const mappingStorage = TypeMappingMapper.Instance
 
-        let metatype = await mMapper.Create( "test suite",
+        const metatype = await mMapper.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatype.isError).false;
@@ -107,10 +112,10 @@ describe('A Data Type Mapping Transformation', async() => {
         const testKeys = [...test_keys]
         testKeys.forEach(key => key.metatype_id = metatype.value.id!)
 
-        let keys = await keyStorage.BulkCreate("test suite", testKeys);
+        const keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        let exp = await DataSourceMapper.Instance.Create("test suite",
+        const exp = await DataSourceMapper.Instance.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -122,13 +127,13 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(exp.value).not.empty;
 
 
-        let mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
+        const mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
             sample_payload: test_raw_payload
         }))
 
-        let transformation = await TypeTransformationMapper.Instance.Create("test suite", new TypeTransformation({
+        const transformation = await TypeTransformationMapper.Instance.Create("test suite", new TypeTransformation({
             type_mapping_id: mapping.value.id!,
             metatype_id: metatype.value.id,
             keys: [new KeyMapping({
@@ -147,16 +152,16 @@ describe('A Data Type Mapping Transformation', async() => {
         retrieved = await TypeTransformationMapper.Instance.Retrieve(transformation.value.id!)
         expect(retrieved.isError).false
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can listed by type mapping id', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyMapper.Instance
-        let mappingStorage = TypeMappingMapper.Instance
+        const storage = DataSourceMapper.Instance;
+        const mMapper = MetatypeMapper.Instance;
+        const keyStorage = MetatypeKeyMapper.Instance
+        const mappingStorage = TypeMappingMapper.Instance
 
-        let metatype = await mMapper.Create( "test suite",
+        const metatype = await mMapper.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatype.isError).false;
@@ -165,10 +170,10 @@ describe('A Data Type Mapping Transformation', async() => {
         const testKeys = [...test_keys]
         testKeys.forEach(key => key.metatype_id = metatype.value.id!)
 
-        let keys = await keyStorage.BulkCreate("test suite", testKeys);
+        const keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        let exp = await DataSourceMapper.Instance.Create("test suite",
+        const exp = await DataSourceMapper.Instance.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -180,13 +185,13 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(exp.value).not.empty;
 
 
-        let mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
+        const mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
             sample_payload: test_raw_payload
         }))
 
-        let transformation = await TypeTransformationMapper.Instance.Create("test suite", new TypeTransformation({
+        const transformation = await TypeTransformationMapper.Instance.Create("test suite", new TypeTransformation({
             type_mapping_id: mapping.value.id!,
             metatype_id: metatype.value.id,
             keys: [ new KeyMapping({
@@ -207,7 +212,7 @@ describe('A Data Type Mapping Transformation', async() => {
         expect(retrieved.value).not.empty
 
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('fetch keys from payload using dot notation', async() => {

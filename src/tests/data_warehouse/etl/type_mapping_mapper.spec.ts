@@ -1,4 +1,3 @@
-/* tslint:disable */
 import faker from 'faker'
 import {expect} from 'chai'
 import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/postgres/postgres";
@@ -16,7 +15,7 @@ import MetatypeKey from "../../../data_warehouse/ontology/metatype_key";
 import DataSourceRecord from "../../../data_warehouse/import/data_source";
 
 describe('A Data Type Mapping', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
        if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -24,29 +23,29 @@ describe('A Data Type Mapping', async() => {
            this.skip()
        }
 
-        await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+       await PostgresAdapter.Instance.init();
+       const mapper = ContainerStorage.Instance;
 
-        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
+       const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
-        expect(container.isError).false;
-        expect(container.value.id).not.null
-        containerID = container.value.id!;
+       expect(container.isError).false;
+       expect(container.value.id).not.null
+       containerID = container.value.id!;
 
-        return Promise.resolve()
+       return Promise.resolve()
     });
 
-    after(async function() {
+    after(async () => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 
     it('can be saved to storage', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyMapper.Instance
-        let mappingStorage = TypeMappingMapper.Instance
+        const storage = DataSourceMapper.Instance;
+        const mMapper = MetatypeMapper.Instance;
+        const keyStorage = MetatypeKeyMapper.Instance
+        const mappingStorage = TypeMappingMapper.Instance
 
-        let metatype = await mMapper.Create("test suite",
+        const metatype = await mMapper.Create("test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatype.isError).false;
@@ -55,10 +54,10 @@ describe('A Data Type Mapping', async() => {
         const testKeys = [...test_keys]
         testKeys.forEach(key => key.metatype_id = metatype.value.id!)
 
-        let keys = await keyStorage.BulkCreate("test suite", testKeys);
+        const keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        let exp = await DataSourceMapper.Instance.Create("test suite",
+        const exp = await DataSourceMapper.Instance.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -69,7 +68,7 @@ describe('A Data Type Mapping', async() => {
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
+        const mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
             sample_payload: test_raw_payload
@@ -78,16 +77,16 @@ describe('A Data Type Mapping', async() => {
         expect(mapping.isError).false
 
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be retrieved from storage', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyMapper.Instance
-        let mappingStorage = TypeMappingMapper.Instance
+        const storage = DataSourceMapper.Instance;
+        const mMapper = MetatypeMapper.Instance;
+        const keyStorage = MetatypeKeyMapper.Instance
+        const mappingStorage = TypeMappingMapper.Instance
 
-        let metatype = await mMapper.Create( "test suite",
+        const metatype = await mMapper.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatype.isError).false;
@@ -96,10 +95,10 @@ describe('A Data Type Mapping', async() => {
         const testKeys = [...test_keys]
         testKeys.forEach(key => key.metatype_id = metatype.value.id!)
 
-        let keys = await keyStorage.BulkCreate("test suite", testKeys);
+        const keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        let exp = await DataSourceMapper.Instance.Create("test suite",
+        const exp = await DataSourceMapper.Instance.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -111,7 +110,7 @@ describe('A Data Type Mapping', async() => {
         expect(exp.value).not.empty;
 
 
-        let mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
+        const mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
             sample_payload: test_raw_payload
@@ -119,19 +118,19 @@ describe('A Data Type Mapping', async() => {
 
         expect(mapping.isError).false
 
-        let fetched = await mappingStorage.Retrieve(mapping.value.id!)
+        const fetched = await mappingStorage.Retrieve(mapping.value.id!)
         expect(fetched.isError).false
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can set active', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyMapper.Instance
-        let mappingStorage = TypeMappingMapper.Instance
+        const storage = DataSourceMapper.Instance;
+        const mMapper = MetatypeMapper.Instance;
+        const keyStorage = MetatypeKeyMapper.Instance
+        const mappingStorage = TypeMappingMapper.Instance
 
-        let metatype = await mMapper.Create( "test suite",
+        const metatype = await mMapper.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatype.isError).false;
@@ -140,10 +139,10 @@ describe('A Data Type Mapping', async() => {
         const testKeys = [...test_keys]
         testKeys.forEach(key => key.metatype_id = metatype.value.id!)
 
-        let keys = await keyStorage.BulkCreate("test suite", testKeys);
+        const keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        let exp = await DataSourceMapper.Instance.Create("test suite",
+        const exp = await DataSourceMapper.Instance.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -155,28 +154,28 @@ describe('A Data Type Mapping', async() => {
         expect(exp.value).not.empty;
 
 
-        let mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
+        const mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
             sample_payload: test_raw_payload
         }))
 
-        let set = await mappingStorage.SetActive(mapping.value.id!)
+        const set = await mappingStorage.SetActive(mapping.value.id!)
 
-        let fetched = await mappingStorage.Retrieve(mapping.value.id!)
+        const fetched = await mappingStorage.Retrieve(mapping.value.id!)
         expect(fetched.isError).false
         expect(fetched.value.active).true
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be listed from storage by container and data source', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyMapper.Instance
-        let mappingStorage = TypeMappingMapper.Instance
+        const storage = DataSourceMapper.Instance;
+        const mMapper = MetatypeMapper.Instance;
+        const keyStorage = MetatypeKeyMapper.Instance
+        const mappingStorage = TypeMappingMapper.Instance
 
-        let metatype = await mMapper.Create( "test suite",
+        const metatype = await mMapper.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatype.isError).false;
@@ -185,10 +184,10 @@ describe('A Data Type Mapping', async() => {
         const testKeys = [...test_keys]
         testKeys.forEach(key => key.metatype_id = metatype.value.id!)
 
-        let keys = await keyStorage.BulkCreate("test suite", testKeys);
+        const keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        let exp = await DataSourceMapper.Instance.Create("test suite",
+        const exp = await DataSourceMapper.Instance.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -200,7 +199,7 @@ describe('A Data Type Mapping', async() => {
         expect(exp.value).not.empty;
 
 
-        let mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
+        const mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
             sample_payload: test_raw_payload
@@ -208,24 +207,24 @@ describe('A Data Type Mapping', async() => {
 
         expect(mapping.isError).false
 
-        let fetched = await mappingStorage.List(containerID, exp.value.id!, 0, 100)
+        const fetched = await mappingStorage.List(containerID, exp.value.id!, 0, 100)
         expect(fetched.isError).false
         expect(fetched.value).not.empty
 
-        let fetched2 = await mappingStorage.ListByDataSource(exp.value.id!, 0, 100)
+        const fetched2 = await mappingStorage.ListByDataSource(exp.value.id!, 0, 100)
         expect(fetched2.isError).false
         expect(fetched2.value).not.empty
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be deleted from storage', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let mMapper = MetatypeMapper.Instance;
-        let keyStorage = MetatypeKeyMapper.Instance
-        let mappingStorage = TypeMappingMapper.Instance
+        const storage = DataSourceMapper.Instance;
+        const mMapper = MetatypeMapper.Instance;
+        const keyStorage = MetatypeKeyMapper.Instance
+        const mappingStorage = TypeMappingMapper.Instance
 
-        let metatype = await mMapper.Create( "test suite",
+        const metatype = await mMapper.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(metatype.isError).false;
@@ -234,10 +233,10 @@ describe('A Data Type Mapping', async() => {
         const testKeys = [...test_keys]
         testKeys.forEach(key => key.metatype_id = metatype.value.id!)
 
-        let keys = await keyStorage.BulkCreate("test suite", testKeys);
+        const keys = await keyStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
-        let exp = await DataSourceMapper.Instance.Create("test suite",
+        const exp = await DataSourceMapper.Instance.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -249,7 +248,7 @@ describe('A Data Type Mapping', async() => {
         expect(exp.value).not.empty;
 
 
-        let mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
+        const mapping = await mappingStorage.CreateOrUpdate("test suite", new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
             sample_payload: test_raw_payload
@@ -257,20 +256,20 @@ describe('A Data Type Mapping', async() => {
 
         expect(mapping.isError).false
 
-        let deleted = await mappingStorage.PermanentlyDelete(mapping.value.id!)
+        const deleted = await mappingStorage.Delete(mapping.value.id!)
         expect(deleted.value).true
 
-        let fetched = await mappingStorage.Retrieve(mapping.value.id!)
+        const fetched = await mappingStorage.Retrieve(mapping.value.id!)
         expect(fetched.isError).true
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('create valid shape hash of objects with array of objects', async() => {
-        let normalHash = TypeMapping.objectToShapeHash(test_payload)
+        const normalHash = TypeMapping.objectToShapeHash(test_payload)
         expect(normalHash).not.null
 
-        let arrayHash = TypeMapping.objectToShapeHash(test_payload_single_array)
+        const arrayHash = TypeMapping.objectToShapeHash(test_payload_single_array)
         expect(arrayHash).eq(normalHash)
     })
 });

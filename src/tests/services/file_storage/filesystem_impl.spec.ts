@@ -1,4 +1,3 @@
-/* tslint:disable */
 import { expect } from 'chai'
 import * as fs from "fs";
 import Logger from "../../../services/logger";

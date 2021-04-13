@@ -75,7 +75,7 @@ export default class OAuthMapper extends Mapper{
         return new Promise(resolve => resolve(Result.Success(true)))
     }
 
-    public PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id))
     }
 

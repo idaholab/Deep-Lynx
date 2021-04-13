@@ -240,7 +240,7 @@ export default class MetatypeRepository extends Repository implements Repository
         if(m.id) {
             this.deleteCached(m.id)
 
-            return this.#mapper.PermanentlyDelete(m.id)
+            return this.#mapper.Delete(m.id)
         }
 
         return Promise.resolve(Result.Failure('metatype has no id'))

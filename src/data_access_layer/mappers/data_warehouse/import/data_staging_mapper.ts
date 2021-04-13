@@ -81,7 +81,7 @@ export default class DataStagingMapper extends Mapper {
         return super.runStatement(this.setInsertedStatement(id), {transaction})
     }
 
-    public async PermanentlyDelete(id: number): Promise<Result<boolean>> {
+    public async Delete(id: number): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id))
     }
 

@@ -1,4 +1,3 @@
-/* tslint:disable */
 import {User} from "../../../access_management/user";
 import Logger from "../../../services/logger";
 import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/postgres/postgres";
@@ -55,7 +54,7 @@ describe('A Type Mapping Repository', async() => {
         expect(userResult.value).not.empty;
         user = userResult.value
 
-        let created = await MetatypeMapper.Instance.Create( "test suite",
+        const created = await MetatypeMapper.Instance.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
         expect(created.isError).false;
@@ -67,7 +66,7 @@ describe('A Type Mapping Repository', async() => {
         expect(keyCreated.isError).false;
         key = keyCreated.value
 
-        let exp = await DataSourceMapper.Instance.Create("test suite",
+        const exp = await DataSourceMapper.Instance.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -82,8 +81,8 @@ describe('A Type Mapping Repository', async() => {
         return Promise.resolve()
     });
 
-    after(async function () {
-        await UserMapper.Instance.PermanentlyDelete(user.id!)
+    after(async () => {
+        await UserMapper.Instance.Delete(user.id!)
         return ContainerMapper.Instance.Delete(containerID)
     })
 
@@ -96,21 +95,21 @@ describe('A Type Mapping Repository', async() => {
        })
 
         // verify the hash ran
-        expect(mapping.shape_hash).not.undefined
+       expect(mapping.shape_hash).not.undefined
 
-        let saved = await repo.save(mapping, user)
-        expect(saved.isError).false
-        expect(mapping.id).not.undefined
+       let saved = await repo.save(mapping, user)
+       expect(saved.isError).false
+       expect(mapping.id).not.undefined
 
         // update the payload, rerun the hash
-        mapping.sample_payload = updated_payload
-        mapping.shape_hash = TypeMapping.objectToShapeHash(updated_payload)
+       mapping.sample_payload = updated_payload
+       mapping.shape_hash = TypeMapping.objectToShapeHash(updated_payload)
 
-        saved = await repo.save(mapping, user)
-        expect(saved.isError)
-        expect(mapping.shape_hash).eq(TypeMapping.objectToShapeHash(updated_payload))
+       saved = await repo.save(mapping, user)
+       expect(saved.isError)
+       expect(mapping.shape_hash).eq(TypeMapping.objectToShapeHash(updated_payload))
 
-        return repo.delete(mapping)
+       return repo.delete(mapping)
     })
 
     it('can save a Type Mapping with Transformations', async() => {

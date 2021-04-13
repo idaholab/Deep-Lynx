@@ -140,7 +140,7 @@ export default class OAuthRoutes {
     }
 
     private static deleteKeyPair(req: Request, res: Response, next: NextFunction) {
-        KeyPairMapper.Instance.PermanentlyDelete(req.params.keyID)
+        KeyPairMapper.Instance.Delete(req.params.keyID)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.redirect(buildUrl('/oauth/profile', {queryParams: {error: "Unable to delete key pair"}}))

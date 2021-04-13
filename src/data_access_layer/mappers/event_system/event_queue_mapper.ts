@@ -40,7 +40,7 @@ export default class EventQueueMapper extends Mapper{
         return Promise.resolve(plainToClass(Task, rows.value))
     }
 
-    public PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id))
     }
 

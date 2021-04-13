@@ -1,4 +1,3 @@
-/* tslint:disable */
 import faker from 'faker'
 import {expect} from 'chai'
 import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
@@ -37,6 +36,10 @@ describe('A Container Repository', async() => {
 
         return Promise.resolve()
     });
+
+    after(async () => {
+        return UserMapper.Instance.Delete(user.id!)
+    })
 
     it('can be saved', async()=> {
         const repository = new ContainerRepository()
@@ -97,7 +100,7 @@ describe('A Container Repository', async() => {
 
     it('can find container by ID', async()=> {
         const repository = new ContainerRepository()
-        let container = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()})
+        const container = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()})
 
         const result = await repository.save(container, user);
 
@@ -112,7 +115,7 @@ describe('A Container Repository', async() => {
     });
 
     it('can list containers for user', async()=> {
-        let repository = new ContainerRepository()
+        const repository = new ContainerRepository()
 
         const container1 = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()})
         const container2 = new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()})
@@ -127,7 +130,7 @@ describe('A Container Repository', async() => {
         expect(assigned).true
 
 
-        let retrieved = await repository.listForUser(user)
+        const retrieved = await repository.listForUser(user)
         expect(retrieved.isError).false;
         expect(retrieved.value.length).eq(1)
         expect(retrieved.value[0].id).eq(container1.id)

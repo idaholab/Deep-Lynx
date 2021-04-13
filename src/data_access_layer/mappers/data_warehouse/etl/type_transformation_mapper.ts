@@ -64,7 +64,7 @@ export default class TypeTransformationMapper extends Mapper{
         return super.runStatement(this.bulkDeleteStatement(transformations), {transaction})
     }
 
-    public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public async Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id))
     }
 

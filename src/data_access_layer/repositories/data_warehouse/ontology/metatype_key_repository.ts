@@ -18,7 +18,7 @@ export default class MetatypeKeyRepository extends  Repository implements Reposi
     delete(k: MetatypeKey): Promise<Result<boolean>> {
         if(k.id) {
             this.#metatypeRepo.deleteCached(k.metatype_id!);
-            return this.#mapper.PermanentlyDelete(k.id)
+            return this.#mapper.Delete(k.id)
         }
 
         return Promise.resolve(Result.Failure(`key has no id`));

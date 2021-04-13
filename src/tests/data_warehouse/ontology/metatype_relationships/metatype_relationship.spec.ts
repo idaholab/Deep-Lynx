@@ -1,4 +1,3 @@
-/* tslint:disable */
 import * as t from 'io-ts'
 import {expect} from 'chai'
 import {fold} from "fp-ts/lib/Either";
@@ -33,7 +32,7 @@ describe('A Metatype Relationship should', async() => {
             this.skip()
         }
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerMapper.Instance;
+        const mapper = ContainerMapper.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -44,7 +43,7 @@ describe('A Metatype Relationship should', async() => {
         return Promise.resolve()
     });
 
-    after(async function() {
+    after(async () => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 

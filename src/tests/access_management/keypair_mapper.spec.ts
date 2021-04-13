@@ -1,4 +1,3 @@
-/* tslint:disable */
 import faker from 'faker'
 import { expect } from 'chai'
 import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgres/postgres";
@@ -16,13 +15,13 @@ describe('A KeyPair', async() => {
            this.skip()
        }
 
-        return PostgresAdapter.Instance.init()
+       return PostgresAdapter.Instance.init()
     });
 
     it('can be created', async()=> {
-        let storage = UserMapper.Instance;
+        const storage = UserMapper.Instance;
 
-        let user = await storage.Create("test suite", new User(
+        const user = await storage.Create("test suite", new User(
             {
                 identity_provider_id: faker.random.uuid(),
                 identity_provider: "username_password",
@@ -35,19 +34,22 @@ describe('A KeyPair', async() => {
         expect(user.isError).false;
         expect(user.value).not.empty;
 
-        let kp = new KeyPair(user.value.id!)
+        const kp = new KeyPair(user.value.id!)
         expect((await kp.setSecret()).isError).false
 
-        let keypair = await KeyPairMapper.Instance.Create(kp)
+        const keypair = await KeyPairMapper.Instance.Create(kp)
         expect(keypair.isError).false
 
-        return storage.PermanentlyDelete(user.value.id!)
+        const keypairDelete = await KeyPairMapper.Instance.Delete(keypair.value.key)
+        expect(keypairDelete.isError).false
+
+        return storage.Delete(user.value.id!)
     });
 
     it('can be validated', async()=> {
-        let storage = UserMapper.Instance;
+        const storage = UserMapper.Instance;
 
-        let user = await storage.Create("test suite", new User(
+        const user = await storage.Create("test suite", new User(
             {
                 identity_provider_id: faker.random.uuid(),
                 identity_provider: "username_password",
@@ -60,20 +62,23 @@ describe('A KeyPair', async() => {
         expect(user.isError).false;
         expect(user.value).not.empty;
 
-        let kp = new KeyPair(user.value.id!)
+        const kp = new KeyPair(user.value.id!)
         expect((await kp.setSecret()).isError).false
 
-        let keypair = await KeyPairMapper.Instance.Create(kp)
+        const keypair = await KeyPairMapper.Instance.Create(kp)
         expect(keypair.isError).false
 
-        let keyRepo = new KeyPairRepository()
+        const keyRepo = new KeyPairRepository()
 
-        let validated = await keyRepo.validateKeyPair(keypair.value.key, keypair.value.secret_raw!)
+        const validated = await keyRepo.validateKeyPair(keypair.value.key, keypair.value.secret_raw!)
         expect(validated).true
 
-        let invalidated = await keyRepo.validateKeyPair(keypair.value.key, "fake key should fail")
+        const invalidated = await keyRepo.validateKeyPair(keypair.value.key, "fake key should fail")
         expect(invalidated).false
 
-        return storage.PermanentlyDelete(user.value.id!)
+        const keypairDelete = await KeyPairMapper.Instance.Delete(keypair.value.key)
+        expect(keypairDelete.isError).false
+
+        return storage.Delete(user.value.id!)
     }).timeout(5000); // bcrypt takes its time
 });

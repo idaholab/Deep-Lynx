@@ -29,7 +29,7 @@ export default class ExporterRepository extends Repository implements Repository
         const stopped = await t.Stop(user)
         if(stopped.isError) return Promise.resolve(Result.Failure(`unable to delete export, cannot stop export process ${stopped.error}`))
 
-        return this.#mapper.PermanentlyDelete(t.ExportRecord!.id!)
+        return this.#mapper.Delete(t.ExportRecord!.id!)
     }
 
     async findByID(id: string): Promise<Result<Exporter>> {

@@ -1,4 +1,3 @@
-/* tslint:disable */
 import Logger from "../../../services/logger";
 import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import MetatypeKeyMapper from "../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper";
@@ -24,7 +23,7 @@ import Edge from "../../../data_warehouse/data/edge";
 import ExportRecord, {StandardExporterConfig} from "../../../data_warehouse/export/export";
 
 describe('Gremlin Exporter', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -37,7 +36,7 @@ describe('Gremlin Exporter', async() => {
             this.skip()
         }
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -48,7 +47,7 @@ describe('Gremlin Exporter', async() => {
         return Promise.resolve()
     });
 
-    after(async function() {
+    after(async () => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 
@@ -62,7 +61,7 @@ describe('Gremlin Exporter', async() => {
         const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // SETUP CREATE NODES AND EDGE
-        let graph = await gStorage.Create(containerID, "test suite");
+        const graph = await gStorage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
@@ -101,13 +100,13 @@ describe('Gremlin Exporter', async() => {
         const node = await nStorage.BulkCreateOrUpdateByCompositeID("test suite",  mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        let relationship = await rMapper.Create("test suite",
+        const relationship = await rMapper.Create("test suite",
             new MetatypeRelationship({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
 
-        let pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
+        const pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
             "name": faker.name.findName(),
             "description": faker.random.alphaNumeric(),
             "origin_metatype": metatype.value[0].id!,
@@ -118,7 +117,7 @@ describe('Gremlin Exporter', async() => {
         }));
 
         // EDGE SETUP
-        let edge = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+        const edge = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
             container_id: containerID,
             graph_id: graph.value.id!,
             metatype_relationship_pair: pair.value.id!,
@@ -130,17 +129,17 @@ describe('Gremlin Exporter', async() => {
         expect(edge.isError).false;
 
         // INITIATE AND CHECK UNASSOCIATED
-        let exportStorage = ExportMapper.Instance;
+        const exportStorage = ExportMapper.Instance;
 
-        let exp = await exportStorage.Create("test suite",
+        const exp = await exportStorage.Create("test suite",
             new ExportRecord({container_id: containerID, adapter:"gremlin", config: new StandardExporterConfig()}));
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let gremlinExportStorage = GremlinExportMapper.Instance;
+        const gremlinExportStorage = GremlinExportMapper.Instance;
 
-        let initiated = await gremlinExportStorage.InitiateExport(exp.value.id!, containerID);
+        const initiated = await gremlinExportStorage.InitiateExport(exp.value.id!, containerID);
         expect(initiated.isError).false;
 
         const transaction = await GremlinExportMapper.Instance.startTransaction()
@@ -153,19 +152,19 @@ describe('Gremlin Exporter', async() => {
                 console.log(e)
             });
 
-        let unassociatedNodes = await gremlinExportStorage.ListUnassociatedNodesAndLock(exp.value.id!, 0, 100, transaction.value);
+        const unassociatedNodes = await gremlinExportStorage.ListUnassociatedNodesAndLock(exp.value.id!, 0, 100, transaction.value);
         expect(unassociatedNodes.isError).false;
         expect(unassociatedNodes.value).not.empty;
 
-        let unassociatedEdges = await gremlinExportStorage.ListUnassociatedEdgesAndLock(exp.value.id!, 0, 100, transaction.value);
+        const unassociatedEdges = await gremlinExportStorage.ListUnassociatedEdgesAndLock(exp.value.id!, 0, 100, transaction.value);
         expect(unassociatedEdges.isError).false;
         expect(unassociatedEdges.value).not.empty;
 
-        let associatedEdges = await gremlinExportStorage.ListAssociatedEdges(exp.value.id!, 0, 100);
+        const associatedEdges = await gremlinExportStorage.ListAssociatedEdges(exp.value.id!, 0, 100);
         expect(associatedEdges.isError).false;
         expect(associatedEdges.value).empty;
 
-        let associatedNodes = await gremlinExportStorage.ListAssociatedNodes(exp.value.id!, 0, 100);
+        const associatedNodes = await gremlinExportStorage.ListAssociatedNodes(exp.value.id!, 0, 100);
         expect(associatedNodes.isError).false;
         expect(associatedNodes).empty;
 

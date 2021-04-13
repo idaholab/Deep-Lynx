@@ -23,7 +23,7 @@ export default class DataSourceRepository extends Repository implements Reposito
     delete(t: DataSource): Promise<Result<boolean>> {
         if(!t.DataSourceRecord || !t.DataSourceRecord.id) return Promise.resolve(Result.Failure(`cannot delete data source: no data source record or record lacking id`))
 
-        return this.#mapper.PermanentlyDelete(t.DataSourceRecord.id!)
+        return this.#mapper.Delete(t.DataSourceRecord.id!)
     }
 
     async findByID(id: string): Promise<Result<DataSource>> {

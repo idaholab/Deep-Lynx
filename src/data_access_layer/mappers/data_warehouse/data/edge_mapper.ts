@@ -70,7 +70,7 @@ export default class EdgeMapper extends Mapper{
         return super.retrieve<Edge>(this.retrieveByCompositeIDStatement(compositeID, dataSourceID), {transaction, resultClass})
     }
 
-    public PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id))
     }
 

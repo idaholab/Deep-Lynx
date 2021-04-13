@@ -37,7 +37,7 @@ export default class UserRepository extends Repository implements RepositoryInte
 
     delete(u: User): Promise<Result<boolean>> {
         if(u.id){
-            return this.#mapper.PermanentlyDelete(u.id)
+            return this.#mapper.Delete(u.id)
         }
 
         return Promise.resolve(Result.Failure(`user must have id`))

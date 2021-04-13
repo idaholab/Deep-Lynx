@@ -58,7 +58,7 @@ export default class ExportMapper extends Mapper{
         return super.retrieve(this.retrieveStatement(id), {resultClass})
     }
 
-    public PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id))
     }
 

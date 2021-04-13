@@ -38,7 +38,7 @@ export default class ImportRoutes {
     }
 
     private static deleteImport(req: Request, res: Response, next: NextFunction) {
-        ImportMapper.Instance.PermanentlyDelete(req.params.importID)
+        ImportMapper.Instance.Delete(req.params.importID)
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);

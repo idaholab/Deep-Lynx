@@ -1,4 +1,3 @@
-/* tslint:disable */
 import faker from 'faker'
 import {expect} from 'chai'
 import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/postgres/postgres";
@@ -17,8 +16,8 @@ import Import, {DataStaging} from "../../../data_warehouse/import/import";
 import DataSourceRecord from "../../../data_warehouse/import/data_source";
 
 describe('A data import', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
-    var user: User
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let user: User
 
     before(async function() {
        if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -26,16 +25,16 @@ describe('A data import', async() => {
            this.skip()
        }
 
-        await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+       await PostgresAdapter.Instance.init();
+       const mapper = ContainerStorage.Instance;
 
-        const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
+       const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
-        expect(container.isError).false;
-        expect(container.value.id).not.null
-        containerID = container.value.id!;
+       expect(container.isError).false;
+       expect(container.value.id).not.null
+       containerID = container.value.id!;
 
-        const userResult = await UserMapper.Instance.Create("test suite", new User(
+       const userResult = await UserMapper.Instance.Create("test suite", new User(
             {
                 identity_provider_id: faker.random.uuid(),
                 identity_provider: "username_password",
@@ -45,23 +44,24 @@ describe('A data import', async() => {
                 roles: ["superuser"]
             }));
 
-        expect(userResult.isError).false;
-        expect(userResult.value).not.empty;
-        user = userResult.value
+       expect(userResult.isError).false;
+       expect(userResult.value).not.empty;
+       user = userResult.value
 
-        return Promise.resolve()
+       return Promise.resolve()
     });
 
-    after(async function() {
+    after(async () => {
+        await UserMapper.Instance.Delete(user.id!)
         return ContainerMapper.Instance.Delete(containerID)
     })
 
     // need to test if we can query imports that are incomplete with uninserted data
     it('can be listed by incomplete and uninserted', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let importStorage = ImportMapper.Instance;
+        const storage = DataSourceMapper.Instance;
+        const importStorage = ImportMapper.Instance;
 
-        let exp = await storage.Create("test suite",
+        const exp = await storage.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -72,7 +72,7 @@ describe('A data import', async() => {
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let newImport = await importStorage.CreateImport( "test suite",  new Import({
+        const newImport = await importStorage.CreateImport( "test suite",  new Import({
             data_source_id: exp.value.id!,
             reference: "testing upload"
         }));
@@ -100,21 +100,21 @@ describe('A data import', async() => {
         expect(imports.isError).false;
         expect(imports.value).not.empty;
 
-        let set = await importStorage.SetStatus(newImport.value.id!, "completed")
+        const set = await importStorage.SetStatus(newImport.value.id!, "completed")
         expect(set.isError).false
 
         imports = await importStorage.ListIncompleteWithUninsertedData(exp.value.id!);
         expect(imports.isError).false;
         expect(imports.value).empty;
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('have individual data records errors set', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let importStorage = ImportMapper.Instance;
+        const storage = DataSourceMapper.Instance;
+        const importStorage = ImportMapper.Instance;
 
-        let exp = await storage.Create("test suite",
+        const exp = await storage.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -125,7 +125,7 @@ describe('A data import', async() => {
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let newImport = await importStorage.CreateImport( "test suite",  new Import({
+        const newImport = await importStorage.CreateImport( "test suite",  new Import({
             data_source_id: exp.value.id!,
             reference: "testing upload"
         }));
@@ -168,14 +168,14 @@ describe('A data import', async() => {
         expect(retrievedData.value.errors.length).eq(0)
 
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be stopped', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let importStorage = ImportMapper.Instance;
+        const storage = DataSourceMapper.Instance;
+        const importStorage = ImportMapper.Instance;
 
-        let exp = await storage.Create("test suite",
+        const exp = await storage.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -186,27 +186,27 @@ describe('A data import', async() => {
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let newImport = await importStorage.CreateImport( "test suite",  new Import({
+        const newImport = await importStorage.CreateImport( "test suite",  new Import({
             data_source_id: exp.value.id!,
             reference: "testing upload"
         }));
         expect(newImport.isError).false;
 
-        let stopped = await importStorage.SetStatus(newImport.value.id!, "stopped");
+        const stopped = await importStorage.SetStatus(newImport.value.id!, "stopped");
         expect(stopped.isError).false;
 
-        let check = await importStorage.Retrieve(newImport.value.id!);
+        const check = await importStorage.Retrieve(newImport.value.id!);
         expect(check.isError).false;
         expect(check.value.status).eq("stopped")
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be updated with errors', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let importStorage = ImportMapper.Instance;
+        const storage = DataSourceMapper.Instance;
+        const importStorage = ImportMapper.Instance;
 
-        let exp = await storage.Create("test suite",
+        const exp = await storage.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -217,27 +217,27 @@ describe('A data import', async() => {
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let newImport = await importStorage.CreateImport( "test suite",  new Import({
+        const newImport = await importStorage.CreateImport( "test suite",  new Import({
             data_source_id: exp.value.id!,
             reference: "testing upload"
         }));
         expect(newImport.isError).false;
 
-        let stopped = await importStorage.SetStatus(newImport.value.id!,"error", "test error");
+        const stopped = await importStorage.SetStatus(newImport.value.id!,"error", "test error");
         expect(stopped.isError).false;
 
-        let check = await importStorage.Retrieve(newImport.value.id!);
+        const check = await importStorage.Retrieve(newImport.value.id!);
         expect(check.isError).false;
         expect(check.value.status_message!).not.empty
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be locked for processing', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let importStorage = ImportMapper.Instance;
+        const storage = DataSourceMapper.Instance;
+        const importStorage = ImportMapper.Instance;
 
-        let exp = await storage.Create("test suite",
+        const exp = await storage.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -248,7 +248,7 @@ describe('A data import', async() => {
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let newImport = await importStorage.CreateImport( "test suite",  new Import({
+        const newImport = await importStorage.CreateImport( "test suite",  new Import({
             data_source_id: exp.value.id!,
             reference: "testing upload"
         }));
@@ -259,7 +259,7 @@ describe('A data import', async() => {
 
         const importLocked = await importStorage.RetrieveAndLock(newImport.value.id!, transaction.value)
         expect(importLocked.isError).false
-        let stopped = await importStorage.SetStatus(newImport.value.id!, "stopped", "locked", transaction.value);
+        const stopped = await importStorage.SetStatus(newImport.value.id!, "stopped", "locked", transaction.value);
         expect(stopped.isError).false;
 
 
@@ -272,14 +272,14 @@ describe('A data import', async() => {
         importStorage.completeTransaction(transaction.value)
         importStorage.completeTransaction(transaction2.value)
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 
     it('can be retrieved by last stopped', async()=> {
-        let storage = DataSourceMapper.Instance;
-        let importStorage = ImportMapper.Instance;
+        const storage = DataSourceMapper.Instance;
+        const importStorage = ImportMapper.Instance;
 
-        let exp = await storage.Create("test suite",
+        const exp = await storage.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -290,23 +290,23 @@ describe('A data import', async() => {
         expect(exp.isError).false;
         expect(exp.value).not.empty;
 
-        let newImport = await importStorage.CreateImport( "test suite",  new Import({
+        const newImport = await importStorage.CreateImport( "test suite",  new Import({
             data_source_id: exp.value.id!,
             reference: "testing upload"
         }));
         expect(newImport.isError).false;
 
-        let stopped = await importStorage.SetStatus(newImport.value.id!, "stopped");
+        const stopped = await importStorage.SetStatus(newImport.value.id!, "stopped");
         expect(stopped.isError).false;
 
-        let check = await importStorage.Retrieve(newImport.value.id!);
+        const check = await importStorage.Retrieve(newImport.value.id!);
         expect(check.isError).false;
         expect(check.value.status).eq("stopped")
 
-        let last = await importStorage.RetrieveLast(exp.value.id!);
+        const last = await importStorage.RetrieveLast(exp.value.id!);
         expect(last.isError).false;
 
-        return storage.PermanentlyDelete(exp.value.id!)
+        return storage.Delete(exp.value.id!)
     });
 });
 

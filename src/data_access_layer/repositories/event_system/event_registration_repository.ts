@@ -17,7 +17,7 @@ export default class EventRegistrationRepository extends Repository implements R
 
     delete(e: EventRegistration): Promise<Result<boolean>> {
         if(e.id){
-           return this.#mapper.PermanentlyDelete(e.id)
+           return this.#mapper.Delete(e.id)
         }
 
         return Promise.resolve(Result.Failure(`event registration has no ide`))

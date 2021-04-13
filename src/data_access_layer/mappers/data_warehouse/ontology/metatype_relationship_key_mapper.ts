@@ -63,7 +63,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper{
         return super.rows(this.listStatement(relationshipID), {resultClass})
     }
 
-    public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public async Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id))
     }
 

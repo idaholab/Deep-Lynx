@@ -50,7 +50,7 @@ export default class ContainerUserInviteMapper extends Mapper{
         return super.runAsTransaction(this.markAcceptedStatement(token, email))
     }
 
-    public PermanentlyDelete(id: number): Promise<Result<boolean>> {
+    public Delete(id: number): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id))
     }
 

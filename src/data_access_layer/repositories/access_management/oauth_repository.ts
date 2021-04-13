@@ -27,7 +27,7 @@ export default class OAuthRepository extends Repository implements RepositoryInt
 
     delete(o: OAuthApplication): Promise<Result<boolean>> {
         if(o.id) {
-            return this.#mapper.PermanentlyDelete(o.id)
+            return this.#mapper.Delete(o.id)
         }
 
         return Promise.resolve(Result.Failure(`oauth application does not have an id`))

@@ -21,7 +21,7 @@ export default class KeyPairRepository implements RepositoryInterface<KeyPair>{
     }
 
     delete(k: KeyPair): Promise<Result<boolean>> {
-        return this.#mapper.PermanentlyDelete(k.key)
+        return this.#mapper.Delete(k.key)
     }
 
     findByID(key: string): Promise<Result<KeyPair>> {

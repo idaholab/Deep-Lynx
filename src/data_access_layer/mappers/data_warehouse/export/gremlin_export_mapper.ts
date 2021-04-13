@@ -66,7 +66,7 @@ export default class GremlinExportMapper extends Mapper{
         return super.rows(this.listAssociatedEdgesStatement(exportID, offset, limit), {resultClass: GremlinEdge})
     }
 
-    public PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id))
     }
 

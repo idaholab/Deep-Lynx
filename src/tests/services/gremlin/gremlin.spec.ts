@@ -1,4 +1,3 @@
-/* tslint:disable */
 import faker from 'faker'
 import { expect } from 'chai'
 import { structure } from 'gremlin'
@@ -7,7 +6,7 @@ import Logger from "../../../services/logger";
 import {GremlinExportConfig} from "../../../data_warehouse/export/export";
 
 describe('A Gremlin Adapter', async () => {
-    var g: GremlinAdapter | undefined = undefined
+    let g: GremlinAdapter | undefined
 
     before(function () {
         if (process.env.SKIP_GREMLIN_TESTS === 'true') {

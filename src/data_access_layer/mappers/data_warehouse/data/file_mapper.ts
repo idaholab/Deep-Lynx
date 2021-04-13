@@ -103,7 +103,7 @@ export default class FileMapper extends Mapper{
         return super.rows<File>(this.listFromIDsStatement(ids), {resultClass})
     }
 
-    public async PermanentlyDelete(fileID: string): Promise<Result<boolean>> {
+    public async Delete(fileID: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(fileID))
     }
 

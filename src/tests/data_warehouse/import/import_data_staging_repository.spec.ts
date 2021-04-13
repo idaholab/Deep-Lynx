@@ -1,4 +1,3 @@
-/* tslint:disable */
 import {User} from "../../../access_management/user";
 import Logger from "../../../services/logger";
 import PostgresAdapter from "../../../data_access_layer/mappers/db_adapters/postgres/postgres";
@@ -22,10 +21,10 @@ import DataSourceRecord from "../../../data_warehouse/import/data_source";
 // that needs to be tested outside their mapper functions(which are already
 // tested elsewhere )
 describe('An Import or Data Staging Repository can', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
-    var user: User
-    var dataSourceID: string
-    var mappingID: string
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let user: User
+    let dataSourceID: string
+    let mappingID: string
 
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -34,7 +33,7 @@ describe('An Import or Data Staging Repository can', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -56,7 +55,7 @@ describe('An Import or Data Staging Repository can', async() => {
         expect(userResult.value).not.empty;
         user = userResult.value
 
-        let exp = await DataSourceMapper.Instance.Create("test suite",
+        const exp = await DataSourceMapper.Instance.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -82,7 +81,8 @@ describe('An Import or Data Staging Repository can', async() => {
         return Promise.resolve()
     });
 
-    after(async function() {
+    after(async () => {
+        await UserMapper.Instance.Delete(user.id!)
         return ContainerMapper.Instance.Delete(containerID)
     })
 
@@ -103,7 +103,7 @@ describe('An Import or Data Staging Repository can', async() => {
         expect(saved.isError).true
 
         // now the staging record
-        let staging = new DataStaging({
+        const staging = new DataStaging({
             data_source_id: dataSourceID,
             import_id: importRecord.id!,
             mapping_id: mappingID,

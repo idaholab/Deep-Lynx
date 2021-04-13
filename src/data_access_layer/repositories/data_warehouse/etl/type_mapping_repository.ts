@@ -26,7 +26,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
         if(t.id) {
             this.deleteCached(t)
 
-            return this.#mapper.PermanentlyDelete(t.id)
+            return this.#mapper.Delete(t.id)
         }
 
         return Promise.resolve(Result.Failure(`type mapping must have id`))

@@ -18,7 +18,7 @@ export default class MetatypeRelationshipKeyRepository extends  Repository imple
     delete(k: MetatypeRelationshipKey): Promise<Result<boolean>> {
         if(k.id) {
             this.#relationshipRepo.deleteCached(k.metatype_relationship_id!)
-            return this.#mapper.PermanentlyDelete(k.id)
+            return this.#mapper.Delete(k.id)
         }
 
         return Promise.resolve(Result.Failure(`key has no id`));

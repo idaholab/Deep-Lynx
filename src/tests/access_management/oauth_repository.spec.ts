@@ -1,4 +1,3 @@
-/* tslint:disable */
 import {User} from "../../access_management/user";
 import Logger from "../../services/logger";
 import PostgresAdapter from "../../data_access_layer/mappers/db_adapters/postgres/postgres";
@@ -50,7 +49,7 @@ describe('An OAuth Repository', async() => {
     });
 
     after(async () => {
-        await UserMapper.Instance.PermanentlyDelete(user.id!)
+        await UserMapper.Instance.Delete(user.id!)
         return ContainerMapper.Instance.Delete(container.id!)
     })
 

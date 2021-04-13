@@ -1,4 +1,3 @@
-/* tslint:disable */
 import Logger from "../../../../services/logger";
 import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import MetatypeKeyMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper";
@@ -23,7 +22,7 @@ import Edge from "../../../../data_warehouse/data/edge";
 // This is both test and utility for creating a full realized, semi-complex
 // graphs. As such this test _does not_ delete its data after running
 describe('A Complex Graph can be created', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
 
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -32,7 +31,7 @@ describe('A Complex Graph can be created', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -43,7 +42,7 @@ describe('A Complex Graph can be created', async() => {
     });
 
 
-    after(async function() {
+    after(async () => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 
@@ -58,7 +57,7 @@ describe('A Complex Graph can be created', async() => {
         const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
+        const graph = await gStorage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
@@ -133,13 +132,13 @@ describe('A Complex Graph can be created', async() => {
         expect(nodePair.isError, nodePair.error?.error).false;
 
 
-        let relationship = await rMapper.Create("test suite",
+        const relationship = await rMapper.Create("test suite",
             new MetatypeRelationship({container_id: containerID, name: faker.name.findName(), description:faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
 
-        let pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
+        const pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
             "name": faker.random.alphaNumeric(),
             "description": faker.random.alphaNumeric(),
             "origin_metatype": metatype.value[0].id!,
@@ -149,7 +148,7 @@ describe('A Complex Graph can be created', async() => {
             container_id: containerID
         }));
 
-        let pair2 = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
+        const pair2 = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
             "name": faker.random.alphaNumeric(),
             "description": faker.random.alphaNumeric(),
             "destination_metatype": metatype.value[0].id!,
@@ -162,7 +161,7 @@ describe('A Complex Graph can be created', async() => {
         expect(pair2.isError).false
 
        // EDGE SETUP
-        let edge1 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+        const edge1 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
             container_id: containerID,
             graph_id: graph.value.id!,
             metatype_relationship_pair: pair.value.id!,
@@ -173,7 +172,7 @@ describe('A Complex Graph can be created', async() => {
 
         expect(edge1.isError, "edge 1").false;
 
-        let edge2 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+        const edge2 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
             container_id: containerID,
             graph_id: graph.value.id!,
             metatype_relationship_pair: pair.value.id!,
@@ -184,7 +183,7 @@ describe('A Complex Graph can be created', async() => {
 
         expect(edge2.isError, "edge 2").false;
 
-        let edge3 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+        const edge3 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
             container_id: containerID,
             graph_id: graph.value.id!,
             metatype_relationship_pair: pair2.value.id!,
@@ -195,7 +194,7 @@ describe('A Complex Graph can be created', async() => {
 
         expect(edge3.isError, "edge 3").false;
 
-        let edge4 =  await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+        const edge4 =  await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
             container_id: containerID,
             graph_id: graph.value.id!,
             metatype_relationship_pair: pair2.value.id!,
@@ -206,7 +205,7 @@ describe('A Complex Graph can be created', async() => {
 
         expect(edge4.isError, "edge 4").false;
 
-        let edge5 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+        const edge5 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
             container_id: containerID,
             graph_id: graph.value.id!,
             metatype_relationship_pair: pair2.value.id!,
@@ -217,7 +216,7 @@ describe('A Complex Graph can be created', async() => {
 
         expect(edge5.isError, "edge 5").false;
 
-        let edge6 =  await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+        const edge6 =  await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
             container_id: containerID,
             graph_id: graph.value.id!,
             metatype_relationship_pair: pair2.value.id!,
@@ -228,7 +227,7 @@ describe('A Complex Graph can be created', async() => {
 
         expect(edge6.isError, "edge 6").false;
 
-        let edge7 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+        const edge7 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
             container_id: containerID,
             graph_id: graph.value.id!,
             metatype_relationship_pair: pair.value.id!,
@@ -240,7 +239,7 @@ describe('A Complex Graph can be created', async() => {
         expect(edge7.isError, "edge 7").false;
 
 
-        let edge8 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
+        const edge8 = await storage.CreateOrUpdateByCompositeID("test suite",  new Edge({
             container_id: containerID,
             graph_id: graph.value.id!,
             metatype_relationship_pair: pair2.value.id!,
@@ -251,7 +250,7 @@ describe('A Complex Graph can be created', async() => {
 
         expect(edge8.isError, "edge 8").false;
 
-       return Promise.resolve()
+        return Promise.resolve()
     });
 });
 

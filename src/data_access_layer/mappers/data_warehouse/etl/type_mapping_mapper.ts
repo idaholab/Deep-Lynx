@@ -89,7 +89,7 @@ export default class TypeMappingMapper extends Mapper{
         return super.runAsTransaction(this.setInactiveStatement(id))
     }
 
-    public async PermanentlyDelete(id: string): Promise<Result<boolean>> {
+    public async Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id))
     }
 

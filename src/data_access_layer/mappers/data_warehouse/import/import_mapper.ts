@@ -83,7 +83,7 @@ export default class ImportMapper extends Mapper {
         return super.count(this.countStatement())
     }
 
-    public async PermanentlyDelete(importID: string): Promise<Result<boolean>> {
+    public async Delete(importID: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(importID))
     }
 

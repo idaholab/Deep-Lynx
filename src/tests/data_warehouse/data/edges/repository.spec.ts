@@ -1,4 +1,3 @@
-/* tslint:disable */
 import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
 import MetatypeRelationshipKey from "../../../../data_warehouse/ontology/metatype_relationship_key";
 import {User} from "../../../../access_management/user";
@@ -74,7 +73,7 @@ describe('An Edge Repository', async() => {
         expect(userResult.value).not.empty;
         user = userResult.value
 
-        let exp = await DataSourceMapper.Instance.Create("test suite",
+        const exp = await DataSourceMapper.Instance.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -174,7 +173,7 @@ describe('An Edge Repository', async() => {
     });
 
     after(async () => {
-        await UserMapper.Instance.PermanentlyDelete(user.id!)
+        await UserMapper.Instance.Delete(user.id!)
         return ContainerMapper.Instance.Delete(containerID)
     })
 
@@ -211,7 +210,7 @@ describe('An Edge Repository', async() => {
         expect(saved.isError).false
 
         // check that save works with a composite original id
-        let originalID = edge.id!
+        const originalID = edge.id!
         edge.id = undefined
 
         saved = await edgeRepo.save(edge, user)
@@ -237,7 +236,7 @@ describe('An Edge Repository', async() => {
     it('can bulk save an Edge', async() => {
         const edgeRepo = new EdgeRepository()
 
-        let edges =  [new Edge({
+        const edges =  [new Edge({
             container_id: containerID,
             graph_id: graphID,
             metatype_relationship_pair: pair.id!,

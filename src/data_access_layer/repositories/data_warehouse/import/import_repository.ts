@@ -15,7 +15,7 @@ export default class ImportRepository extends Repository implements RepositoryIn
     #mapper = ImportMapper.Instance
     delete(t: Import): Promise<Result<boolean>> {
         if(t.id){
-           return this.#mapper.PermanentlyDelete(t.id)
+           return this.#mapper.Delete(t.id)
         }
 
         return Promise.resolve(Result.Failure(`import must have id`))

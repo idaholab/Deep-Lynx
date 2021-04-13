@@ -1,4 +1,3 @@
-/* tslint:disable */
 import faker from 'faker'
 import {expect} from 'chai'
 import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
@@ -59,7 +58,7 @@ describe('A Node Repository', async() => {
         expect(userResult.value).not.empty;
         user = userResult.value
 
-        let exp = await DataSourceMapper.Instance.Create("test suite",
+        const exp = await DataSourceMapper.Instance.Create("test suite",
             new DataSourceRecord({
                 container_id: containerID,
                 name: "Test Data Source",
@@ -72,13 +71,13 @@ describe('A Node Repository', async() => {
         dataSourceID = exp.value.id!
 
         // SETUP
-        let graph = await gMapper.Create(containerID, "test suite");
+        const graph = await gMapper.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
         graphID = graph.value.id!
 
-        let m= await mMapper.Create( "test suite",
+        const m= await mMapper.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
 
@@ -90,12 +89,12 @@ describe('A Node Repository', async() => {
         const testKeys = [...test_keys]
         testKeys.forEach(key => key.metatype_id = metatype.id!)
 
-        let keys = await kStorage.BulkCreate("test suite", testKeys);
+        const keys = await kStorage.BulkCreate("test suite", testKeys);
         expect(keys.isError).false;
 
         metatype.addKey(...keys.value)
 
-        let regexM = await mMapper.Create( "test suite",
+        const regexM = await mMapper.Create( "test suite",
             new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
 
 
@@ -123,8 +122,8 @@ describe('A Node Repository', async() => {
         return Promise.resolve()
     });
 
-    after(async function () {
-        await UserMapper.Instance.PermanentlyDelete(user.id!)
+    after(async () => {
+        await UserMapper.Instance.Delete(user.id!)
         return ContainerMapper.Instance.Delete(containerID)
     })
 
@@ -134,7 +133,7 @@ describe('A Node Repository', async() => {
         const mixed = new Node({
             container_id: containerID,
             graph_id: graphID,
-            metatype: metatype,
+            metatype,
             properties: payload,
             composite_original_id: faker.name.findName(),
             data_source_id: dataSourceID
@@ -169,14 +168,14 @@ describe('A Node Repository', async() => {
         const mixed = [new Node({
             container_id: containerID,
             graph_id: graphID,
-            metatype: metatype,
+            metatype,
             properties: payload,
             composite_original_id: faker.name.findName(),
             data_source_id: dataSourceID
         }), new Node({
             container_id: containerID,
             graph_id: graphID,
-            metatype: metatype,
+            metatype,
             properties: payload,
             composite_original_id: faker.name.findName(),
             data_source_id: dataSourceID
@@ -223,11 +222,11 @@ describe('A Node Repository', async() => {
         const mixed = new Node({
             container_id: containerID,
             graph_id: graphID,
-            metatype: metatype,
+            metatype,
             properties: malformed_payload
         });
 
-        let saved = await nodeRepo.save(mixed, user)
+        const saved = await nodeRepo.save(mixed, user)
         expect(saved.isError).true
 
         return Promise.resolve()
@@ -239,7 +238,7 @@ describe('A Node Repository', async() => {
         const mixed = new Node({
             container_id: containerID,
             graph_id: graphID,
-            metatype: metatype,
+            metatype,
             properties: payload
         });
 

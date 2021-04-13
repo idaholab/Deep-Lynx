@@ -1,4 +1,3 @@
-/* tslint:disable */
 import {
     AssignUserRolePayload,
     ContainerUserInvite,
@@ -67,7 +66,7 @@ describe('A User Repository', async() => {
     });
 
     after(async () => {
-        await UserMapper.Instance.PermanentlyDelete(user.id!)
+        await UserMapper.Instance.Delete(user.id!)
         return ContainerMapper.Instance.Delete(container.id!)
     })
 
@@ -132,9 +131,9 @@ describe('A User Repository', async() => {
     })
 
     it('can initiate and complete a password reset for a User', async()=> {
-        let repository = new UserRepository()
+        const repository = new UserRepository()
 
-        let reset = await repository.initiateResetPassword(user.email)
+        const reset = await repository.initiateResetPassword(user.email)
         expect(reset.isError).false
 
         const check = await repository.findByID(user.id!)
@@ -177,13 +176,13 @@ describe('A User Repository', async() => {
 
     it('can invite a User to a container', async()=> {
         const repository = new UserRepository()
-        let u = testUser()
+        const u = testUser()
 
         let results = await repository.save(u, user)
         expect(results.isError).false
         expect(u.id).not.undefined
 
-        let invite = new ContainerUserInvite({
+        const invite = new ContainerUserInvite({
             email: u.email,
             originUser: user,
             container
@@ -197,6 +196,6 @@ describe('A User Repository', async() => {
         results = await repository.acceptContainerInvite(u, invite.token!)
         expect(results.isError).false
 
-        return Promise.resolve()
+        return repository.delete(u)
     })
 })

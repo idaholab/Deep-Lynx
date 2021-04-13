@@ -1,4 +1,3 @@
-/* tslint:disable */
 import Logger from "../../../../services/logger";
 import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
 import MetatypeKeyMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper";
@@ -26,10 +25,10 @@ import Node from "../../../../data_warehouse/data/node"
 import Edge from "../../../../data_warehouse/data/edge";
 
 describe('Using a GraphQL Query for a nodes edges', async() => {
-    var containerID:string = process.env.TEST_CONTAINER_ID || "";
-    var node: Node
-    var edge: Edge
-    var metatype: Metatype
+    let containerID:string = process.env.TEST_CONTAINER_ID || "";
+    let node: Node
+    let edge: Edge
+    let metatype: Metatype
 
     before(async function() {
         if (process.env.CORE_DB_CONNECTION_STRING === "") {
@@ -38,7 +37,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         }
 
         await PostgresAdapter.Instance.init();
-        let mapper = ContainerStorage.Instance;
+        const mapper = ContainerStorage.Instance;
 
         const container = await mapper.Create("test suite", new Container({name: faker.name.findName(),description: faker.random.alphaNumeric()}));
 
@@ -56,7 +55,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // SETUP
-        let graph = await gStorage.Create(containerID, "test suite");
+        const graph = await gStorage.Create(containerID, "test suite");
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
@@ -87,7 +86,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
 
         node = nodes.value
 
-        let relationship = await rMapper.Create("test suite", new MetatypeRelationship({container_id: containerID, name: "parent", description: faker.random.alphaNumeric()}))
+        const relationship = await rMapper.Create("test suite", new MetatypeRelationship({container_id: containerID, name: "parent", description: faker.random.alphaNumeric()}))
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -99,7 +98,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         const rkeys = await rkStorage.BulkCreate("test suite", relationshipKeys)
         expect(rkeys.isError).false
 
-        let pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
+        const pair = await rpStorage.Create("test suite", new MetatypeRelationshipPair({
             "name": faker.name.findName(),
             "description": faker.random.alphaNumeric(),
             "origin_metatype": metatype.id!,
@@ -110,7 +109,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         }));
 
         // EDGE SETUP
-        let edges = await edgeStorage.CreateOrUpdateByCompositeID("test suite", new Edge({
+        const edges = await edgeStorage.CreateOrUpdateByCompositeID("test suite", new Edge({
             container_id: containerID,
             graph_id: graph.value.id!,
             metatype_relationship_pair: pair.value.id!,
@@ -126,12 +125,12 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
         return Promise.resolve()
     });
 
-    after(async function() {
+    after(async () => {
         return ContainerMapper.Instance.Delete(containerID)
     })
 
     it('can query by id, with all edge resolvers functioning', async()=> {
-        let response = await graphql(schema, `{
+        const response = await graphql(schema, `{
             nodes(nodeID: "${node.id}") {
                 id
                 incoming_edges {id}
@@ -159,7 +158,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
     });
 
     it('can filter edges by properties', async()=> {
-        let response = await graphql(schema, `{
+        const response = await graphql(schema, `{
             nodes(nodeID: "${node.id}") {
                 incoming_edges(where: {
                 AND: [
@@ -187,7 +186,7 @@ describe('Using a GraphQL Query for a nodes edges', async() => {
 
 
     it('can filter edges by relationship name', async()=> {
-        let response = await graphql(schema, `{
+        const response = await graphql(schema, `{
             nodes(nodeID: "${node.id}") {
                 incoming_edges(where: {
                 AND: [
