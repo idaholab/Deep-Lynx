@@ -207,7 +207,7 @@ export default class DataStagingMapper extends Mapper {
 
     private setInsertedStatement(id: number): QueryConfig {
         return {
-            text: `UPDATE data_staging SET inserted_At = NOW() WHERE id = $1`,
+            text: `UPDATE data_staging SET inserted_at = NOW() WHERE id = $1`,
             values: [id]
         }
     }
