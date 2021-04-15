@@ -57,6 +57,8 @@ export async function StartQueue(): Promise<Result<boolean>> {
 
       for (const task of tasks) {
 
+        // transform the incoming string into json and then to the Event class
+        // because it's stored in the database as a string, not actual json
         const events: Event[] = plainToClass(Event, JSON.parse(task.task!));
 
         for (const event of events) {
