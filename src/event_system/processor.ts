@@ -10,6 +10,7 @@ import Event from "./event";
 import Task from "./task";
 import EventRegistration from "./event_registration";
 import EventRegistrationRepository from "../data_access_layer/repositories/event_system/event_registration_repository";
+import {plainToClass} from "class-transformer";
 
 /*
   QueueProcessor class manages the emission of events to their various registered
@@ -56,7 +57,9 @@ export async function StartQueue(): Promise<Result<boolean>> {
 
       for (const task of tasks) {
 
-        const events: Event[] = task.task;
+        // transform the incoming string into json and then to the Event class
+        // because it's stored in the database as a string, not actual json
+        const events: Event[] = plainToClass(Event, JSON.parse(task.task!));
 
         for (const event of events) {
 

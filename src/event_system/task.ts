@@ -1,7 +1,5 @@
 import {BaseDomainClass} from "../common_classes/base_domain_class";
 import {IsNumber, IsOptional, IsString, IsUUID} from "class-validator";
-import Event from "./event"
-import {Type} from "class-transformer";
 
 /*
     Task is a queue specific data structure - the queue processor stores events
@@ -12,8 +10,7 @@ export default class Task extends BaseDomainClass {
     @IsUUID()
     id?: string
 
-    @Type(() => Event)
-    task: Event[] = []
+    task?: string
 
     @IsOptional()
     @IsNumber()
@@ -29,7 +26,7 @@ export default class Task extends BaseDomainClass {
 
     constructor(input?: {
         priority?: number,
-        task?: Event[],
+        task?: string,
         added?: number
     }) {
         super();

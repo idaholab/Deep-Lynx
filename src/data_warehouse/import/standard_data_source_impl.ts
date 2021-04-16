@@ -199,7 +199,7 @@ export default class StandardDataSourceImpl implements DataSource {
                     }
 
                     // check to see if import is now complete. If so, mark completed.
-                    const count = await this.#stagingRepo.countUninsertedForImport(incompleteImport.id!)
+                    const count = await this.#stagingRepo.countUninsertedForImport(incompleteImport.id!, importTransaction.value)
                     if(count.isError) {
                         const set = await ImportMapper.Instance.SetStatus(incompleteImport.id!, "error", `error attempting to count records ${count.error}`, importTransaction.value)
                         if(set.isError) Logger.debug(`error attempting to update import status ${set.error}`)
