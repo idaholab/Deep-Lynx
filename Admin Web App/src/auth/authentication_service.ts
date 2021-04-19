@@ -1,6 +1,5 @@
 import jwt_decode from 'jwt-decode'
 import {UserT} from "@/auth/types";
-import store from './../store/index'
 import Config from '../config'
 
 import  _Vue from "vue"

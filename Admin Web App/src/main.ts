@@ -13,10 +13,12 @@ import Config from "@/config";
 import ErrorBanner from "@/components/errorBanner.vue";
 import SuccessBanner from "@/components/successBanner.vue";
 import InfoTooltip from "@/components/infoTooltip.vue";
+import JSONView from 'vue-json-component';
 
 Vue.config.productionTip = false;
 Vue.use(ElementUI);
 Vue.use(VueI18n);
+Vue.use(JSONView);
 
 const i18n = new VueI18n({
   locale: 'en', // if you need get the browser language use following "window.navigator.language"
