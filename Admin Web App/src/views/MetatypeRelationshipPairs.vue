@@ -55,7 +55,7 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
-import { MetatypeT, MetatypeRelationshipT, MetatypeRelationshipPairT } from '@/api/types';
+import { MetatypeRelationshipT, MetatypeRelationshipPairT } from '@/api/types';
 import CreateRelationshipPairDialog from "@/components/createRelationshipPairDialog.vue";
 import EditRelationshipPairDialog from "@/components/editRelationshipPairDialog.vue";
 
