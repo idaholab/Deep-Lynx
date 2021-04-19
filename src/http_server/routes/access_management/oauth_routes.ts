@@ -464,14 +464,14 @@ export default class OAuthRoutes {
                             }
 
                             // fetch set of permissions per resource for the user before returning
-                            userRepo.retrievePermissions(req.currentUser!)
+                            userRepo.retrievePermissions(user.value)
                                 .then(result => {
                                     if(result.isError) {
                                         res.sendStatus(500)
                                         return
                                     }
 
-                                    const token = jwt.sign(classToPlain(req.currentUser), Config.encryption_key_secret, {expiresIn: expiry})
+                                    const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, {expiresIn: expiry})
                                     res.status(200).json(token)
                                     return
                                 })
