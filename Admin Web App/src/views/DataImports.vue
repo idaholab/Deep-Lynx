@@ -126,16 +126,14 @@
         v-model="dataDialog"
         width="500"
     >
-      <v-card>
+      <v-card style="overflow-y: scroll">
         <v-card-title class="headline grey lighten-2">
           {{$t('dataImports.viewData')}}
         </v-card-title>
-        <v-textarea
-            filled
-            name="input-7-4"
-            :value="JSON.stringify(selectedData) | pretty"
-            :rows="30"
-        ></v-textarea>
+        <json-view
+          :data="selectedData"
+          :maxDepth=4
+        />
 
         <v-card-actions>
           <v-spacer></v-spacer>

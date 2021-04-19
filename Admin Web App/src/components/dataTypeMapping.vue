@@ -63,12 +63,12 @@
           </v-col>
           <v-col :cols="4">
             <h2>{{$t('dataMapping.currentDataSet')}}</h2>
-            <v-textarea
-                filled
-                name="input-7-4"
-                :value="unmappedData | pretty"
-                :rows="15"
-            ></v-textarea>
+            <v-card max-height="360" style="overflow-y: scroll" flat>
+              <json-view
+                :data="unmappedData"
+                :maxDepth=4
+              />
+            </v-card>
           </v-col>
 
 

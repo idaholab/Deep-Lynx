@@ -216,16 +216,15 @@
         v-model="dataDialog"
         width="500"
     >
-      <v-card>
+      <v-card style="overflow-y: scroll">
         <v-card-title class="headline grey lighten-2">
           {{$t('dataMapping.viewSamplePayload')}}
         </v-card-title>
-        <v-textarea
-            filled
-            name="input-7-4"
-            :value="samplePayload | pretty"
-            :rows="30"
-        ></v-textarea>
+        <json-view
+          class="text-wrap"
+          :data="samplePayload"
+          :maxDepth=4
+        />
 
         <v-card-actions>
           <v-spacer></v-spacer>

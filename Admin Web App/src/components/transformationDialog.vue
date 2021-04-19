@@ -409,12 +409,13 @@
 
           <v-col :cols="6">
             <h4>{{$t('typeTransformation.currentDataSet')}}<info-tooltip :message="$t('dataMapping.samplePayloadHelp')"></info-tooltip> </h4>
-            <v-textarea
-                filled
-                name="input-7-4"
-                :value="payload | pretty"
-                :rows="50"
-            ></v-textarea>
+            <v-card max-height="1200" style="overflow-y: scroll">
+              <json-view
+                :data="payload"
+                :maxDepth=4
+              />
+            </v-card>
+            
           </v-col>
         </v-row>
 
@@ -442,7 +443,8 @@ import {getNestedValue} from "@/utilities";
     pretty: function(value: any) {
       return JSON.stringify(value, null, 2)
     }
-  }})
+  }
+})
 export default class TransformationDialog extends Vue {
   @Prop({required: true})
   readonly payload!: object;
