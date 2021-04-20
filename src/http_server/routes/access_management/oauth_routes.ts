@@ -190,7 +190,6 @@ export default class OAuthRoutes {
 
                                 res.redirect(buildUrl(request.redirect_uri, {queryParams: {token: token.value, state: request.state}}))
                                 return
-
                             })
                     })
             })
@@ -261,7 +260,7 @@ export default class OAuthRoutes {
         return res.render('login', {
             // @ts-ignore
             _csrfToken: req.csrfToken(),
-            oauthRequest: serialize(oauthRequest),
+            oauthRequest: classToPlain(oauthRequest),
             registerLink: buildUrl('/oauth/register', {queryParams: req.query}),
             loginWithWindowsLink: buildUrl('/login-saml', {queryParams: req.query}),
             _success: req.query.success,
@@ -277,7 +276,7 @@ export default class OAuthRoutes {
         // so that we can restore it as part of the redirect
         if(oauthRequest) {
             const token = Buffer.from(uuid.v4()).toString('base64')
-            Cache.set(token, serialize(oauthRequest) , 60 * 10)
+            Cache.set(token, classToPlain(oauthRequest) , 60 * 10)
             req.query.RelayState = token
         }
 
@@ -323,7 +322,7 @@ export default class OAuthRoutes {
 
         // if they've logged in following an auth request redirect to the authorize page vs. the profile page
         if(request) {
-            res.redirect(buildUrl('/oauth/authorize', {queryParams: serialize(request)}))
+            res.redirect(buildUrl('/oauth/authorize', {queryParams: classToPlain(request)}))
             return
         }
 
