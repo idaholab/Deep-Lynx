@@ -82,7 +82,11 @@ export default class UserMapper extends Mapper{
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<User[]>> {
-        return super.rows(this.listFromIDsStatement(ids), {resultClass})
+        if (ids.length === 0) {
+            return super.rows(this.listStatement(), {resultClass})
+        } else {
+            return super.rows(this.listFromIDsStatement(ids), {resultClass})
+        }
     }
 
     public ValidateEmail(id: string, validationToken: string): Promise<Result<boolean>> {
@@ -238,7 +242,7 @@ export default class UserMapper extends Mapper{
 
         return {
             text: `SELECT * FROM users WHERE id IN($1)`,
-            values: ids
+            values: [ids]
         }
     }
 }
