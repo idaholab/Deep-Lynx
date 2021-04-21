@@ -59,7 +59,7 @@ export default class ImportMapper extends Mapper {
     }
 
     public async SetStatus(importID: string, status: "ready" | "processing" | "error" | "stopped" | "completed", message?: string, transaction?: PoolClient): Promise<Result<boolean>> {
-        if (status === "completed" || status === "stopped" || status === "error") {
+        if (status === "completed" || status === "stopped") {
             const completeImport = await this.Retrieve(importID)
             QueueProcessor.Instance.emit(new Event({
                 sourceID: completeImport.value.data_source_id!,
