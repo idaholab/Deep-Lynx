@@ -99,7 +99,7 @@ export class Router {
     MetatypeRelationshipKeyRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipContext(), metatypeRelationshipKeyContext(), currentUser()]);
     MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipPairContext(), currentUser()]);
     QueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
-    GraphRoutes.mount(this.app, [authenticateRoute(), containerContext(), nodeContext(), currentUser()]);
+    GraphRoutes.mount(this.app, [authenticateRoute(), containerContext(), nodeContext(), metatypeContext(), currentUser()]);
     EventRoutes.mount(this.app, [authenticateRoute(), containerContext(),eventRegistrationContext(), currentUser()]);
 
     // OAuth and Identity Provider routes - these are the only routes that serve up
