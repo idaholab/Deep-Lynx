@@ -1,13 +1,10 @@
 
 deploy_development:
   stage: deploy
-  image: alpine:3.7
+  image: mcr.microsoft.com/azure-cli:latest
   script:
-    - apk update  && apk add --no-cache curl
-    - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
-    - chmod +x ./kubectl && mv ./kubectl /usr/local/bin/kubectl
-    - mkdir -p $HOME/.kube
-    - echo -n $KUBE_CONFIG | base64 -d > $HOME/.kube/config
+    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
     - kubectl config view
   environment:
     name: development
