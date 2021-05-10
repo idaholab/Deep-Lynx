@@ -1,5 +1,5 @@
 build:
-  stage: build_api_container
+  stage: build
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
@@ -15,7 +15,6 @@ deploy_development:
     - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
     - mkdir -p $HOME/.kube
-    - echo $HOME
     - echo -n $KUBE_CONFIG | base64 -d > $HOME/.kube/config
     - kubectl apply -f $DEEPLYNX_DEV_KUBERNETES
   environment:
