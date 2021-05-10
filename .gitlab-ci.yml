@@ -3,9 +3,9 @@ deploy_development:
   stage: deploy
   image: mcr.microsoft.com/azure-cli:latest
   script:
-    - az cloud set --name AzureUSGovernment
-    - az login --service-principal
-    - az aks install-cli
+    - mkdir -p $HOME/.kube
+    - echo -n $KUBE_CONFIG | base64 -d > $HOME/.kube/config
+    - kubectl config view
   environment:
     name: development
 
