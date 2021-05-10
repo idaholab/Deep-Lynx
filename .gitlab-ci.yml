@@ -4,7 +4,7 @@ deploy_development:
   image: mcr.microsoft.com/azure-cli:latest
   script:
     - az cloud set --name AzureUSGovernment
-    - az login --identity --username $KUBERNETES_NAME
+    - az login --identity
     - az aks install-cli
   environment:
     name: development
