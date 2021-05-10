@@ -7,3 +7,15 @@ build:
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_BUILD_ID
+
+deploy_development:
+  stage: deploy
+  script:
+    - curl -L https://aka.ms/InstallAzureCli | bash
+    - az cloud set --name AzureUSGovernment
+    - az login
+    - az aks install-cli
+  environment:
+    name: development
+
+  
