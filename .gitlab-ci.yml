@@ -4,7 +4,7 @@ deploy_development:
   image: mcr.microsoft.com/azure-cli:latest
   script:
     - az cloud set --name AzureUSGovernment
-    - az login --identity
+    - az login --service-principal
     - az aks install-cli
   environment:
     name: development
