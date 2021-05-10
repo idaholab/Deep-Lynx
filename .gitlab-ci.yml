@@ -10,8 +10,9 @@ build:
 
 deploy_development:
   stage: deploy
+  image: mcr.microsoft.com/dotnet/core/sdk:latest
   script:
-    - curl -L https://aka.ms/InstallAzureCli | bash
+    - curl -sL https://aka.ms/InstallAzureCLIDeb | bash
     - az cloud set --name AzureUSGovernment
     - az login
     - az aks install-cli
