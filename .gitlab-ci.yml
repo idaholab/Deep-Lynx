@@ -14,7 +14,7 @@ deploy_development:
   script:
     - curl -sL https://aka.ms/InstallAzureCLIDeb | bash
     - az cloud set --name AzureUSGovernment
-    - az login
+    - az login --identity --username $KUBERNETES_NAME
     - az aks install-cli
   environment:
     name: development
