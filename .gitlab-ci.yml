@@ -1,3 +1,12 @@
+build:
+  stage: build_api_container
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_BUILD_ID
 
 deploy_development:
   stage: deploy
@@ -8,7 +17,7 @@ deploy_development:
     - mkdir -p $HOME/.kube
     - echo $HOME
     - echo -n $KUBE_CONFIG | base64 -d > $HOME/.kube/config
-    - kubectl config view
+    - kubectl apply -f $DEEPLYNX_DEV_KUBERNETES
   environment:
     name: development
 
