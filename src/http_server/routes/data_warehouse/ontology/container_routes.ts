@@ -29,6 +29,7 @@ export default class ContainerRoutes {
         app.get("/containers/:containerID",...middleware, authInContainer("read", "data"),this.retrieveContainer);
         app.put("/containers/:containerID",...middleware, authInContainer("write", "data"),this.updateContainer);
         app.delete("/containers/:containerID",...middleware, authInContainer("write", "data"),this.archiveContainer);
+        app.post("/containers/:containerID/active", ...middleware, authInContainer("read", "data"), this.setActive);
 
         app.post("/containers/:containerID/permissions", ...middleware, authRequest("write", "containers"), this.repairPermissions)
     }
@@ -133,6 +134,20 @@ export default class ContainerRoutes {
                 })
                 .catch((err) => res.status(500).send(err))
                 .finally(() => next())
+        }
+    }
+
+    private static setActive(req: Request, res: Response, next: NextFunction) {
+        if(req.container) {
+            repository.setActive(req.container, req.currentUser!)
+                .then((result) => {
+                    result.asResponse(res)
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next())
+        } else {
+            Result.Failure(`unable to find container`, 404).asResponse(res)
+            next()
         }
     }
 

@@ -58,7 +58,7 @@ export default class FileRepository extends Repository implements RepositoryInte
         const blobStorage = BlobStorageProvider(f.adapter)
         if(!blobStorage) return Promise.resolve(undefined)
 
-        return blobStorage.downloadStream(f.adapter_file_path!)
+        return blobStorage.downloadStream(`${f.adapter_file_path!}${f.file_name}`)
     }
 
     /*

@@ -218,7 +218,7 @@ export default class ImportRoutes {
     }
 
     private static downloadFile(req: Request, res: Response, next: NextFunction) {
-        fileRepo.findByIDAndContainer(req.params.fileID, req.params.id)
+        fileRepo.findByIDAndContainer(req.params.fileID, req.params.containerID)
             .then(file => {
                 if (file.isError) {
                     file.asResponse(res)
@@ -277,9 +277,15 @@ export default class ImportRoutes {
             if (metadataFieldCount === 0) {
                 Promise.all(files)
                     .then((results) => {
-                        res.status(200).json(results)
-                        next()
-                        return;
+                        if (results[0].isError) {
+                            res.status(500).json(results)
+                            next()
+                            return;
+                        } else {
+                            res.status(200).json(results)
+                            next()
+                            return;
+                        }
                     })
             } else {
                 // update the passed meta information with the file name deep lynx
