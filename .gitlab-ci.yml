@@ -7,7 +7,10 @@ build:
     - mkdir -p /kaniko/.docker
     - cp -f $CI_PROJECT_DIR/Dockerfiles/Application/* $CI_PROJECT_DIR
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_PIPELINE_IID
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY/$CI_REGISTRY_PATH/deep-lynx:$CI_PIPELINE_IID
+    - cd "$CI_PROJECT_DIR/Admin Web App"
+    - echo $DEEPLYNX_ADMIN_UI_CONFIG > "$CI_PROJECT_DIR/Admin Web App/.env"
+    - /kaniko/executor --context "$CI_PROJECT_DIR/Admin Web App" --dockerfile "$CI_PROJECT_DIR/Admin Web App/Dockerfile" --destination $CI_REGISTRY/$CI_REGISTRY_PATH/deep-lynx-admin:$CI_PIPELINE_IID
 
 deploy_development:
   stage: deploy
