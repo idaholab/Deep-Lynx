@@ -273,6 +273,42 @@
         }
       }
     },
+    "/containers/{container-id}/active": {
+      "post": {
+        "description": "Unarchives a Container. This is the only way to update this value of a container via API.",
+        "summary": "Set Active",
+        "tags": [
+          "Containers"
+        ],
+        "operationId": "SetActive",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
+            "name": "container-id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
     "/containers/import": {
       "post": {
         "description": "An optional query param \"dryrun\" may be included with a value of \"true\" in order to return a HTML formatted string explaining the name and description of the container along with the number of metatypes, metatype relationships, and metatype keys to be created. This request uses a form-data body which requires a field \"name\". A \"description\" may also be provided. If the ontology to be imported is being referenced via url, provide the url via a \"path\" field. Otherwise a local file may be provided. A file takes precedence over a \"path\" value if both are provided.",
