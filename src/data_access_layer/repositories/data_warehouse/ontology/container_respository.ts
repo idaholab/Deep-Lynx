@@ -119,6 +119,8 @@ export default class ContainerRepository implements RepositoryInterface<Containe
                         Logger.error(activeGraph.error?.error!);
                     } else {container.active_graph_id = graph.value.id}
                 }
+
+                this.setCache(container)
             }
 
             toReturn.push(...results.value)
@@ -187,6 +189,17 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         }
 
         return Promise.resolve(Result.Failure('container has no id'))
+    }
+
+    async setActive(c: Container, user: User): Promise<Result<boolean>> {
+        if(c.id) {
+            const set = await this.#mapper.SetActive(c.id, user.id!)
+            if(set.isError) return Promise.resolve(Result.Pass(set))
+
+            return Promise.resolve(Result.Success(true))
+        }
+
+        return Promise.resolve(Result.Failure(`container has no id`))
     }
 
     async findByID(id: string): Promise<Result<Container>> {

@@ -69,6 +69,10 @@ export default class ContainerMapper extends Mapper{
         return super.runStatement(this.archiveStatement(containerID, userID))
     }
 
+    public async SetActive(containerID: string, userID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.setActiveStatement(containerID, userID))
+    }
+
     public async Delete(containerID: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(containerID))
     }
@@ -104,6 +108,13 @@ export default class ContainerMapper extends Mapper{
         }
     }
 
+    private setActiveStatement(containerID: string, userID: string): QueryConfig {
+        return {
+            text: `UPDATE containers SET archived = false, modified_at = NOW(), modified_by = $2 WHERE id = $1`,
+            values: [containerID, userID]
+        }
+    }
+
     private deleteStatement(containerID: string): QueryConfig {
         return {
             text:`DELETE FROM containers WHERE id = $1`,
@@ -116,7 +127,7 @@ export default class ContainerMapper extends Mapper{
             text:`SELECT c.*, active_graphs.graph_id as active_graph_id
                     FROM containers c
                     LEFT JOIN active_graphs ON active_graphs.container_id = c.id
-                    WHERE c.id = $1 AND NOT c.archived`,
+                    WHERE c.id = $1`,
             values: [id]
         }
     }

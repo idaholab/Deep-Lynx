@@ -188,6 +188,33 @@
 					"response": []
 				},
 				{
+					"name": "Set Active",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/active",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"active"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"description": "Unarchives a Container. This is the only way to update this value of a container via API."
+					},
+					"response": []
+				},
+				{
 					"name": "Import",
 					"request": {
 						"method": "POST",

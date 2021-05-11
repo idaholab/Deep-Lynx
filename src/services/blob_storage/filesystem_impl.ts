@@ -32,6 +32,11 @@ export default class Filesystem implements BlobStorage {
 
     async uploadPipe(filepath: string, filename: string, stream: Readable | null, contentType?: string, encoding?: string): Promise<Result<BlobUploadResponse>> {
         if(!this._directory) {
+            if (stream) {
+                // unpipe and end the stream so that busboy finish event will be emitted
+                stream!.unpipe()
+                stream!.emit('end')
+            }
             return Promise.resolve(Result.Failure("directory does not exist or was unable to be opened"))
         }
 
@@ -77,7 +82,11 @@ export default class Filesystem implements BlobStorage {
     // this class whether or not its operating in a windows environment
     constructor(directory: string, isWindows?: boolean) {
         if(!fs.existsSync(directory)) {
-            fs.mkdirSync(directory, {recursive: true})
+            try {
+                fs.mkdirSync(directory, {recursive: true})
+            } catch (err) {
+                Logger.error(`error creating directory ${err}`)
+            }
         }
 
         this._directory = directory
