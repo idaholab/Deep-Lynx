@@ -88,7 +88,7 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
     }
 
 
-    @MetatypeRelationshipID({message: "Origin Metatype must have valid ID"})
+    @MetatypeRelationshipID({message: "Metatype Relationship must have valid ID"})
     @Expose({name: "relationship_id", toClassOnly: true})
     @Transform(({value}) => {
         const relationship = plainToClass(MetatypeRelationship, {})

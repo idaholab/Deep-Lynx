@@ -109,12 +109,12 @@ export default class ContainerRepository implements RepositoryInterface<Containe
                 const set = await container.setPermissions()
                 if(set.isError) Logger.error(`unable to set container ${container.id}'s permissions ${set.error}`)
 
-                const graph = await this.#graphMapper.Create(container.id!, user.id!)
+                const graph = await this.#graphMapper.Create(container.id!, user.id!, transaction.value)
                 // set active graph from graph ID
                 if (graph.isError) {
                     Logger.error(graph.error?.error!);
                 } else {
-                    const activeGraph = await this.#graphMapper.SetActiveForContainer(container.id!, graph.value.id!);
+                    const activeGraph = await this.#graphMapper.SetActiveForContainer(container.id!, graph.value.id!, transaction.value);
                     if (activeGraph.isError || !activeGraph.value) {
                         Logger.error(activeGraph.error?.error!);
                     } else {container.active_graph_id = graph.value.id}
