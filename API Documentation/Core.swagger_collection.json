@@ -742,6 +742,97 @@
         }
       }
     },
+    "/containers/{container_id}/graphs/edges/{edge_id}": {
+      "get": {
+        "summary": "Retrieve Edge",
+        "tags": [
+          "Graph"
+        ],
+        "operationId": "RetrieveEdge",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "edge_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      },
+      "delete": {
+        "summary": "Archive Edge",
+        "tags": [
+          "Graph"
+        ],
+        "operationId": "ArchiveEdge",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "default": "Bearer {token}",
+            "type": "string"
+          },
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "edge_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": ""
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ArchiveEdgeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        }
+      }
+    },
     "/containers/{container_id}/graphs/edges": {
       "get": {
         "description": "List Nodes from storage",
@@ -784,57 +875,6 @@
             "required": true,
             "type": "string",
             "description": ""
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "headers": {}
-          }
-        }
-      }
-    },
-    "/containers/{container_id}/graphs/edges/{edge_id}": {
-      "delete": {
-        "summary": "Archive Edge",
-        "tags": [
-          "Graph"
-        ],
-        "operationId": "ArchiveEdge",
-        "deprecated": false,
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "required": false,
-            "default": "Bearer {token}",
-            "type": "string"
-          },
-          {
-            "name": "container_id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "edge_id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "Body",
-            "in": "body",
-            "required": true,
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/ArchiveEdgeRequest"
-            }
           }
         ],
         "responses": {
@@ -2125,8 +2165,7 @@
             "required": true,
             "description": "",
             "schema": {
-              "example": "{\n\t\"name\": \"testing data source\"\n\t\"adapter_type\":\"http OR manual\",\n\t\"active\": true,\n\t\"config\": { // needed only if you are using the HTTP data source\n\t\t\"endpoint\":\"\",\n        \"auth_method\":\"basic\",\n        \"username\": \"test\",\n       \"password\": \"test\"\n\t}\n}",
-              "type": "string"
+              "$ref": "#/definitions/CreateDataSourceRequest"
             }
           }
         ],
@@ -2543,7 +2582,7 @@
         "tags": [
           "Data Sources"
         ],
-        "operationId": "SetActive",
+        "operationId": "PostSetActive",
         "deprecated": false,
         "produces": [
           "application/json"
@@ -2861,44 +2900,6 @@
             "required": true,
             "type": "string",
             "description": ""
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "headers": {}
-          }
-        }
-      }
-    },
-    "/users": {
-      "post": {
-        "description": "Create a new user using the username_password identity type.",
-        "summary": "New User (Username/Password)",
-        "tags": [
-          "Users"
-        ],
-        "operationId": "NewUser(Username/Password)",
-        "deprecated": false,
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "required": false,
-            "default": "Bearer {token}",
-            "type": "string"
-          },
-          {
-            "name": "Body",
-            "in": "body",
-            "required": true,
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/NewUser%28Username~1Password%29Request"
-            }
           }
         ],
         "responses": {
@@ -4852,7 +4853,7 @@
         "description": "Relationship Pair Test description",
         "origin_metatype_id": "566e3862-6853-45af-8a45-3050576dfb9a",
         "destination_metatype_id": "8bcc0b06-bb44-4176-a581-aa68eafca7f3",
-        "metatype_relationship_id": "885e3fca-5066-4be8-a720-63b3c4744e97",
+        "relationship_id": "885e3fca-5066-4be8-a720-63b3c4744e97",
         "relationship_type": "many:many"
       },
       "type": "object",
@@ -4869,7 +4870,7 @@
         "destination_metatype_id": {
           "type": "string"
         },
-        "metatype_relationship_id": {
+        "relationship_id": {
           "type": "string"
         },
         "relationship_type": {
@@ -4881,8 +4882,73 @@
         "description",
         "origin_metatype_id",
         "destination_metatype_id",
-        "metatype_relationship_id",
+        "relationship_id",
         "relationship_type"
+      ]
+    },
+    "CreateDataSourceRequest": {
+      "title": "CreateDataSourceRequest",
+      "example": {
+        "name": "testing data source",
+        "adapter_type": "http OR manual",
+        "active": true,
+        "config": {
+          "endpoint": "",
+          "auth_method": "basic",
+          "username": "test",
+          "password": "test"
+        }
+      },
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "adapter_type": {
+          "type": "string"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "config": {
+          "$ref": "#/definitions/Config"
+        }
+      },
+      "required": [
+        "name",
+        "adapter_type",
+        "active",
+        "config"
+      ]
+    },
+    "Config": {
+      "title": "Config",
+      "example": {
+        "endpoint": "",
+        "auth_method": "basic",
+        "username": "test",
+        "password": "test"
+      },
+      "type": "object",
+      "properties": {
+        "endpoint": {
+          "type": "string"
+        },
+        "auth_method": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "endpoint",
+        "auth_method",
+        "username",
+        "password"
       ]
     },
     "CreateManualImportRequest": {
@@ -4951,7 +5017,7 @@
           "type": "string"
         },
         "config": {
-          "$ref": "#/definitions/Config"
+          "$ref": "#/definitions/Config1"
         }
       },
       "required": [
@@ -4959,8 +5025,8 @@
         "config"
       ]
     },
-    "Config": {
-      "title": "Config",
+    "Config1": {
+      "title": "Config1",
       "example": {
         "traversal_source": "g",
         "graphson_v1": false,
@@ -5008,36 +5074,6 @@
         "port",
         "path",
         "writes_per_second"
-      ]
-    },
-    "NewUser(Username/Password)Request": {
-      "title": "NewUser(Username/Password)Request",
-      "example": {
-        "identity_provider": "username_password",
-        "display_name": "Test User",
-        "email": "test@test.com",
-        "password": "admin"
-      },
-      "type": "object",
-      "properties": {
-        "identity_provider": {
-          "type": "string"
-        },
-        "display_name": {
-          "type": "string"
-        },
-        "email": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "identity_provider",
-        "display_name",
-        "email",
-        "password"
       ]
     },
     "AssignRoleRequest": {
@@ -5291,7 +5327,7 @@
         "app_name": "test app",
         "app_url": "http://localhost:8099/test",
         "container_id": "6d1a2895-a689-4760-a515-a3a3b49ae882",
-        "type": "data source created"
+        "event_type": "data_source_created"
       },
       "type": "object",
       "properties": {
@@ -5304,7 +5340,7 @@
         "container_id": {
           "type": "string"
         },
-        "type": {
+        "event_type": {
           "type": "string"
         }
       },
@@ -5312,7 +5348,7 @@
         "app_name",
         "app_url",
         "container_id",
-        "type"
+        "event_type"
       ]
     }
   },

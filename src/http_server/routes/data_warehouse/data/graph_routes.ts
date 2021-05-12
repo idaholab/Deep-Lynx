@@ -12,15 +12,17 @@ const edgeRepo = new EdgeRepository()
 
 export default class GraphRoutes {
     public static mount(app: Application, middleware: any[]) {
+        app.post("/containers/:containerID/graphs/nodes/", ...middleware, authInContainer("write", "containers"), this.createOrUpdateNodes);
         app.get("/containers/:containerID/graphs/nodes/metatype/:metatypeID", ...middleware, authInContainer("read", "containers"), this.listNodesByMetatypeID);
         app.get("/containers/:containerID/graphs/nodes/", ...middleware, authInContainer("read", "containers"), this.listNodes);
         app.get("/containers/:containerID/graphs/nodes/:nodeID", ...middleware, authInContainer("read", "containers"), this.retrieveNode);
-        app.get("/containers/:containerID/graphs/nodes/:edgeID", ...middleware, authInContainer("read", "containers"), this.retrieveEdge);
-        app.get("/containers/:containerID/graphs/edges/", ...middleware, authInContainer("read", "containers"),this.listEdges);
-        app.post("/containers/:containerID/graphs/nodes/", ...middleware, authInContainer("write", "containers"), this.createOrUpdateNodes);
+
         app.post("/containers/:containerID/graphs/edges/", ...middleware, authInContainer("write", "containers"), this.createOrUpdateEdges);
-        app.delete("/containers/:containerID/graphs/edges/:edgeID", ...middleware, authInContainer("write", "containers"),this.archiveEdge);
+        app.get("/containers/:containerID/graphs/edges/:edgeID", ...middleware, authInContainer("read", "containers"), this.retrieveEdge);
+        app.get("/containers/:containerID/graphs/edges/", ...middleware, authInContainer("read", "containers"),this.listEdges);
+        
         app.delete("/containers/:containerID/graphs/nodes/:nodeID", ...middleware, authInContainer("write", "containers"),this.archiveNode);
+        app.delete("/containers/:containerID/graphs/edges/:edgeID", ...middleware, authInContainer("write", "containers"),this.archiveEdge);
     }
     private static async listNodes(req: Request, res: Response, next: NextFunction) {
         // fresh instance of the repo to avoid filter issues
