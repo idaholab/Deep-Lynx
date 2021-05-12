@@ -150,6 +150,10 @@ export class Config {
     this._smtp_access_token = process.env.SMTP_ACCESS_TOKEN || ""
   }
 
+  get ssl_enabled(): boolean {
+    return process.env.NODE_ENV === 'production'
+  }
+
   get root_address(): string {
     return this._root_address;
   }
@@ -264,10 +268,6 @@ export class Config {
     if(this._encryption_key_path && this._encryption_key_path !== "") return fs.readFileSync(this._encryption_key_path)
 
     return Buffer.from("", "utf8")
-  }
-
-  get encryption_key_path(): string {
-    return this._encryption_key_path!
   }
 
   get log_level(): string {

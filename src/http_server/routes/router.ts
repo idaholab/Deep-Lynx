@@ -167,7 +167,7 @@ export class Router {
 
 
     // SetSaml will initialize and assign the saml auth strategy
-    SetSamlAdfs(this.app);
+    if(Config.saml_enabled) SetSamlAdfs(this.app);
     SetLocalAuthMethod(this.app);
 
     // Once a user has authed against one of the accepted auth methods - the application using the API must

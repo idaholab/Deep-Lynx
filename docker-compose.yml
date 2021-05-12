@@ -66,6 +66,7 @@ services:
       - AUTH_STRATEGY=token
       - BASIC_USER=
       - BASIC_PASSWORD=
+      - SAML_ENALBED=false
       - SAML_ADFS_ENTRY_POINT=
       - SAML_ADFS_ISSUER=
       - SAML_ADFS_CALLBACK=
