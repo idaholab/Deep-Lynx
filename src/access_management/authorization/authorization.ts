@@ -30,6 +30,7 @@ export class Authorization {
             const a = await TypeORMAdapter.newAdapter({
                 type: 'postgres',
                 url: Config.core_db_connection_string,
+                ssl: Config.ssl_enabled
             });
 
             const e = await newEnforcer(Config.auth_config_file, a);
