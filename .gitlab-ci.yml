@@ -7,18 +7,16 @@ build:
     - sh $BUILD
 deploy_development:
   stage: deploy
-  image: gcr.io/kaniko-project/executor:debug
+  image: ubuntu:latest
   script:
     - sh $DEPLOY_DEV
   environment:
     name: development
 deploy_production:
   stage: deploy
-  image: mcr.microsoft.com/azure-cli:latest
+  image: ubuntu:latest
   script:
     - sh $DEPLOY_PROD
   environment:
     name: production
   when: manual
-  only:
-    - master
