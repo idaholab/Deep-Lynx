@@ -1,20 +1,13 @@
-build:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
-  script:
-    - sh $BUILD
 deploy_development:
   stage: deploy
-  image: ubuntu:latest
+  image: curlimages/curl:latest
   script:
     - sh $DEPLOY_DEV
   environment:
     name: development
 deploy_production:
   stage: deploy
-  image: ubuntu:latest
+  image: curlimages/curl:latest
   script:
     - sh $DEPLOY_PROD
   environment:
