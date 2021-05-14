@@ -7,7 +7,7 @@ build:
     - sh $BUILD
 deploy_development:
   stage: deploy
-  image: mcr.microsoft.com/azure-cli:latest
+  image: gcr.io/kaniko-project/executor:debug
   script:
     - sh $DEPLOY_DEV
   environment:
