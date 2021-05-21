@@ -23,6 +23,7 @@ export default interface RepositoryInterface<T> {
 */
 export class Repository {
     private readonly _tableName: string
+    // TODO: replace with pg_format library
     public _rawQuery: string[] = []
     public _values: any[] = []
 

@@ -63,6 +63,10 @@ export default class MetatypeRelationshipKeyMapper extends Mapper{
         return super.rows(this.listStatement(relationshipID), {resultClass})
     }
 
+    public async ListFromIDs(ids: string[]): Promise<Result<MetatypeRelationshipKey[]>> {
+        return super.rows(this.listFromIDsStatement(ids), {resultClass})
+    }
+
     public async Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id))
     }
@@ -102,6 +106,13 @@ export default class MetatypeRelationshipKeyMapper extends Mapper{
             text:`SELECT * FROM metatype_relationship_keys WHERE id = $1 AND NOT ARCHIVED`,
             values: [metatypeKeyID]
         }
+    }
+
+    private listFromIDsStatement(ids: string[]): string {
+        const text = `SELECT * FROM metatype_relationship_keys WHERE id IN(%L)`
+        const values = ids
+
+        return format(text, values)
     }
 
     private archiveStatement(metatypeKeyID: string, userID: string): QueryConfig {
