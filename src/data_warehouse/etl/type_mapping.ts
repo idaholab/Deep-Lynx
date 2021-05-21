@@ -1,4 +1,4 @@
-import {BaseDomainClass} from "../../common_classes/base_domain_class";
+import {BaseDomainClass, NakedDomainClass} from "../../common_classes/base_domain_class";
 import {IsBoolean, IsDefined, IsOptional, IsString, IsUUID} from "class-validator";
 import TypeTransformation from "./type_transformation";
 import {Type} from "class-transformer";
@@ -127,4 +127,12 @@ export default class TypeMapping extends BaseDomainClass {
             }
         }
     }
+}
+
+export class TypeMappingExportPayload extends NakedDomainClass {
+    @IsOptional()
+    mapping_ids: string[] = []
+
+    @IsUUID()
+    target_data_source?: string
 }

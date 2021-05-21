@@ -368,6 +368,9 @@ export default class TypeMappingRepository extends Repository implements Reposit
             // now clear all the id's
             typeMapping.transformations[i].type_mapping_id = undefined
             typeMapping.transformations[i].id = undefined
+            typeMapping.transformations[i].container_id = undefined
+            typeMapping.transformations[i].data_source_id = undefined
+            typeMapping.transformations[i].shape_hash = undefined
 
             typeMapping.transformations[i].created_by = undefined
             typeMapping.transformations[i].created_at = undefined
@@ -423,6 +426,11 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
     dataSourceID(operator: string, value: any) {
         super.query("data_type_mappings.data_source_id", operator, value)
+        return this
+    }
+
+    active(operator: string, value: any) {
+        super.query("data_type_mappings.active", operator, value)
         return this
     }
 
