@@ -10,6 +10,8 @@ import TypeTransformationRepository
     from "../../../../data_access_layer/repositories/data_warehouse/etl/type_transformation_repository";
 import TypeMapping, {TypeMappingExportPayload} from "../../../../data_warehouse/etl/type_mapping";
 
+const JSONStream = require('JSONStream')
+const Busboy = require('busboy');
 const mappingRepo = new TypeMappingRepository()
 const transformationRepo = new TypeTransformationRepository()
 
@@ -20,6 +22,7 @@ export default class TypeMappingRoutes {
         app.get('/containers/:containerID/import/datasources/:sourceID/mappings', ...middleware, authInContainer("read", "data"), this.listTypeMappings)
 
         app.post("/containers/:containerID/import/datasources/:sourceID/mappings/export", ...middleware, authInContainer("read", "data"), this.exportTypeMappings)
+        app.post("/containers/:containerID/import/datasources/:sourceID/mappings/import", ...middleware, authInContainer("write", "data"), this.importTypeMappings)
         app.get('/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("read", "data"), this.retrieveTypeMapping)
         app.delete('/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("read", "data"), this.deleteTypeMapping)
         app.put('/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID', ...middleware, authInContainer("write", "data"), this.updateMapping)
@@ -289,6 +292,71 @@ export default class TypeMappingRoutes {
                 })
                 .catch((err) => res.status(404).send(err))
                 .finally(() => next())
+        }
+    }
+
+    // importTypeMappings will accept either a json body or actual files via multipart http form upload - the payload
+    // should be an array of type mapping classes, previously generated using the export route
+    private static importTypeMappings(req: Request, res: Response, next: NextFunction) {
+        const user = req.currentUser!
+        const busboy = new Busboy({headers: req.headers})
+        const importResults: Promise<Result<TypeMapping>[]>[] = []
+
+        if(!req.dataSource) {
+            Result.Failure(`unable to find data source`, 404).asResponse(res)
+            next()
+            return
+        }
+
+        // if we have a json body, ignore anything else and simply run the import with the json
+        if(req.headers["content-type"] === "application/json") {
+            const repo = new TypeMappingRepository()
+            const payload = plainToClass(TypeMapping, req.body)
+
+            repo.importToDataSource(req.dataSource.DataSourceRecord?.id!, user, ...payload)
+                .then(results => {
+                    res.status(201).json(serialize(results))
+                    next()
+                })
+                .catch(e => res.status(500).send(e))
+        } else {
+            busboy.on('file', async (fieldname:string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
+                const repo = new TypeMappingRepository()
+
+                // we use JSONStreams so that we can parse a large JSON file completely without hitting the arguably low
+                // memory limits of the JSON.parse function - we're still loading it all into memory, and eventually this
+                // might need to be refactored to do periodic processing or go to single mapping imports
+                const stream = JSONStream.parse("*") // this will parse every object in the array
+                const objects: any[] = []
+
+                stream.on('data', (data:any) => {
+                    objects.push(data)
+                })
+
+                // once the file has been read, convert to mappings and then attempt the import
+                stream.on('end', () => {
+                    const mappings = plainToClass(TypeMapping, objects)
+                    importResults.push(repo.importToDataSource(req.dataSource?.DataSourceRecord?.id!, user, ...mappings))
+                })
+
+                file.pipe(stream)
+            })
+
+            busboy.on('finish', () => {
+                Promise.all(importResults)
+                    .then(results => {
+                        const finalResults = []
+                        // no matter how many files were uploaded we want to return a single array of all mapping results
+                        for(const result of results) {
+                            finalResults.push(...result)
+                        }
+
+                        res.status(201).json(finalResults)
+                    })
+                    .catch(e => res.status(500).send(e))
+            })
+
+            return req.pipe(busboy)
         }
     }
 }

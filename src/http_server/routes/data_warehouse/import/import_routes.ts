@@ -1,6 +1,5 @@
 import {Application, NextFunction, Request, Response} from "express"
 import {authInContainer} from "../../../middleware";
-import DataSourceMapper from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
 import ImportMapper from "../../../../data_access_layer/mappers/data_warehouse/import/import_mapper";
 import {Readable} from "stream";
 import FileDataStorage from "../../../../data_access_layer/mappers/data_warehouse/data/file_mapper";

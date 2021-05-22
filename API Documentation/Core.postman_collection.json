@@ -3306,6 +3306,63 @@
 					"response": []
 				},
 				{
+					"name": "Import Type Mappings",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "test",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								}
+							],
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/containers/:container-id/import/datasources/:source-id/mappings/import",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"containers",
+								":container-id",
+								"import",
+								"datasources",
+								":source-id",
+								"mappings",
+								"import"
+							],
+							"variable": [
+								{
+									"key": "container-id",
+									"value": ""
+								},
+								{
+									"key": "source-id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Retrieve a type mapping from storage."
+					},
+					"response": []
+				},
+				{
 					"name": "Get Type Mapping's Transformations",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
