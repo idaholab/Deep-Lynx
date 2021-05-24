@@ -101,7 +101,6 @@ export default class TypeMappingRoutes {
             let query = mappingRepo.where()
                 .containerID("eq", req.container?.id)
                 .and().dataSourceID("eq", req.dataSource.DataSourceRecord?.id)
-                .and().active("eq", true)
 
             if(payload && payload.mapping_ids && payload.mapping_ids.length > 0) {
                 query = query.and().id("in", payload.mapping_ids)

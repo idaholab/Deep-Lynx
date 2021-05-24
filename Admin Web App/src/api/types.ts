@@ -234,3 +234,9 @@ export type GremlinExportConfigT = {
     created_by?: string;
     modified_by?: string;
 }
+
+export type ResultT = {
+    value: any;
+    isError: boolean;
+    error: any;
+}

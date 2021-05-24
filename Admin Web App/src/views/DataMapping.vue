@@ -64,11 +64,19 @@
 
               </v-autocomplete>
             </v-col>
+            <v-col :cols="2">
+              <export-mappings-dialog v-if="selectedDataSource" :containerID="containerID" :dataSourceID="selectedDataSource.id" :mappings="selectedMappings"></export-mappings-dialog>
+            </v-col>
+            <v-col :cols="2">
+              <import-mappings-dialog v-if="selectedDataSource" :containerID="containerID" :dataSourceID="selectedDataSource.id"></import-mappings-dialog>
+            </v-col>
           </v-row>
 
         </v-card-title>
         <v-data-table
             v-if="selectedMetatype || selectedRelationshipPair"
+            v-model="selectedMappings"
+            show-select
             :headers="headers()"
             :items="typeMappings"
             :items-per-page="25"
@@ -120,6 +128,8 @@
             v-if="!selectedMetatype && !selectedRelationshipPair"
             :headers="headers()"
             :items="typeMappings"
+            v-model="selectedMappings"
+            show-select
             class="elevation-1"
             :server-items-length="typeMappingCount"
             :options.sync="options"
@@ -251,6 +261,8 @@
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import {DataSourceT, MetatypeRelationshipPairT, MetatypeT, TypeMappingT} from "@/api/types";
 import DataTypeMapping from "@/components/dataTypeMapping.vue"
+import ExportMappingsDialog from "@/components/exportMappingsDialog.vue";
+import ImportMappingsDialog from "@/components/importMappingsDialog.vue";
 
 @Component({filters: {
     pretty: function(value: any) {
@@ -258,7 +270,9 @@ import DataTypeMapping from "@/components/dataTypeMapping.vue"
             }
         },
         components: {
-           DataTypeMapping
+           DataTypeMapping,
+           ExportMappingsDialog,
+           ImportMappingsDialog
     }})
     export default class DataMapping extends Vue {
       @Prop({required: true})
@@ -275,6 +289,7 @@ import DataTypeMapping from "@/components/dataTypeMapping.vue"
       dataSources: DataSourceT[] = []
       typeMappings: TypeMappingT[] = []
       typeMappingsNoTransformations: TypeMappingT[] = []
+      selectedMappings: [] = []
 
       typeMappingCount = 0
       selectedTypeMapping: TypeMappingT | null = null

@@ -14,7 +14,7 @@ import {
    MetatypeRelationshipPairT,
    UserContainerInviteT,
    TypeMappingTransformationPayloadT,
-   TypeMappingTransformationT, ExportT,
+   TypeMappingTransformationT, ExportT, ResultT,
 } from "@/api/types";
 import {RetrieveJWT} from "@/auth/authentication_service";
 import {UserT} from "@/auth/types";
@@ -388,6 +388,19 @@ export class Client {
       return this.putNoData(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`, mapping)
    }
 
+   // only use this function when exporting type mappings from one data source to another WITHIN THE SAME DL INSTANCE
+   // this will not work for exporting to a separate instance of Deep Lynx
+   exportTypeMappings(containerID: string, dataSourceID: string, targetDataSource: string, ...typeMappings: TypeMappingT[]): Promise<ResultT[]> {
+      return this.postRawReturn<ResultT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/export`, {
+         mapping_ids: typeMappings.map(mapping => mapping.id),
+         target_data_source: targetDataSource
+      })
+   }
+
+   importTypeMappings(containerID: string, dataSourceID: string, file: File): Promise<ResultT[]> {
+      return this.postFileRawReturn<ResultT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/import`,"mappings", file)
+   }
+
    retrieveTransformations(containerID: string, dataSourceID: string, typeMappingID: string): Promise<TypeMappingTransformationT[]> {
       return this.get<TypeMappingTransformationT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations`)
    }
@@ -395,7 +408,6 @@ export class Client {
    deleteTransformation(containerID: string, dataSourceID: string, typeMappingID: string, tranformationID: string): Promise<boolean> {
       return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations/${tranformationID}`)
    }
-
 
    listTypeMappings(containerID: string, dataSourceID: string, {limit, offset, sortBy, sortDesc, resultingMetatypeName, resultingMetatypeRelationshipName, noTransformations }: {limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; resultingMetatypeName?: string | undefined; resultingMetatypeRelationshipName?: string | undefined; noTransformations?: boolean}): Promise<TypeMappingT[]> {
       const query: {[key: string]: any} = {}
@@ -567,6 +579,35 @@ export class Client {
       })
    }
 
+   private async postRawReturn<T>(uri: string, data: any, queryParams?: {[key: string]: any}): Promise<T> {
+      const config: AxiosRequestConfig = {}
+      config.headers = {"Access-Control-Allow-Origin": "*"}
+
+      if(this.config?.auth_method === "token") {
+         config.headers = {"Authorization": `Bearer ${RetrieveJWT()}`}
+      }
+
+      if(this.config?.auth_method === "basic") {
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
+      }
+
+      let url: string
+
+      if(queryParams) {
+         url = buildURL(this.config?.rootURL!, {path: uri, queryParams: queryParams!})
+      } else {
+         url = buildURL(this.config?.rootURL!, {path: uri})
+      }
+
+      const resp: AxiosResponse = await axios.post(url, data, config)
+
+      return new Promise((resolve, reject) => {
+         if(resp.status < 200 || resp.status > 299) reject(resp.status)
+
+         resolve(resp.data as T)
+      })
+   }
+
    private async postNoData(uri: string, data: any, queryParams?: {[key: string]: any}): Promise<boolean> {
       const config: AxiosRequestConfig = {}
       config.headers = {"Access-Control-Allow-Origin": "*"}
@@ -638,6 +679,30 @@ export class Client {
          if(resp.status < 200 || resp.status > 299) reject(resp.status)
 
          resolve(true)
+      })
+   }
+
+   private async postFileRawReturn<T>(uri: string, inputName: string, file: File): Promise<T> {
+      const config: AxiosRequestConfig = {}
+      config.headers = {"Access-Control-Allow-Origin": "*", "Content-Type": 'multipart/form-data'}
+
+      if(this.config?.auth_method === "token") {
+         config.headers = {"Authorization": `Bearer ${RetrieveJWT()}`}
+      }
+
+      if(this.config?.auth_method === "basic") {
+         config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
+      }
+
+      const formData = new FormData()
+      formData.append(inputName, file)
+
+      const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path:uri}), formData, config)
+
+      return new Promise((resolve, reject) => {
+         if(resp.status < 200 || resp.status > 299) reject(resp.status)
+
+         resolve(resp.data as T)
       })
    }
 
