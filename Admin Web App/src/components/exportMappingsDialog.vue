@@ -136,6 +136,7 @@ export default class ExportMappingsDialog extends Vue {
         link.setAttribute('download', 'typeMappings.json')
         document.body.append(link)
         link.click()
+        this.dialog = false
       }
     })
     .catch((e: any) => this.errorMessage = e)

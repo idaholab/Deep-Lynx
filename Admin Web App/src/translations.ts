@@ -314,6 +314,8 @@ export default {
       formTitle: "New Data Source"
     },
     dataMapping: {
+      importedSuccessfully: "Import Status",
+      mappingsImported: "Mappings Successfully Imported",
       record: "Record",
       relationship: "Relationship",
       typeMapping: "Type Mapping",
