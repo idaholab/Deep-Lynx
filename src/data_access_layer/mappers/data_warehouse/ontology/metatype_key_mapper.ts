@@ -48,6 +48,10 @@ export default class MetatypeKeyMapper extends Mapper{
         return super.rows(this.listStatement(metatypeID), {resultClass})
     }
 
+    public async ListFromIDs(ids: string[]): Promise<Result<MetatypeKey[]>> {
+        return super.rows(this.listFromIDsStatement(ids), {resultClass})
+    }
+
     public async Update(userID: string, key: MetatypeKey, transaction?: PoolClient): Promise<Result<MetatypeKey>> {
         const r = await super.run(this.fullUpdateStatement(userID, key), {transaction, resultClass})
         if(r.isError) return Promise.resolve(Result.Pass(r))
@@ -103,6 +107,13 @@ export default class MetatypeKeyMapper extends Mapper{
             text:`SELECT * FROM metatype_keys WHERE id = $1 AND NOT ARCHIVED`,
             values: [metatypeKeyID]
         }
+    }
+
+    private listFromIDsStatement(ids: string[]): string {
+        const text = `SELECT * FROM metatype_keys WHERE id IN(%L)`
+        const values = ids
+
+        return format(text, values)
     }
 
     private archiveStatement(metatypeKeyID: string, userID: string): QueryConfig {

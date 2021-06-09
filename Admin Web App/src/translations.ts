@@ -43,6 +43,22 @@ export default {
       create: "Create",
       changeContainer: "Change Container"
     },
+    exportMapping: {
+      title: "Export Type Mappings",
+      export: "Export",
+      exportAll: "Export All Mappings",
+      cancel: "Cancel",
+      exportToFile: "Export to File",
+      exportToDataSource: "Export to Data Source",
+      selectContainer: "Select Container",
+      selectDataSource: "Select Data Source"
+    },
+    importMapping: {
+      importMappings: "Import Type Mappings",
+      title: "Import Type Mappings From File",
+      cancel: "Cancel",
+      importFromFile: "Import Mappings From File"
+    },
     metatypes: {
       metatypes: "Metatypes",
       search: "Search",
@@ -298,6 +314,8 @@ export default {
       formTitle: "New Data Source"
     },
     dataMapping: {
+      importedSuccessfully: "Import Status",
+      mappingsImported: "Mappings Successfully Imported",
       record: "Record",
       relationship: "Relationship",
       typeMapping: "Type Mapping",

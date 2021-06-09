@@ -18,9 +18,9 @@ export default class Result<TSuccess> {
     }
 
     // this method also logs an error in order to facilitate fast,easy logging
-    public static Failure(error: string, errorCode?: number) {
+    public static Failure(error: string, errorCode?: number, value?: any) {
         Logger.error(error);
-        return new Result<any>(null, true, new Error(error, errorCode));
+        return new Result<any>(value, true, new Error(error, errorCode));
     }
 
     public static SilentFailure(error: string, errorCode?: number) {
