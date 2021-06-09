@@ -8,6 +8,8 @@ import {BaseDomainClass, NakedDomainClass} from "../../common_classes/base_domai
 import {IsDefined, IsIn, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested} from "class-validator";
 import {Type} from "class-transformer";
 import {DataStaging} from "../import/import";
+import MetatypeRelationshipKey from "../ontology/metatype_relationship_key";
+import MetatypeKey from "../ontology/metatype_key";
 
 /*
    Condition represents a logical operation which can determine whether or not
@@ -65,9 +67,17 @@ export class KeyMapping extends NakedDomainClass {
    @IsUUID()
    metatype_key_id?: string
 
+   // generally only present when we're exporting the transformations out, must be populated using repository method
+   @IsOptional()
+   metatype_key?: MetatypeKey
+
    @ValidateIf(o => o.metatype_key_id === null && typeof o.metatype_key_id === "undefined")
    @IsUUID()
    metatype_relationship_key_id?: string
+
+   // generally only present when we're exporting the transformations out, must be populated using repository method
+   @IsOptional()
+   metatype_relationship_key?: MetatypeRelationshipKey
 
    @IsOptional()
    value?: any

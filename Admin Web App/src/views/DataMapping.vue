@@ -4,6 +4,10 @@
     >
       <error-banner :message="errorMessage"></error-banner>
       <success-banner :message="successMessage"></success-banner>
+      <v-alert type="success" v-if="importedMappingResults.length > 0">
+        {{$t('dataMapping.mappingsImported')}} -
+        <v-btn style="margin-top: 10px" class="mb-2" @click="reviewMappings = true">Review</v-btn>
+      </v-alert>
       <v-select
           style="margin-left:10px; margin-right: 10px"
           :items="dataSources"
@@ -26,7 +30,7 @@
       </v-tabs>
       <v-card v-if="(selectedDataSource !== null && activeTab ==='currentMappings')">
         <v-card-title>
-          <v-row>
+          <v-row v-if="!reviewMappings">
             <v-col :cols="6">
               <v-autocomplete
                   :items="metatypes"
@@ -64,11 +68,19 @@
 
               </v-autocomplete>
             </v-col>
+            <v-col :cols="2">
+              <export-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" :mappings="selectedMappings" @mappingsExported="mappingsExported()"></export-mappings-dialog>
+            </v-col>
+            <v-col :cols="2">
+              <import-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" @mappingsImported="mappingsImport"></import-mappings-dialog>
+            </v-col>
           </v-row>
 
         </v-card-title>
         <v-data-table
-            v-if="selectedMetatype || selectedRelationshipPair"
+            v-if="selectedMetatype || selectedRelationshipPair && !reviewMappings"
+            v-model="selectedMappings"
+            show-select
             :headers="headers()"
             :items="typeMappings"
             :items-per-page="25"
@@ -116,10 +128,63 @@
           </template>
         </v-data-table>
 
+
+
         <v-data-table
-            v-if="!selectedMetatype && !selectedRelationshipPair"
+            v-if="reviewMappings"
+            :headers="reviewHeaders()"
+            :items="importedMappingResults"
+            :items-per-page="25"
+            class="elevation-1"
+            :footer-props="{
+                'items-per-page-options': [25,50,100]
+            }"
+        >
+
+
+
+          <template v-slot:[`item.isError`]="{ item }">
+            <p v-if="!item.isError">Successful</p>
+            <p v-else style="color:orange">Error: {{item.error}}</p>
+          </template>
+
+          <template v-slot:[`item.value.sample_payload`]="{ item }">
+            <v-icon
+                small
+                class="mr-2"
+                @click="viewSamplePayload(item)"
+            >
+              mdi-eye
+            </v-icon>
+          </template>
+
+          <template v-slot:[`item.actions`]="{ item }">
+            <v-icon
+                small
+                class="mr-2"
+                @click="editMapping(item.value)"
+            >
+              mdi-pencil
+            </v-icon>
+            <v-icon
+                small
+                @click="deleteMapping(item.value)"
+            >
+              mdi-delete
+            </v-icon>
+          </template>
+        </v-data-table>
+
+        <v-toolbar v-if="reviewMappings">
+          <v-btn color="error" @click="reviewMappings = false; importedMappingResults = []">End Review</v-btn>
+        </v-toolbar>
+
+        <v-data-table
+            v-if="!selectedMetatype && !selectedRelationshipPair && !reviewMappings"
             :headers="headers()"
             :items="typeMappings"
+            v-model="selectedMappings"
+            show-select
             class="elevation-1"
             :server-items-length="typeMappingCount"
             :options.sync="options"
@@ -249,8 +314,10 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
-import {DataSourceT, MetatypeRelationshipPairT, MetatypeT, TypeMappingT} from "@/api/types";
+import {DataSourceT, MetatypeRelationshipPairT, MetatypeT, ResultT, TypeMappingT} from "@/api/types";
 import DataTypeMapping from "@/components/dataTypeMapping.vue"
+import ExportMappingsDialog from "@/components/exportMappingsDialog.vue";
+import ImportMappingsDialog from "@/components/importMappingsDialog.vue";
 
 @Component({filters: {
     pretty: function(value: any) {
@@ -258,7 +325,9 @@ import DataTypeMapping from "@/components/dataTypeMapping.vue"
             }
         },
         components: {
-           DataTypeMapping
+           DataTypeMapping,
+           ExportMappingsDialog,
+           ImportMappingsDialog
     }})
     export default class DataMapping extends Vue {
       @Prop({required: true})
@@ -275,6 +344,9 @@ import DataTypeMapping from "@/components/dataTypeMapping.vue"
       dataSources: DataSourceT[] = []
       typeMappings: TypeMappingT[] = []
       typeMappingsNoTransformations: TypeMappingT[] = []
+      selectedMappings: [] = []
+      importedMappingResults: ResultT[] = []
+      reviewMappings = false
 
       typeMappingCount = 0
       selectedTypeMapping: TypeMappingT | null = null
@@ -325,6 +397,24 @@ import DataTypeMapping from "@/components/dataTypeMapping.vue"
           sortable: false
           }]
       }
+
+  reviewHeaders() {
+    return [{
+      text: this.$t('dataMapping.importedSuccessfully'),
+      value: "isError",
+      align: 'center'
+    },{
+      text: this.$t('dataMapping.samplePayload'),
+      value: "value.sample_payload",
+      align: 'center',
+      sortable: false
+    },{
+      text: 'Actions',
+      value: 'actions',
+      align: 'center',
+      sortable: false
+    }]
+  }
 
       noTransformationHeaders() {
         return [{
@@ -573,5 +663,16 @@ import DataTypeMapping from "@/components/dataTypeMapping.vue"
         this.samplePayload = mapping.sample_payload
         this.dataDialog = true
       }
+
+      mappingsExported() {
+        this.successMessage = 'Mappings successfully Exported'
+      }
+
+      // allows the user to potentially review imported type mappings
+      mappingsImport(results: ResultT[]) {
+        this.importedMappingResults = results
+        this.loadTypeMappings()
+      }
+
   }
 </script>
