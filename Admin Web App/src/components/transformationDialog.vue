@@ -174,6 +174,9 @@
                     :label="$t('dataMapping.resultingDataType')"
                     required
                 ></v-select>
+
+                <!-- RECORD -->
+
                 <div v-if="payloadType === 'record'">
                   <v-autocomplete
                       :items="metatypes"
@@ -241,6 +244,20 @@
                           >
                             <template v-slot:append-outer>{{$t("dataMapping.or")}}</template>
                             <template v-slot:label>{{$t('dataMapping.mapPayloadKey')}} <small style="color:red" v-if="key.required">{{$t("dataMapping.required")}}</small></template>
+                            <template v-slot:item="data">
+                              <!-- Display alternate formatting and key use count if key has been selected -->
+                              <span v-if="propertyMapping.find(prop => prop.key === data.item)">
+                                <v-alert
+                                  dense
+                                  text
+                                  type="success"
+                                >
+                                {{ data.item }} ({{ (propertyMapping.reduce((n, prop) => n + (prop.key === data.item), 0)) }})
+                                </v-alert>
+                              </span>
+                              <!-- Otherwise simply display the key name -->
+                              <span v-else>{{ data.item }}</span>
+                            </template>
                           </v-select>
                         </v-col>
                         <v-col :cols="6">
@@ -358,6 +375,13 @@
 
                 </div>
 
+                <div>
+                  <h4 style="padding-bottom: 20px;">
+                    <span v-if="!rootArray">{{propertyMapping.length}} / {{payloadKeys.length}} properties selected</span>
+                    <span v-if="rootArray">{{propertyMapping.length}} / {{payloadSelectedArrayKeys.length}} array properties selected ({{payloadKeys.length}} available)</span>
+                  </h4>
+                </div>
+
                 <v-btn
                     v-if="!transformation"
                     @click="createTransformation()"
@@ -414,7 +438,7 @@
             <v-card height="600px" style="overflow-y: scroll" id="dataCol">
               <json-view
                 :data="payload"
-                :maxDepth=4
+                :maxDepth=1
               />
             </v-card>
             
@@ -490,10 +514,11 @@ export default class TransformationDialog extends Vue {
   subexpressionOperator: {text: string; value: any; requiresValue: boolean} | null = null
   subexpressionValue = ""
 
-  payloadKeys: any = null
+  payloadKeys: any = []
+  payloadSelectedArrayKeys: any = []
   payloadArrayKeys: any = []
   rootArray: any = null
-  rootArrayKeys: any = null
+  rootArrayKeys: any = []
 
   operators = [
     {text: "==", value: "==", requiresValue: true},
@@ -752,6 +777,7 @@ export default class TransformationDialog extends Vue {
       // key-name for each potential layer
       const parts = this.rootArray.split('[]')
 
+      let prevBracketCount = 0
       for(let i = 0; i < parts.length; i++) {
         const key = parts.slice(0, i+1).join('[]')
         const cleanKey = (key.charAt(key.length -1) === ".") ? key.substr(0, key.length -1) : key
@@ -764,7 +790,22 @@ export default class TransformationDialog extends Vue {
           const keys = Object.keys(value[0])
 
           keys.map(k => {
-            if(!Array.isArray(value[0][k])) this.payloadKeys.push(`${cleanKey}.[].${k}`)
+            if(!Array.isArray(value[0][k])) {
+              this.payloadKeys.push(`${cleanKey}.[].${k}`)
+
+              // remove keys for higher array objects so that
+              // we are left with keys for the lowest array objects
+              const bracketCount = (`${cleanKey}.[].${k}`.split("[]").length - 1)
+
+              if(bracketCount > prevBracketCount) {
+                // set prevBracketCount to the new highest number of brackets
+                prevBracketCount = bracketCount
+
+                // reset the array to remove all previously stored keys
+                this.payloadSelectedArrayKeys = []
+              }
+              this.payloadSelectedArrayKeys.push(`${cleanKey}.[].${k}`)
+            }
           })
         }
 
@@ -1123,6 +1164,6 @@ export default class TransformationDialog extends Vue {
     }
     recurse(data, "");
     return result;
-  }
+  }  
 }
 </script>
