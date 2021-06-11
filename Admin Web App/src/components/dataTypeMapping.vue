@@ -66,7 +66,7 @@
             <v-card max-height="360" style="overflow-y: scroll" flat>
               <json-view
                 :data="unmappedData"
-                :maxDepth=4
+                :maxDepth=1
               />
             </v-card>
           </v-col>
