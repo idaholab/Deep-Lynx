@@ -1,58 +1,63 @@
-<div id="dialog" class="card d-flex flex-column shadow">
+<div id='dialog' class='card d-flex flex-column shadow'>
     {{#if _error}}
-        <div class="alert alert-danger" role="alert">
+        <div class='alert alert-danger' role='alert'>
             {{{_error}}}
         </div>
     {{/if}}
     {{#if _success}}
-        <div class="alert alert-primary" role="alert">
+        <div class='alert alert-primary' role='alert'>
             {{{_success}}}
         </div>
     {{/if}}
-    <div class="row no-gutters flex-fill fill d-flex">
-        <div class="col-md-5">
-            <div id="color-background" class="pa-0 container h-100 d-flex">
-                <div class="align-self-center justify-content-center mx-auto my-5">
-                    <h1 class="login-title text-center text-white mb-4">Deep Lynx</h1>
-                    <img src="img/data-white.png" class="card-img img-fluid" alt="Deep Lynx Logo">
+    <div class='row no-gutters flex-fill fill d-flex'>
+        <div class='col-md-5'>
+            <div id='color-background' class='pa-0 container h-100 d-flex'>
+                <div class='align-self-center justify-content-center mx-auto my-5'>
+                    <h1 class='login-title text-center text-white mb-4'>Deep Lynx</h1>
+                    <img src='img/data-white.png' class='card-img img-fluid' alt='Deep Lynx Logo' />
                 </div>
             </div>
         </div>
-        <div class="col-md-7">
-            <div class="card-body">
-                <h2 class="text-center my-4">Register</h2>
-                <form class="mb-3" action="/oauth/register" method="post" oninput='confirmpassword.setCustomValidity(confirmpassword.value != password.value ? "Passwords do not match." : "")'>
-                    <input type="hidden" name="_csrf" value="{{{_csrfToken}}}" />
-                    <input type="hidden" name="identity_provider" value="username_password" />
+        <div class='col-md-7'>
+            <div class='card-body'>
+                <h2 class='text-center my-4'>Register</h2>
+                <form
+                    class='mb-3'
+                    action='/oauth/register'
+                    method='post'
+                    oninput='confirmpassword.setCustomValidity(confirmpassword.value != password.value ? "Passwords do not match." : "")'
+                >
+                    <input type='hidden' name='_csrf' value='{{{_csrfToken}}}' />
+                    <input type='hidden' name='identity_provider' value='username_password' />
                     {{#if oauthRequest}}
                         {{#each oauthRequest}}
-                            <input type="hidden" name="{{@key}}" value="{{this}}" />
+                            <input type='hidden' name='{{@key}}' value='{{this}}' />
                         {{/each}}
                     {{/if}}
-                    <div class="mb-5">
-                        <div class="form-group">
-                            <label for="name">Full Name</label>
-                            <input type="text" class="form-control" id="display_name" name="display_name" placeholder="Full name" required />
+                    <div class='mb-5'>
+                        <div class='form-group'>
+                            <label for='name'>Full Name</label>
+                            <input type='text' class='form-control' id='display_name' name='display_name' placeholder='Full name' required />
                         </div>
-                        <div class="form-group">
-                            <label for="email">Email address</label>
-                            <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required />
+                        <div class='form-group'>
+                            <label for='email'>Email address</label>
+                            <input type='email' class='form-control' id='email' name='email' placeholder='name@example.com' required />
                         </div>
-                        <div class="form-group">
-                            <label for="password">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required />
+                        <div class='form-group'>
+                            <label for='password'>Password</label>
+                            <input type='password' class='form-control' id='password' name='password' required />
                         </div>
-                        <div class="form-group">
-                            <label for="confirmpassword">Confirm Password</label>
-                            <input type="password" class="form-control" id="confirmpassword" required />
+                        <div class='form-group'>
+                            <label for='confirmpassword'>Confirm Password</label>
+                            <input type='password' class='form-control' id='confirmpassword' required />
                         </div>
                     </div>
-                    <div class="w-100 px-4">
-                        <button type="submit" class="btn btn-lg btn-custom mb-2 btn-block">Register</button>
+                    <div class='w-100 px-4'>
+                        <button type='submit' class='btn btn-lg btn-custom mb-2 btn-block'>Register</button>
                     </div>
                 </form>
-                <div class="w-100 text-center">
-                    <a class="login-link" href="/">Already have an Account?</a>
+                <div class='w-100 text-center'>
+                    <a class='login-link' href='/'>Already have an Account?</a>
                 </div>
             </div>
         </div>

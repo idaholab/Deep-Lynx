@@ -1,10 +1,10 @@
-import Result from "../../../common_classes/result"
-import Mapper from "../mapper";
-import {QueryConfig} from "pg";
-import Task from "../../../event_system/task";
-import {plainToClass} from "class-transformer";
+import Result from '../../../common_classes/result';
+import Mapper from '../mapper';
+import { QueryConfig } from 'pg';
+import Task from '../../../event_system/task';
+import { plainToClass } from 'class-transformer';
 
-const resultClass = Task
+const resultClass = Task;
 
 /*
     EventQueueMapper extends the Postgres database Mapper class and allows
@@ -15,54 +15,55 @@ const resultClass = Task
     try to avoid listing functions, as those are generally covered by the Repository
     class/interface as well.
 */
-export default class EventQueueMapper extends Mapper{
-    public static tableName = "queue_tasks";
+export default class EventQueueMapper extends Mapper {
+    public static tableName = 'queue_tasks';
 
     private static instance: EventQueueMapper;
 
     public static get Instance(): EventQueueMapper {
-        if(!EventQueueMapper.instance) {
-          EventQueueMapper.instance = new EventQueueMapper()
+        if (!EventQueueMapper.instance) {
+            EventQueueMapper.instance = new EventQueueMapper();
         }
 
-        return EventQueueMapper.instance
+        return EventQueueMapper.instance;
     }
 
     public async Retrieve(id: string): Promise<Result<Task>> {
         // TODO verify it's setting the right values on the included event task
-        return super.retrieve<Task>(this.retrieveStatement(id), {resultClass})
+        return super.retrieve<Task>(this.retrieveStatement(id), {
+            resultClass
+        });
     }
 
     public async List(): Promise<Task[]> {
-        const rows = await super.rows<object>(this.listStatement())
-        if(rows.isError) return Promise.resolve([])
+        const rows = await super.rows<object>(this.listStatement());
+        if (rows.isError) return Promise.resolve([]);
 
-        return Promise.resolve(plainToClass(Task, rows.value))
+        return Promise.resolve(plainToClass(Task, rows.value));
     }
 
     public Delete(id: string): Promise<Result<boolean>> {
-        return super.runStatement(this.deleteStatement(id))
+        return super.runStatement(this.deleteStatement(id));
     }
 
-    private retrieveStatement(id:string): QueryConfig {
+    private retrieveStatement(id: string): QueryConfig {
         return {
-            text:`SELECT * FROM ${EventQueueMapper.tableName} WHERE id = $1`,
+            text: `SELECT * FROM ${EventQueueMapper.tableName} WHERE id = $1`,
             values: [id]
-        }
+        };
     }
 
     private deleteStatement(id: string): QueryConfig {
         return {
-            text:`DELETE FROM ${EventQueueMapper.tableName} WHERE id = $1`,
+            text: `DELETE FROM ${EventQueueMapper.tableName} WHERE id = $1`,
             values: [id]
-        }
+        };
     }
 
     private listStatement(): QueryConfig {
         return {
             text: `SELECT * FROM ${EventQueueMapper.tableName}`,
             values: []
-        }
+        };
     }
-
 }

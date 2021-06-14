@@ -1,5 +1,5 @@
 export function BasicEmailTemplate(message: string): string {
-   return `<html>
+    return `<html>
     <p>${message}</p>
-</html>`
+</html>`;
 }

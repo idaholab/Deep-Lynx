@@ -1,13 +1,13 @@
-import Result from "../../../../common_classes/result"
-import Mapper from "../../mapper";
-import {PoolClient, QueryConfig} from "pg";
-import {QueueProcessor} from "../../../../event_system/processor";
-import Event from "../../../../event_system/event";
-import File from "../../../../data_warehouse/data/file";
-import uuid from "uuid";
+import Result from '../../../../common_classes/result';
+import Mapper from '../../mapper';
+import { PoolClient, QueryConfig } from 'pg';
+import { QueueProcessor } from '../../../../event_system/processor';
+import Event from '../../../../event_system/event';
+import File from '../../../../data_warehouse/data/file';
+import uuid from 'uuid';
 
-const format = require('pg-format')
-const resultClass = File
+const format = require('pg-format');
+const resultClass = File;
 
 /*
     FileMapper extends the Postgres database Mapper class and allows
@@ -18,93 +18,117 @@ const resultClass = File
     try to avoid listing functions, as those are generally covered by the Repository
     class/interface as well.
 */
-export default class FileMapper extends Mapper{
-    public static tableName = "files";
+export default class FileMapper extends Mapper {
+    public static tableName = 'files';
 
     private static instance: FileMapper;
 
     public static get Instance(): FileMapper {
-        if(!FileMapper.instance) {
-            FileMapper.instance = new FileMapper()
+        if (!FileMapper.instance) {
+            FileMapper.instance = new FileMapper();
         }
 
-        return FileMapper.instance
+        return FileMapper.instance;
     }
 
     public async Create(userID: string, f: File, transaction?: PoolClient): Promise<Result<File>> {
-        const r = await super.run(this.createStatement(userID, f), {transaction, resultClass})
-        if(r.isError) return Promise.resolve(Result.Pass(r))
+        const r = await super.run(this.createStatement(userID, f), {
+            transaction,
+            resultClass
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        QueueProcessor.Instance.emit(new Event({
-            sourceID: f.data_source_id!,
-            sourceType: "data_source",
-            type: "file_created",
-            data: r.value[0].id
-        }))
+        QueueProcessor.Instance.emit(
+            new Event({
+                sourceID: f.data_source_id!,
+                sourceType: 'data_source',
+                type: 'file_created',
+                data: r.value[0].id
+            })
+        );
 
-        return Promise.resolve(Result.Success(r.value[0]))
+        return Promise.resolve(Result.Success(r.value[0]));
     }
 
     public async BulkCreate(userID: string, f: File[], transaction?: PoolClient): Promise<Result<File[]>> {
-        const r = await super.run(this.createStatement(userID, ...f), {transaction, resultClass})
-        if(r.isError) return Promise.resolve(Result.Pass(r))
+        const r = await super.run(this.createStatement(userID, ...f), {
+            transaction,
+            resultClass
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        r.value.forEach(file => {
-            QueueProcessor.Instance.emit(new Event({
-                sourceID: file.data_source_id!,
-                sourceType: "data_source",
-                type: "file_created",
-                data: file.id
-            }))
-        })
+        r.value.forEach((file) => {
+            QueueProcessor.Instance.emit(
+                new Event({
+                    sourceID: file.data_source_id!,
+                    sourceType: 'data_source',
+                    type: 'file_created',
+                    data: file.id
+                })
+            );
+        });
 
-        return Promise.resolve(Result.Success(r.value))
+        return Promise.resolve(Result.Success(r.value));
     }
 
     public async BulkUpdate(userID: string, f: File[], transaction?: PoolClient): Promise<Result<File>> {
-        const r = await super.run(this.fullUpdateStatement(userID, ...f), {transaction, resultClass})
-        if(r.isError) return Promise.resolve(Result.Pass(r))
+        const r = await super.run(this.fullUpdateStatement(userID, ...f), {
+            transaction,
+            resultClass
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        r.value.forEach(file => {
-            QueueProcessor.Instance.emit(new Event({
-                sourceID: file.data_source_id!,
-                sourceType: "data_source",
-                type: "file_modified",
-                data: file.id
-            }))
-        })
+        r.value.forEach((file) => {
+            QueueProcessor.Instance.emit(
+                new Event({
+                    sourceID: file.data_source_id!,
+                    sourceType: 'data_source',
+                    type: 'file_modified',
+                    data: file.id
+                })
+            );
+        });
 
-        return Promise.resolve(Result.Success(r.value[0]))
+        return Promise.resolve(Result.Success(r.value[0]));
     }
 
     public async Update(userID: string, f: File, transaction?: PoolClient): Promise<Result<File>> {
-        const r = await super.run(this.fullUpdateStatement(userID, f), {transaction, resultClass})
-        if(r.isError) return Promise.resolve(Result.Pass(r))
+        const r = await super.run(this.fullUpdateStatement(userID, f), {
+            transaction,
+            resultClass
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        QueueProcessor.Instance.emit(new Event({
-            sourceID: f.data_source_id!,
-            sourceType: "data_source",
-            type: "file_modified",
-            data: f.id
-        }))
+        QueueProcessor.Instance.emit(
+            new Event({
+                sourceID: f.data_source_id!,
+                sourceType: 'data_source',
+                type: 'file_modified',
+                data: f.id
+            })
+        );
 
-        return Promise.resolve(Result.Success(r.value[0]))
+        return Promise.resolve(Result.Success(r.value[0]));
     }
 
-    public async Retrieve(id:string): Promise<Result<File>>{
-        return super.retrieve<File>(this.retrieveStatement(id), {resultClass})
+    public async Retrieve(id: string): Promise<Result<File>> {
+        return super.retrieve<File>(this.retrieveStatement(id), {
+            resultClass
+        });
     }
 
-    public async DomainRetrieve(id:string, containerID: string): Promise<Result<File>>{
-        return super.retrieve<File>(this.domainRetrieveStatement(id, containerID), {resultClass})
+    public async DomainRetrieve(id: string, containerID: string): Promise<Result<File>> {
+        return super.retrieve<File>(this.domainRetrieveStatement(id, containerID), { resultClass });
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<File[]>> {
-        return super.rows<File>(this.listFromIDsStatement(ids), {resultClass})
+        return super.rows<File>(this.listFromIDsStatement(ids), {
+            resultClass
+        });
     }
 
     public async Delete(fileID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.deleteStatement(fileID))
+        return super.runStatement(this.deleteStatement(fileID));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -112,7 +136,7 @@ export default class FileMapper extends Mapper{
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
     private createStatement(userID: string, ...files: File[]): string {
-           const text = `INSERT INTO files(
+        const text = `INSERT INTO files(
                   id,
                   container_id,
                   file_name,
@@ -123,20 +147,22 @@ export default class FileMapper extends Mapper{
                   data_source_id,
                   md5hash,
                   created_by,
-                  modified_by) VALUES %L RETURNING *`
-           const values = files.map(file => [
-               uuid.v4(),
-               file.container_id,
-               file.file_name,
-               file.file_size,
-               file.adapter_file_path,
-               file.adapter,
-               JSON.stringify(file.metadata),
-               file.data_source_id,
-               file.md5hash,
-               userID, userID])
+                  modified_by) VALUES %L RETURNING *`;
+        const values = files.map((file) => [
+            uuid.v4(),
+            file.container_id,
+            file.file_name,
+            file.file_size,
+            file.adapter_file_path,
+            file.adapter,
+            JSON.stringify(file.metadata),
+            file.data_source_id,
+            file.md5hash,
+            userID,
+            userID
+        ]);
 
-           return format(text, values)
+        return format(text, values);
     }
 
     private fullUpdateStatement(userID: string, ...files: File[]): string {
@@ -162,8 +188,8 @@ export default class FileMapper extends Mapper{
                   data_source_id,
                   md5hash,
                   modified_by)
-                  WHERE u.id::uuid = f.id RETURNING f.*`
-        const values = files.map(file => [
+                  WHERE u.id::uuid = f.id RETURNING f.*`;
+        const values = files.map((file) => [
             uuid.v4(),
             file.container_id,
             file.file_name,
@@ -173,39 +199,41 @@ export default class FileMapper extends Mapper{
             JSON.stringify(file.metadata),
             file.data_source_id,
             file.md5hash,
-            userID, userID])
+            userID,
+            userID
+        ]);
 
-        return format(text, values)
+        return format(text, values);
     }
 
     private deleteStatement(containerID: string): QueryConfig {
         return {
-            text:`DELETE FROM files WHERE id = $1`,
+            text: `DELETE FROM files WHERE id = $1`,
             values: [containerID]
-        }
+        };
     }
 
-    private retrieveStatement(id:string): QueryConfig {
+    private retrieveStatement(id: string): QueryConfig {
         return {
-            text:`SELECT * FROM files WHERE id = $1`,
+            text: `SELECT * FROM files WHERE id = $1`,
             values: [id]
-        }
+        };
     }
 
-    private domainRetrieveStatement(id:string, containerID: string): QueryConfig {
+    private domainRetrieveStatement(id: string, containerID: string): QueryConfig {
         return {
-            text:`SELECT * FROM files WHERE id = $1 AND container_id = $2`,
+            text: `SELECT * FROM files WHERE id = $1 AND container_id = $2`,
             values: [id, containerID]
-        }
+        };
     }
 
     private listFromIDsStatement(ids: string[]): QueryConfig {
         // have to add the quotations in order for postgres to treat the uuid correctly
-        ids.map(id => `'${id}'`)
+        ids.map((id) => `'${id}'`);
 
         return {
-           text: `SELECT * FROM files WHERE id IN($1)`,
-           values: ids
-       }
+            text: `SELECT * FROM files WHERE id IN($1)`,
+            values: ids
+        };
     }
 }

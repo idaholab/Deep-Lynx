@@ -1,14 +1,13 @@
-import Result from "../../../../common_classes/result"
-import Mapper from "../../mapper";
-import {PoolClient, QueryConfig} from "pg";
-import {QueueProcessor} from "../../../../event_system/processor";
-import Event from "../../../../event_system/event";
-import ExportRecord from "../../../../data_warehouse/export/export";
-import uuid from "uuid";
+import Result from '../../../../common_classes/result';
+import Mapper from '../../mapper';
+import { PoolClient, QueryConfig } from 'pg';
+import { QueueProcessor } from '../../../../event_system/processor';
+import Event from '../../../../event_system/event';
+import ExportRecord from '../../../../data_warehouse/export/export';
+import uuid from 'uuid';
 
-
-const format = require('pg-format')
-const resultClass = ExportRecord
+const format = require('pg-format');
+const resultClass = ExportRecord;
 
 /*
     ExportMapper extends the Postgres database Mapper class and allows
@@ -19,60 +18,79 @@ const resultClass = ExportRecord
     try to avoid listing functions, as those are generally covered by the Repository
     class/interface as well.
 */
-export default class ExportMapper extends Mapper{
-    public static tableName = "exports";
+export default class ExportMapper extends Mapper {
+    public static tableName = 'exports';
 
     private static instance: ExportMapper;
 
     public static get Instance(): ExportMapper {
-        if(!ExportMapper.instance) {
-            ExportMapper.instance = new ExportMapper()
+        if (!ExportMapper.instance) {
+            ExportMapper.instance = new ExportMapper();
         }
 
-        return ExportMapper.instance
+        return ExportMapper.instance;
     }
 
     public async Create(userID: string, input: ExportRecord, transaction?: PoolClient): Promise<Result<ExportRecord>> {
-        const r = await super.run(this.createStatement(userID, input), {resultClass, transaction})
-        if(r.isError) return Promise.resolve(Result.Pass(r))
+        const r = await super.run(this.createStatement(userID, input), {
+            resultClass,
+            transaction
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        return Promise.resolve(Result.Success(r.value[0]))
+        return Promise.resolve(Result.Success(r.value[0]));
     }
 
     public async BulkCreate(userID: string, input: ExportRecord[], transaction?: PoolClient): Promise<Result<ExportRecord[]>> {
-        return super.run(this.createStatement(userID, ...input), {resultClass, transaction})
+        return super.run(this.createStatement(userID, ...input), {
+            resultClass,
+            transaction
+        });
     }
 
     public async Update(userID: string, input: ExportRecord, transaction?: PoolClient): Promise<Result<ExportRecord>> {
-        const r = await super.run(this.fullUpdateStatement(userID, input), {resultClass, transaction})
-        if(r.isError) return Promise.resolve(Result.Pass(r))
+        const r = await super.run(this.fullUpdateStatement(userID, input), {
+            resultClass,
+            transaction
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        return Promise.resolve(Result.Success(r.value[0]))
+        return Promise.resolve(Result.Success(r.value[0]));
     }
 
     public async BulkUpdate(userID: string, input: ExportRecord[], transaction?: PoolClient): Promise<Result<ExportRecord[]>> {
-        return super.run(this.fullUpdateStatement(userID, ...input), {resultClass, transaction})
+        return super.run(this.fullUpdateStatement(userID, ...input), {
+            resultClass,
+            transaction
+        });
     }
 
     public Retrieve(id: string): Promise<Result<ExportRecord>> {
-        return super.retrieve(this.retrieveStatement(id), {resultClass})
+        return super.retrieve(this.retrieveStatement(id), { resultClass });
     }
 
     public Delete(id: string): Promise<Result<boolean>> {
-        return super.runStatement(this.deleteStatement(id))
+        return super.runStatement(this.deleteStatement(id));
     }
 
-    public async SetStatus(userID: string, id: string, status: "created" | "processing" | "paused" | "completed" | "failed", message?: string): Promise<Result<boolean>> {
-        if(status === "completed") {
-            const completeExport = await this.Retrieve(id)
-            QueueProcessor.Instance.emit(new Event({
-                sourceID: completeExport.value.container_id!,
-                sourceType: "container",
-                type: "data_exported"
-            }))
+    public async SetStatus(
+        userID: string,
+        id: string,
+        status: 'created' | 'processing' | 'paused' | 'completed' | 'failed',
+        message?: string
+    ): Promise<Result<boolean>> {
+        if (status === 'completed') {
+            const completeExport = await this.Retrieve(id);
+            QueueProcessor.Instance.emit(
+                new Event({
+                    sourceID: completeExport.value.container_id!,
+                    sourceType: 'container',
+                    type: 'data_exported'
+                })
+            );
         }
 
-        return super.runStatement(this.setStatusStatement(userID, id, status, message))
+        return super.runStatement(this.setStatusStatement(userID, id, status, message));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -89,8 +107,8 @@ export default class ExportMapper extends Mapper{
             status_message,
             destination_type,
             created_by,
-            modified_by) VALUES %L RETURNING *`
-        const values = exports.map(exp => [
+            modified_by) VALUES %L RETURNING *`;
+        const values = exports.map((exp) => [
             uuid.v4(),
             exp.container_id,
             exp.adapter,
@@ -98,9 +116,11 @@ export default class ExportMapper extends Mapper{
             JSON.stringify(exp.config),
             exp.status_message,
             exp.destination_type,
-            userID, userID])
+            userID,
+            userID
+        ]);
 
-        return format(text, values)
+        return format(text, values);
     }
 
     private fullUpdateStatement(userID: string, ...exports: ExportRecord[]): string {
@@ -122,8 +142,8 @@ export default class ExportMapper extends Mapper{
                           status_message,
                           destination_type,
                           modified_by)
-                      WHERE u.id::uuid = e.id RETURNING e.*`
-        const values = exports.map(exp => [
+                      WHERE u.id::uuid = e.id RETURNING e.*`;
+        const values = exports.map((exp) => [
             exp.id,
             exp.container_id,
             exp.adapter,
@@ -131,36 +151,42 @@ export default class ExportMapper extends Mapper{
             JSON.stringify(exp.config),
             exp.status_message,
             exp.destination_type,
-            userID])
+            userID
+        ]);
 
-        return format(text, values)
+        return format(text, values);
     }
 
-    private retrieveStatement(exportID:string): QueryConfig {
+    private retrieveStatement(exportID: string): QueryConfig {
         return {
-            text:`SELECT * FROM exports WHERE id = $1`,
+            text: `SELECT * FROM exports WHERE id = $1`,
             values: [exportID]
-        }
+        };
     }
 
     private deleteStatement(exportID: string): QueryConfig {
         return {
-            text:`DELETE FROM exports WHERE id = $1`,
+            text: `DELETE FROM exports WHERE id = $1`,
             values: [exportID]
-        }
+        };
     }
 
-    private setStatusStatement(userID: string, id: string, status: "created" | "processing" | "paused" | "completed" | "failed", message?: string): QueryConfig {
+    private setStatusStatement(
+        userID: string,
+        id: string,
+        status: 'created' | 'processing' | 'paused' | 'completed' | 'failed',
+        message?: string
+    ): QueryConfig {
         return {
             text: `UPDATE exports SET status = $1, status_message = $2, modified_by = $4, modified_at = NOW() WHERE id = $3`,
             values: [status, message, id, userID]
-        }
+        };
     }
 
     private listByStatusStatement(status: string): QueryConfig {
         return {
             text: `SELECT * FROM exports WHERE status = $1`,
             values: [status]
-        }
+        };
     }
 }

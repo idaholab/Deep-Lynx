@@ -1,32 +1,30 @@
-import express from "express";
-import uuid from "uuid-random";
-import { performance, PerformanceObserver } from "perf_hooks";
-import Logger from "../services/logger"
-import Authorization from "../access_management/authorization/authorization";
-import Config from "../services/config";
-import passport from "passport";
-import ContainerRepository from "../data_access_layer/repositories/data_warehouse/ontology/container_respository";
-import MetatypeRepository from "../data_access_layer/repositories/data_warehouse/ontology/metatype_repository";
-import MetatypeRelationshipRepository from "../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository";
-import MetatypeRelationshipPairRepository
-    from "../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository";
-import MetatypeKeyRepository from "../data_access_layer/repositories/data_warehouse/ontology/metatype_key_repository";
-import MetatypeRelationshipKeyRepository from "../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_key_repository";
-import {plainToClass} from "class-transformer";
-import {SuperUser, User} from "../access_management/user";
-import UserRepository from "../data_access_layer/repositories/access_management/user_repository";
-import OAuthRepository from "../data_access_layer/repositories/access_management/oauth_repository";
-import EventRegistrationRepository from "../data_access_layer/repositories/event_system/event_registration_repository";
-import NodeRepository from "../data_access_layer/repositories/data_warehouse/data/node_repository";
-import EdgeRepository from "../data_access_layer/repositories/data_warehouse/data/edge_repository";
-import TypeMappingRepository from "../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository";
-import TypeTransformationRepository
-    from "../data_access_layer/repositories/data_warehouse/etl/type_transformation_repository";
-import ExporterRepository from "../data_access_layer/repositories/data_warehouse/export/export_repository";
-import ImportRepository from "../data_access_layer/repositories/data_warehouse/import/import_repository";
-import DataStagingRepository from "../data_access_layer/repositories/data_warehouse/import/data_staging_repository";
-import DataSourceRepository from "../data_access_layer/repositories/data_warehouse/import/data_source_repository";
-
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+import express from 'express';
+import uuid from 'uuid-random';
+import {performance, PerformanceObserver} from 'perf_hooks';
+import Logger from '../services/logger';
+import Authorization from '../access_management/authorization/authorization';
+import Config from '../services/config';
+import passport from 'passport';
+import ContainerRepository from '../data_access_layer/repositories/data_warehouse/ontology/container_respository';
+import MetatypeRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
+import MetatypeRelationshipRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository';
+import MetatypeRelationshipPairRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository';
+import MetatypeKeyRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_key_repository';
+import MetatypeRelationshipKeyRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_key_repository';
+import {plainToClass} from 'class-transformer';
+import {SuperUser, User} from '../access_management/user';
+import UserRepository from '../data_access_layer/repositories/access_management/user_repository';
+import OAuthRepository from '../data_access_layer/repositories/access_management/oauth_repository';
+import EventRegistrationRepository from '../data_access_layer/repositories/event_system/event_registration_repository';
+import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
+import EdgeRepository from '../data_access_layer/repositories/data_warehouse/data/edge_repository';
+import TypeMappingRepository from '../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
+import TypeTransformationRepository from '../data_access_layer/repositories/data_warehouse/etl/type_transformation_repository';
+import ExporterRepository from '../data_access_layer/repositories/data_warehouse/export/export_repository';
+import ImportRepository from '../data_access_layer/repositories/data_warehouse/import/import_repository';
+import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
+import DataSourceRepository from '../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 
 /*
  PerformanceMiddleware uses the provided logger to display the time each route
@@ -35,116 +33,103 @@ import DataSourceRepository from "../data_access_layer/repositories/data_warehou
 */
 export class PerformanceMiddleware {
     public constructor() {
-        this.performanceObserver.observe({ entryTypes: ["measure"] })
+        this.performanceObserver.observe({entryTypes: ['measure']});
     }
 
-    public performanceObserver = new PerformanceObserver(items => {
-        Logger.info(
-            `${items.getEntries()[0].name} ${items
-                .getEntries()[0]
-                .duration.toFixed(2)} MS`
-        );
+    public performanceObserver = new PerformanceObserver((items) => {
+        Logger.info(`${items.getEntries()[0].name} ${items.getEntries()[0].duration.toFixed(2)} MS`);
         performance.clearMarks();
     });
 
     public Pre() {
-        return (
-            req: express.Request,
-            res: express.Response,
-            next: express.NextFunction
-        ) => {
+        return (req: express.Request, res: express.Response, next: express.NextFunction) => {
             const id = uuid();
 
-            res.setHeader("benchmarking", id);
+            res.setHeader('benchmarking', id);
             performance.mark(id);
 
             next();
-        }
+        };
     }
 
     public Post() {
-        return (
-            req: express.Request,
-            res: express.Response,
-            next: express.NextFunction
-        ) => {
+        return (req: express.Request, res: express.Response, next: express.NextFunction) => {
             const id = uuid();
             performance.mark(id);
-            const firstMark = res.get("benchmarking");
+            const firstMark = res.get('benchmarking');
             if (firstMark) {
                 performance.measure(`${req.method} ${req.path}`, firstMark, id);
             }
 
             next();
-        }
+        };
     }
 }
 
 // authRequest is used to manage user authorization against resources, optional param for declaring domain
-export function authRequest( action: "read" | "write", resource: string, domainParam?:string) {
+export function authRequest(action: 'read' | 'write', resource: string, domainParam?: string) {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         let domain: string | undefined;
         // pass auth if user is an admin
-        if(req.currentUser && req.currentUser.admin) {
-            next()
-            return
+        if (req.currentUser && req.currentUser.admin) {
+            next();
+            return;
         }
 
         // set the domain(container) from the provided parameterID
-        if(domainParam) domain = req.params[domainParam];
+        if (domainParam) domain = req.params[domainParam];
 
         Authorization.AuthUser(req.user, action, resource, domain)
-            .then(result => {
-                if(result) {
+            .then((result) => {
+                if (result) {
                     next();
-                    return
+                    return;
                 }
 
                 resp.status(400).send('unauthorized');
-                return
+                return;
             })
             .catch(() => {
                 resp.status(400).send('unauthorized');
-                return
-            })
-    }
+                return;
+            });
+    };
 }
-
 
 // authUser is used to manage user authorization against themselves, id refers to the user ID
 export function authUser() {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
-        if(req.currentUser && req.params.id === req.currentUser.id) next()
+        if (req.currentUser && req.params.id === req.currentUser.id) next();
         else {
-            resp.status(401).send('unauthorized')
+            resp.status(401).send('unauthorized');
         }
-    }
+    };
 }
 
-// authDomain assumes the request paramater 'containerID' refers to the current domain of the user
-export function authInContainer(action: "read" | "write", resource: string) {
+// authDomain assumes the request parameter 'containerID' refers to the current domain of the user
+export function authInContainer(action: 'read' | 'write', resource: string) {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // pass auth if user is an admin
-        if(req.currentUser && req.currentUser.admin) {
-            next()
-            return
+        if (req.currentUser && req.currentUser.admin) {
+            next();
+            return;
         }
 
         Authorization.AuthUser(req.currentUser, action, resource, req.params.containerID)
-            .then(result => {
-                if(result) {
+            .then((result) => {
+                if (result) {
                     next();
-                    return
+                    return;
                 }
 
                 resp.status(401).send('unauthorized');
-                return
+                return;
             })
             .catch(() => {
                 resp.status(401).send('unauthorized');
-                return
-            })
-    }
+                return;
+            });
+    };
 }
 
 // authenticateRoute should be used whenever a route is considered protected
@@ -157,13 +142,14 @@ export function authenticateRoute(): any {
         }
 
         case 'token': {
-            return passport.authenticate('jwt', {session: false})
+            return passport.authenticate('jwt', {session: false});
         }
 
         default: {
             return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
                 req.currentUser = SuperUser;
-                next()};
+                next();
+            };
         }
     }
 }
@@ -173,11 +159,11 @@ export function authenticateRoute(): any {
 export function offsetLimitReplacer(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // @ts-ignore
-        if(isNaN(+req.query.offset))  req.query.offset = "0";
+        if (isNaN(+req.query.offset)) req.query.offset = '0';
         // @ts-ignore
-        if(isNaN(+req.query.limit))  req.query.limit = "10000";
-        next()};
-
+        if (isNaN(+req.query.limit)) req.query.limit = '10000';
+        next();
+    };
 }
 
 // containerContext will attempt to fetch a container by id specified by the
@@ -186,28 +172,28 @@ export function offsetLimitReplacer(): any {
 export function containerContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id, don't fail, just pass without action
-        if(!req.params.containerID) {
-            next()
-            return
+        if (!req.params.containerID) {
+            next();
+            return;
         }
 
-        const repo = new ContainerRepository()
+        const repo = new ContainerRepository();
 
         repo.findByID(req.params.containerID)
-            .then(result => {
-               if(result.isError) {
-                   result.asResponse(resp)
-                   return
-               }
+            .then((result) => {
+                if (result.isError) {
+                    result.asResponse(resp);
+                    return;
+                }
 
-               req.container = result.value
-               next()
+                req.container = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
 
 // metatypeContext will attempt to fetch a metatype by id specified by the
@@ -216,28 +202,28 @@ export function containerContext(): any {
 export function metatypeContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id, don't fail, just pass without action
-        if(!req.params.metatypeID) {
-            next()
-            return
+        if (!req.params.metatypeID) {
+            next();
+            return;
         }
 
-        const repo = new MetatypeRepository()
+        const repo = new MetatypeRepository();
 
         repo.findByID(req.params.metatypeID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.metatype = result.value
-                next()
+                req.metatype = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
 
 // metatypeKeyContext will attempt to fetch a metatype key by id specified by the
@@ -246,28 +232,28 @@ export function metatypeContext(): any {
 export function metatypeKeyContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id, don't fail, just pass without action
-        if(!req.params.metatypeKeyID) {
-            next()
-            return
+        if (!req.params.metatypeKeyID) {
+            next();
+            return;
         }
 
-        const repo = new MetatypeKeyRepository()
+        const repo = new MetatypeKeyRepository();
 
         repo.findByID(req.params.metatypeKeyID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.metatypeKey = result.value
-                next()
+                req.metatypeKey = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
 
 // metatypeRelationshipContext will attempt to fetch a relationship by id specified by the
@@ -276,28 +262,28 @@ export function metatypeKeyContext(): any {
 export function metatypeRelationshipContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id, don't fail, just pass without action
-        if(!req.params.metatypeRelationshipID) {
-            next()
-            return
+        if (!req.params.metatypeRelationshipID) {
+            next();
+            return;
         }
 
-        const repo = new MetatypeRelationshipRepository()
+        const repo = new MetatypeRelationshipRepository();
 
         repo.findByID(req.params.metatypeRelationshipID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.metatypeRelationship = result.value
-                next()
+                req.metatypeRelationship = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
 
 // metatypeKeyContext will attempt to fetch a metatype key by id specified by the
@@ -306,28 +292,28 @@ export function metatypeRelationshipContext(): any {
 export function metatypeRelationshipKeyContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id, don't fail, just pass without action
-        if(!req.params.relationshipKeyID) {
-            next()
-            return
+        if (!req.params.relationshipKeyID) {
+            next();
+            return;
         }
 
-        const repo = new MetatypeRelationshipKeyRepository()
+        const repo = new MetatypeRelationshipKeyRepository();
 
         repo.findByID(req.params.relationshipKeyID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.metatypeRelationshipKey= result.value
-                next()
+                req.metatypeRelationshipKey = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
 
 // metatypeRelationshipPairContext will attempt to fetch a pair by id specified by the
@@ -336,28 +322,28 @@ export function metatypeRelationshipKeyContext(): any {
 export function metatypeRelationshipPairContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id , don't fail, just pass without action
-        if(!req.params.relationshipPairID) {
-            next()
-            return
+        if (!req.params.relationshipPairID) {
+            next();
+            return;
         }
 
-        const repo = new MetatypeRelationshipPairRepository()
+        const repo = new MetatypeRelationshipPairRepository();
 
         repo.findByID(req.params.relationshipPairID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.metatypeRelationshipPair = result.value
-                next()
+                req.metatypeRelationshipPair = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
 
 // userContext will attempt to fetch a user by id specified by the
@@ -366,28 +352,28 @@ export function metatypeRelationshipPairContext(): any {
 export function userContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id , don't fail, just pass without action
-        if(!req.params.userID) {
-            next()
-            return
+        if (!req.params.userID) {
+            next();
+            return;
         }
 
-        const repo = new UserRepository()
+        const repo = new UserRepository();
 
         repo.findByID(req.params.userID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.routeUser = result.value
-                next()
+                req.routeUser = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
 
 // currentUser will attempt to pull the user object from the request set by
@@ -396,14 +382,14 @@ export function userContext(): any {
 export function currentUser(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id , don't fail, just pass without action
-        if(!req.user) {
-            next()
-            return
+        if (!req.user) {
+            next();
+            return;
         }
 
-        req.currentUser = plainToClass(User, req.user)
-        next()
-    }
+        req.currentUser = plainToClass(User, req.user);
+        next();
+    };
 }
 
 // oauthAppContext will attempt to fetch an oauth app by id specified by the
@@ -412,30 +398,29 @@ export function currentUser(): any {
 export function oauthAppContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id , don't fail, just pass without action
-        if(!req.params.oauthAppID) {
-            next()
-            return
+        if (!req.params.oauthAppID) {
+            next();
+            return;
         }
 
-        const repo = new OAuthRepository()
+        const repo = new OAuthRepository();
 
         repo.findByID(req.params.oauthAppID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.oauthApp = result.value
-                next()
+                req.oauthApp = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
-
 
 // eventRegistrationContext will attempt to fetch an event registration by id specified by the
 // id query parameter. If one is fetched it will pass it on in request context.
@@ -443,28 +428,28 @@ export function oauthAppContext(): any {
 export function eventRegistrationContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id , don't fail, just pass without action
-        if(!req.params.eventRegistrationID) {
-            next()
-            return
+        if (!req.params.eventRegistrationID) {
+            next();
+            return;
         }
 
-        const repo = new EventRegistrationRepository()
+        const repo = new EventRegistrationRepository();
 
         repo.findByID(req.params.eventRegistrationID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.eventRegistration = result.value
-                next()
+                req.eventRegistration = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
 
 // nodeContext will attempt to fetch a node by id specified by the
@@ -473,30 +458,29 @@ export function eventRegistrationContext(): any {
 export function nodeContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id , don't fail, just pass without action
-        if(!req.params.nodeID) {
-            next()
-            return
+        if (!req.params.nodeID) {
+            next();
+            return;
         }
 
-        const repo = new NodeRepository()
+        const repo = new NodeRepository();
 
         repo.findByID(req.params.nodeID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.node = result.value
-                next()
+                req.node = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
-
 
 // edgeContext will attempt to fetch a node by id specified by the
 // id query parameter. If one is fetched it will pass it on in request context.
@@ -504,30 +488,29 @@ export function nodeContext(): any {
 export function edgeContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id , don't fail, just pass without action
-        if(!req.params.edgeID) {
-            next()
-            return
+        if (!req.params.edgeID) {
+            next();
+            return;
         }
 
-        const repo = new EdgeRepository()
+        const repo = new EdgeRepository();
 
         repo.findByID(req.params.edgeID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.edge = result.value
-                next()
+                req.edge = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
-
 
 // typeMappingContext will attempt to fetch a type mapping by id specified by the
 // id query parameter. If one is fetched it will pass it on in request context.
@@ -535,28 +518,28 @@ export function edgeContext(): any {
 export function typeMappingContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id , don't fail, just pass without action
-        if(!req.params.mappingID) {
-            next()
-            return
+        if (!req.params.mappingID) {
+            next();
+            return;
         }
 
-        const repo = new TypeMappingRepository()
+        const repo = new TypeMappingRepository();
 
         repo.findByID(req.params.mappingID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.typeMapping = result.value
-                next()
+                req.typeMapping = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
 
 // typeTransformationContext will attempt to fetch a type mapping by id specified by the
@@ -565,28 +548,28 @@ export function typeMappingContext(): any {
 export function typeTransformationContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id , don't fail, just pass without action
-        if(!req.params.transformationID) {
-            next()
-            return
+        if (!req.params.transformationID) {
+            next();
+            return;
         }
 
-        const repo = new TypeTransformationRepository()
+        const repo = new TypeTransformationRepository();
 
         repo.findByID(req.params.transformationID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.typeTransformation = result.value
-                next()
+                req.typeTransformation = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
 
 // exporterContext will attempt to fetch an exporter by id specified by the
@@ -595,58 +578,58 @@ export function typeTransformationContext(): any {
 export function exporterContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id , don't fail, just pass without action
-        if(!req.params.exportID) {
-            next()
-            return
+        if (!req.params.exportID) {
+            next();
+            return;
         }
 
-        const repo = new ExporterRepository()
+        const repo = new ExporterRepository();
 
         repo.findByID(req.params.exportID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.exporter = result.value
-                next()
+                req.exporter = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
 
-// importContext will attempt to fetch an imprt by id specified by the
+// importContext will attempt to fetch an import by id specified by the
 // id query parameter. If one is fetched it will pass it on in request context.
 // route must contain the param labeled "importID"
 export function importContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id , don't fail, just pass without action
-        if(!req.params.importID) {
-            next()
-            return
+        if (!req.params.importID) {
+            next();
+            return;
         }
 
-        const repo = new ImportRepository()
+        const repo = new ImportRepository();
 
         repo.findByID(req.params.importID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.dataImport = result.value
-                next()
+                req.dataImport = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
 
 // dataStaging context will attempt to fetch a data staging record by id specified by the
@@ -655,28 +638,28 @@ export function importContext(): any {
 export function dataStagingContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id , don't fail, just pass without action
-        if(!req.params.dataID) {
-            next()
-            return
+        if (!req.params.dataID) {
+            next();
+            return;
         }
 
-        const repo = new DataStagingRepository()
+        const repo = new DataStagingRepository();
 
         repo.findByID(+req.params.dataID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.dataStagingRecord = result.value
-                next()
+                req.dataStagingRecord = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }
 
 // dataSource context will attempt to fetch a data source interface by id specified by the
@@ -685,26 +668,26 @@ export function dataStagingContext(): any {
 export function dataSourceContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id , don't fail, just pass without action
-        if(!req.params.sourceID) {
-            next()
-            return
+        if (!req.params.sourceID) {
+            next();
+            return;
         }
 
-        const repo = new DataSourceRepository()
+        const repo = new DataSourceRepository();
 
         repo.findByID(req.params.sourceID)
-            .then(result => {
-                if(result.isError) {
-                    resp.status(result.error?.errorCode!).json(result)
-                    return
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
                 }
 
-                req.dataSource = result.value
-                next()
+                req.dataSource = result.value;
+                next();
             })
-            .catch(error => {
-                resp.status(500).json(error)
-                return
-            })
-    }
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
 }

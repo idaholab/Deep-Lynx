@@ -1,39 +1,40 @@
-<div id="dialog" class="card d-flex flex-column shadow">
-    <div class="row no-gutters flex-fill fill d-flex">
-        <div class="col-md-5">
-            <div id="color-background" class="pa-0 container h-100 d-flex">
-                <div class="align-self-center justify-content-center mx-auto my-5">
-                    <h1 class="login-title text-center text-white mb-4">Deep Lynx</h1>
-                    <img src="/img/data-white.png" class="card-img img-fluid" alt="Deep Lynx Logo">
+<div id='dialog' class='card d-flex flex-column shadow'>
+    <div class='row no-gutters flex-fill fill d-flex'>
+        <div class='col-md-5'>
+            <div id='color-background' class='pa-0 container h-100 d-flex'>
+                <div class='align-self-center justify-content-center mx-auto my-5'>
+                    <h1 class='login-title text-center text-white mb-4'>Deep Lynx</h1>
+                    <img src='/img/data-white.png' class='card-img img-fluid' alt='Deep Lynx Logo' />
                 </div>
             </div>
         </div>
-        <div class="col-md-7">
-            <div class="card-body">
+        <div class='col-md-7'>
+            <div class='card-body'>
                 {{#if _error}}
-                    <div class="alert alert-danger" role="alert">
+                    <div class='alert alert-danger' role='alert'>
                         {{{_error}}}
                     </div>
                 {{/if}}
                 {{#if _success}}
-                    <div class="alert alert-primary" role="alert">
+                    <div class='alert alert-primary' role='alert'>
                         {{{_success}}}
                     </div>
                 {{/if}}
-                <h2 class="text-center my-4">Authorize Application</h2>
-                <div class="mb-4">
-                    <p class="text-center">
-                        <strong>{{{application_name}}}</strong> is requesting permission to access the following information:
+                <h2 class='text-center my-4'>Authorize Application</h2>
+                <div class='mb-4'>
+                    <p class='text-center'>
+                        <strong>{{{application_name}}}</strong>
+                        is requesting permission to access the following information:
                     </p>
-                    <div class="card">
-                        <div class="card-header">
+                    <div class='card'>
+                        <div class='card-header'>
                             {{{user_email}}}
                         </div>
-                        <div class="card-body px-0 py-0">
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item">
+                        <div class='card-body px-0 py-0'>
+                            <ul class='list-group list-group-flush'>
+                                <li class='list-group-item'>
                                     Account Data
-                                    <ul class="pl-4">
+                                    <ul class='pl-4'>
                                         <li>
                                             Name
                                         </li>
@@ -42,9 +43,9 @@
                                         </li>
                                     </ul>
                                 </li>
-                                <li class="list-group-item">
+                                <li class='list-group-item'>
                                     Ontology Data
-                                    <ul class="pl-4">
+                                    <ul class='pl-4'>
                                         <li>
                                             Settings
                                         </li>
@@ -57,13 +58,13 @@
                         </div>
                     </div>
                 </div>
-                <form action="/oauth/authorize" method="post">
-                    <input type="hidden" name="_csrf" value="{{{_csrfToken}}}" />
-                    <input type="hidden" name="application_id" value="{{{application_id}}}" />
-                    <input type="hidden" name="token" value="{{{token}}}" />
+                <form action='/oauth/authorize' method='post'>
+                    <input type='hidden' name='_csrf' value='{{{_csrfToken}}}' />
+                    <input type='hidden' name='application_id' value='{{{application_id}}}' />
+                    <input type='hidden' name='token' value='{{{token}}}' />
 
-                    <div class="w-100 px-4 mb-3">
-                        <button type="submit" class="btn btn-lg btn-custom mb-2 btn-block">
+                    <div class='w-100 px-4 mb-3'>
+                        <button type='submit' class='btn btn-lg btn-custom mb-2 btn-block'>
                             Authorize Access
                         </button>
                     </div>

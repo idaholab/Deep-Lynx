@@ -1,112 +1,116 @@
 body {
-  font-family: 'Montserrat', sans-serif;
+    font-family: 'Montserrat', sans-serif;
 }
 
 #page-container {
-  min-height: 100vh;
+    min-height: 100vh;
 }
 
 #dialog {
-  max-width: 630px; 
-  min-width: 400px;
-  min-height: 512px;
+    max-width: 630px;
+    min-width: 400px;
+    min-height: 512px;
 }
 
 #dialog #color-background {
-  border-top-left-radius: 3px;
-  border-top-right-radius: 3px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
 }
 
 #dialog #color-background img {
-  max-height: 165px; 
-  max-width: 165px;
+    max-height: 165px;
+    max-width: 165px;
 }
 
-
 #dialog .container {
-  background-color: #F68C20;
+    background-color: #f68c20;
 }
 
 .login-title {
-  font-size: 1.75rem;
-  font-weight: 500;
+    font-size: 1.75rem;
+    font-weight: 500;
 }
 
 h2 {
-  font-size: 1.5rem;
-  color: rgb(100, 100, 100);
+    font-size: 1.5rem;
+    color: rgb(100, 100, 100);
 }
 
 .btn {
-  font-size: .875rem;
-  font-weight: 500;
+    font-size: 0.875rem;
+    font-weight: 500;
 }
 
 .btn-custom {
-  color: #fff;
-  background-color: #2BA8E0;
-  border-color: #2BA8E0;
+    color: #fff;
+    background-color: #2ba8e0;
+    border-color: #2ba8e0;
 }
 
-.btn-custom.focus, .btn-custom:focus, .btn-custom.active, .btn-custom:active, .btn-custom.hover, .btn-custom:hover {
-  color: #fff;
-  background-color: #2286b3;
-  border-color: #2286b3;
+.btn-custom.focus,
+.btn-custom:focus,
+.btn-custom.active,
+.btn-custom:active,
+.btn-custom.hover,
+.btn-custom:hover {
+    color: #fff;
+    background-color: #2286b3;
+    border-color: #2286b3;
 }
 
 a {
-  color: #2BA8E0;
+    color: #2ba8e0;
 }
 
 a:hover {
-  color: #2286b3;
+    color: #2286b3;
 }
 
 .divider-container {
-  position: relative;
+    position: relative;
 }
 
 .divider-container hr {
-  position: absolute; 
-  z-index: 1;
+    position: absolute;
+    z-index: 1;
 }
 
 .divider-container span {
-  color: #fff;
-  z-index: 2;
+    color: #fff;
+    z-index: 2;
 }
 
 .list-group {
-  font-size: .875rem;
+    font-size: 0.875rem;
 }
 
 .list-group-item ul {
-  list-style-type: disc; 
-  font-size: .75rem
+    list-style-type: disc;
+    font-size: 0.75rem;
 }
 
 @media screen and (min-width: 768px) {
-  #page-container {
-    height: 100vh;
-  }
-  
-  #dialog {
-    max-width: 830px; 
-    min-width: 740px;
-    min-height: 512px;
-  }
-  
-  #dialog #color-background {
-    border-top-left-radius: 3px;
-    border-top-right-radius: 0px;
-    border-bottom-left-radius: 3px;
-  }
+    #page-container {
+        height: 100vh;
+    }
+
+    #dialog {
+        max-width: 830px;
+        min-width: 740px;
+        min-height: 512px;
+    }
+
+    #dialog #color-background {
+        border-top-left-radius: 3px;
+        border-top-right-radius: 0px;
+        border-bottom-left-radius: 3px;
+    }
 }
 
 @media screen and (min-width: 992px) {
-  #dialog {
-    max-width: 830px; 
-    min-width: 820px;
-    min-height: 512px;
-  }
+    #dialog {
+        max-width: 830px;
+        min-width: 820px;
+        min-height: 512px;
+    }
 }

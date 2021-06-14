@@ -1,4 +1,5 @@
-import {BaseDomainClass} from "../common_classes/base_domain_class";
+/* eslint-disable @typescript-eslint/ban-types */
+import { BaseDomainClass } from '../common_classes/base_domain_class';
 import {
     IsArray,
     IsBoolean,
@@ -8,15 +9,19 @@ import {
     IsOptional,
     IsString,
     IsUUID,
-    MinLength, registerDecorator, ValidateIf, ValidationArguments, ValidationOptions
-} from "class-validator";
-import Config from "../services/config"
-import uuid from "uuid";
-import {Exclude, Expose, plainToClass, Transform, Type} from "class-transformer";
-import Container from "../data_warehouse/ontology/container";
-import bcrypt from "bcrypt";
-import Result from "../common_classes/result";
-const validator = require('validator')
+    MinLength,
+    registerDecorator,
+    ValidateIf,
+    ValidationArguments,
+    ValidationOptions
+} from 'class-validator';
+import Config from '../services/config';
+import uuid from 'uuid';
+import { Exclude, Expose, plainToClass, Transform, Type } from 'class-transformer';
+import Container from '../data_warehouse/ontology/container';
+import bcrypt from 'bcrypt';
+import Result from '../common_classes/result';
+const validator = require('validator');
 
 /*
  User represents a registered Deep Lynx user along with their registered API
@@ -25,136 +30,135 @@ const validator = require('validator')
 export class User extends BaseDomainClass {
     @IsOptional()
     @IsUUID()
-    id?: string
+    id?: string;
 
     @IsString()
-    @IsIn(["saml_adfs", "username_password"])
-    identity_provider: string = "username_password"
+    @IsIn(['saml_adfs', 'username_password'])
+    identity_provider = 'username_password';
 
-    @ValidateIf(o => o.identity_provider !== "username_password")
+    @ValidateIf((o) => o.identity_provider !== 'username_password')
     @IsString()
-    identity_provider_id?: string
+    identity_provider_id?: string;
 
     @IsString()
     @MinLength(1)
-    display_name: string = ""
+    display_name = '';
 
     @IsEmail()
-    email: string = ""
+    email = '';
 
     @IsString()
     @IsOptional()
-    @Exclude({toPlainOnly: true}) // we never want this to show up in a return
-    password?: string
+    @Exclude({ toPlainOnly: true }) // we never want this to show up in a return
+    password?: string;
 
     @IsBoolean()
-    admin: boolean = false
+    admin = false;
 
     @IsBoolean()
-    active: boolean = true
+    active = true;
 
     @IsBoolean()
-    reset_required: boolean = false
+    reset_required = false;
 
     @IsString()
     @IsOptional()
-    @Exclude({toPlainOnly: true}) // we never want this to show up in a return
-    reset_token?: string
+    @Exclude({ toPlainOnly: true }) // we never want this to show up in a return
+    reset_token?: string;
 
     @IsBoolean()
-    email_valid: boolean = false
+    email_valid = false;
 
     @IsString()
     @IsOptional()
-    @Exclude({toPlainOnly: true}) // we never want this to show up in a return
-    email_validation_token?: string
+    @Exclude({ toPlainOnly: true }) // we never want this to show up in a return
+    email_validation_token?: string;
 
     @IsArray()
-    permissions: string[][] = []
+    permissions: string[][] = [];
 
     @IsArray()
-    roles: string[] = []
+    roles: string[] = [];
 
     // These are the user's registered API Key/Secret pairs and are used to gain
     // an access token for authentication
-    keys: KeyPair[] | undefined
+    keys: KeyPair[] | undefined;
     // for tracking removed keys for update
-    #removedKeys: KeyPair[] | undefined
+    #removedKeys: KeyPair[] | undefined;
 
     constructor(input: {
-        identity_provider: string,
-        identity_provider_id?: string,
-        display_name: string,
-        email: string,
-        password?: string,
-        admin?: boolean,
-        active?: boolean,
-        permissions?: string[][],
-        roles?: string[],
-        id?: string
+        identity_provider: string;
+        identity_provider_id?: string;
+        display_name: string;
+        email: string;
+        password?: string;
+        admin?: boolean;
+        active?: boolean;
+        permissions?: string[][];
+        roles?: string[];
+        id?: string;
     }) {
         super();
 
-        if(input) {
-            this.identity_provider = input.identity_provider
-            if(input.identity_provider_id) this.identity_provider_id = input.identity_provider_id
-            this.display_name = input.display_name
-            this.email = input.email
-            if(input.password) this.password = input.password
-            if(input.admin) this.admin = input.admin
-            if(input.active) this.active = input.active
-            if(input.id) this.id = input.id
-            if(input.permissions) this.permissions = input.permissions
-            if(input.roles) this.roles = input.roles
+        if (input) {
+            this.identity_provider = input.identity_provider;
+            if (input.identity_provider_id) this.identity_provider_id = input.identity_provider_id;
+            this.display_name = input.display_name;
+            this.email = input.email;
+            if (input.password) this.password = input.password;
+            if (input.admin) this.admin = input.admin;
+            if (input.active) this.active = input.active;
+            if (input.id) this.id = input.id;
+            if (input.permissions) this.permissions = input.permissions;
+            if (input.roles) this.roles = input.roles;
         }
     }
     get removedKeys() {
-        return this.#removedKeys
+        return this.#removedKeys;
     }
 
     // Please use these operations when manipulating the keypairs of a user
     // even though the KeyPair property is not private, avoid mutating it - it's
     // not private due to limitations with the class-transformer package
     addKey(...keys: KeyPair[]) {
-        if(!this.keys) this.keys = []
+        if (!this.keys) this.keys = [];
 
-        keys.forEach(key => key.user_id = this.id!)
-        this.keys.push(...keys)
+        keys.forEach((key) => (key.user_id = this.id!));
+        this.keys.push(...keys);
     }
 
     replaceKeys(keys: KeyPair[], removedKeys?: KeyPair[]) {
-        this.keys = keys
-        if(removedKeys) this.#removedKeys = removedKeys
+        this.keys = keys;
+        if (removedKeys) this.#removedKeys = removedKeys;
     }
 
     // removeKeys will remove the first matching key, you must save the object
     // for changes to take place
     removeKey(...keys: KeyPair[] | string[]) {
-        if(!this.keys) this.keys = []
-        if(!this.#removedKeys) this.#removedKeys = []
-        for(const key of keys) {
-            if(typeof key === 'string') {
-                this.keys = this.keys.filter(k => {
-                    if(k.key!== key) {
-                        return true
+        if (!this.keys) this.keys = [];
+        if (!this.#removedKeys) this.#removedKeys = [];
+        for (const key of keys) {
+            if (typeof key === 'string') {
+                this.keys = this.keys.filter((k) => {
+                    if (k.key !== key) {
+                        return true;
                     }
-                    this.#removedKeys!.push(k)
-                    return false
-                }, this)
+                    this.#removedKeys!.push(k);
+                    return false;
+                }, this);
             } else {
                 // if it's not a string, we can safely assume it's the type
-                this.keys = this.keys.filter(k => {
-                    if(k.key !== key.key ) {
-                        return true
+                this.keys = this.keys.filter((k) => {
+                    if (k.key !== key.key) {
+                        return true;
                     }
-                    this.#removedKeys!.push(k)
-                    return false
-                }, this)
+                    this.#removedKeys!.push(k);
+                    return false;
+                }, this);
             }
         }
     }
 }
-
 
 /*
  KeyPair represents an API Key/Secret combination used by outside services to
@@ -162,33 +166,33 @@ export class User extends BaseDomainClass {
 */
 export class KeyPair extends BaseDomainClass {
     @IsString()
-    key: string = Buffer.from(uuid.v4()).toString('base64')
+    key: string = Buffer.from(uuid.v4()).toString('base64');
 
     // we set the raw secret, the saving will handle encryption - and checking
     // for the encrypted, saved secret will allow use to verify it's saved
     @IsString()
-    secret_raw: string = Buffer.from(uuid.v4()).toString('base64')
+    secret_raw: string = Buffer.from(uuid.v4()).toString('base64');
 
     @IsString()
-    user_id?: string
+    user_id?: string;
 
     @IsOptional()
-    @Exclude({toPlainOnly: true}) // we never want to show the secret when this is serialized to an object
-    secret? : string
+    @Exclude({ toPlainOnly: true }) // we never want to show the secret when this is serialized to an object
+    secret?: string;
 
     constructor(userID?: string) {
         super();
-        if(userID) this.user_id = userID
+        if (userID) this.user_id = userID;
     }
 
     async setSecret(): Promise<Result<boolean>> {
         try {
-            const hashedSecret = await bcrypt.hash(this.secret_raw, 10)
-            this.secret = hashedSecret
+            const hashedSecret = await bcrypt.hash(this.secret_raw, 10);
+            this.secret = hashedSecret;
 
-            return Promise.resolve(Result.Success(true))
-        } catch(error) {
-            return Promise.resolve(Result.Failure(`unable to hash secret ${error}`))
+            return Promise.resolve(Result.Success(true));
+        } catch (error) {
+            return Promise.resolve(Result.Failure(`unable to hash secret ${error.toString()}`));
         }
     }
 }
@@ -199,18 +203,18 @@ export class KeyPair extends BaseDomainClass {
 // request for a user to finalize a password reset process
 export class ResetUserPasswordPayload extends BaseDomainClass {
     @IsEmail()
-    email?: string
+    email?: string;
     @IsString()
-    token?: string
+    token?: string;
     @IsString()
-    new_password?: string
+    new_password?: string;
 
-    constructor(input?: {email?: string, token?: string, newPassword?: string}) {
+    constructor(input?: { email?: string; token?: string; newPassword?: string }) {
         super();
-        if(input){
-            if(input.email) this.email = input.email
-            if(input.token) this.token = input.token
-            if(input.newPassword) this.new_password = input.newPassword
+        if (input) {
+            if (input.email) this.email = input.email;
+            if (input.token) this.token = input.token;
+            if (input.newPassword) this.new_password = input.newPassword;
         }
     }
 }
@@ -218,70 +222,70 @@ export class ResetUserPasswordPayload extends BaseDomainClass {
 // request for assigning roles to a user within the context of a container
 export class AssignUserRolePayload extends BaseDomainClass {
     @IsUUID()
-    user_id?: string
+    user_id?: string;
     @IsUUID()
-    container_id?: string
+    container_id?: string;
     @IsString()
-    @IsIn(["editor", "user", "admin"])
-    role_name?: string
+    @IsIn(['editor', 'user', 'admin'])
+    role_name?: string;
 
-    constructor(input?: {userID?:string, containerID?: string, roleName?: string}) {
+    constructor(input?: { userID?: string; containerID?: string; roleName?: string }) {
         super();
-        if(input) {
-            if(input.userID) this.user_id = input.userID
-            if(input.containerID) this.container_id = input.containerID
-            if(input.roleName) this.role_name = input.roleName
+        if (input) {
+            if (input.userID) this.user_id = input.userID;
+            if (input.containerID) this.container_id = input.containerID;
+            if (input.roleName) this.role_name = input.roleName;
         }
     }
 }
 
 // this serves as both payload and data structure for the container invite table
-export class ContainerUserInvite extends  BaseDomainClass {
+export class ContainerUserInvite extends BaseDomainClass {
     @IsNumber()
     @IsOptional()
-    id?: number
+    id?: number;
 
     @IsEmail()
-    email: string = ""
+    email = '';
 
     @IsString()
-    origin_user?: string
+    origin_user?: string;
 
     @IsString()
-    token?: string = ""
+    token?: string = '';
 
     // because the end user of this class often needs more information about
     // the container for the invite email, we're going to include and load
     // the full container class instead of just doing the ID. The repository
     // should load the relationship on demand
-    @ContainerID({message: "Container must have valid ID"})
-    @Expose({name: "container_id", toClassOnly: true})
-    @Transform(({value}) => {
-        const container = plainToClass(Container, {})
-        container.id = value
-        return container
-    }, {toClassOnly: true})
-    container: Container | undefined
+    @ContainerID({ message: 'Container must have valid ID' })
+    @Expose({ name: 'container_id', toClassOnly: true })
+    @Transform(
+        ({ value }) => {
+            const container = plainToClass(Container, {});
+            container.id = value;
+            return container;
+        },
+        { toClassOnly: true }
+    )
+    container: Container | undefined;
 
     @Type(() => Date)
-    issued?: Date
+    issued?: Date;
 
-    constructor(input: {
-        email: string,
-        originUser?: User,
-        token?: string,
-        container: string | Container
-    }) {
+    constructor(input: { email: string; originUser?: User; token?: string; container: string | Container }) {
         super();
 
-        if(input) {
-            this.email = input.email
-            if(input.originUser) this.origin_user = input.originUser.id!
-            if(input.token) this.token = input.token
-            if(input.container instanceof Container) {
-                this.container = input.container
+        if (input) {
+            this.email = input.email;
+            if (input.originUser) this.origin_user = input.originUser.id!;
+            if (input.token) this.token = input.token;
+            if (input.container instanceof Container) {
+                this.container = input.container;
             } else {
-                this.container  = plainToClass(Container, {id: input.container})
+                this.container = plainToClass(Container, {
+                    id: input.container
+                });
             }
         }
     }
@@ -292,13 +296,13 @@ export class ContainerUserInvite extends  BaseDomainClass {
 // basic authentication or no authentication on the http_server
 export const SuperUser = new User({
     id: uuid.v4(),
-    identity_provider: "username_password",
-    display_name: "Super User",
+    identity_provider: 'username_password',
+    display_name: 'Super User',
     email: Config.superuser_email,
     password: Config.superuser_password,
     active: true,
     admin: true
-})
+});
 
 /*
  These final operations are class-validator specific property validations
@@ -313,9 +317,9 @@ export function UserID(validationOptions?: ValidationOptions) {
             options: validationOptions,
             validator: {
                 validate(value: any, args: ValidationArguments) {
-                    return value instanceof User && validator.isUUID(value.id)
-                },
-            },
+                    return value instanceof User && validator.isUUID(value.id);
+                }
+            }
         });
     };
 }
@@ -331,9 +335,9 @@ export function ContainerID(validationOptions?: ValidationOptions) {
             options: validationOptions,
             validator: {
                 validate(value: any, args: ValidationArguments) {
-                    return value instanceof Container && validator.isUUID(value.id!)
-                },
-            },
+                    return value instanceof Container && validator.isUUID(value.id!);
+                }
+            }
         });
     };
 }

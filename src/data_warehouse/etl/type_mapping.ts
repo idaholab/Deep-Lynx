@@ -1,9 +1,9 @@
-import {BaseDomainClass, NakedDomainClass} from "../../common_classes/base_domain_class";
-import {IsBoolean, IsDefined, IsOptional, IsString, IsUUID} from "class-validator";
-import TypeTransformation from "./type_transformation";
-import {Type} from "class-transformer";
+import {BaseDomainClass, NakedDomainClass} from '../../common_classes/base_domain_class';
+import {IsBoolean, IsDefined, IsOptional, IsString, IsUUID} from 'class-validator';
+import TypeTransformation from './type_transformation';
+import {Type} from 'class-transformer';
 
-const crypto = require('crypto')
+const crypto = require('crypto');
 const flatten = require('flat');
 
 /*
@@ -14,49 +14,49 @@ const flatten = require('flat');
 export default class TypeMapping extends BaseDomainClass {
     @IsOptional()
     @IsUUID()
-    id?: string
+    id?: string;
 
     @IsUUID()
-    container_id?: string
+    container_id?: string;
 
     @IsDefined()
-    sample_payload?: any
+    sample_payload?: any;
 
     @IsUUID()
-    data_source_id?: string
+    data_source_id?: string;
 
     @IsBoolean()
-    active: boolean = false
+    active = false;
 
     @IsString()
-    shape_hash?: string
+    shape_hash?: string;
 
     @Type(() => TypeTransformation)
-    transformations: TypeTransformation[] | undefined
+    transformations: TypeTransformation[] | undefined;
     // for tracking removed transformations
-    #removedTransformations: TypeTransformation[] | undefined
+    #removedTransformations: TypeTransformation[] | undefined;
 
-    constructor(input:{
-        container_id: string,
-        sample_payload: any,
-        data_source_id: string,
-        active?: boolean,
-        shape_hash?: string,
-        transformations?: TypeTransformation[]
+    constructor(input: {
+        container_id: string;
+        sample_payload: any;
+        data_source_id: string;
+        active?: boolean;
+        shape_hash?: string;
+        transformations?: TypeTransformation[];
     }) {
         super();
 
-        if(input) {
-            this.container_id = input.container_id
-            this.sample_payload = input.sample_payload
-            this.data_source_id = input.data_source_id
-            if(input.active) this.active = input.active
+        if (input) {
+            this.container_id = input.container_id;
+            this.sample_payload = input.sample_payload;
+            this.data_source_id = input.data_source_id;
+            if (input.active) this.active = input.active;
             // allow for overriding the generated shape hash - this is not recommended
-            if(input.shape_hash) this.shape_hash = input.shape_hash
+            if (input.shape_hash) this.shape_hash = input.shape_hash;
             else {
-                this.shape_hash = TypeMapping.objectToShapeHash(input.sample_payload)
+                this.shape_hash = TypeMapping.objectToShapeHash(input.sample_payload);
             }
-            if(input.transformations) this.transformations = input.transformations
+            if (input.transformations) this.transformations = input.transformations;
         }
     }
 
@@ -65,65 +65,65 @@ export default class TypeMapping extends BaseDomainClass {
     // can access it to create type mapping shape hash without having to actually build
     // a mapping
     static objectToShapeHash(obj: any) {
-        const keyTypes: string[] = []
+        const keyTypes: string[] = [];
         // safe means that the flattened object will maintain arrays as they are,
         // not attempt to flatten them along with the rest of the object
-        const flattened = flatten(obj, {safe : true})
+        const flattened = flatten(obj, {safe: true});
 
         const extractPropsAndTypes = (obj: any, resultArray: string[]) => {
-            for(const key of Object.keys(obj)) {
-                if(Array.isArray(obj[key]) && obj[key].length > 0) {
-                    if(typeof obj[key][0] === 'object'  && obj[key][0] !== null) {
-                        extractPropsAndTypes(obj[key][0], resultArray)
+            for (const key of Object.keys(obj)) {
+                if (Array.isArray(obj[key]) && obj[key].length > 0) {
+                    if (typeof obj[key][0] === 'object' && obj[key][0] !== null) {
+                        extractPropsAndTypes(obj[key][0], resultArray);
                     }
                 }
 
-                resultArray.push(key+`:${typeof obj[key]}`)
+                resultArray.push(key + `:${typeof obj[key]}`);
             }
-        }
+        };
 
-        extractPropsAndTypes(flattened, keyTypes)
+        extractPropsAndTypes(flattened, keyTypes);
 
-        return crypto.createHash("sha256").update(keyTypes.sort().join("")).digest("base64");
+        return crypto.createHash('sha256').update(keyTypes.sort().join('')).digest('base64');
     }
 
     get removedTransformations() {
-        return this.#removedTransformations
+        return this.#removedTransformations;
     }
 
     addTransformation(...transformations: TypeTransformation[]) {
-        if(!this.transformations) this.transformations = []
-        this.transformations.push(...transformations)
+        if (!this.transformations) this.transformations = [];
+        this.transformations.push(...transformations);
     }
 
     replaceTransformations(transformations: TypeTransformation[], removedTransformations?: TypeTransformation[]) {
-        this.transformations = transformations
-        if(removedTransformations) this.#removedTransformations = removedTransformations
+        this.transformations = transformations;
+        if (removedTransformations) this.#removedTransformations = removedTransformations;
     }
 
     // removeTransformations will remove the first matching transformation, you must save the object
     // for changes to take place
     removeTransformation(...transformations: TypeTransformation[] | string[]) {
-        if(!this.transformations) this.transformations = []
-        if(!this.#removedTransformations) this.#removedTransformations = []
-        for(const transformation of transformations) {
-            if(typeof transformation === 'string') {
-                this.transformations = this.transformations.filter(t => {
-                    if(t.id !== transformation) {
-                        return true
+        if (!this.transformations) this.transformations = [];
+        if (!this.#removedTransformations) this.#removedTransformations = [];
+        for (const transformation of transformations) {
+            if (typeof transformation === 'string') {
+                this.transformations = this.transformations.filter((t) => {
+                    if (t.id !== transformation) {
+                        return true;
                     }
-                    this.#removedTransformations!.push(t)
-                    return false
-                }, this)
+                    this.#removedTransformations!.push(t);
+                    return false;
+                }, this);
             } else {
                 // if it's not a string, we can safely assume it's the type
-                this.transformations = this.transformations.filter(t => {
-                    if(t.id !== transformation.id) {
-                        return true
+                this.transformations = this.transformations.filter((t) => {
+                    if (t.id !== transformation.id) {
+                        return true;
                     }
-                    this.#removedTransformations!.push(t)
-                    return false
-                }, this)
+                    this.#removedTransformations!.push(t);
+                    return false;
+                }, this);
             }
         }
     }
@@ -131,8 +131,8 @@ export default class TypeMapping extends BaseDomainClass {
 
 export class TypeMappingExportPayload extends NakedDomainClass {
     @IsOptional()
-    mapping_ids: string[] = []
+    mapping_ids: string[] = [];
 
     @IsUUID()
-    target_data_source?: string
+    target_data_source?: string;
 }

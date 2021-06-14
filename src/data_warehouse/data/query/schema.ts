@@ -1,7 +1,6 @@
-import {buildSchema} from "graphql";
+import { buildSchema } from 'graphql';
 
-export const schema = buildSchema(generateSchema())
-
+export const schema = buildSchema(generateSchema());
 
 function generateSchema(): string {
     return `
@@ -124,5 +123,5 @@ input PropertyFilter {
   download_path: String
   metadata: String
   }
-`
+`;
 }
