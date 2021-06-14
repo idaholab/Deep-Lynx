@@ -1,6 +1,7 @@
 .env
 .idea
 .DS_Store
+.husky
 dist
 settings.json
 combined.log
