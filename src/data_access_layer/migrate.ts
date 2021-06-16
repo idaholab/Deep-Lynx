@@ -9,8 +9,12 @@ import PostgresAdapter from './mappers/db_adapters/postgres/postgres';
 import Config from '../services/config';
 import * as fs from 'fs';
 import Logger from '../services/logger';
-import pgtools from 'pgtools';
 import * as path from 'path';
+import {Pool, QueryResult} from 'pg';
+import {ConnectionOptions} from 'pg-connection-string';
+
+const pgParse = require('pg-connection-string').parse;
+const format = require('pg-format');
 
 class Migrator {
     private pool!: any;
@@ -19,24 +23,47 @@ class Migrator {
         // we will attempt to create the database named by the environment variables prior to migration
         // this allows us to work on a pristine instance of Postgres without having to have the user
         // perform any database operations manually
-        pgtools.createdb(Config.core_db_connection_string, Config.db_name, (err: any, res: string) => {
-            if (err) {
-                if (err.name === 'duplicate_database') {
-                    Logger.info(`${Config.db_name} database already exists. Proceeding to migration scripts`);
-                    this.init();
-                } else {
-                    Logger.error(
-                        `creation of ${Config.db_name} database failed -
-                         this is frequently caused by an incorrect connection string. 
-                         Verify your CORE_DB_CONNECTION string environment variable and try again.`,
-                    );
-                    process.exit(-1);
-                }
-            } else {
-                Logger.info(`successful creation of ${Config.db_name} database`);
-                this.init();
-            }
+        const connectionDetails: ConnectionOptions = pgParse.parse(Config.core_db_connection_string);
+
+        // we're going to use the raw node-pg library here, as we need to make a connection
+        // sans database name. This connection will be used to create the db if it doesn't
+        // exist
+
+        const pool = new Pool({
+            host: connectionDetails.host!, // pg-node can handle multiple hosts
+            port: connectionDetails.port ? Number(connectionDetails.port) : 5432,
+            user: connectionDetails.user,
+            password: connectionDetails.password,
+            ssl: Config.ssl_enabled
         });
+
+        // first check to see if the database specified by the connection string already exists
+        pool.query(format(`SELECT datname FROM pg_catalog.pg_database WHERE datname = %L`, connectionDetails.database))
+            .then((results: QueryResult<any>) => {
+                // if results are returned, a database matching the name exists, run migrate
+                if(results.rows.length > 0) {
+                    Logger.info(`${connectionDetails.database} database already exists. Proceeding to migration scripts`);
+                    this.init();
+                    return
+                }
+
+                pool.query(format(`CREATE DATABASE %s`, connectionDetails.database))
+                    .then(() => {
+                        Logger.info(`successful creation of ${connectionDetails.database} database`);
+                        this.init();
+                    })
+                    .catch((e: any) => {
+                        Logger.error(
+                            `creation of ${connectionDetails.database} database failed -
+                         this is frequently caused by an incorrect connection string. 
+                         Verify your CORE_DB_CONNECTION string environment variable and try again: ${e}`,
+                        );
+                        process.exit(-1);
+                    })
+            })
+            .catch((e: any) => {
+                Logger.error(`unable to verify if database specified by connection string exists: ${e}`)
+            })
     }
 
     init() {

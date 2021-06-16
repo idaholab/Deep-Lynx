@@ -1,5 +1,4 @@
 import Queue = require('better-queue');
-import {ConnectionStringParser} from 'connection-string-parser';
 import EventQueueMapper from '../data_access_layer/mappers/event_system/event_queue_mapper';
 import Result from '../common_classes/result';
 import Logger from '../services/logger';
@@ -10,6 +9,9 @@ import Task from './task';
 import EventRegistration from './event_registration';
 import EventRegistrationRepository from '../data_access_layer/repositories/event_system/event_registration_repository';
 import {plainToClass} from 'class-transformer';
+import {ConnectionOptions} from 'pg-connection-string';
+
+const pgParse = require('pg-connection-string').parse;
 
 /*
   QueueProcessor class manages the emission of events to their various registered
@@ -102,21 +104,16 @@ export async function StartQueue(): Promise<Result<boolean>> {
 }
 
 function makeStore() {
-    const connectionStringParser = new ConnectionStringParser({
-        scheme: 'postgresql',
-        hosts: [],
-    });
-
-    const connectionObject = connectionStringParser.parse(Config.core_db_connection_string);
+    const connectionObject: ConnectionOptions = pgParse(Config.core_db_connection_string);
 
     const store = {
         type: 'sql',
         dialect: 'postgres',
-        host: connectionObject.hosts[0].host,
-        port: 5432,
-        username: connectionObject.username!,
-        password: connectionObject.password!,
-        dbname: connectionObject.endpoint!,
+        host: connectionObject.host,
+        port: connectionObject.port ? Number(connectionObject.port) : 5432,
+        username: connectionObject.user,
+        password: connectionObject.password,
+        dbname: connectionObject.database,
         tableName: 'queue_tasks',
     };
 

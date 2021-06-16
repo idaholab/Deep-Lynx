@@ -88,6 +88,7 @@
         "winston": "^3.3.3"
     },
     "dependencies": {
+        "JSONStream": "^1.3.5",
         "axios": "^0.21.1",
         "base64url": "^3.0.1",
         "bcrypt": "^5.0.1",
@@ -99,7 +100,6 @@
         "class-transformer": "^0.4.0",
         "class-transformer-validator": "^0.9.1",
         "class-validator": "^0.13.1",
-        "connection-string-parser": "^1.0.3",
         "copyfiles": "^2.4.1",
         "cors": "^2.8.5",
         "csurf": "^1.11.0",
@@ -119,7 +119,6 @@
         "highlight.js": "^10.6.0",
         "io-ts": "^2.2.16",
         "ioredis": "^4.24.2",
-        "JSONStream": "^1.3.5",
         "jsonwebtoken": "^8.5.1",
         "kind-of": "^6.0.3",
         "knex": "^0.21.19",
@@ -131,8 +130,8 @@
         "nodemailer": "^6.5.0",
         "passport-jwt": "^4.0.0",
         "passport-local": "^1.0.0",
+        "pg-connection-string": "^2.5.0",
         "pg-format": "^1.0.4",
-        "pgtools": "^0.3.1",
         "reflect-metadata": "^0.1.13",
         "uid-generator": "^2.0.0",
         "uuid-random": "^1.3.2",
