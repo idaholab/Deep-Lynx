@@ -1,11 +1,11 @@
-import Result from "../../../../common_classes/result"
-import Mapper from "../../mapper";
-import {PoolClient, QueryConfig} from "pg";
-import TypeMapping from "../../../../data_warehouse/etl/type_mapping";
-import uuid from "uuid";
+import Result from '../../../../common_classes/result';
+import Mapper from '../../mapper';
+import {PoolClient, QueryConfig} from 'pg';
+import TypeMapping from '../../../../data_warehouse/etl/type_mapping';
+import uuid from 'uuid';
 
-const format = require('pg-format')
-const resultClass = TypeMapping
+const format = require('pg-format');
+const resultClass = TypeMapping;
 
 /*
     TypeMappingMapper extends the Postgres database Mapper class and allows
@@ -16,89 +16,110 @@ const resultClass = TypeMapping
     try to avoid listing functions, as those are generally covered by the Repository
     class/interface as well.
 */
-export default class TypeMappingMapper extends Mapper{
-    public static tableName = "data_type_mappings";
+export default class TypeMappingMapper extends Mapper {
+    public static tableName = 'data_type_mappings';
 
     private static instance: TypeMappingMapper;
 
     public static get Instance(): TypeMappingMapper {
-        if(!TypeMappingMapper.instance) {
-            TypeMappingMapper.instance = new TypeMappingMapper()
+        if (!TypeMappingMapper.instance) {
+            TypeMappingMapper.instance = new TypeMappingMapper();
         }
 
-        return TypeMappingMapper.instance
+        return TypeMappingMapper.instance;
     }
 
     public async CreateOrUpdate(userID: string, t: TypeMapping, transaction?: PoolClient): Promise<Result<TypeMapping>> {
-        const r = await super.run(this.createOrUpdateStatement(userID, t,), {transaction, resultClass})
-        if(r.isError) return Promise.resolve(Result.Pass(r))
+        const r = await super.run(this.createOrUpdateStatement(userID, t), {
+            transaction,
+            resultClass,
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        return Promise.resolve(Result.Success(r.value[0]))
+        return Promise.resolve(Result.Success(r.value[0]));
     }
 
     public async BulkCreate(userID: string, t: TypeMapping[], transaction?: PoolClient): Promise<Result<TypeMapping[]>> {
-        return super.run(this.createOrUpdateStatement(userID, ...t,), {transaction, resultClass})
+        return super.run(this.createOrUpdateStatement(userID, ...t), {
+            transaction,
+            resultClass,
+        });
     }
 
     public async Update(userID: string, t: TypeMapping, transaction?: PoolClient): Promise<Result<TypeMapping>> {
-        const r = await super.run(this.fullUpdateStatement(userID, t,), {transaction, resultClass})
-        if(r.isError) return Promise.resolve(Result.Pass(r))
+        const r = await super.run(this.fullUpdateStatement(userID, t), {
+            transaction,
+            resultClass,
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        return Promise.resolve(Result.Success(r.value[0]))
+        return Promise.resolve(Result.Success(r.value[0]));
     }
 
     public async BulkUpdate(userID: string, t: TypeMapping[], transaction?: PoolClient): Promise<Result<TypeMapping[]>> {
-        return super.run(this.fullUpdateStatement(userID, ...t,), {transaction, resultClass})
+        return super.run(this.fullUpdateStatement(userID, ...t), {
+            transaction,
+            resultClass,
+        });
     }
 
     public async Retrieve(id: string): Promise<Result<TypeMapping>> {
-        return super.retrieve<TypeMapping>(this.retrieveStatement(id), {resultClass})
+        return super.retrieve<TypeMapping>(this.retrieveStatement(id), {
+            resultClass,
+        });
     }
 
     // since the combination shape hash, data source, and container are a unique set
     // we can confidently request a single object
     public async RetrieveByShapeHash(dataSourceID: string, shapeHash: string): Promise<Result<TypeMapping>> {
-        return super.retrieve<TypeMapping>(this.retrieveByShapeHashStatement(dataSourceID, shapeHash), {resultClass})
+        return super.retrieve<TypeMapping>(this.retrieveByShapeHashStatement(dataSourceID, shapeHash), {resultClass});
     }
 
-    public List(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?:string, sortDesc?: boolean): Promise<Result<TypeMapping[]>> {
-        if(limit === -1) {
-            return super.rows<TypeMapping>(this.listAllStatement(containerID, dataSourceID), {resultClass})
+    public List(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?: string, sortDesc?: boolean): Promise<Result<TypeMapping[]>> {
+        if (limit === -1) {
+            return super.rows<TypeMapping>(this.listAllStatement(containerID, dataSourceID), {resultClass});
         }
 
-        return super.rows<TypeMapping>(this.listStatement(containerID, dataSourceID, offset, limit, sortBy, sortDesc), {resultClass})
+        return super.rows<TypeMapping>(this.listStatement(containerID, dataSourceID, offset, limit, sortBy, sortDesc), {resultClass});
     }
 
-    public ListNoTransformations(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?:string, sortDesc?: boolean): Promise<Result<TypeMapping[]>> {
-        if(limit === -1) {
-            return super.rows<TypeMapping>(this.listAllNoTransformationsStatement(containerID, dataSourceID), {resultClass})
+    public ListNoTransformations(
+        containerID: string,
+        dataSourceID: string,
+        offset: number,
+        limit: number,
+        sortBy?: string,
+        sortDesc?: boolean,
+    ): Promise<Result<TypeMapping[]>> {
+        if (limit === -1) {
+            return super.rows<TypeMapping>(this.listAllNoTransformationsStatement(containerID, dataSourceID), {resultClass});
         }
 
-        return super.rows<TypeMapping>(this.listNoTransformationsStatement(containerID, dataSourceID, offset, limit, sortBy, sortDesc), {resultClass})
+        return super.rows<TypeMapping>(this.listNoTransformationsStatement(containerID, dataSourceID, offset, limit, sortBy, sortDesc), {resultClass});
     }
 
     public ListByDataSource(dataSourceID: string, offset: number, limit: number): Promise<Result<TypeMapping[]>> {
-        return super.rows<TypeMapping>(this.listByDataSourceStatement(dataSourceID, offset, limit), {resultClass})
+        return super.rows<TypeMapping>(this.listByDataSourceStatement(dataSourceID, offset, limit), {resultClass});
     }
 
     public async SetActive(id: string): Promise<Result<boolean>> {
-        return super.runAsTransaction(this.setActiveStatement(id))
+        return super.runAsTransaction(this.setActiveStatement(id));
     }
 
     public async SetInActive(id: string): Promise<Result<boolean>> {
-        return super.runAsTransaction(this.setInactiveStatement(id))
+        return super.runAsTransaction(this.setInactiveStatement(id));
     }
 
     public async Delete(id: string): Promise<Result<boolean>> {
-        return super.runStatement(this.deleteStatement(id))
+        return super.runStatement(this.deleteStatement(id));
     }
 
     public async Count(dataSourceID: string): Promise<Result<number>> {
-        return super.count(this.countStatement(dataSourceID))
+        return super.count(this.countStatement(dataSourceID));
     }
 
     public async CountNoTransformation(dataSourceID: string): Promise<Result<number>> {
-        return super.count(this.countNoTransformationStatement(dataSourceID))
+        return super.count(this.countNoTransformationStatement(dataSourceID));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -110,7 +131,7 @@ export default class TypeMappingMapper extends Mapper{
     // a mapping first we can blindly insert based on shape_hash and data source and
     // be assured we're getting the right ID back without changes. We do set the modified_at
     // time however so that the system knows the last time the mapping was used
-    private createOrUpdateStatement(userID: string, ...mappings: TypeMapping[]): string{
+    private createOrUpdateStatement(userID: string, ...mappings: TypeMapping[]): string {
         const text = `INSERT INTO data_type_mappings(
             id,
             container_id,
@@ -124,20 +145,22 @@ export default class TypeMappingMapper extends Mapper{
         DO
         UPDATE SET
             modified_at = NOW()
-        RETURNING *`
-        const values = mappings.map(imp => [
+        RETURNING *`;
+        const values = mappings.map((imp) => [
             uuid.v4(),
             imp.container_id,
             imp.data_source_id,
             imp.shape_hash,
             imp.active,
             JSON.stringify(imp.sample_payload),
-            userID, userID])
+            userID,
+            userID,
+        ]);
 
-        return format(text, values)
+        return format(text, values);
     }
 
-    private fullUpdateStatement(userID: string, ...mappings: TypeMapping[]): string{
+    private fullUpdateStatement(userID: string, ...mappings: TypeMapping[]): string {
         const text = `UPDATE data_type_mappings as t SET
             container_id = u.container_id::uuid,
                                data_source_id = u.data_source_id::uuid,
@@ -153,137 +176,150 @@ export default class TypeMappingMapper extends Mapper{
                           active,
                           sample_payload,
                           modified_by)
-                           WHERE u.id::uuid = t.id RETURNING t.*`
-        const values = mappings.map(imp => [
+                           WHERE u.id::uuid = t.id RETURNING t.*`;
+        const values = mappings.map((imp) => [
             imp.id,
             imp.container_id,
             imp.data_source_id,
             imp.shape_hash,
             imp.active,
             JSON.stringify(imp.sample_payload),
-            userID])
+            userID,
+        ]);
 
-        return format(text, values)
+        return format(text, values);
     }
 
-    private retrieveStatement(exportID:string): QueryConfig {
+    private retrieveStatement(exportID: string): QueryConfig {
         return {
-            text:`SELECT * FROM data_type_mappings WHERE id = $1`,
-            values: [exportID]
-        }
+            text: `SELECT * FROM data_type_mappings WHERE id = $1`,
+            values: [exportID],
+        };
     }
 
     private retrieveByShapeHashStatement(dataSourceID: string, shapeHash: string): QueryConfig {
         return {
-            text:`SELECT * FROM data_type_mappings WHERE data_source_id = $1 AND shape_hash = $2`,
-            values: [dataSourceID, shapeHash]
-        }
+            text: `SELECT * FROM data_type_mappings WHERE data_source_id = $1 AND shape_hash = $2`,
+            values: [dataSourceID, shapeHash],
+        };
     }
 
     private deleteStatement(exportID: string): QueryConfig {
         return {
-            text:`DELETE FROM data_type_mappings WHERE id = $1`,
-            values: [exportID]
-        }
+            text: `DELETE FROM data_type_mappings WHERE id = $1`,
+            values: [exportID],
+        };
     }
 
-    private listStatement(containerID:string, dataSourceID:string, offset:number, limit:number, sortBy?:string, sortDesc?:boolean): QueryConfig {
-        if(sortDesc && sortBy) {
+    private listStatement(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?: string, sortDesc?: boolean): QueryConfig {
+        if (sortDesc && sortBy) {
             return {
                 text: `SELECT * FROM data_type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
-                values: [containerID, offset, limit, dataSourceID]
-            }
-        } else if(sortBy) {
+                values: [containerID, offset, limit, dataSourceID],
+            };
+        } else if (sortBy) {
             return {
                 text: `SELECT * FROM data_type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
-                values: [containerID, offset, limit, dataSourceID]
-            }
+                values: [containerID, offset, limit, dataSourceID],
+            };
         } else {
             return {
                 text: `SELECT * FROM data_type_mappings WHERE container_id = $1 AND data_source_id = $4 OFFSET $2 LIMIT $3`,
-                values: [containerID, offset, limit, dataSourceID]
-            }
+                values: [containerID, offset, limit, dataSourceID],
+            };
         }
     }
 
-    private listNoTransformationsStatement(containerID:string, dataSourceID:string, offset:number, limit:number, sortBy?:string, sortDesc?:boolean): QueryConfig {
-        if(sortDesc && sortBy) {
+    private listNoTransformationsStatement(
+        containerID: string,
+        dataSourceID: string,
+        offset: number,
+        limit: number,
+        sortBy?: string,
+        sortDesc?: boolean,
+    ): QueryConfig {
+        if (sortDesc && sortBy) {
             return {
                 text: `SELECT * FROM data_type_mappings
                        WHERE container_id = $1 AND data_source_id = $4
-                       AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
+                       AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations 
+                       WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
                        ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
-                values: [containerID, offset, limit, dataSourceID]
-            }
-        } else if(sortBy) {
+                values: [containerID, offset, limit, dataSourceID],
+            };
+        } else if (sortBy) {
             return {
                 text: `SELECT * FROM data_type_mappings
                        WHERE container_id = $1 AND data_source_id = $4
-                       AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
+                       AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations 
+                       WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
                        ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
-                values: [containerID, offset, limit, dataSourceID]
-            }
+                values: [containerID, offset, limit, dataSourceID],
+            };
         } else {
             return {
                 text: `SELECT * FROM data_type_mappings
                        WHERE container_id = $1 AND data_source_id = $4
-                         AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
+                         AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations 
+                         WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
                        OFFSET $2 LIMIT $3`,
-                values: [containerID, offset, limit, dataSourceID]
-            }
+                values: [containerID, offset, limit, dataSourceID],
+            };
         }
     }
 
-    private listAllStatement(containerID:string, dataSourceID:string ): QueryConfig {
+    private listAllStatement(containerID: string, dataSourceID: string): QueryConfig {
         return {
             text: `SELECT * FROM data_type_mappings WHERE container_id = $1 AND data_source_id = $2`,
-            values: [containerID, dataSourceID]
-        }
+            values: [containerID, dataSourceID],
+        };
     }
 
-    private listAllNoTransformationsStatement(containerID:string, dataSourceID:string ): QueryConfig {
+    private listAllNoTransformationsStatement(containerID: string, dataSourceID: string): QueryConfig {
         return {
             text: `SELECT * FROM data_type_mappings
                    WHERE container_id = $1 AND data_source_id = $2
-                     AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)`,
-            values: [containerID, dataSourceID]
-        }
+                     AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations 
+                     WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)`,
+            values: [containerID, dataSourceID],
+        };
     }
 
-    private listByDataSourceStatement(dataSourceID:string, offset:number, limit:number): QueryConfig {
+    private listByDataSourceStatement(dataSourceID: string, offset: number, limit: number): QueryConfig {
         return {
             text: `SELECT * FROM data_type_mappings WHERE data_source_id = $1 OFFSET $2 LIMIT $3`,
-            values: [dataSourceID, offset, limit]
-        }
+            values: [dataSourceID, offset, limit],
+        };
     }
 
     private setActiveStatement(typeMappingID: string): QueryConfig {
         return {
             text: `UPDATE data_type_mappings SET active = true, modified_at = NOW() WHERE id = $1`,
-            values: [typeMappingID]
-        }
+            values: [typeMappingID],
+        };
     }
 
     private setInactiveStatement(typeMappingID: string): QueryConfig {
         return {
             text: `UPDATE data_type_mappings SET active = false, modified_at = NOW() WHERE id = $1`,
-            values: [typeMappingID]
-        }
+            values: [typeMappingID],
+        };
     }
 
     private countStatement(dataSourceID: string): QueryConfig {
         return {
             text: `SELECT COUNT(*) FROM data_type_mappings WHERE data_source_id = $1`,
-            values: [dataSourceID]
-        }
+            values: [dataSourceID],
+        };
     }
 
     private countNoTransformationStatement(dataSourceID: string): QueryConfig {
         return {
             text: `SELECT COUNT(*) FROM data_type_mappings
                    WHERE data_source_id = $1
-                     AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id )`,
-            values: [dataSourceID]
-        }
+                     AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations 
+                     WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id )`,
+            values: [dataSourceID],
+        };
     }
 }

@@ -9,16 +9,16 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 
 **Requirements**
 
-- node.js  8.x, 10.x, 12.x, 14.x, and 15.x
-- Typescript ^3.5.x
-- npm ^6.x
-- Docker ^18.x - *optional* - for ease of use in development
-- Docker Compose ^1.x.x - *optional* - for ease of use in development
-- Private RSA key. This is used for encryption of sensitive data. If you need help on generating a private key, we recommend using `openssl` to do so. Here is a [tutorial](https://www.scottbrady91.com/OpenSSL/Creating-RSA-Keys-using-OpenSSL)
+-   node.js 8.x, 10.x, 12.x, 14.x, and 15.x
+-   Typescript ^3.5.x
+-   npm ^6.x
+-   Docker ^18.x - _optional_ - for ease of use in development
+-   Docker Compose ^1.x.x - _optional_ - for ease of use in development
+-   Private RSA key. This is used for encryption of sensitive data. If you need help on generating a private key, we recommend using `openssl` to do so. Here is a [tutorial](https://www.scottbrady91.com/OpenSSL/Creating-RSA-Keys-using-OpenSSL)
 
-***Data Source Requirements***
+**_Data Source Requirements_**
 
-- **Required** - PostgreSQL ^11.x 
+-   **Required** - PostgreSQL ^11.x
 
 **Installation**
 
@@ -31,13 +31,13 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 5. Update `.env` file. See the `readme` or comments in the file itself for details.If you are not using Docker, ensure that you update the ENCRYPTION_KEY_PATH environment variable in `.env` to reflect the absolute path of a RSA private key.
 6. Run `npm run build:dev` to build the internal modules.
 7. **optional** - If you would like to use Docker rather than a dedicated PostgreSQL database, please follow these steps:
-   - Ensure Docker is installed. You can find the download here: https://www.docker.com/products/docker-desktop
-   - Run `npm run docker:postgres:build` to create a docker image containing a Postgres data source
-   - Mac users may need to create the directory to mount to the docker container at `/private/var/lib/docker/basedata`. If this directory does not exist, please create it (you may need to use `sudo` as in `sudo mkdir /private/var/lib/docker/basedata`)
-   - Run `npm run docker:postgres:run` to run the created docker image (For Mac users, there is an alternative command `npm run mac:docker:postgres:run`)
+    - Ensure Docker is installed. You can find the download here: https://www.docker.com/products/docker-desktop
+    - Run `npm run docker:postgres:build` to create a docker image containing a Postgres data source
+    - Mac users may need to create the directory to mount to the docker container at `/private/var/lib/docker/basedata`. If this directory does not exist, please create it (you may need to use `sudo` as in `sudo mkdir /private/var/lib/docker/basedata`)
+    - Run `npm run docker:postgres:run` to run the created docker image (For Mac users, there is an alternative command `npm run mac:docker:postgres:run`)
 8. Run `npm run migrate` to create the database and schema within a PostgreSQL database configured in the `.env` file.
 9. Run `npm run watch` or `npm run start` to start the application. See the `readme` for additional details and available commands.  
-**Configuration**
+   **Configuration**
 
 This application's configuration relies on environment variables of its host system. It is best to rely on your CI/CD pipeline to inject those variables into your runtime environment.
 
@@ -45,7 +45,7 @@ In order to facilitate local development, a method has been provided to configur
 
 **Database Migrations**
 
-A migration tool is provided to run SQL scripts against the configured database. You must run the migration tool at least once after installing the application. 
+A migration tool is provided to run SQL scripts against the configured database. You must run the migration tool at least once after installing the application.
 
 Run using `npm run migrate` after configuring your datasource.
 
@@ -57,22 +57,20 @@ This application uses [Mocha](https://mochajs.org/) and [Chai](https://www.chaij
 
 If you decide to test graph functionality (Gremlin functionality in particular) in isolation or use something other than a CosmosDB or CosmosDB emulator you _must_ insure that the `DATA_SOURCE_GRAPHSON_V1` environment variable is left blank. Failure to do so means you might be communicating in an unsupported format, or an unsupported combination of formats.
 
-
 **Available Commands**
 
 Below is a list of all `npm run` commands as listed in the `package.json` file.
 
-- `docker:api:build` Creates a docker image of Deep Lynx, injecting the `.env` file into it.
-- `docker:api:run` Runs previously created Deep Lynx image.
-- `docker:api:clean` Stops the Deep Lynx docker container run by the command above and deletes the container and image.
-- `docker:postgres:build` Creates a docker image containing a Postgres 12 data source, along with all needed extensions.
-- `docker:postgres:run` Runs previously created Postgres.
-- `docker:postgres:clean` Stops the Postgres docker container run by the command above and deletes the container and image.
-- `watch` Runs `nodemon` using the `nodemon.json` configuration file. This runs the application and automatically rebuilds it when file changes are detected.
-- `start` Compiles and runs the application.
-- `build:dev` Compiles the application in development mode.
-- `test`: Runs all tests using the `.env` file to configure application and tests.
-- `migrate`: Runs the database migration tool.
-
+-   `docker:api:build` Creates a docker image of Deep Lynx, injecting the `.env` file into it.
+-   `docker:api:run` Runs previously created Deep Lynx image.
+-   `docker:api:clean` Stops the Deep Lynx docker container run by the command above and deletes the container and image.
+-   `docker:postgres:build` Creates a docker image containing a Postgres 12 data source, along with all needed extensions.
+-   `docker:postgres:run` Runs previously created Postgres.
+-   `docker:postgres:clean` Stops the Postgres docker container run by the command above and deletes the container and image.
+-   `watch` Runs `nodemon` using the `nodemon.json` configuration file. This runs the application and automatically rebuilds it when file changes are detected.
+-   `start` Compiles and runs the application.
+-   `build:dev` Compiles the application in development mode.
+-   `test`: Runs all tests using the `.env` file to configure application and tests.
+-   `migrate`: Runs the database migration tool.
 
 **There is a lot more information about Deep Lynx and it's capabilities in it's [Wiki](https://github.com/idaholab/Deep-Lynx/wiki). We highly recommend you start there if you have questions or need to figure out how best to utilize Deep Lynx in your project.**

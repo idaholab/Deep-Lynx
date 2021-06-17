@@ -1,33 +1,33 @@
-import faker from 'faker'
-import {expect} from 'chai'
-import PostgresAdapter from "../../../../data_access_layer/mappers/db_adapters/postgres/postgres";
-import Logger from "../../../../services/logger";
-import ContainerMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper";
-import Container from "../../../../data_warehouse/ontology/container";
-import Metatype from "../../../../data_warehouse/ontology/metatype";
-import UserMapper from "../../../../data_access_layer/mappers/access_management/user_mapper";
-import {User} from "../../../../access_management/user";
-import GraphMapper from "../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper";
-import MetatypeMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper";
-import MetatypeKeyMapper from "../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper";
-import MetatypeKey from "../../../../data_warehouse/ontology/metatype_key";
-import NodeRepository from "../../../../data_access_layer/repositories/data_warehouse/data/node_repository";
-import Node from "../../../../data_warehouse/data/node";
-import DataSourceMapper from "../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper";
-import DataSourceRecord from "../../../../data_warehouse/import/data_source";
+import faker from 'faker';
+import { expect } from 'chai';
+import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
+import Logger from '../../../../services/logger';
+import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
+import Container from '../../../../data_warehouse/ontology/container';
+import Metatype from '../../../../data_warehouse/ontology/metatype';
+import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
+import { User } from '../../../../access_management/user';
+import GraphMapper from '../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
+import MetatypeMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
+import MetatypeKeyMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
+import MetatypeKey from '../../../../data_warehouse/ontology/metatype_key';
+import NodeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/node_repository';
+import Node from '../../../../data_warehouse/data/node';
+import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
+import DataSourceRecord from '../../../../data_warehouse/import/data_source';
 
-describe('A Node Repository', async() => {
-    let containerID: string = process.env.TEST_CONTAINER_ID || "";
-    let user: User
-    let graphID: string = ""
-    let metatype: Metatype
-    let regexMetatype: Metatype
-    let dataSourceID: string = ""
+describe('A Node Repository', async () => {
+    let containerID: string = process.env.TEST_CONTAINER_ID || '';
+    let user: User;
+    let graphID: string = '';
+    let metatype: Metatype;
+    let regexMetatype: Metatype;
+    let dataSourceID: string = '';
 
     before(async function () {
-        if (process.env.CORE_DB_CONNECTION_STRING === "") {
-            Logger.debug("skipping metatype tests, no mapper layer");
-            this.skip()
+        if (process.env.CORE_DB_CONNECTION_STRING === '') {
+            Logger.debug('skipping metatype tests, no mapper layer');
+            this.skip();
         }
         await PostgresAdapter.Instance.init();
         const mapper = ContainerMapper.Instance;
@@ -35,100 +35,119 @@ describe('A Node Repository', async() => {
         const kStorage = MetatypeKeyMapper.Instance;
         const gMapper = GraphMapper.Instance;
 
-        const container = await mapper.Create("test suite", new Container({
-            name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
-        }));
+        const container = await mapper.Create(
+            'test suite',
+            new Container({
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric()
+            })
+        );
 
         expect(container.isError).false;
-        expect(container.value.id).not.null
+        expect(container.value.id).not.null;
         containerID = container.value.id!;
 
-        const userResult = await UserMapper.Instance.Create("test suite", new User(
-            {
+        const userResult = await UserMapper.Instance.Create(
+            'test suite',
+            new User({
                 identity_provider_id: faker.random.uuid(),
-                identity_provider: "username_password",
+                identity_provider: 'username_password',
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
-                roles: ["superuser"]
-            }));
+                roles: ['superuser']
+            })
+        );
 
         expect(userResult.isError).false;
         expect(userResult.value).not.empty;
-        user = userResult.value
+        user = userResult.value;
 
-        const exp = await DataSourceMapper.Instance.Create("test suite",
+        const exp = await DataSourceMapper.Instance.Create(
+            'test suite',
             new DataSourceRecord({
                 container_id: containerID,
-                name: "Test Data Source",
-                active:false,
-                adapter_type:"standard",
-                data_format: "json"}));
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'standard',
+                data_format: 'json'
+            })
+        );
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
-        dataSourceID = exp.value.id!
+        dataSourceID = exp.value.id!;
 
         // SETUP
-        const graph = await gMapper.Create(containerID, "test suite");
+        const graph = await gMapper.Create(containerID, 'test suite');
 
         expect(graph.isError, graph.error?.error).false;
         expect(graph.value).not.empty;
-        graphID = graph.value.id!
+        graphID = graph.value.id!;
 
-        const m= await mMapper.Create( "test suite",
-            new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
-
+        const m = await mMapper.Create(
+            'test suite',
+            new Metatype({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric()
+            })
+        );
 
         expect(m.isError).false;
         expect(m.value).not.empty;
-        metatype = m.value
+        metatype = m.value;
 
+        const testKeys = [...test_keys];
+        testKeys.forEach((key) => (key.metatype_id = metatype.id!));
 
-        const testKeys = [...test_keys]
-        testKeys.forEach(key => key.metatype_id = metatype.id!)
-
-        const keys = await kStorage.BulkCreate("test suite", testKeys);
+        const keys = await kStorage.BulkCreate('test suite', testKeys);
         expect(keys.isError).false;
 
-        metatype.addKey(...keys.value)
+        metatype.addKey(...keys.value);
 
-        const regexM = await mMapper.Create( "test suite",
-            new Metatype({container_id: containerID, name: faker.name.findName(), description: faker.random.alphaNumeric()}));
-
+        const regexM = await mMapper.Create(
+            'test suite',
+            new Metatype({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric()
+            })
+        );
 
         expect(regexM.isError).false;
         expect(regexM.value.id).not.undefined;
-        regexMetatype = regexM.value
+        regexMetatype = regexM.value;
 
         const regex_test_key: MetatypeKey = new MetatypeKey({
-            name: "Test Key Regex",
-            property_name: "regex",
+            name: 'Test Key Regex',
+            property_name: 'regex',
             required: true,
-            description: "testing key regex",
-            data_type: "string",
+            description: 'testing key regex',
+            data_type: 'string',
             // validation is a pattern match verifying that the value has at least 6 characters
             // with 1 uppercase, 1 lowercase, 1 number and no spaces test at https://regex101.com/r/fX8dY0/1
-            validation: {regex: "^((?=\\S*?[A-Z])(?=\\S*?[a-z])(?=\\S*?[0-9]).{6,})\\S$"},
+            validation: {
+                regex: '^((?=\\S*?[A-Z])(?=\\S*?[a-z])(?=\\S*?[0-9]).{6,})\\S$'
+            },
             metatype_id: regexMetatype.id
-        })
+        });
 
-        const added = await kStorage.Create("test suite", regex_test_key);
+        const added = await kStorage.Create('test suite', regex_test_key);
         expect(added.isError).false;
 
-        regexMetatype.addKey(added.value)
+        regexMetatype.addKey(added.value);
 
-        return Promise.resolve()
+        return Promise.resolve();
     });
 
     after(async () => {
-        await UserMapper.Instance.Delete(user.id!)
-        return ContainerMapper.Instance.Delete(containerID)
-    })
+        await UserMapper.Instance.Delete(user.id!);
+        return ContainerMapper.Instance.Delete(containerID);
+    });
 
-    it('can save Nodes', async()=> {
-        const nodeRepo = new NodeRepository()
+    it('can save Nodes', async () => {
+        const nodeRepo = new NodeRepository();
 
         const mixed = new Node({
             container_id: containerID,
@@ -139,85 +158,88 @@ describe('A Node Repository', async() => {
             data_source_id: dataSourceID
         });
 
-        let saved = await nodeRepo.save(mixed, user)
-        expect(saved.isError).false
-        expect(mixed.id).not.undefined
-        expect(mixed.properties).to.have.deep.property('flower_name', "Daisy")
+        let saved = await nodeRepo.save(mixed, user);
+        expect(saved.isError).false;
+        expect(mixed.id).not.undefined;
+        expect(mixed.properties).to.have.deep.property('flower_name', 'Daisy');
 
         // update the node's payload
-        mixed.properties = updatedPayload
+        mixed.properties = updatedPayload;
 
-        saved = await nodeRepo.save(mixed, user)
-        expect(saved.isError).false
-        expect(mixed.properties).to.have.deep.property('flower_name', "Violet")
+        saved = await nodeRepo.save(mixed, user);
+        expect(saved.isError).false;
+        expect(mixed.properties).to.have.deep.property('flower_name', 'Violet');
 
         // update by composite_original_id
-        const originalID = mixed.id
-        mixed.id = undefined
+        const originalID = mixed.id;
+        mixed.id = undefined;
 
-        saved = await nodeRepo.save(mixed, user)
-        expect(saved.isError).false
-        expect(mixed.id).eq(originalID)
+        saved = await nodeRepo.save(mixed, user);
+        expect(saved.isError).false;
+        expect(mixed.id).eq(originalID);
 
-        return nodeRepo.delete(mixed)
-    })
+        return nodeRepo.delete(mixed);
+    });
 
-    it('can bulk save Nodes', async()=> {
-        const nodeRepo = new NodeRepository()
+    it('can bulk save Nodes', async () => {
+        const nodeRepo = new NodeRepository();
 
-        const mixed = [new Node({
-            container_id: containerID,
-            graph_id: graphID,
-            metatype,
-            properties: payload,
-            composite_original_id: faker.name.findName(),
-            data_source_id: dataSourceID
-        }), new Node({
-            container_id: containerID,
-            graph_id: graphID,
-            metatype,
-            properties: payload,
-            composite_original_id: faker.name.findName(),
-            data_source_id: dataSourceID
-        })];
+        const mixed = [
+            new Node({
+                container_id: containerID,
+                graph_id: graphID,
+                metatype,
+                properties: payload,
+                composite_original_id: faker.name.findName(),
+                data_source_id: dataSourceID
+            }),
+            new Node({
+                container_id: containerID,
+                graph_id: graphID,
+                metatype,
+                properties: payload,
+                composite_original_id: faker.name.findName(),
+                data_source_id: dataSourceID
+            })
+        ];
 
-        let saved = await nodeRepo.bulkSave(user, mixed)
-        expect(saved.isError).false
-        mixed.forEach(node => {
-            expect(node.id).not.undefined
-            expect(node.properties).to.have.deep.property('flower_name', "Daisy")
-        })
+        let saved = await nodeRepo.bulkSave(user, mixed);
+        expect(saved.isError).false;
+        mixed.forEach((node) => {
+            expect(node.id).not.undefined;
+            expect(node.properties).to.have.deep.property('flower_name', 'Daisy');
+        });
 
         // update the node's payload
-        mixed[0].properties = updatedPayload
-        mixed[1].properties = updatedPayload
+        mixed[0].properties = updatedPayload;
+        mixed[1].properties = updatedPayload;
 
-        saved = await nodeRepo.bulkSave(user, mixed)
-        expect(saved.isError).false
-        mixed.forEach(node => {
-            expect(node.id).not.undefined
-            expect(node.properties).to.have.deep.property('flower_name', "Violet")
-        })
+        saved = await nodeRepo.bulkSave(user, mixed);
+        expect(saved.isError).false;
+        mixed.forEach((node) => {
+            expect(node.id).not.undefined;
+            expect(node.properties).to.have.deep.property('flower_name', 'Violet');
+        });
 
         // check composite id bulk save
-        const originalID1 = mixed[0].id
-        const originalID2 = mixed[1].id
-        mixed[0].id = undefined
-        mixed[1].id = undefined
+        const originalID1 = mixed[0].id;
+        const originalID2 = mixed[1].id;
+        mixed[0].id = undefined;
+        mixed[1].id = undefined;
 
-        saved = await nodeRepo.bulkSave(user, mixed)
-        expect(saved.isError).false
-        mixed.forEach(node => {
-            expect(node.id).not.undefined
-            expect(node.id).oneOf([originalID1, originalID2])
-        })
+        saved = await nodeRepo.bulkSave(user, mixed);
+        expect(saved.isError).false;
+        mixed.forEach((node) => {
+            expect(node.id).not.undefined;
+            expect(node.id).oneOf([originalID1, originalID2]);
+        });
 
-        await nodeRepo.delete(mixed[0])
-        return nodeRepo.delete(mixed[1])
-    })
+        await nodeRepo.delete(mixed[0]);
+        return nodeRepo.delete(mixed[1]);
+    });
 
-    it('can fail saving Nodes if properties are malformed', async()=> {
-        const nodeRepo = new NodeRepository()
+    it('can fail saving Nodes if properties are malformed', async () => {
+        const nodeRepo = new NodeRepository();
 
         const mixed = new Node({
             container_id: containerID,
@@ -226,14 +248,14 @@ describe('A Node Repository', async() => {
             properties: malformed_payload
         });
 
-        const saved = await nodeRepo.save(mixed, user)
-        expect(saved.isError).true
+        const saved = await nodeRepo.save(mixed, user);
+        expect(saved.isError).true;
 
-        return Promise.resolve()
-    })
+        return Promise.resolve();
+    });
 
-    it('will not update Nodes if they have malformed payloads', async()=> {
-        const nodeRepo = new NodeRepository()
+    it('will not update Nodes if they have malformed payloads', async () => {
+        const nodeRepo = new NodeRepository();
 
         const mixed = new Node({
             container_id: containerID,
@@ -242,22 +264,22 @@ describe('A Node Repository', async() => {
             properties: payload
         });
 
-        let saved = await nodeRepo.save(mixed, user)
-        expect(saved.isError).false
-        expect(mixed.id).not.undefined
-        expect(mixed.properties).to.have.deep.property('flower_name', "Daisy")
+        let saved = await nodeRepo.save(mixed, user);
+        expect(saved.isError).false;
+        expect(mixed.id).not.undefined;
+        expect(mixed.properties).to.have.deep.property('flower_name', 'Daisy');
 
         // update the node's payload
-        mixed.properties = malformed_payload
+        mixed.properties = malformed_payload;
 
-        saved = await nodeRepo.save(mixed, user)
-        expect(saved.isError).true
+        saved = await nodeRepo.save(mixed, user);
+        expect(saved.isError).true;
 
-        return nodeRepo.delete(mixed)
-    })
+        return nodeRepo.delete(mixed);
+    });
 
-    it('will save Nodes with valid regexed payloads', async()=> {
-        const nodeRepo = new NodeRepository()
+    it('will save Nodes with valid regexed payloads', async () => {
+        const nodeRepo = new NodeRepository();
 
         const mixed = new Node({
             container_id: containerID,
@@ -266,49 +288,73 @@ describe('A Node Repository', async() => {
             properties: regex_payload
         });
 
-        let saved = await nodeRepo.save(mixed, user)
-        expect(saved.isError).false
-        expect(mixed.id).not.undefined
+        let saved = await nodeRepo.save(mixed, user);
+        expect(saved.isError).false;
+        expect(mixed.id).not.undefined;
 
-        mixed.properties = regex_payload_fails
+        mixed.properties = regex_payload_fails;
 
-        saved = await nodeRepo.save(mixed, user)
-        expect(saved.isError).true
+        saved = await nodeRepo.save(mixed, user);
+        expect(saved.isError).true;
 
-        return nodeRepo.delete(mixed)
-    })
-})
+        return nodeRepo.delete(mixed);
+    });
+});
 
-const payload: {[key:string]:any} = {
-    "flower_name": "Daisy",
-    "color": "yellow",
-    "notRequired": 1
+const payload: { [key: string]: any } = {
+    flower_name: 'Daisy',
+    color: 'yellow',
+    notRequired: 1
 };
 
-const updatedPayload: {[key:string]:any} = {
-    "flower_name": "Violet",
-    "color": "blue",
-    "notRequired": 1
+const updatedPayload: { [key: string]: any } = {
+    flower_name: 'Violet',
+    color: 'blue',
+    notRequired: 1
 };
 
-const malformed_payload: {[key:string]:any} = {
-    "flower": "Daisy",
-    "notRequired": 1
+const malformed_payload: { [key: string]: any } = {
+    flower: 'Daisy',
+    notRequired: 1
 };
 
 export const test_keys: MetatypeKey[] = [
-    new MetatypeKey({name: "Test", description: "flower name", required: true, property_name: "flower_name", data_type: "string"}),
-    new MetatypeKey({name: "Test2", description: "color of flower allowed", required: true, property_name: "color", data_type: "enumeration", options: ["yellow", "blue"]}),
-    new MetatypeKey({name: "Test Not Required", description: "not required", required: false, property_name: "notRequired", data_type: "number"}),
+    new MetatypeKey({
+        name: 'Test',
+        description: 'flower name',
+        required: true,
+        property_name: 'flower_name',
+        data_type: 'string'
+    }),
+    new MetatypeKey({
+        name: 'Test2',
+        description: 'color of flower allowed',
+        required: true,
+        property_name: 'color',
+        data_type: 'enumeration',
+        options: ['yellow', 'blue']
+    }),
+    new MetatypeKey({
+        name: 'Test Not Required',
+        description: 'not required',
+        required: false,
+        property_name: 'notRequired',
+        data_type: 'number'
+    })
 ];
 
-export const single_test_key: MetatypeKey = new MetatypeKey({name: "Test Not Required", description: "not required", required: false, property_name: "notRequired", data_type: "number"})
+export const single_test_key: MetatypeKey = new MetatypeKey({
+    name: 'Test Not Required',
+    description: 'not required',
+    required: false,
+    property_name: 'notRequired',
+    data_type: 'number'
+});
 
-
-const regex_payload : {[key:string]:any} = {
-    regex: "Catcat1"
+const regex_payload: { [key: string]: any } = {
+    regex: 'Catcat1'
 };
 
-const regex_payload_fails : {[key:string]:any} = {
-    regex: "catcat"
+const regex_payload_fails: { [key: string]: any } = {
+    regex: 'catcat'
 };

@@ -1,40 +1,41 @@
-const NodeCache = require("node-cache")
-const Redis = require("ioredis")
-// @ts-ignore - needed because ioredis's types haven't been updated
-import {RedisStatic} from "ioredis";
-import Config from "../config"
-import Logger from "../logger"
+const NodeCache = require('node-cache');
+const Redis = require('ioredis');
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { RedisStatic } from 'ioredis';
+import Config from '../config';
+import Logger from '../logger';
 
 /*
     Presenting Cache as a singleton class allows us to avoid creating many instances
     of the same cache adapter.
  */
 class Cache {
-    public cache: CacheInterface
-    private static instance: Cache
+    public cache: CacheInterface;
+    private static instance: Cache;
 
     public static get Instance(): Cache {
-        if(!Cache.instance) {
-            Cache.instance = new Cache()
+        if (!Cache.instance) {
+            Cache.instance = new Cache();
         }
 
-        return Cache.instance
+        return Cache.instance;
     }
 
     constructor() {
-        switch(Config.cache_provider) {
-            case "memory": {
-                this.cache = new MemoryCacheImpl()
+        switch (Config.cache_provider) {
+            case 'memory': {
+                this.cache = new MemoryCacheImpl();
                 break;
             }
 
-            case "redis": {
-                this.cache = new RedisCacheImpl()
+            case 'redis': {
+                this.cache = new RedisCacheImpl();
                 break;
             }
 
             default: {
-                this.cache = new MemoryCacheImpl()
+                this.cache = new MemoryCacheImpl();
                 break;
             }
         }
@@ -46,9 +47,9 @@ class Cache {
     so that it doesn't have to worry about which implementation to use
  */
 export interface CacheInterface {
-    set(key: string, val: any, ttl?: number): Promise<boolean>
-    del(key: string): Promise<boolean>
-    get<T>(key: string): Promise<T | undefined>
+    set(key: string, val: any, ttl?: number): Promise<boolean>;
+    del(key: string): Promise<boolean>;
+    get<T>(key: string): Promise<T | undefined>;
 }
 
 /*
@@ -56,36 +57,36 @@ export interface CacheInterface {
     a sharded environment is highly discouraged.
  */
 export class MemoryCacheImpl implements CacheInterface {
-    private _cache: any
+    private _cache: any;
     get<T>(key: string): Promise<T | undefined> {
-        const value = this._cache.get(key)
+        const value = this._cache.get(key);
 
-        if(!value) return new Promise(resolve => resolve(undefined))
+        if (!value) return new Promise((resolve) => resolve(undefined));
 
         try {
-            const parsed = JSON.parse(value)
-            return new Promise(resolve => resolve(parsed as T))
+            const parsed = JSON.parse(value);
+            return new Promise((resolve) => resolve(parsed as T));
         } catch {
-            return new Promise(resolve => resolve(value as T))
+            return new Promise((resolve) => resolve(value as T));
         }
     }
 
     set(key: string, val: any, ttl?: number): Promise<boolean> {
-        return new Promise(resolve => resolve(this._cache.set(key, val, ttl)))
+        return new Promise((resolve) => resolve(this._cache.set(key, val, ttl)));
     }
 
     del(key: string): Promise<boolean> {
-        const deleted = this._cache.del(key)
-        if(deleted !== 1 && deleted !== 0) {
-            Logger.error(`error deleting value from memory: ${deleted}`)
-            return new Promise(resolve => resolve(false))
+        const deleted = this._cache.del(key);
+        if (deleted !== 1 && deleted !== 0) {
+            Logger.error(`error deleting value from memory: ${deleted}`);
+            return new Promise((resolve) => resolve(false));
         }
 
-        return new Promise(resolve => resolve(true))
+        return new Promise((resolve) => resolve(true));
     }
 
     constructor() {
-        this._cache = new NodeCache()
+        this._cache = new NodeCache();
     }
 }
 
@@ -93,51 +94,50 @@ export class MemoryCacheImpl implements CacheInterface {
     A Redis backed implementation of the cache interface
  */
 export class RedisCacheImpl implements CacheInterface {
-    private _redis: RedisStatic
+    private _redis: RedisStatic;
     async get<T>(key: string): Promise<T | undefined> {
-        const val = await this._redis.get(key)
+        const val = await this._redis.get(key);
 
-        if(val === null) {
-            return new Promise(resolve => resolve(undefined))
+        if (val === null) {
+            return new Promise((resolve) => resolve(undefined));
         }
 
-        return new Promise(resolve => resolve(JSON.parse(val) as T))
+        return new Promise((resolve) => resolve(JSON.parse(val) as T));
     }
 
     async set(key: string, val: any, ttl?: number): Promise<boolean> {
-        let set: string
+        let set: string;
 
-        if(ttl) {
-            set = await this._redis.set(key, JSON.stringify(val), "EX", ttl)
+        if (ttl) {
+            set = await this._redis.set(key, JSON.stringify(val), 'EX', ttl);
         } else {
-            set = await this._redis.set(key, JSON.stringify(val))
+            set = await this._redis.set(key, JSON.stringify(val));
         }
 
-        if(set !== "OK") {
-            Logger.error(`error inserting value into redis: ${set}`)
-            return new Promise(resolve => resolve(false))
+        if (set !== 'OK') {
+            Logger.error(`error inserting value into redis: ${set}`);
+            return new Promise((resolve) => resolve(false));
         }
 
-        return new Promise(resolve => resolve(true))
+        return new Promise((resolve) => resolve(true));
     }
 
     async del(key: string): Promise<boolean> {
-        const deleted = await this._redis.del(key)
+        const deleted = await this._redis.del(key);
 
         // returns 1 if deleted, 0 if key doesn't exist - we won't error out on
         // attempting to delete a non-existent key
-        if(deleted !== 1 && deleted !== 0) {
-            Logger.error(`error deleting value from redis: ${deleted}`)
-            return new Promise(resolve => resolve(false))
+        if (deleted !== 1 && deleted !== 0) {
+            Logger.error(`error deleting value from redis: ${deleted}`);
+            return new Promise((resolve) => resolve(false));
         }
 
-        return new Promise(resolve => resolve(true))
+        return new Promise((resolve) => resolve(true));
     }
 
     constructor() {
-        this._redis = new Redis(Config.redis_connection_string)
+        this._redis = new Redis(Config.redis_connection_string);
     }
-
 }
 
-export default Cache.Instance.cache
+export default Cache.Instance.cache;

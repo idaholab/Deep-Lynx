@@ -1,5 +1,5 @@
-import {BaseDomainClass, NakedDomainClass} from "../common_classes/base_domain_class";
-import {IsIn, IsObject, IsString} from "class-validator";
+import { BaseDomainClass, NakedDomainClass } from '../common_classes/base_domain_class';
+import { IsIn, IsObject, IsString } from 'class-validator';
 
 /*
     Event represents an event record in the Deep Lynx database and the various
@@ -18,32 +18,26 @@ export default class Event extends NakedDomainClass {
         'data_source_modified',
         'data_exported'
     ])
-    type?: string
+    type?: string;
 
     @IsString()
-    source_id?: string
+    source_id?: string;
 
     @IsString()
-    @IsIn(["data_source", "container"])
-    source_type?: string
+    @IsIn(['data_source', 'container'])
+    source_type?: string;
 
     @IsObject()
-    data?: any
+    data?: any;
 
-    constructor(input: {
-        sourceID: string,
-        sourceType: string,
-        type?: string,
-        data?: any
-    }) {
+    constructor(input: { sourceID: string; sourceType: string; type?: string; data?: any }) {
         super();
 
-        if(input) {
-            if(input.type) this.type = input.type
-            if(input.data) this.data = input.data
-            this.source_id = input.sourceID
-            this.source_type = input.sourceType
+        if (input) {
+            if (input.type) this.type = input.type;
+            if (input.data) this.data = input.data;
+            this.source_id = input.sourceID;
+            this.source_type = input.sourceType;
         }
     }
 }
-

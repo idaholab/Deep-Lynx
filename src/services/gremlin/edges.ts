@@ -1,7 +1,7 @@
-import {driver, process} from "gremlin";
-import Result from "../../common_classes/result";
-import {Edge, Property} from "./types";
-import GremlinAdapter from "./gremlin";
+import { driver, process } from 'gremlin';
+import Result from '../../common_classes/result';
+import { Edge, Property } from './types';
+import GremlinAdapter from './gremlin';
 
 export default class Edges {
     private g: process.GraphTraversalSource;
@@ -9,22 +9,24 @@ export default class Edges {
 
     constructor(g: process.GraphTraversalSource, client: driver.Client) {
         this.g = g;
-        this.client = client
+        this.client = client;
     }
 
     public async retrieve(id: string): Promise<Result<Edge>> {
+        // eslint-disable-next-line prefer-rest-params
         GremlinAdapter.escapeArguments(arguments);
         const translator = new process.Translator(this.g);
         translator.of('g');
         return new Promise((resolve) => {
-            this.client.submit(translator.translate(this.g.E(`${id}L`).getBytecode()))
+            this.client
+                .submit(translator.translate(this.g.E(`${id}L`).getBytecode()))
                 .then((result: driver.ResultSet) => {
                     if (result.first() == null) resolve(Result.Failure('record not found', 404));
 
-                    resolve(Result.Success(result.first() as Edge))
+                    resolve(Result.Success(result.first() as Edge));
                 })
-                .catch((err) => resolve(Result.Failure(err)))
-        })
+                .catch((err) => resolve(Result.Failure(err)));
+        });
     }
 
     /*
@@ -32,6 +34,7 @@ export default class Edges {
     Currently we return the raw gremlin type - planning on changing this soon
     */
     public async add(from: string, to: string, relationshipLabel: string, properties?: any): Promise<Result<Edge>> {
+        // eslint-disable-next-line prefer-rest-params
         GremlinAdapter.escapeArguments(arguments);
 
         const translator = new process.Translator(this.g);
@@ -41,9 +44,10 @@ export default class Edges {
         query = GremlinAdapter.toGremlinProperties(query, properties);
 
         return new Promise((resolve, reject) => {
-            this.client.submit(translator.translate(query.getBytecode()))
+            this.client
+                .submit(translator.translate(query.getBytecode()))
                 .then((result) => resolve(Result.Success(result.first())))
-                .catch((err) => reject(err))
-        })
+                .catch((err) => reject(err));
+        });
     }
 }

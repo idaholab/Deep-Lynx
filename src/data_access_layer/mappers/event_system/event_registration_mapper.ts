@@ -1,10 +1,10 @@
-import Result from "../../../common_classes/result"
-import EventRegistration from "../../../event_system/event_registration";
-import Mapper from "../mapper";
-import {PoolClient, QueryConfig} from "pg";
-import uuid from "uuid";
+import Result from '../../../common_classes/result';
+import EventRegistration from '../../../event_system/event_registration';
+import Mapper from '../mapper';
+import { PoolClient, QueryConfig } from 'pg';
+import uuid from 'uuid';
 
-const format = require('pg-format')
+const format = require('pg-format');
 
 /*
     EventRegistrationMapper extends the Postgres database Mapper class and allows
@@ -15,47 +15,55 @@ const format = require('pg-format')
     try to avoid listing functions, as those are generally covered by the Repository
     class/interface as well.
 */
-export default class EventRegistrationMapper extends Mapper{
-    public static tableName = "registered_events";
+export default class EventRegistrationMapper extends Mapper {
+    public static tableName = 'registered_events';
 
     private static instance: EventRegistrationMapper;
 
     public static get Instance(): EventRegistrationMapper {
-        if(!EventRegistrationMapper.instance) {
-            EventRegistrationMapper.instance = new EventRegistrationMapper()
+        if (!EventRegistrationMapper.instance) {
+            EventRegistrationMapper.instance = new EventRegistrationMapper();
         }
 
-        return EventRegistrationMapper.instance
+        return EventRegistrationMapper.instance;
     }
 
-    public async Create(userID:string, input: EventRegistration, transaction?: PoolClient): Promise<Result<EventRegistration>> {
-        const r = await super.run(this.createStatement(userID, input), {transaction, resultClass: EventRegistration})
-        if(r.isError) return Promise.resolve(Result.Pass(r))
+    public async Create(userID: string, input: EventRegistration, transaction?: PoolClient): Promise<Result<EventRegistration>> {
+        const r = await super.run(this.createStatement(userID, input), {
+            transaction,
+            resultClass: EventRegistration
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        return Promise.resolve(Result.Success(r.value[0]))
+        return Promise.resolve(Result.Success(r.value[0]));
     }
 
-    public async Update(userID:string, input: EventRegistration, transaction?: PoolClient): Promise<Result<EventRegistration>> {
-        const r = await super.run(this.fullUpdateStatement(userID, input), {transaction, resultClass: EventRegistration})
-        if(r.isError) return Promise.resolve(Result.Pass(r))
+    public async Update(userID: string, input: EventRegistration, transaction?: PoolClient): Promise<Result<EventRegistration>> {
+        const r = await super.run(this.fullUpdateStatement(userID, input), {
+            transaction,
+            resultClass: EventRegistration
+        });
+        if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        return Promise.resolve(Result.Success(r.value[0]))
+        return Promise.resolve(Result.Success(r.value[0]));
     }
 
     public async Retrieve(id: string): Promise<Result<EventRegistration>> {
-       return super.retrieve(this.retrieveStatement(id), {resultClass: EventRegistration})
+        return super.retrieve(this.retrieveStatement(id), {
+            resultClass: EventRegistration
+        });
     }
 
     public Delete(id: string): Promise<Result<boolean>> {
-        return super.runStatement(this.deleteStatement(id))
+        return super.runStatement(this.deleteStatement(id));
     }
 
     public SetActive(id: string, userID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.setActiveStatement(id, userID))
+        return super.runStatement(this.setActiveStatement(id, userID));
     }
 
     public SetInActive(id: string, userID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.setInactiveStatement(id, userID))
+        return super.runStatement(this.setInactiveStatement(id, userID));
     }
 
     private createStatement(userID: string, ...registrations: EventRegistration[]): string {
@@ -67,17 +75,10 @@ export default class EventRegistrationMapper extends Mapper{
                               container_id,
                               event_type,
                               created_by,
-                              modified_by) VALUES %L RETURNING *`
-        const values = registrations.map(reg => [
-            uuid.v4(),
-            reg.app_name,
-            reg.app_url,
-            reg.data_source_id,
-            reg.container_id,
-            reg.event_type,
-            userID, userID])
+                              modified_by) VALUES %L RETURNING *`;
+        const values = registrations.map((reg) => [uuid.v4(), reg.app_name, reg.app_url, reg.data_source_id, reg.container_id, reg.event_type, userID, userID]);
 
-        return format(text, values)
+        return format(text, values);
     }
 
     private fullUpdateStatement(userID: string, ...registrations: EventRegistration[]): string {
@@ -90,44 +91,37 @@ export default class EventRegistrationMapper extends Mapper{
                               modified_by = u.modified_by,
                               modified_at = NOW()
                           FROM (VALUES %L) AS u(id, app_name, app_url,data_source_id, container_id, event_type, modified_by)
-                          WHERE u.id::uuid = r.id RETURNING r.*`
-        const values = registrations.map(reg => [
-            reg.id,
-            reg.app_name,
-            reg.app_url,
-            reg.data_source_id,
-            reg.container_id,
-            reg.event_type,
-            userID])
+                          WHERE u.id::uuid = r.id RETURNING r.*`;
+        const values = registrations.map((reg) => [reg.id, reg.app_name, reg.app_url, reg.data_source_id, reg.container_id, reg.event_type, userID]);
 
-        return format(text, values)
+        return format(text, values);
     }
 
-    private retrieveStatement(id:string): QueryConfig {
+    private retrieveStatement(id: string): QueryConfig {
         return {
-            text:`SELECT * FROM registered_events WHERE id = $1`,
+            text: `SELECT * FROM registered_events WHERE id = $1`,
             values: [id]
-        }
+        };
     }
 
     private setInactiveStatement(id: string, userID: string): QueryConfig {
         return {
-            text:`UPDATE registered_events SET active = false, modified_by = $2 WHERE id = $1`,
+            text: `UPDATE registered_events SET active = false, modified_by = $2 WHERE id = $1`,
             values: [id, userID]
-        }
+        };
     }
 
     private setActiveStatement(id: string, userID: string): QueryConfig {
         return {
-            text:`UPDATE registered_events SET active = true, modified_by = $2 WHERE id = $1`,
+            text: `UPDATE registered_events SET active = true, modified_by = $2 WHERE id = $1`,
             values: [id, userID]
-        }
+        };
     }
 
     private deleteStatement(id: string): QueryConfig {
         return {
-            text:`DELETE FROM registered_events WHERE id = $1`,
+            text: `DELETE FROM registered_events WHERE id = $1`,
             values: [id]
-        }
+        };
     }
 }

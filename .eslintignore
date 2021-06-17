@@ -1,0 +1,4 @@
+.eslintrc.js
+src/tests/
+src/services/gremlin/graphson_v1_reader/type_serializers.ts
+src/services/gremlin/vertices.ts

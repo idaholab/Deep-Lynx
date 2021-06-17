@@ -1,5 +1,5 @@
 {
-  "watch": ["src"],
-  "ext": "ts,hbs",
-  "exec": "tsc && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"./src/assets/**\" ./dist && node -r dotenv/config ./dist/main.js"
+    "watch": ["src"],
+    "ext": "ts,hbs",
+    "exec": "tsc && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"./src/assets/**\" ./dist && node -r dotenv/config ./dist/main.js"
 }
