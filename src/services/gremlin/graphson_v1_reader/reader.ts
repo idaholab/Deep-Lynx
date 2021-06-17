@@ -42,7 +42,6 @@ export class GraphSONReaderV1 {
     private _deserializeObject(obj: any) {
         const keys = Object.keys(obj);
         const result = {} as any;
-        // tslint:disable-next-line:prefer-for-of
         // eslint-disable-next-line @typescript-eslint/prefer-for-of
         for (let i = 0; i < keys.length; i++) {
             result[keys[i]] = this.read(obj[keys[i]]);
