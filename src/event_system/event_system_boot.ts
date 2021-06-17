@@ -3,12 +3,11 @@
  The main loop of Deep Lynx will spawn this process. This process should restart
  the event management and processing system.
 */
-import {StartQueue} from "./processor";
-import PostgresAdapter from "../data_access_layer/mappers/db_adapters/postgres/postgres";
+import { StartQueue } from './processor';
+import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 
-const postgresAdapter = PostgresAdapter.Instance
+const postgresAdapter = PostgresAdapter.Instance;
 
-postgresAdapter.init()
-    .then(() => {
-        StartQueue();
-    })
+void postgresAdapter.init().then(() => {
+    void StartQueue();
+});

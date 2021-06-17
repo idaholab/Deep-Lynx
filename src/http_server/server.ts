@@ -1,9 +1,8 @@
-import express from "express";
-import Config from "../services/config";
-import { Logger } from "../services/logger";
-import DefaultLogger from "../services/logger";
-import { Router } from "./routes/router"
-
+import express from 'express';
+import Config from '../services/config';
+import {Logger} from '../services/logger';
+import DefaultLogger from '../services/logger';
+import {Router} from './routes/router';
 
 /*
  Server is a singleton and wraps the express.js library and application. This
@@ -11,38 +10,40 @@ import { Router } from "./routes/router"
  for its configuration.
 */
 export class Server {
-  private static instance: Server;
-  private logger: Logger;
-  private server: express.Application;
+    private static instance: Server;
+    private logger: Logger;
+    private server: express.Application;
 
-  private constructor(server: express.Application) {
-    this.logger = DefaultLogger;
-    this.server = server;
-  }
-
-  static get Instance(): Server {
-    if (!Server.instance) {
-      Server.instance = new Server(express());
+    private constructor(server: express.Application) {
+        this.logger = DefaultLogger;
+        this.server = server;
     }
 
-    return Server.instance;
-  }
+    static get Instance(): Server {
+        if (!Server.instance) {
+            Server.instance = new Server(express());
+        }
 
-  public get UnderlyingExpressApplication(): express.Application {
-    return this.server;
-  }
-
-  public startServer(logger?: Logger) {
-    if (logger) {
-      this.logger = logger
+        return Server.instance;
     }
 
-    const router = new Router(this);
-    router.mount();
+    public get UnderlyingExpressApplication(): express.Application {
+        return this.server;
+    }
 
-    this.logger.info(`starting Deep Lynx on port ${Config.server_port}`);
-    // tslint:disable-next-line:no-empty
-    this.server.listen(Config.server_port, () => {}); // empty callback on application exit. Could add something
-                                                              // here later if needed, such as processing cleanup
-  }
+    public startServer(logger?: Logger) {
+        if (logger) {
+            this.logger = logger;
+        }
+
+        const router = new Router(this);
+        router.mount();
+
+        this.logger.info(`starting Deep Lynx on port ${Config.server_port}`);
+        // tslint:disable-next-line:no-empty
+        this.server.listen(Config.server_port, () => {
+            this.logger.info('server terminated');
+        }); // empty callback on application exit. Could add something
+        // here later if needed, such as processing cleanup
+    }
 }

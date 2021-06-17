@@ -1,4 +1,4 @@
-import { serializers } from "./type_serializers"
+import {serializers} from './type_serializers';
 
 /**
  * This allows the user to parse GraphSON v1.0 encoded responses from gremlin.
@@ -11,38 +11,38 @@ export class GraphSONReaderV1 {
      */
     public read(obj: object, type?: string): any {
         if (obj === undefined) {
-            return undefined
+            return undefined;
         }
 
         if (obj === null) {
-            return null
+            return null;
         }
 
         if (Array.isArray(obj)) {
-            return obj.map(item => this.read(item, type))
+            return obj.map((item) => this.read(item, type));
         }
 
         let typeSerializer: string = obj['type' as keyof typeof obj];
         if (type) {
-            typeSerializer = type
+            typeSerializer = type;
         }
 
         if (SERIALIZERS[typeSerializer]) {
             const serializer = new SERIALIZERS[typeSerializer](this);
-            return serializer.deserialize(obj)
+            return serializer.deserialize(obj);
         }
 
-        if (obj && typeof obj === "object" && obj.constructor === Object) {
+        if (obj && typeof obj === 'object' && obj.constructor === Object) {
             return this._deserializeObject(obj);
         }
 
-        return obj
+        return obj;
     }
 
     private _deserializeObject(obj: any) {
         const keys = Object.keys(obj);
         const result = {} as any;
-        // tslint:disable-next-line:prefer-for-of
+        // eslint-disable-next-line @typescript-eslint/prefer-for-of
         for (let i = 0; i < keys.length; i++) {
             result[keys[i]] = this.read(obj[keys[i]]);
         }
@@ -55,8 +55,8 @@ export class GraphSONReaderV1 {
  * or based on the object being parsed.
  */
 const SERIALIZERS: Record<string, any> = {
-    'edge': serializers.EdgeSerializer,
-    'vertex': serializers.VertexSerializer,
-    'vertexProperty': serializers.VertexPropertySerializer,
-    'property': serializers.PropertySerializer,
+    edge: serializers.EdgeSerializer,
+    vertex: serializers.VertexSerializer,
+    vertexProperty: serializers.VertexPropertySerializer,
+    property: serializers.PropertySerializer,
 };

@@ -1,6 +1,6 @@
-import Logger from "../services/logger";
-import express from "express";
-import {serialize} from "class-transformer";
+import Logger from '../services/logger';
+import express from 'express';
+import {serialize} from 'class-transformer';
 
 /*
  Result was created to solve the problem of constantly throwing and catching
@@ -28,54 +28,47 @@ export default class Result<TSuccess> {
     }
 
     public static Error(e: Error) {
-        return new Result<any>(null, true, e)
+        return new Result<any>(null, true, e);
     }
 
     // calling this allows the user to pass a Result class - this is done to avoid
     // compilation errors when the return type of a Result's value doesn't match
     // the parent operation's type.
-    public static Pass(res:Result<any>) {
+    public static Pass(res: Result<any>) {
         return res;
     }
 
     // this is a helper method that allows use to utilize the class-transformer
     // when working with express.js returns
     public asResponse(resp: express.Response, code?: number) {
-        if(this.isError) {
-            resp.status((this.error?.errorCode) ? this.error.errorCode : 500)
-        } else if(code) {
-            resp.status(code)
+        if (this.isError) {
+            resp.status(this.error?.errorCode ? this.error.errorCode : 500);
+        } else if (code) {
+            resp.status(code);
         } else {
-            resp.status(200)
+            resp.status(200);
         }
 
-        resp.setHeader('Content-Type', 'application/json')
-        resp.send(serialize(this))
+        resp.setHeader('Content-Type', 'application/json');
+        resp.send(serialize(this));
     }
 
-
-    constructor(
-        value: TSuccess,
-        isError: boolean,
-        error?: Error
-    ) {
+    constructor(value: TSuccess, isError: boolean, error?: Error) {
         this.value = value;
         this.isError = isError;
-        if (error) this.error = error
+        if (error) this.error = error;
     }
-
 }
 
 class Error {
     error: string;
-    errorCode: number = 500;
+    errorCode = 500;
 
     constructor(error: string, errorCode?: number) {
         this.error = error;
-        if (errorCode) this.errorCode = errorCode
+        if (errorCode) this.errorCode = errorCode;
     }
 }
-
 
 /*
  Pre-built error classes might come in handy in a few situations. Consider adding

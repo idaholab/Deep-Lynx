@@ -1,0 +1,11 @@
+dist
+node_modules
+.idea
+.nyc_output
+Admin Web App
+API Documentation
+src/data_access_layer/mappers/data_warehouse/ontology/container_import.ts
+src/data_warehouse/ontology/metatype_relationship_pair.ts
+src/data_warehouse/data/node.ts
+src/data_access_layer/repositories/data_warehouse/etl/type_transformation_repository.ts
+src/data_access_layer/migrate.ts
