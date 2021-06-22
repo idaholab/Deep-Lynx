@@ -1,0 +1,1 @@
+ALTER TABLE containers ADD COLUMN config jsonb DEFAULT '{}'::jsonb;

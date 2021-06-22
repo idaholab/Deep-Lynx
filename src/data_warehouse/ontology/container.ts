@@ -1,10 +1,28 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { BaseDomainClass } from '../../common_classes/base_domain_class';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength, registerDecorator, ValidationArguments, ValidationOptions } from 'class-validator';
+import {BaseDomainClass, NakedDomainClass} from '../../common_classes/base_domain_class';
+import {IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
 import Result from '../../common_classes/result';
 import Authorization from '../../access_management/authorization/authorization';
 import Logger from '../../services/logger';
-import validator from 'validator';
+import {Type} from 'class-transformer';
+
+/*
+    ContainerConfig allows the user and system to toggle features at a container
+    level. Example would be using this configuration to toggle whether or not the
+    container would insert records into the nodes/edges shadow table.
+ */
+export class ContainerConfig extends NakedDomainClass {
+    @IsBoolean()
+    data_versioning_enabled = true;
+
+    constructor(input?: {data_versioning_enabled: boolean}) {
+        super();
+
+        if (input) {
+            this.data_versioning_enabled = input.data_versioning_enabled;
+        }
+    }
+}
 
 /*
     Container represents a container record in the Deep Lynx database and the various
@@ -34,11 +52,10 @@ export default class Container extends BaseDomainClass {
     @IsUUID()
     active_graph_id?: string;
 
-    /**
-     *
-     * @param input
-     */
-    constructor(input: { name: string; description: string }) {
+    @Type(() => ContainerConfig)
+    config?: ContainerConfig;
+
+    constructor(input: {name: string; description: string; config?: ContainerConfig}) {
         super();
 
         // we have to do this because class-transformer doesn't know to create
@@ -46,6 +63,7 @@ export default class Container extends BaseDomainClass {
         if (input) {
             this.name = input.name;
             this.description = input.description;
+            input.config ? (this.config = input.config) : (this.config = new ContainerConfig());
         }
     }
 
@@ -108,22 +126,4 @@ export default class Container extends BaseDomainClass {
 
         return new Promise((resolve) => resolve(Result.Success(true)));
     }
-}
-
-// any specific validators should be specified here
-export function ContainerID(validationOptions?: ValidationOptions) {
-    return (object: object, propertyName: string) => {
-        registerDecorator({
-            name: 'ContainerID',
-            target: object.constructor,
-            propertyName,
-            constraints: [],
-            options: validationOptions,
-            validator: {
-                validate(value: any, args: ValidationArguments) {
-                    return value instanceof Container && validator.isUUID(value.id!);
-                }
-            }
-        });
-    };
 }

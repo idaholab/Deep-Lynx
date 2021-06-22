@@ -4,7 +4,7 @@ import MetatypeKeyMapper from './metatype_key_mapper';
 import Result from '../../../../common_classes/result';
 import Logger from '../../../../services/logger';
 import ContainerRepository from '../../../repositories/data_warehouse/ontology/container_respository';
-import Container from '../../../../data_warehouse/ontology/container';
+import Container, { ContainerConfig } from "../../../../data_warehouse/ontology/container";
 import MetatypeRepository from '../../../repositories/data_warehouse/ontology/metatype_repository';
 import Metatype from '../../../../data_warehouse/ontology/metatype';
 import MetatypeRelationshipRepository from '../../../repositories/data_warehouse/ontology/metatype_relationship_repository';
@@ -31,6 +31,7 @@ export type ContainerImportT = {
     name: string;
     description?: string | undefined;
     path?: string | undefined;
+    data_versioning_enabled: boolean
 };
 
 /*
@@ -116,7 +117,13 @@ export default class ContainerImport {
                     spaces: 4,
                 });
 
-                this.parseOntology(user, JSON.parse(jsonData), input.name, input.description || '', dryrun, update, containerID)
+                this.parseOntology(
+                    user,
+                    JSON.parse(jsonData),
+                    input.name,
+                    input.description || '',
+                    input.data_versioning_enabled,
+                    dryrun, update, containerID)
                     .then((result) => {
                         resolve(result);
                     })
@@ -134,7 +141,13 @@ export default class ContainerImport {
                 spaces: 4,
             });
             return new Promise<Result<string>>((resolve) => {
-                resolve(this.parseOntology(user, JSON.parse(jsonData), input.name, input.description || '', dryrun, update, containerID));
+                resolve(this.parseOntology(
+                    user,
+                    JSON.parse(jsonData),
+                    input.name,
+                    input.description || '',
+                    input.data_versioning_enabled,
+                    dryrun, update, containerID));
             }).catch((e) => {
                 return Promise.reject(Result.Failure(e));
             });
@@ -146,6 +159,7 @@ export default class ContainerImport {
         json: any,
         name: string,
         description: string,
+        data_versioning_enabled: boolean,
         dryrun: boolean,
         update: boolean,
         containerID: string,
@@ -391,6 +405,7 @@ export default class ContainerImport {
                     container = new Container({
                         name,
                         description: ontologyDescription,
+                        config: new ContainerConfig({data_versioning_enabled})
                     });
 
                     const saved = await containerRepo.save(container, user);
