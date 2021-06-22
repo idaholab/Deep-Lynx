@@ -1,5 +1,5 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import 'reflect-metadata';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../../../services/logger';
@@ -11,7 +11,7 @@ import EdgeMapper from '../../../../data_access_layer/mappers/data_warehouse/dat
 import MetatypeRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 import MetatypeRelationshipPairRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
-import { User } from '../../../../access_management/user';
+import {User} from '../../../../access_management/user';
 import Node from '../../../../data_warehouse/data/node';
 import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 import Edge from '../../../../data_warehouse/data/edge';
@@ -35,8 +35,8 @@ describe('A Container Import', async () => {
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(userResult.isError).false;
@@ -60,12 +60,13 @@ describe('A Container Import', async () => {
             user,
             {
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
+                description: faker.random.alphaNumeric(),
+                data_versioning_enabled: false,
             },
             fileBuffer,
             false,
             false,
-            ''
+            '',
         );
 
         expect(container.isError, `container creation from ontology failed: ${container.error}`).false;
@@ -80,7 +81,8 @@ describe('A Container Import', async () => {
 
         const containerInput = {
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
+            data_versioning_enabled: false,
         };
         let containerID: string;
 
@@ -111,7 +113,8 @@ describe('A Container Import', async () => {
 
         const containerInput = {
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
+            data_versioning_enabled: false,
         };
         let containerID: string;
 
@@ -138,8 +141,8 @@ describe('A Container Import', async () => {
                 container_id: containerID,
                 graph_id: retrievedContainer.value.active_graph_id,
                 metatype: metatypeID!,
-                properties: { name: 'test document' }
-            })
+                properties: {name: 'test document'},
+            }),
         );
 
         expect(nodeCreate.isError).false;
@@ -162,7 +165,8 @@ describe('A Container Import', async () => {
 
         const containerInput = {
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
+            data_versioning_enabled: false,
         };
         let containerID: string;
 
@@ -189,8 +193,8 @@ describe('A Container Import', async () => {
                 graph_id: retrievedContainer.value.active_graph_id!,
                 container_id: containerID,
                 metatype: metatypeID!,
-                properties: { name: 'test document' }
-            })
+                properties: {name: 'test document'},
+            }),
         );
 
         expect(nodeCreate.isError).false;
@@ -215,7 +219,8 @@ describe('A Container Import', async () => {
 
         const containerInput = {
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
+            data_versioning_enabled: false,
         };
         let containerID: string;
 
@@ -242,14 +247,14 @@ describe('A Container Import', async () => {
                 container_id: containerID,
                 graph_id: retrievedContainer.value.active_graph_id!,
                 metatype: metatypeID!,
-                properties: { name: 'test action 1' }
+                properties: {name: 'test action 1'},
             }),
             new Node({
                 container_id: containerID,
                 graph_id: retrievedContainer.value.active_graph_id!,
                 metatype: metatypeID!,
-                properties: { name: 'test action 2' }
-            })
+                properties: {name: 'test action 2'},
+            }),
         ]);
 
         expect(nodeCreate.isError).false;
@@ -283,8 +288,8 @@ describe('A Container Import', async () => {
                 graph_id: retrievedContainer.value.active_graph_id,
                 properties: {},
                 origin_node_id: originID,
-                destination_node_id: destinationID
-            })
+                destination_node_id: destinationID,
+            }),
         );
 
         expect(edgeCreate.isError).false;
@@ -306,7 +311,8 @@ describe('A Container Import', async () => {
 
         const containerInput = {
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
+            data_versioning_enabled: false,
         };
         let containerID: string;
 

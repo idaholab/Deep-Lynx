@@ -1,12 +1,15 @@
-export type ContainerT  = {
+export type ContainerT = {
     id: string;
     name: string;
     description: string;
+    config: {
+        data_versioning_enabled: boolean;
+    };
     created_at: string;
     modified_at: string;
     created_by: string;
     modified_by: string;
-}
+};
 
 export type MetatypeT = {
     id: string;
@@ -18,7 +21,7 @@ export type MetatypeT = {
     modified_at: string;
     created_by: string;
     modified_by: string;
-}
+};
 
 export type MetatypeRelationshipT = {
     id: string;
@@ -30,7 +33,7 @@ export type MetatypeRelationshipT = {
     modified_at: string;
     created_by: string;
     modified_by: string;
-}
+};
 
 export type MetatypeRelationshipPairT = {
     id: string;
@@ -40,44 +43,46 @@ export type MetatypeRelationshipPairT = {
     origin_metatype_id: string;
     destination_metatype_id: string;
     relationship_id: string;
-    relationship_type: "many:many" | "one:one" | "one:many" | "many:one";
+    relationship_type: 'many:many' | 'one:one' | 'one:many' | 'many:one';
     relationship_pair_name?: string;
     created_at: string;
     modified_at: string;
     created_by: string;
     modified_by: string;
-}
+};
 
-export type MetatypeKeyT= {
+export type MetatypeKeyT = {
     id: string;
     metatype_id: string;
     name: string;
     property_name: string;
     required: boolean;
     description: string;
-    data_type: "number" | "date" | "string" | "boolean" | "enumeration" | "file";
+    data_type: 'number' | 'date' | 'string' | 'boolean' | 'enumeration' | 'file';
     archived: boolean;
-    validation: {
-        regex: string;
-        min: number;
-        max: number;
-    } | undefined;
+    validation:
+        | {
+              regex: string;
+              min: number;
+              max: number;
+          }
+        | undefined;
     options: string[] | undefined;
     default_value: string | boolean | number | any[] | undefined;
     created_at: string;
     modified_at: string;
     created_by: string;
     modified_by: string;
-}
+};
 
-export type MetatypeRelationshipKeyT= {
+export type MetatypeRelationshipKeyT = {
     id: string;
     metatype_relationship_id: string;
     name: string;
     property_name: string;
     required: boolean;
     description: string;
-    data_type: "number" | "date" | "string" | "boolean" | "enumeration" | "file";
+    data_type: 'number' | 'date' | 'string' | 'boolean' | 'enumeration' | 'file';
     archived: boolean;
     validation: {
         regex: string;
@@ -90,7 +95,7 @@ export type MetatypeRelationshipKeyT= {
     modified_at: string;
     created_by: string;
     modified_by: string;
-}
+};
 
 export type DataSourceT = {
     id: string;
@@ -103,7 +108,7 @@ export type DataSourceT = {
     modified_at: string;
     created_by: string;
     modified_by: string;
-}
+};
 
 export type ImportT = {
     id: string;
@@ -118,13 +123,13 @@ export type ImportT = {
 
     total_records: number;
     records_inserted: number;
-}
+};
 
 export type AssignRolePayloadT = {
-   user_id: string;
-   container_id: string;
-   role_name: string;
-}
+    user_id: string;
+    container_id: string;
+    role_name: string;
+};
 
 export type ImportDataT = {
     id: number;
@@ -135,7 +140,7 @@ export type ImportDataT = {
     data: {[key: string]: any};
     inserted_at: string;
     created_at: string;
-}
+};
 
 export type TypeMappingT = {
     id: string;
@@ -147,27 +152,27 @@ export type TypeMappingT = {
     created_at: string;
     modified_at: string;
     transformations: TypeMappingTransformationT[];
-}
+};
 
 export type TypeMappingTransformationKeyMapping = {
     key: string;
     metatype_key_id?: string;
     metatype_relationship_key_id?: string;
-}
+};
 
 export type TypeMappingTransformationSubexpression = {
-    expression: "AND" | "OR";
+    expression: 'AND' | 'OR';
     key: string;
     operator: string;
     value: any;
-}
+};
 
 export type TypeMappingTransformationCondition = {
     key: string;
     operator: string;
     value: any;
     subexpressions: TypeMappingTransformationSubexpression[];
-}
+};
 
 export type TypeMappingTransformationT = {
     id: string;
@@ -179,11 +184,11 @@ export type TypeMappingTransformationT = {
     origin_id_key?: string;
     destination_id_key?: string;
     unique_identifier_key?: string;
-    on_conflict?: "create" | "update" | "ignore";
+    on_conflict?: 'create' | 'update' | 'ignore';
     metatype_name?: string;
     metatype_relationship_pair_name?: string;
     keys: TypeMappingTransformationKeyMapping[];
-}
+};
 
 export type TypeMappingTransformationPayloadT = {
     conditions?: TypeMappingTransformationCondition[];
@@ -192,10 +197,10 @@ export type TypeMappingTransformationPayloadT = {
     origin_id_key?: string;
     destination_id_key?: string;
     unique_identifier_key?: string;
-    on_conflict?: "create" | "update" | "ignore";
+    on_conflict?: 'create' | 'update' | 'ignore';
     keys: TypeMappingTransformationKeyMapping[];
     type_mappping_id: string;
-}
+};
 
 export type UserContainerInviteT = {
     id: number;
@@ -206,20 +211,20 @@ export type UserContainerInviteT = {
     container_id: string;
     container_name: string;
     issued: string;
-}
+};
 
 export type ExportT = {
     id: string;
     destination_type: string;
-    adapter: "gremlin";
+    adapter: 'gremlin';
     config: GremlinExportConfigT;
     container_id?: string;
-    status?: "created" | "processing"| "paused" | "completed" | "failed";
+    status?: 'created' | 'processing' | 'paused' | 'completed' | 'failed';
     status_message?: string;
-}
+};
 
 export type GremlinExportConfigT = {
-    kind: "gremlin";
+    kind: 'gremlin';
     traversal_source: string;
     user: string;
     key: string;
@@ -233,10 +238,10 @@ export type GremlinExportConfigT = {
     modified_at?: string;
     created_by?: string;
     modified_by?: string;
-}
+};
 
 export type ResultT = {
     value: any;
     isError: boolean;
     error: any;
-}
+};

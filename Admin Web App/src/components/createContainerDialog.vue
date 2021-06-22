@@ -31,21 +31,28 @@
                                 ></v-textarea>
                               <v-file-input @change="addFile">
                                 <template v-slot:label>
-                                  .owl File <small>(optional)</small>
+                                  {{$t('containers.owlFile')}} <small>({{$t('containers.optional')}})</small>
                                 </template>
                                 <template v-slot:append-outer><info-tooltip :message="$t('containers.owlFileHelp')"></info-tooltip> </template>
                               </v-file-input>
                               <v-row class="my-8 mx-0" align="center">
                                 <v-divider></v-divider>
-                                <span class="px-2">or</span>
+                                <span class="px-2">{{$t('containers.or')}}</span>
                                 <v-divider></v-divider>
                               </v-row>
                               <v-text-field v-model="owlFilePath">
                                 <template v-slot:label>
-                                  URL to .owl File <small>(optional)</small>
+                                  {{$t('containers.urlOwlFile')}} <small>({{$t('containers.optional')}})</small>
                                 </template>
                                 <template slot="append-outer"><info-tooltip :message="$t('containers.owlUrlHelp')"></info-tooltip> </template>
                               </v-text-field>
+                              <v-checkbox v-model="newContainer.config.data_versioning_enabled">
+                                <template v-slot:label>
+                                  {{$t('containers.dataVersioningEnabled')}}
+                                </template>
+
+                                <template slot="append-outer"><info-tooltip :message="$t('containers.dataVersioningHelp')"></info-tooltip> </template>
+                              </v-checkbox>
                             </v-form>
                         </v-col>
                     </v-row>
@@ -71,7 +78,11 @@
         errorMessage = ""
         loading = false
         dialog = false
-        newContainer = {name: null, description:null}
+        newContainer = {
+          name: null,
+          description:null, config: {
+          data_versioning_enabled: true
+          }}
         owlFilePath = ""
         owlFile: File | null = null
 
@@ -80,7 +91,11 @@
         }
 
         clearNew() {
-            this.newContainer = {name: null, description: null}
+            this.newContainer = {
+              name: null,
+              description:null, config: {
+                data_versioning_enabled: true
+              }}
             this.dialog = false
         }
 

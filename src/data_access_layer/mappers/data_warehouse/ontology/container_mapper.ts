@@ -1,7 +1,7 @@
 import Container from '../../../../data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import { PoolClient, QueryConfig } from 'pg';
+import {PoolClient, QueryConfig} from 'pg';
 import uuid from 'uuid';
 
 const format = require('pg-format');
@@ -32,7 +32,7 @@ export default class ContainerMapper extends Mapper {
     public async Create(userID: string, c: Container, transaction?: PoolClient): Promise<Result<Container>> {
         const r = await super.run(this.createStatement(userID, c), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -44,20 +44,20 @@ export default class ContainerMapper extends Mapper {
 
         return super.run(this.createStatement(userID, ...c), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
     public async Retrieve(id: string): Promise<Result<Container>> {
         return super.retrieve(this.retrieveStatement(id), {
-            resultClass: Container
+            resultClass: Container,
         });
     }
 
     public async Update(userID: string, c: Container, transaction?: PoolClient): Promise<Result<Container>> {
         const r = await super.run(this.fullUpdateStatement(userID, c), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -67,16 +67,16 @@ export default class ContainerMapper extends Mapper {
     public async BulkUpdate(userID: string, c: Container[], transaction?: PoolClient): Promise<Result<Container[]>> {
         return super.run(this.fullUpdateStatement(userID, ...c), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
     public async List(): Promise<Result<Container[]>> {
-        return super.rows(this.listStatement(), { resultClass: Container });
+        return super.rows(this.listStatement(), {resultClass: Container});
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<Container[]>> {
-        return super.rows(this.listFromIDsStatement(ids), { resultClass });
+        return super.rows(this.listFromIDsStatement(ids), {resultClass});
     }
 
     public async Archive(containerID: string, userID: string): Promise<Result<boolean>> {
@@ -96,8 +96,14 @@ export default class ContainerMapper extends Mapper {
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
     private createStatement(userID: string, ...containers: Container[]): string {
-        const text = `INSERT INTO containers(id,name,description, created_by, modified_by) VALUES %L RETURNING *`;
-        const values = containers.map((container) => [uuid.v4(), container.name, container.description, userID, userID]);
+        const text = `INSERT INTO containers(
+                       id,
+                       name,
+                       description,
+                       config, 
+                       created_by, 
+                       modified_by) VALUES %L RETURNING *`;
+        const values = containers.map((container) => [uuid.v4(), container.name, container.description, container.config, userID, userID]);
 
         return format(text, values);
     }
@@ -106,11 +112,12 @@ export default class ContainerMapper extends Mapper {
         const text = `UPDATE containers AS c SET
                         name = u.name,
                         description = u.description,
+                        config = u.config::jsonb,
                         modified_by = u.modified_by,
                         modified_at = NOW()
-                      FROM(VALUES %L) AS u(id, name, description, modified_by)
+                      FROM(VALUES %L) AS u(id, name, description, config, modified_by)
                       WHERE u.id::uuid = c.id RETURNING c.*`;
-        const values = containers.map((container) => [container.id, container.name, container.description, userID]);
+        const values = containers.map((container) => [container.id, container.name, container.description, container.config, userID]);
 
         return format(text, values);
     }
@@ -118,21 +125,21 @@ export default class ContainerMapper extends Mapper {
     private archiveStatement(containerID: string, userID: string): QueryConfig {
         return {
             text: `UPDATE containers SET archived = true, modified_by = $2  WHERE id = $1`,
-            values: [containerID, userID]
+            values: [containerID, userID],
         };
     }
 
     private setActiveStatement(containerID: string, userID: string): QueryConfig {
         return {
             text: `UPDATE containers SET archived = false, modified_at = NOW(), modified_by = $2 WHERE id = $1`,
-            values: [containerID, userID]
+            values: [containerID, userID],
         };
     }
 
     private deleteStatement(containerID: string): QueryConfig {
         return {
             text: `DELETE FROM containers WHERE id = $1`,
-            values: [containerID]
+            values: [containerID],
         };
     }
 
@@ -142,7 +149,7 @@ export default class ContainerMapper extends Mapper {
                     FROM containers c
                     LEFT JOIN active_graphs ON active_graphs.container_id = c.id
                     WHERE c.id = $1`,
-            values: [id]
+            values: [id],
         };
     }
 
@@ -151,7 +158,7 @@ export default class ContainerMapper extends Mapper {
             text: `SELECT c.*, active_graphs.graph_id as active_graph_id
                     FROM containers c
                     LEFT JOIN active_graphs ON active_graphs.container_id = c.id
-                    WHERE NOT c.archived`
+                    WHERE NOT c.archived`,
         };
     }
 
