@@ -1,4 +1,4 @@
-FROM node:10
+FROM node:14
 
 # Create the base directory and make user "node" the owner
 RUN mkdir /srv/core_api && chown node:node /srv/core_api
