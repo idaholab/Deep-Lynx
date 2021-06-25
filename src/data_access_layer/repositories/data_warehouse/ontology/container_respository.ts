@@ -45,6 +45,9 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         const set = await result.value.setPermissions();
         if (set.isError) Logger.error(`unable to set container ${result.value.id}'s permissions ${set.error}`);
 
+        // assign admin role to the user who created the container
+        const role = await Authorization.AssignRole(user.id!, 'admin', result.value.id!);
+
         const graph = await this.#graphMapper.Create(result.value.id!, user.id!);
         if (graph.isError) {
             Logger.error(result.error?.error!);
@@ -110,6 +113,9 @@ export default class ContainerRepository implements RepositoryInterface<Containe
                 // we need to set permissions and create the graph instance for this container now
                 const set = await container.setPermissions();
                 if (set.isError) Logger.error(`unable to set container ${container.id}'s permissions ${set.error}`);
+
+                // assign admin role to the user who created the container
+                const role = await Authorization.AssignRole(user.id!, 'admin', container.id!);
 
                 const graph = await this.#graphMapper.Create(container.id!, user.id!, transaction.value);
                 // set active graph from graph ID
