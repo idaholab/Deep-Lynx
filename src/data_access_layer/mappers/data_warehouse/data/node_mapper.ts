@@ -1,6 +1,6 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import { PoolClient, QueryConfig } from 'pg';
+import {PoolClient, QueryConfig} from 'pg';
 import Node from '../../../../data_warehouse/data/node';
 import uuid from 'uuid';
 
@@ -36,7 +36,7 @@ export default class NodeMapper extends Mapper {
     public async CreateOrUpdateByCompositeID(userID: string, node: Node, transaction?: PoolClient): Promise<Result<Node>> {
         const r = await super.run(this.createOrUpdateStatement(userID, node), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -46,14 +46,14 @@ export default class NodeMapper extends Mapper {
     public BulkCreateOrUpdateByCompositeID(userID: string, nodes: Node[], transaction?: PoolClient): Promise<Result<Node[]>> {
         return super.run(this.createOrUpdateStatement(userID, ...nodes), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
     public async Update(userID: string, node: Node, transaction?: PoolClient): Promise<Result<Node>> {
         const r = await super.run(this.fullUpdateStatement(userID, node), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -63,35 +63,35 @@ export default class NodeMapper extends Mapper {
     public BulkUpdate(userID: string, nodes: Node[], transaction?: PoolClient): Promise<Result<Node[]>> {
         return super.run(this.fullUpdateStatement(userID, ...nodes), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
     public Delete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
-        return super.runStatement(this.deleteStatement(id), { transaction });
+        return super.runStatement(this.deleteStatement(id), {transaction});
     }
 
     public Archive(userID: string, id: string, transaction?: PoolClient): Promise<Result<boolean>> {
         return super.runStatement(this.archiveStatement(userID, id), {
-            transaction
+            transaction,
         });
     }
 
     public async Retrieve(id: string, transaction?: PoolClient): Promise<Result<Node>> {
         return super.retrieve(this.retrieveStatement(id), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
     public async RetrieveByCompositeOriginalID(originalID: string, dataSourceID: string, transaction?: PoolClient): Promise<Result<Node>> {
-        return super.retrieve(this.retrieveByCompositeOriginalIDStatement(dataSourceID, originalID), { transaction, resultClass });
+        return super.retrieve(this.retrieveByCompositeOriginalIDStatement(dataSourceID, originalID), {transaction, resultClass});
     }
 
     public async DomainRetrieve(id: string, containerID: string, transaction?: PoolClient): Promise<Result<Node>> {
         return super.retrieve(this.domainRetrieveStatement(id, containerID), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
@@ -144,7 +144,7 @@ export default class NodeMapper extends Mapper {
             n.data_staging_id,
             n.composite_original_id,
             userID,
-            userID
+            userID,
         ]);
 
         return format(text, values);
@@ -192,7 +192,7 @@ export default class NodeMapper extends Mapper {
             n.data_staging_id,
             n.composite_original_id,
             userID,
-            userID
+            userID,
         ]);
 
         return format(text, values);
@@ -201,14 +201,14 @@ export default class NodeMapper extends Mapper {
     private retrieveStatement(nodeID: string): QueryConfig {
         return {
             text: `SELECT * FROM nodes WHERE id = $1 AND NOT archived`,
-            values: [nodeID]
+            values: [nodeID],
         };
     }
 
     private domainRetrieveStatement(nodeID: string, containerID: string): QueryConfig {
         return {
             text: `SELECT * FROM nodes WHERE id = $1 AND container_id = $2 AND NOT archived`,
-            values: [nodeID, containerID]
+            values: [nodeID, containerID],
         };
     }
 
@@ -217,28 +217,21 @@ export default class NodeMapper extends Mapper {
     private retrieveByCompositeOriginalIDStatement(dataSourceID: string, originalID: string): QueryConfig {
         return {
             text: `SELECT * FROM nodes WHERE composite_original_id = $1 AND data_source_id = $2 AND NOT archived`,
-            values: [originalID, dataSourceID]
+            values: [originalID, dataSourceID],
         };
     }
 
     private archiveStatement(userID: string, nodeID: string): QueryConfig {
         return {
             text: `UPDATE nodes SET archived = true, modified_by = $2, modified_at = NOW()  WHERE id = $1`,
-            values: [nodeID, userID]
+            values: [nodeID, userID],
         };
     }
 
     private deleteStatement(nodeID: string): QueryConfig {
         return {
             text: `DELETE FROM nodes WHERE id = $1`,
-            values: [nodeID]
-        };
-    }
-
-    private listStatement(containerID: string, offset: number, limit: number): QueryConfig {
-        return {
-            text: `SELECT * FROM nodes WHERE container_id = $1 AND NOT archived OFFSET $2 LIMIT $3`,
-            values: [containerID, offset, limit]
+            values: [nodeID],
         };
     }
 }
