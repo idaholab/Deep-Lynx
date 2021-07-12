@@ -20,50 +20,54 @@ class Migrator {
     private pool!: any;
 
     constructor() {
+        // check to see if production environment, if so we do not want to create
+        // the database as we most likely do not have permissions to do so
+        if(process.env.NODE_ENV !== 'production') {
         // we will attempt to create the database named by the environment variables prior to migration
         // this allows us to work on a pristine instance of Postgres without having to have the user
         // perform any database operations manually
-        const connectionDetails: ConnectionOptions = pgParse.parse(Config.core_db_connection_string);
+            const connectionDetails: ConnectionOptions = pgParse.parse(Config.core_db_connection_string);
 
-        // we're going to use the raw node-pg library here, as we need to make a connection
-        // sans database name. This connection will be used to create the db if it doesn't
-        // exist
+            // we're going to use the raw node-pg library here, as we need to make a connection
+            // sans database name. This connection will be used to create the db if it doesn't
+            // exist
 
-        const pool = new Pool({
-            host: connectionDetails.host!, // pg-node can handle multiple hosts
-            port: connectionDetails.port ? Number(connectionDetails.port) : 5432,
-            user: connectionDetails.user,
-            password: connectionDetails.password,
-            ssl: Config.ssl_enabled
-        });
+            const pool = new Pool({
+                host: connectionDetails.host!, // pg-node can handle multiple hosts
+                port: connectionDetails.port ? Number(connectionDetails.port) : 5432,
+                user: connectionDetails.user,
+                password: connectionDetails.password,
+                ssl: Config.ssl_enabled
+            });
 
-        // first check to see if the database specified by the connection string already exists
-        pool.query(format(`SELECT datname FROM pg_catalog.pg_database WHERE datname = %L`, connectionDetails.database))
-            .then((results: QueryResult<any>) => {
+            // first check to see if the database specified by the connection string already exists
+            pool.query(format(`SELECT datname FROM pg_catalog.pg_database WHERE datname = %L`, connectionDetails.database))
+                .then((results: QueryResult<any>) => {
                 // if results are returned, a database matching the name exists, run migrate
-                if(results.rows.length > 0) {
-                    Logger.info(`${connectionDetails.database} database already exists. Proceeding to migration scripts`);
-                    this.init();
-                    return
-                }
-
-                pool.query(format(`CREATE DATABASE %s`, connectionDetails.database))
-                    .then(() => {
-                        Logger.info(`successful creation of ${connectionDetails.database} database`);
+                    if(results.rows.length > 0) {
+                        Logger.info(`${connectionDetails.database} database already exists. Proceeding to migration scripts`);
                         this.init();
-                    })
-                    .catch((e: any) => {
-                        Logger.error(
-                            `creation of ${connectionDetails.database} database failed -
+                        return
+                    }
+
+                    pool.query(format(`CREATE DATABASE %s`, connectionDetails.database))
+                        .then(() => {
+                            Logger.info(`successful creation of ${connectionDetails.database} database`);
+                            this.init();
+                        })
+                        .catch((e: any) => {
+                            Logger.error(
+                                `creation of ${connectionDetails.database} database failed -
                          this is frequently caused by an incorrect connection string. 
                          Verify your CORE_DB_CONNECTION string environment variable and try again: ${e}`,
-                        );
-                        process.exit(-1);
-                    })
-            })
-            .catch((e: any) => {
-                Logger.error(`unable to verify if database specified by connection string exists: ${e}`)
-            })
+                            );
+                            process.exit(-1);
+                        })
+                })
+                .catch((e: any) => {
+                    Logger.error(`unable to verify if database specified by connection string exists: ${e}`)
+                })
+        }
     }
 
     init() {
