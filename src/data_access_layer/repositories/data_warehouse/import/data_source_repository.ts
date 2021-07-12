@@ -119,6 +119,11 @@ export default class DataSourceRepository extends Repository implements Reposito
         return this;
     }
 
+    archived(value: boolean) {
+        super.query('archived', 'eq', value);
+        return this;
+    }
+
     inactive() {
         super.query('active', 'eq', false);
         return this;

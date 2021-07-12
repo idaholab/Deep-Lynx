@@ -344,8 +344,9 @@ export class Client {
         return this.postFile(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`, 'import', file);
     }
 
-    listDataSources(containerID: string): Promise<DataSourceT[]> {
-        return this.get<DataSourceT[]>(`/containers/${containerID}/import/datasources`);
+    listDataSources(containerID: string, archived = false): Promise<DataSourceT[]> {
+        // we hardcoded the sortBy to insure we're always getting archived data sources at the bottom of the list
+        return this.get<DataSourceT[]>(`/containers/${containerID}/import/datasources`, {archived, sortBy: 'archived'});
     }
 
     deleteDataSources(containerID: string, dataSourceID: string): Promise<boolean> {

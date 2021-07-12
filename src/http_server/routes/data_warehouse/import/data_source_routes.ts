@@ -140,6 +140,10 @@ export default class DataSourceRoutes {
             }
         } else {
             repository
+                .and()
+                .archived(req.query.archived === 'true')
+                .or()
+                .archived(false) // we always want to at least list all unarchived ones
                 .list({
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
@@ -162,9 +166,17 @@ export default class DataSourceRoutes {
     }
 
     private static deleteDataSource(req: Request, res: Response, next: NextFunction) {
-        if (req.dataSource) {
+        if (req.dataSource && req.query.archive === 'true') {
             dataSourceRepo
-                .delete(req.dataSource)
+                .archive(req.currentUser!, req.dataSource)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
+        } else if (req.dataSource) {
+            dataSourceRepo
+                .delete(req.dataSource, req.query.forceDelete === 'true')
                 .then((result) => {
                     result.asResponse(res);
                 })

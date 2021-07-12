@@ -1,7 +1,7 @@
 <template>
     <v-dialog v-model="dialog" max-width="500px">
         <template v-slot:activator="{ on }">
-            <v-btn color="primary" dark class="mb-2" v-on="on">Import Data</v-btn>
+            <v-btn color="primary" :disabled="disabled" dark class="mb-2" v-on="on">Import Data</v-btn>
         </template>
         <v-card>
             <v-card-title>
@@ -46,6 +46,9 @@
 
         @Prop({required: true})
         readonly containerID!: string
+
+        @Prop({required: false, default: false})
+        disabled!: boolean
 
         errorMessage = ""
         dialog = false

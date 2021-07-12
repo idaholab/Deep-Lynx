@@ -312,6 +312,12 @@ export default {
         dataSources: {
             create: 'Create',
             formTitle: 'New Data Source',
+            title: 'Data Sources',
+            name: 'Name',
+            adapterType: 'Adapter Type',
+            active: 'Active',
+            actions: 'Actions',
+            archived: 'SOURCE ARCHIVED',
         },
         dataMapping: {
             importedSuccessfully: 'Import Status',
