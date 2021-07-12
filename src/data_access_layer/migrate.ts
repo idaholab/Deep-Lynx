@@ -67,6 +67,8 @@ class Migrator {
                 .catch((e: any) => {
                     Logger.error(`unable to verify if database specified by connection string exists: ${e}`)
                 })
+        } else {
+            this.init()
         }
     }
 
