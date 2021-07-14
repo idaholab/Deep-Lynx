@@ -1,8 +1,8 @@
 import Mapper from '../../mapper';
 import Result from '../../../../common_classes/result';
-import { PoolClient, QueryConfig } from 'pg';
+import {PoolClient, QueryConfig} from 'pg';
 import uuid from 'uuid';
-import { QueueProcessor } from '../../../../event_system/processor';
+import {QueueProcessor} from '../../../../event_system/processor';
 import Event from '../../../../event_system/event';
 import Import from '../../../../data_warehouse/import/import';
 
@@ -32,7 +32,7 @@ export default class ImportMapper extends Mapper {
 
     public async CreateImport(userID: string, importRecord: Import): Promise<Result<Import>> {
         const r = await super.run(this.createStatement(userID, importRecord), {
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -40,7 +40,7 @@ export default class ImportMapper extends Mapper {
     }
 
     public Retrieve(id: string): Promise<Result<Import>> {
-        return super.retrieve(this.retrieveStatement(id), { resultClass });
+        return super.retrieve(this.retrieveStatement(id), {resultClass});
     }
 
     // client is not optional here as the lock only applies if your call is in the
@@ -48,7 +48,7 @@ export default class ImportMapper extends Mapper {
     public RetrieveAndLock(id: string, transaction: PoolClient, wait?: boolean): Promise<Result<Import>> {
         return super.retrieve(this.retrieveLockStatement(id, wait), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
@@ -57,13 +57,13 @@ export default class ImportMapper extends Mapper {
     public RetrieveLastAndLock(dataSourceID: string, transaction: PoolClient): Promise<Result<Import>> {
         return super.retrieve(this.retrieveLastAndLockStatement(dataSourceID), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
     public RetrieveLast(dataSourceID: string): Promise<Result<Import>> {
         return super.retrieve(this.retrieveLastStatement(dataSourceID), {
-            resultClass
+            resultClass,
         });
     }
 
@@ -71,7 +71,7 @@ export default class ImportMapper extends Mapper {
         importID: string,
         status: 'ready' | 'processing' | 'error' | 'stopped' | 'completed',
         message?: string,
-        transaction?: PoolClient
+        transaction?: PoolClient,
     ): Promise<Result<boolean>> {
         if (status === 'completed' || status === 'stopped') {
             const completeImport = await this.Retrieve(importID);
@@ -82,20 +82,28 @@ export default class ImportMapper extends Mapper {
                     type: 'data_ingested',
                     data: {
                         import_id: importID,
-                        status
-                    }
-                })
+                        status,
+                    },
+                }),
             );
         }
-        return super.runStatement(this.setStatusStatement(importID, status, message), { transaction });
+        return super.runStatement(this.setStatusStatement(importID, status, message), {transaction});
     }
 
     public async ListIncompleteWithUninsertedData(dataSourceID: string): Promise<Result<Import[]>> {
-        return super.rows(this.listIncompleteWithUninsertedDataStatement(dataSourceID), { resultClass });
+        return super.rows(this.listIncompleteWithUninsertedDataStatement(dataSourceID), {resultClass});
     }
 
     public async Count(): Promise<Result<number>> {
         return super.count(this.countStatement());
+    }
+
+    // returns true if any imports exist for supplied data source
+    public async ExistForDataSource(datasourceID: string): Promise<Result<boolean>> {
+        const result = await super.count(this.existForDataSourceStatement(datasourceID));
+        if (result.isError) return Promise.resolve(Result.Pass(result));
+
+        return Promise.resolve(Result.Success(result.value > 0));
     }
 
     public async Delete(importID: string): Promise<Result<boolean>> {
@@ -106,7 +114,7 @@ export default class ImportMapper extends Mapper {
     private deleteStatement(importID: string): QueryConfig {
         return {
             text: `DELETE FROM imports WHERE id = $1 AND status <> 'processed'`,
-            values: [importID]
+            values: [importID],
         };
     }
 
@@ -125,7 +133,7 @@ export default class ImportMapper extends Mapper {
     private retrieveStatement(logID: string): QueryConfig {
         return {
             text: `SELECT * FROM imports WHERE id = $1`,
-            values: [logID]
+            values: [logID],
         };
     }
 
@@ -133,34 +141,34 @@ export default class ImportMapper extends Mapper {
         if (wait) {
             return {
                 text: `SELECT * FROM imports WHERE id = $1 FOR UPDATE`,
-                values: [logID]
+                values: [logID],
             };
         }
 
         return {
             text: `SELECT * FROM imports WHERE id = $1 FOR UPDATE NOWAIT`,
-            values: [logID]
+            values: [logID],
         };
     }
 
     private retrieveLastStatement(logID: string): QueryConfig {
         return {
             text: `SELECT * FROM imports WHERE data_source_id = $1 ORDER BY modified_at DESC NULLS LAST LIMIT 1`,
-            values: [logID]
+            values: [logID],
         };
     }
 
     private retrieveLastAndLockStatement(logID: string): QueryConfig {
         return {
             text: `SELECT * FROM imports WHERE data_source_id = $1 ORDER BY modified_at DESC NULLS LAST LIMIT 1 FOR UPDATE NOWAIT `,
-            values: [logID]
+            values: [logID],
         };
     }
 
     private setStatusStatement(id: string, status: 'ready' | 'processing' | 'error' | 'stopped' | 'completed', message?: string): QueryConfig {
         return {
             text: `UPDATE imports SET status = $2, status_message = $3, modified_at = NOW() WHERE id = $1`,
-            values: [id, status, message]
+            values: [id, status, message],
         };
     }
 
@@ -176,13 +184,23 @@ export default class ImportMapper extends Mapper {
                      AND EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id AND data_staging.inserted_at IS NULL)
                      AND EXISTS(SELECT * FROM data_staging WHERE data_staging.import_id = imports.id)
                    GROUP BY imports.id`,
-            values: [dataSourceID]
+            values: [dataSourceID],
         };
     }
 
     private countStatement(): QueryConfig {
         return {
-            text: `SELECT COUNT(*) FROM imports`
+            text: `SELECT COUNT(*) FROM imports`,
+        };
+    }
+
+    // this allows us to run a fast check to see if a data source has any imports
+    // prior to deletion - users must force delete a data source if any imports
+    // exist for it
+    private existForDataSourceStatement(datasourceID: string): QueryConfig {
+        return {
+            text: `SELECT COUNT(*) FROM imports WHERE data_source_id = $1 LIMIT 1`,
+            values: [datasourceID],
         };
     }
 }

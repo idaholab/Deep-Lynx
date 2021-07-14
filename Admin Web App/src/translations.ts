@@ -312,6 +312,28 @@ export default {
         dataSources: {
             create: 'Create',
             formTitle: 'New Data Source',
+            title: 'Data Sources',
+            name: 'Name',
+            adapterType: 'Adapter Type',
+            active: 'Active',
+            actions: 'Actions',
+            archived: 'archived',
+        },
+        deleteDataSource: {
+            deleteDataSource: 'Delete Data Source',
+            deleteTitle: 'Delete Data Source Permanently',
+            archiveTitle: 'Archive Data Source',
+            deleteWarning:
+                'Deleting a Data Source means it will be unrecoverable to even administrative users. Only delete Data Sources you know are no longer needed or that were created in error. When in doubt, please archive your Data Source instead. Archiving a Data Source maintains all data imported and all type mappings created with associations to the source. It is generally the preferred action.',
+            forceDeleteWarning:
+                'ATTENTION: This Data Source has data, type mappings, or pending imports associated with it. Deleting this Data Source may adversely affect your container - force deletion at your own risk, this cannot be reversed.',
+            archiveWarning:
+                'Archiving a Data Source will stop all data collection that it might currently be performing. Data collected by this source and mappings created in response to that data will not be affected.',
+            cancel: 'Cancel',
+            archive: 'Archive',
+            delete: 'Delete',
+            forceDelete: 'Force Delete',
+            in: 'in',
         },
         dataMapping: {
             importedSuccessfully: 'Import Status',
