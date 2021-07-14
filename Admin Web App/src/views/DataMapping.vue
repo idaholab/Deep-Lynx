@@ -8,15 +8,11 @@
         {{$t('dataMapping.mappingsImported')}} -
         <v-btn style="margin-top: 10px" class="mb-2" @click="reviewMappings = true">Review</v-btn>
       </v-alert>
-      <v-select
-          style="margin-left:10px; margin-right: 10px"
-          :items="dataSources"
-          item-text="name"
-          return-object
-          @change="setDataSource"
-          :value="selectedDataSource"
-          :label="$t('dataMapping.selectDataSource')"
-      ></v-select>
+      <select-data-source
+        :containerID="containerID"
+        :show-archived="true"
+        @selected="setDataSource">
+      </select-data-source>
       <v-tabs v-if="selectedDataSource !== null" grow>
         <v-tab @click="activeTab = 'currentMappings'">{{$t('dataMapping.currentMappings')}}</v-tab>
         <v-tab @click="activeTab = 'pendingTransformations'" :disabled="noTransformationsCount === 0">
@@ -68,10 +64,10 @@
 
               </v-autocomplete>
             </v-col>
-            <v-col :cols="2">
+            <v-col :cols="3">
               <export-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" :mappings="selectedMappings" @mappingsExported="mappingsExported()"></export-mappings-dialog>
             </v-col>
-            <v-col :cols="2">
+            <v-col :cols="3">
               <import-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" @mappingsImported="mappingsImport"></import-mappings-dialog>
             </v-col>
           </v-row>
@@ -318,6 +314,7 @@ import {DataSourceT, MetatypeRelationshipPairT, MetatypeT, ResultT, TypeMappingT
 import DataTypeMapping from "@/components/dataTypeMapping.vue"
 import ExportMappingsDialog from "@/components/exportMappingsDialog.vue";
 import ImportMappingsDialog from "@/components/importMappingsDialog.vue";
+import SelectDataSource from "@/components/selectDataSource.vue";
 
 @Component({filters: {
     pretty: function(value: any) {
@@ -327,7 +324,8 @@ import ImportMappingsDialog from "@/components/importMappingsDialog.vue";
         components: {
            DataTypeMapping,
            ExportMappingsDialog,
-           ImportMappingsDialog
+           ImportMappingsDialog,
+           SelectDataSource
     }})
     export default class DataMapping extends Vue {
       @Prop({required: true})
@@ -341,7 +339,6 @@ import ImportMappingsDialog from "@/components/importMappingsDialog.vue";
       noTransformationsCount = 0
       activeTab = "currentMappings"
       selectedDataSource: DataSourceT | null = null
-      dataSources: DataSourceT[] = []
       typeMappings: TypeMappingT[] = []
       typeMappingsNoTransformations: TypeMappingT[] = []
       selectedMappings: [] = []
@@ -651,14 +648,6 @@ import ImportMappingsDialog from "@/components/importMappingsDialog.vue";
         this.mappingDialog = true
       }
 
-      mounted() {
-          this.$client.listDataSources(this.containerID)
-              .then(dataSources => {
-                  this.dataSources = dataSources
-              })
-              .catch((e: any) => this.errorMessage = e)
-      }
-
       viewSamplePayload(mapping: TypeMappingT) {
         this.samplePayload = mapping.sample_payload
         this.dataDialog = true
@@ -673,6 +662,5 @@ import ImportMappingsDialog from "@/components/importMappingsDialog.vue";
         this.importedMappingResults = results
         this.loadTypeMappings()
       }
-
   }
 </script>

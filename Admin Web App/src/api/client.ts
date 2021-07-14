@@ -344,12 +344,18 @@ export class Client {
         return this.postFile(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`, 'import', file);
     }
 
-    listDataSources(containerID: string): Promise<DataSourceT[]> {
-        return this.get<DataSourceT[]>(`/containers/${containerID}/import/datasources`);
+    listDataSources(containerID: string, archived = false): Promise<DataSourceT[]> {
+        // we hardcoded the sortBy to insure we're always getting archived data sources at the bottom of the list
+        return this.get<DataSourceT[]>(`/containers/${containerID}/import/datasources`, {archived, sortBy: 'archived'});
     }
 
-    deleteDataSources(containerID: string, dataSourceID: string): Promise<boolean> {
-        return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}`);
+    deleteDataSources(containerID: string, dataSourceID: string, {archive, forceDelete}: {archive?: boolean; forceDelete?: boolean}): Promise<boolean> {
+        const query: {[key: string]: any} = {};
+
+        if (archive) query.archive = archive;
+        if (forceDelete) query.forceDelete = forceDelete;
+
+        return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}`, query);
     }
 
     activateDataSource(containerID: string, dataSourceID: string): Promise<boolean> {
@@ -628,7 +634,7 @@ export class Client {
         });
     }
 
-    private async delete(uri: string): Promise<boolean> {
+    private async delete(uri: string, queryParams?: {[key: string]: any}): Promise<boolean> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
 
@@ -640,7 +646,15 @@ export class Client {
             config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials;
         }
 
-        const resp: AxiosResponse = await axios.delete(`${this.config?.rootURL}${uri}`, config);
+        let url: string;
+
+        if (queryParams) {
+            url = buildURL(this.config?.rootURL!, {path: uri, queryParams});
+        } else {
+            url = buildURL(this.config?.rootURL!, {path: uri});
+        }
+
+        const resp: AxiosResponse = await axios.delete(url, config);
 
         return new Promise((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);

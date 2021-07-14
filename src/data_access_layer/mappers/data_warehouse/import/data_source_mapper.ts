@@ -1,9 +1,9 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import { PoolClient, QueryConfig } from 'pg';
+import {PoolClient, QueryConfig} from 'pg';
 import DataSourceRecord from '../../../../data_warehouse/import/data_source';
 import uuid from 'uuid';
-import { QueueProcessor } from '../../../../event_system/processor';
+import {QueueProcessor} from '../../../../event_system/processor';
 import Event from '../../../../event_system/event';
 
 const format = require('pg-format');
@@ -34,7 +34,7 @@ export default class DataSourceMapper extends Mapper {
     public async Create(userID: string, input: DataSourceRecord, transaction?: PoolClient): Promise<Result<DataSourceRecord>> {
         const r = await super.run(this.createStatement(userID, input), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -43,8 +43,8 @@ export default class DataSourceMapper extends Mapper {
                 sourceID: r.value[0].container_id!,
                 sourceType: 'container',
                 type: 'data_source_created',
-                data: r.value[0].id!
-            })
+                data: r.value[0].id!,
+            }),
         );
 
         return Promise.resolve(Result.Success(r.value[0]));
@@ -53,7 +53,7 @@ export default class DataSourceMapper extends Mapper {
     public async Update(userID: string, input: DataSourceRecord, transaction?: PoolClient): Promise<Result<DataSourceRecord>> {
         const r = await super.run(this.fullUpdateStatement(userID, input), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -62,15 +62,15 @@ export default class DataSourceMapper extends Mapper {
                 sourceID: r.value[0].container_id!,
                 sourceType: 'container',
                 type: 'data_source_modified',
-                data: r.value[0].id!
-            })
+                data: r.value[0].id!,
+            }),
         );
 
         return Promise.resolve(Result.Success(r.value[0]));
     }
 
     public Retrieve(id: string): Promise<Result<DataSourceRecord>> {
-        return super.retrieve(this.retrieveStatement(id), { resultClass });
+        return super.retrieve(this.retrieveStatement(id), {resultClass});
     }
 
     public async IsActive(dataSourceID: string): Promise<Result<boolean>> {
@@ -85,18 +85,16 @@ export default class DataSourceMapper extends Mapper {
         });
     }
 
-    // LastActiveSince was created so that the processing loop was sure to pick up
-    // and start activated or modified data sources
-    public ListActiveSince(date: Date): Promise<Result<DataSourceRecord[]>> {
-        return super.rows(this.listActiveSince(date), { resultClass });
-    }
-
     public SetActive(id: string, userID: string): Promise<Result<boolean>> {
         return super.runStatement(this.setActiveStatement(id, userID));
     }
 
     public SetInactive(id: string, userID: string): Promise<Result<boolean>> {
         return super.runStatement(this.setInactiveStatement(id, userID));
+    }
+
+    public Archive(dataSourceID: string, userID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.archiveStatement(dataSourceID, userID));
     }
 
     public Delete(id: string): Promise<Result<boolean>> {
@@ -127,7 +125,7 @@ export default class DataSourceMapper extends Mapper {
             source.data_format,
             source.name,
             userID,
-            userID
+            userID,
         ]);
 
         return format(text, values);
@@ -161,7 +159,7 @@ export default class DataSourceMapper extends Mapper {
             source.active,
             source.name,
             source.data_format,
-            userID
+            userID,
         ]);
 
         return format(text, values);
@@ -170,49 +168,42 @@ export default class DataSourceMapper extends Mapper {
     private retrieveStatement(exportID: string): QueryConfig {
         return {
             text: `SELECT * FROM data_sources WHERE id = $1`,
-            values: [exportID]
+            values: [exportID],
         };
     }
 
     private deleteStatement(exportID: string): QueryConfig {
         return {
             text: `DELETE FROM data_sources WHERE id = $1`,
-            values: [exportID]
+            values: [exportID],
         };
     }
 
     private setActiveStatement(dataSourceID: string, userID: string): QueryConfig {
         return {
             text: `UPDATE data_sources SET active = true, modified_at = NOW(), modified_by = $2 WHERE id = $1`,
-            values: [dataSourceID, userID]
+            values: [dataSourceID, userID],
         };
     }
 
     private setInactiveStatement(dataSourceID: string, userID: string): QueryConfig {
         return {
             text: `UPDATE data_sources SET active = false, modified_at = NOW(), modified_by = $2 WHERE id = $1`,
-            values: [dataSourceID, userID]
+            values: [dataSourceID, userID],
         };
     }
 
     private isActive(dataSourceID: string): QueryConfig {
         return {
             text: `SELECT COUNT(*) FROM data_sources WHERE active = TRUE AND id = $1`,
-            values: [dataSourceID]
+            values: [dataSourceID],
         };
     }
 
-    private listActiveSince(date: Date): QueryConfig {
+    private archiveStatement(dataSourceID: string, userID: string): QueryConfig {
         return {
-            text: `SELECT * FROM data_sources WHERE active = TRUE AND date_part('epoch', modified_at) >= $1 `,
-            values: [date.getTime() / 1000]
-        };
-    }
-
-    private listSince(date: Date): QueryConfig {
-        return {
-            text: `SELECT * FROM data_sources WHERE date_part('epoch', modified_at) >= $1 `,
-            values: [date.getTime() / 1000]
+            text: `UPDATE data_sources SET archived = true, active = false, modified_by = $2 WHERE id = $1`,
+            values: [dataSourceID, userID],
         };
     }
 }

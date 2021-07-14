@@ -3,15 +3,11 @@
   >
     <error-banner :message="errorMessage"></error-banner>
     <success-banner :message="successMessage"></success-banner>
-    <v-select
-        style="margin-left:10px; margin-right: 10px"
-        :items="dataSources"
-        item-text="name"
-        return-object
-        @change="setDataSource"
-        :value="selectedDataSource"
-        label="Select Data Source"
-    ></v-select>
+    <select-data-source
+        :containerID="containerID"
+        :showArchived="true"
+        @selected="setDataSource">
+    </select-data-source>
 
     <v-card v-if="(selectedDataSource !== null)">
 
@@ -28,10 +24,11 @@
           class="elevation-1"
       >
         <template v-slot:top>
-          <v-col v-if="selectedDataSource.adapter_type === 'standard'">
+          <v-col v-if="selectedDataSource.adapter_type === 'standard' || selectedDataSource.adapter_type === 'manual'">
             <import-data-dialog
                 :dataSourceID="selectedDataSource.id"
                 :containerID="containerID"
+                :disabled="!selectedDataSource.active || selectedDataSource.archived"
                 @importUploaded="listImports()">
             </import-data-dialog>
           </v-col>
@@ -131,8 +128,8 @@
           {{$t('dataImports.viewData')}}
         </v-card-title>
         <json-view
-          :data="selectedData"
-          :maxDepth=4
+            :data="selectedData"
+            :maxDepth=4
         />
 
         <v-card-actions>
@@ -163,6 +160,7 @@ import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import {DataSourceT, ImportDataT, ImportT} from "@/api/types";
 import ImportDataDialog from "@/components/importDataDialog.vue";
 import DataTypeMapping from "@/components/dataTypeMapping.vue"
+import SelectDataSource from "@/components/selectDataSource.vue";
 
 
 @Component({filters: {
@@ -173,6 +171,7 @@ import DataTypeMapping from "@/components/dataTypeMapping.vue"
   components: {
     ImportDataDialog,
     DataTypeMapping,
+    SelectDataSource
   }
 })
 export default class DataImports extends Vue {

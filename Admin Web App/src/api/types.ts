@@ -103,6 +103,7 @@ export type DataSourceT = {
     name: string;
     adapter_type: string;
     active: boolean;
+    archived: boolean;
     config: object;
     created_at: string;
     modified_at: string;

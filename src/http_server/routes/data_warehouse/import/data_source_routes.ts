@@ -1,10 +1,10 @@
-import { Application, NextFunction, Request, Response } from 'express';
-import { authInContainer } from '../../../middleware';
-import { plainToClass } from 'class-transformer';
+import {Application, NextFunction, Request, Response} from 'express';
+import {authInContainer} from '../../../middleware';
+import {plainToClass} from 'class-transformer';
 import DataSourceRecord from '../../../../data_warehouse/import/data_source';
 import Result from '../../../../common_classes/result';
-import DataSourceRepository, { DataSourceFactory } from '../../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
-import { QueryOptions } from '../../../../data_access_layer/repositories/repository';
+import DataSourceRepository, {DataSourceFactory} from '../../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
+import {QueryOptions} from '../../../../data_access_layer/repositories/repository';
 
 const dataSourceRepo = new DataSourceRepository();
 const dataSourceFactory = new DataSourceFactory();
@@ -15,11 +15,11 @@ export default class DataSourceRoutes {
         app.post('/containers/:containerID/import/datasources', ...middleware, authInContainer('write', 'data'), this.createDataSource);
         app.get('/containers/:containerID/import/datasources', ...middleware, authInContainer('read', 'data'), this.listDataSources);
         app.get('/containers/:containerID/import/datasources/:sourceID', ...middleware, authInContainer('read', 'data'), this.retrieveDataSource);
-        app.put('/containers/:containerID/import/datasources/:sourceID', ...middleware, authInContainer('read', 'data'), this.updateDataSource);
-        app.delete('/containers/:containerID/import/datasources/:sourceID', ...middleware, authInContainer('read', 'data'), this.deleteDataSource);
+        app.put('/containers/:containerID/import/datasources/:sourceID', ...middleware, authInContainer('write', 'data'), this.updateDataSource);
+        app.delete('/containers/:containerID/import/datasources/:sourceID', ...middleware, authInContainer('write', 'data'), this.deleteDataSource);
 
-        app.post('/containers/:containerID/import/datasources/:sourceID/active', ...middleware, authInContainer('read', 'data'), this.setActive);
-        app.delete('/containers/:containerID/import/datasources/:sourceID/active', ...middleware, authInContainer('read', 'data'), this.setInactive);
+        app.post('/containers/:containerID/import/datasources/:sourceID/active', ...middleware, authInContainer('write', 'data'), this.setActive);
+        app.delete('/containers/:containerID/import/datasources/:sourceID/active', ...middleware, authInContainer('write', 'data'), this.setInactive);
     }
 
     private static createDataSource(req: Request, res: Response, next: NextFunction) {
@@ -140,11 +140,15 @@ export default class DataSourceRoutes {
             }
         } else {
             repository
+                .and()
+                .archived(req.query.archived === 'true')
+                .or()
+                .archived(false) // we always want to at least list all unarchived ones
                 .list({
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                     sortBy: req.query.sortBy,
-                    sortDesc: req.query.sortDesc ? req.query.sortDesc === 'true' : undefined
+                    sortDesc: req.query.sortDesc ? req.query.sortDesc === 'true' : undefined,
                 } as QueryOptions)
                 .then((result) => {
                     if (result.isError) {
@@ -162,9 +166,17 @@ export default class DataSourceRoutes {
     }
 
     private static deleteDataSource(req: Request, res: Response, next: NextFunction) {
-        if (req.dataSource) {
+        if (req.dataSource && req.query.archive === 'true') {
             dataSourceRepo
-                .delete(req.dataSource)
+                .archive(req.currentUser!, req.dataSource)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
+        } else if (req.dataSource) {
+            dataSourceRepo
+                .delete(req.dataSource, req.query.forceDelete === 'true')
                 .then((result) => {
                     result.asResponse(res);
                 })
