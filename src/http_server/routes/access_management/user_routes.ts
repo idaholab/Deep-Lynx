@@ -32,6 +32,7 @@ export default class UserRoutes {
         app.get('/containers/:containerID/users/:userID', ...middleware, authInContainer('read', 'users'), this.retrieveUser);
         app.post('/containers/:containerID/users/roles', ...middleware, authInContainer('write', 'users'), this.assignRole);
         app.get('/containers/:containerID/users/:userID/roles', ...middleware, authInContainer('read', 'users'), this.listUserRoles);
+        app.get('/containers/:containerID/users/:userID/permissions', ...middleware, this.listUserPermissions);
 
         app.post('/containers/:containerID/users/invite', ...middleware, authInContainer('write', 'users'), this.inviteUserToContainer);
         app.get('/containers/:containerID/users/invite', ...middleware, authInContainer('write', 'users'), this.listInvitedUsers);
@@ -131,6 +132,15 @@ export default class UserRoutes {
                 })
                 .catch((err) => res.status(500).send(err))
                 .finally(() => next());
+        } else {
+            Result.Failure('user not found', 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static listUserPermissions(req: Request, res: Response, next: NextFunction) {
+        if (req.currentUser) {
+            return req.currentUser.permissions;
         } else {
             Result.Failure('user not found', 404).asResponse(res);
             next();
