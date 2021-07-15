@@ -17,6 +17,7 @@ const userRepo = new UserRepository();
 export default class UserRoutes {
     public static mount(app: Application, middleware: any[]) {
         app.get('/users', ...middleware, authRequest('read', 'users'), this.listUsers);
+        app.get('/users/permissions', ...middleware, this.listUserPermissions);
         app.delete('/users/:userID', middleware, authRequest('write', 'users'), this.deleteUser);
         app.put('/users/:userID', ...middleware, authRequest('write', 'users'), this.updateUser);
 
@@ -128,6 +129,22 @@ export default class UserRoutes {
                 .rolesInContainer(req.routeUser, req.container.id!)
                 .then((result) => {
                     result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
+        } else {
+            Result.Failure('user not found', 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static listUserPermissions(req: Request, res: Response, next: NextFunction) {
+        if (req.currentUser) {
+            userRepo
+                .retrievePermissions(req.currentUser)
+                .then((result) => {
+                    // @ts-ignore
+                    res.status(200).json(result.value);
                 })
                 .catch((err) => res.status(500).send(err))
                 .finally(() => next());
