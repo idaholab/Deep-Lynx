@@ -337,10 +337,11 @@ export default class UserRepository extends Repository implements RepositoryInte
 
     // visit the Authorization domain object to see exactly what the permission
     // return consists of when dealing with this function
-    async retrievePermissions(user: User): Promise<Result<boolean>> {
-        user.permissions = await Authorization.PermissionsForUser(user.id!);
+    async retrievePermissions(user: User): Promise<Result<string[][]>> {
+        const permissions = await Authorization.PermissionsForUser(user.id!);
+        user.permissions = permissions;
 
-        return Promise.resolve(Result.Success(true));
+        return Promise.resolve(Result.Success(permissions));
     }
 
     // this allows authorized users to invite either registered or new users to an
