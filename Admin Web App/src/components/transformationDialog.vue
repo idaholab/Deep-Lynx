@@ -526,10 +526,10 @@ export default class TransformationDialog extends Vue {
     {text: "in", value: "in", requiresValue: true},
     {text: "contains", value: "contains", requiresValue: true},
     {text: "exists", value: "exists", requiresValue: false},
-    {text: "<", value: "<", requiresValue: false},
-    {text: "<=", value: "<=", requiresValue: false},
-    {text: ">", value: ">", requiresValue: false},
-    {text: ">=", value: ">=", requiresValue: false},
+    {text: "<", value: "<", requiresValue: true},
+    {text: "<=", value: "<=", requiresValue: true},
+    {text: ">", value: ">", requiresValue: true},
+    {text: ">=", value: ">=", requiresValue: true},
   ]
   expressions = ["AND", "OR"]
 

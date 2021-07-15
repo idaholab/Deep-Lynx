@@ -143,6 +143,8 @@ export default class DataSourceRoutes {
                 .and()
                 .archived(req.query.archived === 'true')
                 .or()
+                .containerID('eq', req.container!.id) // we have to specify the container again in an OR statement
+                .and()
                 .archived(false) // we always want to at least list all unarchived ones
                 .list({
                     limit: req.query.limit ? +req.query.limit : undefined,
