@@ -208,8 +208,6 @@ export default class StandardDataSourceImpl implements DataSource {
 
                         const processed = await this.process(incompleteImport, graphID, importTransaction.value);
                         if (processed.isError) {
-                            Logger.debug(`import ${incompleteImport.id} incomplete: ${processed.error?.error!}`);
-
                             const set = await this.#importRepo.setStatus(
                                 incompleteImport.id!,
                                 'error',

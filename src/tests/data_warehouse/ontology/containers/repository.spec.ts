@@ -1,15 +1,16 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../../../services/logger';
 import Container from '../../../../data_warehouse/ontology/container';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 import Authorization from '../../../../access_management/authorization/authorization';
-import { User } from '../../../../access_management/user';
+import {User} from '../../../../access_management/user';
 
 describe('A Container Repository', async () => {
     let user: User;
+    let user2: User;
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
@@ -19,7 +20,7 @@ describe('A Container Repository', async () => {
 
         await PostgresAdapter.Instance.init();
 
-        const userResult = await UserMapper.Instance.Create(
+        let userResult = await UserMapper.Instance.Create(
             'test suite',
             new User({
                 identity_provider_id: faker.random.uuid(),
@@ -27,13 +28,29 @@ describe('A Container Repository', async () => {
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(userResult.isError).false;
         expect(userResult.value).not.empty;
         user = userResult.value;
+
+        userResult = await UserMapper.Instance.Create(
+            'test suite',
+            new User({
+                identity_provider_id: faker.random.uuid(),
+                identity_provider: 'username_password',
+                admin: false,
+                display_name: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ['superuser'],
+            }),
+        );
+
+        expect(userResult.isError).false;
+        expect(userResult.value).not.empty;
+        user2 = userResult.value;
 
         return Promise.resolve();
     });
@@ -46,7 +63,7 @@ describe('A Container Repository', async () => {
         const repository = new ContainerRepository();
         const container = new Container({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         let results = await repository.save(container, user);
@@ -73,11 +90,12 @@ describe('A Container Repository', async () => {
 
         const container1 = new Container({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
+
         const container2 = new Container({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         let results = await repository.bulkSave(user, [container1, container2]);
@@ -111,7 +129,7 @@ describe('A Container Repository', async () => {
         const repository = new ContainerRepository();
         const container = new Container({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         const result = await repository.save(container, user);
@@ -131,25 +149,35 @@ describe('A Container Repository', async () => {
 
         const container1 = new Container({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
-        });
-        const container2 = new Container({
-            name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
-        const results = await repository.bulkSave(user, [container1, container2]);
+        const container2 = new Container({
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric(),
+        });
+
+        const container3 = new Container({
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric(),
+        });
+
+        let results = await repository.bulkSave(user, [container1, container2]);
         expect(results.isError).false;
         expect(container1.id).not.undefined;
         expect(container2.id).not.undefined;
 
-        // we must assign the user a role with that container as a domain before we attempt to list it
-        const assigned = await Authorization.AssignRole(user.id!, 'user', container1.id!);
-        expect(assigned).true;
+        // now save one under user2 to verify we're not getting a container back
+        // we don't own
+        results = await repository.save(container3, user2);
+        expect(results.isError).false;
+        expect(container1.id).not.undefined;
+        expect(container2.id).not.undefined;
 
+        // admin role is immediately applied on bulk save, check this
         const retrieved = await repository.listForUser(user);
         expect(retrieved.isError).false;
-        expect(retrieved.value.length).eq(1);
+        expect(retrieved.value.length).eq(2);
         expect(retrieved.value[0].id).eq(container1.id);
 
         await repository.delete(container1);
@@ -162,7 +190,7 @@ describe('A Container Repository', async () => {
         const repository = new ContainerRepository();
         const container = new Container({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         const results = await repository.save(container, user);
