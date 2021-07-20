@@ -1,7 +1,7 @@
-import { Enforcer, newEnforcer } from 'casbin';
+import {Enforcer, newEnforcer} from 'casbin';
 import TypeORMAdapter from 'typeorm-adapter';
 import Config from '../../services/config';
-import { User } from '../user';
+import {User} from '../user';
 
 /*
  Authorization in Deep Lynx uses the https://casbin.org/ library. Please use
@@ -29,7 +29,7 @@ export class Authorization {
             const a = await TypeORMAdapter.newAdapter({
                 type: 'postgres',
                 url: Config.core_db_connection_string,
-                ssl: Config.ssl_enabled
+                ssl: Config.ssl_enabled,
             });
 
             const e = await newEnforcer(Config.auth_config_file, a);
@@ -83,6 +83,7 @@ export class Authorization {
     // containerID, resource, allowed action
     async PermissionsForUser(userID: string): Promise<string[][]> {
         await this.enforcer(); // insure it's connected
+        await this.e.loadPolicy();
         const permissionReturn: string[][] = [];
 
         // retrieves the containers in which the user has a role - response is an array of strings with the format
