@@ -1,7 +1,7 @@
 import {Enforcer, newEnforcer} from 'casbin';
-import TypeORMAdapter from 'typeorm-adapter';
 import Config from '../../services/config';
 import {User} from '../user';
+import PostgresAdapter from 'casbin-pg-adapter';
 
 /*
  Authorization in Deep Lynx uses the https://casbin.org/ library. Please use
@@ -22,17 +22,14 @@ export class Authorization {
         return Authorization.instance;
     }
 
-    // In order to store the casbin configuration and policy files we use the
-    // TypeORM ORM adapter. PLEASE only use it here.
     public async enforcer(): Promise<Enforcer> {
         if (!this.e) {
-            const a = await TypeORMAdapter.newAdapter({
-                type: 'postgres',
-                url: Config.core_db_connection_string,
-                ssl: Config.ssl_enabled,
+            const a = await PostgresAdapter.newAdapter({
+                connectionString: Config.core_db_connection_string,
             });
 
             const e = await newEnforcer(Config.auth_config_file, a);
+            await e.loadPolicy();
 
             this.e = e;
         }
@@ -105,11 +102,7 @@ export class Authorization {
         await this.enforcer(); // insure it's connected
         if (!domain) domain = 'all';
 
-        await this.e.deleteRolesForUser(userID, domain);
-
-        // for whatever reason we must save the policy on a deletion, but we don't
-        // have to anywhere else?
-        return this.e.savePolicy();
+        return this.e.deleteRolesForUser(userID, domain);
     }
 }
 

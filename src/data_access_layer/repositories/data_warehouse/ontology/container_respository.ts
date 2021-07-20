@@ -6,9 +6,9 @@ import Authorization from '../../../../access_management/authorization/authoriza
 import Logger from '../../../../services/logger';
 import GraphMapper from '../../../mappers/data_warehouse/data/graph_mapper';
 import Cache from '../../../../services/cache/cache';
-import { plainToClass, serialize } from 'class-transformer';
+import {plainToClass, serialize} from 'class-transformer';
 import Config from '../../../../services/config';
-import { User } from '../../../../access_management/user';
+import {User} from '../../../../access_management/user';
 
 /*
     ContainerRepository contains methods for persisting and retrieving a container
@@ -46,7 +46,8 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         if (set.isError) Logger.error(`unable to set container ${result.value.id}'s permissions ${set.error}`);
 
         // assign admin role to the user who created the container
-        const role = await Authorization.AssignRole(user.id!, 'admin', result.value.id!);
+        const role = await Authorization.AssignRole(user.id!, 'admin', result.value.id);
+        if (!role) Logger.error(`error while assigning admin role to user`);
 
         const graph = await this.#graphMapper.Create(result.value.id!, user.id!);
         if (graph.isError) {
@@ -115,7 +116,8 @@ export default class ContainerRepository implements RepositoryInterface<Containe
                 if (set.isError) Logger.error(`unable to set container ${container.id}'s permissions ${set.error}`);
 
                 // assign admin role to the user who created the container
-                const role = await Authorization.AssignRole(user.id!, 'admin', container.id!);
+                const role = await Authorization.AssignRole(user.id!, 'admin', container.id);
+                if (!role) Logger.error(`error while assigning admin role to user`);
 
                 const graph = await this.#graphMapper.Create(container.id!, user.id!, transaction.value);
                 // set active graph from graph ID
