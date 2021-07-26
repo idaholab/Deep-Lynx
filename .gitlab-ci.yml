@@ -9,10 +9,8 @@ build:
         - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
         - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY/$CI_REGISTRY_PATH/deep-lynx:$CI_PIPELINE_IID
         - cd "$CI_PROJECT_DIR/Admin Web App"
-        - cp -f $DEEPLYNX_ADMIN_UI_CONFIG_DEV "$CI_PROJECT_DIR/Admin Web App/.env"
-        - /kaniko/executor --context "$CI_PROJECT_DIR/Admin Web App" --dockerfile "$CI_PROJECT_DIR/Admin Web App/Dockerfile" --destination $CI_REGISTRY/$CI_REGISTRY_PATH/deep-lynx-admin-dev:$CI_PIPELINE_IID
-        - cp -f $DEEPLYNX_ADMIN_UI_CONFIG_PROD "$CI_PROJECT_DIR/Admin Web App/.env"
-        - /kaniko/executor --context "$CI_PROJECT_DIR/Admin Web App" --dockerfile "$CI_PROJECT_DIR/Admin Web App/Dockerfile" --destination $CI_REGISTRY/$CI_REGISTRY_PATH/deep-lynx-admin-prod:$CI_PIPELINE_IID
+        - cp -f $DEEPLYNX_ADMIN_UI_CONFIG "$CI_PROJECT_DIR/Admin Web App/.env"
+        - /kaniko/executor --context "$CI_PROJECT_DIR/Admin Web App" --dockerfile "$CI_PROJECT_DIR/Admin Web App/Dockerfile" --destination $CI_REGISTRY/$CI_REGISTRY_PATH/deep-lynx-admin:$CI_PIPELINE_IID
     only:
         - master
 deploy_development:
