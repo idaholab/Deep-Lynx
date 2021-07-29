@@ -192,7 +192,8 @@
 
     <v-main style="padding: 64px 0px 36px 36px">
       <v-container>
-        <component v-bind:is="currentMainComponent" :containerID="containerID"></component>
+        <!-- we provide both containerID and container as some of the components require either/or or both -->
+        <component v-bind:is="currentMainComponent" :containerID="containerID" :container="container"></component>
       </v-container>
     </v-main>
   </div>

@@ -27,24 +27,46 @@ export default class GraphRoutes {
     private static listNodes(req: Request, res: Response, next: NextFunction) {
         // fresh instance of the repo to avoid filter issues
         if (req.container) {
-            const repo = new NodeRepository();
-            repo.where()
-                .containerID('eq', req.container.id!)
-                .and()
-                .archived('eq', false)
-                .list(req.query.loadMetatypes === 'true', {
+            let repo = new NodeRepository();
+            repo = repo.where().containerID('eq', req.container.id!).and();
+
+            if (typeof req.query.transformationID !== 'undefined' && (req.query.transformationID as string) !== '') {
+                repo = repo.and().transformationID('eq', req.query.transformationID);
+            }
+
+            if (typeof req.query.metatypeID !== 'undefined' && (req.query.metatypeID as string) !== '') {
+                repo = repo.and().metatypeID('eq', req.query.metatypeID);
+            }
+
+            if (req.query.count !== undefined && req.query.count === 'true') {
+                repo.count(undefined, {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                 })
-                .then((result) => {
-                    if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
-                        return;
-                    }
-                    res.status(200).json(result);
-                })
-                .catch((err) => res.status(404).send(err))
-                .finally(() => next());
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => {
+                        res.status(404).send(err);
+                    })
+                    .finally(() => next());
+            } else {
+                repo.and()
+                    .archived('eq', false)
+                    .list(req.query.loadMetatypes === 'true', {
+                        limit: req.query.limit ? +req.query.limit : undefined,
+                        offset: req.query.offset ? +req.query.offset : undefined,
+                    })
+                    .then((result) => {
+                        if (result.isError && result.error) {
+                            res.status(result.error.errorCode).json(result);
+                            return;
+                        }
+                        res.status(200).json(result);
+                    })
+                    .catch((err) => res.status(404).send(err))
+                    .finally(() => next());
+            }
         } else {
             Result.Failure(`container not found`, 404).asResponse(res);
             next();
@@ -123,7 +145,10 @@ export default class GraphRoutes {
 
         if (req.query.count !== undefined && req.query.count === 'true') {
             repository
-                .count()
+                .count(undefined, {
+                    limit: req.query.limit ? +req.query.limit : undefined,
+                    offset: req.query.offset ? +req.query.offset : undefined,
+                })
                 .then((result) => {
                     if (result.isError && result.error) {
                         res.status(result.error.errorCode).json(result);

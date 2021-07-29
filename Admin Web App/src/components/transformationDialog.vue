@@ -16,7 +16,9 @@
         <v-row>
           <v-col :cols="6" >
             <h2 v-if="!transformation">{{$t("dataMapping.createNewTransformation")}}</h2>
-            <h2 v-if="transformation">{{$t("dataMapping.editTransformation")}}</h2>
+            <h2 v-if="transformation && !transformation.archived">{{$t("dataMapping.editTransformation")}}</h2>
+            <h2 v-if="transformation && transformation.archived">{{$t("dataMapping.viewArchivedTransformation")}}</h2>
+            <h4>{{transformation.id}}</h4>
             <v-divider></v-divider>
             <div id="mappingCol">
               <v-row v-if="payloadArrayKeys.length > 0">
@@ -401,7 +403,7 @@
                     @click="editTransformation()"
                     color="success"
                     class="mr-4"
-                    :disabled="!isMainFormValid"
+                    :disabled="!isMainFormValid || transformation.archived"
                 >
                   <v-progress-circular
                       indeterminate
@@ -415,6 +417,7 @@
                     color="error"
                     class="mr-4"
                     v-if="!loading && !transformation"
+                    :disabled="transformation.archived"
                 >
                   {{$t("dataMapping.reset")}}
                 </v-btn>
@@ -424,6 +427,7 @@
                     color="error"
                     class="mr-4"
                     v-if="!loading && transformation"
+                    :disabled="transformation.archived"
                 >
                   {{$t("dataMapping.reset")}}
                 </v-btn>

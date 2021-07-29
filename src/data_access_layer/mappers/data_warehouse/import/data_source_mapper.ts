@@ -101,6 +101,10 @@ export default class DataSourceMapper extends Mapper {
         return super.runStatement(this.deleteStatement(id));
     }
 
+    public DeleteWithData(id: string): Promise<Result<boolean>> {
+        return super.runAsTransaction(...this.deleteWithDataStatement(id));
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -165,18 +169,38 @@ export default class DataSourceMapper extends Mapper {
         return format(text, values);
     }
 
-    private retrieveStatement(exportID: string): QueryConfig {
+    private retrieveStatement(dataSourceID: string): QueryConfig {
         return {
             text: `SELECT * FROM data_sources WHERE id = $1`,
-            values: [exportID],
+            values: [dataSourceID],
         };
     }
 
-    private deleteStatement(exportID: string): QueryConfig {
+    private deleteStatement(dataSourceID: string): QueryConfig {
         return {
             text: `DELETE FROM data_sources WHERE id = $1`,
-            values: [exportID],
+            values: [dataSourceID],
         };
+    }
+
+    // allows us to delete all the data associated with this DataSource prior to
+    // removing it. This only applies to nodes and edges which do not cascade
+    // delete when source is removed
+    private deleteWithDataStatement(dataSourceID: string): QueryConfig[] {
+        return [
+            {
+                text: `DELETE FROM nodes WHERE data_source_id = $1`,
+                values: [dataSourceID],
+            },
+            {
+                text: `DELETE FROM edges WHERE data_source_id = $1`,
+                values: [dataSourceID],
+            },
+            {
+                text: `DELETE FROM data_sources WHERE id = $1`,
+                values: [dataSourceID],
+            },
+        ];
     }
 
     private setActiveStatement(dataSourceID: string, userID: string): QueryConfig {
@@ -202,7 +226,7 @@ export default class DataSourceMapper extends Mapper {
 
     private archiveStatement(dataSourceID: string, userID: string): QueryConfig {
         return {
-            text: `UPDATE data_sources SET archived = true, active = false, modified_by = $2 WHERE id = $1`,
+            text: `UPDATE data_sources SET archived = true, active = false, modified_by = $2, modified_at = NOW() WHERE id = $1`,
             values: [dataSourceID, userID],
         };
     }

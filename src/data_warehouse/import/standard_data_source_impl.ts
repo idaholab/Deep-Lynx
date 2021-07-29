@@ -314,6 +314,9 @@ export default class StandardDataSourceImpl implements DataSource {
                 // run any more transformations
                 if (mapping.value.transformations)
                     for (const transformation of mapping.value.transformations) {
+                        // skip if the transformation is archived
+                        if (transformation.archived) continue;
+
                         const results = await transformation.applyTransformation(row);
                         if (results.isError) {
                             await stagingRepo.addError(row.id!, `unable to apply transformation ${transformation.id} to data ${row.id}: ${results.error}`);

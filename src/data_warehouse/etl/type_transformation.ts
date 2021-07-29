@@ -162,6 +162,9 @@ export default class TypeTransformation extends BaseDomainClass {
     @IsOptional()
     shape_hash?: string;
 
+    @IsOptional()
+    archived?: boolean;
+
     constructor(input: {
         type_mapping_id: string;
         conditions?: Condition[];

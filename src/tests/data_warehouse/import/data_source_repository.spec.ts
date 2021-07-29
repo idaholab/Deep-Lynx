@@ -109,7 +109,41 @@ describe('A Datasource Repository can', async () => {
         expect(results.isError).true;
 
         // now force
-        results = await sourceRepo.delete(source!, true);
+        results = await sourceRepo.delete(source!, {force: true});
+        expect(results.isError).false;
+
+        return Promise.resolve();
+    });
+
+    it('can delete when delete with data is specified', async () => {
+        // build the data source first
+        const sourceRepo = new DataSourceRepository();
+
+        const source = new DataSourceFactory().fromDataSourceRecord(
+            new DataSourceRecord({
+                container_id: containerID,
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'standard',
+                data_format: 'json',
+            }),
+        );
+
+        let results = await sourceRepo.save(source!, user);
+        expect(results.isError).false;
+        expect(source!.DataSourceRecord?.id).not.undefined;
+
+        // now we create an import through the datasource
+        const newImport = await source!.ReceiveData([test_payload], user);
+        expect(newImport.isError).false;
+        expect(newImport.value.id).not.undefined;
+
+        // first delete attempt should fail as there is an import
+        results = await sourceRepo.delete(source!);
+        expect(results.isError).true;
+
+        // now force
+        results = await sourceRepo.delete(source!, {force: true, removeData: true});
         expect(results.isError).false;
 
         return Promise.resolve();

@@ -196,7 +196,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                                 .catch((error) => resolve(Result.Failure(`unable to fetch relationship pair for edge${error}`)));
                         })
                         .catch((error) => resolve(Result.Failure(`validation for one or more edges failed ${error}`)));
-                })
+                }),
             );
 
             edge.id ? toUpdate.push(edge) : toCreate.push(edge);
@@ -348,8 +348,8 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                         Result.Failure(
                             `proposed relationship of type: ${e.metatypeRelationshipPair!.relationship_id} between ${origin.id} and ${
                                 destination.id
-                            } violates the one:one relationship constraint`
-                        )
+                            } violates the one:one relationship constraint`,
+                        ),
                     );
                 }
 
@@ -358,8 +358,8 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                         Result.Failure(
                             `proposed relationship of type: ${e.metatypeRelationshipPair!.relationship_id} between ${origin.id} and ${
                                 destination.id
-                            } violates the one:one relationship constraint`
-                        )
+                            } violates the one:one relationship constraint`,
+                        ),
                     );
                 }
 
@@ -372,8 +372,8 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                         Result.Failure(
                             `proposed relationship of type: ${e.metatypeRelationshipPair!.relationship_id} between ${origin.id} and ${
                                 destination.id
-                            } violates the one:many relationship constraint`
-                        )
+                            } violates the one:many relationship constraint`,
+                        ),
                     );
                 }
 
@@ -386,8 +386,8 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                         Result.Failure(
                             `proposed relationship of type: ${e.metatypeRelationshipPair!.relationship_id} between ${origin.id} and ${
                                 destination.id
-                            } violates the many:one relationship constraint`
-                        )
+                            } violates the many:one relationship constraint`,
+                        ),
                     );
                 }
 
@@ -468,8 +468,8 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         return this;
     }
 
-    async count(): Promise<Result<number>> {
-        const results = await super.count();
+    async count(transaction?: PoolClient, queryOptions?: QueryOptions): Promise<Result<number>> {
+        const results = await super.count(transaction, queryOptions);
         // reset the query
         this._rawQuery = [];
         this._rawQuery.push(`SELECT edges.* FROM ${EdgeMapper.tableName}`);
@@ -483,7 +483,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     async list(loadRelationshipPairs?: boolean, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<Edge[]>> {
         const results = await super.findAll<Edge>(queryOptions, {
             transaction,
-            resultClass: Edge
+            resultClass: Edge,
         });
         // reset the query
         this._rawQuery = [];
@@ -507,7 +507,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                             resolve(Result.Success(true));
                         });
                     });
-                })
+                }),
             );
         }
 

@@ -1,4 +1,4 @@
-import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
+import RepositoryInterface, {DeleteOptions, QueryOptions, Repository} from '../../repository';
 import DataSourceRecord, {DataSource} from '../../../../data_warehouse/import/data_source';
 import DataSourceMapper from '../../../mappers/data_warehouse/import/data_source_mapper';
 import HttpDataSourceImpl from '../../../../data_warehouse/import/http_data_source_impl';
@@ -21,13 +21,18 @@ export default class DataSourceRepository extends Repository implements Reposito
     #mapper = DataSourceMapper.Instance;
     #factory = new DataSourceFactory();
 
-    async delete(t: DataSource, forceDelete?: boolean): Promise<Result<boolean>> {
+    async delete(t: DataSource, options?: DeleteOptions): Promise<Result<boolean>> {
         if (!t.DataSourceRecord || !t.DataSourceRecord.id)
             return Promise.resolve(Result.Failure(`cannot delete data source: no data source record or record lacking id`));
 
         const hasImports = await ImportMapper.Instance.ExistForDataSource(t.DataSourceRecord.id);
 
-        if (!hasImports || forceDelete) return this.#mapper.Delete(t.DataSourceRecord.id);
+        if (options) {
+            if (!hasImports || (options.force && options.removeData)) return this.#mapper.DeleteWithData(t.DataSourceRecord.id);
+            else if (!hasImports || options.force) return this.#mapper.Delete(t.DataSourceRecord.id);
+        } else {
+            if (!hasImports) return this.#mapper.Delete(t.DataSourceRecord.id);
+        }
 
         return Promise.resolve(Result.Failure(`Data Source has data associated with it, this data must be removed or user must force delete.`));
     }
