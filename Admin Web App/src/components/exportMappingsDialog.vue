@@ -60,8 +60,8 @@ export default class ExportMappingsDialog extends Vue {
   @Prop({required: true})
   dataSourceID!: string;
 
-  @Prop({required: false})
-  mappings?: TypeMappingT[] = []
+  @Prop({required: false, default: []})
+  mappings?: TypeMappingT[]
 
   errorMessage = ""
   dialog = false

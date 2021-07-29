@@ -15,31 +15,31 @@
           v-on="on"
           @click="isDelete = true; initiate()"
       >mdi-delete</v-icon>
-      <v-btn v-if="displayIcon ==='none'" color="primary" dark class="mb-2" v-on="on">{{$t("deleteDataSource.deleteDataSource")}}</v-btn>
+      <v-btn v-if="displayIcon ==='none'" color="primary" dark class="mb-2" v-on="on">{{$t("deleteTransformation.deleteTransformation")}}</v-btn>
     </template>
 
     <v-card v-if="isDelete">
       <v-card-text>
         <v-container>
           <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('deleteDataSource.deleteTitle')}}</span>
+          <span class="headline">{{$t('deleteTransformation.deleteTitle')}}</span>
           <v-row>
             <v-col :cols="12">
-              <v-progress-linear v-if="importsLoading" indeterminate></v-progress-linear>
+              <v-progress-linear v-if="inUseLoading" indeterminate></v-progress-linear>
               <div v-else>
                 <v-alert type="warning">
-                  {{$t('deleteDataSource.deleteWarning')}}
+                  {{$t('deleteTransformation.deleteWarning')}}
                 </v-alert>
 
-                <v-alert type="error" v-if="importCount > 0">
-                  {{$t('deleteDataSource.forceDeleteWarning')}}
+                <v-alert type="error" v-if="inUse">
+                  {{$t('deleteTransformation.forceDeleteWarning')}}
                 </v-alert>
 
-                <v-alert type="error" v-if="importCount > 0">
-                  {{$t('deleteDataSource.withDataWarning')}}
+                <v-alert type="error" v-if="inUse">
+                  {{$t('deleteTransformation.withDataWarning')}}
                   <v-checkbox
                       v-model="withData"
-                      :label="$t('deleteDataSource.withData')"
+                      :label="$t('deleteTransformation.withData')"
                   ></v-checkbox>
                 </v-alert>
               </div>
@@ -48,18 +48,18 @@
         </v-container>
       </v-card-text>
 
-      <v-card-actions v-if="!importsLoading">
+      <v-card-actions v-if="!inUseLoading">
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="reset()">{{$t("deleteDataSource.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="archiveSource()" v-if="!dataSource.archived">
+        <v-btn color="blue darken-1" text @click="reset()">{{$t("deleteTransformation.cancel")}}</v-btn>
+        <v-btn color="blue darken-1" text @click="archiveSource()" v-if="!transformation.archived">
           <v-progress-circular v-if="archiveLoading" indeterminate></v-progress-circular>
-          {{$t("deleteDataSource.archive")}}
+          {{$t("deleteTransformation.archive")}}
         </v-btn>
         <v-btn color="red darken-1" text :disabled="countDown > 0" @click="deleteSource()">
           <v-progress-circular v-if="deleteLoading" indeterminate></v-progress-circular>
-          <span v-if="importCount <= 0">{{$t("deleteDataSource.delete")}}</span>
-          <span v-else>{{$t("deleteDataSource.forceDelete")}}</span>
-          <span v-if="countDown > 0">{{$t('deleteDataSource.in')}} {{countDown}}</span>
+          <span v-if="!inUse">{{$t("deleteTransformation.delete")}}</span>
+          <span v-else>{{$t("deleteTransformation.forceDelete")}}</span>
+          <span v-if="countDown > 0">{{$t('deleteTransformation.in')}} {{countDown}}</span>
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -68,11 +68,11 @@
       <v-card-text>
         <v-container>
           <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('deleteDataSource.archiveTitle')}}</span>
+          <span class="headline">{{$t('deleteTransformation.archiveTitle')}}</span>
           <v-row>
             <v-col :cols="12">
               <v-alert type="warning">
-                {{$t('deleteDataSource.archiveWarning')}}
+                {{$t('deleteTransformation.archiveWarning')}}
               </v-alert>
             </v-col>
           </v-row>
@@ -81,8 +81,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="reset()">{{$t("deleteDataSource.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="archiveSource()">{{$t("deleteDataSource.archive")}}</v-btn>
+        <v-btn color="blue darken-1" text @click="reset()">{{$t("deleteTransformation.cancel")}}</v-btn>
+        <v-btn color="blue darken-1" text @click="archiveSource()">{{$t("deleteTransformation.archive")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -90,15 +90,18 @@
 
 <script lang="ts">
 import {Component, Prop, Vue} from 'vue-property-decorator'
-import {DataSourceT} from "@/api/types";
+import {TypeMappingTransformationT} from "@/api/types";
 
 @Component
-export default class DeleteDataSourceDialog extends Vue {
+export default class DeleteTypeTransformationDialog extends Vue {
   @Prop({required: true})
   containerID!: string
 
   @Prop({required: true})
-  dataSource!: DataSourceT
+  dataSourceID!: string
+
+  @Prop({required: true})
+  transformation!: TypeMappingTransformationT
 
   @Prop({required: false, default: "none"})
   readonly icon!: "trash" | "archive" | "both" | "none"
@@ -107,8 +110,8 @@ export default class DeleteDataSourceDialog extends Vue {
   dialog = false
   isDelete = false
   isArchive = false
-  importsLoading = true
-  importCount = 0
+  inUseLoading = true
+  inUse = false
   deleteLoading = false
   archiveLoading = false
   timerRunning = false
@@ -120,13 +123,21 @@ export default class DeleteDataSourceDialog extends Vue {
   }
 
   initiate() {
-    this.$client.countImports(this.containerID, this.dataSource!.id)
-    .then((count) => {
-      this.importCount = count
-      this.importsLoading = false
-      this.startCountdown()
-    })
-    .catch(e => this.errorMessage = e)
+    // check to see if it's in-use, should return 'true' if in use
+    this.$client.deleteTransformation(
+        this.containerID,
+        this.dataSourceID,
+        this.transformation.type_mapping_id,
+        this.transformation.id,
+        {
+          inUse: true
+        })
+        .then((result) => {
+          this.inUse = result
+          this.inUseLoading = false
+          this.startCountdown()
+        })
+        .catch(e => this.errorMessage = e)
   }
 
   startCountdown() {
@@ -149,24 +160,30 @@ export default class DeleteDataSourceDialog extends Vue {
 
   deleteSource() {
     this.deleteLoading = true
-    this.$client.deleteDataSources(
+    this.$client.deleteTransformation(
         this.containerID,
-        this.dataSource!.id,
+        this.dataSourceID,
+        this.transformation.type_mapping_id,
+        this.transformation.id,
         {forceDelete: true, withData: this.withData})
-    .then(() => {
-      this.reset()
-      this.$emit('dataSourceDeleted')
-    })
-    .catch(e => this.errorMessage = e)
+        .then(() => {
+          this.reset()
+          this.$emit('transformationDeleted')
+        })
+        .catch(e => this.errorMessage = e)
   }
 
   archiveSource() {
     this.archiveLoading = true
-    this.$client.deleteDataSources(this.containerID, this.dataSource!.id,
+    this.$client.deleteTransformation(
+        this.containerID,
+        this.dataSourceID,
+        this.transformation.type_mapping_id,
+        this.transformation.id,
         {forceDelete: false, archive: true})
         .then(() => {
           this.reset()
-          this.$emit('dataSourceArchived')
+          this.$emit('transformationArchived')
         })
         .catch(e => this.errorMessage = e)
   }
@@ -177,7 +194,7 @@ export default class DeleteDataSourceDialog extends Vue {
     this.isArchive = false
     this.deleteLoading = false
     this.archiveLoading = false
-    this.importsLoading = true
+    this.inUseLoading = true
     this.timerRunning = false
     this.withData = true
   }

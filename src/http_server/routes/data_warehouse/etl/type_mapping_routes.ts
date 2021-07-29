@@ -228,16 +228,38 @@ export default class TypeMappingRoutes {
     }
 
     private static deleteTypeTransformation(req: Request, res: Response, next: NextFunction) {
-        if (req.typeTransformation) {
+        // while we could run a count on the nodes/edges via the graph routes - those calls can be expensive if all we
+        // need is to be able to check whether or not this transformation is in use. Including the inUse query param therefore
+        // will short-circuit and return true/false depending on use
+        if (req.typeTransformation && req.query.inUse === 'true') {
             transformationRepo
-                .delete(req.typeTransformation)
+                .inUse(req.typeTransformation)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
+        } else if (req.typeTransformation && req.query.archive === 'true') {
+            transformationRepo
+                .archive(req.currentUser!, req.typeTransformation)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
+        } else if (req.typeTransformation) {
+            transformationRepo
+                .delete(req.typeTransformation, {
+                    force: req.query.forceDelete === 'true',
+                    removeData: req.query.removeData === 'true',
+                })
                 .then((result) => {
                     result.asResponse(res);
                 })
                 .catch((err) => res.status(500).send(err))
                 .finally(() => next());
         } else {
-            Result.Failure(`type transformation not found`).asResponse(res);
+            Result.Failure(`type transformation not found`, 404).asResponse(res);
             next();
         }
     }

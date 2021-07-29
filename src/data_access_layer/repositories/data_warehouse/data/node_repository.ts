@@ -270,6 +270,11 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return this;
     }
 
+    transformationID(operator: string, value: any) {
+        super.query('nodes.type_mapping_transformation_id', operator, value);
+        return this;
+    }
+
     importDataID(operator: string, value: any) {
         super.query('nodes.import_data_id', operator, value);
         return this;
@@ -280,8 +285,8 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return this;
     }
 
-    async count(): Promise<Result<number>> {
-        const results = await super.count();
+    async count(transaction?: PoolClient, queryOptions?: QueryOptions): Promise<Result<number>> {
+        const results = await super.count(transaction, queryOptions);
         // reset the query
         this._rawQuery = [
             `SELECT nodes.*, metatypes.name as metatype_name FROM ${NodeMapper.tableName}`,

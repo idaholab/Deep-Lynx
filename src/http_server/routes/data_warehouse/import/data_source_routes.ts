@@ -178,7 +178,10 @@ export default class DataSourceRoutes {
                 .finally(() => next());
         } else if (req.dataSource) {
             dataSourceRepo
-                .delete(req.dataSource, req.query.forceDelete === 'true')
+                .delete(req.dataSource, {
+                    force: req.query.forceDelete === 'true',
+                    removeData: req.query.removeData === 'true',
+                })
                 .then((result) => {
                     result.asResponse(res);
                 })

@@ -1,6 +1,6 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import {PoolClient, QueryConfig} from 'pg';
+import {PoolClient, Query, QueryConfig} from 'pg';
 import TypeTransformation from '../../../../data_warehouse/etl/type_transformation';
 import uuid from 'uuid';
 
@@ -79,8 +79,23 @@ export default class TypeTransformationMapper extends Mapper {
         });
     }
 
+    public async InUse(id: string): Promise<Result<boolean>> {
+        const results = await super.rows<any>(this.inUseStatement(id));
+        if (results.isError) return Promise.resolve(Result.Pass(results));
+
+        return Promise.resolve(Result.Success(results.value.length > 0));
+    }
+
+    public async Archive(id: string, userID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.archiveStatement(id, userID));
+    }
+
     public async Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id));
+    }
+
+    public async DeleteWithData(id: string): Promise<Result<boolean>> {
+        return super.runAsTransaction(...this.deleteWithDataStatement(id));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -210,6 +225,23 @@ export default class TypeTransformationMapper extends Mapper {
         };
     }
 
+    private deleteWithDataStatement(transformationID: string): QueryConfig[] {
+        return [
+            {
+                text: `DELETE FROM nodes WHERE type_mapping_transformation_id = $1`,
+                values: [transformationID],
+            },
+            {
+                text: `DELETE FROM edges WHERE type_mapping_transformation_id = $1`,
+                values: [transformationID],
+            },
+            {
+                text: `DELETE FROM data_type_mapping_transformations WHERE id = $1`,
+                values: [transformationID],
+            },
+        ];
+    }
+
     private bulkDeleteStatement(transformations: TypeTransformation[]): string {
         const text = `DELETE FROM data_type_mapping_transformations WHERE id IN(%L)`;
         const values = transformations.filter((t) => t.id).map((t) => t.id as string);
@@ -232,6 +264,27 @@ export default class TypeTransformationMapper extends Mapper {
                                 ON data_type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id
                    WHERE type_mapping_id = $1`,
             values: [typeMappingID],
+        };
+    }
+
+    private archiveStatement(transformationID: string, userID: string): QueryConfig {
+        return {
+            text: `UPDATE data_type_mapping_transformations 
+                    SET archived = true, modified_by = $2, modified_at = NOW()
+                    WHERE id = $1`,
+            values: [transformationID, userID],
+        };
+    }
+
+    // this statement basically checks to see if a transformation was used to generate
+    // any existing nodes or edges. Generally used prior to deletion to check and
+    // see if we need the "force" parameter for the delete
+    private inUseStatement(transformationID: string): QueryConfig {
+        return {
+            text: `(SELECT n.id FROM nodes n WHERE n.type_mapping_transformation_id = $1
+                        UNION ALL
+                    SELECT e.id FROM edges e WHERE e.type_mapping_transformation_id = $1) LIMIT 1`,
+            values: [transformationID],
         };
     }
 }

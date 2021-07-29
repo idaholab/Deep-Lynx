@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-for-in-array */
-import RepositoryInterface, {Repository} from '../../repository';
+import RepositoryInterface, { DeleteOptions, Repository } from "../../repository";
 import TypeTransformation from '../../../../data_warehouse/etl/type_transformation';
 import Result from '../../../../common_classes/result';
 import {User} from '../../../../access_management/user';
@@ -18,6 +18,8 @@ import MetatypeRepository from '../ontology/metatype_repository';
 import MetatypeRelationshipPairRepository from '../ontology/metatype_relationship_pair_repository';
 import MetatypeRelationshipPair from '../../../../data_warehouse/ontology/metatype_relationship_pair';
 import Metatype from '../../../../data_warehouse/ontology/metatype';
+import NodeRepository from "../data/node_repository";
+import EdgeRepository from "../data/edge_repository";
 
 /*
     TypeTransformationRepository contains methods for persisting and retrieving
@@ -33,16 +35,60 @@ export default class TypeTransformationRepository extends Repository implements 
     #metatypeKeyMapper: MetatypeKeyMapper = MetatypeKeyMapper.Instance;
     #relationshipKeyMapper: MetatypeRelationshipKeyMapper = MetatypeRelationshipKeyMapper.Instance;
 
-    delete(t: TypeTransformation): Promise<Result<boolean>> {
+    async delete(t: TypeTransformation, options?: DeleteOptions): Promise<Result<boolean>> {
+        if(!t.id)  return Promise.resolve(Result.Failure(`transformation must have id`));
+
         const mappingRepo = new TypeMappingRepository();
-        if (t.id) {
+
+        if(options && options.force) {
             void this.deleteCached(t);
             void mappingRepo.deleteCached(t.type_mapping_id!);
 
-            return this.#mapper.Delete(t.id);
+            if(options.removeData) {
+                return this.#mapper.DeleteWithData(t.id)
+            } else {
+                return this.#mapper.Delete(t.id);
+            }
         }
 
-        return Promise.resolve(Result.Failure(`transformation must have id`));
+        // instead of pulling in the edge and node repo and running listing functions
+        // on both, we opted for simply adding a function into the mapper for counting
+        // how many places a transformation was being used
+        const inUse = await this.#mapper.InUse(t.id)
+        if(inUse.isError || inUse.value) {
+            return Promise.resolve(Result.Failure(`unable to delete transformation as data exists that was created by utilizing this transformation`))
+        }
+
+        void this.deleteCached(t);
+        void mappingRepo.deleteCached(t.type_mapping_id!);
+
+        if(options && options.removeData) {
+            return this.#mapper.DeleteWithData(t.id);
+        } else {
+            return this.#mapper.Delete(t.id);
+        }
+    }
+
+    archive(u: User, t: TypeTransformation): Promise<Result<boolean>> {
+        if(!t.id)
+            return Promise.resolve(Result.Failure('cannot archive type transformation: no id present'))
+
+        const mappingRepo = new TypeMappingRepository();
+
+        // we must delete the cached versions so as to get the archived field updated
+        void this.deleteCached(t);
+        void mappingRepo.deleteCached(t.type_mapping_id!);
+
+        return this.#mapper.Archive(t.id, u.id!)
+    }
+
+    // quick way to check if this transformation has been used to generate any
+    // inserted nodes/edges
+    inUse(t: TypeTransformation): Promise<Result<boolean>> {
+        if(!t.id)
+            return Promise.resolve(Result.Failure('cannot check use of type transformation: no id present'))
+
+        return this.#mapper.InUse(t.id)
     }
 
     async findByID(id: string): Promise<Result<TypeTransformation>> {

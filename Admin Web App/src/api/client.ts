@@ -86,7 +86,7 @@ export class Client {
 
         const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: `containers/import`}), formData, config as AxiosRequestConfig);
 
-        return new Promise((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
             if (resp.data.isError) reject(resp.data.error);
@@ -122,7 +122,7 @@ export class Client {
             config as AxiosRequestConfig,
         );
 
-        return new Promise((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
             if (resp.data.isError) reject(resp.data.error);
@@ -349,11 +349,16 @@ export class Client {
         return this.get<DataSourceT[]>(`/containers/${containerID}/import/datasources`, {archived, sortBy: 'archived'});
     }
 
-    deleteDataSources(containerID: string, dataSourceID: string, {archive, forceDelete}: {archive?: boolean; forceDelete?: boolean}): Promise<boolean> {
+    deleteDataSources(
+        containerID: string,
+        dataSourceID: string,
+        {archive, forceDelete, withData}: {archive?: boolean; forceDelete?: boolean; withData?: boolean},
+    ): Promise<boolean> {
         const query: {[key: string]: any} = {};
 
         if (archive) query.archive = archive;
         if (forceDelete) query.forceDelete = forceDelete;
+        if (withData) query.withData = withData;
 
         return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}`, query);
     }
@@ -491,8 +496,24 @@ export class Client {
         );
     }
 
-    deleteTransformation(containerID: string, dataSourceID: string, typeMappingID: string, tranformationID: string): Promise<boolean> {
-        return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations/${tranformationID}`);
+    deleteTransformation(
+        containerID: string,
+        dataSourceID: string,
+        typeMappingID: string,
+        transformationID: string,
+        {archive, forceDelete, withData, inUse}: {archive?: boolean; forceDelete?: boolean; withData?: boolean; inUse?: boolean},
+    ): Promise<boolean> {
+        const query: {[key: string]: any} = {};
+
+        if (archive) query.archive = archive;
+        if (forceDelete) query.forceDelete = forceDelete;
+        if (withData) query.withData = withData;
+        if (inUse) query.inUse = inUse;
+
+        return this.deleteWithResponse(
+            `/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations/${transformationID}`,
+            query,
+        );
     }
 
     listTypeMappings(
@@ -592,7 +613,7 @@ export class Client {
         // `${this.config?.rootURL}${uri}
         const resp: AxiosResponse = await axios.get(url, config);
 
-        return new Promise((resolve, reject) => {
+        return new Promise<T>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
             if (resp.data.isError) reject(resp.data.value);
@@ -625,7 +646,7 @@ export class Client {
         // `${this.config?.rootURL}${uri}
         const resp: AxiosResponse = await axios.get(url, config);
 
-        return new Promise((resolve, reject) => {
+        return new Promise<boolean>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
             if (resp.data.isError) reject(resp.data.value);
@@ -656,10 +677,39 @@ export class Client {
 
         const resp: AxiosResponse = await axios.delete(url, config);
 
-        return new Promise((resolve, reject) => {
+        return new Promise<boolean>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
             resolve(true);
+        });
+    }
+
+    private async deleteWithResponse(uri: string, queryParams?: {[key: string]: any}): Promise<boolean> {
+        const config: AxiosRequestConfig = {};
+        config.headers = {'Access-Control-Allow-Origin': '*'};
+
+        if (this.config?.auth_method === 'token') {
+            config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
+        }
+
+        if (this.config?.auth_method === 'basic') {
+            config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials;
+        }
+
+        let url: string;
+
+        if (queryParams) {
+            url = buildURL(this.config?.rootURL!, {path: uri, queryParams});
+        } else {
+            url = buildURL(this.config?.rootURL!, {path: uri});
+        }
+
+        const resp: AxiosResponse = await axios.delete(url, config);
+
+        return new Promise<boolean>((resolve, reject) => {
+            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+
+            resolve(resp.data.value);
         });
     }
 
@@ -685,7 +735,7 @@ export class Client {
 
         const resp: AxiosResponse = await axios.post(url, data, config);
 
-        return new Promise((resolve, reject) => {
+        return new Promise<T>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
             if (resp.data.isError) reject(resp.data.value);
@@ -716,7 +766,7 @@ export class Client {
 
         const resp: AxiosResponse = await axios.post(url, data, config);
 
-        return new Promise((resolve, reject) => {
+        return new Promise<T>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
             resolve(resp.data as T);
@@ -745,7 +795,7 @@ export class Client {
 
         const resp: AxiosResponse = await axios.post(url, data, config);
 
-        return new Promise((resolve, reject) => {
+        return new Promise<boolean>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
             resolve(true);
@@ -766,7 +816,7 @@ export class Client {
 
         const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), {}, config);
 
-        return new Promise((resolve, reject) => {
+        return new Promise<boolean>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
             resolve(true);
@@ -790,7 +840,7 @@ export class Client {
 
         const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), formData, config);
 
-        return new Promise((resolve, reject) => {
+        return new Promise<boolean>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
             resolve(true);
@@ -814,7 +864,7 @@ export class Client {
 
         const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), formData, config);
 
-        return new Promise((resolve, reject) => {
+        return new Promise<T>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
             resolve(resp.data as T);
@@ -835,7 +885,7 @@ export class Client {
 
         const resp: AxiosResponse = await axios.put(`${this.config?.rootURL}${uri}`, data, config);
 
-        return new Promise((resolve, reject) => {
+        return new Promise<T>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
             if (resp.data.isError) reject(resp.data.value);
@@ -866,7 +916,7 @@ export class Client {
 
         const resp: AxiosResponse = await axios.put(url, data, config);
 
-        return new Promise((resolve, reject) => {
+        return new Promise<boolean>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
             resolve(true);

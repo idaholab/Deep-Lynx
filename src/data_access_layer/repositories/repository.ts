@@ -177,11 +177,22 @@ export class Repository {
         return storage.rows<T>(query, options);
     }
 
-    count(transaction?: PoolClient): Promise<Result<number>> {
+    // we accept limited query options here
+    count(transaction?: PoolClient, queryOptions?: QueryOptions): Promise<Result<number>> {
         const storage = new Mapper();
 
         // modify the original query to be count
         this._rawQuery[0] = `SELECT COUNT(*) FROM ${this._tableName}`;
+
+        if (queryOptions && queryOptions.offset) {
+            this._values.push(queryOptions.offset);
+            this._rawQuery.push(`OFFSET $${this._values.length}`);
+        }
+
+        if (queryOptions && queryOptions.limit) {
+            this._values.push(queryOptions.limit);
+            this._rawQuery.push(`LIMIT $${this._values.length}`);
+        }
 
         const query = {
             text: this._rawQuery.join(' '),
@@ -203,4 +214,9 @@ export type QueryOptions = {
     sortDesc?: boolean | undefined;
     // generally used if we have a complicated set of joins
     groupBy?: string | undefined;
+};
+
+export type DeleteOptions = {
+    force?: boolean;
+    removeData?: boolean;
 };

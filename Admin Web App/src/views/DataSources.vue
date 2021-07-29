@@ -19,6 +19,15 @@
           <create-data-source-dialog :containerID="containerID" @dataSourceCreated="refreshDataSources"></create-data-source-dialog>
         </v-toolbar>
       </template>
+      <template v-slot:[`item.id`]="{ item }">
+        <v-tooltip top>
+          <template v-slot:activator="{on, attrs}">
+            <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
+          </template>
+          <span>{{$t('dataSources.copyID')}}</span>
+          <span>{{item.id}}</span>
+        </v-tooltip>
+      </template>
       <template v-slot:[`item.name`]="{ item }">
         <p v-if="!item.archived">{{item.name}}</p>
         <p v-else class="text--disabled">{{item.name}}</p>
@@ -56,6 +65,7 @@ import {Component, Prop, Vue} from 'vue-property-decorator'
 import {DataSourceT} from "@/api/types";
 import CreateDataSourceDialog from "@/components/createDataSourceDialog.vue"
 import DeleteDataSourceDialog from "@/components/deleteDataSourceDialog.vue";
+import {mdiFileDocumentMultiple} from "@mdi/js";
 
 @Component({components:{CreateDataSourceDialog, DeleteDataSourceDialog}})
 export default class DataSources extends Vue {
@@ -66,9 +76,11 @@ export default class DataSources extends Vue {
   select = ""
   dataSources: DataSourceT[] = []
   errorMessage = ""
+  copy = mdiFileDocumentMultiple
 
   headers() {
     return [
+      { text: this.$t('dataSources.id'), value: 'id'},
       { text: this.$t('dataSources.name'), value: 'name' },
       { text: this.$t('dataSources.adapterType'), value: 'adapter_type'},
       { text: this.$t('dataSources.active'), value: 'active'},
@@ -102,6 +114,10 @@ export default class DataSources extends Vue {
           })
           .catch(e => this.errorMessage = e)
     }
+  }
+
+  copyID(id: string) {
+    navigator.clipboard.writeText(id)
   }
 }
 </script>

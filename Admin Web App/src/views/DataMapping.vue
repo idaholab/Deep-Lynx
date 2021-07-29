@@ -9,9 +9,9 @@
         <v-btn style="margin-top: 10px" class="mb-2" @click="reviewMappings = true">Review</v-btn>
       </v-alert>
       <select-data-source
-        :containerID="containerID"
-        :show-archived="true"
-        @selected="setDataSource">
+          :containerID="containerID"
+          :show-archived="true"
+          @selected="setDataSource">
       </select-data-source>
       <v-tabs v-if="selectedDataSource !== null" grow>
         <v-tab @click="activeTab = 'currentMappings'">{{$t('dataMapping.currentMappings')}}</v-tab>
@@ -115,12 +115,14 @@
             >
               mdi-pencil
             </v-icon>
-            <v-icon
-                small
-                @click="deleteMapping(item)"
-            >
-              mdi-delete
-            </v-icon>
+
+            <delete-type-mapping-dialog
+                :containerID="containerID"
+                :dataSourceID="selectedDataSource.id"
+                :mappingID="item.value.id"
+                :icon="true"
+                @typeMappingDeleted="mappingDeleted()"
+            ></delete-type-mapping-dialog>
           </template>
         </v-data-table>
 
@@ -162,12 +164,13 @@
             >
               mdi-pencil
             </v-icon>
-            <v-icon
-                small
-                @click="deleteMapping(item.value)"
-            >
-              mdi-delete
-            </v-icon>
+            <delete-type-mapping-dialog
+                :containerID="this.containerID"
+                :dataSourceID="this.selectedDataSource.id"
+                :mappingID="item.value.id"
+                :icon="true"
+                @typeMappingDeleted="mappingDeleted()"
+            ></delete-type-mapping-dialog>
           </template>
         </v-data-table>
 
@@ -219,12 +222,13 @@
             >
               mdi-pencil
             </v-icon>
-            <v-icon
-                small
-                @click="deleteMapping(item)"
-            >
-              mdi-delete
-            </v-icon>
+            <delete-type-mapping-dialog
+                :containerID="containerID"
+                :dataSourceID="selectedDataSource.id"
+                :mappingID="item.id"
+                :icon="true"
+                @typeMappingDeleted="mappingDeleted()"
+            ></delete-type-mapping-dialog>
           </template>
         </v-data-table>
       </v-card>
@@ -263,12 +267,13 @@
             >
               mdi-pencil
             </v-icon>
-            <v-icon
-                small
-                @click="deleteMapping(item)"
-            >
-              mdi-delete
-            </v-icon>
+            <delete-type-mapping-dialog
+                :containerID="containerID"
+                :dataSourceID="selectedDataSource.id"
+                :mappingID="item.id"
+                :icon="true"
+                @typeMappingDeleted="mappingDeleted()"
+            ></delete-type-mapping-dialog>
           </template>
         </v-data-table>
       </div>
@@ -282,9 +287,9 @@
           {{$t('dataMapping.viewSamplePayload')}}
         </v-card-title>
         <json-view
-          class="text-wrap"
-          :data="samplePayload"
-          :maxDepth=4
+            class="text-wrap"
+            :data="samplePayload"
+            :maxDepth=4
         />
 
         <v-card-actions>
@@ -315,85 +320,87 @@ import DataTypeMapping from "@/components/dataTypeMapping.vue"
 import ExportMappingsDialog from "@/components/exportMappingsDialog.vue";
 import ImportMappingsDialog from "@/components/importMappingsDialog.vue";
 import SelectDataSource from "@/components/selectDataSource.vue";
+import DeleteTypeMappingDialog from "@/components/deleteTypeMappingDialog.vue";
 
 @Component({filters: {
     pretty: function(value: any) {
       return JSON.stringify(value, null, 2);
-            }
-        },
-        components: {
-           DataTypeMapping,
-           ExportMappingsDialog,
-           ImportMappingsDialog,
-           SelectDataSource
-    }})
-    export default class DataMapping extends Vue {
-      @Prop({required: true})
-      readonly containerID!: string;
+    }
+  },
+  components: {
+    DataTypeMapping,
+    ExportMappingsDialog,
+    ImportMappingsDialog,
+    SelectDataSource,
+    DeleteTypeMappingDialog
+  }})
+export default class DataMapping extends Vue {
+  @Prop({required: true})
+  readonly containerID!: string;
 
-      errorMessage = ""
-      dataDialog = false
-      mappingDialog = false
-      samplePayload: object | null = null
-      successMessage = ""
-      noTransformationsCount = 0
-      activeTab = "currentMappings"
-      selectedDataSource: DataSourceT | null = null
-      typeMappings: TypeMappingT[] = []
-      typeMappingsNoTransformations: TypeMappingT[] = []
-      selectedMappings: [] = []
-      importedMappingResults: ResultT[] = []
-      reviewMappings = false
+  errorMessage = ""
+  dataDialog = false
+  mappingDialog = false
+  samplePayload: object | null = null
+  successMessage = ""
+  noTransformationsCount = 0
+  activeTab = "currentMappings"
+  selectedDataSource: DataSourceT | null = null
+  typeMappings: TypeMappingT[] = []
+  typeMappingsNoTransformations: TypeMappingT[] = []
+  selectedMappings: [] = []
+  importedMappingResults: ResultT[] = []
+  reviewMappings = false
 
-      typeMappingCount = 0
-      selectedTypeMapping: TypeMappingT | null = null
-      mappingsLoading = false
-      options: {
-        sortDesc: boolean[];
-        sortBy: string[];
-        page: number;
-        itemsPerPage: number;
-      } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 25}
+  typeMappingCount = 0
+  selectedTypeMapping: TypeMappingT | null = null
+  mappingsLoading = false
+  options: {
+    sortDesc: boolean[];
+    sortBy: string[];
+    page: number;
+    itemsPerPage: number;
+  } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 25}
 
-      transformationsOptions: {
-        sortDesc: boolean[];
-        sortBy: string[];
-        page: number;
-        itemsPerPage: number;
-      } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 25}
+  transformationsOptions: {
+    sortDesc: boolean[];
+    sortBy: string[];
+    page: number;
+    itemsPerPage: number;
+  } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 25}
 
-      metatypeSearch = ""
-      metatypes: MetatypeT[] = []
-      selectedMetatype: MetatypeT | null = null
+  metatypeSearch = ""
+  metatypes: MetatypeT[] = []
+  selectedMetatype: MetatypeT | null = null
 
-      relationshipPairSearch = ""
-      relationshipPairs: MetatypeRelationshipPairT[] = []
-      selectedRelationshipPair: MetatypeRelationshipPairT | null = null
+  relationshipPairSearch = ""
+  relationshipPairs: MetatypeRelationshipPairT[] = []
+  selectedRelationshipPair: MetatypeRelationshipPairT | null = null
 
-      headers() {
-        return [{
-          text: this.$t('dataMapping.enabled'),
-          value: "active",
-          align: 'center'
-        },{
-          text: this.$t('dataMapping.createdAt'),
-          value: "created_at"
-        },{
-          text: this.$t('dataMapping.resultingTypes'),
-          value: "resulting_types",
-          sortable: false
-        },{
-          text: this.$t('dataMapping.samplePayload'),
-          value: "sample_payload",
-          align: 'center',
-          sortable: false
-        },{
-          text: 'Actions',
-          value: 'actions',
-          align: 'center',
-          sortable: false
-          }]
-      }
+  headers() {
+    return [{
+      text: this.$t('dataMapping.enabled'),
+      value: "active",
+      align: 'center'
+    },{
+      text: this.$t('dataMapping.createdAt'),
+      value: "created_at"
+    },{
+      text: this.$t('dataMapping.resultingTypes'),
+      value: "resulting_types",
+      sortable: false
+    },{
+      text: this.$t('dataMapping.samplePayload'),
+      value: "sample_payload",
+      align: 'center',
+      sortable: false
+    },{
+      text: 'Actions',
+      value: 'actions',
+      align: 'center',
+      sortable: false
+    }]
+  }
 
   reviewHeaders() {
     return [{
@@ -413,114 +420,114 @@ import SelectDataSource from "@/components/selectDataSource.vue";
     }]
   }
 
-      noTransformationHeaders() {
-        return [{
-          text: this.$t('dataMapping.enabled'),
-          value: "active",
-          align: 'center'
-        },{
-          text: this.$t('dataMapping.createdAt'),
-          value: "created_at"
-        },{
-          text: this.$t('dataMapping.samplePayload'),
-          value: "sample_payload",
-          align: 'center',
-          sortable: false
-        },{
-          text: 'Actions',
-          value: 'actions',
-          align: 'center',
-          sortable: false
-        }]
-      }
+  noTransformationHeaders() {
+    return [{
+      text: this.$t('dataMapping.enabled'),
+      value: "active",
+      align: 'center'
+    },{
+      text: this.$t('dataMapping.createdAt'),
+      value: "created_at"
+    },{
+      text: this.$t('dataMapping.samplePayload'),
+      value: "sample_payload",
+      align: 'center',
+      sortable: false
+    },{
+      text: 'Actions',
+      value: 'actions',
+      align: 'center',
+      sortable: false
+    }]
+  }
 
-      @Watch('options', {immediate: true})
-      onOptionChange() {
-        this.loadTypeMappings()
-      }
+  @Watch('options', {immediate: true})
+  onOptionChange() {
+    this.loadTypeMappings()
+  }
 
-      @Watch('transformationsOptions', {immediate: true})
-      onTransformationOptionChange() {
-        this.loadTypeMappingsNoTransformations()
-      }
+  @Watch('transformationsOptions', {immediate: true})
+  onTransformationOptionChange() {
+    this.loadTypeMappingsNoTransformations()
+  }
 
-      @Watch('selectedRelationshipPair', {immediate: true})
-      onSelectedMetatypeRelationshipPairChange() {
-        this.loadTypeMappingsFromSearch()
-      }
+  @Watch('selectedRelationshipPair', {immediate: true})
+  onSelectedMetatypeRelationshipPairChange() {
+    this.loadTypeMappingsFromSearch()
+  }
 
-      @Watch('selectedMetatype', {immediate: true})
-      onSelectedMetatypeChange() {
-        this.loadTypeMappingsFromSearch()
-      }
+  @Watch('selectedMetatype', {immediate: true})
+  onSelectedMetatypeChange() {
+    this.loadTypeMappingsFromSearch()
+  }
 
-      @Watch('selectedDataSource', {immediate: true})
-      onSelectedDataSourceChange(dataSource: DataSourceT) {
-        if(!dataSource) return;
+  @Watch('selectedDataSource', {immediate: true})
+  onSelectedDataSourceChange(dataSource: DataSourceT) {
+    if(!dataSource) return;
 
-        this.loadTypeMappings()
-        this.loadTypeMappingsNoTransformations()
-      }
+    this.loadTypeMappings()
+    this.loadTypeMappingsNoTransformations()
+  }
 
-      @Watch('metatypeSearch', {immediate: true})
-      onSearchChange(newVal: string) {
-        if(newVal === "") return;
+  @Watch('metatypeSearch', {immediate: true})
+  onSearchChange(newVal: string) {
+    if(newVal === "") return;
 
-        this.$client.listMetatypes(this.containerID, {name: newVal})
-            .then((metatypes) => {
-              this.metatypes = metatypes as MetatypeT[]
-            })
-            .catch((e: any) => this.errorMessage = e)
-      }
-
-      @Watch('relationshipPairSearch', {immediate: true})
-      onRelationshipSearchChange(newVal: string) {
-        if(newVal === "") return
-
-        this.$client.listMetatypeRelationshipPairs(this.containerID, {
-          name: newVal,
-          limit: 1000,
-          offset: 0,
-          originID: undefined,
-          destinationID: undefined,
+    this.$client.listMetatypes(this.containerID, {name: newVal})
+        .then((metatypes) => {
+          this.metatypes = metatypes as MetatypeT[]
         })
-            .then(pairs => {
-              this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
-            })
-            .catch(e => this.errorMessage = e)
-      }
+        .catch((e: any) => this.errorMessage = e)
+  }
 
-      setDataSource(dataSource: any) {
-          this.selectedDataSource = dataSource
-      }
+  @Watch('relationshipPairSearch', {immediate: true})
+  onRelationshipSearchChange(newVal: string) {
+    if(newVal === "") return
 
-      loadTypeMappings() {
-        if(this.selectedDataSource) {
-          this.mappingsLoading= true
-          this.typeMappings = []
+    this.$client.listMetatypeRelationshipPairs(this.containerID, {
+      name: newVal,
+      limit: 1000,
+      offset: 0,
+      originID: undefined,
+      destinationID: undefined,
+    })
+        .then(pairs => {
+          this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
+        })
+        .catch(e => this.errorMessage = e)
+  }
 
-          const {page, itemsPerPage, sortBy, sortDesc} = this.options;
-          let sortParam: string | undefined
-          let sortDescParam: boolean | undefined
+  setDataSource(dataSource: any) {
+    this.selectedDataSource = dataSource
+  }
 
-          const pageNumber = page - 1;
-          if (sortBy && sortBy.length >= 1) sortParam = sortBy[0]
-          if (sortDesc) sortDescParam = sortDesc[0]
+  loadTypeMappings() {
+    if(this.selectedDataSource) {
+      this.mappingsLoading= true
+      this.typeMappings = []
 
-          this.$client.listTypeMappings(this.containerID, this.selectedDataSource?.id!, {
-            limit: itemsPerPage,
-            offset: itemsPerPage * pageNumber,
-            sortBy: sortParam,
-            sortDesc: sortDescParam
-          })
+      const {page, itemsPerPage, sortBy, sortDesc} = this.options;
+      let sortParam: string | undefined
+      let sortDescParam: boolean | undefined
+
+      const pageNumber = page - 1;
+      if (sortBy && sortBy.length >= 1) sortParam = sortBy[0]
+      if (sortDesc) sortDescParam = sortDesc[0]
+
+      this.$client.listTypeMappings(this.containerID, this.selectedDataSource?.id!, {
+        limit: itemsPerPage,
+        offset: itemsPerPage * pageNumber,
+        sortBy: sortParam,
+        sortDesc: sortDescParam
+      })
           .then((results) => {
             this.mappingsLoading = false
 
             this.$client.countTypeMappings(this.containerID, this.selectedDataSource?.id!)
-            .then(count => {
-              this.typeMappingCount = count
-            })
-            .catch(e => this.errorMessage = e)
+                .then(count => {
+                  this.typeMappingCount = count
+                })
+                .catch(e => this.errorMessage = e)
 
             const promises = []
 
@@ -529,69 +536,69 @@ import SelectDataSource from "@/components/selectDataSource.vue";
             }
 
             Promise.all(promises)
-            .then((transformationResults) => {
-              for(const transformations of transformationResults) {
-                transformations.map(transformation => {
-                 results = results.map(mapping => {
-                    if(!mapping.transformations) mapping.transformations = []
+                .then((transformationResults) => {
+                  for(const transformations of transformationResults) {
+                    transformations.map(transformation => {
+                      results = results.map(mapping => {
+                        if(!mapping.transformations) mapping.transformations = []
 
-                    if(mapping.id === transformation.type_mapping_id) {
-                      mapping.transformations.push(transformation)
-                    }
+                        if(mapping.id === transformation.type_mapping_id) {
+                          mapping.transformations.push(transformation)
+                        }
 
-                    return mapping
-                  })
+                        return mapping
+                      })
+                    })
+                  }
+
+                  this.typeMappings = results
                 })
-              }
-
-              this.typeMappings = results
-            })
-            .catch(e => this.errorMessage = e)
+                .catch(e => this.errorMessage = e)
           })
           .catch(e => this.errorMessage = e)
-        }
-      }
+    }
+  }
 
-      loadTypeMappingsFromSearch() {
-        if(this.selectedDataSource) {
-          this.mappingsLoading= true
-          this.typeMappings = []
+  loadTypeMappingsFromSearch() {
+    if(this.selectedDataSource) {
+      this.mappingsLoading= true
+      this.typeMappings = []
 
-          this.$client.listTypeMappings(this.containerID, this.selectedDataSource?.id!, {
-            resultingMetatypeName: (this.selectedMetatype) ? this.selectedMetatype.name : undefined,
-            resultingMetatypeRelationshipName: (this.selectedRelationshipPair) ? this.selectedRelationshipPair.relationship_pair_name : undefined
-          })
-              .then((results) => {
-                this.mappingsLoading = false
-                const promises = []
+      this.$client.listTypeMappings(this.containerID, this.selectedDataSource?.id!, {
+        resultingMetatypeName: (this.selectedMetatype) ? this.selectedMetatype.name : undefined,
+        resultingMetatypeRelationshipName: (this.selectedRelationshipPair) ? this.selectedRelationshipPair.relationship_pair_name : undefined
+      })
+          .then((results) => {
+            this.mappingsLoading = false
+            const promises = []
 
-                for(const i in results) {
-                  promises.push(this.$client.retrieveTransformations(this.containerID, this.selectedDataSource?.id!, results[i].id))
-                }
+            for(const i in results) {
+              promises.push(this.$client.retrieveTransformations(this.containerID, this.selectedDataSource?.id!, results[i].id))
+            }
 
-                Promise.all(promises)
-                    .then((transformationResults) => {
-                      for(const transformations of transformationResults) {
-                        transformations.map(transformation => {
-                          results = results.map(mapping => {
-                            if(!mapping.transformations) mapping.transformations = []
+            Promise.all(promises)
+                .then((transformationResults) => {
+                  for(const transformations of transformationResults) {
+                    transformations.map(transformation => {
+                      results = results.map(mapping => {
+                        if(!mapping.transformations) mapping.transformations = []
 
-                            if(mapping.id === transformation.type_mapping_id) {
-                              mapping.transformations.push(transformation)
-                            }
+                        if(mapping.id === transformation.type_mapping_id) {
+                          mapping.transformations.push(transformation)
+                        }
 
-                            return mapping
-                          })
-                        })
-                      }
-
-                      this.typeMappings = results
+                        return mapping
+                      })
                     })
-                    .catch(e => this.errorMessage = e)
-              })
-              .catch(e => this.errorMessage = e)
-        }
-      }
+                  }
+
+                  this.typeMappings = results
+                })
+                .catch(e => this.errorMessage = e)
+          })
+          .catch(e => this.errorMessage = e)
+    }
+  }
 
   loadTypeMappingsNoTransformations() {
     if(this.selectedDataSource) {
@@ -627,40 +634,34 @@ import SelectDataSource from "@/components/selectDataSource.vue";
     }
   }
 
-      deleteMapping(typeMapping: TypeMappingT) {
-        this.$client.deleteTypeMapping(this.containerID, this.selectedDataSource?.id!, typeMapping.id)
-        .then((deleted) => {
-          if(!deleted) this.errorMessage = "Unable to delete type mapping"
+  mappingDeleted() {
+    if(this.selectedMetatype || this.selectedRelationshipPair) {
+      this.loadTypeMappingsFromSearch()
+      return
+    }
 
-          if(this.selectedMetatype || this.selectedRelationshipPair) {
-            this.loadTypeMappingsFromSearch()
-            return
-          }
-
-          this.loadTypeMappings()
-          this.loadTypeMappingsNoTransformations()
-        })
-        .catch((e: any) => this.errorMessage = e)
-      }
-
-      editMapping(typeMapping: TypeMappingT) {
-        this.selectedTypeMapping = typeMapping
-        this.mappingDialog = true
-      }
-
-      viewSamplePayload(mapping: TypeMappingT) {
-        this.samplePayload = mapping.sample_payload
-        this.dataDialog = true
-      }
-
-      mappingsExported() {
-        this.successMessage = 'Mappings successfully Exported'
-      }
-
-      // allows the user to potentially review imported type mappings
-      mappingsImport(results: ResultT[]) {
-        this.importedMappingResults = results
-        this.loadTypeMappings()
-      }
+    this.loadTypeMappings()
+    this.loadTypeMappingsNoTransformations()
   }
+
+  editMapping(typeMapping: TypeMappingT) {
+    this.selectedTypeMapping = typeMapping
+    this.mappingDialog = true
+  }
+
+  viewSamplePayload(mapping: TypeMappingT) {
+    this.samplePayload = mapping.sample_payload
+    this.dataDialog = true
+  }
+
+  mappingsExported() {
+    this.successMessage = 'Mappings successfully Exported'
+  }
+
+  // allows the user to potentially review imported type mappings
+  mappingsImport(results: ResultT[]) {
+    this.importedMappingResults = results
+    this.loadTypeMappings()
+  }
+}
 </script>
