@@ -148,6 +148,36 @@ describe('A Datasource Repository can', async () => {
 
         return Promise.resolve();
     });
+
+    it('can set and review status', async () => {
+        // build the data source first
+        const sourceRepo = new DataSourceRepository();
+
+        const source = new DataSourceFactory().fromDataSourceRecord(
+            new DataSourceRecord({
+                container_id: containerID,
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'standard',
+                data_format: 'json',
+            }),
+        );
+
+        let results = await sourceRepo.save(source!, user);
+        expect(results.isError).false;
+        expect(source!.DataSourceRecord?.id).not.undefined;
+
+        const set = await sourceRepo.setStatus(source!, user, 'error', 'test error');
+        expect(set.isError).false;
+
+        const retrieved = await sourceRepo.findByID(source?.DataSourceRecord?.id!);
+        expect(retrieved.isError).false;
+        expect(retrieved.value.DataSourceRecord).not.undefined;
+        expect(retrieved.value.DataSourceRecord?.status).eq('error');
+        expect(retrieved.value.DataSourceRecord?.status_message).eq('test error');
+
+        return sourceRepo.delete(source!, {force: true});
+    });
 });
 
 const test_payload = {

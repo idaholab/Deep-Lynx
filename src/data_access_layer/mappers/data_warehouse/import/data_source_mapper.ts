@@ -105,6 +105,16 @@ export default class DataSourceMapper extends Mapper {
         return super.runAsTransaction(...this.deleteWithDataStatement(id));
     }
 
+    public async SetStatus(
+        dataSourceID: string,
+        userID: string,
+        status: 'ready' | 'polling' | 'error',
+        message?: string,
+        transaction?: PoolClient,
+    ): Promise<Result<boolean>> {
+        return super.runStatement(this.setStatusStatement(dataSourceID, userID, status, message), {transaction});
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -228,6 +238,13 @@ export default class DataSourceMapper extends Mapper {
         return {
             text: `UPDATE data_sources SET archived = true, active = false, modified_by = $2, modified_at = NOW() WHERE id = $1`,
             values: [dataSourceID, userID],
+        };
+    }
+
+    private setStatusStatement(id: string, userID: string, status: 'ready' | 'polling' | 'error', message?: string): QueryConfig {
+        return {
+            text: `UPDATE data_sources SET status = $2, status_message = $3, modified_at = NOW(), modified_by = $4 WHERE id = $1`,
+            values: [id, status, message, userID],
         };
     }
 }

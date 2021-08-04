@@ -1,5 +1,5 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../../services/logger';
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
@@ -24,8 +24,8 @@ describe('A Data Source', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -49,8 +49,8 @@ describe('A Data Source', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -68,8 +68,8 @@ describe('A Data Source', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -78,6 +78,34 @@ describe('A Data Source', async () => {
         const retrieved = await storage.Retrieve(exp.value.id!);
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(exp.value.id);
+
+        return storage.Delete(exp.value.id!);
+    });
+
+    it('can have its status set', async () => {
+        const storage = DataSourceMapper.Instance;
+        const exp = await storage.Create(
+            'test suite',
+            new DataSourceRecord({
+                container_id: containerID,
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'standard',
+                data_format: 'json',
+            }),
+        );
+
+        expect(exp.isError).false;
+        expect(exp.value).not.empty;
+
+        const set = await storage.SetStatus(exp.value.id!, 'test suite', 'error', 'test error message');
+        expect(set.isError).false;
+
+        const retrieved = await storage.Retrieve(exp.value.id!);
+        expect(retrieved.isError).false;
+        expect(retrieved.value.id).eq(exp.value.id);
+        expect(retrieved.value.status).eq('error');
+        expect(retrieved.value.status_message).eq('test error message');
 
         return storage.Delete(exp.value.id!);
     });
@@ -92,8 +120,8 @@ describe('A Data Source', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;

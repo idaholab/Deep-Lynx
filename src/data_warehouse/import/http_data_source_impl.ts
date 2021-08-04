@@ -74,6 +74,9 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
             return;
         }
 
+        let set = await this.#mapper.SetStatus(this.DataSourceRecord.id!, 'system', 'polling');
+        if (set.isError) Logger.error(`unable to update data source status:${set.error?.error}`);
+
         while (true) {
             // because the user could have either set the source to inactive or modified
             // the configuration since this last ran, update the current data source record
@@ -113,7 +116,7 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
                 lastImportTime = (lastImport.value.modified_at as Date).toUTCString();
             }
 
-            if (lastImport.value && lastImport.value.status !== 'completed') {
+            if (lastImport.isError || (lastImport.value && lastImport.value.status !== 'completed')) {
                 config.poll_interval ? await this.delay(config.poll_interval * 1000) : await this.delay(1000);
                 await ImportMapper.Instance.completeTransaction(pollTransaction.value);
 
@@ -179,6 +182,9 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
             // function could possibly run an import while still in its cool-down
             await ImportMapper.Instance.completeTransaction(pollTransaction.value);
         }
+
+        set = await this.#mapper.SetStatus(this.DataSourceRecord.id!, 'system', 'ready');
+        if (set.isError) Logger.error(`unable to update data source status:${set.error?.error}`);
 
         return Promise.resolve();
     }
