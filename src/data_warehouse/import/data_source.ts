@@ -54,7 +54,7 @@ export class HttpDataSourceConfig extends BaseDataSourceConfig {
     @IsDefined()
     auth_method: 'none' | 'basic' | 'token' = 'none';
 
-    // poll interval in seconds
+    // poll interval in minutes
     poll_interval = 10;
 
     @ValidateIf((o) => o.auth_method === 'token')

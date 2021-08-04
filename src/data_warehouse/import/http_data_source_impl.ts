@@ -1,5 +1,5 @@
 import DataSourceRecord, {DataSource, HttpDataSourceConfig} from './data_source';
-import Result from '../../common_classes/result';
+import Result, {ErrorNotFound} from '../../common_classes/result';
 import Logger from '../../services/logger';
 import Config from '../../services/config';
 import DataSourceMapper from '../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
@@ -62,13 +62,13 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
     // actual processing loop that the parent class has. This has allowed use to
     // easily reuse the process functions that are similar to the standard class
     async Process(loopOnce?: boolean): Promise<void> {
-        void this.startPolling();
+        void this.startPolling(loopOnce);
         return super.Process(loopOnce);
     }
 
     // Use the HTTP data source and poll for data. Data is stored in the imports table
     // processing the data is not the responsibility of this portion of the application
-    private async startPolling(): Promise<void> {
+    private async startPolling(loopOnce?: boolean): Promise<void> {
         if (!this.DataSourceRecord) {
             Logger.error(`unable to start http data source process, no record present`);
             return;
@@ -90,7 +90,12 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
             this.DataSourceRecord = retrievedSource.value;
 
             // cut if we're no longer set to active
-            if (!this.DataSourceRecord.active) break;
+            if (!this.DataSourceRecord.active) {
+                set = await this.#mapper.SetStatus(this.DataSourceRecord.id!, 'system', 'ready');
+                if (set.isError) Logger.error(`unable to update data source status:${set.error?.error}`);
+
+                break;
+            }
 
             // let's give the config an easier way of being referenced
             const config = this.DataSourceRecord.config as HttpDataSourceConfig;
@@ -105,22 +110,41 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
                 continue;
             }
 
+            // fetch the count of imports (but limit one) - we are only checking to see
+            // if this is the first import. IF it is, we need quickly create and lock an
+            // import record to help avoid polling twice the first time and to allow us
+            // to more easily handle the polling interval
+            let lastImportTime = '';
+            const currentTime = new Date();
+
             // fetch last import, include time as url param - we lock the record on
             // retrieval because if we can successfully lock it it means that it's
             // not currently being processed or another export polling function is
             // acting on it
             const lastImport = await this.#importRepo.findLastAndLock(this.DataSourceRecord.id!, pollTransaction.value);
 
-            let lastImportTime = '';
-            if (!lastImport.isError && lastImport.value.status === 'completed') {
-                lastImportTime = (lastImport.value.modified_at as Date).toUTCString();
-            }
-
-            if (lastImport.isError || (lastImport.value && lastImport.value.status !== 'completed')) {
-                config.poll_interval ? await this.delay(config.poll_interval * 1000) : await this.delay(1000);
+            // if this isn't a not found error it means we couldn't lock the record
+            // which means it's being processed
+            if (lastImport.isError && lastImport.error !== ErrorNotFound) {
+                config.poll_interval ? await this.delay(config.poll_interval * 60000) : await this.delay(60000);
                 await ImportMapper.Instance.completeTransaction(pollTransaction.value);
 
                 continue;
+            }
+
+            if (lastImport.value && lastImport.value.modified_at) {
+                lastImportTime = lastImport.value.modified_at.toUTCString();
+                const nextRunTime = new Date(lastImport.value.modified_at.getTime() + config.poll_interval * 60000);
+
+                // if we haven't reached the next poll time, intelligently sleep
+                // only the amount of time remaining
+                if (nextRunTime.getTime() <= new Date().getTime()) {
+                    // terminate the transaction before the sleep so we're not holding the connection open
+                    await ImportMapper.Instance.completeTransaction(pollTransaction.value);
+
+                    await this.delay(nextRunTime.getTime() - new Date().getTime());
+                    continue;
+                }
             }
 
             // create http request
@@ -175,12 +199,15 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
                 Logger.error(`data source ${this.DataSourceRecord.id} poll failed ${err}`);
             }
 
-            // sleep for poll interval
-            config.poll_interval ? await this.delay(config.poll_interval * 1000) : await this.delay(1000);
-
-            // call the transaction complete after the delay interval so that there is no way another import
-            // function could possibly run an import while still in its cool-down
+            // we shouldn't run into issue of a poller double polling even after terminating
+            // because we will have created a new import with the current time as the modified_at field
+            // that should should up on the find last and lock call
             await ImportMapper.Instance.completeTransaction(pollTransaction.value);
+
+            if (loopOnce) break;
+
+            // sleep for poll interval
+            config.poll_interval ? await this.delay(config.poll_interval * 60000) : await this.delay(60000);
         }
 
         set = await this.#mapper.SetStatus(this.DataSourceRecord.id!, 'system', 'ready');
