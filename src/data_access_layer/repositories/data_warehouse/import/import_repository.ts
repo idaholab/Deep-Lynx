@@ -1,9 +1,9 @@
-import RepositoryInterface, { QueryOptions, Repository } from '../../repository';
+import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
 import Import from '../../../../data_warehouse/import/import';
 import Result from '../../../../common_classes/result';
 import ImportMapper from '../../../mappers/data_warehouse/import/import_mapper';
-import { PoolClient } from 'pg';
-import { User } from '../../../../access_management/user';
+import {PoolClient} from 'pg';
+import {User} from '../../../../access_management/user';
 
 /*
     Imports contains methods for persisting and retrieving an import
@@ -43,7 +43,7 @@ export default class ImportRepository extends Repository implements RepositoryIn
         importID: string,
         status: 'ready' | 'processing' | 'error' | 'stopped' | 'completed',
         message?: string,
-        transaction?: PoolClient
+        transaction?: PoolClient,
     ): Promise<Result<boolean>> {
         return this.#mapper.SetStatus(importID, status, message, transaction);
     }
@@ -74,7 +74,7 @@ export default class ImportRepository extends Repository implements RepositoryIn
             SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
             SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
             FROM imports
-            LEFT JOIN data_staging ON data_staging.import_id = imports.id`
+            LEFT JOIN data_staging ON data_staging.import_id = imports.id`,
         ];
     }
 
@@ -92,8 +92,8 @@ export default class ImportRepository extends Repository implements RepositoryIn
         return this;
     }
 
-    async count(): Promise<Result<number>> {
-        const results = await super.count();
+    async count(transaction?: PoolClient, queryOptions?: QueryOptions): Promise<Result<number>> {
+        const results = await super.count(transaction, queryOptions);
 
         // in order to select the composite fields we must redo the initial query
         this._rawQuery = [
@@ -101,7 +101,7 @@ export default class ImportRepository extends Repository implements RepositoryIn
             SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
             SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
             FROM imports
-            LEFT JOIN data_staging ON data_staging.import_id = imports.id`
+            LEFT JOIN data_staging ON data_staging.import_id = imports.id`,
         ];
 
         return Promise.resolve(Result.Pass(results));
@@ -112,13 +112,13 @@ export default class ImportRepository extends Repository implements RepositoryIn
 
         const results = await super.findAll<Import>(options, {
             transaction,
-            resultClass: Import
+            resultClass: Import,
         });
         // in order to select the composite fields we must redo the initial query
         this._rawQuery = [
             `SELECT imports.*,
             SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
-            SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records`
+            SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records`,
         ];
 
         return Promise.resolve(Result.Pass(results));
