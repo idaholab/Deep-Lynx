@@ -1,7 +1,7 @@
-import { BaseDomainClass, NakedDomainClass } from '../../common_classes/base_domain_class';
-import { IsBoolean, IsDefined, IsIn, IsOptional, IsString, IsUrl, IsUUID, ValidateIf, ValidateNested } from 'class-validator';
-import { Exclude, Type } from 'class-transformer';
-import { User } from '../../access_management/user';
+import {BaseDomainClass, NakedDomainClass} from '../../common_classes/base_domain_class';
+import {IsBoolean, IsDefined, IsIn, IsOptional, IsString, IsUrl, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
+import {Exclude, Type} from 'class-transformer';
+import {User} from '../../access_management/user';
 import Import from './import';
 import Result from '../../common_classes/result';
 
@@ -59,17 +59,17 @@ export class HttpDataSourceConfig extends BaseDataSourceConfig {
 
     @ValidateIf((o) => o.auth_method === 'token')
     @IsString()
-    @Exclude({ toPlainOnly: true })
+    @Exclude({toPlainOnly: true})
     token?: string;
 
     @ValidateIf((o) => o.auth_method === 'basic')
     @IsString()
-    @Exclude({ toPlainOnly: true })
+    @Exclude({toPlainOnly: true})
     username?: string;
 
     @IsOptional()
     @IsString()
-    @Exclude({ toPlainOnly: true })
+    @Exclude({toPlainOnly: true})
     password?: string;
 
     constructor(input: {
@@ -110,6 +110,14 @@ export default class DataSourceRecord extends BaseDomainClass {
     @IsIn(['http', 'standard', 'manual'])
     adapter_type = 'standard';
 
+    @IsString()
+    @IsIn(['ready', 'polling', 'error'])
+    status?: 'ready' | 'polling' | 'error' = 'ready';
+
+    @IsOptional()
+    @IsString()
+    status_message?: string;
+
     @IsOptional()
     @IsString()
     data_format?: string;
@@ -123,11 +131,11 @@ export default class DataSourceRecord extends BaseDomainClass {
         discriminator: {
             property: 'kind',
             subTypes: [
-                { value: StandardDataSourceConfig, name: 'standard' },
-                { value: StandardDataSourceConfig, name: 'manual' },
-                { value: HttpDataSourceConfig, name: 'http' }
-            ]
-        }
+                {value: StandardDataSourceConfig, name: 'standard'},
+                {value: StandardDataSourceConfig, name: 'manual'},
+                {value: HttpDataSourceConfig, name: 'http'},
+            ],
+        },
     })
     config?: StandardDataSourceConfig | HttpDataSourceConfig = new StandardDataSourceConfig();
 
@@ -138,6 +146,8 @@ export default class DataSourceRecord extends BaseDomainClass {
         active?: boolean;
         config?: StandardDataSourceConfig | HttpDataSourceConfig;
         data_format?: string;
+        status?: 'ready' | 'polling' | 'error';
+        status_message?: string;
     }) {
         super();
         this.config = new StandardDataSourceConfig();
@@ -149,6 +159,8 @@ export default class DataSourceRecord extends BaseDomainClass {
             if (input.active) this.active = input.active;
             if (input.config) this.config = input.config;
             if (input.data_format) this.data_format = input.data_format;
+            if (input.status) this.status = input.status;
+            if (input.status_message) this.status_message = input.status_message;
         }
     }
 }

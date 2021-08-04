@@ -104,6 +104,18 @@ export default class DataSourceRepository extends Repository implements Reposito
         } else return Promise.resolve(Result.Failure(`data source's record must be instantiated and have an id`));
     }
 
+    async setStatus(
+        t: DataSource,
+        user: User,
+        status: 'ready' | 'polling' | 'error',
+        status_message?: string,
+        transaction?: PoolClient,
+    ): Promise<Result<boolean>> {
+        if (t.DataSourceRecord && t.DataSourceRecord.id) {
+            return this.#mapper.SetStatus(t.DataSourceRecord.id, user.id!, status, status_message, transaction);
+        } else return Promise.resolve(Result.Failure(`data source's record must be instantiated and have an id`));
+    }
+
     constructor() {
         super(DataSourceMapper.tableName);
     }
