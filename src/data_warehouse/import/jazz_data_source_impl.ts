@@ -1,16 +1,18 @@
-import DataSourceRecord, {DataSource, HttpDataSourceConfig} from './data_source';
+import DataSourceRecord, {DataSource, HttpDataSourceConfig, JazzDataSourceConfig} from './data_source';
 import Result, {ErrorNotFound} from '../../common_classes/result';
 import Logger from '../../services/logger';
 import Config from '../../services/config';
 import DataSourceMapper from '../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import ImportMapper from '../../data_access_layer/mappers/data_warehouse/import/import_mapper';
 import NodeRSA from 'node-rsa';
-import axios, {AxiosResponse} from 'axios';
+import axios, {AxiosRequestConfig, AxiosResponse} from 'axios';
 import {SuperUser} from '../../access_management/user';
 import UserRepository from '../../data_access_layer/repositories/access_management/user_repository';
 import ImportRepository from '../../data_access_layer/repositories/data_warehouse/import/import_repository';
 import StandardDataSourceImpl from './standard_data_source_impl';
 import {plainToClass} from 'class-transformer';
+import * as https from 'https';
+const xml2js = require('xml2js');
 
 const buildUrl = require('build-url');
 
@@ -19,7 +21,7 @@ const buildUrl = require('build-url');
  this implementation allows the user to query both basic authentication and
  bearer token secured endpoints for JSON data.
 */
-export default class HttpDataSourceImpl extends StandardDataSourceImpl implements DataSource {
+export default class JazzDataSourceImpl extends StandardDataSourceImpl implements DataSource {
     #mapper = DataSourceMapper.Instance;
     #userRepo = new UserRepository();
     #importRepo = new ImportRepository();
@@ -37,23 +39,10 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
             const key = new NodeRSA(Config.encryption_key_secret);
 
             try {
-                if ((this.DataSourceRecord.config as HttpDataSourceConfig).auth_method === 'basic') {
-                    (this.DataSourceRecord.config as HttpDataSourceConfig).username = key.decryptPublic(
-                        (this.DataSourceRecord.config as HttpDataSourceConfig).username!,
-                        'utf8',
-                    );
-                    (this.DataSourceRecord.config as HttpDataSourceConfig).password = key.decryptPublic(
-                        (this.DataSourceRecord.config as HttpDataSourceConfig).password!,
-                        'utf8',
-                    );
-                }
-
-                if ((this.DataSourceRecord.config as HttpDataSourceConfig).auth_method === 'token') {
-                    (this.DataSourceRecord.config as HttpDataSourceConfig).token = key.decryptPublic(
-                        (this.DataSourceRecord.config as HttpDataSourceConfig).token!,
-                        'utf8',
-                    );
-                }
+                (this.DataSourceRecord.config as JazzDataSourceConfig).token = key.decryptPublic(
+                    (this.DataSourceRecord.config as JazzDataSourceConfig).token!,
+                    'utf8',
+                );
 
                 this.decrypted = true;
             } catch (err) {
@@ -75,7 +64,7 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
     // processing the data is not the responsibility of this portion of the application
     private async startPolling(loopOnce?: boolean): Promise<void> {
         if (!this.DataSourceRecord) {
-            Logger.error(`unable to start http data source process, no record present`);
+            Logger.error(`unable to start jazz data source process, no record present`);
             return;
         }
 
@@ -106,7 +95,7 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
             }
 
             // let's give the config an easier way of being referenced
-            const config = this.DataSourceRecord.config as HttpDataSourceConfig;
+            const config = this.DataSourceRecord.config as JazzDataSourceConfig;
 
             // we start a transaction so that we can lock the previous and new import
             // rows while we attempt to poll new data
@@ -117,8 +106,6 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
                 config.poll_interval ? await this.delay(config.poll_interval * 1000) : await this.delay(1000);
                 continue;
             }
-
-            let lastImportTime = '';
 
             // fetch last import, include time as url param - we lock the record on
             // retrieval because if we can successfully lock it it means that it's
@@ -136,7 +123,6 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
             }
 
             if (lastImport.value && lastImport.value.modified_at) {
-                lastImportTime = lastImport.value.modified_at.toUTCString();
                 const nextRunTime = new Date(lastImport.value.modified_at.getTime() + config.poll_interval * 60000);
 
                 // if we haven't reached the next poll time, intelligently sleep
@@ -153,37 +139,46 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
             // create http request
             Logger.debug(`data source ${this.DataSourceRecord.id} http polling for data`);
             const endpoint = buildUrl(`${config.endpoint}`, {
+                path: 'rm/publish/modules',
                 queryParams: {
-                    lastImport: lastImportTime,
+                    projectName: config.project_name,
                 },
             });
 
             // configure and send http request
             let resp: AxiosResponse<any>;
-            const httpConfig: {[key: string]: any} = {};
+            const httpConfig: AxiosRequestConfig = {};
+            httpConfig.headers = {};
 
             if (lastImport.value && lastImport.value.reference) httpConfig.headers.Reference = lastImport.value.reference;
 
-            switch (config.auth_method) {
-                case 'basic': {
-                    httpConfig.auth = {
-                        username: config.username!,
-                        password: config.password!,
-                    };
-                }
-
-                case 'token': {
-                    if (config.token) httpConfig.headers.Authorization = `Bearer ${config.token}`;
-                }
-            }
+            if (config.token) httpConfig.headers.Authorization = `Bearer ${config.token}`;
 
             try {
+                // we were running into issues with self-signed certificates, while
+                // not recommended this isn't as dangerous as accepting expired or incorrect ones
+                if (config.secure) {
+                    httpConfig.httpsAgent = new https.Agent({rejectUnauthorized: false});
+                }
+
                 resp = await axios.get(endpoint, httpConfig);
                 if (resp.status > 299 || resp.status < 200 || !resp.data) {
                     Logger.debug(`data source ${this.DataSourceRecord.id} poll failed or had no data`);
                 } else {
                     let reference = '';
                     if ('Reference' in resp.headers) reference = resp.headers.Reference;
+
+                    // TODO:convert this all to streams with the rest of the system
+                    // these options allow us to do a lot of trimming before hand
+                    const parser = new xml2js.Parser({
+                        trim: true,
+                        normalize: true,
+                        normalizeTags: true,
+                        mergeAttrs: true,
+                        explicitArray: false,
+                    });
+
+                    const results = await parser.parseString(resp.data);
 
                     if (!Array.isArray(resp.data)) {
                         Logger.error(`response from http importer must be an array of JSON objects`);
@@ -230,14 +225,7 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
         const output = plainToClass(DataSourceRecord, {}); // we do this to avoid having to use the constructor or pollute current record
         Object.assign(output, this.DataSourceRecord);
 
-        if ((output.config as HttpDataSourceConfig).auth_method === 'basic') {
-            (output.config as HttpDataSourceConfig).username = key.encryptPrivate((output.config as HttpDataSourceConfig).username!, 'base64');
-            (output.config as HttpDataSourceConfig).password = key.encryptPrivate((output.config as HttpDataSourceConfig).password!, 'base64');
-        }
-
-        if ((output.config as HttpDataSourceConfig).auth_method === 'token') {
-            (output.config as HttpDataSourceConfig).token = key.encryptPrivate((output.config as HttpDataSourceConfig).token!, 'base64');
-        }
+        (output.config as JazzDataSourceConfig).token = key.encryptPrivate((output.config as JazzDataSourceConfig).token!, 'base64');
 
         return Promise.resolve(output);
     }

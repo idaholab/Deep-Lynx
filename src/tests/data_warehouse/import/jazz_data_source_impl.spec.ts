@@ -8,17 +8,17 @@ import {expect} from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import DataSourceRecord, {DataSource, HttpDataSourceConfig} from '../../../data_warehouse/import/data_source';
+import DataSourceRecord, {DataSource, HttpDataSourceConfig, JazzDataSourceConfig} from '../../../data_warehouse/import/data_source';
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import StandardDataSourceImpl from '../../../data_warehouse/import/standard_data_source_impl';
 import HttpDataSourceImpl from '../../../data_warehouse/import/http_data_source_impl';
-import ImportRepository from "../../../data_access_layer/repositories/data_warehouse/import/import_repository";
+import ImportRepository from '../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 
 // some general tests on data sources that aren't specific to the implementation
-describe('An HTTP Data Source can', async () => {
+describe('An Jazz Data Source can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
-    let config: HttpDataSourceConfig;
+    let config: JazzDataSourceConfig;
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
@@ -26,8 +26,12 @@ describe('An HTTP Data Source can', async () => {
             this.skip();
         }
 
-        if (process.env.HTTP_DATA_SOURCE_URL === '') {
-            Logger.debug('skipping HTTP data source tests, no data source URL');
+        if (process.env.JAZZ_DATA_SOURCE_URL === '') {
+            Logger.debug('skipping Jazz data source tests, no data source URL');
+        }
+
+        if (process.env.JAZZ_DATA_SOURCE_PROJECT_NAME === '') {
+            Logger.debug('skipping Jazz data source tests, no project name');
         }
 
         await PostgresAdapter.Instance.init();
@@ -61,13 +65,12 @@ describe('An HTTP Data Source can', async () => {
         expect(userResult.value).not.empty;
         user = userResult.value;
 
-        config = new HttpDataSourceConfig({
-            endpoint: process.env.HTTP_DATA_SOURCE_URL as string,
-            auth_method: process.env.HTTP_DATA_SOURCE_AUTH_METHOD ? (process.env.HTTP_DATA_SOURCE_AUTH_METHOD as 'token' | 'basic' | 'none') : 'none',
-            username: process.env.HTTP_DATA_SOURCE_USERNAME,
-            password: process.env.HTTP_DATA_SOURCE_PASSWORD,
-            token: process.env.HTTP_DATA_SOURCE_TOKEN,
-            poll_interval: 1000, // don't want to have this poll more than once
+        config = new JazzDataSourceConfig({
+            endpoint: process.env.JAZZ_DATA_SOURCE_URL as string,
+            token: process.env.JAZZ_DATA_SOURCE_TOKEN as string,
+            project_name: process.env.JAZZ_DATA_SOURCE_PROJECT_NAME as string,
+            poll_interval: 1000, // don't want to have this poll more than once,
+            secure: true,
         });
 
         return Promise.resolve();
@@ -85,9 +88,9 @@ describe('An HTTP Data Source can', async () => {
         let source = new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
                 container_id: containerID,
-                name: 'Test HTTP Data Source',
+                name: 'Test JAZZ Data Source',
                 active: true,
-                adapter_type: 'http',
+                adapter_type: 'jazz',
                 config: config,
                 data_format: 'json',
             }),
@@ -115,17 +118,14 @@ describe('An HTTP Data Source can', async () => {
         // while we can't make assumptions on how much data we fetched, we can
         // make sure we fetched something by checking the import count for the
         // data source. If you want more a more robust check of your individual
-        // http source, you'll need to add more tests after this.
+        // JAZZ source, you'll need to add more tests after this.
 
-        const count = await new ImportRepository()
-            .where()
-            .dataSourceID("eq", source?.DataSourceRecord!.id)
-            .count()
+        const count = await new ImportRepository().where().dataSourceID('eq', source?.DataSourceRecord!.id).count();
 
-        expect(count.isError).false
-        expect(count.value).gt(0)
+        expect(count.isError).false;
+        expect(count.value).gt(0);
 
-        return Promise.resolve()
+        return Promise.resolve();
     });
 });
 
