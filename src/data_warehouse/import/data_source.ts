@@ -35,7 +35,7 @@ export interface DataSource {
  validate against
 */
 export class BaseDataSourceConfig extends NakedDomainClass {
-    kind: 'http' | 'standard' | 'manual' = 'standard';
+    kind: 'http' | 'standard' | 'manual' | 'jazz' = 'standard';
 }
 
 export class StandardDataSourceConfig extends BaseDataSourceConfig {
@@ -50,6 +50,9 @@ export class HttpDataSourceConfig extends BaseDataSourceConfig {
 
     @IsUrl()
     endpoint?: string;
+
+    @IsBoolean()
+    secure = false;
 
     @IsDefined()
     auth_method: 'none' | 'basic' | 'token' = 'none';
@@ -79,6 +82,7 @@ export class HttpDataSourceConfig extends BaseDataSourceConfig {
         token?: string;
         username?: string;
         password?: string;
+        secure?: boolean;
     }) {
         super();
 
@@ -88,6 +92,39 @@ export class HttpDataSourceConfig extends BaseDataSourceConfig {
             if (input.poll_interval) this.poll_interval = input.poll_interval;
             this.username = input.username;
             this.password = input.password;
+            if (input.secure) this.secure = input.secure;
+        }
+    }
+}
+
+export class JazzDataSourceConfig extends BaseDataSourceConfig {
+    kind: 'jazz' = 'jazz';
+
+    @IsUrl()
+    endpoint?: string;
+
+    @IsBoolean()
+    secure = false;
+
+    @IsString()
+    project_name?: string;
+
+    // poll interval in minutes
+    poll_interval = 10;
+
+    @IsString()
+    @Exclude({toPlainOnly: true})
+    token?: string;
+
+    constructor(input: {endpoint: string; token: string; project_name: string; poll_interval?: number; secure?: boolean}) {
+        super();
+
+        if (input) {
+            this.endpoint = input.endpoint;
+            this.project_name = input.project_name;
+            this.token = input.token;
+            if (input.poll_interval) this.poll_interval = input.poll_interval;
+            if (input.secure) this.secure = input.secure;
         }
     }
 }
@@ -107,7 +144,7 @@ export default class DataSourceRecord extends BaseDomainClass {
     name?: string;
 
     @IsString()
-    @IsIn(['http', 'standard', 'manual'])
+    @IsIn(['http', 'standard', 'manual', 'jazz'])
     adapter_type = 'standard';
 
     @IsString()
@@ -133,18 +170,19 @@ export default class DataSourceRecord extends BaseDomainClass {
             subTypes: [
                 {value: StandardDataSourceConfig, name: 'standard'},
                 {value: StandardDataSourceConfig, name: 'manual'},
+                {value: JazzDataSourceConfig, name: 'jazz'},
                 {value: HttpDataSourceConfig, name: 'http'},
             ],
         },
     })
-    config?: StandardDataSourceConfig | HttpDataSourceConfig = new StandardDataSourceConfig();
+    config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig = new StandardDataSourceConfig();
 
     constructor(input: {
         container_id: string;
         name: string;
         adapter_type: string;
         active?: boolean;
-        config?: StandardDataSourceConfig | HttpDataSourceConfig;
+        config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig;
         data_format?: string;
         status?: 'ready' | 'polling' | 'error';
         status_message?: string;

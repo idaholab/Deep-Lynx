@@ -7,6 +7,7 @@ import Result from '../../../../common_classes/result';
 import {User} from '../../../../access_management/user';
 import {PoolClient} from 'pg';
 import ImportMapper from '../../../mappers/data_warehouse/import/import_mapper';
+import JazzDataSourceImpl from '../../../../data_warehouse/import/jazz_data_source_impl';
 
 /*
     DataSourceRepository contains methods for persisting and retrieving data sources
@@ -174,6 +175,10 @@ export class DataSourceFactory {
             case 'manual': {
                 // this is to handle backwards compatibility with already existing records
                 return new StandardDataSourceImpl(sourceRecord);
+            }
+
+            case 'jazz': {
+                return new JazzDataSourceImpl(sourceRecord);
             }
 
             default: {
