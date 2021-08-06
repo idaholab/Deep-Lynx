@@ -178,9 +178,16 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
                         explicitArray: false,
                     });
 
-                    const results = await parser.parseString(resp.data);
+                    // this data shaping will need to be moved once we incorporate streams
+                    const results = await parser.parseStringPromise(resp.data);
+                    if (!results['ds:datasource'] || !results['ds:datasource']['ds:artifact']) {
+                        Logger.error(`jazz data response lacking required fields`);
+                        await ImportMapper.Instance.completeTransaction(pollTransaction.value);
+                    }
 
-                    if (!Array.isArray(resp.data)) {
+                    if (!Array.isArray(results['ds:datasource']['ds:artifact'])) {
+                        // TODO: move this once we convert to streams
+
                         Logger.error(`response from http importer must be an array of JSON objects`);
                         await ImportMapper.Instance.completeTransaction(pollTransaction.value);
 
@@ -192,7 +199,7 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
                     const retrievedUser = await this.#userRepo.findByID(this.DataSourceRecord.created_by!);
                     if (!retrievedUser.isError) user = retrievedUser.value;
 
-                    const received = await this.ReceiveData(resp.data, user, pollTransaction.value);
+                    const received = await this.ReceiveData(results['ds:datasource']['ds:artifact'], user, pollTransaction.value);
                     if (received.isError) {
                         Logger.error(`unable to process data received from http data source ${received.error?.error}`);
                     }
