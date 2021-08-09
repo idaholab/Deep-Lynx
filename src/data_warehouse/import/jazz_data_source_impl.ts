@@ -113,6 +113,9 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
             // acting on it
             const lastImport = await this.#importRepo.findLastAndLock(this.DataSourceRecord.id!, pollTransaction.value);
 
+            // for the query param which dictates the time period to fetch from
+            let modifiedSince = '';
+
             // if this isn't a not found error it means we couldn't lock the record
             // which means it's being processed
             if (lastImport.isError && lastImport.error !== ErrorNotFound) {
@@ -123,6 +126,7 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
             }
 
             if (lastImport.value && lastImport.value.modified_at) {
+                modifiedSince = lastImport.value.modified_at.toISOString();
                 const nextRunTime = new Date(lastImport.value.modified_at.getTime() + config.poll_interval * 60000);
 
                 // if we haven't reached the next poll time, intelligently sleep
@@ -142,6 +146,7 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
                 path: 'rm/publish/modules',
                 queryParams: {
                     projectName: config.project_name,
+                    modifiedSince, // this allows us to limit the return value to only changed records
                 },
             });
 
