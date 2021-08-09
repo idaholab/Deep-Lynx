@@ -18,7 +18,7 @@
             <h2 v-if="!transformation">{{$t("dataMapping.createNewTransformation")}}</h2>
             <h2 v-if="transformation && !transformation.archived">{{$t("dataMapping.editTransformation")}}</h2>
             <h2 v-if="transformation && transformation.archived">{{$t("dataMapping.viewArchivedTransformation")}}</h2>
-            <h4>{{transformation.id}}</h4>
+            <h4 v-if="transformation">{{transformation.id}}</h4>
             <v-divider></v-divider>
             <div id="mappingCol">
               <v-row v-if="payloadArrayKeys.length > 0">
@@ -417,7 +417,6 @@
                     color="error"
                     class="mr-4"
                     v-if="!loading && !transformation"
-                    :disabled="transformation.archived"
                 >
                   {{$t("dataMapping.reset")}}
                 </v-btn>
@@ -488,7 +487,7 @@ export default class TransformationDialog extends Vue {
   @Prop({required: true})
   readonly typeMappingID!: string
 
-  @Prop({required: false})
+  @Prop({required: false, default: null})
   readonly transformation!: TypeMappingTransformationT | null
 
   @Prop({required: false})
