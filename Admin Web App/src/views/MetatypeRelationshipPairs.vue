@@ -41,7 +41,7 @@
         </v-row>
       </template>
       <template v-slot:[`item.actions`]="{ item }">
-        <edit-relationship-pair-dialog :pair="item" :icon="true" @pairEdited="loadMetatypeRelationshipPairs()"></edit-relationship-pair-dialog>
+      <edit-relationship-pair-dialog :pair="item" :icon="true" @pairEdited="loadMetatypeRelationshipPairs()"></edit-relationship-pair-dialog>
         <v-icon
             small
             @click="deleteRelationship(item)"

@@ -28,10 +28,12 @@ describe('An Jazz Data Source can', async () => {
 
         if (process.env.JAZZ_DATA_SOURCE_URL === '') {
             Logger.debug('skipping Jazz data source tests, no data source URL');
+            this.skip();
         }
 
         if (process.env.JAZZ_DATA_SOURCE_PROJECT_NAME === '') {
             Logger.debug('skipping Jazz data source tests, no project name');
+            this.skip();
         }
 
         await PostgresAdapter.Instance.init();
@@ -77,8 +79,12 @@ describe('An Jazz Data Source can', async () => {
     });
 
     after(async () => {
-        await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(containerID);
+        if (process.env.CORE_DB_CONNECTION_STRING !== '' && process.env.JAZZ_DATA_SOURCE_URL !== '' && process.env.JAZZ_DATA_SOURCE_PROJECT_NAME !== '') {
+            await UserMapper.Instance.Delete(user.id!);
+            return ContainerMapper.Instance.Delete(containerID);
+        }
+
+        return Promise.resolve();
     });
 
     it('will successfully poll and store data', async () => {

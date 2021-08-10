@@ -123,7 +123,7 @@ export default class EditRelationshipPairDialog extends Vue {
   destinationMetatypes: MetatypeT[] = []
   metatypeRelationships: MetatypeRelationshipT[] = []
 
-  @Watch('destinationSearch', {immediate: true})
+  @Watch('destinationSearch', {immediate: false})
   onDestinationSearchChange(newVal: string) {
     this.$client.listMetatypes(this.pair.container_id, {name: newVal})
         .then((metatypes) => {
@@ -132,7 +132,7 @@ export default class EditRelationshipPairDialog extends Vue {
         .catch((e: any) => this.errorMessage = e)
   }
 
-  @Watch('originSearch', {immediate: true})
+  @Watch('originSearch', {immediate: false})
   onOriginSearchChange(newVal: string) {
     this.$client.listMetatypes(this.pair.container_id, {name: newVal})
         .then((metatypes) => {
@@ -141,7 +141,7 @@ export default class EditRelationshipPairDialog extends Vue {
         .catch((e: any) => this.errorMessage = e)
   }
 
-  @Watch('relationshipSearch', {immediate: true})
+  @Watch('relationshipSearch', {immediate: false})
   relationshipSearchChange(newVal: string) {
     this.$client.listMetatypeRelationships(this.pair.container_id,  {name: newVal})
         .then(metatypeRelationships => {

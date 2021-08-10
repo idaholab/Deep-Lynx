@@ -12,7 +12,7 @@ import DataSourceRecord, {DataSource, HttpDataSourceConfig} from '../../../data_
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import StandardDataSourceImpl from '../../../data_warehouse/import/standard_data_source_impl';
 import HttpDataSourceImpl from '../../../data_warehouse/import/http_data_source_impl';
-import ImportRepository from "../../../data_access_layer/repositories/data_warehouse/import/import_repository";
+import ImportRepository from '../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 
 // some general tests on data sources that aren't specific to the implementation
 describe('An HTTP Data Source can', async () => {
@@ -28,6 +28,7 @@ describe('An HTTP Data Source can', async () => {
 
         if (process.env.HTTP_DATA_SOURCE_URL === '') {
             Logger.debug('skipping HTTP data source tests, no data source URL');
+            this.skip();
         }
 
         await PostgresAdapter.Instance.init();
@@ -74,8 +75,12 @@ describe('An HTTP Data Source can', async () => {
     });
 
     after(async () => {
-        await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(containerID);
+        if (process.env.CORE_DB_CONNECTION_STRING !== '' && process.env.HTTP_DATA_SOURCE_URL !== '') {
+            await UserMapper.Instance.Delete(user.id!);
+            return ContainerMapper.Instance.Delete(containerID);
+        }
+
+        return Promise.resolve();
     });
 
     it('will successfully poll and store data', async () => {
@@ -117,15 +122,12 @@ describe('An HTTP Data Source can', async () => {
         // data source. If you want more a more robust check of your individual
         // http source, you'll need to add more tests after this.
 
-        const count = await new ImportRepository()
-            .where()
-            .dataSourceID("eq", source?.DataSourceRecord!.id)
-            .count()
+        const count = await new ImportRepository().where().dataSourceID('eq', source?.DataSourceRecord!.id).count();
 
-        expect(count.isError).false
-        expect(count.value).gt(0)
+        expect(count.isError).false;
+        expect(count.value).gt(0);
 
-        return Promise.resolve()
+        return Promise.resolve();
     });
 });
 
