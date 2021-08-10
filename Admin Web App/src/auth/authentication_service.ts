@@ -175,6 +175,7 @@ export async function RefreshPermissions(): Promise<boolean> {
 
     if (Config.deepLynxApiAuth === 'token') {
         config.headers.Authorization = `Bearer ${RetrieveJWT()}`;
+        // @ts-ignore
         delete config.auth;
     }
 
