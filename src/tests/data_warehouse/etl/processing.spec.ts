@@ -1,5 +1,5 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../../services/logger';
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
@@ -19,15 +19,15 @@ import MetatypeRelationshipPair from '../../../data_warehouse/ontology/metatype_
 import MetatypeKey from '../../../data_warehouse/ontology/metatype_key';
 import MetatypeRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
-import { User } from '../../../access_management/user';
+import {User} from '../../../access_management/user';
 import NodeRepository from '../../../data_access_layer/repositories/data_warehouse/data/node_repository';
 import EdgeRepository from '../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import TypeMapping from '../../../data_warehouse/etl/type_mapping';
-import TypeTransformation, { KeyMapping } from '../../../data_warehouse/etl/type_transformation';
+import TypeTransformation, {KeyMapping} from '../../../data_warehouse/etl/type_transformation';
 import TypeMappingRepository from '../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
-import Import, { DataStaging } from '../../../data_warehouse/import/import';
-import DataSourceRecord, { DataSource } from '../../../data_warehouse/import/data_source';
-import { DataSourceFactory } from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
+import Import, {DataStaging} from '../../../data_warehouse/import/import';
+import DataSourceRecord, {DataSource} from '../../../data_warehouse/import/data_source';
+import {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 
 describe('A Data Processor', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -47,15 +47,15 @@ describe('A Data Processor', async () => {
             property_name: 'id',
             description: 'id of car',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'name',
             property_name: 'name',
             description: 'name of car',
             data_type: 'string',
-            required: true
-        })
+            required: true,
+        }),
     ];
 
     const component_metatype_keys: MetatypeKey[] = [
@@ -64,15 +64,15 @@ describe('A Data Processor', async () => {
             property_name: 'id',
             description: 'id of car',
             data_type: 'number',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'name',
             property_name: 'name',
             description: 'name of car',
             data_type: 'string',
-            required: true
-        })
+            required: true,
+        }),
     ];
 
     const manufacturer_metatype_keys: MetatypeKey[] = [
@@ -81,22 +81,22 @@ describe('A Data Processor', async () => {
             property_name: 'id',
             description: 'id of car',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'name',
             property_name: 'name',
             description: 'name of car',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'location',
             property_name: 'location',
             description: 'location of manufacturer',
             data_type: 'string',
-            required: true
-        })
+            required: true,
+        }),
     ];
 
     const tire_pressure_metatype_keys: MetatypeKey[] = [
@@ -105,29 +105,29 @@ describe('A Data Processor', async () => {
             property_name: 'id',
             description: 'id of car',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'measurement',
             property_name: 'measurement',
             description: 'measurement',
             data_type: 'number',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'measurement unit',
             property_name: 'measurement_unit',
             description: 'unit of measurement',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'measurement name',
             property_name: 'measurement_name',
             description: 'name of measurement',
             data_type: 'string',
-            required: true
-        })
+            required: true,
+        }),
     ];
 
     const car_maintenance_metatype_keys: MetatypeKey[] = [
@@ -136,29 +136,29 @@ describe('A Data Processor', async () => {
             property_name: 'id',
             description: 'id of car',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'name',
             property_name: 'name',
             description: 'name',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'start date',
             property_name: 'start_date',
             description: 'start date',
             data_type: 'date',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'average visits per year',
             property_name: 'average_visits',
             description: 'average visits per yera',
             data_type: 'number',
-            required: true
-        })
+            required: true,
+        }),
     ];
 
     const maintenance_entry_metatype_keys: MetatypeKey[] = [
@@ -167,22 +167,22 @@ describe('A Data Processor', async () => {
             property_name: 'id',
             description: 'id',
             data_type: 'number',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'check engine light flag',
             property_name: 'check_engine_light_flag',
             description: 'check engine light flag',
             data_type: 'boolean',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'type',
             property_name: 'type',
             description: 'type',
             data_type: 'string',
-            required: true
-        })
+            required: true,
+        }),
     ];
 
     const car_part_metatype_keys: MetatypeKey[] = [
@@ -191,67 +191,67 @@ describe('A Data Processor', async () => {
             property_name: 'id',
             description: 'id of car',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'name',
             property_name: 'name',
             description: 'name',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'price',
             property_name: 'price',
             description: 'price',
             data_type: 'number',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'quantity',
             property_name: 'quantity',
             description: 'quantity',
             data_type: 'number',
-            required: true
-        })
+            required: true,
+        }),
     ];
 
     const test_metatypes: Metatype[] = [
         new Metatype({
             name: 'Car',
             description: 'A Vehicle',
-            keys: car_metatype_keys
+            keys: car_metatype_keys,
         }),
         new Metatype({
             name: 'Manufacturer',
             description: 'Creator of Car',
-            keys: manufacturer_metatype_keys
+            keys: manufacturer_metatype_keys,
         }),
         new Metatype({
             name: 'Tire Pressure',
             description: 'Pressure of tire',
-            keys: tire_pressure_metatype_keys
+            keys: tire_pressure_metatype_keys,
         }),
         new Metatype({
             name: 'Maintenance',
             description: 'Maintenance records',
-            keys: car_maintenance_metatype_keys
+            keys: car_maintenance_metatype_keys,
         }),
         new Metatype({
             name: 'Maintenance Entry',
             description: 'Maintenance entries',
-            keys: maintenance_entry_metatype_keys
+            keys: maintenance_entry_metatype_keys,
         }),
         new Metatype({
             name: 'Part',
             description: 'Physical part of car',
-            keys: car_part_metatype_keys
+            keys: car_part_metatype_keys,
         }),
         new Metatype({
             name: 'Component',
             description: 'Base component of part',
-            keys: component_metatype_keys
-        })
+            keys: component_metatype_keys,
+        }),
     ];
 
     before(async function () {
@@ -267,8 +267,8 @@ describe('A Data Processor', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -285,8 +285,8 @@ describe('A Data Processor', async () => {
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(userResult.isError).false;
@@ -308,8 +308,8 @@ describe('A Data Processor', async () => {
             new MetatypeRelationship({
                 container_id: containerID,
                 name: 'parent',
-                description: "item is another's parent"
-            })
+                description: "item is another's parent",
+            }),
         ];
 
         // create the relationships
@@ -329,8 +329,8 @@ describe('A Data Processor', async () => {
                 destination_metatype: test_metatypes.find((m) => m.name === 'Maintenance Entry')!.id!,
                 relationship: resultMetatypeRelationships.find((m) => m.name === 'parent')!.id!,
                 relationship_type: 'one:one',
-                container_id: containerID
-            })
+                container_id: containerID,
+            }),
         );
 
         expect(pairs.isError).false;
@@ -345,8 +345,8 @@ describe('A Data Processor', async () => {
                 name: 'Test Data Source',
                 active: true,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -358,7 +358,7 @@ describe('A Data Processor', async () => {
         const mapping = new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
-            sample_payload: test_payload[0]
+            sample_payload: test_payload[0],
         });
 
         const repo = new TypeMappingRepository();
@@ -375,8 +375,8 @@ describe('A Data Processor', async () => {
             'test suite',
             new Import({
                 data_source_id: exp.value.id!,
-                reference: 'testing suite upload'
-            })
+                reference: 'testing suite upload',
+            }),
         );
         expect(newImport.isError).false;
 
@@ -387,8 +387,8 @@ describe('A Data Processor', async () => {
                 data_source_id: exp.value.id!,
                 import_id: newImport.value.id!,
                 mapping_id: typeMappingID,
-                data: test_payload[0]
-            })
+                data: test_payload[0],
+            }),
         );
         expect(inserted.isError).false;
         expect(inserted.value.id).not.undefined;
@@ -412,23 +412,23 @@ describe('A Data Processor', async () => {
             keys: [
                 new KeyMapping({
                     key: 'car_maintenance.id',
-                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'id')!.id
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'id')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.name',
-                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'name')!.id
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'name')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.start_date',
-                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'start date')!.id
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'start date')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.average_visits_per_year',
-                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'average visits per year')!.id
-                })
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'average visits per year')!.id,
+                }),
             ],
             metatype_id: test_metatypes.find((m) => m.name === 'Maintenance')!.id,
-            unique_identifier_key: 'car_maintenance.id'
+            unique_identifier_key: 'car_maintenance.id',
         });
 
         let result = await TypeTransformationMapper.Instance.Create('test suite', maintenanceTransformation);
@@ -443,20 +443,20 @@ describe('A Data Processor', async () => {
             keys: [
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].id',
-                    metatype_key_id: entryKeys!.find((key) => key.name === 'id')!.id
+                    metatype_key_id: entryKeys!.find((key) => key.name === 'id')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].type',
-                    metatype_key_id: entryKeys!.find((key) => key.name === 'type')!.id
+                    metatype_key_id: entryKeys!.find((key) => key.name === 'type')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].check_engine_light_flag',
-                    metatype_key_id: entryKeys!.find((key) => key.name === 'check engine light flag')!.id
-                })
+                    metatype_key_id: entryKeys!.find((key) => key.name === 'check engine light flag')!.id,
+                }),
             ],
             metatype_id: test_metatypes.find((m) => m.name === 'Maintenance Entry')!.id,
             unique_identifier_key: 'car_maintenance.maintenance_entries.[].id',
-            root_array: 'car_maintenance.maintenance_entries'
+            root_array: 'car_maintenance.maintenance_entries',
         });
 
         result = await TypeTransformationMapper.Instance.Create('test suite', maintenanceEntryTransformation);
@@ -470,7 +470,7 @@ describe('A Data Processor', async () => {
             origin_id_key: 'car_maintenance.id',
             destination_id_key: 'car_maintenance.maintenance_entries.[].id',
             root_array: 'car_maintenance.maintenance_entries',
-            keys: []
+            keys: [],
         });
 
         result = await TypeTransformationMapper.Instance.Create('test suite', maintenanceEdgeTransformation);
@@ -479,7 +479,7 @@ describe('A Data Processor', async () => {
         const active = await TypeMappingMapper.Instance.SetActive(typeMappingID);
         expect(active.isError).false;
 
-        await dataSource!.Process(true);
+        await dataSource!.Process();
 
         const nodeRepo = new NodeRepository();
         const nodes = await nodeRepo.where().importDataID('eq', dataImportID).list();
@@ -553,34 +553,34 @@ const test_payload = [
             manufacturer: {
                 id: 'UUID',
                 name: 'Test Cars Inc',
-                location: 'Seattle, WA'
+                location: 'Seattle, WA',
             },
             tire_pressures: [
                 {
                     id: 'tire0',
                     measurement_unit: 'PSI',
                     measurement: 35.08,
-                    measurement_name: 'tire pressure'
+                    measurement_name: 'tire pressure',
                 },
                 {
                     id: 'tire1',
                     measurement_unit: 'PSI',
                     measurement: 35.45,
-                    measurement_name: 'tire pressure'
+                    measurement_name: 'tire pressure',
                 },
                 {
                     id: 'tire2',
                     measurement_unit: 'PSI',
                     measurement: 34.87,
-                    measurement_name: 'tire pressure'
+                    measurement_name: 'tire pressure',
                 },
                 {
                     id: 'tire3',
                     measurement_unit: 'PSI',
                     measurement: 37.22,
-                    measurement_name: 'tire pressure'
-                }
-            ]
+                    measurement_name: 'tire pressure',
+                },
+            ],
         },
         car_maintenance: {
             id: 'UUID',
@@ -601,18 +601,18 @@ const test_payload = [
                             components: [
                                 {
                                     id: 1,
-                                    name: 'oil'
-                                }
-                            ]
+                                    name: 'oil',
+                                },
+                            ],
                         },
                         {
                             id: 'pan',
                             name: 'oil pan',
                             price: 15.5,
                             quantity: 1,
-                            components: []
-                        }
-                    ]
+                            components: [],
+                        },
+                    ],
                 },
                 {
                     id: 2,
@@ -624,25 +624,25 @@ const test_payload = [
                             name: 'all terrain tire',
                             price: 150.99,
                             quantity: 4,
-                            components: []
+                            components: [],
                         },
                         {
                             id: 'wrench',
                             name: 'wrench',
                             price: 4.99,
                             quantity: 1,
-                            components: []
+                            components: [],
                         },
                         {
                             id: 'bolts',
                             name: 'bolts',
                             price: 1.99,
                             quantity: 5,
-                            components: []
-                        }
-                    ]
-                }
-            ]
-        }
-    }
+                            components: [],
+                        },
+                    ],
+                },
+            ],
+        },
+    },
 ];

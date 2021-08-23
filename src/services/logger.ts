@@ -1,7 +1,8 @@
-import winston, { transports } from 'winston';
+import winston, {transports} from 'winston';
 import Config from './config';
 
 export interface Logger {
+    logger: any;
     error(message: string, ...input: any): void;
     warn(message: string, ...input: any): void;
     info(message: string, ...input: any): void;
@@ -12,7 +13,7 @@ export interface Logger {
 
 export class Winston implements Logger {
     private static instance: Winston;
-    private logger: winston.Logger;
+    public logger: winston.Logger;
 
     error(message: string, ...input: any): void {
         this.logger.log('error', message, input);
@@ -45,34 +46,34 @@ export class Winston implements Logger {
                     format: winston.format.combine(
                         winston.format.colorize(),
                         winston.format.timestamp(),
-                        winston.format.printf(({ level, message, label, timestamp }) => {
+                        winston.format.printf(({level, message, label, timestamp}) => {
                             return `${timestamp} ${level}: ${message}`;
-                        })
-                    )
+                        }),
+                    ),
                 }),
                 new winston.transports.File({
                     filename: 'combined.log',
                     format: winston.format.combine(
                         winston.format.colorize(),
                         winston.format.timestamp(),
-                        winston.format.printf(({ level, message, label, timestamp }) => {
+                        winston.format.printf(({level, message, label, timestamp}) => {
                             return `${timestamp} ${level}: ${message}`;
-                        })
-                    )
-                })
+                        }),
+                    ),
+                }),
             ],
             exceptionHandlers: [
-                new transports.File({ filename: 'exceptions.log' }),
+                new transports.File({filename: 'exceptions.log'}),
                 new winston.transports.Console({
                     format: winston.format.combine(
                         winston.format.colorize(),
                         winston.format.timestamp(),
-                        winston.format.printf(({ level, message, label, timestamp }) => {
+                        winston.format.printf(({level, message, label, timestamp}) => {
                             return `${timestamp} ${level}: ${message}`;
-                        })
-                    )
-                })
-            ]
+                        }),
+                    ),
+                }),
+            ],
         });
     }
     public static Instance(): Logger {

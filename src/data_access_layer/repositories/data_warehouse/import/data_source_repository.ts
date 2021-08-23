@@ -94,13 +94,12 @@ export default class DataSourceRepository extends Repository implements Reposito
         } else return Promise.resolve(Result.Failure(`data source's record must be instantiated and have an id`));
     }
 
-    // when we set the source active we must remember to start the Process loop
+    // do not start the process loop when setting to active, the worker will pick up the change automatically
     async setActive(t: DataSource, user: User): Promise<Result<boolean>> {
         if (t.DataSourceRecord && t.DataSourceRecord.id) {
             const set = await this.#mapper.SetActive(t.DataSourceRecord.id, user.id!);
             if (set.isError) return Promise.resolve(Result.Pass(set));
 
-            void t.Process();
             return Promise.resolve(Result.Success(true));
         } else return Promise.resolve(Result.Failure(`data source's record must be instantiated and have an id`));
     }

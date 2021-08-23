@@ -5,6 +5,9 @@ import {Server} from './http_server/server';
 import BackedLogger from './services/logger';
 import Config from './services/config';
 const {spawn} = require('child_process');
+const path = require('path');
+import Bree from 'bree';
+const Graceful = require('@ladjs/graceful');
 import 'reflect-metadata';
 import UserRepository from './data_access_layer/repositories/access_management/user_repository';
 import PostgresAdapter from './data_access_layer/mappers/db_adapters/postgres/postgres';
@@ -12,32 +15,9 @@ import PostgresAdapter from './data_access_layer/mappers/db_adapters/postgres/po
 const postgresAdapter = PostgresAdapter.Instance;
 
 void postgresAdapter.init().then(() => {
-    // Restart any data exports that were running pre-shutdown
-    // this logic might make sense somewhere else
-    const dataExport = spawn('node', [`${Config.project_dir}/data_access_layer/repositories/data_warehouse/export/boot_exporters.js`]);
-
-    // we want the stdout and stderr output of the function to combine logging
-    dataExport.stdout.on('data', (data: any) => {
-        console.log(data.toString().trim());
-    });
-
-    dataExport.stderr.on('data', (data: any) => {
-        console.log(data.toString().trim());
-    });
-
-    // Start Data Processing loop
-    const dataProcessing = spawn('node', [`${Config.project_dir}/data_access_layer/repositories/data_warehouse/import/boot_data_source_processing.js`]);
-
-    // we want the stdout and stderr output of the function to combine logging
-    dataProcessing.stdout.on('data', (data: any) => {
-        console.log(data.toString().trim());
-    });
-
-    dataProcessing.stderr.on('data', (data: any) => {
-        console.log(data.toString().trim());
-    });
-
-    // Start Event System
+    // Start Event System - we could convert this to a Bree job, but there is no point in doing so as we want this
+    // constantly running, not on an interval. This is still the easiest way to make sure it doesn't pollute the main
+    // thread.
     const eventSystem = spawn('node', [`${Config.project_dir}/event_system/event_system_boot.js`]);
 
     // we want the stdout and stderr output of the function to combine logging
@@ -48,6 +28,26 @@ void postgresAdapter.init().then(() => {
     eventSystem.stderr.on('data', (data: any) => {
         console.log(data.toString().trim());
     });
+
+    const bree = new Bree({
+        logger: BackedLogger.logger,
+        root: path.resolve('dist/jobs'),
+        jobs: [
+            {
+                name: 'data_source_processing', // will run data_source_processing.js
+                interval: Config.data_source_interval,
+            },
+            {
+                name: 'export', // will run export.js
+                interval: Config.export_data_interval, // exports take longer to process, therefore some more time in-between instances is needed
+            },
+        ],
+    });
+
+    const graceful = new Graceful({brees: [bree]});
+    graceful.listen();
+
+    bree.start();
 
     // if enabled, create an initial SuperUser for easier system management
     // if SAML is configured, the initial SAML user will be assigned admin status

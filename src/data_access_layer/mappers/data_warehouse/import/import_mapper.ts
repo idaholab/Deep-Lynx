@@ -90,8 +90,8 @@ export default class ImportMapper extends Mapper {
         return super.runStatement(this.setStatusStatement(importID, status, message), {transaction});
     }
 
-    public async ListIncompleteWithUninsertedData(dataSourceID: string): Promise<Result<Import[]>> {
-        return super.rows(this.listIncompleteWithUninsertedDataStatement(dataSourceID), {resultClass});
+    public async ListIncompleteWithUninsertedData(dataSourceID: string, limit: number): Promise<Result<Import[]>> {
+        return super.rows(this.listIncompleteWithUninsertedDataStatement(dataSourceID, limit), {resultClass});
     }
 
     public async Count(): Promise<Result<number>> {
@@ -172,7 +172,7 @@ export default class ImportMapper extends Mapper {
         };
     }
 
-    private listIncompleteWithUninsertedDataStatement(dataSourceID: string): QueryConfig {
+    private listIncompleteWithUninsertedDataStatement(dataSourceID: string, limit: number): QueryConfig {
         return {
             text: `SELECT imports.*,
                           SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
@@ -183,8 +183,9 @@ export default class ImportMapper extends Mapper {
                      AND imports.data_source_id = $1
                      AND EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id AND data_staging.inserted_at IS NULL)
                      AND EXISTS(SELECT * FROM data_staging WHERE data_staging.import_id = imports.id)
-                   GROUP BY imports.id`,
-            values: [dataSourceID],
+                   GROUP BY imports.id
+                   LIMIT $2 `,
+            values: [dataSourceID, limit],
         };
     }
 

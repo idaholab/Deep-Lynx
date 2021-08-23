@@ -58,7 +58,11 @@ export class Config {
     private readonly _auth_config_file: string;
     private readonly _auth_token_expiry: string;
 
-    private readonly _data_source_processing_interval: number;
+    private readonly _export_data_interval: string;
+    private readonly _export_data_concurrency: number;
+
+    private readonly _data_source_processing_interval: string;
+    private readonly _data_source_processing_concurrency: number;
     private readonly _data_source_processing_batch_size: number;
 
     private readonly _queue_system: string;
@@ -130,12 +134,16 @@ export class Config {
         this._auth_config_file = process.env.AUTH_CONFIG_FILE_PATH || path.resolve(__dirname, '../../src/access_management/authorization/auth_model.conf');
         this._auth_token_expiry = process.env.AUTH_TOKEN_EXPIRY || '24h';
 
-        this._data_source_processing_interval = process.env.DATA_SOURCE_PROCESSING_INTERVAL
-            ? parseInt(process.env.DATA_SOURCE_PROCESSING_INTERVAL!, 10)
-            : 10000;
+        this._data_source_processing_interval = process.env.DATA_SOURCE_PROCESSING_INTERVAL || '1m';
+        this._data_source_processing_concurrency = process.env.DATA_SOURCE_PROCESSING_CONCURRENCY
+            ? parseInt(process.env.DATA_SOURCE_PROCESSING_CONCURRENCY, 10)
+            : 4;
         this._data_source_processing_batch_size = process.env.DATA_SOURCE_PROCESSING_BATCH_SIZE
             ? parseInt(process.env.DATA_SOURCE_PROCESSING_BATCH_SIZE!, 10)
             : 1000;
+
+        this._export_data_interval = process.env.EXPORT_INTERVAL || '10m';
+        this._export_data_concurrency = process.env.EXPORT_DATA_CONCURRENCY ? parseInt(process.env.EXPORT_DATA_CONCURRENCY, 10) : 4;
 
         this._queue_system = process.env.QUEUE_SYSTEM || 'database';
         this._queue_poll_interval = process.env.QUEUE_POLL_INTERVAL ? parseInt(process.env.QUEUE_POLL_INTERVAL!, 10) : 1000;
@@ -239,12 +247,24 @@ export class Config {
         return this._superuser_password;
     }
 
-    get data_source_poll_interval(): number {
+    get data_source_interval(): string {
         return this._data_source_processing_interval;
+    }
+
+    get data_source_concurrency(): number {
+        return this._data_source_processing_concurrency;
     }
 
     get data_source_batch_size(): number {
         return this._data_source_processing_batch_size;
+    }
+
+    get export_data_interval(): string {
+        return this._export_data_interval;
+    }
+
+    get export_data_concurrency(): number {
+        return this._export_data_concurrency;
     }
 
     get queue_system(): string {

@@ -171,9 +171,7 @@ export class GremlinImpl implements Exporter {
         }
 
         await ExportMapper.Instance.SetStatus(user.id!, this.ExportRecord.id, 'processing');
-        void this.export();
-
-        return new Promise((resolve) => resolve(Result.Success(true)));
+        return this.export();
     }
 
     Status(): string {
@@ -188,15 +186,15 @@ export class GremlinImpl implements Exporter {
         return ExportMapper.Instance.SetStatus(user.id!, this.ExportRecord.id, 'paused');
     }
 
-    private async export() {
+    private async export(): Promise<Result<boolean>> {
         if (!this.ExportRecord || !this.ExportRecord.id) {
             Logger.error(`unable to start export, export must be saved before attempting to process`);
-            return;
+            return Promise.resolve(Result.Failure('unable to start export, export must be saved before processing'));
         }
 
         if (!this.client) {
             Logger.error(`unable to initiate gremlin client for export ${this.ExportRecord.id}`);
-            return;
+            return Promise.resolve(Result.Failure('unable to initiate gremlin client for export'));
         }
 
         const metatypeRepo = new MetatypeRepository();
@@ -209,13 +207,13 @@ export class GremlinImpl implements Exporter {
             const check = await ExportMapper.Instance.Retrieve(this.ExportRecord.id);
             if (check.isError || check.value.status !== 'processing') {
                 Logger.error(`gremlin export ${this.ExportRecord.id} unable to verify status or status stopped, exiting`);
-                return;
+                return Promise.resolve(Result.Failure(`gremlin export ${this.ExportRecord.id} unable to verify status or status stopped, exiting`));
             }
 
             const transaction = await gremlinExportStorage.startTransaction();
             if (transaction.isError) {
                 Logger.error(`unable to initiate db transaction ${transaction}`);
-                return;
+                return Promise.resolve(Result.Failure(`unable to initiate db transaction ${transaction}`));
             }
 
             // unassociated nodes should be inserted as vertices without any edges,
@@ -233,7 +231,7 @@ export class GremlinImpl implements Exporter {
                 Logger.error(`gremlin export failing: ${unassociatedNodes.error?.error}`);
                 await gremlinExportStorage.completeTransaction(transaction.value);
 
-                return;
+                return Promise.resolve(Result.Failure(`gremlin export failing: ${unassociatedNodes.error?.error}`));
             }
 
             if (unassociatedNodes.value.length <= 0) break;
@@ -273,13 +271,13 @@ export class GremlinImpl implements Exporter {
             const check = await ExportMapper.Instance.Retrieve(this.ExportRecord.id);
             if (check.isError || check.value.status !== 'processing') {
                 Logger.error(`gremlin export ${this.ExportRecord.id} unable to verify status or status stopped, exiting`);
-                return;
+                return Promise.resolve(Result.Failure(`gremlin export ${this.ExportRecord.id} unable to verify status or status stopped, exiting`));
             }
 
             const transaction = await gremlinExportStorage.startTransaction();
             if (transaction.isError) {
                 Logger.error(`unable to initiate db transaction ${transaction}`);
-                return;
+                return Promise.resolve(Result.Failure(`unable to initiate db transaction ${transaction}`));
             }
 
             // We choose to wait here if we can't get a lock so that we don't
@@ -296,7 +294,7 @@ export class GremlinImpl implements Exporter {
                 Logger.error(`gremlin export failing: ${unassociatedEdges.error?.error}`);
                 await gremlinExportStorage.completeTransaction(transaction.value);
 
-                return;
+                return Promise.resolve(Result.Failure(`gremlin export failing: ${unassociatedEdges.error?.error}`));
             }
 
             if (unassociatedEdges.value.length <= 0) break;
@@ -334,7 +332,8 @@ export class GremlinImpl implements Exporter {
 
         Logger.debug(`gremlin export ${this.ExportRecord.id} completed, cleaning up snapshot`);
         await ExportMapper.Instance.SetStatus('system', this.ExportRecord.id, 'completed');
-        await gremlinExportStorage.DeleteForExport(this.ExportRecord.id);
+
+        return gremlinExportStorage.DeleteForExport(this.ExportRecord.id);
     }
 
     private delay(ms: number) {
