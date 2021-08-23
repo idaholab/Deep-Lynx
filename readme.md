@@ -9,7 +9,7 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 
 **Requirements**
 
--   node.js 8.x, 10.x, 12.x, 14.x, and 15.x
+-   node.js 12.x, 14.x, and 15.x
 -   Typescript ^3.5.x
 -   npm ^6.x
 -   Docker ^18.x - _optional_ - for ease of use in development

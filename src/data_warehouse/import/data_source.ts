@@ -18,9 +18,10 @@ export interface DataSource {
     // the import record the data is stored under
     ReceiveData(payload: any, user: User): Promise<Result<Import>>;
 
-    // process should be a never ending loop that both processes the data from the
-    // source as well as starting any polling efforts like with the http implementation
-    Process(loopOnce?: boolean): Promise<void>;
+    // process single fire function that both processes the data from the
+    // source as well as running any polling efforts like with the http implementation
+    // this is run once per minute by default
+    Process(): Promise<Result<boolean>>;
 
     // this final method is so that the data source can run any encryption or source
     // specific functions prior to the data source record being saved into the database

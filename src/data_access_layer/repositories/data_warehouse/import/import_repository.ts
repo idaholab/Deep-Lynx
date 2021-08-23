@@ -78,8 +78,8 @@ export default class ImportRepository extends Repository implements RepositoryIn
         ];
     }
 
-    listIncompleteWithUninsertedData(dataSourceID: string): Promise<Result<Import[]>> {
-        return this.#mapper.ListIncompleteWithUninsertedData(dataSourceID);
+    listIncompleteWithUninsertedData(dataSourceID: string, limit: number): Promise<Result<Import[]>> {
+        return this.#mapper.ListIncompleteWithUninsertedData(dataSourceID, limit);
     }
 
     dataSourceID(operator: string, value: any) {

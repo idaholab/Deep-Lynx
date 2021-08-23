@@ -150,110 +150,105 @@ export default class StandardDataSourceImpl implements DataSource {
         loop which takes received data and converts it to nodes and edges, prior
         to inserting it into the database.
      */
-    async Process(loopOnce?: boolean): Promise<void> {
-        if (this.DataSourceRecord)
-            while (true) {
-                let graphID: string;
+    async Process(): Promise<Result<boolean>> {
+        if (this.DataSourceRecord) {
+            let graphID: string;
 
-                // we run this check constantly to catch data sources disabled by the user since this class was created
-                const active = await DataSourceMapper.Instance.IsActive(this.DataSourceRecord.id!);
-                if (active.isError || !active.value) break;
+            // we run this check constantly to catch data sources disabled by the user since this class was created
+            const active = await DataSourceMapper.Instance.IsActive(this.DataSourceRecord.id!);
+            if (active.isError || !active.value) return Promise.resolve(Result.Success(true));
 
-                const container = await this.#containerRepo.findByID(this.DataSourceRecord.container_id!);
-                if (container.isError) {
-                    Logger.debug(`unable to fetch container for data source record ${container.error?.error}`);
-                    return;
-                }
-
-                // verify that the active graph for the container is set, if not, set it.
-                if (container.value.active_graph_id) {
-                    graphID = container.value.active_graph_id;
-                } else {
-                    const graph = await this.#graphMapper.Create(container.value.id!, this.DataSourceRecord.created_by!);
-                    if (graph.isError) {
-                        Logger.error(graph.error?.error!);
-                        return;
-                    } else {
-                        const activeGraph = await this.#graphMapper.SetActiveForContainer(container.value.id!, graph.value.id!);
-
-                        if (activeGraph.isError || !activeGraph.value) {
-                            Logger.error(activeGraph.error?.error!);
-                            return;
-                        } else {
-                            graphID = graph.value.id!;
-                        }
-                    }
-                }
-
-                const incompleteImports = await this.#importRepo.listIncompleteWithUninsertedData(this.DataSourceRecord.id!);
-                if (!incompleteImports.isError) {
-                    for (const incompleteImport of incompleteImports.value) {
-                        // we must wrap this insert as a transaction so that we are able to
-                        // lock the individual row for processing.
-                        // we won't pass the transaction into every function, only the updates
-                        const importTransaction = await ImportMapper.Instance.startTransaction();
-                        if (importTransaction.isError) {
-                            Logger.debug(`error attempting to start db transaction for import ${importTransaction.error}`);
-                            continue;
-                        }
-
-                        // attempt to retrieve and lock the record for processing
-                        const dataImport = await this.#importRepo.findByIDAndLock(incompleteImport.id!, importTransaction.value);
-                        if (dataImport.isError) {
-                            await ImportMapper.Instance.completeTransaction(importTransaction.value);
-
-                            Logger.debug(`error obtaining lock on import record ${dataImport.error}`);
-                            continue;
-                        }
-
-                        const processed = await this.process(incompleteImport, graphID, importTransaction.value);
-                        if (processed.isError) {
-                            const set = await this.#importRepo.setStatus(
-                                incompleteImport.id!,
-                                'error',
-                                `error attempting to process import ${processed.error?.error}`,
-                                importTransaction.value,
-                            );
-                            if (set.isError) Logger.debug(`error attempting to update import status ${set.error}`);
-
-                            await ImportMapper.Instance.completeTransaction(importTransaction.value);
-                            continue;
-                        }
-
-                        // check to see if import is now complete. If so, mark completed.
-                        const count = await this.#stagingRepo.countUninsertedForImport(incompleteImport.id!, importTransaction.value);
-                        if (count.isError) {
-                            const set = await ImportMapper.Instance.SetStatus(
-                                incompleteImport.id!,
-                                'error',
-                                `error attempting to count records ${count.error}`,
-                                importTransaction.value,
-                            );
-                            if (set.isError) Logger.debug(`error attempting to update import status ${set.error}`);
-
-                            await ImportMapper.Instance.completeTransaction(importTransaction.value);
-                            continue;
-                        }
-
-                        if (count.value === 0) {
-                            const set = await this.#importRepo.setStatus(incompleteImport.id!, 'completed', undefined, importTransaction.value);
-                            if (set.isError) Logger.debug(`error attempting to update import status ${set.error}`);
-
-                            await ImportMapper.Instance.completeTransaction(importTransaction.value);
-                            continue;
-                        }
-
-                        const set = await this.#importRepo.setStatus(incompleteImport.id!, 'processing', undefined, importTransaction.value);
-                        if (set.isError) Logger.debug(`error attempting to update import status ${set.error}`);
-                        await ImportMapper.Instance.completeTransaction(importTransaction.value);
-                    }
-                }
-
-                // we use the loopOnce param to allow us to easily test this processing loop
-                if (loopOnce) break;
-
-                await this.delay(Config.data_source_poll_interval);
+            const container = await this.#containerRepo.findByID(this.DataSourceRecord.container_id!);
+            if (container.isError) {
+                return Promise.resolve(Result.Failure(`unable to fetch container for data source record ${container.error?.error}`));
             }
+
+            // verify that the active graph for the container is set, if not, set it.
+            if (container.value.active_graph_id) {
+                graphID = container.value.active_graph_id;
+            } else {
+                const graph = await this.#graphMapper.Create(container.value.id!, this.DataSourceRecord.created_by!);
+                if (graph.isError) {
+                    return Promise.resolve(Result.Failure(`error creating graph ${graph.error?.error}`));
+                } else {
+                    const activeGraph = await this.#graphMapper.SetActiveForContainer(container.value.id!, graph.value.id!);
+
+                    if (activeGraph.isError || !activeGraph.value) {
+                        return Promise.resolve(Result.Failure(`error setting graph as active ${activeGraph.error?.error}`));
+                    } else {
+                        graphID = graph.value.id!;
+                    }
+                }
+            }
+
+            // we limit the imports we process to ten, as this is now a job vs. never-ending loop we don't want to overwhelm
+            // the worker in case of a data source being slammed with imports (e.g the Aveva adapters initial import)
+            const incompleteImports = await this.#importRepo.listIncompleteWithUninsertedData(this.DataSourceRecord.id!, 10);
+            if (!incompleteImports.isError) {
+                for (const incompleteImport of incompleteImports.value) {
+                    // we must wrap this insert as a transaction so that we are able to
+                    // lock the individual row for processing.
+                    // we won't pass the transaction into every function, only the updates
+                    const importTransaction = await ImportMapper.Instance.startTransaction();
+                    if (importTransaction.isError) {
+                        Logger.debug(`error attempting to start db transaction for import ${importTransaction.error}`);
+                        continue;
+                    }
+
+                    // attempt to retrieve and lock the record for processing
+                    const dataImport = await this.#importRepo.findByIDAndLock(incompleteImport.id!, importTransaction.value);
+                    if (dataImport.isError) {
+                        await ImportMapper.Instance.completeTransaction(importTransaction.value);
+
+                        Logger.debug(`error obtaining lock on import record ${dataImport.error}`);
+                        continue;
+                    }
+
+                    const processed = await this.process(incompleteImport, graphID, importTransaction.value);
+                    if (processed.isError) {
+                        const set = await this.#importRepo.setStatus(
+                            incompleteImport.id!,
+                            'error',
+                            `error attempting to process import ${processed.error?.error}`,
+                            importTransaction.value,
+                        );
+                        if (set.isError) Logger.debug(`error attempting to update import status ${set.error}`);
+
+                        await ImportMapper.Instance.completeTransaction(importTransaction.value);
+                        continue;
+                    }
+
+                    // check to see if import is now complete. If so, mark completed.
+                    const count = await this.#stagingRepo.countUninsertedForImport(incompleteImport.id!, importTransaction.value);
+                    if (count.isError) {
+                        const set = await ImportMapper.Instance.SetStatus(
+                            incompleteImport.id!,
+                            'error',
+                            `error attempting to count records ${count.error}`,
+                            importTransaction.value,
+                        );
+                        if (set.isError) Logger.debug(`error attempting to update import status ${set.error}`);
+
+                        await ImportMapper.Instance.completeTransaction(importTransaction.value);
+                        continue;
+                    }
+
+                    if (count.value === 0) {
+                        const set = await this.#importRepo.setStatus(incompleteImport.id!, 'completed', undefined, importTransaction.value);
+                        if (set.isError) Logger.debug(`error attempting to update import status ${set.error}`);
+
+                        await ImportMapper.Instance.completeTransaction(importTransaction.value);
+                        continue;
+                    }
+
+                    const set = await this.#importRepo.setStatus(incompleteImport.id!, 'processing', undefined, importTransaction.value);
+                    if (set.isError) Logger.debug(`error attempting to update import status ${set.error}`);
+                    await ImportMapper.Instance.completeTransaction(importTransaction.value);
+                }
+            }
+        }
+
+        return Promise.resolve(Result.Success(true));
     }
 
     private async process(dataImport: Import, graphID: string, transactionClient: PoolClient): Promise<Result<boolean>> {

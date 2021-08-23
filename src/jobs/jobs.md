@@ -1,0 +1,3 @@
+## Jobs and Bree
+
+DeepLynx uses [Bree](https://github.com/breejs/bree) to handle the problem of polluting the main thread with CPU intensive data processing. This directory contains the individual jobs that Bree will run on boot (or at the time interval specified in main.ts). Please note that the job runner points to the _compiled_ version of these files, not the native Typescript files. This is by design
