@@ -32,6 +32,12 @@ export default class ImportRoutes {
         );
 
         app.delete('/containers/:containerID/import/imports/:importID', ...middleware, authInContainer('write', 'data'), this.deleteImport);
+        app.post(
+            '/containers/:containerID/datasources/:sourceID/imports/:importID/data',
+            ...middleware,
+            authInContainer('write', 'data'),
+            this.addDataToImport,
+        );
         app.get('/containers/:containerID/import/imports/:importID/data', ...middleware, authInContainer('read', 'data'), this.listDataForImport);
         app.get('/containers/:containerID/import/imports/:importID/data/:dataID', ...middleware, authInContainer('read', 'data'), this.getImportData);
         app.put('/containers/:containerID/import/imports/:importID/data/:dataID', ...middleware, authInContainer('write', 'data'), this.updateImportData);
@@ -325,5 +331,53 @@ export default class ImportRoutes {
         });
 
         return req.pipe(busboy);
+    }
+
+    // createManualImport will accept either a file or a raw JSON body
+    private static addDataToImport(req: Request, res: Response, next: NextFunction) {
+        if (req.dataSource && req.dataImport) {
+            if (Object.keys(req.body).length !== 0) {
+                req.dataSource
+                    .ReceiveData(req.body, req.currentUser!, {importID: req.dataImport.id})
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => res.status(404).send(err))
+                    .finally(() => next());
+                // @ts-ignore
+            } else if (req.files.import.mimetype === 'application/json') {
+                req.dataSource
+                    // @ts-ignore
+                    .ReceiveData(JSON.parse(req.files.import.data), req.currentUser!, {importID: req.dataImport.id})
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => {
+                        res.status(404).send(err);
+                    })
+                    .finally(() => next());
+            }
+            // @ts-ignore - we have to handle microsoft's excel csv type, as when you save a csv file using excel the mimetype is different than text/csv
+            else if (req.files.import.mimetype === 'text/csv' || req.files.import.mimetype === 'application/vnd.ms-excel') {
+                csv()
+                    // @ts-ignore
+                    .fromString(req.files.import.data.toString())
+                    .then((json: any) => {
+                        req.dataSource
+                            ?.ReceiveData(json, req.currentUser!, {importID: req.dataImport!.id})
+                            .then((result) => {
+                                result.asResponse(res);
+                            })
+                            .catch((err) => res.status(404).send(err))
+                            .finally(() => next());
+                    });
+            } else {
+                res.sendStatus(500);
+                next();
+            }
+        } else {
+            Result.Failure(`unable to find data source or import`, 404).asResponse(res);
+            next();
+        }
     }
 }

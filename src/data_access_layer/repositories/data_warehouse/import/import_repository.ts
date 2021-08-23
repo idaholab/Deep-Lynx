@@ -78,8 +78,10 @@ export default class ImportRepository extends Repository implements RepositoryIn
         ];
     }
 
+    // this function will always return imports in the order in which they were received - insuring that older data is
+    // always processed first
     listIncompleteWithUninsertedData(dataSourceID: string, limit: number): Promise<Result<Import[]>> {
-        return this.#mapper.ListIncompleteWithUninsertedData(dataSourceID, limit);
+        return this.#mapper.ListWithUninsertedData(dataSourceID, limit);
     }
 
     dataSourceID(operator: string, value: any) {

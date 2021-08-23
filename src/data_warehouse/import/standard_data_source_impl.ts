@@ -1,4 +1,4 @@
-import DataSourceRecord, {DataSource} from './data_source';
+import DataSourceRecord, {DataSource, ReceiveDataOptions} from './data_source';
 import ImportRepository from '../../data_access_layer/repositories/data_warehouse/import/import_repository';
 import DataStagingRepository from '../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import DataSourceMapper from '../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
@@ -42,10 +42,14 @@ export default class StandardDataSourceImpl implements DataSource {
         }
     }
 
-    // TODO: this will need to be reworked to handle larger payloads at some point, and to take advantage of Postgres's file copy
-    async ReceiveData(payload: any, user: User, transaction?: PoolClient): Promise<Result<Import>> {
+    // TODO: this will need to be reworked to handle larger payloads at some point - needs to use Streams
+    async ReceiveData(payload: any, user: User, options?: ReceiveDataOptions): Promise<Result<Import>> {
         let internalTransaction = false;
-        if (!transaction) {
+        let transaction: PoolClient;
+
+        if (options && options.transaction) {
+            transaction = options.transaction;
+        } else {
             const newTransaction = await this.#mapper.startTransaction();
             if (newTransaction.isError) return Promise.resolve(Result.Failure('unable to initiated db transaction'));
 
@@ -62,29 +66,38 @@ export default class StandardDataSourceImpl implements DataSource {
             );
         }
 
+        // if it's not an array, we throw it inside one for ease of use when working with it later on
         if (!Array.isArray(payload)) {
-            if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
-            return new Promise((resolve) => resolve(Result.Failure('payload must be an array of JSON objects')));
+            payload = [payload];
         }
 
-        const newImport = await ImportMapper.Instance.CreateImport(
-            user.id!,
-            new Import({
-                data_source_id: this.DataSourceRecord.id,
-                reference: 'manual upload',
-            }),
-        );
+        let importID: string;
 
-        if (newImport.isError) {
-            if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
-            return Promise.resolve(Result.Failure(`unable to create import for data ${newImport.error?.error}`));
+        if (options && options.importID) {
+            importID = options.importID;
+        } else {
+            const newImport = await ImportMapper.Instance.CreateImport(
+                user.id!,
+                new Import({
+                    data_source_id: this.DataSourceRecord.id,
+                    reference: 'manual upload',
+                }),
+                transaction,
+            );
+
+            if (newImport.isError) {
+                if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
+                return Promise.resolve(Result.Failure(`unable to create import for data ${newImport.error?.error}`));
+            }
+
+            importID = newImport.value.id!;
         }
 
-        const lockNewImport = await this.#importRepo.findByIDAndLock(newImport.value.id!, transaction);
-        if (lockNewImport.isError) {
+        const lockedNewImport = await this.#importRepo.findByIDAndLock(importID, transaction);
+        if (lockedNewImport.isError) {
             if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
-            Logger.error(`unable to retrieve and lock new import ${lockNewImport.error}`);
-            return Promise.resolve(Result.Failure(`unable to retrieve and lock new import ${lockNewImport.error?.error}`));
+            Logger.error(`unable to retrieve and lock import ${lockedNewImport.error}`);
+            return Promise.resolve(Result.Failure(`unable to retrieve and lock import ${lockedNewImport.error?.error}`));
         }
 
         const recordPromises: Promise<DataStaging>[] = [];
@@ -114,7 +127,7 @@ export default class StandardDataSourceImpl implements DataSource {
                             resolve(
                                 new DataStaging({
                                     data_source_id: this.DataSourceRecord!.id!,
-                                    import_id: newImport.value.id!,
+                                    import_id: lockedNewImport.value.id!,
                                     mapping_id: mapping.value.id!,
                                     data,
                                 }),
@@ -138,7 +151,7 @@ export default class StandardDataSourceImpl implements DataSource {
                 if (commit.isError) return Promise.resolve(Result.Pass(commit));
             }
 
-            return new Promise((resolve) => resolve(Result.Success(newImport.value)));
+            return new Promise((resolve) => resolve(Result.Success(lockedNewImport.value)));
         } catch (error) {
             if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
             return Promise.resolve(Result.Failure(`error attempting to insert new data records for import ${error}`));
