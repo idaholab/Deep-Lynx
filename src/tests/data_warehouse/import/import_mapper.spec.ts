@@ -1,5 +1,5 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../../services/logger';
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
@@ -9,10 +9,10 @@ import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/impo
 import DataStagingMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
 import Container from '../../../data_warehouse/ontology/container';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
-import { User } from '../../../access_management/user';
+import {User} from '../../../access_management/user';
 import TypeMapping from '../../../data_warehouse/etl/type_mapping';
 import TypeMappingRepository from '../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
-import Import, { DataStaging } from '../../../data_warehouse/import/import';
+import Import, {DataStaging} from '../../../data_warehouse/import/import';
 import DataSourceRecord from '../../../data_warehouse/import/data_source';
 
 describe('A data import', async () => {
@@ -32,8 +32,8 @@ describe('A data import', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -48,8 +48,8 @@ describe('A data import', async () => {
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(userResult.isError).false;
@@ -76,8 +76,8 @@ describe('A data import', async () => {
                 name: 'Test Data Source',
                 active: true,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -87,8 +87,8 @@ describe('A data import', async () => {
             'test suite',
             new Import({
                 data_source_id: exp.value.id!,
-                reference: 'testing upload'
-            })
+                reference: 'testing upload',
+            }),
         );
         expect(newImport.isError).false;
 
@@ -96,7 +96,7 @@ describe('A data import', async () => {
         const mapping = new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
-            sample_payload: test_payload
+            sample_payload: test_payload,
         });
 
         const saved = await new TypeMappingRepository().save(mapping, user);
@@ -107,19 +107,19 @@ describe('A data import', async () => {
                 data_source_id: exp.value.id!,
                 import_id: newImport.value.id!,
                 mapping_id: mapping.id!,
-                data: test_payload
-            })
+                data: test_payload,
+            }),
         );
         expect(inserted.isError).false;
 
-        let imports = await importStorage.ListIncompleteWithUninsertedData(exp.value.id!);
+        let imports = await importStorage.ListIncompleteWithUninsertedData(exp.value.id!, 1);
         expect(imports.isError).false;
         expect(imports.value).not.empty;
 
         const set = await importStorage.SetStatus(newImport.value.id!, 'completed');
         expect(set.isError).false;
 
-        imports = await importStorage.ListIncompleteWithUninsertedData(exp.value.id!);
+        imports = await importStorage.ListIncompleteWithUninsertedData(exp.value.id!, 1);
         expect(imports.isError).false;
         expect(imports.value).empty;
 
@@ -137,8 +137,8 @@ describe('A data import', async () => {
                 name: 'Test Data Source',
                 active: true,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -148,8 +148,8 @@ describe('A data import', async () => {
             'test suite',
             new Import({
                 data_source_id: exp.value.id!,
-                reference: 'testing upload'
-            })
+                reference: 'testing upload',
+            }),
         );
         expect(newImport.isError).false;
 
@@ -157,7 +157,7 @@ describe('A data import', async () => {
         const mapping = new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
-            sample_payload: test_payload
+            sample_payload: test_payload,
         });
 
         const saved = await new TypeMappingRepository().save(mapping, user);
@@ -168,8 +168,8 @@ describe('A data import', async () => {
                 data_source_id: exp.value.id!,
                 import_id: newImport.value.id!,
                 mapping_id: mapping.id!,
-                data: test_payload
-            })
+                data: test_payload,
+            }),
         );
         expect(inserted.isError).false;
 
@@ -205,8 +205,8 @@ describe('A data import', async () => {
                 name: 'Test Data Source',
                 active: true,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -216,8 +216,8 @@ describe('A data import', async () => {
             'test suite',
             new Import({
                 data_source_id: exp.value.id!,
-                reference: 'testing upload'
-            })
+                reference: 'testing upload',
+            }),
         );
         expect(newImport.isError).false;
 
@@ -242,8 +242,8 @@ describe('A data import', async () => {
                 name: 'Test Data Source',
                 active: true,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -253,8 +253,8 @@ describe('A data import', async () => {
             'test suite',
             new Import({
                 data_source_id: exp.value.id!,
-                reference: 'testing upload'
-            })
+                reference: 'testing upload',
+            }),
         );
         expect(newImport.isError).false;
 
@@ -279,8 +279,8 @@ describe('A data import', async () => {
                 name: 'Test Data Source',
                 active: true,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -290,8 +290,8 @@ describe('A data import', async () => {
             'test suite',
             new Import({
                 data_source_id: exp.value.id!,
-                reference: 'testing upload'
-            })
+                reference: 'testing upload',
+            }),
         );
         expect(newImport.isError).false;
 
@@ -326,8 +326,8 @@ describe('A data import', async () => {
                 name: 'Test Data Source',
                 active: true,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -337,8 +337,8 @@ describe('A data import', async () => {
             'test suite',
             new Import({
                 data_source_id: exp.value.id!,
-                reference: 'testing upload'
-            })
+                reference: 'testing upload',
+            }),
         );
         expect(newImport.isError).false;
 
@@ -357,5 +357,5 @@ describe('A data import', async () => {
 });
 
 const test_payload = {
-    test: 'test'
+    test: 'test',
 };
