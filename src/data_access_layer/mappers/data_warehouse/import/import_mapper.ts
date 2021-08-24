@@ -30,8 +30,9 @@ export default class ImportMapper extends Mapper {
         return ImportMapper.instance;
     }
 
-    public async CreateImport(userID: string, importRecord: Import): Promise<Result<Import>> {
+    public async CreateImport(userID: string, importRecord: Import, transaction?: PoolClient): Promise<Result<Import>> {
         const r = await super.run(this.createStatement(userID, importRecord), {
+            transaction,
             resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
@@ -90,8 +91,10 @@ export default class ImportMapper extends Mapper {
         return super.runStatement(this.setStatusStatement(importID, status, message), {transaction});
     }
 
-    public async ListIncompleteWithUninsertedData(dataSourceID: string, limit: number): Promise<Result<Import[]>> {
-        return super.rows(this.listIncompleteWithUninsertedDataStatement(dataSourceID, limit), {resultClass});
+    // list all imports which have data with an uninserted status - while we used to check status of the import,
+    // checking for uninserted records is a far better method when attempting to gauge if an import still needs processed
+    public async ListWithUninsertedData(dataSourceID: string, limit: number): Promise<Result<Import[]>> {
+        return super.rows(this.listWithUninsertedDataStatement(dataSourceID, limit), {resultClass});
     }
 
     public async Count(): Promise<Result<number>> {
@@ -172,18 +175,18 @@ export default class ImportMapper extends Mapper {
         };
     }
 
-    private listIncompleteWithUninsertedDataStatement(dataSourceID: string, limit: number): QueryConfig {
+    private listWithUninsertedDataStatement(dataSourceID: string, limit: number): QueryConfig {
         return {
             text: `SELECT imports.*,
                           SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
                           SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
                    FROM imports
                    LEFT JOIN data_staging ON data_staging.import_id = imports.id
-                   WHERE imports.status <> 'completed'
-                     AND imports.data_source_id = $1
+                     WHERE imports.data_source_id = $1
                      AND EXISTS (SELECT * FROM data_staging WHERE data_staging.import_id = imports.id AND data_staging.inserted_at IS NULL)
                      AND EXISTS(SELECT * FROM data_staging WHERE data_staging.import_id = imports.id)
                    GROUP BY imports.id
+                   ORDER BY imports.created_at ASC
                    LIMIT $2 `,
             values: [dataSourceID, limit],
         };

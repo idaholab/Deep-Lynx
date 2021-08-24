@@ -4,6 +4,7 @@ import {Exclude, Type} from 'class-transformer';
 import {User} from '../../access_management/user';
 import Import from './import';
 import Result from '../../common_classes/result';
+import {PoolClient} from 'pg';
 
 /*
     The DataSource interface represents basic functionality of a data source. All
@@ -15,8 +16,11 @@ export interface DataSource {
 
     // a payload of any should allow data sources to accept things like streams,
     // json payloads, or hopefully anything they might need. This should return
-    // the import record the data is stored under
-    ReceiveData(payload: any, user: User): Promise<Result<Import>>;
+    // the import record the data is stored under - optionally you can pass an
+    // import that already exists, in case you are adding data to it - keep in
+    // mind that it is not best practice to do so - in case your old data overwrites
+    // newer data when the data source attempts to process it
+    ReceiveData(payload: any, user: User, options?: ReceiveDataOptions): Promise<Result<Import>>;
 
     // process single fire function that both processes the data from the
     // source as well as running any polling efforts like with the http implementation
@@ -26,6 +30,13 @@ export interface DataSource {
     // this final method is so that the data source can run any encryption or source
     // specific functions prior to the data source record being saved into the database
     ToSave(): Promise<DataSourceRecord>;
+}
+
+// ReceiveDataOptions will allow us to grow the potential options needed by the ReceiveData
+// function of various implementations without having to grow the parameter list
+export class ReceiveDataOptions {
+    transaction?: PoolClient;
+    importID?: string;
 }
 
 /*
