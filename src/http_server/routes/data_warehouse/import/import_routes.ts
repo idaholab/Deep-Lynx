@@ -9,7 +9,7 @@ import File from '../../../../data_warehouse/data/file';
 import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
 import DataStagingRepository from '../../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import {plainToClass} from 'class-transformer';
-import {DataStaging} from '../../../../data_warehouse/import/import';
+import Import, {DataStaging} from '../../../../data_warehouse/import/import';
 import ImportRepository from '../../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 import {QueryOptions} from '../../../../data_access_layer/repositories/repository';
 
@@ -18,6 +18,7 @@ const fileUpload = require('express-fileupload');
 const csv = require('csvtojson');
 const fileRepo = new FileRepository();
 const stagingRepo = new DataStagingRepository();
+const importRepo = new ImportRepository();
 
 // This contains all routes pertaining to DataSources.
 export default class ImportRoutes {
@@ -31,6 +32,7 @@ export default class ImportRoutes {
             this.createManualImport,
         );
 
+        app.post('/containers/:containerID/datasources/:sourceID/imports/', ...middleware, authInContainer('write', 'data'), this.createImport);
         app.delete('/containers/:containerID/import/imports/:importID', ...middleware, authInContainer('write', 'data'), this.deleteImport);
         app.post(
             '/containers/:containerID/datasources/:sourceID/imports/:importID/data',
@@ -46,6 +48,29 @@ export default class ImportRoutes {
         app.post('/containers/:containerID/import/datasources/:sourceID/files', ...middleware, authInContainer('write', 'data'), this.uploadFile);
         app.get('/containers/:containerID/files/:fileID', ...middleware, authInContainer('read', 'data'), this.getFile);
         app.get('/containers/:containerID/files/:fileID/download', ...middleware, authInContainer('read', 'data'), this.downloadFile);
+    }
+
+    private static createImport(req: Request, res: Response, next: NextFunction) {
+        if (req.dataSource) {
+            const toSave = new Import({data_source_id: req.dataSource.DataSourceRecord!.id!});
+            importRepo
+                .save(toSave, req.currentUser!)
+                .then((result) => {
+                    if (result.isError) {
+                        result.asResponse(res);
+                        return;
+                    }
+
+                    Result.Success(toSave).asResponse(res);
+                })
+                .catch((err) => {
+                    res.status(500).json(err.message);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure(`unable to find data source`, 404).asResponse(res);
+            next();
+        }
     }
 
     private static deleteImport(req: Request, res: Response, next: NextFunction) {

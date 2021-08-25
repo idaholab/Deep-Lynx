@@ -116,13 +116,6 @@ describe('A data import', async () => {
         expect(imports.isError).false;
         expect(imports.value).not.empty;
 
-        const set = await importStorage.SetStatus(newImport.value.id!, 'completed');
-        expect(set.isError).false;
-
-        imports = await importStorage.ListWithUninsertedData(exp.value.id!, 1);
-        expect(imports.isError).false;
-        expect(imports.value).empty;
-
         return storage.Delete(exp.value.id!);
     });
 
