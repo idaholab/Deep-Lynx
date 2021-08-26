@@ -340,18 +340,25 @@ export default class ImportRoutes {
                 // update the passed meta information with the file name deep lynx
                 // has stored it under
                 // eslint-disable-next-line @typescript-eslint/no-for-in-array
-                for (const i in fileNames) metadata[`deep-lynx-file-${i}`] = fileNames[i];
                 const user = req.currentUser!;
 
-                // create an "import" with a single object, the metadata and file information
-                // the user will then handle the mapping of this via the normal type mapping channels
-                req.dataSource
-                    ?.ReceiveData([metadata], user)
-                    .then((result) => {
-                        result.asResponse(res);
-                    })
-                    .catch((err) => res.status(500).send(err))
-                    .finally(() => next());
+                void Promise.all(files).then((results) => {
+                    if (results[0].isError) {
+                        res.status(500).json(results);
+                        next();
+                        return;
+                    } else {
+                        metadata['deep-lynx-files'] = results;
+
+                        req.dataSource
+                            ?.ReceiveData([metadata], user)
+                            .then((result) => {
+                                result.asResponse(res);
+                            })
+                            .catch((err) => res.status(500).send(err))
+                            .finally(() => next());
+                    }
+                });
             }
         });
 
