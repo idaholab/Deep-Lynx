@@ -120,7 +120,7 @@ export default class DeleteDataSourceDialog extends Vue {
   }
 
   initiate() {
-    this.$client.countImports(this.containerID, this.dataSource!.id)
+    this.$client.countImports(this.containerID, this.dataSource!.id!)
     .then((count) => {
       this.importCount = count
       this.importsLoading = false
@@ -151,7 +151,7 @@ export default class DeleteDataSourceDialog extends Vue {
     this.deleteLoading = true
     this.$client.deleteDataSources(
         this.containerID,
-        this.dataSource!.id,
+        this.dataSource!.id!,
         {forceDelete: true, withData: this.withData})
     .then(() => {
       this.reset()
@@ -162,13 +162,13 @@ export default class DeleteDataSourceDialog extends Vue {
 
   archiveSource() {
     this.archiveLoading = true
-    this.$client.deleteDataSources(this.containerID, this.dataSource!.id,
+    this.$client.deleteDataSources(this.containerID, this.dataSource!.id!,
         {forceDelete: false, archive: true})
         .then(() => {
           this.reset()
           this.$emit('dataSourceArchived')
         })
-        .catch(e => this.errorMessage = e)
+        .catch((e: any) => this.errorMessage = e)
   }
 
   reset() {

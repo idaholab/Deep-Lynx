@@ -102,17 +102,17 @@ export default class DataSources extends Vue {
 
   toggleDataSourceActive(dataSource: DataSourceT) {
     if(dataSource.active) {
-      this.$client.activateDataSource(this.containerID, dataSource.id)
+      this.$client.activateDataSource(this.containerID, dataSource.id!)
           .then(()=> {
             this.refreshDataSources()
           })
           .catch(e => this.errorMessage = e)
     } else {
-      this.$client.deactivateDataSource(this.containerID, dataSource.id)
+      this.$client.deactivateDataSource(this.containerID, dataSource.id!)
           .then(()=> {
             this.refreshDataSources()
           })
-          .catch(e => this.errorMessage = e)
+          .catch((e: any) => this.errorMessage = e)
     }
   }
 

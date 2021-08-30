@@ -98,17 +98,65 @@ export type MetatypeRelationshipKeyT = {
 };
 
 export type DataSourceT = {
-    id: string;
-    container_id: string;
+    id?: string;
+    container_id?: string;
     name: string;
-    adapter_type: string;
+    adapter_type: string | undefined;
     active: boolean;
-    archived: boolean;
-    config: object;
-    created_at: string;
-    modified_at: string;
-    created_by: string;
-    modified_by: string;
+    archived?: boolean;
+    config: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | JazzDataSourceConfig | undefined;
+    created_at?: string;
+    modified_at?: string;
+    created_by?: string;
+    modified_by?: string;
+};
+
+export type StandardDataSourceConfig = {
+    kind: 'standard' | 'manual';
+    data_type: 'json' | 'csv';
+};
+
+export type HttpDataSourceConfig = {
+    kind: 'http';
+    endpoint: string;
+    secure: boolean;
+    auth_method: 'none' | 'basic' | 'token';
+    poll_interval: number; // in minutes
+    token?: string; // security token, set if auth method is token
+    username?: string; // auth method basic
+    password?: string; // auth method basic
+};
+
+export type JazzDataSourceConfig = {
+    kind: 'jazz';
+    endpoint: string;
+    secure: boolean;
+    project_name: string;
+    poll_interval: number; // in minutes
+    token: string; // security token for http authentication
+};
+
+export type AvevaDataSourceConfig = {
+    kind: 'aveva';
+    ignore_dbs: string[];
+    ignore_element_types: string[];
+    ifc_element_types: string[];
+    ifc_settings: {
+        format: string;
+        data_level: string;
+        component_level: boolean;
+        log_detail: number;
+        arc_tolerance: string;
+        tube: boolean;
+        cl: boolean;
+        insu_translucency: number;
+        obst_translucency: number;
+        root: number;
+        pipe: number;
+        nozzle: number;
+        structure: number;
+        cable: number;
+    };
 };
 
 export type ImportT = {

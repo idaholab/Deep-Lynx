@@ -8,6 +8,7 @@ import {User} from '../../../../access_management/user';
 import {PoolClient} from 'pg';
 import ImportMapper from '../../../mappers/data_warehouse/import/import_mapper';
 import JazzDataSourceImpl from '../../../../data_warehouse/import/jazz_data_source_impl';
+import AvevaDataSourceImpl from '../../../../data_warehouse/import/aveva_data_source';
 
 /*
     DataSourceRepository contains methods for persisting and retrieving data sources
@@ -178,6 +179,10 @@ export class DataSourceFactory {
 
             case 'jazz': {
                 return new JazzDataSourceImpl(sourceRecord);
+            }
+
+            case 'aveva': {
+                return new AvevaDataSourceImpl(sourceRecord);
             }
 
             default: {
