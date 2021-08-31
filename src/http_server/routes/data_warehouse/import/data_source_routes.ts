@@ -158,7 +158,7 @@ export default class DataSourceRoutes {
                         return;
                     }
 
-                    Result.Success(result.value.map((source) => source?.DataSourceRecord)).asResponse(res);
+                    Result.Success(result.value.map((source) => source?.DataSourceRecord!)).asResponse(res);
                 })
                 .catch((err) => {
                     res.status(404).send(err);

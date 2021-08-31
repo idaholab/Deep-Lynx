@@ -144,7 +144,7 @@ export default class ExportMappingsDialog extends Vue {
 
   exportToDataSource() {
     if(this.dataSource) {
-      this.$client.exportTypeMappings(this.containerID, this.dataSourceID, this.dataSource.id, ...this.mappings!)
+      this.$client.exportTypeMappings(this.containerID, this.dataSourceID, this.dataSource.id!, ...this.mappings!)
       .then(results => {
         this.dialog = false
         this.$emit('mappingsExported', results)

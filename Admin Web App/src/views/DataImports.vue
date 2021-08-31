@@ -287,7 +287,7 @@ export default class DataImports extends Vue {
       if(sortBy && sortBy.length >= 1 && sortBy[0] === 'percentage_processed') sortParam = 'records_inserted'
       if(sortDesc) sortDescParam = sortDesc[0]
 
-      this.$client.listImports(this.containerID, this.selectedDataSource.id,{
+      this.$client.listImports(this.containerID, this.selectedDataSource.id!,{
         limit: itemsPerPage,
         offset: itemsPerPage * pageNumber,
         sortBy: sortParam,

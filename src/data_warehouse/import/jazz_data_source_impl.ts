@@ -1,4 +1,4 @@
-import DataSourceRecord, {DataSource, HttpDataSourceConfig, JazzDataSourceConfig} from './data_source';
+import DataSourceRecord, {DataSource, JazzDataSourceConfig} from './data_source';
 import Result, {ErrorNotFound} from '../../common_classes/result';
 import Logger from '../../services/logger';
 import Config from '../../services/config';
