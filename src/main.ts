@@ -39,7 +39,11 @@ void postgresAdapter.init().then(() => {
             },
             {
                 name: 'export', // will run export.js
-                interval: Config.export_data_interval, // exports take longer to process, therefore some more time in-between instances is needed
+                interval: Config.export_data_interval, // exports take longer to process, more time in-between instances is needed
+            },
+            {
+                name: 'data_staging_mapping', // will run data_staging_mapping.js
+                interval: Config.data_source_interval, // exports take longer to process, more time in-between instances is needed
             },
         ],
     });

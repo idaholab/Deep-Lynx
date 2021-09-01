@@ -40,10 +40,8 @@ export class Server {
         router.mount();
 
         this.logger.info(`starting Deep Lynx on port ${Config.server_port}`);
-        // tslint:disable-next-line:no-empty
-        this.server.listen(Config.server_port, () => {
-            this.logger.info('server terminated');
-        }); // empty callback on application exit. Could add something
+        // eslint-disable-next-line @typescript-eslint/no-empty-function,no-empty-function
+        this.server.listen(Config.server_port, () => {}); // empty callback on application exit. Could add something
         // here later if needed, such as processing cleanup
     }
 }

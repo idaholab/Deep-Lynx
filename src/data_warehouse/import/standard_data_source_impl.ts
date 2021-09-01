@@ -33,7 +33,6 @@ export default class StandardDataSourceImpl implements DataSource {
     #containerRepo = new ContainerRepository();
     #importRepo = new ImportRepository();
     #stagingRepo = new DataStagingRepository();
-    #mappingMapper = new TypeMappingMapper();
 
     constructor(record: DataSourceRecord) {
         // again we have to check for param existence because we might potentially be using class-transformer
@@ -100,46 +99,19 @@ export default class StandardDataSourceImpl implements DataSource {
             return Promise.resolve(Result.Failure(`unable to retrieve and lock import ${lockedNewImport.error?.error}`));
         }
 
-        const recordPromises: Promise<DataStaging>[] = [];
+        const records: DataStaging[] = [];
 
         for (const data of payload) {
-            recordPromises.push(
-                new Promise((resolve, reject) => {
-                    // we call the mapping repo directly here because we don't need
-                    // the pre-processing steps - and we're calling CreateOrUpdate in order
-                    // to avoid having to try fetching or finding an existing mapping
-                    this.#mappingMapper
-                        .CreateOrUpdate(
-                            user.id!,
-                            new TypeMapping({
-                                container_id: this.DataSourceRecord!.container_id!,
-                                data_source_id: this.DataSourceRecord!.id!,
-                                sample_payload: data,
-                                shape_hash: TypeMapping.objectToShapeHash(data),
-                            }),
-                            transaction,
-                        )
-                        .then((mapping) => {
-                            if (mapping.isError) {
-                                reject(`unable to create or update type mapping ${mapping.error?.error}`);
-                            }
-
-                            resolve(
-                                new DataStaging({
-                                    data_source_id: this.DataSourceRecord!.id!,
-                                    import_id: lockedNewImport.value.id!,
-                                    mapping_id: mapping.value.id!,
-                                    data,
-                                }),
-                            );
-                        })
-                        .catch((e) => reject(`unable to create or update type mapping ${e}`));
+            records.push(
+                new DataStaging({
+                    data_source_id: this.DataSourceRecord.id,
+                    import_id: lockedNewImport.value.id!,
+                    data,
                 }),
             );
         }
 
         try {
-            const records = await Promise.all(recordPromises);
             const saved = await this.#stagingRepo.bulkSave(records, transaction);
             if (saved.isError) {
                 if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
@@ -309,7 +281,7 @@ export default class StandardDataSourceImpl implements DataSource {
             for (const row of toProcess.value) {
                 // pull the mapping and transformations for the individual data row. Then transform the data prior to
                 // insert
-                const mapping = await mappingRepo.findByID(row.mapping_id!, true);
+                const mapping = await mappingRepo.findByShapeHash(row.shape_hash!, row.data_source_id!, true);
                 if (mapping.isError) {
                     return new Promise((resolve) => resolve(Result.SilentFailure(`error attempting to fetch type mapping ${mapping.error?.error}`)));
                 }

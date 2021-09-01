@@ -101,7 +101,7 @@ export class Repository {
         return this;
     }
 
-    query(fieldName: string, operator: string, value: any) {
+    query(fieldName: string, operator: string, value?: any) {
         switch (operator) {
             case 'eq': {
                 this._values.push(value);
@@ -133,6 +133,12 @@ export class Repository {
                 });
 
                 this._rawQuery.push(`${fieldName} IN (${output.join(',')})`);
+                break;
+            }
+            // is null completely ignores the value because for some reason the formatting library will
+            // does not like us including null on queries
+            case 'is null': {
+                this._rawQuery.push(`${fieldName} IS NULL`);
                 break;
             }
         }

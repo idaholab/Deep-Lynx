@@ -121,8 +121,8 @@ export default class DataStagingMapper extends Mapper {
                          data_source_id,
                          import_id,
                          data,
-                         mapping_id) VALUES %L RETURNING *`;
-        const values = data.map((d) => [d.data_source_id, d.import_id, JSON.stringify(d.data), d.mapping_id]);
+                         shape_hash) VALUES %L RETURNING *`;
+        const values = data.map((d) => [d.data_source_id, d.import_id, JSON.stringify(d.data), d.shape_hash]);
 
         return format(text, values);
     }
@@ -132,10 +132,10 @@ export default class DataStagingMapper extends Mapper {
                          data_source_id = u.data_source_id::uuid,
                          import_id = u.import_id::uuid,
                          data = u.data::jsonb,
-                         mapping_id = u.mapping_id::uuid
-                        FROM(VALUES %L) AS u(data_source_id, import_id, data, mapping_id)
+                         shape_hash = u.shape_hash::text
+                        FROM(VALUES %L) AS u(id,data_source_id, import_id, data, shape_hash)
                         WHERE u.id::int4 = s.id RETURNING s.*`;
-        const values = data.map((d) => [d.id, d.data_source_id, d.import_id, JSON.stringify(d.data), d.mapping_id]);
+        const values = data.map((d) => [d.id, d.data_source_id, d.import_id, JSON.stringify(d.data), d.shape_hash]);
 
         return format(text, values);
     }
@@ -177,12 +177,14 @@ export default class DataStagingMapper extends Mapper {
         return {
             text: `SELECT data_staging.*
                    FROM data_staging
-                   LEFT JOIN data_type_mappings ON data_type_mappings.id = data_staging.mapping_id
+                   LEFT JOIN data_type_mappings ON data_type_mappings.shape_hash = data_staging.shape_hash
+                                                AND data_type_mappings.data_source_id = data_staging.data_source_id    
                    WHERE import_id = $1
                    AND inserted_at IS NULL
                    AND data_type_mappings.active IS TRUE
                    AND EXISTS 
-                       (SELECT * from data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_staging.mapping_id)
+                       (SELECT * from data_type_mapping_transformations 
+                        WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
                    OFFSET $2 LIMIT $3`,
             values: [importID, offset, limit],
         };
@@ -206,12 +208,14 @@ export default class DataStagingMapper extends Mapper {
         return {
             text: `SELECT COUNT(*)
                    FROM data_staging
-                   LEFT JOIN data_type_mappings ON data_type_mappings.id = data_staging.mapping_id
+                            LEFT JOIN data_type_mappings ON data_type_mappings.shape_hash = data_staging.shape_hash
+                                                         AND data_type_mappings.data_source_id = data_staging.data_source_id
                    WHERE data_staging.import_id = $1
                    AND data_staging.inserted_at IS NULL
                    AND data_type_mappings.active IS TRUE
                    AND EXISTS 
-                       (SELECT * from data_type_mapping_transformations WHERE data_type_mapping_transformations.type_mapping_id = data_staging.mapping_id)
+                        (SELECT * from data_type_mapping_transformations 
+                            WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
             `,
             values: [importID],
         };

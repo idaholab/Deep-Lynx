@@ -1,5 +1,5 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../../services/logger';
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
@@ -20,13 +20,13 @@ import MetatypeRelationshipPair from '../../../data_warehouse/ontology/metatype_
 import MetatypeKey from '../../../data_warehouse/ontology/metatype_key';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import MetatypeRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
-import { User } from '../../../access_management/user';
+import {User} from '../../../access_management/user';
 import Node from '../../../data_warehouse/data/node';
 import Edge from '../../../data_warehouse/data/edge';
 import TypeMapping from '../../../data_warehouse/etl/type_mapping';
 import TypeMappingRepository from '../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
-import TypeTransformation, { Condition, KeyMapping } from '../../../data_warehouse/etl/type_transformation';
-import Import, { DataStaging } from '../../../data_warehouse/import/import';
+import TypeTransformation, {Condition, KeyMapping} from '../../../data_warehouse/etl/type_transformation';
+import Import, {DataStaging} from '../../../data_warehouse/import/import';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import DataSourceRecord from '../../../data_warehouse/import/data_source';
 
@@ -47,15 +47,15 @@ describe('A Data Type Mapping can', async () => {
             property_name: 'id',
             description: 'id of car',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'name',
             property_name: 'name',
             description: 'name of car',
             data_type: 'string',
-            required: true
-        })
+            required: true,
+        }),
     ];
 
     const component_metatype_keys: MetatypeKey[] = [
@@ -64,15 +64,15 @@ describe('A Data Type Mapping can', async () => {
             property_name: 'id',
             description: 'id of car',
             data_type: 'number',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'name',
             property_name: 'name',
             description: 'name of car',
             data_type: 'string',
-            required: true
-        })
+            required: true,
+        }),
     ];
 
     const manufacturer_metatype_keys: MetatypeKey[] = [
@@ -81,22 +81,22 @@ describe('A Data Type Mapping can', async () => {
             property_name: 'id',
             description: 'id of car',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'name',
             property_name: 'name',
             description: 'name of car',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'location',
             property_name: 'location',
             description: 'location of manufacturer',
             data_type: 'string',
-            required: true
-        })
+            required: true,
+        }),
     ];
 
     const tire_pressure_metatype_keys: MetatypeKey[] = [
@@ -105,29 +105,29 @@ describe('A Data Type Mapping can', async () => {
             property_name: 'id',
             description: 'id of car',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'measurement',
             property_name: 'measurement',
             description: 'measurement',
             data_type: 'number',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'measurement unit',
             property_name: 'measurement_unit',
             description: 'unit of measurement',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'measurement name',
             property_name: 'measurement_name',
             description: 'name of measurement',
             data_type: 'string',
-            required: true
-        })
+            required: true,
+        }),
     ];
 
     const car_maintenance_metatype_keys: MetatypeKey[] = [
@@ -136,29 +136,29 @@ describe('A Data Type Mapping can', async () => {
             property_name: 'id',
             description: 'id of car',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'name',
             property_name: 'name',
             description: 'name',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'start date',
             property_name: 'start_date',
             description: 'start date',
             data_type: 'date',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'average visits per year',
             property_name: 'average_visits',
             description: 'average visits per year',
             data_type: 'number',
-            required: true
-        })
+            required: true,
+        }),
     ];
 
     const maintenance_entry_metatype_keys: MetatypeKey[] = [
@@ -167,22 +167,22 @@ describe('A Data Type Mapping can', async () => {
             property_name: 'id',
             description: 'id',
             data_type: 'number',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'check engine light flag',
             property_name: 'check_engine_light_flag',
             description: 'check engine light flag',
             data_type: 'boolean',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'type',
             property_name: 'type',
             description: 'type',
             data_type: 'string',
-            required: true
-        })
+            required: true,
+        }),
     ];
 
     const partKeys: MetatypeKey[] = [
@@ -191,67 +191,67 @@ describe('A Data Type Mapping can', async () => {
             property_name: 'id',
             description: 'id of car',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'name',
             property_name: 'name',
             description: 'name',
             data_type: 'string',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'price',
             property_name: 'price',
             description: 'price',
             data_type: 'number',
-            required: true
+            required: true,
         }),
         new MetatypeKey({
             name: 'quantity',
             property_name: 'quantity',
             description: 'quantity',
             data_type: 'number',
-            required: true
-        })
+            required: true,
+        }),
     ];
 
     const test_metatypes: Metatype[] = [
         new Metatype({
             name: 'Car',
             description: 'A Vehicle',
-            keys: car_metatype_keys
+            keys: car_metatype_keys,
         }),
         new Metatype({
             name: 'Manufacturer',
             description: 'Creator of Car',
-            keys: manufacturer_metatype_keys
+            keys: manufacturer_metatype_keys,
         }),
         new Metatype({
             name: 'Tire Pressure',
             description: 'Pressure of tire',
-            keys: tire_pressure_metatype_keys
+            keys: tire_pressure_metatype_keys,
         }),
         new Metatype({
             name: 'Maintenance',
             description: 'Maintenance records',
-            keys: car_maintenance_metatype_keys
+            keys: car_maintenance_metatype_keys,
         }),
         new Metatype({
             name: 'Maintenance Entry',
             description: 'Maintenance entries',
-            keys: maintenance_entry_metatype_keys
+            keys: maintenance_entry_metatype_keys,
         }),
         new Metatype({
             name: 'Part',
             description: 'Physical part of car',
-            keys: partKeys
+            keys: partKeys,
         }),
         new Metatype({
             name: 'Component',
             description: 'Base component of part',
-            keys: component_metatype_keys
-        })
+            keys: component_metatype_keys,
+        }),
     ];
 
     before(async function () {
@@ -267,8 +267,8 @@ describe('A Data Type Mapping can', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -285,8 +285,8 @@ describe('A Data Type Mapping can', async () => {
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(userResult.isError).false;
@@ -310,8 +310,8 @@ describe('A Data Type Mapping can', async () => {
             new MetatypeRelationship({
                 container_id: containerID,
                 name: 'parent',
-                description: 'item has parent'
-            })
+                description: 'item has parent',
+            }),
         ];
 
         // create the relationships
@@ -330,8 +330,8 @@ describe('A Data Type Mapping can', async () => {
                 destination_metatype: test_metatypes.find((m) => m.name === 'Maintenance Entry')!.id!,
                 relationship: resultMetatypeRelationships.find((m) => m.name === 'parent')!.id!,
                 relationship_type: 'one:one',
-                container_id: containerID
-            })
+                container_id: containerID,
+            }),
         );
 
         expect(pairs.isError).false;
@@ -346,8 +346,8 @@ describe('A Data Type Mapping can', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -358,7 +358,7 @@ describe('A Data Type Mapping can', async () => {
         const mapping = new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
-            sample_payload: test_payload[0]
+            sample_payload: test_payload[0],
         });
 
         const saved = await new TypeMappingRepository().save(mapping, user);
@@ -373,8 +373,8 @@ describe('A Data Type Mapping can', async () => {
             'test suite',
             new Import({
                 data_source_id: dataSourceID,
-                reference: 'testing suite upload'
-            })
+                reference: 'testing suite upload',
+            }),
         );
         expect(newImport.isError).false;
 
@@ -382,16 +382,15 @@ describe('A Data Type Mapping can', async () => {
             new DataStaging({
                 data_source_id: dataSourceID,
                 import_id: newImport.value.id!,
-                mapping_id: typeMappingID,
-                data: test_payload[0]
-            })
+                data: test_payload[0],
+            }),
         );
         expect(inserted.isError).false;
         expect(inserted.value.id).not.undefined;
 
         const stagingRepo = new DataStagingRepository();
 
-        const insertedData = await stagingRepo.where().importID('eq', newImport.value.id).list({ limit: 1 });
+        const insertedData = await stagingRepo.where().importID('eq', newImport.value.id).list({limit: 1});
         expect(insertedData.isError).false;
         expect(insertedData.value).not.empty;
 
@@ -413,17 +412,17 @@ describe('A Data Type Mapping can', async () => {
             keys: [
                 new KeyMapping({
                     key: 'car.id',
-                    metatype_key_id: carKeys.find((key) => key.name === 'id')!.id
+                    metatype_key_id: carKeys.find((key) => key.name === 'id')!.id,
                 }),
                 new KeyMapping({
                     key: 'car.name',
-                    metatype_key_id: carKeys.find((key) => key.name === 'name')!.id
-                })
+                    metatype_key_id: carKeys.find((key) => key.name === 'name')!.id,
+                }),
             ],
             metatype_id: test_metatypes.find((m) => m.name === 'Car')!.id,
             unique_identifier_key: 'car.id',
             container_id: containerID,
-            data_source_id: dataSourceID
+            data_source_id: dataSourceID,
         });
 
         const results = await carTransformation.applyTransformation(data!);
@@ -456,15 +455,15 @@ describe('A Data Type Mapping can', async () => {
             keys: [
                 new KeyMapping({
                     value: 'TEST UUID',
-                    metatype_key_id: car!.keys!.find((key) => key.name === 'id')!.id!
+                    metatype_key_id: car!.keys!.find((key) => key.name === 'id')!.id!,
                 }),
                 new KeyMapping({
                     value: 'MOTOROLA',
-                    metatype_key_id: car!.keys!.find((key) => key.name === 'name')!.id!
-                })
+                    metatype_key_id: car!.keys!.find((key) => key.name === 'name')!.id!,
+                }),
             ],
             metatype_id: car!.id,
-            unique_identifier_key: 'car.id'
+            unique_identifier_key: 'car.id',
         });
 
         const results = await carTransformation.applyTransformation(data!);
@@ -501,20 +500,20 @@ describe('A Data Type Mapping can', async () => {
             keys: [
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].id',
-                    metatype_key_id: entry!.keys!.find((key) => key.name === 'id')!.id
+                    metatype_key_id: entry!.keys!.find((key) => key.name === 'id')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].type',
-                    metatype_key_id: entry!.keys!.find((key) => key.name === 'type')!.id
+                    metatype_key_id: entry!.keys!.find((key) => key.name === 'type')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].check_engine_light_flag',
-                    metatype_key_id: entry!.keys!.find((key) => key.name === 'check engine light flag')!.id
-                })
+                    metatype_key_id: entry!.keys!.find((key) => key.name === 'check engine light flag')!.id,
+                }),
             ],
             metatype_id: entry!.id,
             unique_identifier_key: 'car_maintenance.maintenance_entries.[].id',
-            root_array: 'car_maintenance.maintenance_entries'
+            root_array: 'car_maintenance.maintenance_entries',
         });
 
         const results = await maintenanceTransformation.applyTransformation(data!);
@@ -559,24 +558,24 @@ describe('A Data Type Mapping can', async () => {
             keys: [
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].parts_list.[].id',
-                    metatype_key_id: part!.keys!.find((key) => key.name === 'id')!.id
+                    metatype_key_id: part!.keys!.find((key) => key.name === 'id')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].parts_list.[].name',
-                    metatype_key_id: part!.keys!.find((key) => key.name === 'name')!.id
+                    metatype_key_id: part!.keys!.find((key) => key.name === 'name')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].parts_list.[].quantity',
-                    metatype_key_id: part!.keys!.find((key) => key.name === 'quantity')!.id
+                    metatype_key_id: part!.keys!.find((key) => key.name === 'quantity')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].parts_list.[].price',
-                    metatype_key_id: part!.keys!.find((key) => key.name === 'price')!.id
-                })
+                    metatype_key_id: part!.keys!.find((key) => key.name === 'price')!.id,
+                }),
             ],
             metatype_id: part!.id,
             unique_identifier_key: 'car_maintenance.maintenance_entries.[].parts_list.[].id',
-            root_array: 'car_maintenance.maintenance_entries.[].parts_list'
+            root_array: 'car_maintenance.maintenance_entries.[].parts_list',
         });
 
         const results = await maintenanceTransformation.applyTransformation(data!);
@@ -591,7 +590,7 @@ describe('A Data Type Mapping can', async () => {
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[0].original_data_id).eq('oil');
         expect((results.value as Node[])[0].composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+oil`
+            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+oil`,
         );
 
         expect((results.value as Node[])[1].properties).to.have.property('id', 'pan');
@@ -601,7 +600,7 @@ describe('A Data Type Mapping can', async () => {
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[1].original_data_id).eq('pan');
         expect((results.value as Node[])[1].composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+pan`
+            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+pan`,
         );
 
         expect((results.value as Node[])[2].properties).to.have.property('id', 'tire');
@@ -611,7 +610,7 @@ describe('A Data Type Mapping can', async () => {
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[2].original_data_id).eq('tire');
         expect((results.value as Node[])[2].composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+tire`
+            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+tire`,
         );
 
         expect((results.value as Node[])[3].properties).to.have.property('id', 'wrench');
@@ -621,7 +620,7 @@ describe('A Data Type Mapping can', async () => {
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[3].original_data_id).eq('wrench');
         expect((results.value as Node[])[3].composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+wrench`
+            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+wrench`,
         );
 
         expect((results.value as Node[])[4].properties).to.have.property('id', 'bolts');
@@ -631,7 +630,7 @@ describe('A Data Type Mapping can', async () => {
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[4].original_data_id).eq('bolts');
         expect((results.value as Node[])[4].composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+bolts`
+            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+bolts`,
         );
 
         // run through and set the right metatype and container
@@ -667,32 +666,32 @@ describe('A Data Type Mapping can', async () => {
                             expression: 'AND',
                             key: 'car_maintenance.maintenance_entries.[].parts_list.[].id',
                             operator: '==',
-                            value: 'oil'
-                        })
-                    ]
-                })
+                            value: 'oil',
+                        }),
+                    ],
+                }),
             ],
             keys: [
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].parts_list.[].id',
-                    metatype_key_id: part!.keys!.find((key) => key.name === 'id')!.id
+                    metatype_key_id: part!.keys!.find((key) => key.name === 'id')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].parts_list.[].name',
-                    metatype_key_id: part!.keys!.find((key) => key.name === 'name')!.id
+                    metatype_key_id: part!.keys!.find((key) => key.name === 'name')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].parts_list.[].quantity',
-                    metatype_key_id: part!.keys!.find((key) => key.name === 'quantity')!.id
+                    metatype_key_id: part!.keys!.find((key) => key.name === 'quantity')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].parts_list.[].price',
-                    metatype_key_id: part!.keys!.find((key) => key.name === 'price')!.id
-                })
+                    metatype_key_id: part!.keys!.find((key) => key.name === 'price')!.id,
+                }),
             ],
             metatype_id: part!.id,
             unique_identifier_key: 'car_maintenance.maintenance_entries.[].parts_list.[].id',
-            root_array: 'car_maintenance.maintenance_entries.[].parts_list'
+            root_array: 'car_maintenance.maintenance_entries.[].parts_list',
         });
 
         const results = await maintenanceTransformation.applyTransformation(data!);
@@ -707,7 +706,7 @@ describe('A Data Type Mapping can', async () => {
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[0].original_data_id).eq('oil');
         expect((results.value as Node[])[0].composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+oil`
+            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+oil`,
         );
 
         // run through and set the right metatype and container
@@ -733,16 +732,16 @@ describe('A Data Type Mapping can', async () => {
             keys: [
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].parts_list.[].components.[].id',
-                    metatype_key_id: component!.keys!.find((key) => key.name === 'id')!.id
+                    metatype_key_id: component!.keys!.find((key) => key.name === 'id')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].parts_list.[].components.[].name',
-                    metatype_key_id: component!.keys!.find((key) => key.name === 'name')!.id
-                })
+                    metatype_key_id: component!.keys!.find((key) => key.name === 'name')!.id,
+                }),
             ],
             metatype_id: component!.id,
             unique_identifier_key: 'car_maintenance.maintenance_entries.[].parts_list.[].components.[].id',
-            root_array: 'car_maintenance.maintenance_entries.[].parts_list.[].components'
+            root_array: 'car_maintenance.maintenance_entries.[].parts_list.[].components',
         });
 
         const results = await componentTransformation.applyTransformation(data!);
@@ -755,7 +754,7 @@ describe('A Data Type Mapping can', async () => {
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[0].original_data_id).eq('1');
         expect((results.value as Node[])[0].composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].components.[].id+1`
+            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].components.[].id+1`,
         );
 
         // run through and set the right metatype and container
@@ -781,23 +780,23 @@ describe('A Data Type Mapping can', async () => {
             keys: [
                 new KeyMapping({
                     key: 'car_maintenance.id',
-                    metatype_key_id: maintenance!.keys!.find((key) => key.name === 'id')!.id
+                    metatype_key_id: maintenance!.keys!.find((key) => key.name === 'id')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.name',
-                    metatype_key_id: maintenance!.keys!.find((key) => key.name === 'name')!.id
+                    metatype_key_id: maintenance!.keys!.find((key) => key.name === 'name')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.start_date',
-                    metatype_key_id: maintenance!.keys!.find((key) => key.name === 'start date')!.id
+                    metatype_key_id: maintenance!.keys!.find((key) => key.name === 'start date')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.average_visits_per_year',
-                    metatype_key_id: maintenance!.keys!.find((key) => key.name === 'average visits per year')!.id
-                })
+                    metatype_key_id: maintenance!.keys!.find((key) => key.name === 'average visits per year')!.id,
+                }),
             ],
             metatype_id: maintenance!.id,
-            unique_identifier_key: 'car_maintenance.id'
+            unique_identifier_key: 'car_maintenance.id',
         });
 
         const maintenanceResult = await maintenanceTransformation.applyTransformation(data!);
@@ -831,20 +830,20 @@ describe('A Data Type Mapping can', async () => {
             keys: [
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].id',
-                    metatype_key_id: entry!.keys!.find((key) => key.name === 'id')!.id
+                    metatype_key_id: entry!.keys!.find((key) => key.name === 'id')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].type',
-                    metatype_key_id: entry!.keys!.find((key) => key.name === 'type')!.id
+                    metatype_key_id: entry!.keys!.find((key) => key.name === 'type')!.id,
                 }),
                 new KeyMapping({
                     key: 'car_maintenance.maintenance_entries.[].check_engine_light_flag',
-                    metatype_key_id: entry!.keys!.find((key) => key.name === 'check engine light flag')!.id
-                })
+                    metatype_key_id: entry!.keys!.find((key) => key.name === 'check engine light flag')!.id,
+                }),
             ],
             metatype_id: entry!.id,
             unique_identifier_key: 'car_maintenance.maintenance_entries.[].id',
-            root_array: 'car_maintenance.maintenance_entries'
+            root_array: 'car_maintenance.maintenance_entries',
         });
 
         const results = await maintenanceEntryTransformation.applyTransformation(data!);
@@ -883,7 +882,7 @@ describe('A Data Type Mapping can', async () => {
             metatype_relationship_pair_id: maintenancePair!.id,
             origin_id_key: 'car_maintenance.id',
             destination_id_key: 'car_maintenance.maintenance_entries.[].id',
-            root_array: 'car_maintenance.maintenance_entries'
+            root_array: 'car_maintenance.maintenance_entries',
         });
 
         const maintenanceEdgeResult = await maintenanceEdgeTransformation.applyTransformation(data!);
@@ -901,11 +900,11 @@ describe('A Data Type Mapping can', async () => {
         // validate the original and composite ID fields worked correctly
         expect((maintenanceEdgeResult.value as Edge[])[0].origin_node_composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.id+UUID`);
         expect((maintenanceEdgeResult.value as Edge[])[0].destination_node_composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+1`
+            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+1`,
         );
         expect((maintenanceEdgeResult.value as Edge[])[1].origin_node_composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.id+UUID`);
         expect((maintenanceEdgeResult.value as Edge[])[1].destination_node_composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+2`
+            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+2`,
         );
 
         const maintenanceEdgeInserted = await EdgeMapper.Instance.BulkCreateOrUpdateByCompositeID('test suite', maintenanceEdgeResult.value as Edge[]);
@@ -920,7 +919,7 @@ describe('A Data Type Mapping can', async () => {
         const carNameFalse = new Condition({
             key: 'car.name',
             operator: '==',
-            value: 'false'
+            value: 'false',
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameFalse, test_payload[0])).false;
@@ -928,7 +927,7 @@ describe('A Data Type Mapping can', async () => {
         const carNameTrue = new Condition({
             key: 'car.name',
             operator: '==',
-            value: 'test car'
+            value: 'test car',
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameTrue, test_payload[0])).true;
@@ -936,7 +935,7 @@ describe('A Data Type Mapping can', async () => {
         const carMaintenanceNested = new Condition({
             key: 'car_maintenance.maintenance_entries.[].type',
             operator: '==',
-            value: 'oil change'
+            value: 'oil change',
         });
 
         expect(TypeTransformation.validTransformationCondition(carMaintenanceNested, test_payload[0], [0])).true;
@@ -950,9 +949,9 @@ describe('A Data Type Mapping can', async () => {
                     expression: 'AND',
                     key: 'car.manufacturer.name',
                     operator: '==',
-                    value: 'false'
-                })
-            ]
+                    value: 'false',
+                }),
+            ],
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameSubexpressionFalse, test_payload[0])).false;
@@ -966,9 +965,9 @@ describe('A Data Type Mapping can', async () => {
                     expression: 'AND',
                     key: 'car.manufacturer.name',
                     operator: '==',
-                    value: 'Test Cars Inc'
-                })
-            ]
+                    value: 'Test Cars Inc',
+                }),
+            ],
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameSubexpressionTrue, test_payload[0])).true;
@@ -982,15 +981,15 @@ describe('A Data Type Mapping can', async () => {
                     expression: 'AND',
                     key: 'car.manufacturer.name',
                     operator: '==',
-                    value: 'Test Cars Inc'
+                    value: 'Test Cars Inc',
                 }),
                 new Condition({
                     expression: 'AND',
                     key: 'car.id',
                     operator: '==',
-                    value: 'UUID'
-                })
-            ]
+                    value: 'UUID',
+                }),
+            ],
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameSubexpressionTrueMultiple, test_payload[0])).true;
@@ -1004,15 +1003,15 @@ describe('A Data Type Mapping can', async () => {
                     expression: 'AND',
                     key: 'car.manufacturer.name',
                     operator: '==',
-                    value: 'false'
+                    value: 'false',
                 }),
                 new Condition({
                     expression: 'AND',
                     key: 'car.id',
                     operator: '==',
-                    value: 'UUID'
-                })
-            ]
+                    value: 'UUID',
+                }),
+            ],
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameSubexpressionFalseMultiple, test_payload[0])).false;
@@ -1026,9 +1025,9 @@ describe('A Data Type Mapping can', async () => {
                     expression: 'OR',
                     key: 'car.manufacturer.name',
                     operator: '==',
-                    value: 'Test Cars Inc'
-                })
-            ]
+                    value: 'Test Cars Inc',
+                }),
+            ],
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameSubexpressionTrueOr, test_payload[0])).true;
@@ -1042,15 +1041,15 @@ describe('A Data Type Mapping can', async () => {
                     expression: 'OR',
                     key: 'car.manufacturer.name',
                     operator: '==',
-                    value: 'false'
+                    value: 'false',
                 }),
                 new Condition({
                     expression: 'OR',
                     key: 'car.manufacturer.name',
                     operator: '==',
-                    value: 'Test Cars Inc'
-                })
-            ]
+                    value: 'Test Cars Inc',
+                }),
+            ],
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameSubexpressionTrueOrMultiple, test_payload[0])).true;
@@ -1058,7 +1057,7 @@ describe('A Data Type Mapping can', async () => {
         const carNameNonEquality = new Condition({
             key: 'car.name',
             operator: '!=',
-            value: 'false'
+            value: 'false',
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameNonEquality, test_payload[0])).true;
@@ -1066,7 +1065,7 @@ describe('A Data Type Mapping can', async () => {
         const carNameIn = new Condition({
             key: 'car.name',
             operator: 'in',
-            value: 'test car, test'
+            value: 'test car, test',
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameIn, test_payload[0])).true;
@@ -1074,7 +1073,7 @@ describe('A Data Type Mapping can', async () => {
         const carNameInFalse = new Condition({
             key: 'car.name',
             operator: 'in',
-            value: 'false, test'
+            value: 'false, test',
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameInFalse, test_payload[0])).false;
@@ -1082,7 +1081,7 @@ describe('A Data Type Mapping can', async () => {
         const carNameLike = new Condition({
             key: 'car.name',
             operator: 'contains',
-            value: 'test'
+            value: 'test',
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameLike, test_payload[0])).true;
@@ -1090,7 +1089,7 @@ describe('A Data Type Mapping can', async () => {
         const carNameLikeFalse = new Condition({
             key: 'car.name',
             operator: 'contains',
-            value: 'false'
+            value: 'false',
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameLikeFalse, test_payload[0])).false;
@@ -1098,7 +1097,7 @@ describe('A Data Type Mapping can', async () => {
         const carNameLesserThan = new Condition({
             key: 'car_maintenance.average_visits_per_year',
             operator: '<',
-            value: 10
+            value: 10,
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameLesserThan, test_payload[0])).true;
@@ -1106,7 +1105,7 @@ describe('A Data Type Mapping can', async () => {
         const carNameLesserThanFalse = new Condition({
             key: 'car_maintenance.average_visits_per_year',
             operator: '<',
-            value: 1
+            value: 1,
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameLesserThanFalse, test_payload[0])).false;
@@ -1114,7 +1113,7 @@ describe('A Data Type Mapping can', async () => {
         const carNameGreaterThan = new Condition({
             key: 'car_maintenance.average_visits_per_year',
             operator: '>',
-            value: 10
+            value: 10,
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameGreaterThan, test_payload[0])).false;
@@ -1122,7 +1121,7 @@ describe('A Data Type Mapping can', async () => {
         const carNameGreaterThanFalse = new Condition({
             key: 'car_maintenance.average_visits_per_year',
             operator: '>',
-            value: 1
+            value: 1,
         });
 
         expect(TypeTransformation.validTransformationCondition(carNameGreaterThanFalse, test_payload[0])).true;
@@ -1137,34 +1136,34 @@ const test_payload = [
             manufacturer: {
                 id: 'UUID',
                 name: 'Test Cars Inc',
-                location: 'Seattle, WA'
+                location: 'Seattle, WA',
             },
             tire_pressures: [
                 {
                     id: 'tire0',
                     measurement_unit: 'PSI',
                     measurement: 35.08,
-                    measurement_name: 'tire pressure'
+                    measurement_name: 'tire pressure',
                 },
                 {
                     id: 'tire1',
                     measurement_unit: 'PSI',
                     measurement: 35.45,
-                    measurement_name: 'tire pressure'
+                    measurement_name: 'tire pressure',
                 },
                 {
                     id: 'tire2',
                     measurement_unit: 'PSI',
                     measurement: 34.87,
-                    measurement_name: 'tire pressure'
+                    measurement_name: 'tire pressure',
                 },
                 {
                     id: 'tire3',
                     measurement_unit: 'PSI',
                     measurement: 37.22,
-                    measurement_name: 'tire pressure'
-                }
-            ]
+                    measurement_name: 'tire pressure',
+                },
+            ],
         },
         car_maintenance: {
             id: 'UUID',
@@ -1185,18 +1184,18 @@ const test_payload = [
                             components: [
                                 {
                                     id: 1,
-                                    name: 'oil'
-                                }
-                            ]
+                                    name: 'oil',
+                                },
+                            ],
                         },
                         {
                             id: 'pan',
                             name: 'oil pan',
                             price: 15.5,
                             quantity: 1,
-                            components: []
-                        }
-                    ]
+                            components: [],
+                        },
+                    ],
                 },
                 {
                     id: 2,
@@ -1208,25 +1207,25 @@ const test_payload = [
                             name: 'all terrain tire',
                             price: 150.99,
                             quantity: 4,
-                            components: []
+                            components: [],
                         },
                         {
                             id: 'wrench',
                             name: 'wrench',
                             price: 4.99,
                             quantity: 1,
-                            components: []
+                            components: [],
                         },
                         {
                             id: 'bolts',
                             name: 'bolts',
                             price: 1.99,
                             quantity: 5,
-                            components: []
-                        }
-                    ]
-                }
-            ]
-        }
-    }
+                            components: [],
+                        },
+                    ],
+                },
+            ],
+        },
+    },
 ];

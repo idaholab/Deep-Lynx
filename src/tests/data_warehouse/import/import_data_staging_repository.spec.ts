@@ -1,16 +1,16 @@
-import { User } from '../../../access_management/user';
+import {User} from '../../../access_management/user';
 import Logger from '../../../services/logger';
 import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import Container from '../../../data_warehouse/ontology/container';
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import TypeMapping from '../../../data_warehouse/etl/type_mapping';
 import TypeMappingRepository from '../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
-import Import, { DataStaging } from '../../../data_warehouse/import/import';
+import Import, {DataStaging} from '../../../data_warehouse/import/import';
 import ImportRepository from '../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import DataSourceRecord from '../../../data_warehouse/import/data_source';
@@ -38,8 +38,8 @@ describe('An Import or Data Staging Repository can', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -54,8 +54,8 @@ describe('An Import or Data Staging Repository can', async () => {
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(userResult.isError).false;
@@ -69,8 +69,8 @@ describe('An Import or Data Staging Repository can', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -80,7 +80,7 @@ describe('An Import or Data Staging Repository can', async () => {
         const mapping = new TypeMapping({
             container_id: containerID,
             data_source_id: exp.value.id!,
-            sample_payload: test_payload
+            sample_payload: test_payload,
         });
 
         const saved = await new TypeMappingRepository().save(mapping, user);
@@ -100,7 +100,7 @@ describe('An Import or Data Staging Repository can', async () => {
         const stagingRepo = new DataStagingRepository();
         const importRecord = new Import({
             data_source_id: dataSourceID,
-            reference: 'testing upload'
+            reference: 'testing upload',
         });
 
         let saved = await importRepo.save(importRecord, user);
@@ -115,8 +115,7 @@ describe('An Import or Data Staging Repository can', async () => {
         const staging = new DataStaging({
             data_source_id: dataSourceID,
             import_id: importRecord.id!,
-            mapping_id: mappingID,
-            data: test_payload
+            data: test_payload,
         });
 
         saved = await stagingRepo.save(staging);
@@ -125,8 +124,54 @@ describe('An Import or Data Staging Repository can', async () => {
 
         return importRepo.delete(importRecord);
     });
+
+    // because filtering by null shape hashes are so important we need
+    // to test the filter and make sure it's working
+    it('can filter data staging on shape_hash', async () => {
+        const importRepo = new ImportRepository();
+        const stagingRepo = new DataStagingRepository();
+        const importRecord = new Import({
+            data_source_id: dataSourceID,
+            reference: 'testing upload',
+        });
+
+        let saved = await importRepo.save(importRecord, user);
+        expect(saved.isError).false;
+        expect(importRecord.id).not.undefined;
+
+        // verify the update will not work
+        saved = await importRepo.save(importRecord, user);
+        expect(saved.isError).true;
+
+        // now the staging records, one null one with shape hash
+        const staging = [
+            new DataStaging({
+                data_source_id: dataSourceID,
+                import_id: importRecord.id!,
+                data: test_payload,
+            }),
+            new DataStaging({
+                data_source_id: dataSourceID,
+                import_id: importRecord.id!,
+                data: test_payload,
+                shape_hash: 'test_hash',
+            }),
+        ];
+
+        saved = await stagingRepo.bulkSave(staging);
+        expect(saved.isError).false;
+
+        const results = await stagingRepo.where().importID('eq', importRecord.id).and().shapeHash('is null').list();
+
+        expect(results.isError).false;
+        expect(results.value.length).eq(1); // should only be one record coming back on the null search
+        // while we're here, check the joins
+        expect(results.value[0].container_id).eq(containerID);
+
+        return importRepo.delete(importRecord);
+    });
 });
 
 const test_payload = {
-    test: 'test'
+    test: 'test',
 };
