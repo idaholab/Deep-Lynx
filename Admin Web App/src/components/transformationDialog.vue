@@ -772,7 +772,12 @@ export default class TransformationDialog extends Vue {
     // first fetch all keys that are not arrays and are the top level
     const flattened = this.flattenWithoutArray(this.payload)
     Object.keys(flattened).map(k => {
-      if(!Array.isArray(flattened[k])) this.payloadKeys.push(k)
+      // add key if it is not an array
+      if (!Array.isArray(flattened[k])) this.payloadKeys.push(k)
+      // also add key if it is an array of primitives
+      else if (Array.isArray(flattened[k]) && typeof flattened[k][0] != "object") {
+        this.payloadKeys.push(k)
+      }
     })
 
     if(this.rootArray){
@@ -823,7 +828,12 @@ export default class TransformationDialog extends Vue {
 
     const flattened = this.flattenWithoutArray(this.payload)
     Object.keys(flattened).map(k => {
-      if(!Array.isArray(flattened[k])) this.payloadKeys.push(k)
+      // add key if it is not an array
+      if (!Array.isArray(flattened[k])) this.payloadKeys.push(k)
+      // also add key if it is an array of primitives
+      else if (Array.isArray(flattened[k]) && typeof flattened[k][0] != "object") {
+        this.payloadKeys.push(k)
+      }
     })
 
     const flattenedWithArrays = this.flatten(this.payload)

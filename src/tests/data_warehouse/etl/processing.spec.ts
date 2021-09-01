@@ -155,8 +155,15 @@ describe('A Data Processor', async () => {
         new MetatypeKey({
             name: 'average visits per year',
             property_name: 'average_visits',
-            description: 'average visits per yera',
+            description: 'average visits per year',
             data_type: 'number',
+            required: true,
+        }),
+        new MetatypeKey({
+            name: 'visit dates',
+            property_name: 'visit_dates',
+            description: 'history of maintenance visits',
+            data_type: 'list',
             required: true,
         }),
     ];
@@ -426,6 +433,10 @@ describe('A Data Processor', async () => {
                     key: 'car_maintenance.average_visits_per_year',
                     metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'average visits per year')!.id,
                 }),
+                new KeyMapping({
+                    key: 'car_maintenance.visit_dates',
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'visit dates')!.id,
+                }),
             ],
             metatype_id: test_metatypes.find((m) => m.name === 'Maintenance')!.id,
             unique_identifier_key: 'car_maintenance.id',
@@ -496,6 +507,7 @@ describe('A Data Processor', async () => {
                     expect(node.properties).to.have.property('name', "test car's maintenance");
                     expect(node.properties).to.have.property('start_date', '1/1/2020 12:00:00');
                     expect(node.properties).to.have.property('average_visits', 4);
+                    expect(node.properties).to.have.property('visit_dates', ['1/5/2020', '2/20/2020', '3/30/2020']);
                     // validate the original and composite ID fields worked correctly
                     expect(node.original_data_id).eq('UUID'); // original IDs are strings
                     break;
@@ -587,6 +599,7 @@ const test_payload = [
             name: "test car's maintenance",
             start_date: '1/1/2020 12:00:00',
             average_visits_per_year: 4,
+            visit_dates: ['1/5/2020', '2/20/2020', '3/30/2020'],
             maintenance_entries: [
                 {
                     id: 1,

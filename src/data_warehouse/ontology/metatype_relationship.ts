@@ -131,6 +131,11 @@ export default class MetatypeRelationship extends BaseDomainClass {
                         break;
                     }
 
+                    case 'list': {
+                        key.required ? (output[key.property_name] = t.array) : (partialOutput[key.property_name] = t.union([t.null, t.array(t.unknown)]));
+                        break;
+                    }
+
                     case 'enumeration': {
                         // if we don't have options, enum will default to a string value
                         if (key.options === undefined) {

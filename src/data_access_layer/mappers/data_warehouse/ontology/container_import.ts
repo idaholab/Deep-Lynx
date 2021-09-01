@@ -57,17 +57,38 @@ export default class ContainerImport {
                 case 'integer':
                     target = 'number';
                     break;
+                case 'int':
+                    target = 'number';
+                    break;
                 case 'decimal':
+                    target = 'number';
+                    break;
+                case 'float':
                     target = 'number';
                     break;
                 case 'double':
                     target = 'number';
                     break;
+                case 'rational':
+                    target = 'number';
+                    break;
                 case 'dateTimeStamp':
+                    target = 'date';
+                    break;
+                case 'dateTime':
                     target = 'date';
                     break;
                 case 'anyURI':
                     target = 'file';
+                    break;
+                case 'IDREF':
+                    target = 'string';
+                    break;
+                case 'ID':
+                    target = 'string';
+                    break;
+                case 'List':
+                    target = 'list';
                     break;
                 default:
                     target = 'string';
@@ -284,6 +305,7 @@ export default class ContainerImport {
                                 propertyType = 'relationship';
                             }
                         }
+
                         const propertyObj = {
                             value: onProperty,
                             target,
