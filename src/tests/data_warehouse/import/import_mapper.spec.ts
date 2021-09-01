@@ -106,7 +106,6 @@ describe('A data import', async () => {
             new DataStaging({
                 data_source_id: exp.value.id!,
                 import_id: newImport.value.id!,
-                mapping_id: mapping.id!,
                 data: test_payload,
             }),
         );
@@ -160,7 +159,6 @@ describe('A data import', async () => {
             new DataStaging({
                 data_source_id: exp.value.id!,
                 import_id: newImport.value.id!,
-                mapping_id: mapping.id!,
                 data: test_payload,
             }),
         );

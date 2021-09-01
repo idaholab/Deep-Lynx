@@ -16,6 +16,7 @@ import Config from '../services/config';
 const postgresAdapter = PostgresAdapter.Instance;
 
 void postgresAdapter.init().then(() => {
+    Logger.debug('starting data processing job');
     const repo = new DataSourceRepository();
 
     const queue = new PQueue({concurrency: Config.data_source_concurrency});
@@ -49,5 +50,8 @@ void postgresAdapter.init().then(() => {
                     process.exit(1);
                 });
         })
-        .catch((err) => Logger.error(`unable to restart active data source's process loop ${err}`));
+        .catch((err) => {
+            Logger.error(`unable to restart active data source's process loop ${err}`);
+            process.exit(1);
+        });
 });

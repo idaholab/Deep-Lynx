@@ -1,5 +1,5 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../../services/logger';
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
@@ -30,8 +30,8 @@ describe('A Data Type Mapping', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -56,8 +56,8 @@ describe('A Data Type Mapping', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -76,8 +76,8 @@ describe('A Data Type Mapping', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -88,9 +88,66 @@ describe('A Data Type Mapping', async () => {
             new TypeMapping({
                 container_id: containerID,
                 data_source_id: exp.value.id!,
-                sample_payload: test_raw_payload
-            })
+                sample_payload: test_raw_payload,
+            }),
         );
+
+        expect(mapping.isError).false;
+
+        return storage.Delete(exp.value.id!);
+    });
+
+    it('can be bulk saved to storage', async () => {
+        const storage = DataSourceMapper.Instance;
+        const mMapper = MetatypeMapper.Instance;
+        const keyStorage = MetatypeKeyMapper.Instance;
+        const mappingStorage = TypeMappingMapper.Instance;
+
+        const metatype = await mMapper.Create(
+            'test suite',
+            new Metatype({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+        );
+
+        expect(metatype.isError).false;
+        expect(metatype.value).not.empty;
+
+        const testKeys = [...test_keys];
+        testKeys.forEach((key) => (key.metatype_id = metatype.value.id!));
+
+        const keys = await keyStorage.BulkCreate('test suite', testKeys);
+        expect(keys.isError).false;
+
+        const exp = await DataSourceMapper.Instance.Create(
+            'test suite',
+            new DataSourceRecord({
+                container_id: containerID,
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'standard',
+                data_format: 'json',
+            }),
+        );
+
+        expect(exp.isError).false;
+        expect(exp.value).not.empty;
+
+        const mapping = await mappingStorage.BulkCreateOrUpdate('test suite', [
+            new TypeMapping({
+                container_id: containerID,
+                data_source_id: exp.value.id!,
+                sample_payload: test_raw_payload,
+                shape_hash: 'test',
+            }),
+            new TypeMapping({
+                container_id: containerID,
+                data_source_id: exp.value.id!,
+                sample_payload: test_raw_payload,
+            }),
+        ]);
 
         expect(mapping.isError).false;
 
@@ -108,8 +165,8 @@ describe('A Data Type Mapping', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -128,8 +185,8 @@ describe('A Data Type Mapping', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -140,8 +197,8 @@ describe('A Data Type Mapping', async () => {
             new TypeMapping({
                 container_id: containerID,
                 data_source_id: exp.value.id!,
-                sample_payload: test_raw_payload
-            })
+                sample_payload: test_raw_payload,
+            }),
         );
 
         expect(mapping.isError).false;
@@ -163,8 +220,8 @@ describe('A Data Type Mapping', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -183,8 +240,8 @@ describe('A Data Type Mapping', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -195,8 +252,8 @@ describe('A Data Type Mapping', async () => {
             new TypeMapping({
                 container_id: containerID,
                 data_source_id: exp.value.id!,
-                sample_payload: test_raw_payload
-            })
+                sample_payload: test_raw_payload,
+            }),
         );
 
         const set = await mappingStorage.SetActive(mapping.value.id!);
@@ -219,8 +276,8 @@ describe('A Data Type Mapping', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -239,8 +296,8 @@ describe('A Data Type Mapping', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -251,8 +308,8 @@ describe('A Data Type Mapping', async () => {
             new TypeMapping({
                 container_id: containerID,
                 data_source_id: exp.value.id!,
-                sample_payload: test_raw_payload
-            })
+                sample_payload: test_raw_payload,
+            }),
         );
 
         expect(mapping.isError).false;
@@ -279,8 +336,8 @@ describe('A Data Type Mapping', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -299,8 +356,8 @@ describe('A Data Type Mapping', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -311,8 +368,8 @@ describe('A Data Type Mapping', async () => {
             new TypeMapping({
                 container_id: containerID,
                 data_source_id: exp.value.id!,
-                sample_payload: test_raw_payload
-            })
+                sample_payload: test_raw_payload,
+            }),
         );
 
         expect(mapping.isError).false;
@@ -341,7 +398,7 @@ export const test_keys: MetatypeKey[] = [
         description: 'flower name',
         required: true,
         property_name: 'flower_name',
-        data_type: 'string'
+        data_type: 'string',
     }),
     new MetatypeKey({
         name: 'Test2',
@@ -349,15 +406,15 @@ export const test_keys: MetatypeKey[] = [
         required: true,
         property_name: 'color',
         data_type: 'enumeration',
-        options: ['yellow', 'blue']
+        options: ['yellow', 'blue'],
     }),
     new MetatypeKey({
         name: 'Test Not Required',
         description: 'not required',
         required: false,
         property_name: 'notRequired',
-        data_type: 'number'
-    })
+        data_type: 'number',
+    }),
 ];
 
 const test_raw_payload = {
@@ -367,8 +424,8 @@ const test_raw_payload = {
     TEST: 'TEST',
     ITEM_ID: '123',
     ATTRIBUTES: {
-        WHEELS: 1
-    }
+        WHEELS: 1,
+    },
 };
 const test_payload = [
     {
@@ -378,34 +435,34 @@ const test_payload = [
             manufacturer: {
                 id: 'UUID',
                 name: 'Test Cars Inc',
-                location: 'Seattle, WA'
+                location: 'Seattle, WA',
             },
             tire_pressures: [
                 {
                     id: 'tire0',
                     measurement_unit: 'PSI',
                     measurement: 35.08,
-                    measurement_name: 'tire pressure'
+                    measurement_name: 'tire pressure',
                 },
                 {
                     id: 'tire1',
                     measurement_unit: 'PSI',
                     measurement: 35.45,
-                    measurement_name: 'tire pressure'
+                    measurement_name: 'tire pressure',
                 },
                 {
                     id: 'tire2',
                     measurement_unit: 'PSI',
                     measurement: 34.87,
-                    measurement_name: 'tire pressure'
+                    measurement_name: 'tire pressure',
                 },
                 {
                     id: 'tire3',
                     measurement_unit: 'PSI',
                     measurement: 37.22,
-                    measurement_name: 'tire pressure'
-                }
-            ]
+                    measurement_name: 'tire pressure',
+                },
+            ],
         },
         car_maintenance: {
             id: 'UUID',
@@ -422,15 +479,15 @@ const test_payload = [
                             id: 'oil',
                             name: 'synthetic oil',
                             price: 45.66,
-                            quantity: 1
+                            quantity: 1,
                         },
                         {
                             id: 'pan',
                             name: 'oil pan',
                             price: 15.5,
-                            quantity: 1
-                        }
-                    ]
+                            quantity: 1,
+                        },
+                    ],
                 },
                 {
                     id: 2,
@@ -441,25 +498,25 @@ const test_payload = [
                             id: 'tire',
                             name: 'all terrain tire',
                             price: 150.99,
-                            quantity: 4
+                            quantity: 4,
                         },
                         {
                             id: 'wrench',
                             name: 'wrench',
                             price: 4.99,
-                            quantity: 1
+                            quantity: 1,
                         },
                         {
                             id: 'bolts',
                             name: 'bolts',
                             price: 1.99,
-                            quantity: 5
-                        }
-                    ]
-                }
-            ]
-        }
-    }
+                            quantity: 5,
+                        },
+                    ],
+                },
+            ],
+        },
+    },
 ];
 
 const test_payload_single_array = [
@@ -470,16 +527,16 @@ const test_payload_single_array = [
             manufacturer: {
                 id: 'UUID',
                 name: 'Test Cars Inc',
-                location: 'Seattle, WA'
+                location: 'Seattle, WA',
             },
             tire_pressures: [
                 {
                     id: 'tire0',
                     measurement_unit: 'PSI',
                     measurement: 35.08,
-                    measurement_name: 'tire pressure'
-                }
-            ]
+                    measurement_name: 'tire pressure',
+                },
+            ],
         },
         car_maintenance: {
             id: 'UUID',
@@ -496,9 +553,9 @@ const test_payload_single_array = [
                             id: 'oil',
                             name: 'synthetic oil',
                             price: 45.66,
-                            quantity: 1
-                        }
-                    ]
+                            quantity: 1,
+                        },
+                    ],
                 },
                 {
                     id: 2,
@@ -509,11 +566,11 @@ const test_payload_single_array = [
                             id: 'tire',
                             name: 'all terrain tire',
                             price: 150.99,
-                            quantity: 4
-                        }
-                    ]
-                }
-            ]
-        }
-    }
+                            quantity: 4,
+                        },
+                    ],
+                },
+            ],
+        },
+    },
 ];

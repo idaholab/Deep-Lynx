@@ -386,8 +386,8 @@ describe('A Data Processor', async () => {
             new DataStaging({
                 data_source_id: exp.value.id!,
                 import_id: newImport.value.id!,
-                mapping_id: typeMappingID,
                 data: test_payload[0],
+                shape_hash: mapping.shape_hash,
             }),
         );
         expect(inserted.isError).false;

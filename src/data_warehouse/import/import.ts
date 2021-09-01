@@ -1,6 +1,6 @@
-import { BaseDomainClass, NakedDomainClass } from '../../common_classes/base_domain_class';
-import { IsDate, IsDefined, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
-import { Type } from 'class-transformer';
+import {BaseDomainClass, NakedDomainClass} from '../../common_classes/base_domain_class';
+import {IsDate, IsDefined, IsNumber, IsOptional, IsString, IsUUID} from 'class-validator';
+import {Type} from 'class-transformer';
 
 /*
     Import represents an import record in the Deep Lynx database and the various
@@ -33,7 +33,7 @@ export default class Import extends BaseDomainClass {
     @IsNumber()
     records_inserted?: number;
 
-    constructor(input: { data_source_id: string; status_message?: string; reference?: string }) {
+    constructor(input: {data_source_id: string; status_message?: string; reference?: string}) {
         super();
 
         if (input) {
@@ -61,8 +61,8 @@ export class DataStaging extends NakedDomainClass {
     import_id?: string;
 
     @IsOptional()
-    @IsUUID()
-    mapping_id?: string;
+    @IsString()
+    shape_hash?: string;
 
     @IsOptional()
     errors: string[] = [];
@@ -80,14 +80,18 @@ export class DataStaging extends NakedDomainClass {
     @Type(() => Date)
     inserted_at?: Date;
 
-    constructor(input: { data_source_id: string; import_id: string; data: any; mapping_id?: string }) {
+    // This is a join field - generally fetched as part of listing function
+    @IsOptional()
+    container_id?: string;
+
+    constructor(input: {data_source_id: string; import_id: string; data: any; shape_hash?: string}) {
         super();
 
         if (input) {
             this.data_source_id = input.data_source_id;
             this.import_id = input.import_id;
             this.data = input.data;
-            if (input.mapping_id) this.mapping_id = input.mapping_id;
+            if (input.shape_hash) this.shape_hash = input.shape_hash;
         }
     }
 }

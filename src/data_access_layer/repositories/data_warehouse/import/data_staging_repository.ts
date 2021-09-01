@@ -162,6 +162,11 @@ export default class DataStagingRepository extends Repository implements Reposit
 
     constructor() {
         super(DataStagingMapper.tableName);
+
+        this._rawQuery = [
+            `SELECT data_staging.*, data_sources.container_id FROM data_staging 
+            LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id`,
+        ];
     }
 
     dataSourceID(operator: string, value: any) {
@@ -179,6 +184,11 @@ export default class DataStagingRepository extends Repository implements Reposit
         return this;
     }
 
+    shapeHash(operator: string, value?: any) {
+        super.query('shape_hash', operator, value);
+        return this;
+    }
+
     // these listing functions are separate from the main filter due to some more
     // complicated query behavior than the filter can currently handle
     listUninsertedActiveMapping(importID: string, offset: number, limit: number, transaction?: PoolClient): Promise<Result<DataStaging[]>> {
@@ -186,7 +196,14 @@ export default class DataStagingRepository extends Repository implements Reposit
     }
 
     async count(transaction?: PoolClient): Promise<Result<number>> {
-        return super.count(transaction);
+        const results = await super.count(transaction);
+
+        this._rawQuery = [
+            `SELECT data_staging.*, data_sources.container_id FROM data_staging 
+            LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id`,
+        ];
+
+        return Promise.resolve(Result.Pass(results));
     }
 
     countUninsertedForImport(importID: string, transaction?: PoolClient): Promise<Result<number>> {
@@ -198,9 +215,16 @@ export default class DataStagingRepository extends Repository implements Reposit
     }
 
     async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<DataStaging[]>> {
-        return super.findAll<DataStaging>(options, {
+        const results = await super.findAll<DataStaging>(options, {
             transaction,
             resultClass: DataStaging,
         });
+
+        this._rawQuery = [
+            `SELECT data_staging.*, data_sources.container_id FROM data_staging 
+            LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id`,
+        ];
+
+        return Promise.resolve(Result.Pass(results));
     }
 }

@@ -39,7 +39,7 @@ export default class TypeMappingMapper extends Mapper {
         return Promise.resolve(Result.Success(r.value[0]));
     }
 
-    public async BulkCreate(userID: string, t: TypeMapping[], transaction?: PoolClient): Promise<Result<TypeMapping[]>> {
+    public async BulkCreateOrUpdate(userID: string, t: TypeMapping[], transaction?: PoolClient): Promise<Result<TypeMapping[]>> {
         return super.run(this.createOrUpdateStatement(userID, ...t), {
             transaction,
             resultClass,
@@ -75,7 +75,14 @@ export default class TypeMappingMapper extends Mapper {
         return super.retrieve<TypeMapping>(this.retrieveByShapeHashStatement(dataSourceID, shapeHash), {resultClass});
     }
 
-    public List(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?: string, sortDesc?: boolean): Promise<Result<TypeMapping[]>> {
+    public List(
+        containerID: string,
+        dataSourceID: string,
+        offset: number,
+        limit: number,
+        sortBy?: string,
+        sortDesc?: boolean,
+    ): Promise<Result<TypeMapping[]>> {
         if (limit === -1) {
             return super.rows<TypeMapping>(this.listAllStatement(containerID, dataSourceID), {resultClass});
         }
@@ -95,7 +102,9 @@ export default class TypeMappingMapper extends Mapper {
             return super.rows<TypeMapping>(this.listAllNoTransformationsStatement(containerID, dataSourceID), {resultClass});
         }
 
-        return super.rows<TypeMapping>(this.listNoTransformationsStatement(containerID, dataSourceID, offset, limit, sortBy, sortDesc), {resultClass});
+        return super.rows<TypeMapping>(this.listNoTransformationsStatement(containerID, dataSourceID, offset, limit, sortBy, sortDesc), {
+            resultClass,
+        });
     }
 
     public ListByDataSource(dataSourceID: string, offset: number, limit: number): Promise<Result<TypeMapping[]>> {
@@ -211,7 +220,14 @@ export default class TypeMappingMapper extends Mapper {
         };
     }
 
-    private listStatement(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?: string, sortDesc?: boolean): QueryConfig {
+    private listStatement(
+        containerID: string,
+        dataSourceID: string,
+        offset: number,
+        limit: number,
+        sortBy?: string,
+        sortDesc?: boolean,
+    ): QueryConfig {
         if (sortDesc && sortBy) {
             return {
                 text: `SELECT * FROM data_type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,

@@ -134,7 +134,7 @@ export class Config {
         this._auth_config_file = process.env.AUTH_CONFIG_FILE_PATH || path.resolve(__dirname, '../../src/access_management/authorization/auth_model.conf');
         this._auth_token_expiry = process.env.AUTH_TOKEN_EXPIRY || '24h';
 
-        this._data_source_processing_interval = process.env.DATA_SOURCE_PROCESSING_INTERVAL || '1m';
+        this._data_source_processing_interval = process.env.DATA_SOURCE_PROCESSING_INTERVAL || '10s';
         this._data_source_processing_concurrency = process.env.DATA_SOURCE_PROCESSING_CONCURRENCY
             ? parseInt(process.env.DATA_SOURCE_PROCESSING_CONCURRENCY, 10)
             : 4;
