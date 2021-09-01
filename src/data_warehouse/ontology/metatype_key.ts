@@ -31,7 +31,7 @@ export default class MetatypeKey extends BaseDomainClass {
 
     @IsNotEmpty()
     @IsString()
-    @IsIn(['number', 'date', 'string', 'boolean', 'enumeration', 'file', 'unknown'])
+    @IsIn(['number', 'date', 'string', 'boolean', 'enumeration', 'file', 'list', 'unknown'])
     data_type = 'unknown';
 
     @IsBoolean()

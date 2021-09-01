@@ -78,7 +78,11 @@ export default class TypeMapping extends BaseDomainClass {
                     }
                 }
 
-                resultArray.push(key + `:${typeof obj[key]}`);
+                if (Array.isArray(obj[key])) {
+                    resultArray.push(key + `:list`);
+                } else {
+                    resultArray.push(key + `:${typeof obj[key]}`);
+                }
             }
         };
 
