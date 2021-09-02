@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 
 export default class QueryRoutes {
     public static mount(app: Application, middleware: any[]) {
-        app.post('/containers/:id/query', ...middleware, authInContainer('read', 'data'), bodyParser.text(), this.query);
+        app.post('/containers/:containerID/query', ...middleware, authInContainer('read', 'data'), bodyParser.text(), this.query);
     }
 
     // very simple route that passes the raw body directly to the the graphql query
