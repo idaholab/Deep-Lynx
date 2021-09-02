@@ -313,6 +313,10 @@ import {Component, Prop, Vue} from "vue-property-decorator"
 import {
   AvevaDataSourceConfig,
   DataSourceT,
+  DefaultAvevaDataSourceConfig,
+  DefaultHttpDataSourceConfig,
+  DefaultJazzDataSourceConfig,
+  DefaultStandardDataSourceConfig,
   HttpDataSourceConfig,
   JazzDataSourceConfig,
   StandardDataSourceConfig
@@ -338,27 +342,10 @@ export default class CreateDataSourceDialog extends Vue {
     config: undefined
   }
 
-  standardConfig: StandardDataSourceConfig = {
-    kind: "standard",
-    data_type: "json"
-  }
-
-  httpConfig: HttpDataSourceConfig = {
-    kind: "http",
-    endpoint: "",
-    secure: true,
-    auth_method: 'none',
-    poll_interval: 10,
-  }
-
-  jazzConfig: JazzDataSourceConfig = {
-    kind: "jazz",
-    endpoint: "",
-    secure: true,
-    project_name: "",
-    poll_interval: 10,
-    token: ""
-  }
+  standardConfig: StandardDataSourceConfig = DefaultStandardDataSourceConfig()
+  httpConfig: HttpDataSourceConfig = DefaultHttpDataSourceConfig()
+  jazzConfig: JazzDataSourceConfig = DefaultJazzDataSourceConfig()
+  avevaConfig: AvevaDataSourceConfig = DefaultAvevaDataSourceConfig()
 
   adapterTypes() {
     return [
@@ -373,24 +360,6 @@ export default class CreateDataSourceDialog extends Vue {
 
   selectAdapter(adapter: string) {
     this.newDataSource.adapter_type = adapter
-  }
-
-  selectDatatype(dataType: string) {
-    switch(dataType) {
-      case "json" : {
-        this.standardConfig.data_type = 'json'
-        break;
-      }
-
-      case "csv" : {
-        this.standardConfig.data_type = 'csv'
-        break
-      }
-
-      default : {
-        this.standardConfig.data_type = 'json'
-      }
-    }
   }
 
   selectAuthMethodHttp(authMethod: string) {
@@ -450,7 +419,6 @@ export default class CreateDataSourceDialog extends Vue {
   }
 
 
-  // we include this at the bottom since it's so large
   clearNewAdapter() {
     this.dialog = false
     this.select = null
@@ -461,198 +429,12 @@ export default class CreateDataSourceDialog extends Vue {
       config: undefined
     }
 
-    this.standardConfig = {
-      kind: "standard",
-      data_type: "json"
-    }
-
-    this.httpConfig = {
-      kind: "http",
-      endpoint: "",
-      secure: true,
-      auth_method: 'none',
-      poll_interval: 10,
-    }
-
-    this.jazzConfig = {
-      kind: "jazz",
-      endpoint: "",
-      secure: true,
-      project_name: "",
-      poll_interval: 10,
-      token: ""
-    }
-
-    this.avevaConfig = {
-      kind: "aveva",
-      ignore_dbs: ['SYSTEM', 'DICTIONARY', 'PROPERTY', 'CATALOG', 'NSEQ'],
-      ignore_element_types: [
-        'GENPRI',
-        'POINT',
-        'INVISIBLE POINT',
-        'TANGENT POINT',
-        'POLYGON',
-        'VERTEX',
-        'AIDARC',
-        'AIDCIRCLE',
-        'AIDLINE',
-        'AIDPOINT',
-        'AIDTEXT',
-        'BOX',
-        'CONE',
-        'CTORUS',
-        'CYLINDER',
-        'DISH',
-        'DRAWING',
-        'EXTRUSION',
-        'IPOINT',
-        'LINDIMENSION',
-        'LOOP',
-        'LOOPTS',
-        'MLABEL',
-        'POGON',
-        'POHEDRON',
-        'POINT',
-        'POLFACE',
-        'POLOOP',
-        'POLPTLIST',
-        'POLYHEDRON',
-        'PYRAMID',
-        'REVOLUTION',
-        'RTORUS',
-        'SLCYLINDER',
-        'SNOUT',
-        'TANPOINT',
-        'VERTEX',
-        'NBOX',
-        'NCONE',
-        'NCTORUS',
-        'NCYLINDER',
-        'NDISH',
-        'NPOLYHEDRON',
-        'NPYRAMID',
-        'NREVOLUTION',
-        'NRTORUS',
-        'NSLCYLINDER',
-        'NSNOUT',
-        'NXRUSION',
-      ],
-      ifc_element_types: [
-        'WORLD',
-        'SITE',
-        'AREA WORLD',
-        'GROUP WORLD',
-        'GROUP',
-        'AREA SET',
-        'AREA DEFINITION',
-        'SITE',
-        'ZONE',
-        'DRAWING',
-        'STRUCTURE',
-      ],
-      ifc_settings: {
-        format: 'IFC2x3',
-        data_level: 'GA',
-        component_level: true,
-        log_detail: 2,
-        arc_tolerance: '10mm',
-        tube: true,
-        cl: false,
-        insu_translucency: 25,
-        obst_translucency: 50,
-        root: 6,
-        pipe: 6,
-        nozzle: 6,
-        structure: 6,
-        cable: 6,
-      }
-    }
+    this.standardConfig = DefaultStandardDataSourceConfig()
+    this.httpConfig = DefaultHttpDataSourceConfig()
+    this.jazzConfig = DefaultJazzDataSourceConfig
+    this.avevaConfig = DefaultAvevaDataSourceConfig()
   }
 
-  avevaConfig: AvevaDataSourceConfig = {
-    kind: "aveva",
-    ignore_dbs: ['SYSTEM', 'DICTIONARY', 'PROPERTY', 'CATALOG', 'NSEQ'],
-    ignore_element_types: [
-      'GENPRI',
-      'POINT',
-      'INVISIBLE POINT',
-      'TANGENT POINT',
-      'POLYGON',
-      'VERTEX',
-      'AIDARC',
-      'AIDCIRCLE',
-      'AIDLINE',
-      'AIDPOINT',
-      'AIDTEXT',
-      'BOX',
-      'CONE',
-      'CTORUS',
-      'CYLINDER',
-      'DISH',
-      'DRAWING',
-      'EXTRUSION',
-      'IPOINT',
-      'LINDIMENSION',
-      'LOOP',
-      'LOOPTS',
-      'MLABEL',
-      'POGON',
-      'POHEDRON',
-      'POINT',
-      'POLFACE',
-      'POLOOP',
-      'POLPTLIST',
-      'POLYHEDRON',
-      'PYRAMID',
-      'REVOLUTION',
-      'RTORUS',
-      'SLCYLINDER',
-      'SNOUT',
-      'TANPOINT',
-      'VERTEX',
-      'NBOX',
-      'NCONE',
-      'NCTORUS',
-      'NCYLINDER',
-      'NDISH',
-      'NPOLYHEDRON',
-      'NPYRAMID',
-      'NREVOLUTION',
-      'NRTORUS',
-      'NSLCYLINDER',
-      'NSNOUT',
-      'NXRUSION',
-    ],
-    ifc_element_types: [
-      'WORLD',
-      'SITE',
-      'AREA WORLD',
-      'GROUP WORLD',
-      'GROUP',
-      'AREA SET',
-      'AREA DEFINITION',
-      'SITE',
-      'ZONE',
-      'DRAWING',
-      'STRUCTURE',
-    ],
-    ifc_settings: {
-      format: 'IFC2x3',
-      data_level: 'GA',
-      component_level: true,
-      log_detail: 2,
-      arc_tolerance: '10mm',
-      tube: true,
-      cl: false,
-      insu_translucency: 25,
-      obst_translucency: 50,
-      root: 6,
-      pipe: 6,
-      nozzle: 6,
-      structure: 6,
-      cable: 6,
-    }
-  }
 
 }
 </script>
