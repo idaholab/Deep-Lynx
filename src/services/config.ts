@@ -61,6 +61,7 @@ export class Config {
     private readonly _export_data_interval: string;
     private readonly _export_data_concurrency: number;
 
+    private readonly _data_source_receive_buffer: number;
     private readonly _data_source_processing_interval: string;
     private readonly _data_source_processing_concurrency: number;
     private readonly _data_source_processing_batch_size: number;
@@ -134,6 +135,7 @@ export class Config {
         this._auth_config_file = process.env.AUTH_CONFIG_FILE_PATH || path.resolve(__dirname, '../../src/access_management/authorization/auth_model.conf');
         this._auth_token_expiry = process.env.AUTH_TOKEN_EXPIRY || '24h';
 
+        this._data_source_receive_buffer = process.env.DATA_SOURCE_RECEIVE_BUFFER ? parseInt(process.env.DATA_SOURCE_RECEIVE_BUFFER, 10) : 1000;
         this._data_source_processing_interval = process.env.DATA_SOURCE_PROCESSING_INTERVAL || '10s';
         this._data_source_processing_concurrency = process.env.DATA_SOURCE_PROCESSING_CONCURRENCY
             ? parseInt(process.env.DATA_SOURCE_PROCESSING_CONCURRENCY, 10)
@@ -245,6 +247,10 @@ export class Config {
 
     get superuser_password(): string {
         return this._superuser_password;
+    }
+
+    get data_source_receive_buffer(): number {
+        return this._data_source_receive_buffer;
     }
 
     get data_source_interval(): string {

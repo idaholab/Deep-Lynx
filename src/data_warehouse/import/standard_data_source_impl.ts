@@ -16,8 +16,7 @@ import Edge, {IsEdges} from '../data/edge';
 import GraphMapper from '../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
 import ContainerRepository from '../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 import {User} from '../../access_management/user';
-import TypeMapping from '../etl/type_mapping';
-import TypeMappingMapper from '../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
+import {Readable} from 'stream';
 
 /*
     StandardDataSourceImpl is the most basic of data sources, and serves as the base
@@ -41,8 +40,17 @@ export default class StandardDataSourceImpl implements DataSource {
         }
     }
 
-    // TODO: this will need to be reworked to handle larger payloads at some point - needs to use Streams
-    async ReceiveData(payload: any, user: User, options?: ReceiveDataOptions): Promise<Result<Import>> {
+    // see the interface declaration's explanation of ReceiveData
+    async ReceiveData(payloadStream: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import>> {
+        // verify that the stream is in object mode, fail fast if we get anything else
+        if (!payloadStream.readableObjectMode) {
+            return Promise.resolve(Result.Failure('underlying stream passed to ReceiveData is not in object mode'));
+        }
+
+        if (!this.DataSourceRecord || !this.DataSourceRecord.id) {
+            return Promise.resolve(Result.Failure('cannot receive data, no underlying or saved data source record'));
+        }
+
         let internalTransaction = false;
         let transaction: PoolClient;
 
@@ -63,11 +71,6 @@ export default class StandardDataSourceImpl implements DataSource {
                     `unable to receive data, data source either doesn't have a record present or data source needs to be saved prior to data being received`,
                 ),
             );
-        }
-
-        // if it's not an array, we throw it inside one for ease of use when working with it later on
-        if (!Array.isArray(payload)) {
-            payload = [payload];
         }
 
         let importID: string;
@@ -99,35 +102,66 @@ export default class StandardDataSourceImpl implements DataSource {
             return Promise.resolve(Result.Failure(`unable to retrieve and lock import ${lockedNewImport.error?.error}`));
         }
 
-        const records: DataStaging[] = [];
+        // basically a buffer, once it's full we'll write these records to the database and wipe to start again
+        let recordBuffer: DataStaging[] = [];
 
-        for (const data of payload) {
-            records.push(
+        // let's us wait for all save operations to complete - we can still fail fast on a bad import since all the
+        // save operations will share the same database transaction under the hood
+        const saveOperations: Promise<Result<boolean>>[] = [];
+
+        // read the stream completely - while we could make this an entirely async operation, return the import record
+        // to the user and keep the data pouring in the background, we want to be able to fail fast and roll back (or
+        // give the user the option to roll back) the database transaction if something goes wrong. As the saveOperations
+        // promises are fulfilled they will be garbage collected, freeing up the memory we used in copying the buffer into
+        // them. This is still a much better solution that reading the entire payload into memory, then inserting the
+        // entire payload at once.
+        while (true) {
+            const data = payloadStream.read();
+            if (data == null) break;
+
+            recordBuffer.push(
                 new DataStaging({
                     data_source_id: this.DataSourceRecord.id,
                     import_id: lockedNewImport.value.id!,
                     data,
                 }),
             );
+
+            // if we've reached the process record limit, insert into the database and wipe the records array
+            // make sure to COPY the array into bulkSave function so that we can push it into the array of promises
+            // and not modify the underlying array on save, allowing us to move asynchronously
+            if (recordBuffer.length >= Config.data_source_receive_buffer) {
+                const toSave = [...recordBuffer];
+                recordBuffer = [];
+
+                saveOperations.push(this.#stagingRepo.bulkSave(toSave, transaction));
+            }
         }
 
-        try {
-            const saved = await this.#stagingRepo.bulkSave(records, transaction);
-            if (saved.isError) {
-                if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
-                return Promise.resolve(Result.Pass(saved));
-            }
+        // catch any records remaining in the buffer
+        saveOperations.push(this.#stagingRepo.bulkSave(recordBuffer, transaction));
 
-            if (internalTransaction) {
-                const commit = await this.#mapper.completeTransaction(transaction);
-                if (commit.isError) return Promise.resolve(Result.Pass(commit));
-            }
+        // we have to wait until any save operations are complete before we can act on the pipe's results
+        const saveResults = await Promise.all(saveOperations);
 
-            return new Promise((resolve) => resolve(Result.Success(lockedNewImport.value)));
-        } catch (error) {
+        // if any of the save operations have an error, fail and rollback the transaction etc
+        if (saveResults.filter((result) => result.isError || !result.value).length > 0) {
             if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
-            return Promise.resolve(Result.Failure(`error attempting to insert new data records for import ${error}`));
+            return Promise.resolve(
+                Result.Failure(
+                    `one or more attempts to save data to the database failed, encountered the following errors: ${saveResults
+                        .filter((r) => r.isError)
+                        .map((r) => r.error)}`,
+                ),
+            );
         }
+
+        if (internalTransaction) {
+            const commit = await this.#mapper.completeTransaction(transaction);
+            if (commit.isError) return Promise.resolve(Result.Pass(commit));
+        }
+
+        return new Promise((resolve) => resolve(Result.Success(lockedNewImport.value)));
     }
 
     /*
