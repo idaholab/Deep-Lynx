@@ -295,3 +295,127 @@ export type ResultT = {
     isError: boolean;
     error: any;
 };
+
+// DefaultAvevaDataSourceConfig are sane defaults found through trial and error with the Aveva Deep Lynx Adapter
+// while we could include this on the createDataSourceDialog component, it's so large that it clutters
+// that component - better to pull it out and maintain it here so the connection to Deep Lynx is clear.
+export function DefaultAvevaDataSourceConfig(): AvevaDataSourceConfig {
+    return {
+        kind: 'aveva',
+        ignore_dbs: [
+            'SYSTEM',
+            'DICTIONARY',
+            'PROPERTY',
+            'CATALOG',
+            'NSEQ',
+            'COMMENT/COMMENT',
+            'COMMENTENG/COMMENT',
+            'PPROJECT/CONFIG',
+            'PPROJECT/REFGRID',
+            'ADMIN/REFDATA',
+            'ASSOC/ASSOC',
+            'SAMPLE/ENGITAGS',
+            'SHARED/HMLINKS',
+            'SHARED/DESIGN',
+            'UNKNOWN',
+        ],
+        ignore_element_types: [
+            'GENPRI',
+            'POINT',
+            'INVISIBLE POINT',
+            'TANGENT POINT',
+            'POLYGON',
+            'VERTEX',
+            'AIDARC',
+            'AIDCIRCLE',
+            'AIDLINE',
+            'AIDPOINT',
+            'AIDTEXT',
+            'BOX',
+            'CONE',
+            'CTORUS',
+            'CYLINDER',
+            'DISH',
+            'DRAWING',
+            'EXTRUSION',
+            'IPOINT',
+            'LINDIMENSION',
+            'LOOP',
+            'LOOPTS',
+            'MLABEL',
+            'POGON',
+            'POHEDRON',
+            'POINT',
+            'POLFACE',
+            'POLOOP',
+            'POLPTLIST',
+            'POLYHEDRON',
+            'PYRAMID',
+            'REVOLUTION',
+            'RTORUS',
+            'SLCYLINDER',
+            'SNOUT',
+            'TANPOINT',
+            'VERTEX',
+            'NBOX',
+            'NCONE',
+            'NCTORUS',
+            'NCYLINDER',
+            'NDISH',
+            'NPOLYHEDRON',
+            'NPYRAMID',
+            'NREVOLUTION',
+            'NRTORUS',
+            'NSLCYLINDER',
+            'NSNOUT',
+            'NXRUSION',
+        ],
+        ifc_element_types: ['WORLD', 'SITE', 'AREA WORLD', 'GROUP WORLD', 'GROUP', 'AREA SET', 'AREA DEFINITION', 'SITE', 'ZONE', 'DRAWING', 'STRUCTURE'],
+        ifc_settings: {
+            format: 'IFC2x3',
+            data_level: 'GA',
+            component_level: true,
+            log_detail: 2,
+            arc_tolerance: '10mm',
+            tube: true,
+            cl: false,
+            insu_translucency: 25,
+            obst_translucency: 50,
+            root: 6,
+            pipe: 6,
+            nozzle: 6,
+            structure: 6,
+            cable: 6,
+        },
+    };
+}
+
+// Like the AvevaDefaultConfig we're including functions for all default configs for data source types, easier to
+// change when they're in one place.
+export function DefaultJazzDataSourceConfig(): JazzDataSourceConfig {
+    return {
+        kind: 'jazz',
+        endpoint: '',
+        secure: true,
+        project_name: '',
+        poll_interval: 10,
+        token: '',
+    };
+}
+
+export function DefaultHttpDataSourceConfig(): HttpDataSourceConfig {
+    return {
+        kind: 'http',
+        endpoint: '',
+        secure: true,
+        auth_method: 'none',
+        poll_interval: 10,
+    };
+}
+
+export function DefaultStandardDataSourceConfig(): StandardDataSourceConfig {
+    return {
+        kind: 'standard',
+        data_type: 'json',
+    };
+}
