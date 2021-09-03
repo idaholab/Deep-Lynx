@@ -28,7 +28,7 @@ export default class GraphRoutes {
         // fresh instance of the repo to avoid filter issues
         if (req.container) {
             let repo = new NodeRepository();
-            repo = repo.where().containerID('eq', req.container.id!).and();
+            repo = repo.where().containerID('eq', req.container.id!);
 
             if (typeof req.query.transformationID !== 'undefined' && (req.query.transformationID as string) !== '') {
                 repo = repo.and().transformationID('eq', req.query.transformationID);

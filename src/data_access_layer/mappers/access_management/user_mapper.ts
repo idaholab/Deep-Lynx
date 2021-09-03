@@ -255,12 +255,11 @@ export default class UserMapper extends Mapper {
         };
     }
 
-    private listFromIDsStatement(ids: string[]): QueryConfig {
-        ids.map((id) => `${id}`);
+    private listFromIDsStatement(ids: string[]): string {
+        const text = `SELECT * FROM users
+                    WHERE id IN(%L)`;
+        const values = ids;
 
-        return {
-            text: `SELECT * FROM users WHERE id IN($1)`,
-            values: [ids]
-        };
+        return format(text, values);
     }
 }
