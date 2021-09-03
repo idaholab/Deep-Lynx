@@ -157,7 +157,7 @@ export default class ImportRoutes {
         if (req.dataSource) {
             if (Object.keys(req.body).length !== 0) {
                 req.dataSource
-                    .ReceiveData(req.body, req.currentUser!)
+                    .ReceiveData(toStream(req.body), req.currentUser!)
                     .then((result) => {
                         result.asResponse(res);
                     })
@@ -167,7 +167,7 @@ export default class ImportRoutes {
             } else if (req.files.import.mimetype === 'application/json') {
                 req.dataSource
                     // @ts-ignore
-                    .ReceiveData(JSON.parse(req.files.import.data), req.currentUser!)
+                    .ReceiveData(toStream(JSON.parse(req.files.import.data)), req.currentUser!)
                     .then((result) => {
                         result.asResponse(res);
                     })
@@ -183,7 +183,7 @@ export default class ImportRoutes {
                     .fromString(req.files.import.data.toString())
                     .then((json: any) => {
                         req.dataSource
-                            ?.ReceiveData(json, req.currentUser!)
+                            ?.ReceiveData(toStream(json), req.currentUser!)
                             .then((result) => {
                                 result.asResponse(res);
                             })
@@ -371,7 +371,7 @@ export default class ImportRoutes {
         if (req.dataSource && req.dataImport) {
             if (Object.keys(req.body).length !== 0) {
                 req.dataSource
-                    .ReceiveData(req.body, req.currentUser!, {importID: req.dataImport.id})
+                    .ReceiveData(toStream(req.body), req.currentUser!, {importID: req.dataImport.id})
                     .then((result) => {
                         result.asResponse(res);
                     })
@@ -381,7 +381,7 @@ export default class ImportRoutes {
             } else if (req.files.import.mimetype === 'application/json') {
                 req.dataSource
                     // @ts-ignore
-                    .ReceiveData(JSON.parse(req.files.import.data), req.currentUser!, {importID: req.dataImport.id})
+                    .ReceiveData(toStream(JSON.parse(req.files.import.data)), req.currentUser!, {importID: req.dataImport.id})
                     .then((result) => {
                         result.asResponse(res);
                     })
@@ -397,7 +397,7 @@ export default class ImportRoutes {
                     .fromString(req.files.import.data.toString())
                     .then((json: any) => {
                         req.dataSource
-                            ?.ReceiveData(json, req.currentUser!, {importID: req.dataImport!.id})
+                            ?.ReceiveData(toStream(json), req.currentUser!, {importID: req.dataImport!.id})
                             .then((result) => {
                                 result.asResponse(res);
                             })
