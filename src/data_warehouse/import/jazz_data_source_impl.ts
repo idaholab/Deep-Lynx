@@ -12,6 +12,7 @@ import ImportRepository from '../../data_access_layer/repositories/data_warehous
 import StandardDataSourceImpl from './standard_data_source_impl';
 import {plainToClass} from 'class-transformer';
 import * as https from 'https';
+import {toStream} from '../../services/utilities';
 const xml2js = require('xml2js');
 
 const buildUrl = require('build-url');
@@ -207,7 +208,7 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
                 const retrievedUser = await this.#userRepo.findByID(this.DataSourceRecord.created_by!);
                 if (!retrievedUser.isError) user = retrievedUser.value;
 
-                const received = await this.ReceiveData(results['ds:datasource']['ds:artifact'], user, {transaction: pollTransaction.value});
+                const received = await this.ReceiveData(toStream(results['ds:datasource']['ds:artifact']), user, {transaction: pollTransaction.value});
                 if (received.isError) {
                     Logger.error(`unable to process data received from http data source ${received.error?.error}`);
                 }

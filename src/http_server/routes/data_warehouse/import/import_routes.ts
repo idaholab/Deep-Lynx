@@ -12,6 +12,7 @@ import {plainToClass} from 'class-transformer';
 import Import, {DataStaging} from '../../../../data_warehouse/import/import';
 import ImportRepository from '../../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 import {QueryOptions} from '../../../../data_access_layer/repositories/repository';
+import {toStream} from '../../../../services/utilities';
 
 const Busboy = require('busboy');
 const fileUpload = require('express-fileupload');
@@ -351,7 +352,7 @@ export default class ImportRoutes {
                         metadata['deep-lynx-files'] = results;
 
                         req.dataSource
-                            ?.ReceiveData([metadata], user)
+                            ?.ReceiveData(toStream([metadata]), user)
                             .then((result) => {
                                 result.asResponse(res);
                             })

@@ -12,6 +12,7 @@ import DataSourceRecord, {DataSource} from '../../../data_warehouse/import/data_
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import StandardDataSourceImpl from '../../../data_warehouse/import/standard_data_source_impl';
 import HttpDataSourceImpl from '../../../data_warehouse/import/http_data_source_impl';
+import {toStream} from '../../../services/utilities';
 
 // some general tests on data sources that aren't specific to the implementation
 describe('A Datasource Repository can', async () => {
@@ -100,7 +101,7 @@ describe('A Datasource Repository can', async () => {
         expect(source!.DataSourceRecord?.id).not.undefined;
 
         // now we create an import through the datasource
-        const newImport = await source!.ReceiveData([test_payload], user);
+        const newImport = await source!.ReceiveData(toStream([test_payload]), user);
         expect(newImport.isError).false;
         expect(newImport.value.id).not.undefined;
 
@@ -134,7 +135,7 @@ describe('A Datasource Repository can', async () => {
         expect(source!.DataSourceRecord?.id).not.undefined;
 
         // now we create an import through the datasource
-        const newImport = await source!.ReceiveData([test_payload], user);
+        const newImport = await source!.ReceiveData(toStream([test_payload]), user);
         expect(newImport.isError).false;
         expect(newImport.value.id).not.undefined;
 

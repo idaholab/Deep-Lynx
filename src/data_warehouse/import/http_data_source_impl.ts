@@ -11,6 +11,7 @@ import UserRepository from '../../data_access_layer/repositories/access_manageme
 import ImportRepository from '../../data_access_layer/repositories/data_warehouse/import/import_repository';
 import StandardDataSourceImpl from './standard_data_source_impl';
 import {plainToClass} from 'class-transformer';
+import {toStream} from '../../services/utilities';
 
 const buildUrl = require('build-url');
 
@@ -193,7 +194,7 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
                 const retrievedUser = await this.#userRepo.findByID(this.DataSourceRecord.created_by!);
                 if (!retrievedUser.isError) user = retrievedUser.value;
 
-                const received = await this.ReceiveData(resp.data, user, {transaction: pollTransaction.value});
+                const received = await this.ReceiveData(toStream(resp.data), user, {transaction: pollTransaction.value});
                 if (received.isError) {
                     Logger.error(`unable to process data received from http data source ${received.error?.error}`);
                 }

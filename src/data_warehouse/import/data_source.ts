@@ -5,6 +5,7 @@ import {User} from '../../access_management/user';
 import Import from './import';
 import Result from '../../common_classes/result';
 import {PoolClient} from 'pg';
+import {Readable, Writable} from 'stream';
 
 /*
     The DataSource interface represents basic functionality of a data source. All
@@ -14,13 +15,14 @@ import {PoolClient} from 'pg';
 export interface DataSource {
     DataSourceRecord?: DataSourceRecord;
 
-    // a payload of any should allow data sources to accept things like streams,
-    // json payloads, or hopefully anything they might need. This should return
+    // ReceiveData should accept a stream which outputs objects - there is no way
+    // currently to enforce this other than at the implementation level. The implementation
+    // should fail fast if the stream does not output objects. This function should return
     // the import record the data is stored under - optionally you can pass an
-    // import that already exists, in case you are adding data to it - keep in
-    // mind that it is not best practice to do so - in case your old data overwrites
+    // import that already exists in case you are adding data to it. This is not best practice
+    // because you might be adding records to an import which isn't the latest, potentially overwriting
     // newer data when the data source attempts to process it
-    ReceiveData(payload: any, user: User, options?: ReceiveDataOptions): Promise<Result<Import>>;
+    ReceiveData(payload: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import>>;
 
     // process single fire function that both processes the data from the
     // source as well as running any polling efforts like with the http implementation
