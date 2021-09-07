@@ -16,7 +16,8 @@ import Edge, {IsEdges} from '../data/edge';
 import GraphMapper from '../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
 import ContainerRepository from '../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 import {User} from '../../access_management/user';
-import {Readable} from 'stream';
+import {PassThrough, Readable} from 'stream';
+const JSONStream = require('JSONStream');
 
 /*
     StandardDataSourceImpl is the most basic of data sources, and serves as the base
@@ -42,11 +43,6 @@ export default class StandardDataSourceImpl implements DataSource {
 
     // see the interface declaration's explanation of ReceiveData
     async ReceiveData(payloadStream: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import>> {
-        // verify that the stream is in object mode, fail fast if we get anything else
-        if (!payloadStream.readableObjectMode) {
-            return Promise.resolve(Result.Failure('underlying stream passed to ReceiveData is not in object mode'));
-        }
-
         if (!this.DataSourceRecord || !this.DataSourceRecord.id) {
             return Promise.resolve(Result.Failure('cannot receive data, no underlying or saved data source record'));
         }
@@ -109,19 +105,13 @@ export default class StandardDataSourceImpl implements DataSource {
         // save operations will share the same database transaction under the hood
         const saveOperations: Promise<Result<boolean>>[] = [];
 
-        // read the stream completely - while we could make this an entirely async operation, return the import record
-        // to the user and keep the data pouring in the background, we want to be able to fail fast and roll back (or
-        // give the user the option to roll back) the database transaction if something goes wrong. As the saveOperations
-        // promises are fulfilled they will be garbage collected, freeing up the memory we used in copying the buffer into
-        // them. This is still a much better solution that reading the entire payload into memory, then inserting the
-        // entire payload at once.
-        while (true) {
-            const data = payloadStream.read();
-            if (data == null) break;
+        // our PassThrough stream is what actually processes the data, it's the last step in our eventual pipe
+        const pass = new PassThrough({objectMode: true});
 
+        pass.on('data', (data) => {
             recordBuffer.push(
                 new DataStaging({
-                    data_source_id: this.DataSourceRecord.id,
+                    data_source_id: this.DataSourceRecord!.id!,
                     import_id: lockedNewImport.value.id!,
                     data,
                 }),
@@ -136,10 +126,30 @@ export default class StandardDataSourceImpl implements DataSource {
 
                 saveOperations.push(this.#stagingRepo.bulkSave(toSave, transaction));
             }
-        }
+        });
 
         // catch any records remaining in the buffer
-        saveOperations.push(this.#stagingRepo.bulkSave(recordBuffer, transaction));
+        pass.on('end', () => {
+            saveOperations.push(this.#stagingRepo.bulkSave(recordBuffer, transaction));
+        });
+
+        // the JSONStream pipe is simple, parsing a single array of json objects into parts
+        const fromJSON = JSONStream.parse('*');
+
+        // handle all transform streams, piping each in order
+        if (options && options.transformStreams && options.transformStreams.length > 0) {
+            let pipeline = payloadStream;
+
+            for (const pipe of options.transformStreams) {
+                pipeline = pipeline.pipe(pipe);
+            }
+
+            pipeline.pipe(fromJSON).pipe(pass);
+        } else if (options && options.overrideJsonStream) {
+            payloadStream.pipe(pass);
+        } else {
+            payloadStream.pipe(fromJSON).pipe(pass);
+        }
 
         // we have to wait until any save operations are complete before we can act on the pipe's results
         const saveResults = await Promise.all(saveOperations);

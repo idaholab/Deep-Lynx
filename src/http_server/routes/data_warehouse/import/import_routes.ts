@@ -2,7 +2,7 @@
 import {Application, NextFunction, Request, Response} from 'express';
 import {authInContainer} from '../../../middleware';
 import ImportMapper from '../../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
-import {Readable} from 'stream';
+import {PassThrough, pipeline, Readable} from 'stream';
 import FileDataStorage from '../../../../data_access_layer/mappers/data_warehouse/data/file_mapper';
 import Result from '../../../../common_classes/result';
 import File from '../../../../data_warehouse/data/file';
@@ -13,42 +13,94 @@ import Import, {DataStaging} from '../../../../data_warehouse/import/import';
 import ImportRepository from '../../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 import {QueryOptions} from '../../../../data_access_layer/repositories/repository';
 import {toStream} from '../../../../services/utilities';
+import Logger from '../../../../services/logger';
+import Config from '../../../../services/config';
 
-const Busboy = require('busboy');
-const fileUpload = require('express-fileupload');
+import express from 'express';
 const csv = require('csvtojson');
+const Busboy = require('busboy');
 const fileRepo = new FileRepository();
 const stagingRepo = new DataStagingRepository();
 const importRepo = new ImportRepository();
 
 // This contains all routes pertaining to DataSources.
 export default class ImportRoutes {
+    // unfortunately we have to mount the express.json middleware manually on this set of routes so that we can avoid
+    // having it run on the upload routes as it reads the request body into memory, no matter size, and doesn't reset it
     public static mount(app: Application, middleware: any[]) {
-        app.get('/containers/:containerID/import/datasources/:sourceID/imports', ...middleware, authInContainer('read', 'data'), this.listDataSourcesImports);
-        app.post(
+        app.get(
             '/containers/:containerID/import/datasources/:sourceID/imports',
             ...middleware,
-            fileUpload({limits: {fileSize: 50 * 6024 * 6024}}),
-            authInContainer('write', 'data'),
-            this.createManualImport,
+            express.json({limit: `${Config.max_request_body_size}mb`}),
+            authInContainer('read', 'data'),
+            this.listDataSourcesImports,
         );
+        app.post('/containers/:containerID/import/datasources/:sourceID/imports', ...middleware, authInContainer('write', 'data'), this.createManualImport);
 
-        app.post('/containers/:containerID/datasources/:sourceID/imports/', ...middleware, authInContainer('write', 'data'), this.createImport);
-        app.delete('/containers/:containerID/import/imports/:importID', ...middleware, authInContainer('write', 'data'), this.deleteImport);
+        app.post(
+            '/containers/:containerID/datasources/:sourceID/imports/',
+            ...middleware,
+            express.json({limit: `${Config.max_request_body_size}mb`}),
+            authInContainer('write', 'data'),
+            this.createImport,
+        );
+        app.delete(
+            '/containers/:containerID/import/imports/:importID',
+            ...middleware,
+            express.json({limit: `${Config.max_request_body_size}mb`}),
+            authInContainer('write', 'data'),
+            this.deleteImport,
+        );
         app.post(
             '/containers/:containerID/datasources/:sourceID/imports/:importID/data',
             ...middleware,
             authInContainer('write', 'data'),
             this.addDataToImport,
         );
-        app.get('/containers/:containerID/import/imports/:importID/data', ...middleware, authInContainer('read', 'data'), this.listDataForImport);
-        app.get('/containers/:containerID/import/imports/:importID/data/:dataID', ...middleware, authInContainer('read', 'data'), this.getImportData);
-        app.put('/containers/:containerID/import/imports/:importID/data/:dataID', ...middleware, authInContainer('write', 'data'), this.updateImportData);
-        app.delete('/containers/:containerID/import/imports/:importID/data/:dataID', ...middleware, authInContainer('write', 'data'), this.deleteImportData);
+        app.get(
+            '/containers/:containerID/import/imports/:importID/data',
+            ...middleware,
+            express.json({limit: `${Config.max_request_body_size}mb`}),
+            authInContainer('read', 'data'),
+            this.listDataForImport,
+        );
+        app.get(
+            '/containers/:containerID/import/imports/:importID/data/:dataID',
+            ...middleware,
+            express.json({limit: `${Config.max_request_body_size}mb`}),
+            authInContainer('read', 'data'),
+            this.getImportData,
+        );
+        app.put(
+            '/containers/:containerID/import/imports/:importID/data/:dataID',
+            ...middleware,
+            express.json({limit: `${Config.max_request_body_size}mb`}),
+            authInContainer('write', 'data'),
+            this.updateImportData,
+        );
+        app.delete(
+            '/containers/:containerID/import/imports/:importID/data/:dataID',
+            ...middleware,
+            express.json({limit: `${Config.max_request_body_size}mb`}),
+            authInContainer('write', 'data'),
+            this.deleteImportData,
+        );
 
         app.post('/containers/:containerID/import/datasources/:sourceID/files', ...middleware, authInContainer('write', 'data'), this.uploadFile);
-        app.get('/containers/:containerID/files/:fileID', ...middleware, authInContainer('read', 'data'), this.getFile);
-        app.get('/containers/:containerID/files/:fileID/download', ...middleware, authInContainer('read', 'data'), this.downloadFile);
+        app.get(
+            '/containers/:containerID/files/:fileID',
+            ...middleware,
+            express.json({limit: `${Config.max_request_body_size}mb`}),
+            authInContainer('read', 'data'),
+            this.getFile,
+        );
+        app.get(
+            '/containers/:containerID/files/:fileID/download',
+            ...middleware,
+            express.json({limit: `${Config.max_request_body_size}mb`}),
+            authInContainer('read', 'data'),
+            this.downloadFile,
+        );
     }
 
     private static createImport(req: Request, res: Response, next: NextFunction) {
@@ -155,44 +207,62 @@ export default class ImportRoutes {
     // createManualImport will accept either a file or a raw JSON body
     private static createManualImport(req: Request, res: Response, next: NextFunction) {
         if (req.dataSource) {
-            if (Object.keys(req.body).length !== 0) {
+            if (req.headers['content-type'] === 'application/json') {
                 req.dataSource
-                    .ReceiveData(toStream(req.body), req.currentUser!)
+                    .ReceiveData(req, req.currentUser!)
                     .then((result) => {
                         result.asResponse(res);
                     })
                     .catch((err) => res.status(404).send(err))
                     .finally(() => next());
                 // @ts-ignore
-            } else if (req.files.import.mimetype === 'application/json') {
-                req.dataSource
-                    // @ts-ignore
-                    .ReceiveData(toStream(JSON.parse(req.files.import.data)), req.currentUser!)
-                    .then((result) => {
-                        result.asResponse(res);
-                    })
-                    .catch((err) => {
-                        res.status(404).send(err);
-                    })
-                    .finally(() => next());
-            }
-            // @ts-ignore - we have to handle microsoft's excel csv type, as when you save a csv file using excel the mimetype is different than text/csv
-            else if (req.files.import.mimetype === 'text/csv' || req.files.import.mimetype === 'application/vnd.ms-excel') {
-                csv()
-                    // @ts-ignore
-                    .fromString(req.files.import.data.toString())
-                    .then((json: any) => {
-                        req.dataSource
-                            ?.ReceiveData(toStream(json), req.currentUser!)
-                            .then((result) => {
-                                result.asResponse(res);
-                            })
-                            .catch((err) => res.status(404).send(err))
-                            .finally(() => next());
-                    });
             } else {
-                res.sendStatus(500);
-                next();
+                const busboy = new Busboy({headers: req.headers});
+                const importPromises: Promise<Result<Import>>[] = [];
+
+                busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimetype: string) => {
+                    Logger.debug(`file found at ${fieldname} - ${filename}, attempting upload`);
+                    if (mimetype === 'application/json') {
+                        // shouldn't need to do anything special for a valid json file, ReceiveData can handle valid json
+                        // files
+                        importPromises.push(req.dataSource!.ReceiveData(file as Readable, req.currentUser!));
+                    } else if (mimetype === 'text/csv') {
+                        importPromises.push(
+                            req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
+                                transformStreams: [
+                                    csv({
+                                        downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
+                                    }),
+                                ],
+                            }),
+                        );
+                    }
+                });
+
+                busboy.on('finish', () => {
+                    if (importPromises.length <= 0) {
+                        Result.Failure(`no valid files attached`).asResponse(res);
+                        next();
+                        return;
+                    }
+
+                    Promise.all(importPromises)
+                        .then((imports) => {
+                            if (imports.length <= 0) {
+                                Result.Failure(`no json or csv files included for upload`);
+                            } else if (imports.length === 1) {
+                                imports[0].asResponse(res);
+                            } else {
+                                Result.Success(imports).asResponse(res);
+                            }
+
+                            next();
+                            return;
+                        })
+                        .catch((err) => res.status(500).send(err));
+                });
+
+                return req.pipe(busboy);
             }
         } else {
             Result.Failure(`unable to find data source`, 404).asResponse(res);
@@ -343,6 +413,12 @@ export default class ImportRoutes {
                 // eslint-disable-next-line @typescript-eslint/no-for-in-array
                 const user = req.currentUser!;
 
+                if (files.length <= 0) {
+                    Result.Failure('unable to upload files, none attached or none uploaded correctly').asResponse(res);
+                    next();
+                    return;
+                }
+
                 void Promise.all(files).then((results) => {
                     if (results[0].isError) {
                         res.status(500).json(results);
@@ -369,44 +445,63 @@ export default class ImportRoutes {
     // createManualImport will accept either a file or a raw JSON body
     private static addDataToImport(req: Request, res: Response, next: NextFunction) {
         if (req.dataSource && req.dataImport) {
-            if (Object.keys(req.body).length !== 0) {
+            if (req.headers['content-type'] === 'application/json') {
                 req.dataSource
-                    .ReceiveData(toStream(req.body), req.currentUser!, {importID: req.dataImport.id})
+                    .ReceiveData(req, req.currentUser!, {importID: req.dataImport.id})
                     .then((result) => {
                         result.asResponse(res);
                     })
                     .catch((err) => res.status(404).send(err))
                     .finally(() => next());
                 // @ts-ignore
-            } else if (req.files.import.mimetype === 'application/json') {
-                req.dataSource
-                    // @ts-ignore
-                    .ReceiveData(toStream(JSON.parse(req.files.import.data)), req.currentUser!, {importID: req.dataImport.id})
-                    .then((result) => {
-                        result.asResponse(res);
-                    })
-                    .catch((err) => {
-                        res.status(404).send(err);
-                    })
-                    .finally(() => next());
-            }
-            // @ts-ignore - we have to handle microsoft's excel csv type, as when you save a csv file using excel the mimetype is different than text/csv
-            else if (req.files.import.mimetype === 'text/csv' || req.files.import.mimetype === 'application/vnd.ms-excel') {
-                csv()
-                    // @ts-ignore
-                    .fromString(req.files.import.data.toString())
-                    .then((json: any) => {
-                        req.dataSource
-                            ?.ReceiveData(toStream(json), req.currentUser!, {importID: req.dataImport!.id})
-                            .then((result) => {
-                                result.asResponse(res);
-                            })
-                            .catch((err) => res.status(404).send(err))
-                            .finally(() => next());
-                    });
             } else {
-                res.sendStatus(500);
-                next();
+                const busboy = new Busboy({headers: req.headers});
+                const importPromises: Promise<Result<Import>>[] = [];
+
+                busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimetype: string) => {
+                    Logger.debug(`file found at ${fieldname} - ${filename}, attempting upload`);
+                    if (mimetype === 'application/json') {
+                        // shouldn't need to do anything special for a valid json file, ReceiveData can handle valid json
+                        // files
+                        importPromises.push(req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {importID: req.dataImport!.id}));
+                    } else if (mimetype === 'text/csv') {
+                        importPromises.push(
+                            req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
+                                importID: req.dataImport!.id,
+                                transformStreams: [
+                                    csv({
+                                        downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
+                                    }),
+                                ],
+                            }),
+                        );
+                    }
+                });
+
+                busboy.on('finish', () => {
+                    if (importPromises.length <= 0) {
+                        Result.Failure(`no valid files attached`).asResponse(res);
+                        next();
+                        return;
+                    }
+
+                    Promise.all(importPromises)
+                        .then((imports) => {
+                            if (imports.length <= 0) {
+                                Result.Failure(`no json or csv files included for upload`);
+                            } else if (imports.length === 1) {
+                                imports[0].asResponse(res);
+                            } else {
+                                Result.Success(imports).asResponse(res);
+                            }
+
+                            next();
+                            return;
+                        })
+                        .catch((err) => res.status(500).send(err));
+                });
+
+                return req.pipe(busboy);
             }
         } else {
             Result.Failure(`unable to find data source or import`, 404).asResponse(res);

@@ -162,7 +162,7 @@ export default class DataSourceRepository extends Repository implements Reposito
 // to take data source records and generate data source interfaces from them. Currently
 // the only implementations are the Http and Standard data sources.
 export class DataSourceFactory {
-    fromDataSourceRecord(sourceRecord: DataSourceRecord): StandardDataSourceImpl | HttpDataSourceImpl | undefined {
+    fromDataSourceRecord(sourceRecord: DataSourceRecord): StandardDataSourceImpl | HttpDataSourceImpl | JazzDataSourceImpl | AvevaDataSourceImpl | undefined {
         switch (sourceRecord.adapter_type) {
             case 'http': {
                 return new HttpDataSourceImpl(sourceRecord);
