@@ -116,7 +116,7 @@ export class Config {
 
         this._server_port = process.env.SERVER_PORT || '8090';
         this._log_level = process.env.LOG_LEVEL || 'debug';
-        this._max_request_body_size = process.env.MAX_REQUEST_BODY_SIZE || '50';
+        this._max_request_body_size = process.env.MAX_REQUEST_BODY_SIZE || '50000';
         this._session_secret = process.env.SESSION_SECRET || 'changeme';
         this._basic_user = process.env.BASIC_USER || '';
         this._basic_password = process.env.BASIC_PASSWORD || '';

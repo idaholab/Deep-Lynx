@@ -131,7 +131,9 @@ export default class Metatype extends BaseDomainClass {
                     }
 
                     case 'list': {
-                        key.required ? (output[key.property_name] = t.array) : (partialOutput[key.property_name] = t.union([t.null, t.array(t.unknown)]));
+                        key.required
+                            ? (output[key.property_name] = t.array(t.unknown))
+                            : (partialOutput[key.property_name] = t.union([t.null, t.array(t.unknown)]));
                         break;
                     }
 

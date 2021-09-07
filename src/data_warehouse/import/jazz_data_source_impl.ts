@@ -208,7 +208,10 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
                 const retrievedUser = await this.#userRepo.findByID(this.DataSourceRecord.created_by!);
                 if (!retrievedUser.isError) user = retrievedUser.value;
 
-                const received = await this.ReceiveData(toStream(results['ds:datasource']['ds:artifact']), user, {transaction: pollTransaction.value});
+                const received = await this.ReceiveData(toStream(results['ds:datasource']['ds:artifact']), user, {
+                    transaction: pollTransaction.value,
+                    overrideJsonStream: true,
+                });
                 if (received.isError) {
                     Logger.error(`unable to process data received from http data source ${received.error?.error}`);
                 }

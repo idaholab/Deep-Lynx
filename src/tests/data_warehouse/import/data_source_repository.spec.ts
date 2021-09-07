@@ -8,7 +8,7 @@ import {expect} from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import DataSourceRecord, {DataSource} from '../../../data_warehouse/import/data_source';
+import DataSourceRecord from '../../../data_warehouse/import/data_source';
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import StandardDataSourceImpl from '../../../data_warehouse/import/standard_data_source_impl';
 import HttpDataSourceImpl from '../../../data_warehouse/import/http_data_source_impl';
@@ -101,7 +101,7 @@ describe('A Datasource Repository can', async () => {
         expect(source!.DataSourceRecord?.id).not.undefined;
 
         // now we create an import through the datasource
-        const newImport = await source!.ReceiveData(toStream([test_payload]), user);
+        const newImport = await source!.ReceiveData(toStream([test_payload]), user, {overrideJsonStream: true});
         expect(newImport.isError).false;
         expect(newImport.value.id).not.undefined;
 
@@ -135,7 +135,7 @@ describe('A Datasource Repository can', async () => {
         expect(source!.DataSourceRecord?.id).not.undefined;
 
         // now we create an import through the datasource
-        const newImport = await source!.ReceiveData(toStream([test_payload]), user);
+        const newImport = await source!.ReceiveData(toStream([test_payload]), user, {overrideJsonStream: true});
         expect(newImport.isError).false;
         expect(newImport.value.id).not.undefined;
 

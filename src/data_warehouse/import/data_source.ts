@@ -5,7 +5,7 @@ import {User} from '../../access_management/user';
 import Import from './import';
 import Result from '../../common_classes/result';
 import {PoolClient} from 'pg';
-import {Readable, Writable} from 'stream';
+import {Readable, Transform, Writable} from 'stream';
 
 /*
     The DataSource interface represents basic functionality of a data source. All
@@ -15,10 +15,11 @@ import {Readable, Writable} from 'stream';
 export interface DataSource {
     DataSourceRecord?: DataSourceRecord;
 
-    // ReceiveData should accept a stream which outputs objects - there is no way
-    // currently to enforce this other than at the implementation level. The implementation
-    // should fail fast if the stream does not output objects. This function should return
-    // the import record the data is stored under - optionally you can pass an
+    // ReceiveData accepts a Readable stream who's origin data is an array of JSON objects. JSONStream will handle
+    // parsing this data into valid javascript objects. If your origin data is not valid JSON then you must pass
+    // in one or more valid Transform stream types to convert your origin data into valid JSON prior to parsing.
+    // If your stream is already valid javascript objects, or you don't need parsing - override the JSON stream.
+    // This function should return the import record the data is stored under - optionally you can pass an
     // import that already exists in case you are adding data to it. This is not best practice
     // because you might be adding records to an import which isn't the latest, potentially overwriting
     // newer data when the data source attempts to process it
@@ -39,6 +40,8 @@ export interface DataSource {
 export class ReceiveDataOptions {
     transaction?: PoolClient;
     importID?: string;
+    overrideJsonStream? = false; // needed if you're passing raw json objects or an object stream
+    transformStreams?: Transform[]; // streams to pipe to, prior to piping to the JSONStream
 }
 
 /*

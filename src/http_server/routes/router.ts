@@ -97,11 +97,17 @@ export class Router {
         this.mountPreMiddleware();
 
         // Mount application controllers, middleware is passed in as an array of functions
+        ImportRoutes.mount(this.app, [authenticateRoute(), containerContext(), importContext(), dataStagingContext(), dataSourceContext(), currentUser()]);
+
+        // we have to mount the json middleware after the data import middleware as this reads the request body but does
+        // not reset it, meaning that the data import routes that use streams would not work as intended (apart from reading
+        // large json bodies into memory)
+        this.app.use(express.json({limit: `${Config.max_request_body_size}mb`}));
+
         UserRoutes.mount(this.app, [authenticateRoute(), containerContext(), userContext(), currentUser()]);
         ContainerRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         ExportRoutes.mount(this.app, [authenticateRoute(), containerContext(), exporterContext(), currentUser()]);
         DataSourceRoutes.mount(this.app, [authenticateRoute(), containerContext(), dataSourceContext(), currentUser()]);
-        ImportRoutes.mount(this.app, [authenticateRoute(), containerContext(), importContext(), dataStagingContext(), dataSourceContext(), currentUser()]);
         TypeMappingRoutes.mount(this.app, [
             authenticateRoute(),
             containerContext(),
@@ -152,8 +158,6 @@ export class Router {
                 origin: '*',
             }),
         );
-
-        this.app.use(express.json({limit: `${Config.max_request_body_size}mb`}));
 
         // basic session storage to postgres - keep in mind that this is currently
         // not used. It's here to facilitate future extension of the application and

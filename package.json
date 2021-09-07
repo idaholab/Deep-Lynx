@@ -106,6 +106,7 @@
         "copyfiles": "^2.4.1",
         "cors": "^2.8.5",
         "csurf": "^1.11.0",
+        "csv": "^5.5.3",
         "csvtojson": "^2.0.10",
         "digest-stream": "^2.0.0",
         "dot-prop": "^5.3.0",
