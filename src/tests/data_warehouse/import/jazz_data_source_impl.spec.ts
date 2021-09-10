@@ -7,11 +7,8 @@ import faker from 'faker';
 import {expect} from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import DataSourceRecord, {DataSource, HttpDataSourceConfig, JazzDataSourceConfig} from '../../../data_warehouse/import/data_source';
+import DataSourceRecord, {JazzDataSourceConfig} from '../../../data_warehouse/import/data_source';
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
-import StandardDataSourceImpl from '../../../data_warehouse/import/standard_data_source_impl';
-import HttpDataSourceImpl from '../../../data_warehouse/import/http_data_source_impl';
 import ImportRepository from '../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 
 // some general tests on data sources that aren't specific to the implementation
@@ -71,8 +68,10 @@ describe('An Jazz Data Source can', async () => {
             endpoint: process.env.JAZZ_DATA_SOURCE_URL as string,
             token: process.env.JAZZ_DATA_SOURCE_TOKEN as string,
             project_name: process.env.JAZZ_DATA_SOURCE_PROJECT_NAME as string,
+            artifact_types: process.env.JAZZ_DATA_SOURCE_ARTIFACT_TYPES ? process.env.JAZZ_DATA_SOURCE_ARTIFACT_TYPES.split(',') : ['System Requirement'],
             poll_interval: 1000, // don't want to have this poll more than once,
             secure: true,
+            limit: 10, // should generally trigger the pagination and recursive functionality of the poll endpoint
         });
 
         return Promise.resolve();
@@ -87,6 +86,7 @@ describe('An Jazz Data Source can', async () => {
         return Promise.resolve();
     });
 
+    // @ts-ignore
     it('will successfully poll and store data', async () => {
         // first create and save the source
         const sourceRepo = new DataSourceRepository();
@@ -110,16 +110,14 @@ describe('An Jazz Data Source can', async () => {
         // an inaccurate art so if your tests fails, increase this wait time first
         // prior to stepping through your code to make sure you're getting some
         // kind of result back.
-        source?.Process();
-
-        // default wait time 30 seconds
-        await delay(30000);
+        let result = await source?.Process();
+        expect(result!.isError).false;
 
         // first fetch the data source and verify we haven't encountered an error
-        // the status should still be set to "polling"
+        // the status should still be set to "ready"
         const fetchedSource = await sourceRepo.findByID(source?.DataSourceRecord!.id!);
         expect(fetchedSource.isError).false;
-        expect(fetchedSource.value.DataSourceRecord?.status).eq('polling');
+        expect(fetchedSource.value.DataSourceRecord?.status).eq('ready');
 
         // while we can't make assumptions on how much data we fetched, we can
         // make sure we fetched something by checking the import count for the
@@ -132,9 +130,5 @@ describe('An Jazz Data Source can', async () => {
         expect(count.value).gt(0);
 
         return Promise.resolve();
-    });
+    }).timeout(30000); // Jazz has shown to be very slow, should help us avoid issues
 });
-
-function delay(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}

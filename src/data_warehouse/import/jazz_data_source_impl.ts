@@ -12,9 +12,10 @@ import ImportRepository from '../../data_access_layer/repositories/data_warehous
 import StandardDataSourceImpl from './standard_data_source_impl';
 import {plainToClass} from 'class-transformer';
 import * as https from 'https';
-import {toStream} from '../../services/utilities';
-const xml2js = require('xml2js');
+import {PoolClient} from 'pg';
+import {Readable} from 'stream';
 
+const parser = require('fast-xml-parser');
 const buildUrl = require('build-url');
 
 /*
@@ -137,24 +138,50 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
         }
 
         // create http request
-        Logger.debug(`data source ${this.DataSourceRecord.id} http polling for data`);
+        Logger.debug(`data source ${this.DataSourceRecord.id} jazz data source polling for data`);
         const endpoint = buildUrl(`${config.endpoint}`, {
-            path: 'rm/publish/modules',
+            path: 'rm/publish/text',
             queryParams: {
+                size: config.limit ? config.limit : undefined,
                 projectName: config.project_name,
                 modifiedSince, // this allows us to limit the return value to only changed records
+                typeName: config.artifact_types.join(','),
             },
         });
 
-        // configure and send http request
+        // send the request
+        const result = await this.requestData(config, pollTransaction.value, endpoint);
+        // if we fail for any reason, you'll need rollback the transaction
+        if (result.isError) {
+            await ImportMapper.Instance.rollbackTransaction(pollTransaction.value);
+
+            set = await this.#mapper.SetStatus(this.DataSourceRecord.id!, 'system', 'error', result.error?.error);
+            if (set.isError) Logger.error(`unable to update data source status:${set.error?.error}`);
+        } else {
+            // we shouldn't run into issue of a poller double polling even after terminating
+            // because we will have created a new import with the current time as the modified_at field
+            // that should should up on the find last and lock call
+            await ImportMapper.Instance.completeTransaction(pollTransaction.value);
+
+            set = await this.#mapper.SetStatus(this.DataSourceRecord.id!, 'system', 'ready');
+            if (set.isError) Logger.error(`unable to update data source status:${set.error?.error}`);
+        }
+
+        return Promise.resolve();
+    }
+
+    // request data is the actual Jazz server request - we're writing it this way so that we can recursively call this
+    // function in order to paginate Jazz server results, passing it an import adds the data from the call to an existing
+    // import instead of creating a new one and including a URL will override whatever generated URL we use for that one
+    // this is useful because Jazz, when paging results, returns a prebuilt URL you must use to fetch the next page of
+    // results and Jazz will continue to return a URL to call until all results have been fetched
+    // Note: you do not need to set the modifiedSince query parameter in subsequent paging calls, it will be set automatically
+    private async requestData(config: JazzDataSourceConfig, pollTransaction: PoolClient, url: string, importID?: string): Promise<Result<any>> {
         let resp: AxiosResponse<any>;
         const httpConfig: AxiosRequestConfig = {};
         httpConfig.headers = {};
 
-        if (lastImport.value && lastImport.value.reference) httpConfig.headers.Reference = lastImport.value.reference;
-
         if (config.token) httpConfig.headers.Authorization = `Bearer ${config.token}`;
-
         try {
             // we were running into issues with self-signed certificates, while
             // not recommended this isn't as dangerous as accepting expired or incorrect ones
@@ -162,73 +189,154 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
                 httpConfig.httpsAgent = new https.Agent({rejectUnauthorized: false});
             }
 
-            resp = await axios.get(endpoint, httpConfig);
+            resp = await axios.get(url, httpConfig);
             if (resp.status > 299 || resp.status < 200 || !resp.data) {
-                Logger.debug(`data source ${this.DataSourceRecord.id} poll failed or had no data`);
+                Logger.debug(`data source ${this.DataSourceRecord!.id} poll failed or had no data`);
+                return Promise.resolve(Result.Failure(`data source ${this.DataSourceRecord!.id} poll failed or had no data`));
             } else {
                 let reference = '';
                 if ('Reference' in resp.headers) reference = resp.headers.Reference;
 
-                // TODO:convert this all to streams with the rest of the system
-                // these options allow us to do a lot of trimming before hand
-                const parser = new xml2js.Parser({
-                    trim: true,
-                    normalize: true,
-                    normalizeTags: true,
-                    mergeAttrs: true,
-                    explicitArray: false,
-                });
+                // Unfortunately because we need information from the payload we cannot stream convert this xml to
+                // valid JSON - these options allow us to do a lot of trimming beforehand however, and should minimize
+                // the memory footprint. If we start to run into issues with response size, we should rethink either the
+                // adapter or the data source's limit configuration. I've attempted to write this as streams, but due to
+                // the recursive nature of needing to call out to the server again for pagination we risk holding many
+                // http responses open and swamping memory and the external adapter anyway
+                const options = {
+                    attrNodeName: 'attr', // default is 'false'
+                    textNodeName: '#text',
+                    ignoreAttributes: false,
+                    ignoreNameSpace: true,
+                    allowBooleanAttributes: false,
+                    parseNodeValue: true,
+                    parseAttributeValue: false,
+                    trimValues: true,
+                    cdataTagName: '__cdata', // default is 'false'
+                    cdataPositionChar: '\\c',
+                    parseTrueNumberOnly: false,
+                    arrayMode: false,
+                    stopNodes: ['richTextBody'], // if we let the parser attempt to parse this we got a horrible object
+                };
 
                 // this data shaping will need to be moved once we incorporate streams
-                const results = await parser.parseStringPromise(resp.data);
-                if (results['ds:datasource'] && results['ds:datasource']['rrm:totalCount'] === '0') {
+                const results = parser.parse(resp.data, options);
+
+                if (results.dataSource && results.dataSource.attr['@_totalCount'] === '0') {
                     Logger.debug(`jazz data response indicates no changes since last poll`);
-                    await ImportMapper.Instance.completeTransaction(pollTransaction.value);
 
-                    return Promise.resolve();
+                    return Promise.resolve(Result.Success(true));
                 }
 
-                if (!results['ds:datasource'] || !results['ds:datasource']['ds:artifact']) {
+                if (!results.dataSource || !results.dataSource.artifact) {
                     Logger.error(`jazz data response lacking required fields`);
-                    await ImportMapper.Instance.completeTransaction(pollTransaction.value);
 
-                    return Promise.resolve();
+                    return Promise.resolve(Result.Failure(`jazz data response lacking required fields`));
                 }
 
-                if (!Array.isArray(results['ds:datasource']['ds:artifact'])) {
-                    // TODO: move this once we convert to streams
-                    Logger.error(`response from http importer must be an array of JSON objects`);
-                    await ImportMapper.Instance.completeTransaction(pollTransaction.value);
-
-                    return Promise.resolve();
+                if (!Array.isArray(results.dataSource.artifact)) {
+                    results.dataSource.artifact = [results.dataSource.artifact];
                 }
+
+                /*
+                we're going to build a custom Reader so that we can avoid having to loop over the data twice
+                this transform stream is for aggregating the custom attributes and converting them from an array to
+                an object - this is necessary so that the type mapping can more easily function for jazz specific
+                adapters
+
+                this is the response body's nesting attribute names - I don't like hardcoding these as if the response
+                body changes so to will this code, but the other option is that we have a very large, convoluted configuration
+                object that the lay user will have no idea how to deal with - considering how set in stone the return
+                structure is I'm not too worried.
+
+                artifact - collaboration - attributes - objectType - customAttribute[array] -> attr -> @_datatype e.g http://www.w3.org/2001/XMLSchema#int
+                                                                                                @_name
+                                                                                                @_value
+                */
+                const reader = new Readable({
+                    read() {
+                        if (results.dataSource.artifact.length === 0) this.push(null);
+                        else {
+                            const artifact = results.dataSource.artifact.shift();
+
+                            // ?. lets us safely access nested object properties even if something in the chain doesn't exist
+                            if (Array.isArray(artifact?.collaboration?.attributes?.objectType?.customAttribute)) {
+                                const transformed: {[key: string]: any} = {};
+
+                                // loop through the custom attributes and build out the transformed object
+                                artifact.collaboration.attributes.objectType.customAttribute.forEach((custom: {[key: string]: any}) => {
+                                    switch (custom.attr['@_datatype']) {
+                                        case 'http://www.w3.org/2001/XMLSchema#int': {
+                                            const int = parseInt(custom.attr['@_value'], 10); // we assume we're using base10
+                                            isNaN(int)
+                                                ? (transformed[custom.attr['@_name']] = custom.attr['@_value'])
+                                                : (transformed[custom.attr['@_name']] = int);
+                                            break;
+                                        }
+
+                                        case 'http://www.w3.org/2001/XMLSchema#double' ||
+                                            'http://www.w3.org/2001/XMLSchema#float' ||
+                                            'http://www.w3.org/2001/XMLSchema#decimal': {
+                                            const float = parseFloat(custom.attr['@_value']);
+                                            isNaN(float)
+                                                ? (transformed[custom.attr['@_name']] = custom.attr['@_value'])
+                                                : (transformed[custom.attr['@_name']] = float);
+                                            break;
+                                        }
+
+                                        // default to whatever value xml has, typically a string
+                                        default: {
+                                            transformed[custom.attr['@_name']] = custom.attr['@_value'];
+                                        }
+                                    }
+                                });
+
+                                artifact.collaboration.attributes.objectType.customAttribute = transformed;
+
+                                // we also cleanup the rich text body by stripping out the HTML
+                                artifact.content.text.richTextBody = artifact.content.text.richTextBody.replace(/<\/?[^>]+(>|$)/g, '').trim();
+
+                                this.push(artifact);
+                            }
+                        }
+                    },
+                    objectMode: true,
+                });
 
                 // set to super user if we don't know who's running the source
                 let user = SuperUser;
-                const retrievedUser = await this.#userRepo.findByID(this.DataSourceRecord.created_by!);
+                const retrievedUser = await this.#userRepo.findByID(this.DataSourceRecord!.created_by!);
                 if (!retrievedUser.isError) user = retrievedUser.value;
 
-                const received = await this.ReceiveData(toStream(results['ds:datasource']['ds:artifact']), user, {
-                    transaction: pollTransaction.value,
+                const received = await this.ReceiveData(reader, user, {
+                    importID: importID ? importID : undefined,
+                    transaction: pollTransaction,
                     overrideJsonStream: true,
                 });
                 if (received.isError) {
                     Logger.error(`unable to process data received from http data source ${received.error?.error}`);
+
+                    return Promise.resolve(Result.Failure(`unable to process data received from http data source ${received.error?.error}`));
+                }
+                // href potentially has an already formatted URL for pagination
+                // contains all previously passed params for fetching next page
+                if (results.dataSource.attr['@_href']) {
+                    Logger.debug('jazz data source responded with paginated content, attempting to call pagination url');
+
+                    // set the pagination url and clean up from the fact xml screwed up the URL encoding somehow
+                    const paginationURL = results.dataSource.attr['@_href'].replace(/&amp;/g, '&');
+
+                    const result = await this.requestData(config, pollTransaction, paginationURL, received.value.id);
+                    if (result.isError) {
+                        return Promise.resolve(Result.Pass(result));
+                    }
                 }
             }
         } catch (err) {
-            Logger.error(`data source ${this.DataSourceRecord.id} poll failed ${err}`);
+            Logger.error(`data source ${this.DataSourceRecord!.id} poll failed ${err}`);
         }
 
-        // we shouldn't run into issue of a poller double polling even after terminating
-        // because we will have created a new import with the current time as the modified_at field
-        // that should should up on the find last and lock call
-        await ImportMapper.Instance.completeTransaction(pollTransaction.value);
-
-        set = await this.#mapper.SetStatus(this.DataSourceRecord.id!, 'system', 'ready');
-        if (set.isError) Logger.error(`unable to update data source status:${set.error?.error}`);
-
-        return Promise.resolve();
+        return Promise.resolve(Result.Success(true));
     }
 
     // we'll need to encrypt the config prior to saving

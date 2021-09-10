@@ -343,6 +343,10 @@ export default {
             secure: 'Use HTTPS',
             ignoreDBs: 'Ignored Database Types',
             ignoreElements: 'Ignored Element Types',
+            recordLimit: 'Records Per Call Limit',
+            artifactTypes: 'Artifact Types for Retrieval',
+            endpoint: 'HTTP(S) Endpoint',
+            typeToAdd: 'Type and hit "Enter" to add entry',
             ifcElementTypes: 'Element Types for IFC Generation',
             ifcSettingsTitle: 'IFC Settings',
             ifcSettings: {

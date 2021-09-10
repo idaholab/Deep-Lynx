@@ -36,7 +36,7 @@
                 <div v-if="newDataSource.adapter_type === 'http'">
                   <v-text-field
                       v-model="httpConfig.endpoint"
-                      label="Endpoint"
+                      :label="$t('createDataSource.endpoint')"
                       required
                   ></v-text-field>
 
@@ -92,6 +92,16 @@
                         required
                     ></v-text-field>
 
+                    <v-combobox
+                        clearable
+                        multiple
+                        small-chips
+                        deletable-chips
+                        v-model="jazzConfig.artifact_types"
+                        :label="$t('createDataSource.artifactTypes')"
+                        :placeholder="$t('createDataSource.typeToAdd')"
+                    ></v-combobox>
+
                     <v-text-field
                         v-model="jazzConfig.endpoint"
                         :label="$t('createDataSource.endpoint')"
@@ -111,6 +121,13 @@
                         required
                     ></v-text-field>
 
+                    <v-text-field
+                        v-model="jazzConfig.limit"
+                        :label="$t('createDataSource.recordLimit')"
+                        type="number"
+                        required
+                    ></v-text-field>
+
                     <v-checkbox
                         v-model="jazzConfig.secure"
                         :label="$t('createDataSource.secure')"
@@ -126,6 +143,7 @@
                       deletable-chips
                       v-model="avevaConfig.ignore_dbs"
                       :label="$t('createDataSource.ignoreDBs')"
+                      :placeholder="$t('createDataSource.typeToAdd')"
                   ></v-combobox>
 
                   <v-combobox
@@ -135,6 +153,7 @@
                       deletable-chips
                       v-model="avevaConfig.ignore_element_types"
                       :label="$t('createDataSource.ignoreElements')"
+                      :placeholder="$t('createDataSource.typeToAdd')"
                   ></v-combobox>
 
                   <v-combobox
@@ -144,6 +163,7 @@
                       deletable-chips
                       v-model="avevaConfig.ifc_element_types"
                       :label="$t('createDataSource.ifcElementTypes')"
+                      :placeholder="$t('createDataSource.typeToAdd')"
                   ></v-combobox>
 
                   <h3>{{$t("createDataSource.ifcSettingsTitle")}}</h3>
@@ -431,7 +451,7 @@ export default class CreateDataSourceDialog extends Vue {
 
     this.standardConfig = DefaultStandardDataSourceConfig()
     this.httpConfig = DefaultHttpDataSourceConfig()
-    this.jazzConfig = DefaultJazzDataSourceConfig
+    this.jazzConfig = DefaultJazzDataSourceConfig()
     this.avevaConfig = DefaultAvevaDataSourceConfig()
   }
 
