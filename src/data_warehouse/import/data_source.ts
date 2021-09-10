@@ -1,11 +1,11 @@
 import {BaseDomainClass, NakedDomainClass} from '../../common_classes/base_domain_class';
-import {IsArray, IsBoolean, IsDefined, IsIn, IsObject, IsOptional, IsString, IsUrl, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
+import {ArrayMinSize, IsArray, IsBoolean, IsDefined, IsIn, IsObject, IsOptional, IsString, IsUrl, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
 import {Exclude, Type} from 'class-transformer';
 import {User} from '../../access_management/user';
 import Import from './import';
 import Result from '../../common_classes/result';
 import {PoolClient} from 'pg';
-import {Readable, Transform, Writable} from 'stream';
+import {Readable, Transform} from 'stream';
 
 /*
     The DataSource interface represents basic functionality of a data source. All
@@ -129,11 +129,29 @@ export class JazzDataSourceConfig extends BaseDataSourceConfig {
     // poll interval in minutes
     poll_interval = 10;
 
+    // limit records returned, can be useful for large projects
+    limit?: number;
+
+    // artifact types dictate to Jazz how to limit the return to user defined or general artifact types - we cannot set
+    // sane defaults for this as the artifact type names vary widely between projects - enforce that we have at least one
+    // item in the array however
+    @IsArray()
+    @ArrayMinSize(1)
+    artifact_types: string[] = [];
+
     @IsString()
     @Exclude({toPlainOnly: true})
     token?: string;
 
-    constructor(input: {endpoint: string; token: string; project_name: string; poll_interval?: number; secure?: boolean}) {
+    constructor(input: {
+        endpoint: string;
+        token: string;
+        project_name: string;
+        poll_interval?: number;
+        secure?: boolean;
+        limit?: number;
+        artifact_types?: string[];
+    }) {
         super();
 
         if (input) {
@@ -142,6 +160,8 @@ export class JazzDataSourceConfig extends BaseDataSourceConfig {
             this.token = input.token;
             if (input.poll_interval) this.poll_interval = input.poll_interval;
             if (input.secure) this.secure = input.secure;
+            if (input.limit) this.limit = input.limit;
+            if (input.artifact_types) this.artifact_types = input.artifact_types;
         }
     }
 }
@@ -213,19 +233,7 @@ export class AvevaDataSourceConfig extends BaseDataSourceConfig {
     // as it will return the whole project as an ifc file, then separate by zones, sites etc. See Aveva's database documentation
     // for more information - https://help.aveva.com/AVEVA_Everything3D/1.1/NCUG/wwhelp/wwhimpl/js/html/wwhelp.htm#href=NCUG4.5.15.html#1021602
     @IsArray()
-    ifc_element_types: string[] = [
-        'WORLD',
-        'SITE',
-        'AREA WORLD',
-        'GROUP WORLD',
-        'GROUP',
-        'AREA SET',
-        'AREA DEFINITION',
-        'SITE',
-        'ZONE',
-        'DRAWING',
-        'STRUCTURE',
-    ];
+    ifc_element_types: string[] = ['SITE', 'GROUP', 'SITE', 'ZONE', 'DRAWING', 'STRUCTURE'];
 
     @IsObject()
     ifc_settings: {

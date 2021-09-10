@@ -132,6 +132,8 @@ export type JazzDataSourceConfig = {
     endpoint: string;
     secure: boolean;
     project_name: string;
+    artifact_types: string[]; // artifact types to retrieve, everything else is ignored
+    limit: number;
     poll_interval: number; // in minutes
     token: string; // security token for http authentication
 };
@@ -398,8 +400,10 @@ export function DefaultJazzDataSourceConfig(): JazzDataSourceConfig {
         endpoint: '',
         secure: true,
         project_name: '',
+        artifact_types: [],
         poll_interval: 10,
         token: '',
+        limit: 10,
     };
 }
 
