@@ -17,6 +17,7 @@ import GraphMapper from '../../../data_access_layer/mappers/data_warehouse/data/
 import ContainerRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 import {User} from '../../../domain_objects/access_management/user';
 import {PassThrough, Readable} from 'stream';
+import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
 const JSONStream = require('JSONStream');
 
 /*
@@ -114,6 +115,7 @@ export default class StandardDataSourceImpl implements DataSource {
                     data_source_id: this.DataSourceRecord!.id!,
                     import_id: lockedNewImport.value.id!,
                     data,
+                    shape_hash: options && options.generateShapeHash ? TypeMapping.objectToShapeHash(data) : undefined,
                 }),
             );
 
