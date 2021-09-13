@@ -164,7 +164,8 @@ export default class DataStagingRepository extends Repository implements Reposit
         super(DataStagingMapper.tableName);
 
         this._rawQuery = [
-            `SELECT data_staging.*, data_sources.container_id FROM data_staging 
+            `SELECT data_staging.*, data_sources.container_id, data_sources.config AS data_source_config
+            FROM data_staging 
             LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id`,
         ];
     }
@@ -221,7 +222,8 @@ export default class DataStagingRepository extends Repository implements Reposit
         });
 
         this._rawQuery = [
-            `SELECT data_staging.*, data_sources.container_id FROM data_staging 
+            `SELECT data_staging.*, data_sources.container_id, data_sources.config AS data_source_config
+            FROM data_staging 
             LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id`,
         ];
 

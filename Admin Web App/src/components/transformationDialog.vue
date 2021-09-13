@@ -198,7 +198,7 @@
                   <div v-if="selectedMetatype !== null">
                     <v-row>
                       <v-col>
-                        <v-select
+                        <v-combobox
                             v-if="!rootArray"
                             :items="payloadKeys"
                             v-model="uniqueIdentifierKey"
@@ -207,8 +207,8 @@
 
                           <template v-slot:label>{{$t('dataMapping.uniqueIdentifierKey')}} <small>{{$t('dataMapping.optional')}}</small></template>
                           <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueIdentifierHelp')"></info-tooltip> </template>
-                        </v-select>
-                        <v-select
+                        </v-combobox>
+                        <v-combobox
                             v-if="rootArray"
                             :items="payloadKeys"
                             v-model="uniqueIdentifierKey"
@@ -216,7 +216,7 @@
                         >
                           <template v-slot:label>{{$t('dataMapping.uniqueIdentifierKey')}} <small>{{$t('dataMapping.optional')}}</small></template>
                           <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueIdentifierHelp')"></info-tooltip> </template>
-                        </v-select>
+                        </v-combobox>
                       </v-col>
                     </v-row>
                     <br>
@@ -230,12 +230,18 @@
                       </v-col>
                     </v-row>
 
-                    <h4 v-if="selectedMetatypeKeys.length > 0">{{$t('dataMapping.metatypePropertyMapping')}}<info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip> </h4>
+                    <h4 v-if="selectedMetatypeKeys.length > 0">{{$t('dataMapping.metatypePropertyMapping')}}<info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip>  <v-btn
+                        @click="autoPopulateMetatypeKeys()"
+                        class="mr-4"
+                    >
+                      {{$t("dataMapping.autopopulate")}}
+                    </v-btn></h4>
+
                     <div v-for="key in selectedMetatypeKeys" :key="key.id">
                       <v-row>
                         <v-col :cols="6">
-                          <h4>{{key.name}} <info-tooltip :message="key.description"></info-tooltip></h4>
-                          <v-select
+                          <h4>{{key.name}} <info-tooltip v-if="key.description !== ''" :message="key.description"></info-tooltip></h4>
+                          <v-combobox
                               :items="payloadKeys"
                               label="map payload key"
                               @input="selectPropertyKey($event, key)"
@@ -260,7 +266,7 @@
                               <!-- Otherwise simply display the key name -->
                               <span v-else>{{ data.item }}</span>
                             </template>
-                          </v-select>
+                          </v-combobox>
                         </v-col>
                         <v-col :cols="6">
                           <h4 style="color:white">{{key.name}}</h4>
@@ -336,11 +342,18 @@
                   </v-row>
 
                   <br>
-                  <h4 v-if="selectedMetatypeRelationshipPairKeys.length > 0">{{$t('dataMapping.metatypeRelationshipPropertyMapping')}}<info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip> </h4>
+                  <h4 v-if="selectedMetatypeRelationshipPairKeys.length > 0">{{$t('dataMapping.metatypeRelationshipPropertyMapping')}}<info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip>
+                    <v-btn
+                        @click="autoPopulateRelationshipKeys()"
+                        class="mr-4"
+                    >
+                      {{$t("dataMapping.autopopulate")}}
+                    </v-btn>
+                  </h4>
                   <div v-for="key in selectedMetatypeRelationshipPairKeys" :key="key.id">
                     <v-row>
                       <v-col :cols="6">
-                        <v-select
+                        <v-combobox
                             :items="payloadKeys"
                             @input="selectRelationshipPropertyKey($event, key)"
                             :disabled="isRelationshipValueMapped(key)"
@@ -349,7 +362,7 @@
 
                           <template v-slot:append-outer>{{$t('dataMapping.or')}}</template>
                           <template v-slot:label>{{$t("dataMapping.mapPayloadKey")}} <small style="color:red" v-if="key.required">{{$t('dataMapping.required')}}</small></template>
-                        </v-select>
+                        </v-combobox>
                       </v-col>
                       <v-col :cols="6">
                         <h4 style="color:white">{{key.name}} x</h4>
@@ -436,15 +449,16 @@
             </div>
           </v-col>
 
-          <v-col :cols="6" >
-            <h4>{{$t('typeTransformation.currentDataSet')}}<info-tooltip :message="$t('dataMapping.samplePayloadHelp')"></info-tooltip> </h4>
-            <v-card height="600px" style="overflow-y: scroll" id="dataCol">
-              <json-view
-                :data="payload"
-                :maxDepth=1
-              />
-            </v-card>
-            
+          <v-col :cols="6">
+            <div style="position: sticky; top: 0px;">
+              <h4>{{$t('typeTransformation.currentDataSet')}}<info-tooltip :message="$t('dataMapping.samplePayloadHelp')"></info-tooltip> </h4>
+              <v-card  style="overflow-y: scroll;" max-height="800px" id="dataCol">
+                <json-view
+                    :data="payload"
+                    :maxDepth=1
+                />
+              </v-card>
+            </div>
           </v-col>
         </v-row>
 
@@ -843,6 +857,46 @@ export default class TransformationDialog extends Vue {
         this.payloadArrayKeys.push(k)
       }
     })
+  }
+
+  // autoPopulateMetatypeKeys attempts to match a selected metatype key's to payload
+  // keys by property name
+  autoPopulateMetatypeKeys() {
+    if(this.selectedMetatype) {
+      this.payloadKeys.forEach((payloadKey: string) =>  {
+        // first, because payload keys are dot notated we need to strip it and find the root of each key
+        const stripped = payloadKey.split('.')
+        const rootKey = stripped[stripped.length-1]
+
+        const metatypeKey = this.selectedMetatypeKeys.find(metatypeKey => metatypeKey.property_name === rootKey)
+
+        if(metatypeKey) {
+          this.propertyMapping.push({
+            key: payloadKey,
+            metatype_key_id: metatypeKey.id
+          })
+        }
+      })
+    }
+  }
+
+  autoPopulateRelationshipKeys() {
+    if(this.selectedRelationshipPair) {
+      this.payloadKeys.forEach((payloadKey: string) =>  {
+        // first, because payload keys are dot notated we need to strip it and find the root of each key
+        const stripped = payloadKey.split('.')
+        const rootKey = stripped[stripped.length-1]
+
+        const relationship = this.selectedMetatypeRelationshipPairKeys.find(relationshipKey => relationshipKey.property_name === rootKey)
+
+        if(relationship) {
+          this.propertyMapping.push({
+            key: payloadKey,
+            metatype_relationshipc_key_id: relationship.id
+          })
+        }
+      })
+    }
   }
 
   createTransformation() {

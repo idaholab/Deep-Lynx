@@ -304,6 +304,9 @@
       <v-card>
         <v-card-title class="headline grey lighten-2">
           {{$t('dataImports.editTypeMapping')}}
+          <v-flex class="text-right">
+            <v-icon class="justify-right"  @click="mappingDialog = false">mdi-window-close</v-icon>
+          </v-flex>
         </v-card-title>
         <div v-if="selectedDataSource !== null && mappingDialog">
           <data-type-mapping :dataSourceID="selectedDataSource.id" :containerID="containerID" :typeMappingID="selectedTypeMapping.id" @mappingCreated="mappingDialog = false" @updated="loadTypeMappings"></data-type-mapping>

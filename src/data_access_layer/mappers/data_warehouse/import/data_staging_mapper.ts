@@ -142,34 +142,11 @@ export default class DataStagingMapper extends Mapper {
 
     private retrieveStatement(id: number): QueryConfig {
         return {
-            text: `SELECT * FROM data_staging WHERE id = $1`,
+            text: `SELECT data_staging.*, data_sources.container_id, data_sources.config AS data_source_config 
+                    FROM data_staging 
+                    LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
+                    WHERE data_staging.id = $1`,
             values: [id],
-        };
-    }
-
-    private listStatement(importID: string, offset: number, limit: number, sortBy?: string, sortDesc?: boolean): QueryConfig {
-        if (sortDesc) {
-            return {
-                text: `SELECT * FROM data_staging WHERE import_id = $1 ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
-                values: [importID, offset, limit],
-            };
-        } else if (sortBy) {
-            return {
-                text: `SELECT * FROM data_staging WHERE import_id = $1 ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
-                values: [importID, offset, limit],
-            };
-        } else {
-            return {
-                text: `SELECT * FROM data_staging WHERE import_id = $1 OFFSET $2 LIMIT $3`,
-                values: [importID, offset, limit],
-            };
-        }
-    }
-
-    private listAllStatement(importID: string): QueryConfig {
-        return {
-            text: `SELECT * FROM data_staging WHERE import_id = $1`,
-            values: [importID],
         };
     }
 

@@ -43,7 +43,10 @@ void postgresAdapter.init().then(() => {
 
             // eslint-disable-next-line @typescript-eslint/no-for-in-array
             for (const i in results.value) {
-                results.value[i].shape_hash = TypeMapping.objectToShapeHash(results.value[i].data);
+                results.value[i].shape_hash = TypeMapping.objectToShapeHash(results.value[i].data, {
+                    stop_nodes: results.value[i].data_source_config?.stop_nodes,
+                    value_nodes: results.value[i].data_source_config?.value_nodes,
+                });
 
                 // if we haven't already setup a new type mapping, create
                 if (!mappings.has(results.value[i].shape_hash!)) {

@@ -307,11 +307,42 @@
                 </div>
 
 
-                <v-checkbox
-                    v-model="newDataSource.active"
-                    :label="$t('createDataSource.enable')"
-                    required
-                ></v-checkbox>
+                <div v-if="newDataSource.adapter_type">
+                  <v-checkbox
+                      v-model="newDataSource.active"
+                      :label="$t('createDataSource.enable')"
+                      required
+                  ></v-checkbox>
+
+                  <v-expansion-panels>
+                    <v-expansion-panel>
+                      <v-expansion-panel-header color="red"><span style="color:white">{{$t('createDataSource.dangerZone')}}</span></v-expansion-panel-header>
+                      <v-expansion-panel-content>
+                        <v-combobox
+                            style="margin-top: 10px"
+                            clearable
+                            multiple
+                            small-chips
+                            deletable-chips
+                            v-model="stopNodes"
+                            :label="$t('createDataSource.stopNodes')"
+                            :placeholder="$t('createDataSource.typeToAdd')"
+                        ></v-combobox>
+
+                        <v-combobox
+                            style="margin-top: 10px"
+                            clearable
+                            multiple
+                            small-chips
+                            deletable-chips
+                            v-model="valueNodes"
+                            :label="$t('createDataSource.valueNodes')"
+                            :placeholder="$t('createDataSource.typeToAdd')"
+                        ></v-combobox>
+                      </v-expansion-panel-content>
+                    </v-expansion-panel>
+                  </v-expansion-panels>
+                </div>
 
               </v-form>
             </v-col>
@@ -353,6 +384,8 @@ export default class CreateDataSourceDialog extends Vue {
   select: string | null = ""
   select_auth = ""
   authMethods = ["Basic", "Token"]
+  stopNodes = []
+  valueNodes = []
 
   newDataSource: DataSourceT = {
     name: "",
@@ -426,6 +459,9 @@ export default class CreateDataSourceDialog extends Vue {
         this.newDataSource.config = this.standardConfig
       }
     }
+
+    if(this.stopNodes.length > 0) this.newDataSource.config.stop_nodes = this.stopNodes
+    if(this.valueNodes.length > 0) this.newDataSource.config.value_nodes = this.valueNodes
 
     this.$client.createDataSource(this.containerID, this.newDataSource)
         .then((dataSource)=> {
