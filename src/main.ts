@@ -18,7 +18,7 @@ void postgresAdapter.init().then(() => {
     // Start Event System - we could convert this to a Bree job, but there is no point in doing so as we want this
     // constantly running, not on an interval. This is still the easiest way to make sure it doesn't pollute the main
     // thread.
-    const eventSystem = spawn('node', [`${Config.project_dir}/event_system/event_system_boot.js`]);
+    const eventSystem = spawn('node', [`${Config.project_dir}/domain_objects/event_system/event_system_boot.js`]);
 
     // we want the stdout and stderr output of the function to combine logging
     eventSystem.stdout.on('data', (data: any) => {
