@@ -64,11 +64,31 @@ export default class TypeMapping extends BaseDomainClass {
     // of its keys and the type of data those keys are in - this method is static so users
     // can access it to create type mapping shape hash without having to actually build
     // a mapping
-    static objectToShapeHash(obj: any) {
+    static objectToShapeHash(obj: any, options?: ShapeHashOptions) {
+        // because we might be removing items from the object we need to make sure to copy it instead of manipulate
+        // the parent
+        const toHash: any = {};
+        Object.assign(toHash, obj);
+
+        // first remove all stop nodes from the object if required, used for data normalization by some data sources
+        if (options && options.stop_nodes) {
+            const removeStopNodes = (root: any) => {
+                Object.keys(root).forEach((key) => {
+                    if (options.stop_nodes?.includes(key)) {
+                        delete root[key];
+                    } else if (typeof root[key] === 'object') {
+                        removeStopNodes(root[key]);
+                    }
+                });
+            };
+
+            removeStopNodes(toHash);
+        }
+
         const keyTypes: string[] = [];
         // safe means that the flattened object will maintain arrays as they are,
         // not attempt to flatten them along with the rest of the object
-        const flattened = flatten(obj, {safe: true});
+        const flattened = flatten(toHash, {safe: true});
 
         const extractPropsAndTypes = (obj: any, resultArray: string[]) => {
             for (const key of Object.keys(obj)) {
@@ -78,7 +98,12 @@ export default class TypeMapping extends BaseDomainClass {
                     }
                 }
 
-                resultArray.push(key + `:${typeof obj[key]}`);
+                // if it's a value node, use the value itself when calculating the hash vs. the type
+                if (options && options.value_nodes) {
+                    options.value_nodes.find((name) => name === key) ? resultArray.push(key + `:${obj[key]}`) : resultArray.push(key + `:${typeof obj[key]}`);
+                } else {
+                    resultArray.push(key + `:${typeof obj[key]}`);
+                }
             }
         };
 
@@ -135,4 +160,9 @@ export class TypeMappingExportPayload extends NakedDomainClass {
 
     @IsUUID()
     target_data_source?: string;
+}
+
+export class ShapeHashOptions {
+    stop_nodes?: string[];
+    value_nodes?: string[];
 }

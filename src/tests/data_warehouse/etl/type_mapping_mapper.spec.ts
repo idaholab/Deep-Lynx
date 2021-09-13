@@ -390,6 +390,30 @@ describe('A Data Type Mapping', async () => {
         const arrayHash = TypeMapping.objectToShapeHash(test_payload_single_array);
         expect(arrayHash).eq(normalHash);
     });
+
+    it('create valid shape hash of an object while ignoring desired keys', async () => {
+        const ignoredFieldHash = TypeMapping.objectToShapeHash(test_payload_single_array, {stop_nodes});
+        expect(ignoredFieldHash).not.null;
+
+        const normalHash = TypeMapping.objectToShapeHash(test_payload);
+        expect(normalHash).not.null;
+
+        expect(ignoredFieldHash).not.eq(normalHash);
+
+        const normalIgnoredHash = TypeMapping.objectToShapeHash(test_payload_ignored_fields);
+        expect(normalIgnoredHash).not.null;
+        expect(normalIgnoredHash).eq(ignoredFieldHash);
+    });
+
+    it('create valid shape hash of an object while using a key value', async () => {
+        const valueFieldHash = TypeMapping.objectToShapeHash(test_payload_single_array, {value_nodes: ['0.car.id']});
+        expect(valueFieldHash).not.null;
+
+        const normalHash = TypeMapping.objectToShapeHash(test_payload);
+        expect(normalHash).not.null;
+
+        expect(valueFieldHash).not.eq(normalHash);
+    });
 });
 
 export const test_keys: MetatypeKey[] = [
@@ -567,6 +591,74 @@ const test_payload_single_array = [
                             name: 'all terrain tire',
                             price: 150.99,
                             quantity: 4,
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+];
+
+const stop_nodes = ['tire_pressures', 'check_engine_light_flag'];
+
+// this is exactly like the test_payload minus the keys listed above - this is used to test the shape hash's ignore/stop
+// fields property
+const test_payload_ignored_fields = [
+    {
+        car: {
+            id: 'UUID',
+            name: 'test car',
+            manufacturer: {
+                id: 'UUID',
+                name: 'Test Cars Inc',
+                location: 'Seattle, WA',
+            },
+        },
+        car_maintenance: {
+            id: 'UUID',
+            name: "test car's maintenance",
+            start_date: '1/1/2020 12:00:00',
+            average_visits_per_year: 4,
+            maintenance_entries: [
+                {
+                    id: 1,
+                    type: 'oil change',
+                    parts_list: [
+                        {
+                            id: 'oil',
+                            name: 'synthetic oil',
+                            price: 45.66,
+                            quantity: 1,
+                        },
+                        {
+                            id: 'pan',
+                            name: 'oil pan',
+                            price: 15.5,
+                            quantity: 1,
+                        },
+                    ],
+                },
+                {
+                    id: 2,
+                    type: 'tire rotation',
+                    parts_list: [
+                        {
+                            id: 'tire',
+                            name: 'all terrain tire',
+                            price: 150.99,
+                            quantity: 4,
+                        },
+                        {
+                            id: 'wrench',
+                            name: 'wrench',
+                            price: 4.99,
+                            quantity: 1,
+                        },
+                        {
+                            id: 'bolts',
+                            name: 'bolts',
+                            price: 1.99,
+                            quantity: 5,
                         },
                     ],
                 },

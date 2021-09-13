@@ -97,10 +97,6 @@
         >
           <template v-slot:top>
           </template>
-          <template v-slot:item.typeMappings="{ item }">
-            <!-- TODO: Create a type mapping connection component here - give the user the option to create a type mapping using this data -->
-            <v-btn @click="editTypeMapping(item)" color="warning">{{$t('dataImports.editTypeMapping')}}</v-btn>
-          </template>
           <template v-slot:item.actions="{ item }">
             <v-icon
                 small
@@ -138,21 +134,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <v-dialog
-        v-model="mappingDialog"
-    >
-      <v-card>
-        <v-card-title class="headline grey lighten-2">
-          {{$t('dataImports.editTypeMapping')}}
-        </v-card-title>
-        <div v-if="selectedDataSource !== null && mappingDialog">
-          <data-type-mapping :dataSourceID="selectedDataSource.id" :containerID="containerID" :import="importDataMapping" :typeMappingID="importDataMapping.mapping_id" @mappingCreated="mappingDialog = false"></data-type-mapping>
-        </div>
-      </v-card>
-    </v-dialog>
   </v-card>
-
 </template>
 
 <script lang="ts">
@@ -244,9 +226,6 @@ export default class DataImports extends Vue {
       {
         text: this.$t('dataImports.errors'),
         value: "errors"
-      }, {
-        text: this.$t('dataImports.typeMapping'),
-        value: 'typeMappings'
       },
       {  text: this.$t('dataImports.viewDeleteData'), value: 'actions', sortable: false },]
   }

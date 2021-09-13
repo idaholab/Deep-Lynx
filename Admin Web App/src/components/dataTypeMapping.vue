@@ -32,13 +32,6 @@
               {{item.metatype_relationship_pair_name}}
                </span>
           </template>
-          <template v-slot:item.conditionals="{ item }">
-            <v-checkbox
-                :value="isApplicable(item)"
-                readonly
-                disabled
-            ></v-checkbox>
-          </template>
           <template v-slot:item.actions="{ item }">
             <transformation-dialog
                 :payload="unmappedData"
@@ -141,21 +134,12 @@ export default class DataTypeMapping extends Vue {
       text: this.$t("dataMapping.resultingTypeName"),
       value: 'names'
     }, {
-      text: this.$t("dataMapping.applicableToCurrentData"),
-      value: 'conditions'
-    }, {
       text: this.$t("dataMapping.actions"),
       value: "actions"
     }]
   }
 
   unmappedData: {[key: string]: any} = {}
-
-  // returns whether or not the current transformation is applicable to
-  // to the payload
-  isApplicable(transformation: TypeMappingTransformationT) {
-    return false
-  }
 
   beforeMount() {
     this.$client.retrieveTypeMapping(this.containerID, this.dataSourceID, this.typeMappingID)

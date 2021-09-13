@@ -114,6 +114,8 @@ export type DataSourceT = {
 export type StandardDataSourceConfig = {
     kind: 'standard' | 'manual';
     data_type: 'json' | 'csv';
+    stop_nodes?: string[];
+    value_nodes?: string[];
 };
 
 export type HttpDataSourceConfig = {
@@ -125,6 +127,8 @@ export type HttpDataSourceConfig = {
     token?: string; // security token, set if auth method is token
     username?: string; // auth method basic
     password?: string; // auth method basic
+    stop_nodes?: string[];
+    value_nodes?: string[];
 };
 
 export type JazzDataSourceConfig = {
@@ -136,6 +140,8 @@ export type JazzDataSourceConfig = {
     limit: number;
     poll_interval: number; // in minutes
     token: string; // security token for http authentication
+    stop_nodes?: string[];
+    value_nodes?: string[];
 };
 
 export type AvevaDataSourceConfig = {
@@ -159,6 +165,8 @@ export type AvevaDataSourceConfig = {
         structure: number;
         cable: number;
     };
+    stop_nodes?: string[];
+    value_nodes?: string[];
 };
 
 export type ImportT = {

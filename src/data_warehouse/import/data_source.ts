@@ -53,6 +53,23 @@ export class ReceiveDataOptions {
 */
 export class BaseDataSourceConfig extends NakedDomainClass {
     kind: 'http' | 'standard' | 'manual' | 'jazz' | 'aveva' = 'standard';
+
+    // advanced configuration, while we allow the user to set these it's generally
+    // assumed that only those with technical knowledge or experience would be modifying
+    // these
+
+    // when parsing data from this data source, these are nodes which should be removed
+    // and ignored when creating the shape_hash
+    @IsOptional()
+    @IsArray()
+    stop_nodes?: string[];
+
+    // when parsing data from this data source, these nodes should have their values
+    // and not their types evaluated when creating the shape_hash - nested keys must be
+    // dictated in dot notation - this will ignore any nodes which end up being objects
+    @IsOptional()
+    @IsArray()
+    value_nodes?: string[];
 }
 
 export class StandardDataSourceConfig extends BaseDataSourceConfig {
