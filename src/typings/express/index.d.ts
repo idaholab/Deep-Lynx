@@ -1,19 +1,19 @@
-import Container from '../../data_warehouse/ontology/container';
-import Metatype from '../../data_warehouse/ontology/metatype';
-import MetatypeRelationship from '../../data_warehouse/ontology/metatype_relationship';
-import MetatypeRelationshipPair from '../../data_warehouse/ontology/metatype_relationship_pair';
-import MetatypeKey from '../../data_warehouse/ontology/metatype_key';
-import MetatypeRelationshipKey from '../../data_warehouse/ontology/metatype_relationship_key';
-import { User as DLUser } from '../../access_management/user';
-import { OAuthApplication } from '../../access_management/oauth/oauth';
-import EventRegistration from '../../event_system/event_registration';
-import Node from '../../data_warehouse/data/node';
-import Edge from '../../data_warehouse/data/edge';
-import TypeMapping from '../../data_warehouse/etl/type_mapping';
-import TypeTransformation from '../../data_warehouse/etl/type_transformation';
-import { Exporter } from '../../data_warehouse/export/export';
-import Import, { DataStaging } from '../../data_warehouse/import/import';
-import { DataSource } from '../../data_warehouse/import/data_source';
+import Container from '../../domain_objects/data_warehouse/ontology/container';
+import Metatype from '../../domain_objects/data_warehouse/ontology/metatype';
+import MetatypeRelationship from '../../domain_objects/data_warehouse/ontology/metatype_relationship';
+import MetatypeRelationshipPair from '../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
+import MetatypeKey from '../../domain_objects/data_warehouse/ontology/metatype_key';
+import MetatypeRelationshipKey from '../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
+import {User as DLUser} from '../../domain_objects/access_management/user';
+import {OAuthApplication} from '../../domain_objects/access_management/oauth/oauth';
+import EventRegistration from '../../domain_objects/event_system/event_registration';
+import Node from '../../domain_objects/data_warehouse/data/node';
+import Edge from '../../domain_objects/data_warehouse/data/edge';
+import TypeMapping from '../../domain_objects/data_warehouse/etl/type_mapping';
+import TypeTransformation from '../../domain_objects/data_warehouse/etl/type_transformation';
+import {Exporter} from '../../domain_objects/data_warehouse/export/export';
+import Import, {DataStaging} from '../../domain_objects/data_warehouse/import/import';
+import {DataSource} from '../../domain_objects/data_warehouse/import/data_source';
 
 declare global {
     namespace Express {

@@ -4,8 +4,8 @@ import faker from 'faker';
 import { expect } from 'chai';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
 import OAuthMapper from '../../data_access_layer/mappers/access_management/oauth_mapper';
-import { User } from '../../access_management/user';
-import { OAuthApplication } from '../../access_management/oauth/oauth';
+import { User } from '../../domain_objects/access_management/user';
+import { OAuthApplication } from '../../domain_objects/access_management/oauth/oauth';
 
 describe('A OAuth Application can', async () => {
     let user: User;

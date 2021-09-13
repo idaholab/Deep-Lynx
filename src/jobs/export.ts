@@ -7,7 +7,7 @@
 */
 import Logger from '../services/logger';
 import ExporterRepository from '../data_access_layer/repositories/data_warehouse/export/export_repository';
-import {SuperUser} from '../access_management/user';
+import {SuperUser} from '../domain_objects/access_management/user';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 import PQueue from 'p-queue';
 import {parentPort} from 'worker_threads';

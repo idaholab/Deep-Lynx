@@ -5,11 +5,11 @@ import ImportMapper from '../../../../data_access_layer/mappers/data_warehouse/i
 import {PassThrough, pipeline, Readable} from 'stream';
 import FileDataStorage from '../../../../data_access_layer/mappers/data_warehouse/data/file_mapper';
 import Result from '../../../../common_classes/result';
-import File from '../../../../data_warehouse/data/file';
+import File from '../../../../domain_objects/data_warehouse/data/file';
 import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
 import DataStagingRepository from '../../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import {plainToClass} from 'class-transformer';
-import Import, {DataStaging} from '../../../../data_warehouse/import/import';
+import Import, {DataStaging} from '../../../../domain_objects/data_warehouse/import/import';
 import ImportRepository from '../../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 import {QueryOptions} from '../../../../data_access_layer/repositories/repository';
 import {toStream} from '../../../../services/utilities';

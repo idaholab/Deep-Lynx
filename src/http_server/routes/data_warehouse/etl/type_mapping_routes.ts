@@ -5,9 +5,9 @@ import TypeMappingMapper from '../../../../data_access_layer/mappers/data_wareho
 import Result from '../../../../common_classes/result';
 import TypeMappingRepository from '../../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
 import {plainToClass, serialize} from 'class-transformer';
-import TypeTransformation from '../../../../data_warehouse/etl/type_transformation';
+import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeTransformationRepository from '../../../../data_access_layer/repositories/data_warehouse/etl/type_transformation_repository';
-import TypeMapping, {TypeMappingExportPayload} from '../../../../data_warehouse/etl/type_mapping';
+import TypeMapping, {TypeMappingExportPayload} from '../../../../domain_objects/data_warehouse/etl/type_mapping';
 
 const JSONStream = require('JSONStream');
 const Busboy = require('busboy');

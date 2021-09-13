@@ -5,10 +5,10 @@ import MetatypeKeyMapper from '../../../../data_access_layer/mappers/data_wareho
 import Logger from '../../../../services/logger';
 import MetatypeMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../../../data_warehouse/ontology/container';
-import Metatype from '../../../../data_warehouse/ontology/metatype';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
+import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import MetatypeKey from '../../../../data_warehouse/ontology/metatype_key';
+import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 
 describe('A Metatype Key', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

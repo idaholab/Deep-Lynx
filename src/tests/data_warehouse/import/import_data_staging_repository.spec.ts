@@ -1,19 +1,19 @@
-import {User} from '../../../access_management/user';
+import {User} from '../../../domain_objects/access_management/user';
 import Logger from '../../../services/logger';
 import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../../data_warehouse/ontology/container';
+import Container from '../../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
 import {expect} from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import TypeMapping from '../../../data_warehouse/etl/type_mapping';
+import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
 import TypeMappingRepository from '../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
-import Import, {DataStaging} from '../../../data_warehouse/import/import';
+import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
 import ImportRepository from '../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
-import DataSourceRecord from '../../../data_warehouse/import/data_source';
+import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 
 // we're combining the data staging and import repository tests because these
 // two systems are very intertwined, and that there isn't much functionality

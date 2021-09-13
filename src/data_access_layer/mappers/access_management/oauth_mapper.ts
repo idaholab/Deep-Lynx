@@ -2,7 +2,7 @@ import Result from '../../../common_classes/result';
 import Mapper from '../mapper';
 import { PoolClient, QueryConfig } from 'pg';
 import uuid from 'uuid';
-import { OAuthApplication } from '../../../access_management/oauth/oauth';
+import { OAuthApplication } from '../../../domain_objects/access_management/oauth/oauth';
 
 const format = require('pg-format');
 const resultClass = OAuthApplication;

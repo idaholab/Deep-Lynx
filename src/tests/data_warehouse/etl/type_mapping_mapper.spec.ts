@@ -8,11 +8,11 @@ import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/
 import TypeMappingMapper from '../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
 import MetatypeMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import MetatypeKeyMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
-import Container from '../../../data_warehouse/ontology/container';
-import Metatype from '../../../data_warehouse/ontology/metatype';
-import TypeMapping from '../../../data_warehouse/etl/type_mapping';
-import MetatypeKey from '../../../data_warehouse/ontology/metatype_key';
-import DataSourceRecord from '../../../data_warehouse/import/data_source';
+import Container from '../../../domain_objects/data_warehouse/ontology/container';
+import Metatype from '../../../domain_objects/data_warehouse/ontology/metatype';
+import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
+import MetatypeKey from '../../../domain_objects/data_warehouse/ontology/metatype_key';
+import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 
 describe('A Data Type Mapping', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

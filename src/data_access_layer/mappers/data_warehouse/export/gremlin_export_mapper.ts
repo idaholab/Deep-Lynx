@@ -1,7 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import { PoolClient, QueryConfig } from 'pg';
-import { GremlinEdge, GremlinNode } from '../../../../data_warehouse/export/gremlin_export_impl';
+import {PoolClient, QueryConfig} from 'pg';
+import {GremlinEdge, GremlinNode} from '../../../../interface_implementations/data_warehouse/export/gremlin_export_impl';
 
 /*
     GremlinExportMapper extends the Postgres database Mapper class and allows
@@ -43,13 +43,13 @@ export default class GremlinExportMapper extends Mapper {
 
     public RetrieveNode(id: string): Promise<Result<GremlinNode>> {
         return super.retrieve(this.retrieveNodeStatement(id), {
-            resultClass: GremlinNode
+            resultClass: GremlinNode,
         });
     }
 
     public RetrieveEdge(id: string): Promise<Result<GremlinEdge>> {
         return super.retrieve(this.retrieveEdgeStatement(id), {
-            resultClass: GremlinEdge
+            resultClass: GremlinEdge,
         });
     }
 
@@ -58,13 +58,13 @@ export default class GremlinExportMapper extends Mapper {
         offset: number,
         limit: number,
         transaction?: PoolClient,
-        wait?: boolean
+        wait?: boolean,
     ): Promise<Result<GremlinNode[]>> {
-        return super.rows(this.listUnassociatedAndLockNodesStatement(exportID, offset, limit, wait), { transaction, resultClass: GremlinNode });
+        return super.rows(this.listUnassociatedAndLockNodesStatement(exportID, offset, limit, wait), {transaction, resultClass: GremlinNode});
     }
 
     public ListAssociatedNodes(exportID: string, offset: number, limit: number): Promise<Result<GremlinNode[]>> {
-        return super.rows(this.listAssociatedNodesStatement(exportID, offset, limit), { resultClass: GremlinNode });
+        return super.rows(this.listAssociatedNodesStatement(exportID, offset, limit), {resultClass: GremlinNode});
     }
 
     public ListUnassociatedEdgesAndLock(
@@ -72,13 +72,13 @@ export default class GremlinExportMapper extends Mapper {
         offset: number,
         limit: number,
         transaction?: PoolClient,
-        wait?: boolean
+        wait?: boolean,
     ): Promise<Result<GremlinEdge[]>> {
-        return super.rows(this.listUnassociatedAndLockEdgesStatement(exportID, offset, limit, wait), { transaction, resultClass: GremlinEdge });
+        return super.rows(this.listUnassociatedAndLockEdgesStatement(exportID, offset, limit, wait), {transaction, resultClass: GremlinEdge});
     }
 
     public ListAssociatedEdges(exportID: string, offset: number, limit: number): Promise<Result<GremlinEdge[]>> {
-        return super.rows(this.listAssociatedEdgesStatement(exportID, offset, limit), { resultClass: GremlinEdge });
+        return super.rows(this.listAssociatedEdgesStatement(exportID, offset, limit), {resultClass: GremlinEdge});
     }
 
     public Delete(id: string): Promise<Result<boolean>> {
@@ -95,7 +95,7 @@ export default class GremlinExportMapper extends Mapper {
                        FROM nodes
                        WHERE nodes.archived = FALSE
                        AND nodes.container_id = $1`,
-                values: [containerID]
+                values: [containerID],
             },
             {
                 text: `INSERT INTO gremlin_export_edges(id, export_id, container_id, relationship_pair_id, origin_node_id, destination_node_id, properties)
@@ -103,8 +103,8 @@ export default class GremlinExportMapper extends Mapper {
                        FROM edges
                        WHERE edges.archived = FALSE
                        AND edges.container_id = $1`,
-                values: [containerID]
-            }
+                values: [containerID],
+            },
         ];
     }
 
@@ -112,47 +112,47 @@ export default class GremlinExportMapper extends Mapper {
         return [
             {
                 text: `DELETE FROM gremlin_export_nodes WHERE export_id = $1`,
-                values: [exportID]
+                values: [exportID],
             },
             {
                 text: `DELETE FROM gremlin_export_edges WHERE export_id = $1`,
-                values: [exportID]
-            }
+                values: [exportID],
+            },
         ];
     }
 
     private deleteStatement(exportID: string): QueryConfig {
         return {
             text: `DELETE FROM exports WHERE id = $1`,
-            values: [exportID]
+            values: [exportID],
         };
     }
 
     private setGremlinNodeIDStatement(nodeID: string, gremlinNodeID: string): QueryConfig {
         return {
             text: `UPDATE gremlin_export_nodes SET gremlin_node_id = $1 WHERE id = $2`,
-            values: [gremlinNodeID, nodeID]
+            values: [gremlinNodeID, nodeID],
         };
     }
 
     private setGremlinEdgeIDStatement(edgeID: string, gremlinEdgeID: string): QueryConfig {
         return {
             text: `UPDATE gremlin_export_edges SET gremlin_edge_id = $1 WHERE id = $2`,
-            values: [gremlinEdgeID, edgeID]
+            values: [gremlinEdgeID, edgeID],
         };
     }
 
     private retrieveEdgeStatement(id: string): QueryConfig {
         return {
             text: `SELECT * FROM gremlin_export_edges WHERE id = $1`,
-            values: [id]
+            values: [id],
         };
     }
 
     private retrieveNodeStatement(id: string): QueryConfig {
         return {
             text: `SELECT * FROM gremlin_export_nodes WHERE id = $1`,
-            values: [id]
+            values: [id],
         };
     }
 
@@ -160,20 +160,20 @@ export default class GremlinExportMapper extends Mapper {
         if (wait) {
             return {
                 text: `SELECT * FROM gremlin_export_nodes WHERE export_id = $1 AND gremlin_node_id IS NULL OFFSET $2 LIMIT $3 FOR UPDATE`,
-                values: [exportID, offset, limit]
+                values: [exportID, offset, limit],
             };
         }
 
         return {
             text: `SELECT * FROM gremlin_export_nodes WHERE export_id = $1 AND gremlin_node_id IS NULL OFFSET $2 LIMIT $3 FOR UPDATE NOWAIT`,
-            values: [exportID, offset, limit]
+            values: [exportID, offset, limit],
         };
     }
 
     private listAssociatedNodesStatement(exportID: string, offset: number, limit: number): QueryConfig {
         return {
             text: `SELECT * FROM gremlin_export_nodes WHERE export_id = $1 AND gremlin_node_id NOT NULL OFFSET $2 LIMIT $3`,
-            values: [exportID, offset, limit]
+            values: [exportID, offset, limit],
         };
     }
 
@@ -181,19 +181,19 @@ export default class GremlinExportMapper extends Mapper {
         if (wait) {
             return {
                 text: `SELECT * FROM gremlin_export_edges WHERE export_id = $1 AND gremlin_edge_id IS NULL OFFSET $2 LIMIT $3 FOR UPDATE`,
-                values: [exportID, offset, limit]
+                values: [exportID, offset, limit],
             };
         }
         return {
             text: `SELECT * FROM gremlin_export_edges WHERE export_id = $1 AND gremlin_edge_id IS NULL OFFSET $2 LIMIT $3 FOR UPDATE NOWAIT`,
-            values: [exportID, offset, limit]
+            values: [exportID, offset, limit],
         };
     }
 
     private listAssociatedEdgesStatement(exportID: string, offset: number, limit: number): QueryConfig {
         return {
             text: `SELECT * FROM gremlin_export_edges WHERE export_id = $1 AND gremlin_edge_id NOT NULL OFFSET $2 LIMIT $3`,
-            values: [exportID, offset, limit]
+            values: [exportID, offset, limit],
         };
     }
 }

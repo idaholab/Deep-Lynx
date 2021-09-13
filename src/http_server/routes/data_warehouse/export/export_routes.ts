@@ -3,7 +3,7 @@ import { Request, Response, NextFunction, Application } from 'express';
 import { authInContainer } from '../../../middleware';
 import ExporterRepository, { ExporterFactory } from '../../../../data_access_layer/repositories/data_warehouse/export/export_repository';
 import { plainToClass } from 'class-transformer';
-import ExportRecord from '../../../../data_warehouse/export/export';
+import ExportRecord from '../../../../domain_objects/data_warehouse/export/export';
 import Result from '../../../../common_classes/result';
 import { QueryOptions } from '../../../../data_access_layer/repositories/repository';
 

@@ -1,7 +1,7 @@
 import Result from '../../../common_classes/result';
 import Mapper from '../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import {ContainerUserInvite} from '../../../access_management/user';
+import {ContainerUserInvite} from '../../../domain_objects/access_management/user';
 
 const resultClass = ContainerUserInvite;
 

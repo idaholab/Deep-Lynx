@@ -2,9 +2,9 @@ import Mapper from '../../mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient, QueryConfig} from 'pg';
 import uuid from 'uuid';
-import {QueueProcessor} from '../../../../event_system/processor';
-import Event from '../../../../event_system/event';
-import Import from '../../../../data_warehouse/import/import';
+import {QueueProcessor} from '../../../../domain_objects/event_system/processor';
+import Event from '../../../../domain_objects/event_system/event';
+import Import from '../../../../domain_objects/data_warehouse/import/import';
 
 const format = require('pg-format');
 const resultClass = Import;

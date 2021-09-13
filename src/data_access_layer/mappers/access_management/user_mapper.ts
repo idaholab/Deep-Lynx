@@ -1,7 +1,7 @@
 import Result from '../../../common_classes/result';
 import Mapper from '../mapper';
 import { PoolClient, QueryConfig } from 'pg';
-import { User } from '../../../access_management/user';
+import { User } from '../../../domain_objects/access_management/user';
 import uuid from 'uuid';
 
 const UIDGenerator = require('uid-generator');

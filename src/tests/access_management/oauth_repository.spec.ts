@@ -1,13 +1,13 @@
-import { User } from '../../access_management/user';
+import { User } from '../../domain_objects/access_management/user';
 import Logger from '../../services/logger';
 import PostgresAdapter from '../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerMapper from '../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../data_warehouse/ontology/container';
+import Container from '../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
 import { expect } from 'chai';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
 import OAuthRepository from '../../data_access_layer/repositories/access_management/oauth_repository';
-import { OAuthApplication } from '../../access_management/oauth/oauth';
+import { OAuthApplication } from '../../domain_objects/access_management/oauth/oauth';
 
 describe('An OAuth Repository', async () => {
     let container: Container;

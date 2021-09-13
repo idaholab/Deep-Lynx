@@ -1,7 +1,7 @@
 import {Application, NextFunction, Request, Response} from 'express';
 import {authInContainer} from '../../../middleware';
 import {plainToClass} from 'class-transformer';
-import DataSourceRecord from '../../../../data_warehouse/import/data_source';
+import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 import Result from '../../../../common_classes/result';
 import DataSourceRepository, {DataSourceFactory} from '../../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {QueryOptions} from '../../../../data_access_layer/repositories/repository';

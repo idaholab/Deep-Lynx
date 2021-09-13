@@ -1,5 +1,5 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import Metatype from '../../../../data_warehouse/ontology/metatype';
+import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import Result from '../../../../common_classes/result';
 import Cache from '../../../../services/cache/cache';
 import Config from '../../../../services/config';
@@ -7,9 +7,9 @@ import Logger from '../../../../services/logger';
 import MetatypeMapper from '../../../mappers/data_warehouse/ontology/metatype_mapper';
 import {plainToClass, serialize} from 'class-transformer';
 import MetatypeKeyMapper from '../../../mappers/data_warehouse/ontology/metatype_key_mapper';
-import MetatypeKey from '../../../../data_warehouse/ontology/metatype_key';
+import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 import {PoolClient} from 'pg';
-import {User} from '../../../../access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 
 /*
     MetatypeRepository contains methods for persisting and retrieving a metatype

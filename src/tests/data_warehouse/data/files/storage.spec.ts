@@ -5,9 +5,9 @@ import Logger from '../../../../services/logger';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import FileMapper from '../../../../data_access_layer/mappers/data_warehouse/data/file_mapper';
-import Container from '../../../../data_warehouse/ontology/container';
-import File from '../../../../data_warehouse/data/file';
-import DataSourceRecord from '../../../../data_warehouse/import/data_source';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
+import File from '../../../../domain_objects/data_warehouse/data/file';
+import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 
 describe('A File can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

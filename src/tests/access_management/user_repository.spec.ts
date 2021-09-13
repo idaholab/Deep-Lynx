@@ -1,8 +1,8 @@
-import { AssignUserRolePayload, ContainerUserInvite, KeyPair, ResetUserPasswordPayload, User } from '../../access_management/user';
+import { AssignUserRolePayload, ContainerUserInvite, KeyPair, ResetUserPasswordPayload, User } from '../../domain_objects/access_management/user';
 import Logger from '../../services/logger';
 import PostgresAdapter from '../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerMapper from '../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../data_warehouse/ontology/container';
+import Container from '../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
 import { expect } from 'chai';
 import UserRepository from '../../data_access_layer/repositories/access_management/user_repository';

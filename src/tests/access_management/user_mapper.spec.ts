@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import PostgresAdapter from '../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../services/logger';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
-import { User } from '../../access_management/user';
+import { User } from '../../domain_objects/access_management/user';
 
 describe('A User', async () => {
     before(function () {

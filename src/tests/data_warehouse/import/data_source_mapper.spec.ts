@@ -4,9 +4,9 @@ import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/post
 import Logger from '../../../services/logger';
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import Container from '../../../data_warehouse/ontology/container';
+import Container from '../../../domain_objects/data_warehouse/ontology/container';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import DataSourceRecord from '../../../data_warehouse/import/data_source';
+import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 
 describe('A Data Source', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

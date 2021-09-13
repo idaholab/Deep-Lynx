@@ -1,23 +1,23 @@
-import { User } from '../../../access_management/user';
+import { User } from '../../../domain_objects/access_management/user';
 import Logger from '../../../services/logger';
 import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../../data_warehouse/ontology/container';
+import Container from '../../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
 import { expect } from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import TypeMapping from '../../../data_warehouse/etl/type_mapping';
+import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
 import TypeMappingRepository from '../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
-import MetatypeKey from '../../../data_warehouse/ontology/metatype_key';
-import Metatype from '../../../data_warehouse/ontology/metatype';
+import MetatypeKey from '../../../domain_objects/data_warehouse/ontology/metatype_key';
+import Metatype from '../../../domain_objects/data_warehouse/ontology/metatype';
 import MetatypeMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import MetatypeKeyMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
-import TypeTransformation, { Condition, KeyMapping } from '../../../data_warehouse/etl/type_transformation';
-import DataSourceRecord from '../../../data_warehouse/import/data_source';
+import TypeTransformation, { Condition, KeyMapping } from '../../../domain_objects/data_warehouse/etl/type_transformation';
+import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 import MetatypeRelationshipRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository';
-import MetatypeRelationship from '../../../data_warehouse/ontology/metatype_relationship';
-import MetatypeRelationshipKey from '../../../data_warehouse/ontology/metatype_relationship_key';
+import MetatypeRelationship from '../../../domain_objects/data_warehouse/ontology/metatype_relationship';
+import MetatypeRelationshipKey from '../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 import TypeTransformationRepository from '../../../data_access_layer/repositories/data_warehouse/etl/type_transformation_repository';
 
 describe('A Type Transformation Repository', async () => {

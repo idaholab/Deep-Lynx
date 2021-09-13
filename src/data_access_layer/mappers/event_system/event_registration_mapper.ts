@@ -1,7 +1,7 @@
 import Result from '../../../common_classes/result';
-import EventRegistration from '../../../event_system/event_registration';
+import EventRegistration from '../../../domain_objects/event_system/event_registration';
 import Mapper from '../mapper';
-import { PoolClient, QueryConfig } from 'pg';
+import {PoolClient, QueryConfig} from 'pg';
 import uuid from 'uuid';
 
 const format = require('pg-format');
@@ -31,7 +31,7 @@ export default class EventRegistrationMapper extends Mapper {
     public async Create(userID: string, input: EventRegistration, transaction?: PoolClient): Promise<Result<EventRegistration>> {
         const r = await super.run(this.createStatement(userID, input), {
             transaction,
-            resultClass: EventRegistration
+            resultClass: EventRegistration,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -41,7 +41,7 @@ export default class EventRegistrationMapper extends Mapper {
     public async Update(userID: string, input: EventRegistration, transaction?: PoolClient): Promise<Result<EventRegistration>> {
         const r = await super.run(this.fullUpdateStatement(userID, input), {
             transaction,
-            resultClass: EventRegistration
+            resultClass: EventRegistration,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -50,7 +50,7 @@ export default class EventRegistrationMapper extends Mapper {
 
     public async Retrieve(id: string): Promise<Result<EventRegistration>> {
         return super.retrieve(this.retrieveStatement(id), {
-            resultClass: EventRegistration
+            resultClass: EventRegistration,
         });
     }
 
@@ -100,28 +100,28 @@ export default class EventRegistrationMapper extends Mapper {
     private retrieveStatement(id: string): QueryConfig {
         return {
             text: `SELECT * FROM registered_events WHERE id = $1`,
-            values: [id]
+            values: [id],
         };
     }
 
     private setInactiveStatement(id: string, userID: string): QueryConfig {
         return {
             text: `UPDATE registered_events SET active = false, modified_by = $2 WHERE id = $1`,
-            values: [id, userID]
+            values: [id, userID],
         };
     }
 
     private setActiveStatement(id: string, userID: string): QueryConfig {
         return {
             text: `UPDATE registered_events SET active = true, modified_by = $2 WHERE id = $1`,
-            values: [id, userID]
+            values: [id, userID],
         };
     }
 
     private deleteStatement(id: string): QueryConfig {
         return {
             text: `DELETE FROM registered_events WHERE id = $1`,
-            values: [id]
+            values: [id],
         };
     }
 }

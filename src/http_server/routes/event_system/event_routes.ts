@@ -1,8 +1,8 @@
-import { Application, NextFunction, Request, Response } from 'express';
-import { authInContainer } from '../../middleware';
+import {Application, NextFunction, Request, Response} from 'express';
+import {authInContainer} from '../../middleware';
 import Result from '../../../common_classes/result';
-import { plainToClass } from 'class-transformer';
-import EventRegistration from '../../../event_system/event_registration';
+import {plainToClass} from 'class-transformer';
+import EventRegistration from '../../../domain_objects/event_system/event_registration';
 import EventRegistrationRepository from '../../../data_access_layer/repositories/event_system/event_registration_repository';
 
 const repo = new EventRegistrationRepository();

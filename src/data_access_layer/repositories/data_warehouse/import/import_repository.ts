@@ -1,9 +1,9 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import Import from '../../../../data_warehouse/import/import';
+import Import from '../../../../domain_objects/data_warehouse/import/import';
 import Result from '../../../../common_classes/result';
 import ImportMapper from '../../../mappers/data_warehouse/import/import_mapper';
 import {PoolClient} from 'pg';
-import {User} from '../../../../access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 
 /*
     Imports contains methods for persisting and retrieving an import

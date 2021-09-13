@@ -1,7 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import Node from '../../../../data_warehouse/data/node';
+import Node from '../../../../domain_objects/data_warehouse/data/node';
 import uuid from 'uuid';
 
 const format = require('pg-format');

@@ -2,7 +2,7 @@ import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import { PoolClient, QueryConfig } from 'pg';
 import uuid from 'uuid';
-import MetatypeRelationship from '../../../../data_warehouse/ontology/metatype_relationship';
+import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 
 const format = require('pg-format');
 const resultClass = MetatypeRelationship;

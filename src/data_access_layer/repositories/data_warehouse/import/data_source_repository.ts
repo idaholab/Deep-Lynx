@@ -1,14 +1,14 @@
 import RepositoryInterface, {DeleteOptions, QueryOptions, Repository} from '../../repository';
-import DataSourceRecord, {DataSource} from '../../../../data_warehouse/import/data_source';
+import DataSourceRecord, {DataSource} from '../../../../domain_objects/data_warehouse/import/data_source';
 import DataSourceMapper from '../../../mappers/data_warehouse/import/data_source_mapper';
-import HttpDataSourceImpl from '../../../../data_warehouse/import/http_data_source_impl';
-import StandardDataSourceImpl from '../../../../data_warehouse/import/standard_data_source_impl';
+import HttpDataSourceImpl from '../../../../interface_implementations/data_warehouse/import/http_data_source_impl';
+import StandardDataSourceImpl from '../../../../interface_implementations/data_warehouse/import/standard_data_source_impl';
 import Result from '../../../../common_classes/result';
-import {User} from '../../../../access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
 import ImportMapper from '../../../mappers/data_warehouse/import/import_mapper';
-import JazzDataSourceImpl from '../../../../data_warehouse/import/jazz_data_source_impl';
-import AvevaDataSourceImpl from '../../../../data_warehouse/import/aveva_data_source';
+import JazzDataSourceImpl from '../../../../interface_implementations/data_warehouse/import/jazz_data_source_impl';
+import AvevaDataSourceImpl from '../../../../interface_implementations/data_warehouse/import/aveva_data_source';
 
 /*
     DataSourceRepository contains methods for persisting and retrieving data sources

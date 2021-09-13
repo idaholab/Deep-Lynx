@@ -3,7 +3,7 @@ import {authInContainer, authRequest} from '../../../middleware';
 import ContainerImport, {ContainerImportT} from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_import';
 import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 import {plainToClass} from 'class-transformer';
-import Container from '../../../../data_warehouse/ontology/container';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 
 const Busboy = require('busboy');

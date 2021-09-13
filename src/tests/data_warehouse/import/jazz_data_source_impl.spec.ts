@@ -1,13 +1,13 @@
-import {User} from '../../../access_management/user';
+import {User} from '../../../domain_objects/access_management/user';
 import Logger from '../../../services/logger';
 import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../../data_warehouse/ontology/container';
+import Container from '../../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
 import {expect} from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import DataSourceRecord, {JazzDataSourceConfig} from '../../../data_warehouse/import/data_source';
+import DataSourceRecord, {JazzDataSourceConfig} from '../../../domain_objects/data_warehouse/import/data_source';
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import ImportRepository from '../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 

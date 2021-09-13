@@ -11,10 +11,10 @@ import EdgeMapper from '../../../../data_access_layer/mappers/data_warehouse/dat
 import MetatypeRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 import MetatypeRelationshipPairRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
-import {User} from '../../../../access_management/user';
-import Node from '../../../../data_warehouse/data/node';
+import {User} from '../../../../domain_objects/access_management/user';
+import Node from '../../../../domain_objects/data_warehouse/data/node';
 import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
-import Edge from '../../../../data_warehouse/data/edge';
+import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 
 describe('A Container Import', async () => {
     let user: User;

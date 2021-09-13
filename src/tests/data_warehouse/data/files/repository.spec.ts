@@ -5,12 +5,12 @@ import Logger from '../../../../services/logger';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import FileMapper from '../../../../data_access_layer/mappers/data_warehouse/data/file_mapper';
-import Container from '../../../../data_warehouse/ontology/container';
-import { User } from '../../../../access_management/user';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
+import { User } from '../../../../domain_objects/access_management/user';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
-import File from '../../../../data_warehouse/data/file';
+import File from '../../../../domain_objects/data_warehouse/data/file';
 import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
-import DataSourceRecord from '../../../../data_warehouse/import/data_source';
+import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 
 describe('A File Repository can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

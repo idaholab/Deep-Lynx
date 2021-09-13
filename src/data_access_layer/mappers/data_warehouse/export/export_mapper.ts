@@ -1,9 +1,9 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import { PoolClient, QueryConfig } from 'pg';
-import { QueueProcessor } from '../../../../event_system/processor';
-import Event from '../../../../event_system/event';
-import ExportRecord from '../../../../data_warehouse/export/export';
+import {PoolClient, QueryConfig} from 'pg';
+import {QueueProcessor} from '../../../../domain_objects/event_system/processor';
+import Event from '../../../../domain_objects/event_system/event';
+import ExportRecord from '../../../../domain_objects/data_warehouse/export/export';
 import uuid from 'uuid';
 
 const format = require('pg-format');
@@ -34,7 +34,7 @@ export default class ExportMapper extends Mapper {
     public async Create(userID: string, input: ExportRecord, transaction?: PoolClient): Promise<Result<ExportRecord>> {
         const r = await super.run(this.createStatement(userID, input), {
             resultClass,
-            transaction
+            transaction,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -44,14 +44,14 @@ export default class ExportMapper extends Mapper {
     public async BulkCreate(userID: string, input: ExportRecord[], transaction?: PoolClient): Promise<Result<ExportRecord[]>> {
         return super.run(this.createStatement(userID, ...input), {
             resultClass,
-            transaction
+            transaction,
         });
     }
 
     public async Update(userID: string, input: ExportRecord, transaction?: PoolClient): Promise<Result<ExportRecord>> {
         const r = await super.run(this.fullUpdateStatement(userID, input), {
             resultClass,
-            transaction
+            transaction,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -61,12 +61,12 @@ export default class ExportMapper extends Mapper {
     public async BulkUpdate(userID: string, input: ExportRecord[], transaction?: PoolClient): Promise<Result<ExportRecord[]>> {
         return super.run(this.fullUpdateStatement(userID, ...input), {
             resultClass,
-            transaction
+            transaction,
         });
     }
 
     public Retrieve(id: string): Promise<Result<ExportRecord>> {
-        return super.retrieve(this.retrieveStatement(id), { resultClass });
+        return super.retrieve(this.retrieveStatement(id), {resultClass});
     }
 
     public Delete(id: string): Promise<Result<boolean>> {
@@ -77,7 +77,7 @@ export default class ExportMapper extends Mapper {
         userID: string,
         id: string,
         status: 'created' | 'processing' | 'paused' | 'completed' | 'failed',
-        message?: string
+        message?: string,
     ): Promise<Result<boolean>> {
         if (status === 'completed') {
             const completeExport = await this.Retrieve(id);
@@ -85,8 +85,8 @@ export default class ExportMapper extends Mapper {
                 new Event({
                     sourceID: completeExport.value.container_id!,
                     sourceType: 'container',
-                    type: 'data_exported'
-                })
+                    type: 'data_exported',
+                }),
             );
         }
 
@@ -117,7 +117,7 @@ export default class ExportMapper extends Mapper {
             exp.status_message,
             exp.destination_type,
             userID,
-            userID
+            userID,
         ]);
 
         return format(text, values);
@@ -151,7 +151,7 @@ export default class ExportMapper extends Mapper {
             JSON.stringify(exp.config),
             exp.status_message,
             exp.destination_type,
-            userID
+            userID,
         ]);
 
         return format(text, values);
@@ -160,14 +160,14 @@ export default class ExportMapper extends Mapper {
     private retrieveStatement(exportID: string): QueryConfig {
         return {
             text: `SELECT * FROM exports WHERE id = $1`,
-            values: [exportID]
+            values: [exportID],
         };
     }
 
     private deleteStatement(exportID: string): QueryConfig {
         return {
             text: `DELETE FROM exports WHERE id = $1`,
-            values: [exportID]
+            values: [exportID],
         };
     }
 
@@ -175,18 +175,18 @@ export default class ExportMapper extends Mapper {
         userID: string,
         id: string,
         status: 'created' | 'processing' | 'paused' | 'completed' | 'failed',
-        message?: string
+        message?: string,
     ): QueryConfig {
         return {
             text: `UPDATE exports SET status = $1, status_message = $2, modified_by = $4, modified_at = NOW() WHERE id = $3`,
-            values: [status, message, id, userID]
+            values: [status, message, id, userID],
         };
     }
 
     private listByStatusStatement(status: string): QueryConfig {
         return {
             text: `SELECT * FROM exports WHERE status = $1`,
-            values: [status]
+            values: [status],
         };
     }
 }

@@ -3,12 +3,12 @@ import { expect } from 'chai';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../../../services/logger';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../../../data_warehouse/ontology/container';
-import Metatype from '../../../../data_warehouse/ontology/metatype';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
+import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
 import MetatypeRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
-import MetatypeKey from '../../../../data_warehouse/ontology/metatype_key';
-import { User } from '../../../../access_management/user';
+import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
+import { User } from '../../../../domain_objects/access_management/user';
 
 describe('A Metatype Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

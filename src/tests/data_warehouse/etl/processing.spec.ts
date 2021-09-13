@@ -12,21 +12,21 @@ import DataStagingMapper from '../../../data_access_layer/mappers/data_warehouse
 import MetatypeRelationshipMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
 import MetatypeRelationshipPairMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
 import TypeTransformationMapper from '../../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper';
-import Container from '../../../data_warehouse/ontology/container';
-import Metatype from '../../../data_warehouse/ontology/metatype';
-import MetatypeRelationship from '../../../data_warehouse/ontology/metatype_relationship';
-import MetatypeRelationshipPair from '../../../data_warehouse/ontology/metatype_relationship_pair';
-import MetatypeKey from '../../../data_warehouse/ontology/metatype_key';
+import Container from '../../../domain_objects/data_warehouse/ontology/container';
+import Metatype from '../../../domain_objects/data_warehouse/ontology/metatype';
+import MetatypeRelationship from '../../../domain_objects/data_warehouse/ontology/metatype_relationship';
+import MetatypeRelationshipPair from '../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
+import MetatypeKey from '../../../domain_objects/data_warehouse/ontology/metatype_key';
 import MetatypeRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
-import {User} from '../../../access_management/user';
+import {User} from '../../../domain_objects/access_management/user';
 import NodeRepository from '../../../data_access_layer/repositories/data_warehouse/data/node_repository';
 import EdgeRepository from '../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
-import TypeMapping from '../../../data_warehouse/etl/type_mapping';
-import TypeTransformation, {KeyMapping} from '../../../data_warehouse/etl/type_transformation';
+import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
+import TypeTransformation, {KeyMapping} from '../../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeMappingRepository from '../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
-import Import, {DataStaging} from '../../../data_warehouse/import/import';
-import DataSourceRecord, {DataSource} from '../../../data_warehouse/import/data_source';
+import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
+import DataSourceRecord, {DataSource} from '../../../domain_objects/data_warehouse/import/data_source';
 import {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 
 describe('A Data Processor', async () => {

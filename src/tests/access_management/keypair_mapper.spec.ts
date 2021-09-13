@@ -4,7 +4,7 @@ import PostgresAdapter from '../../data_access_layer/mappers/db_adapters/postgre
 import Logger from '../../services/logger';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
 import KeyPairMapper from '../../data_access_layer/mappers/access_management/keypair_mapper';
-import { KeyPair, User } from '../../access_management/user';
+import { KeyPair, User } from '../../domain_objects/access_management/user';
 import KeyPairRepository from '../../data_access_layer/repositories/access_management/keypair_repository';
 
 describe('A KeyPair', async () => {

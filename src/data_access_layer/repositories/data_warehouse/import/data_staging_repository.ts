@@ -1,9 +1,9 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import {DataStaging} from '../../../../data_warehouse/import/import';
+import {DataStaging} from '../../../../domain_objects/data_warehouse/import/import';
 import DataStagingMapper from '../../../mappers/data_warehouse/import/data_staging_mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient} from 'pg';
-import {User} from '../../../../access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 
 /*
     DataStaging contains methods for persisting and retrieving an import's data

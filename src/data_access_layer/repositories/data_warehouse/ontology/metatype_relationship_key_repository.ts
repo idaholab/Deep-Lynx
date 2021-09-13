@@ -1,8 +1,8 @@
 import RepositoryInterface, {Repository} from '../../repository';
-import MetatypeRelationshipKey from '../../../../data_warehouse/ontology/metatype_relationship_key';
+import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 import Result from '../../../../common_classes/result';
 import MetatypeRelationshipKeyMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_key_mapper';
-import {User} from '../../../../access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 import MetatypeRelationshipRepository from './metatype_relationship_repository';
 
 /*
