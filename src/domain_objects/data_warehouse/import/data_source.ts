@@ -42,6 +42,7 @@ export class ReceiveDataOptions {
     importID?: string;
     overrideJsonStream? = false; // needed if you're passing raw json objects or an object stream
     transformStreams?: Transform[]; // streams to pipe to, prior to piping to the JSONStream
+    generateShapeHash? = false; // whether or not to generate shape hash on ingestion, this is cpu heavy so try to let the job handle it
 }
 
 /*
