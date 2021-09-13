@@ -29,6 +29,9 @@ void postgresAdapter.init().then(() => {
         console.log(data.toString().trim());
     });
 
+    // Bree is a job runner that allows us to start and schedule independent processes across threads
+    // We use it primarily for data processing and mapping, as those cpu heavy tasks tend to block the
+    // main execution thread frequently
     const bree = new Bree({
         logger: BackedLogger.logger,
         root: path.resolve('dist/jobs'),

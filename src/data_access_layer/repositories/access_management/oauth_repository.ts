@@ -10,8 +10,8 @@ import jwt from 'jsonwebtoken';
 import {classToPlain, plainToClass} from 'class-transformer';
 import Config from '../../../services/config';
 import {Request} from 'express';
-import {OAuthApplication, OAuthRequest, OAuthTokenExchangeRequest} from '../../../access_management/oauth/oauth';
-import {User} from '../../../access_management/user';
+import {OAuthApplication, OAuthRequest, OAuthTokenExchangeRequest} from '../../../domain_objects/access_management/oauth/oauth';
+import {User} from '../../../domain_objects/access_management/user';
 import base64url from 'base64url';
 
 const crypto = require('crypto');

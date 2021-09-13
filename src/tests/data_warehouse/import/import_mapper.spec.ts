@@ -7,13 +7,13 @@ import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/o
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
 import DataStagingMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
-import Container from '../../../data_warehouse/ontology/container';
+import Container from '../../../domain_objects/data_warehouse/ontology/container';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
-import {User} from '../../../access_management/user';
-import TypeMapping from '../../../data_warehouse/etl/type_mapping';
+import {User} from '../../../domain_objects/access_management/user';
+import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
 import TypeMappingRepository from '../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
-import Import, {DataStaging} from '../../../data_warehouse/import/import';
-import DataSourceRecord from '../../../data_warehouse/import/data_source';
+import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
+import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 
 describe('A data import', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

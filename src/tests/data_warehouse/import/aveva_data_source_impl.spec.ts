@@ -1,17 +1,17 @@
-import {User} from '../../../access_management/user';
+import {User} from '../../../domain_objects/access_management/user';
 import Logger from '../../../services/logger';
 import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../../data_warehouse/ontology/container';
+import Container from '../../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
 import {expect} from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import DataSourceRecord, {AvevaDataSourceConfig, DataSource} from '../../../data_warehouse/import/data_source';
+import DataSourceRecord, {AvevaDataSourceConfig, DataSource} from '../../../domain_objects/data_warehouse/import/data_source';
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
-import StandardDataSourceImpl from '../../../data_warehouse/import/standard_data_source_impl';
-import HttpDataSourceImpl from '../../../data_warehouse/import/http_data_source_impl';
+import StandardDataSourceImpl from '../../../interface_implementations/data_warehouse/import/standard_data_source_impl';
+import HttpDataSourceImpl from '../../../interface_implementations/data_warehouse/import/http_data_source_impl';
 
 // Aveva is super simple currently - simply make sure we can save it correctly
 describe('A Aveva DataSource Implementation can', async () => {

@@ -4,8 +4,8 @@ import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/p
 import MetatypeRelationshipMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
 import Logger from '../../../../services/logger';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../../../data_warehouse/ontology/container';
-import MetatypeRelationship from '../../../../data_warehouse/ontology/metatype_relationship';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
+import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 
 describe('A Metatype Relationship Mapper', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

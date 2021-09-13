@@ -1,8 +1,8 @@
 import {Application, NextFunction, Request, Response} from 'express';
 import {graphql} from 'graphql';
 import {authInContainer} from '../../../../middleware';
-import resolversRoot from '../../../../../data_warehouse/data/query/resolvers';
-import {schema} from '../../../../../data_warehouse/data/query/schema';
+import resolversRoot from './resolvers';
+import {schema} from './schema';
 const bodyParser = require('body-parser');
 
 export default class QueryRoutes {

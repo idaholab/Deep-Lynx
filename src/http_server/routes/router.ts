@@ -41,11 +41,11 @@ import MetatypeRelationshipKeyRoutes from './data_warehouse/ontology/metatype_re
 import MetatypeRelationshipPairRoutes from './data_warehouse/ontology/metatype_relationship_pair_routes';
 import PostgresAdapter from '../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Config from '../../services/config';
-import {SetSamlAdfs} from '../../access_management/authentication/saml/saml-adfs';
+import {SetSamlAdfs} from '../authentication/saml/saml-adfs';
 import UserRoutes from './access_management/user_routes';
 import DataSourceRoutes from './data_warehouse/import/data_source_routes';
-import {SetJWTAuthMethod} from '../../access_management/authentication/jwt';
-import {SetLocalAuthMethod} from '../../access_management/authentication/local';
+import {SetJWTAuthMethod} from '../authentication/jwt';
+import {SetLocalAuthMethod} from '../authentication/local';
 import QueryRoutes from './data_warehouse/data/query/query_routes';
 import GraphRoutes from './data_warehouse/data/graph_routes';
 import OAuthRoutes from './access_management/oauth_routes';
@@ -54,7 +54,7 @@ import EventRoutes from './event_system/event_routes';
 import ExportRoutes from './data_warehouse/export/export_routes';
 import TypeMappingRoutes from './data_warehouse/etl/type_mapping_routes';
 import {serialize} from 'class-transformer';
-import {SuperUser} from '../../access_management/user';
+import {SuperUser} from '../../domain_objects/access_management/user';
 import ImportRoutes from './data_warehouse/import/import_routes';
 
 /*

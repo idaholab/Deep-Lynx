@@ -3,7 +3,7 @@ import express from 'express';
 import uuid from 'uuid-random';
 import {performance, PerformanceObserver} from 'perf_hooks';
 import Logger from '../services/logger';
-import Authorization from '../access_management/authorization/authorization';
+import Authorization from '../domain_objects/access_management/authorization/authorization';
 import Config from '../services/config';
 import passport from 'passport';
 import ContainerRepository from '../data_access_layer/repositories/data_warehouse/ontology/container_respository';
@@ -13,7 +13,7 @@ import MetatypeRelationshipPairRepository from '../data_access_layer/repositorie
 import MetatypeKeyRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_key_repository';
 import MetatypeRelationshipKeyRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_key_repository';
 import {plainToClass} from 'class-transformer';
-import {SuperUser, User} from '../access_management/user';
+import {SuperUser, User} from '../domain_objects/access_management/user';
 import UserRepository from '../data_access_layer/repositories/access_management/user_repository';
 import OAuthRepository from '../data_access_layer/repositories/access_management/oauth_repository';
 import EventRegistrationRepository from '../data_access_layer/repositories/event_system/event_registration_repository';

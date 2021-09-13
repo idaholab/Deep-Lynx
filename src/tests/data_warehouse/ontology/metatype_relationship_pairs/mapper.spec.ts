@@ -7,10 +7,10 @@ import ContainerStorage from '../../../../data_access_layer/mappers/data_warehou
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import MetatypeRelationshipMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
 import MetatypeRelationshipPairMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
-import Container from '../../../../data_warehouse/ontology/container';
-import Metatype from '../../../../data_warehouse/ontology/metatype';
-import MetatypeRelationship from '../../../../data_warehouse/ontology/metatype_relationship';
-import MetatypeRelationshipPair from '../../../../data_warehouse/ontology/metatype_relationship_pair';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
+import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
+import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
+import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 
 describe('A Metatype Relationship Pair Mapper can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

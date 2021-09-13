@@ -3,18 +3,18 @@ import { expect } from 'chai';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../../../services/logger';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../../../data_warehouse/ontology/container';
-import Metatype from '../../../../data_warehouse/ontology/metatype';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
+import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
-import { User } from '../../../../access_management/user';
+import { User } from '../../../../domain_objects/access_management/user';
 import GraphMapper from '../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
 import MetatypeMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import MetatypeKeyMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
-import MetatypeKey from '../../../../data_warehouse/ontology/metatype_key';
+import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 import NodeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/node_repository';
-import Node from '../../../../data_warehouse/data/node';
+import Node from '../../../../domain_objects/data_warehouse/data/node';
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import DataSourceRecord from '../../../../data_warehouse/import/data_source';
+import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 
 describe('A Node Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

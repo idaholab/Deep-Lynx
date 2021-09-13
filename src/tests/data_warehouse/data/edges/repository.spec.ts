@@ -1,28 +1,28 @@
-import MetatypeKey from '../../../../data_warehouse/ontology/metatype_key';
-import MetatypeRelationshipKey from '../../../../data_warehouse/ontology/metatype_relationship_key';
-import { User } from '../../../../access_management/user';
-import Metatype from '../../../../data_warehouse/ontology/metatype';
+import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
+import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
+import { User } from '../../../../domain_objects/access_management/user';
+import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import Logger from '../../../../services/logger';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import MetatypeMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import MetatypeKeyMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
 import GraphMapper from '../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
-import Container from '../../../../data_warehouse/ontology/container';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
 import { expect } from 'chai';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
 import MetatypeRelationshipMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
 import MetatypeRelationshipPairMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
-import Node from '../../../../data_warehouse/data/node';
-import MetatypeRelationship from '../../../../data_warehouse/ontology/metatype_relationship';
-import MetatypeRelationshipPair from '../../../../data_warehouse/ontology/metatype_relationship_pair';
+import Node from '../../../../domain_objects/data_warehouse/data/node';
+import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
+import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import NodeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import MetatypeRelationshipKeyMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper';
-import Edge from '../../../../data_warehouse/data/edge';
+import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import EdgeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import DataSourceRecord from '../../../../data_warehouse/import/data_source';
+import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 
 describe('An Edge Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

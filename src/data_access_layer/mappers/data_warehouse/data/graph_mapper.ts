@@ -2,7 +2,7 @@ import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import { PoolClient, QueryConfig } from 'pg';
 import uuid from 'uuid';
-import Graph, { ActiveGraph } from '../../../../data_warehouse/data/graph';
+import Graph, { ActiveGraph } from '../../../../domain_objects/data_warehouse/data/graph';
 
 const format = require('pg-format');
 const resultClass = Graph;

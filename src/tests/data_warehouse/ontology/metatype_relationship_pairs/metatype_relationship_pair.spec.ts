@@ -3,9 +3,9 @@ import * as faker from 'faker';
 import Logger from '../../../../services/logger';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../../../data_warehouse/ontology/container';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import { classToPlain, plainToClass } from 'class-transformer';
-import MetatypeRelationshipPair from '../../../../data_warehouse/ontology/metatype_relationship_pair';
+import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 
 describe('A Metatype Relationship Pair should', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

@@ -1,13 +1,13 @@
-import { User } from '../../access_management/user';
+import {User} from '../../domain_objects/access_management/user';
 import Logger from '../../services/logger';
 import PostgresAdapter from '../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerMapper from '../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../data_warehouse/ontology/container';
+import Container from '../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
 import EventRegistrationRepository from '../../data_access_layer/repositories/event_system/event_registration_repository';
-import EventRegistration from '../../event_system/event_registration';
+import EventRegistration from '../../domain_objects/event_system/event_registration';
 
 describe('An Event Registration Repository', async () => {
     let container: Container;
@@ -25,8 +25,8 @@ describe('An Event Registration Repository', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         const userResult = await UserMapper.Instance.Create(
@@ -38,8 +38,8 @@ describe('An Event Registration Repository', async () => {
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 password: faker.random.alphaNumeric(12),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(userResult.isError).false;
@@ -63,7 +63,7 @@ describe('An Event Registration Repository', async () => {
         const reg = new EventRegistration({
             appName: 'Daisy',
             appUrl: 'yellow',
-            eventType: 'data_ingested'
+            eventType: 'data_ingested',
         });
 
         let saved = await repo.save(reg, user);

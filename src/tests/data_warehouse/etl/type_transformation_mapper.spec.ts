@@ -1,19 +1,19 @@
 import Logger from '../../../services/logger';
 import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../../data_warehouse/ontology/container';
+import Container from '../../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
 import { expect } from 'chai';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import MetatypeMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import MetatypeKeyMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
 import TypeMappingMapper from '../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
-import Metatype from '../../../data_warehouse/ontology/metatype';
-import TypeMapping from '../../../data_warehouse/etl/type_mapping';
+import Metatype from '../../../domain_objects/data_warehouse/ontology/metatype';
+import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
 import TypeTransformationMapper from '../../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper';
-import TypeTransformation, { Condition, KeyMapping } from '../../../data_warehouse/etl/type_transformation';
-import MetatypeKey from '../../../data_warehouse/ontology/metatype_key';
-import DataSourceRecord from '../../../data_warehouse/import/data_source';
+import TypeTransformation, { Condition, KeyMapping } from '../../../domain_objects/data_warehouse/etl/type_transformation';
+import MetatypeKey from '../../../domain_objects/data_warehouse/ontology/metatype_key';
+import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 
 describe('A Data Type Mapping Transformation', async () => {

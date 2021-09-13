@@ -1,9 +1,9 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import { PoolClient, QueryConfig } from 'pg';
-import { QueueProcessor } from '../../../../event_system/processor';
-import Event from '../../../../event_system/event';
-import File from '../../../../data_warehouse/data/file';
+import {PoolClient, QueryConfig} from 'pg';
+import {QueueProcessor} from '../../../../domain_objects/event_system/processor';
+import Event from '../../../../domain_objects/event_system/event';
+import File from '../../../../domain_objects/data_warehouse/data/file';
 import uuid from 'uuid';
 
 const format = require('pg-format');
@@ -34,7 +34,7 @@ export default class FileMapper extends Mapper {
     public async Create(userID: string, f: File, transaction?: PoolClient): Promise<Result<File>> {
         const r = await super.run(this.createStatement(userID, f), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -43,8 +43,8 @@ export default class FileMapper extends Mapper {
                 sourceID: f.data_source_id!,
                 sourceType: 'data_source',
                 type: 'file_created',
-                data: r.value[0].id
-            })
+                data: r.value[0].id,
+            }),
         );
 
         return Promise.resolve(Result.Success(r.value[0]));
@@ -53,7 +53,7 @@ export default class FileMapper extends Mapper {
     public async BulkCreate(userID: string, f: File[], transaction?: PoolClient): Promise<Result<File[]>> {
         const r = await super.run(this.createStatement(userID, ...f), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -63,8 +63,8 @@ export default class FileMapper extends Mapper {
                     sourceID: file.data_source_id!,
                     sourceType: 'data_source',
                     type: 'file_created',
-                    data: file.id
-                })
+                    data: file.id,
+                }),
             );
         });
 
@@ -74,7 +74,7 @@ export default class FileMapper extends Mapper {
     public async BulkUpdate(userID: string, f: File[], transaction?: PoolClient): Promise<Result<File>> {
         const r = await super.run(this.fullUpdateStatement(userID, ...f), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -84,8 +84,8 @@ export default class FileMapper extends Mapper {
                     sourceID: file.data_source_id!,
                     sourceType: 'data_source',
                     type: 'file_modified',
-                    data: file.id
-                })
+                    data: file.id,
+                }),
             );
         });
 
@@ -95,7 +95,7 @@ export default class FileMapper extends Mapper {
     public async Update(userID: string, f: File, transaction?: PoolClient): Promise<Result<File>> {
         const r = await super.run(this.fullUpdateStatement(userID, f), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -104,8 +104,8 @@ export default class FileMapper extends Mapper {
                 sourceID: f.data_source_id!,
                 sourceType: 'data_source',
                 type: 'file_modified',
-                data: f.id
-            })
+                data: f.id,
+            }),
         );
 
         return Promise.resolve(Result.Success(r.value[0]));
@@ -113,17 +113,17 @@ export default class FileMapper extends Mapper {
 
     public async Retrieve(id: string): Promise<Result<File>> {
         return super.retrieve<File>(this.retrieveStatement(id), {
-            resultClass
+            resultClass,
         });
     }
 
     public async DomainRetrieve(id: string, containerID: string): Promise<Result<File>> {
-        return super.retrieve<File>(this.domainRetrieveStatement(id, containerID), { resultClass });
+        return super.retrieve<File>(this.domainRetrieveStatement(id, containerID), {resultClass});
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<File[]>> {
         return super.rows<File>(this.listFromIDsStatement(ids), {
-            resultClass
+            resultClass,
         });
     }
 
@@ -159,7 +159,7 @@ export default class FileMapper extends Mapper {
             file.data_source_id,
             file.md5hash,
             userID,
-            userID
+            userID,
         ]);
 
         return format(text, values);
@@ -200,7 +200,7 @@ export default class FileMapper extends Mapper {
             file.data_source_id,
             file.md5hash,
             userID,
-            userID
+            userID,
         ]);
 
         return format(text, values);
@@ -209,21 +209,21 @@ export default class FileMapper extends Mapper {
     private deleteStatement(containerID: string): QueryConfig {
         return {
             text: `DELETE FROM files WHERE id = $1`,
-            values: [containerID]
+            values: [containerID],
         };
     }
 
     private retrieveStatement(id: string): QueryConfig {
         return {
             text: `SELECT * FROM files WHERE id = $1`,
-            values: [id]
+            values: [id],
         };
     }
 
     private domainRetrieveStatement(id: string, containerID: string): QueryConfig {
         return {
             text: `SELECT * FROM files WHERE id = $1 AND container_id = $2`,
-            values: [id, containerID]
+            values: [id, containerID],
         };
     }
 
@@ -233,7 +233,7 @@ export default class FileMapper extends Mapper {
 
         return {
             text: `SELECT * FROM files WHERE id IN($1)`,
-            values: ids
+            values: ids,
         };
     }
 }

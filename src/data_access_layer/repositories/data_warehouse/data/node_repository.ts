@@ -1,9 +1,9 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import Node from '../../../../data_warehouse/data/node';
+import Node from '../../../../domain_objects/data_warehouse/data/node';
 import Result from '../../../../common_classes/result';
 import NodeMapper from '../../../mappers/data_warehouse/data/node_mapper';
 import {PoolClient} from 'pg';
-import {User} from '../../../../access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 import MetatypeRepository from '../ontology/metatype_repository';
 import Logger from '../../../../services/logger';
 

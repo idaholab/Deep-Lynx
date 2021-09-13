@@ -4,12 +4,12 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 
 `Deep Lynx` is documented in the following ways
 
-1. [Wiki](https://github.com/idaholab/Deep-Lynx/wiki)
+1. [Wiki](https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Home)
 2. API level documentation in the form of Postman and Swagger collections - found in `api_documentation`
 
 **Requirements**
 
--   node.js 12.x, 14.x, and 15.x
+-   node.js 12.x, 14.x, or 15.x
 -   Typescript ^3.5.x
 -   npm ^6.x
 -   Docker ^18.x - _optional_ - for ease of use in development
@@ -36,8 +36,10 @@ The construction of megaprojects has consistently demonstrated challenges for pr
     - Mac users may need to create the directory to mount to the docker container at `/private/var/lib/docker/basedata`. If this directory does not exist, please create it (you may need to use `sudo` as in `sudo mkdir /private/var/lib/docker/basedata`)
     - Run `npm run docker:postgres:run` to run the created docker image (For Mac users, there is an alternative command `npm run mac:docker:postgres:run`)
 8. Run `npm run migrate` to create the database and schema within a PostgreSQL database configured in the `.env` file.
-9. Run `npm run watch` or `npm run start` to start the application. See the `readme` for additional details and available commands.  
-   **Configuration**
+9. Run `npm run watch` or `npm run start` to start the application. See the `readme` for additional details and available commands.
+ 
+
+**Configuration**
 
 This application's configuration relies on environment variables of its host system. It is best to rely on your CI/CD pipeline to inject those variables into your runtime environment.
 
@@ -73,4 +75,4 @@ Below is a list of all `npm run` commands as listed in the `package.json` file.
 -   `test`: Runs all tests using the `.env` file to configure application and tests.
 -   `migrate`: Runs the database migration tool.
 
-**There is a lot more information about Deep Lynx and it's capabilities in it's [Wiki](https://github.com/idaholab/Deep-Lynx/wiki). We highly recommend you start there if you have questions or need to figure out how best to utilize Deep Lynx in your project.**
+**There is a lot more information about Deep Lynx, and it's capabilities in it's [Wiki](https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Home). We highly recommend you start there if you have questions or need to figure out how best to utilize Deep Lynx in your project.**

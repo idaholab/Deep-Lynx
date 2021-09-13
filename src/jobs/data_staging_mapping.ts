@@ -10,7 +10,7 @@ import Logger from '../services/logger';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import {parentPort} from 'worker_threads';
-import TypeMapping from '../data_warehouse/etl/type_mapping';
+import TypeMapping from '../domain_objects/data_warehouse/etl/type_mapping';
 import Result from '../common_classes/result';
 import TypeMappingMapper from '../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
 

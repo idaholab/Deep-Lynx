@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-for-in-array */
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import TypeMapping from '../../../../data_warehouse/etl/type_mapping';
+import TypeMapping from '../../../../domain_objects/data_warehouse/etl/type_mapping';
 import TypeMappingMapper from '../../../mappers/data_warehouse/etl/type_mapping_mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient} from 'pg';
-import {User} from '../../../../access_management/user';
-import TypeTransformation from '../../../../data_warehouse/etl/type_transformation';
+import {User} from '../../../../domain_objects/access_management/user';
+import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeTransformationMapper from '../../../mappers/data_warehouse/etl/type_transformation_mapper';
 import Cache from '../../../../services/cache/cache';
 import {plainToClass, serialize} from 'class-transformer';

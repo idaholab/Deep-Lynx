@@ -3,18 +3,18 @@ import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/p
 import MetatypeKeyMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
 import MetatypeMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import GraphMapper from '../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
 import NodeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import { graphql } from 'graphql';
-import resolversRoot from '../../../../data_warehouse/data/query/resolvers';
-import { schema } from '../../../../data_warehouse/data/query/schema';
-import Container from '../../../../data_warehouse/ontology/container';
-import Metatype from '../../../../data_warehouse/ontology/metatype';
+import {graphql} from 'graphql';
+import resolversRoot from '../../../../http_server/routes/data_warehouse/data/query/resolvers';
+import {schema} from '../../../../http_server/routes/data_warehouse/data/query/schema';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
+import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import MetatypeKey from '../../../../data_warehouse/ontology/metatype_key';
-import Node from '../../../../data_warehouse/data/node';
+import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
+import Node from '../../../../domain_objects/data_warehouse/data/node';
 
 describe('Using a GraphQL Query on nodes we', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -34,8 +34,8 @@ describe('Using a GraphQL Query on nodes we', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -58,8 +58,8 @@ describe('Using a GraphQL Query on nodes we', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatypeResult.isError).false;
@@ -75,7 +75,7 @@ describe('Using a GraphQL Query on nodes we', async () => {
             graph_id: graph.value.id!,
             container_id: containerID,
             metatype: metatypeResult.value.id!,
-            properties: payload
+            properties: payload,
         });
 
         const nodes = await nodeStorage.CreateOrUpdateByCompositeID('test suite', mixed);
@@ -111,7 +111,7 @@ describe('Using a GraphQL Query on nodes we', async () => {
                 outgoing_edges {id}
             }
         }`,
-            resolversRoot(containerID)
+            resolversRoot(containerID),
         );
 
         expect(response.errors).undefined;
@@ -153,7 +153,7 @@ describe('Using a GraphQL Query on nodes we', async () => {
                     }
                 }
             `,
-            resolversRoot(containerID)
+            resolversRoot(containerID),
         );
 
         expect(response.errors).undefined;
@@ -174,7 +174,7 @@ describe('Using a GraphQL Query on nodes we', async () => {
                 metatype { id name description}
             }
         }`,
-            resolversRoot(containerID)
+            resolversRoot(containerID),
         );
 
         expect(response.errors).undefined;
@@ -196,7 +196,7 @@ describe('Using a GraphQL Query on nodes we', async () => {
                 metatype { id name description}
             }
         }`,
-            resolversRoot(containerID)
+            resolversRoot(containerID),
         );
 
         expect(response.errors).undefined;
@@ -220,7 +220,7 @@ describe('Using a GraphQL Query on nodes we', async () => {
                 metatype { id name description}
             }
         }`,
-            resolversRoot(containerID)
+            resolversRoot(containerID),
         );
 
         expect(response.errors).undefined;
@@ -242,7 +242,7 @@ describe('Using a GraphQL Query on nodes we', async () => {
                 id
             }
         }`,
-            resolversRoot(containerID)
+            resolversRoot(containerID),
         );
 
         expect(response.errors).undefined;
@@ -256,12 +256,12 @@ describe('Using a GraphQL Query on nodes we', async () => {
             schema,
             `
                 {
-                    nodes(where: { AND: [{ properties: [{ key: "flower_name", value: "Daisy", operator: "eq" }] }] }) {
+                    nodes(where: {AND: [{properties: [{key: "flower_name", value: "Daisy", operator: "eq"}]}]}) {
                         id
                     }
                 }
             `,
-            resolversRoot(containerID)
+            resolversRoot(containerID),
         );
 
         expect(response.errors).undefined;
@@ -278,12 +278,12 @@ describe('Using a GraphQL Query on nodes we', async () => {
             schema,
             `
                 {
-                    nodes(where: { AND: [{ properties: [{ key: "flower_name", value: "Dais%", operator: "like" }] }] }) {
+                    nodes(where: {AND: [{properties: [{key: "flower_name", value: "Dais%", operator: "like"}]}]}) {
                         id
                     }
                 }
             `,
-            resolversRoot(containerID)
+            resolversRoot(containerID),
         );
 
         expect(response.errors).undefined;
@@ -301,12 +301,12 @@ describe('Using a GraphQL Query on nodes we', async () => {
             schema,
             `
                 {
-                    nodes(where: { AND: [{ properties: [{ key: "nested.nested1", value: "nested1 value", operator: "eq" }] }] }) {
+                    nodes(where: {AND: [{properties: [{key: "nested.nested1", value: "nested1 value", operator: "eq"}]}]}) {
                         id
                     }
                 }
             `,
-            resolversRoot(containerID)
+            resolversRoot(containerID),
         );
 
         expect(response.errors).undefined;
@@ -323,12 +323,12 @@ describe('Using a GraphQL Query on nodes we', async () => {
             schema,
             `
                 {
-                    nodes(where: { AND: [{ properties: [{ key: "nested.nested2.nested2", value: "nested2 value", operator: "eq" }] }] }) {
+                    nodes(where: {AND: [{properties: [{key: "nested.nested2.nested2", value: "nested2 value", operator: "eq"}]}]}) {
                         id
                     }
                 }
             `,
-            resolversRoot(containerID)
+            resolversRoot(containerID),
         );
 
         expect(response.errors).undefined;
@@ -342,14 +342,14 @@ describe('Using a GraphQL Query on nodes we', async () => {
     });
 });
 
-const payload: { [key: string]: any } = {
+const payload: {[key: string]: any} = {
     flower_name: 'Daisy',
     color: 'yellow',
     notRequired: 1,
     nested: {
         nested1: 'nested1 value',
-        nested2: { nested2: 'nested2 value' }
-    }
+        nested2: {nested2: 'nested2 value'},
+    },
 };
 
 export const test_keys: MetatypeKey[] = [
@@ -358,7 +358,7 @@ export const test_keys: MetatypeKey[] = [
         description: 'flower name',
         required: true,
         property_name: 'flower_name',
-        data_type: 'string'
+        data_type: 'string',
     }),
     new MetatypeKey({
         name: 'Test2',
@@ -366,15 +366,15 @@ export const test_keys: MetatypeKey[] = [
         required: true,
         property_name: 'color',
         data_type: 'enumeration',
-        options: ['yellow', 'blue']
+        options: ['yellow', 'blue'],
     }),
     new MetatypeKey({
         name: 'Test Not Required',
         description: 'not required',
         required: false,
         property_name: 'notRequired',
-        data_type: 'number'
-    })
+        data_type: 'number',
+    }),
 ];
 
 export const single_test_key: MetatypeKey = new MetatypeKey({
@@ -382,5 +382,5 @@ export const single_test_key: MetatypeKey = new MetatypeKey({
     description: 'not required',
     required: false,
     property_name: 'notRequired',
-    data_type: 'number'
+    data_type: 'number',
 });

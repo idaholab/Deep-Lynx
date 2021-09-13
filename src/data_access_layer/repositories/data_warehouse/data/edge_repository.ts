@@ -2,11 +2,11 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
 import Result from '../../../../common_classes/result';
 import {PoolClient} from 'pg';
-import {User} from '../../../../access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 import Logger from '../../../../services/logger';
-import Edge from '../../../../data_warehouse/data/edge';
+import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import EdgeMapper from '../../../mappers/data_warehouse/data/edge_mapper';
-import Node from '../../../../data_warehouse/data/node';
+import Node from '../../../../domain_objects/data_warehouse/data/node';
 import MetatypeRelationshipPairRepository from '../ontology/metatype_relationship_pair_repository';
 import NodeRepository from './node_repository';
 

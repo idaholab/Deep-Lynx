@@ -3,15 +3,15 @@ import { expect } from 'chai';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../../../services/logger';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../../../data_warehouse/ontology/container';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
 import MetatypeRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 import MetatypeRelationshipRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository';
-import Metatype from '../../../../data_warehouse/ontology/metatype';
-import MetatypeRelationship from '../../../../data_warehouse/ontology/metatype_relationship';
-import MetatypeRelationshipPair from '../../../../data_warehouse/ontology/metatype_relationship_pair';
+import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
+import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
+import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import MetatypeRelationshipPairRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository';
-import { User } from '../../../../access_management/user';
+import { User } from '../../../../domain_objects/access_management/user';
 
 describe('A Metatype Relationship Pair Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

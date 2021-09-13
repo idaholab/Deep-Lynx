@@ -1,7 +1,7 @@
 import Mapper from '../../mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient, QueryConfig} from 'pg';
-import {DataStaging} from '../../../../data_warehouse/import/import';
+import {DataStaging} from '../../../../domain_objects/data_warehouse/import/import';
 
 const format = require('pg-format');
 const resultClass = DataStaging;

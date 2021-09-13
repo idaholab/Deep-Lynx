@@ -1,8 +1,8 @@
 import RepositoryInterface, { QueryOptions, Repository } from '../../repository';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
-import { User } from '../../../../access_management/user';
+import { User } from '../../../../domain_objects/access_management/user';
 import Result from '../../../../common_classes/result';
-import File from '../../../../data_warehouse/data/file';
+import File from '../../../../domain_objects/data_warehouse/data/file';
 import { PoolClient } from 'pg';
 import { Readable } from 'stream';
 import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';

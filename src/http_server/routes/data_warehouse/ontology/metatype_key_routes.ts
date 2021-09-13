@@ -2,7 +2,7 @@ import {Application, NextFunction, Request, Response} from 'express';
 import {authInContainer} from '../../../middleware';
 import MetatypeKeyRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_key_repository';
 import {plainToClass} from 'class-transformer';
-import MetatypeKey from '../../../../data_warehouse/ontology/metatype_key';
+import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 import Result from '../../../../common_classes/result';
 
 const repo = new MetatypeKeyRepository();

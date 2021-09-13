@@ -1,4 +1,4 @@
-import Container from '../../../../data_warehouse/ontology/container';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';

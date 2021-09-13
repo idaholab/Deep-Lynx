@@ -1,5 +1,5 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import MetatypeRelationship from '../../../../data_warehouse/ontology/metatype_relationship';
+import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import Result from '../../../../common_classes/result';
 import Cache from '../../../../services/cache/cache';
 import Config from '../../../../services/config';
@@ -7,9 +7,9 @@ import Logger from '../../../../services/logger';
 import MetatypeRelationshipMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_mapper';
 import {plainToClass, serialize} from 'class-transformer';
 import MetatypeRelationshipKeyMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_key_mapper';
-import MetatypeRelationshipKey from '../../../../data_warehouse/ontology/metatype_relationship_key';
+import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 import {PoolClient} from 'pg';
-import {User} from '../../../../access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 
 /*
     MetatypeRelationshipRepository contains methods for persisting and retrieving a metatype relationship

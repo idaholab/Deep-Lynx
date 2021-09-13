@@ -2,7 +2,7 @@ import { Application, NextFunction, Request, Response } from 'express';
 import { authInContainer } from '../../../middleware';
 import MetatypeRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 import { plainToClass } from 'class-transformer';
-import Metatype from '../../../../data_warehouse/ontology/metatype';
+import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import Result from '../../../../common_classes/result';
 import { QueryOptions } from '../../../../data_access_layer/repositories/repository';
 

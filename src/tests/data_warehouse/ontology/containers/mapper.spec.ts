@@ -4,7 +4,7 @@ import 'reflect-metadata';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import Logger from '../../../../services/logger';
-import Container from '../../../../data_warehouse/ontology/container';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 
 describe('A Container Mapper', async () => {
     before(async function () {

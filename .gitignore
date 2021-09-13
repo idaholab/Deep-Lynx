@@ -12,8 +12,8 @@ node_modules
 /src/access_management/authentication/saml/*.key
 .nyc_output
 /src/privateKey.key
-/src/access_management/authentication/saml/localhost.cert
-/src/access_management/authentication/saml/localhost.xml
+/src/http_server/authentication/saml/localhost.cert
+/src/http_server/authentication/saml/localhost.xml
 /tools/ontology_extractor/diamond.owl
 /private-key.pem
 /private-key.key

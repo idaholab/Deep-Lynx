@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-for-in-array */
 import RepositoryInterface, { DeleteOptions, Repository } from "../../repository";
-import TypeTransformation from '../../../../data_warehouse/etl/type_transformation';
+import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 import Result from '../../../../common_classes/result';
-import {User} from '../../../../access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 import TypeTransformationMapper from '../../../mappers/data_warehouse/etl/type_transformation_mapper';
 import Cache from '../../../../services/cache/cache';
 import {plainToClass, serialize} from 'class-transformer';
@@ -10,14 +10,14 @@ import Config from '../../../../services/config';
 import Logger from '../../../../services/logger';
 import TypeMappingMapper from '../../../mappers/data_warehouse/etl/type_mapping_mapper';
 import TypeMappingRepository from './type_mapping_repository';
-import MetatypeKey from '../../../../data_warehouse/ontology/metatype_key';
-import MetatypeRelationshipKey from '../../../../data_warehouse/ontology/metatype_relationship_key';
+import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
+import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 import MetatypeKeyMapper from '../../../mappers/data_warehouse/ontology/metatype_key_mapper';
 import MetatypeRelationshipKeyMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_key_mapper';
 import MetatypeRepository from '../ontology/metatype_repository';
 import MetatypeRelationshipPairRepository from '../ontology/metatype_relationship_pair_repository';
-import MetatypeRelationshipPair from '../../../../data_warehouse/ontology/metatype_relationship_pair';
-import Metatype from '../../../../data_warehouse/ontology/metatype';
+import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
+import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import NodeRepository from "../data/node_repository";
 import EdgeRepository from "../data/edge_repository";
 

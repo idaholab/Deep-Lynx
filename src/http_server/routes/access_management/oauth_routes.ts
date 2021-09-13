@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment,@typescript-eslint/no-floating-promises */
-import { Application, NextFunction, Request, Response } from 'express';
+import {Application, NextFunction, Request, Response} from 'express';
 import OAuthMapper from '../../../data_access_layer/mappers/access_management/oauth_mapper';
-import { LocalAuthMiddleware } from '../../../access_management/authentication/local';
+import {LocalAuthMiddleware} from '../../authentication/local';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import KeyPairMapper from '../../../data_access_layer/mappers/access_management/keypair_mapper';
 import Config from '../../../services/config';
@@ -11,11 +11,11 @@ import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import uuid from 'uuid';
 import UserRepository from '../../../data_access_layer/repositories/access_management/user_repository';
-import { KeyPair, ResetUserPasswordPayload, User } from '../../../access_management/user';
-import { classToPlain, plainToClass, serialize } from 'class-transformer';
+import {KeyPair, ResetUserPasswordPayload, User} from '../../../domain_objects/access_management/user';
+import {classToPlain, plainToClass, serialize} from 'class-transformer';
 import KeyPairRepository from '../../../data_access_layer/repositories/access_management/keypair_repository';
 import OAuthRepository from '../../../data_access_layer/repositories/access_management/oauth_repository';
-import { OAuthApplication, OAuthTokenExchangeRequest } from '../../../access_management/oauth/oauth';
+import {OAuthApplication, OAuthTokenExchangeRequest} from '../../../domain_objects/access_management/oauth/oauth';
 
 const csurf = require('csurf');
 const buildUrl = require('build-url');
@@ -75,7 +75,7 @@ export default class OAuthRoutes {
             .then((result) => {
                 if (result.isError && result.error) {
                     res.render('profile', {
-                        _error: "Unable to fetch user's API keys"
+                        _error: "Unable to fetch user's API keys",
                     });
                     return;
                 }
@@ -89,18 +89,18 @@ export default class OAuthRoutes {
                     _success: req.query.success,
                     _error: req.query.error,
                     api_key: req.query.newKey,
-                    api_secret: req.query.newSecret
+                    api_secret: req.query.newSecret,
                 });
                 return;
             })
-            .catch((err) => res.render('profile', { _error: err }));
+            .catch((err) => res.render('profile', {_error: err}));
     }
 
     private static createOAuthApplicationPage(req: Request, res: Response) {
         res.render('oauth_application_create', {
             _error: req.query.error,
             // @ts-ignore
-            _csrfToken: req.csrfToken()
+            _csrfToken: req.csrfToken(),
         });
         return;
     }
@@ -110,13 +110,13 @@ export default class OAuthRoutes {
             res.render('oauth_application_single', {
                 // @ts-ignore
                 _csrfToken: req.csrfToken(),
-                application: classToPlain(req.oauthApp)
+                application: classToPlain(req.oauthApp),
             });
         } else {
             res.redirect(
                 buildUrl('/oauth/applications', {
-                    queryParams: { error: `uanble to find oauth application` }
-                })
+                    queryParams: {error: `uanble to find oauth application`},
+                }),
             );
             return;
         }
@@ -133,9 +133,9 @@ export default class OAuthRoutes {
                     res.redirect(
                         buildUrl('/oauth/profile', {
                             queryParams: {
-                                error: 'Unable to generate key pair'
-                            }
-                        })
+                                error: 'Unable to generate key pair',
+                            },
+                        }),
                     );
                     return;
                 }
@@ -148,13 +148,13 @@ export default class OAuthRoutes {
                         queryParams: {
                             success: 'Successfully generated key pair',
                             newKey: keyPair.key,
-                            newSecret: keyPair.secret_raw
-                        }
-                    })
+                            newSecret: keyPair.secret_raw,
+                        },
+                    }),
                 );
                 return;
             })
-            .catch((err) => res.redirect(buildUrl('/oauth/profile', { queryParams: { error: err } })));
+            .catch((err) => res.redirect(buildUrl('/oauth/profile', {queryParams: {error: err}})));
     }
 
     private static deleteKeyPair(req: Request, res: Response, next: NextFunction) {
@@ -163,8 +163,8 @@ export default class OAuthRoutes {
                 if (result.isError && result.error) {
                     res.redirect(
                         buildUrl('/oauth/profile', {
-                            queryParams: { error: 'Unable to delete key pair' }
-                        })
+                            queryParams: {error: 'Unable to delete key pair'},
+                        }),
                     );
                     return;
                 }
@@ -172,13 +172,13 @@ export default class OAuthRoutes {
                 res.redirect(
                     buildUrl('/oauth/profile', {
                         queryParams: {
-                            success: 'Deleted key pair successfully'
-                        }
-                    })
+                            success: 'Deleted key pair successfully',
+                        },
+                    }),
                 );
                 return;
             })
-            .catch((err) => res.redirect(buildUrl('/oauth/profile', { queryParams: { error: err } })));
+            .catch((err) => res.redirect(buildUrl('/oauth/profile', {queryParams: {error: err}})));
     }
 
     private static authorizePage(req: Request, res: Response, next: NextFunction) {
@@ -189,9 +189,9 @@ export default class OAuthRoutes {
             res.redirect(
                 buildUrl('/', {
                     queryParams: {
-                        error: 'Missing authorization request parameters'
-                    }
-                })
+                        error: 'Missing authorization request parameters',
+                    },
+                }),
             );
             return;
         }
@@ -203,9 +203,9 @@ export default class OAuthRoutes {
                     res.redirect(
                         buildUrl('/', {
                             queryParams: {
-                                error: 'Unable to retrieve OAuth application'
-                            }
-                        })
+                                error: 'Unable to retrieve OAuth application',
+                            },
+                        }),
                     );
                     return;
                 }
@@ -219,7 +219,7 @@ export default class OAuthRoutes {
                             token: token.value,
                             application_id: application.value.id,
                             application_name: application.value.name,
-                            user_email: user.email
+                            user_email: user.email,
                         });
 
                         return;
@@ -229,9 +229,9 @@ export default class OAuthRoutes {
                         buildUrl(request.redirect_uri, {
                             queryParams: {
                                 token: token.value,
-                                state: request.state
-                            }
-                        })
+                                state: request.state,
+                            },
+                        }),
                     );
                     return;
                 });
@@ -244,7 +244,7 @@ export default class OAuthRoutes {
         OAuthMapper.Instance.MarkApplicationApproved(req.body.application_id, user.id!).then((result) => {
             if (result.isError && !result.value) {
                 res.render('authorize', {
-                    _error: 'Unable to authorize OAuth application'
+                    _error: 'Unable to authorize OAuth application',
                 });
                 return;
             }
@@ -252,7 +252,7 @@ export default class OAuthRoutes {
             // fetch the request so that we can do the redirect
             oauthRepo.authorizationFromToken(req.body.token).then((oauthRequest) => {
                 if (!oauthRequest) {
-                    res.render('authorize', { _error: 'Invalid token' });
+                    res.render('authorize', {_error: 'Invalid token'});
                     return;
                 }
 
@@ -260,9 +260,9 @@ export default class OAuthRoutes {
                     buildUrl(oauthRequest.redirect_uri, {
                         queryParams: {
                             token: req.body.token,
-                            state: oauthRequest.state
-                        }
-                    })
+                            state: oauthRequest.state,
+                        },
+                    }),
                 );
             });
         });
@@ -274,7 +274,7 @@ export default class OAuthRoutes {
             _csrfToken: req.csrfToken(),
             oauthRequest: serialize(oauthRepo.authorizationFromRequest(req)),
             _success: req.query.success,
-            _error: req.query.error
+            _error: req.query.error,
         });
     }
 
@@ -288,9 +288,9 @@ export default class OAuthRoutes {
                     res.redirect(
                         buildUrl('/oauth/register', {
                             queryParams: {
-                                error: 'Unable to create a new user'
-                            }
-                        })
+                                error: 'Unable to create a new user',
+                            },
+                        }),
                     );
                     return;
                 }
@@ -299,8 +299,8 @@ export default class OAuthRoutes {
                     req.login(result.value, () => {
                         res.redirect(
                             buildUrl('/oauth/authorize', {
-                                queryParams: oauthRequest
-                            })
+                                queryParams: oauthRequest,
+                            }),
                         );
                     });
                     return;
@@ -310,14 +310,14 @@ export default class OAuthRoutes {
                     res.redirect(
                         buildUrl('/oauth/profile', {
                             queryParams: {
-                                success: 'Successfully created account'
-                            }
-                        })
+                                success: 'Successfully created account',
+                            },
+                        }),
                     );
                 });
                 return;
             })
-            .catch((err) => res.redirect(buildUrl('/oauth/register', { queryParams: { error: err } })));
+            .catch((err) => res.redirect(buildUrl('/oauth/register', {queryParams: {error: err}})));
     }
 
     private static loginPage(req: Request, res: Response, next: NextFunction) {
@@ -329,14 +329,14 @@ export default class OAuthRoutes {
             _csrfToken: req.csrfToken(),
             oauthRequest: classToPlain(oauthRequest),
             registerLink: buildUrl('/oauth/register', {
-                queryParams: req.query
+                queryParams: req.query,
             }),
             loginWithWindowsLink: buildUrl('/login-saml', {
-                queryParams: req.query
+                queryParams: req.query,
             }),
             _success: req.query.success,
             _error: req.query.error,
-            saml_enabled: Config.saml_enabled
+            saml_enabled: Config.saml_enabled,
         });
     }
 
@@ -353,14 +353,14 @@ export default class OAuthRoutes {
 
         passport.authenticate('saml', {
             failureRedirect: '/unauthorized',
-            failureFlash: true
+            failureFlash: true,
         })(req, res);
     }
 
     private static saml(req: Request, res: Response, next: NextFunction) {
         passport.authenticate('saml', (err, user, info) => {
             if (err) {
-                res.redirect(buildUrl('/', { queryParams: { error: `${err}` } }));
+                res.redirect(buildUrl('/', {queryParams: {error: `${err}`}}));
                 return;
             }
 
@@ -376,8 +376,8 @@ export default class OAuthRoutes {
                     if (oauthRequest) {
                         res.redirect(
                             buildUrl('/oauth/authorize', {
-                                queryParams: oauthRequest
-                            })
+                                queryParams: oauthRequest,
+                            }),
                         );
                         return;
                     }
@@ -406,8 +406,8 @@ export default class OAuthRoutes {
         if (request) {
             res.redirect(
                 buildUrl('/oauth/authorize', {
-                    queryParams: classToPlain(request)
-                })
+                    queryParams: classToPlain(request),
+                }),
             );
             return;
         }
@@ -427,9 +427,9 @@ export default class OAuthRoutes {
                     res.redirect(
                         buildUrl('/oauth/applications', {
                             queryParams: {
-                                error: 'Unable to successfully create OAuth application'
-                            }
-                        })
+                                error: 'Unable to successfully create OAuth application',
+                            },
+                        }),
                     );
                     return;
                 }
@@ -440,17 +440,17 @@ export default class OAuthRoutes {
                             success: 'Successfully created OAuth application',
                             application_name: payload.name,
                             application_id: payload.client_id,
-                            application_secret: payload.client_secret_raw
-                        }
-                    })
+                            application_secret: payload.client_secret_raw,
+                        },
+                    }),
                 );
             })
             .catch((err) =>
                 res.redirect(
                     buildUrl('/oauth/applications', {
-                        queryParams: { error: err }
-                    })
-                )
+                        queryParams: {error: err},
+                    }),
+                ),
             );
     }
 
@@ -461,7 +461,7 @@ export default class OAuthRoutes {
             .then((result) => {
                 if (result.isError && result.error) {
                     res.render('oauth_applications', {
-                        _error: result.error.errorCode
+                        _error: result.error.errorCode,
                     });
                     return;
                 }
@@ -474,10 +474,10 @@ export default class OAuthRoutes {
                     application_secret: req.query.application_secret,
                     applications: classToPlain(result.value),
                     _error: req.query.error,
-                    _success: req.query.success
+                    _success: req.query.success,
                 });
             })
-            .catch((err) => res.render('oauth_applications', { _error: err }));
+            .catch((err) => res.render('oauth_applications', {_error: err}));
     }
 
     private static updateOAuthApplication(req: Request, res: Response) {
@@ -487,8 +487,8 @@ export default class OAuthRoutes {
             if (req.oauthApp.owner_id !== user.id) {
                 res.redirect(
                     buildUrl('/oauth/applications', {
-                        queryParams: { _error: 'Unauthorized' }
-                    })
+                        queryParams: {_error: 'Unauthorized'},
+                    }),
                 );
                 return;
             }
@@ -503,9 +503,9 @@ export default class OAuthRoutes {
                         res.redirect(
                             buildUrl('/oauth/applications', {
                                 queryParams: {
-                                    error: 'Unable to update OAuth application'
-                                }
-                            })
+                                    error: 'Unable to update OAuth application',
+                                },
+                            }),
                         );
                         return;
                     }
@@ -513,24 +513,24 @@ export default class OAuthRoutes {
                     res.redirect(
                         buildUrl('/oauth/applications', {
                             queryParams: {
-                                success: 'Successfully updated OAuth application'
-                            }
-                        })
+                                success: 'Successfully updated OAuth application',
+                            },
+                        }),
                     );
                     return;
                 })
                 .catch((err) =>
                     res.redirect(
                         buildUrl('/oauth/applications', {
-                            queryParams: { error: err }
-                        })
-                    )
+                            queryParams: {error: err},
+                        }),
+                    ),
                 );
         } else {
             res.redirect(
                 buildUrl('/oauth/applications', {
-                    queryParams: { _error: 'application not found' }
-                })
+                    queryParams: {_error: 'application not found'},
+                }),
             );
             return;
         }
@@ -545,9 +545,9 @@ export default class OAuthRoutes {
                         res.redirect(
                             buildUrl('/oauth/applications', {
                                 queryParams: {
-                                    error: 'Unable to delete OAuth application'
-                                }
-                            })
+                                    error: 'Unable to delete OAuth application',
+                                },
+                            }),
                         );
                         return;
                     }
@@ -555,24 +555,24 @@ export default class OAuthRoutes {
                     res.redirect(
                         buildUrl('/oauth/applications', {
                             queryParams: {
-                                success: 'Successfully deleted OAuth application'
-                            }
-                        })
+                                success: 'Successfully deleted OAuth application',
+                            },
+                        }),
                     );
                     return;
                 })
                 .catch((err) =>
                     res.redirect(
                         buildUrl('/oauth/applications', {
-                            queryParams: { error: err }
-                        })
-                    )
+                            queryParams: {error: err},
+                        }),
+                    ),
                 );
         } else {
             res.redirect(
                 buildUrl('/oauth/applications', {
-                    queryParams: { error: 'oauth app not found' }
-                })
+                    queryParams: {error: 'oauth app not found'},
+                }),
             );
         }
     }
@@ -622,7 +622,7 @@ export default class OAuthRoutes {
                             return;
                         }
 
-                        const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, { expiresIn: expiry });
+                        const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, {expiresIn: expiry});
                         res.status(200).json(token);
                         return;
                     });
@@ -639,16 +639,16 @@ export default class OAuthRoutes {
         UserMapper.Instance.ValidateEmail(req.query.id, req.query.token)
             .then((result) => {
                 if (result.isError && result.error) {
-                    res.render('email_validate', { _error: result.error });
+                    res.render('email_validate', {_error: result.error});
                     return;
                 }
 
                 res.render('email_validate', {
-                    _success: 'Successfully Validated Email'
+                    _success: 'Successfully Validated Email',
                 });
                 return;
             })
-            .catch((err) => res.render('email_validate', { _error: err }));
+            .catch((err) => res.render('email_validate', {_error: err}));
     }
 
     private static resetPasswordPage(req: Request, res: Response) {
@@ -658,7 +658,7 @@ export default class OAuthRoutes {
             email: req.query.email,
             token: req.query.token,
             // @ts-ignore
-            _csrfToken: req.csrfToken()
+            _csrfToken: req.csrfToken(),
         });
         return;
     }
@@ -671,8 +671,8 @@ export default class OAuthRoutes {
                 if (result.isError && result.error) {
                     res.redirect(
                         buildUrl('/reset-password', {
-                            queryParams: { error: result.error }
-                        })
+                            queryParams: {error: result.error},
+                        }),
                     );
                     return;
                 }
@@ -680,14 +680,14 @@ export default class OAuthRoutes {
                 res.redirect(
                     buildUrl('/', {
                         queryParams: {
-                            success: 'Password reset initiated successfully.'
+                            success: 'Password reset initiated successfully.',
                             // @ts-ignore
-                        }
-                    })
+                        },
+                    }),
                 );
                 return;
             })
-            .catch((err) => res.redirect(buildUrl('/reset-password', { queryParams: { error: err } })));
+            .catch((err) => res.redirect(buildUrl('/reset-password', {queryParams: {error: err}})));
     }
 
     // the actual password reset will redirect users back to the login page with a successful user flash
@@ -697,17 +697,17 @@ export default class OAuthRoutes {
             .resetPassword(plainToClass(ResetUserPasswordPayload, req.body as object))
             .then((result) => {
                 if (result.isError && result.error) {
-                    res.redirect(buildUrl('/', { queryParams: { error: result.error } }));
+                    res.redirect(buildUrl('/', {queryParams: {error: result.error}}));
                     return;
                 }
 
                 res.redirect(
                     buildUrl('/', {
-                        queryParams: { success: 'Password reset successfully' }
-                    })
+                        queryParams: {success: 'Password reset successfully'},
+                    }),
                 );
                 return;
             })
-            .catch((err) => res.redirect(buildUrl('/', { queryParams: { error: err } })));
+            .catch((err) => res.redirect(buildUrl('/', {queryParams: {error: err}})));
     }
 }

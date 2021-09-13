@@ -1,7 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, Query, QueryConfig} from 'pg';
-import TypeTransformation from '../../../../data_warehouse/etl/type_transformation';
+import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 import uuid from 'uuid';
 
 const format = require('pg-format');

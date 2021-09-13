@@ -1,9 +1,9 @@
-import RepositoryInterface, { QueryOptions, Repository } from '../repository';
-import EventRegistration from '../../../event_system/event_registration';
+import RepositoryInterface, {QueryOptions, Repository} from '../repository';
+import EventRegistration from '../../../domain_objects/event_system/event_registration';
 import EventRegistrationMapper from '../../mappers/event_system/event_registration_mapper';
 import Result from '../../../common_classes/result';
-import { plainToClass } from 'class-transformer';
-import { User } from '../../../access_management/user';
+import {plainToClass} from 'class-transformer';
+import {User} from '../../../domain_objects/access_management/user';
 
 /*
     EventRegistrationRepository contains methods for persisting and retrieving an event registration

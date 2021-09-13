@@ -3,13 +3,13 @@ import { expect } from 'chai';
 import { fold } from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
 import { failure } from 'io-ts/lib/PathReporter';
-import MetatypeRelationshipKey from '../../../../data_warehouse/ontology/metatype_relationship_key';
+import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 import * as faker from 'faker';
-import MetatypeRelationship from '../../../../data_warehouse/ontology/metatype_relationship';
+import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import Logger from '../../../../services/logger';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../../../data_warehouse/ontology/container';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 
 // failure handler
 const onLeft = (errors: t.Errors): string => {

@@ -1,10 +1,10 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import DataSourceRecord from '../../../../data_warehouse/import/data_source';
+import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 import uuid from 'uuid';
-import {QueueProcessor} from '../../../../event_system/processor';
-import Event from '../../../../event_system/event';
+import {QueueProcessor} from '../../../../domain_objects/event_system/processor';
+import Event from '../../../../domain_objects/event_system/event';
 
 const format = require('pg-format');
 const resultClass = DataSourceRecord;

@@ -1,10 +1,10 @@
-import RepositoryInterface, { QueryOptions, Repository } from '../../repository';
-import ExportRecord, { Exporter } from '../../../../data_warehouse/export/export';
-import { GremlinImpl } from '../../../../data_warehouse/export/gremlin_export_impl';
+import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
+import ExportRecord, {Exporter} from '../../../../domain_objects/data_warehouse/export/export';
+import {GremlinImpl} from '../../../../interface_implementations/data_warehouse/export/gremlin_export_impl';
 import ExportMapper from '../../../mappers/data_warehouse/export/export_mapper';
-import { SuperUser, User } from '../../../../access_management/user';
+import {SuperUser, User} from '../../../../domain_objects/access_management/user';
 import Result from '../../../../common_classes/result';
-import { PoolClient } from 'pg';
+import {PoolClient} from 'pg';
 
 /*
     ExportRepository contains methods for persisting and retrieving data exports
@@ -103,7 +103,7 @@ export default class ExporterRepository extends Repository implements Repository
     async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<(Exporter | undefined)[]>> {
         const results = await super.findAll<ExportRecord>(options, {
             transaction,
-            resultClass: ExportRecord
+            resultClass: ExportRecord,
         });
         if (results.isError) return Promise.resolve(Result.Pass(results));
 

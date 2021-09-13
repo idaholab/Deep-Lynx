@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-for-in-array */
 import Result from '../../common_classes/result';
 import Mapper, {Options} from '../mappers/mapper';
-import {User} from '../../access_management/user';
+import {User} from '../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
 
 /*

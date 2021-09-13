@@ -12,15 +12,15 @@ import MetatypeRelationshipMapper from '../../../data_access_layer/mappers/data_
 import MetatypeRelationshipPairMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
 import ExportMapper from '../../../data_access_layer/mappers/data_warehouse/export/export_mapper';
 import GremlinExportMapper from '../../../data_access_layer/mappers/data_warehouse/export/gremlin_export_mapper';
-import Container from '../../../data_warehouse/ontology/container';
-import Metatype from '../../../data_warehouse/ontology/metatype';
+import Container from '../../../domain_objects/data_warehouse/ontology/container';
+import Metatype from '../../../domain_objects/data_warehouse/ontology/metatype';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import MetatypeRelationship from '../../../data_warehouse/ontology/metatype_relationship';
-import MetatypeRelationshipPair from '../../../data_warehouse/ontology/metatype_relationship_pair';
-import MetatypeKey from '../../../data_warehouse/ontology/metatype_key';
-import Node from '../../../data_warehouse/data/node';
-import Edge from '../../../data_warehouse/data/edge';
-import ExportRecord, { StandardExporterConfig } from '../../../data_warehouse/export/export';
+import MetatypeRelationship from '../../../domain_objects/data_warehouse/ontology/metatype_relationship';
+import MetatypeRelationshipPair from '../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
+import MetatypeKey from '../../../domain_objects/data_warehouse/ontology/metatype_key';
+import Node from '../../../domain_objects/data_warehouse/data/node';
+import Edge from '../../../domain_objects/data_warehouse/data/edge';
+import ExportRecord, { StandardExporterConfig } from '../../../domain_objects/data_warehouse/export/export';
 
 describe('Gremlin Exporter', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

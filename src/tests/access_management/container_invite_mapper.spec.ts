@@ -6,8 +6,8 @@ import faker from 'faker';
 import { expect } from 'chai';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerUserInviteMapper from '../../data_access_layer/mappers/access_management/container_user_invite_mapper';
-import Container from '../../data_warehouse/ontology/container';
-import { User, ContainerUserInvite } from '../../access_management/user';
+import Container from '../../domain_objects/data_warehouse/ontology/container';
+import { User, ContainerUserInvite } from '../../domain_objects/access_management/user';
 
 const UIDGenerator = require('uid-generator');
 const uidgen = new UIDGenerator();

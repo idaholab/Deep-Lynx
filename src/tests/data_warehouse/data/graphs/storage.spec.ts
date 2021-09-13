@@ -4,7 +4,7 @@ import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/p
 import GraphMapper from '../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
 import Logger from '../../../../services/logger';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../../../data_warehouse/ontology/container';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 
 describe('A Graph', async () => {

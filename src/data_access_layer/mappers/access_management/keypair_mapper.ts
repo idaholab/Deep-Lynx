@@ -1,7 +1,7 @@
 import Result from '../../../common_classes/result';
 import Mapper from '../mapper';
 import { PoolClient, QueryConfig } from 'pg';
-import { KeyPair, User } from '../../../access_management/user';
+import { KeyPair, User } from '../../../domain_objects/access_management/user';
 
 const format = require('pg-format');
 const resultClass = KeyPair;

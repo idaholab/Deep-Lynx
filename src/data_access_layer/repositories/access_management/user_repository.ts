@@ -1,12 +1,12 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../repository';
-import {AssignUserRolePayload, ContainerUserInvite, KeyPair, ResetUserPasswordPayload, User} from '../../../access_management/user';
+import {AssignUserRolePayload, ContainerUserInvite, KeyPair, ResetUserPasswordPayload, User} from '../../../domain_objects/access_management/user';
 import Result, {ErrorUnauthorized} from '../../../common_classes/result';
 import bcrypt from 'bcrypt';
 import UserMapper from '../../mappers/access_management/user_mapper';
 import Logger from '../../../services/logger';
 import {Emailer} from '../../../services/email/email';
 import {ResetPasswordEmailTemplate} from '../../../services/email/templates/reset_password';
-import Authorization from '../../../access_management/authorization/authorization';
+import Authorization from '../../../domain_objects/access_management/authorization/authorization';
 import ContainerUserInviteMapper from '../../mappers/access_management/container_user_invite_mapper';
 import {ContainerInviteEmailTemplate} from '../../../services/email/templates/container_invite';
 import ContainerRepository from '../data_warehouse/ontology/container_respository';

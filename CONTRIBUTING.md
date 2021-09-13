@@ -8,20 +8,20 @@ We love your input! We want to make contributing to this project as easy and tra
 -   Proposing new features
 -   Becoming a maintainer
 
-## We Develop with Github
+## We Develop with GitHub/GitLab 
 
-We use github to host code, to track issues and feature requests, as well as accept pull requests.
+We use GitLab and GitHub to host code, to track issues and feature requests, as well as accept pull requests.
 
-## We Use Github, So All Code Changes Happen Through Pull Requests
+## We Use GitLab/GitHub, So All Code Changes Happen Through Pull Requests or Merge Requests
 
-Pull requests are the best way to propose changes to the codebase. We actively welcome your pull requests:
+Pull/Merge requests are the best way to propose changes to the codebase. We actively welcome your pull requests:
 
 1. Fork the repo and create your branch from `master`.
 2. If you've added code that should be tested, add tests.
 3. If you've changed APIs, update the documentation.
 4. Ensure the test suite passes.
 5. Make sure your code lints.
-6. Issue that pull request!
+6. Issue that pull/merge request!
 
 ## Any contributions you make will be under the MIT Software License
 
@@ -47,7 +47,7 @@ We use GitHub or GitLab issues to track public bugs.
 
 ## Use a Consistent Coding Style
 
-Please ensure that you use TSLint, with the including configuration, when contributing to the project. Please maintain naming schemes and structure throughout the project.
+Please ensure that you use ESLint, with the including configuration, when contributing to the project. Please maintain naming schemes and structure throughout the project.
 
 ## License
 
@@ -56,4 +56,4 @@ By contributing, you agree that your contributions will be licensed under its MI
 ## References
 
 This document was adapted from the open-source contribution guidelines for [Facebook's Draft](https://github.com/facebook/draft-js/blob/a9316a723f9e918afde44dea68b5f9f39b7d9b00/CONTRIBUTING.md)
-This Contribution Guidline was adapted from Github user [briandk](https://gist.github.com/briandk/3d2e8b3ec8daf5a27a62).
+This Contribution Guideline was adapted from GitHub user [briandk](https://gist.github.com/briandk/3d2e8b3ec8daf5a27a62).

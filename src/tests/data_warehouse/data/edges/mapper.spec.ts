@@ -9,18 +9,18 @@ import MetatypeRelationshipPairMapper from '../../../../data_access_layer/mapper
 import EdgeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import MetatypeRelationshipKeyMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper';
-import Container from '../../../../data_warehouse/ontology/container';
-import Metatype from '../../../../data_warehouse/ontology/metatype';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
+import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import MetatypeRelationship from '../../../../data_warehouse/ontology/metatype_relationship';
-import MetatypeRelationshipPair from '../../../../data_warehouse/ontology/metatype_relationship_pair';
-import MetatypeKey from '../../../../data_warehouse/ontology/metatype_key';
-import MetatypeRelationshipKey from '../../../../data_warehouse/ontology/metatype_relationship_key';
+import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
+import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
+import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
+import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 import NodeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import GraphMapper from '../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
-import Node from '../../../../data_warehouse/data/node';
-import Edge from '../../../../data_warehouse/data/edge';
-import DataSourceRecord from '../../../../data_warehouse/import/data_source';
+import Node from '../../../../domain_objects/data_warehouse/data/node';
+import Edge from '../../../../domain_objects/data_warehouse/data/edge';
+import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 
 describe('An Edge Mapper', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

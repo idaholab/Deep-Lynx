@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { structure } from 'gremlin';
 import GremlinAdapter from '../../../services/gremlin/gremlin';
 import Logger from '../../../services/logger';
-import { GremlinExportConfig } from '../../../data_warehouse/export/export';
+import { GremlinExportConfig } from '../../../domain_objects/data_warehouse/export/export';
 
 describe('A Gremlin Adapter', async () => {
     let g: GremlinAdapter | undefined;

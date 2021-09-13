@@ -1,12 +1,12 @@
 import Logger from '../../services/logger';
 import PostgresAdapter from '../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import ContainerStorage from '../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import EventRegistrationMapper from '../../data_access_layer/mappers/event_system/event_registration_mapper';
-import Container from '../../data_warehouse/ontology/container';
+import Container from '../../domain_objects/data_warehouse/ontology/container';
 import ContainerMapper from '../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import EventRegistration from '../../event_system/event_registration';
+import EventRegistration from '../../domain_objects/event_system/event_registration';
 
 describe('An Event Registration Mapper Can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -24,8 +24,8 @@ describe('An Event Registration Mapper Can', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -47,8 +47,8 @@ describe('An Event Registration Mapper Can', async () => {
             new EventRegistration({
                 appName: 'Daisy',
                 appUrl: 'yellow',
-                eventType: 'data_ingested'
-            })
+                eventType: 'data_ingested',
+            }),
         );
         expect(event.isError).false;
         expect(event.value).not.empty;

@@ -8,12 +8,12 @@ import GraphMapper from '../../../../data_access_layer/mappers/data_warehouse/da
 import NodeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import Container from '../../../../data_warehouse/ontology/container';
-import Metatype from '../../../../data_warehouse/ontology/metatype';
+import Container from '../../../../domain_objects/data_warehouse/ontology/container';
+import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import MetatypeKey from '../../../../data_warehouse/ontology/metatype_key';
-import Node from '../../../../data_warehouse/data/node';
-import DataSourceRecord from '../../../../data_warehouse/import/data_source';
+import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
+import Node from '../../../../domain_objects/data_warehouse/data/node';
+import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 
 describe('A Node Mapper', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
