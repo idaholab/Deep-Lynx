@@ -41,7 +41,7 @@ export default class TypeMappingRoutes {
         app.delete(
             '/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID',
             ...middleware,
-            authInContainer('read', 'data'),
+            authInContainer('write', 'data'),
             this.deleteTypeMapping,
         );
         app.put(

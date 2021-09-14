@@ -170,11 +170,11 @@ export default class EdgeRepository extends Repository implements RepositoryInte
 
                                     edge.metatypeRelationshipPair = pair.value;
 
-                                    edge.metatypeRelationshipPair
+                                    edge.metatypeRelationshipPair!
                                         .relationship!.validateAndTransformProperties(edge.properties)
                                         .then((transformed) => {
                                             if (transformed.isError) {
-                                                resolve(Result.Failure(`unable to validate properties for edge${transformed.isError}`));
+                                                resolve(Result.Failure(`unable to validate properties for edge: ${transformed.error?.error}`));
                                                 return;
                                             }
 
@@ -189,11 +189,11 @@ export default class EdgeRepository extends Repository implements RepositoryInte
 
                                                     resolve(Result.Success(true));
                                                 })
-                                                .catch((error) => resolve(Result.Failure(`unable to validate relationships for edge${error}`)));
+                                                .catch((error) => resolve(Result.Failure(`unable to validate relationships for edge ${error}`)));
                                         })
                                         .catch((error) => resolve(Result.Failure(`unable to validate properties for edge ${error}`)));
                                 })
-                                .catch((error) => resolve(Result.Failure(`unable to fetch relationship pair for edge${error}`)));
+                                .catch((error) => resolve(Result.Failure(`unable to fetch relationship pair for edge ${error}`)));
                         })
                         .catch((error) => resolve(Result.Failure(`validation for one or more edges failed ${error}`)));
                 }),

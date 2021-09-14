@@ -14,7 +14,7 @@ export default class QueryRoutes {
     // for the complex portions of this endpoint visit the data_query folder and functions
     private static query(req: Request, res: Response, next: NextFunction) {
         if (req.header('content-type') !== 'application/json' && req.header('content-type') !== 'application/graphql') {
-            graphql(schema, req.body, resolversRoot(req.params.id))
+            graphql(schema, req.body, resolversRoot(req.params.containerID))
                 .then((response) => {
                     res.status(200).json(response);
                 })
@@ -23,7 +23,7 @@ export default class QueryRoutes {
                 })
                 .finally(() => next());
         } else {
-            graphql(schema, req.body.query, resolversRoot(req.params.id), req.body.variables)
+            graphql(schema, req.body.query, resolversRoot(req.params.containerID), req.body.variables)
                 .then((response) => {
                     res.status(200).json(response);
                 })

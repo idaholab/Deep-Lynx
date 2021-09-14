@@ -176,7 +176,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
                                         .validateAndTransformProperties(node.properties)
                                         .then((transformed) => {
                                             if (transformed.isError) {
-                                                resolve(Result.Failure(`unable to validate properties for node ${transformed.isError}`));
+                                                resolve(Result.Failure(`unable to validate properties for node: ${transformed.error?.error}`));
                                                 return;
                                             }
 

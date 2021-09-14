@@ -30,12 +30,11 @@ export default class UserRoutes {
         app.get('/containers/:containerID/users', ...middleware, authInContainer('read', 'users'), this.listUsersForContainer);
         app.get('/containers/:containerID/users/:userID', ...middleware, authInContainer('read', 'users'), this.retrieveUser);
 
-        app.get('/containers/:containerID/users/:userID', ...middleware, authInContainer('read', 'users'), this.retrieveUser);
         app.post('/containers/:containerID/users/roles', ...middleware, authInContainer('write', 'users'), this.assignRole);
         app.get('/containers/:containerID/users/:userID/roles', ...middleware, authInContainer('read', 'users'), this.listUserRoles);
 
         app.post('/containers/:containerID/users/invite', ...middleware, authInContainer('write', 'users'), this.inviteUserToContainer);
-        app.get('/containers/:containerID/users/invite', ...middleware, authInContainer('write', 'users'), this.listInvitedUsers);
+        app.get('/containers/:containerID/users/invite', ...middleware, authInContainer('read', 'users'), this.listInvitedUsers);
     }
 
     private static retrieveUser(req: Request, res: Response, next: NextFunction) {
