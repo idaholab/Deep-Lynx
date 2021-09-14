@@ -1,0 +1,5792 @@
+openapi: 3.0.1
+info:
+  title: Deep Lynx
+  description: |-
+    The construction of megaprojects has consistently demonstrated challenges for project managers in regard to meeting cost, schedule, and performance requirements. Megaproject construction challenges are common place within megaprojects with many active projects in the United States failing to meet cost and schedule efforts by significant margins. Currently, engineering teams operate in siloed tools and disparate teams where connections across design, procurement, and construction systems are translated manually or over brittle point-to-point integrations. The manual nature of data exchange increases the risk of silent errors in the reactor design, with each silent error cascading across the design. These cascading errors lead to uncontrollable risk during construction, resulting in significant delays and cost overruns. Deep Lynx allows for an integrated platform during design and operations of mega projects.
+
+    The Deep Lynx Core API delivers a few main features.
+
+    1. Core provides a set of methods and endpoints for manipulating data in an object oriented database. This allows us to store complex datatypes as records and then to compile them into actual, modifiable objects at run-time. Users can store taxonomies or ontologies in a readable format.
+
+    2. Core provides methods for storing and retrieving data in a graph database. This data is structured and validated against the aformentioned object oriented database before storage.
+  contact: {}
+  version: '1.0'
+servers:
+  - url: 'http://localhost:8090'
+tags:
+  - name: Containers
+    description: 'Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. '
+  - name: Data Query
+    description: 'Deep Lynx gives you the ability to query data using a GraphQL enabled endpoint. Please see the documentation on GraphQL and run a schema query to learn more about what search methods, query arguments, and fields are available to you.'
+  - name: Graph
+    description: 'These endpoints give you the ability to add nodes and edges to the graph manually as well as perform some basic queries. For all advanced queries, please use the GraphQL query endpoint.'
+  - name: Metatypes
+    description: 'Metatypes only consist of a name and a description. While this might change, the bulk of information about a type should reside in its keys and relationships. Metatypes can be considered as "classes" when referring to web ontology.'
+  - name: Metatype Keys
+    description: 'Keys represent a Metatype''s properties, and in the future, its methods. This information allows for a user to modify and compile a complex object type/class and store it in a readable format. Inserted data is then validated against a Metatype''s declared keys/properties.'
+  - name: Metatype Relationships
+    description: Metatype Relationships consist of a name and a description. They define  the relationships available to be instantiated between certain Metatypes  as Metatype Relationship Pairs.
+  - name: Metatype Relationship Keys
+    description: 'Keys represent a Metatype Relationship''s properties, and in the future, its methods. This information allows for a user to modify and compile a complex object type/class relationship and store it in a readable format. Relationships declared between already inserted data will be verified against its declared Metatype Relationship.'
+  - name: Metatype Relationship Pairs
+    description: 'Metatype Relationship pairs represent the actual connection between two Metatypes. Properties of that relationship are attached to the Metatype Relationship. Again, this only represents the connection between two Metatypes.'
+  - name: Data Sources
+    description: 'This set of endpoints allows the user to create and manage data sources. As of 3/26/2020 only the HTTP data source type is supported, and that''s still under construction. Each endpoint functions - but there is no guaranteed functionality with regards to data sources beyond this point.'
+  - name: Data Export
+    description: 'These endpoints have to do with the export functionality. A snapshot of the contained data can be exported to numerous different data sources. However, only Gremlin enabled Graph databases are supported for export.'
+  - name: Users
+    description: 'These endpoints have to do with user functionality. As of 3/26/2020 there are no methods for creating new users - other than enabling and use SAML-ADFS authentication methods. Unless using this method, either request/build a feature or use Basic Authentication configuration.'
+  - name: Data Type Mappings
+    description: These are mappings for taking unknown payloads and mapping them to known data classes and structures prior to storage.
+  - name: Imports
+    description: These endpoints allow for retrieving or deleting the data associated with  a given import from a Data Source.
+  - name: Events
+    description: 'An application may create a Registered Event with Deep Lynx in order to  receive messages from Deep Lynx concerning the event type registered. This  system may be used to receive alerts when other Data Sources have ingested data, a new data source is created, etc.'
+  - name: Misc
+    description: ''
+security:
+  - BearerAuth: []
+paths:
+  /containers:
+    get:
+      tags:
+        - Containers
+      summary: List
+      description: List all containers.
+      operationId: List
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainerResponse'
+      deprecated: false
+    put:
+      tags:
+        - Containers
+      summary: Batch Update
+      description: 'Accepts an array of container objects - will attempt to update all of them in a single transaction. If the update fails, none of them will go through.'
+      operationId: BatchUpdate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainerResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      deprecated: false
+      x-codegen-request-body-name: Body
+    post:
+      tags:
+        - Containers
+      summary: Create
+      description: |-
+        Creates a new container object. Containers are the root level object and are considered to contain both the ontology(in form of Metatypes, Metatype Keys, and MetatypeRelationships) as well as the data stored under that ontology.
+
+        Endpoint will accept both a single container request object, or an array of container request objects
+      operationId: Create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRequest'
+        required: true
+      responses:
+        '200':
+          description: 'Returns the newly created container if successfull, else the appropriate error. '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainerResponse'
+              examples: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                example-1:
+                  value:
+                    isError: true
+                    error:
+                      errorCode: 0
+                      error: string
+      deprecated: false
+      x-codegen-request-body-name: Body
+      parameters: []
+  '/containers/{container_id}':
+    get:
+      tags:
+        - Containers
+      summary: Fetch by ID
+      description: Fetch container by ID.
+      operationId: FetchbyID
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainerResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      deprecated: false
+    put:
+      tags:
+        - Containers
+      summary: Update
+      description: Updates the container. This will fail if a container already exists with the proposed updated name.
+      operationId: Update
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainerResponse'
+      deprecated: false
+      x-codegen-request-body-name: Body
+    delete:
+      tags:
+        - Containers
+      summary: Archive
+      description: 'Archives a Container. This is preferred over deletion as deletion has a cascading effect on the deleted type''s keys, relationships, and relationship keys. When in doubt, archive over delete. We''d rather have tombstones than cremating the type.'
+      operationId: Archive
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - schema:
+            type: boolean
+          in: query
+          name: permanent
+          description: 'If true, permanently deletes the container'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+  '/containers/{container_id}/active':
+    post:
+      tags:
+        - Containers
+      summary: Set Active
+      description: Unarchives a Container. This is the only way to update this value of a container via API.
+      operationId: SetActive
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+  /containers/import:
+    post:
+      tags:
+        - Containers
+      summary: Import
+      description: 'An optional query param "dryrun" may be included with a value of "true" in order to return a HTML formatted string explaining the name and description of the container along with the number of metatypes, metatype relationships, and metatype keys to be created. This request uses a form-data body. If the ontology to be imported is being referenced via url, provide the url via a "path" field. Otherwise a local file may be provided. A file takes precedence over a "path" value if both are provided.'
+      operationId: Import
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ContainerImportRequest'
+            examples:
+              example-1:
+                value:
+                  name: string
+                  description: string
+                  data_versioning_enabled: true
+                  path: string
+                  file: 'http://example.com'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainerImportSuccess'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      deprecated: false
+      parameters:
+        - schema:
+            type: boolean
+          in: query
+          name: dryrun
+          description: If true returns a description of the container that will be created and its contents.
+  '/containers/import/{container_id}':
+    put:
+      tags:
+        - Containers
+      summary: Update Import
+      operationId: UpdateImport
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ContainerImportRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainerImportSuccess'
+      deprecated: false
+      description: ''
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+  '/containers/{container_id}/permissions':
+    post:
+      tags:
+        - Containers
+      summary: Repair Permissions
+      description: Repairs a container's permission set
+      operationId: RepairPermissions
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+              examples:
+                example-1:
+                  value:
+                    value: true
+                    isError: false
+      deprecated: false
+  '/containers/{container_id}/query':
+    post:
+      tags:
+        - Data Query
+      summary: Query Graph
+      description: Query the graph of the specified container using GraphQL. GraphQL queries may be formatted as json or plain text.
+      operationId: QueryGraph
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+          text/plain:
+            schema:
+              type: string
+              example: "{\r\n    nodes {\r\n        id\r\n        metatype{id}\r\n        archived\r\n    }\r\n}"
+        required: true
+        description: ''
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+      deprecated: false
+      x-codegen-request-body-name: Body
+  '/containers/{container_id}/graphs/nodes':
+    get:
+      tags:
+        - Graph
+      summary: List Nodes
+      description: List nodes
+      operationId: ListNodes
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - schema:
+            type: string
+          in: query
+          name: transformationID
+          description: Return only nodes for the selected type transformation
+        - schema:
+            type: string
+          in: query
+          name: metatypeID
+          description: Return only nodes for the selected metatype
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NodeResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    post:
+      tags:
+        - Graph
+      summary: Create Or Update Nodes
+      description: This endpoint will either create new nodes or update nodes if a "modified_at" property with a valid DateTime is passed.
+      operationId: CreateOrUpdateNodes
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateNodesRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+      x-codegen-request-body-name: Body
+  '/containers/{container_id}/graphs/nodes/{node_id}':
+    get:
+      tags:
+        - Graph
+      summary: Retrieve Node
+      description: Retrieve a single node from storage.
+      operationId: RetrieveNode
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: node_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/NodeResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    delete:
+      tags:
+        - Graph
+      summary: Archive Node
+      operationId: ArchiveNode
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: node_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+      x-codegen-request-body-name: Body
+      description: Archives a node
+  '/containers/{container_id}/graphs/nodes/metatype/{metatype_id}':
+    get:
+      tags:
+        - Graph
+      summary: List Nodes by Metatype ID
+      description: 'List Nodes, filter by MetatypeID'
+      operationId: ListNodesbyMetatypeID
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: metatype_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NodeResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+  '/containers/{container_id}/graphs/edges/{edge_id}':
+    get:
+      tags:
+        - Graph
+      summary: Retrieve Edge
+      operationId: RetrieveEdge
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: edge_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/EdgeResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      description: Retrieve a single edge
+    delete:
+      tags:
+        - Graph
+      summary: Archive Edge
+      operationId: ArchiveEdge
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: edge_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+      x-codegen-request-body-name: Body
+      description: Archives an edge
+  '/containers/{container_id}/graphs/edges':
+    get:
+      tags:
+        - Graph
+      summary: List Edges
+      description: List Edges from storage
+      operationId: ListEdges
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - schema:
+            type: string
+          in: query
+          name: originID
+        - schema:
+            type: string
+          in: query
+          name: destinationID
+        - schema:
+            type: string
+          in: query
+          name: relationshipPairID
+        - schema:
+            type: string
+          in: query
+          name: relationshipPairName
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EdgeResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    post:
+      summary: Create or Update Edges
+      operationId: post-containers-container_id-graphs-edges
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      description: This endpoint will either create new edges or update edges if a "modified_at" property with a valid DateTime is passed.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrUpdateEdgesRequest'
+  '/containers/{container_id}/metatypes':
+    get:
+      tags:
+        - Metatypes
+      summary: List Metatypes
+      description: 'List all metatypes that the container has access to. '
+      operationId: ListTypes
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Filter metatypes with names that match this pattern
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - schema:
+            type: string
+          in: query
+          name: description
+          description: Filter metatypes with descriptions that match this pattern
+        - schema:
+            type: string
+          in: query
+          name: archived
+          description: Set to true to include archived metatypes
+        - schema:
+            type: string
+          in: query
+          name: count
+          description: Set to true to return an integer count of the number of metatypes
+        - schema:
+            type: string
+          in: query
+          name: loadKeys
+          description: Set to false to not return the keys for the selected metatypes (true by default)
+        - schema:
+            type: string
+          in: query
+          name: sortBy
+          description: 'Supply the name of a metatype attribute (name, created_at, etc) by which to sort'
+        - schema:
+            type: string
+          in: query
+          name: sortDesc
+          description: Set true to sort descending
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MetatypeResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    post:
+      tags:
+        - Metatypes
+      summary: New Metatype
+      description: Create a new metatype. Pass in an array for bulk creation.
+      operationId: NewType
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTypeRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MetatypeResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+  '/containers/{container_id}/metatypes/{metatype_id}':
+    get:
+      tags:
+        - Metatypes
+      summary: Get Metatype
+      description: Retrieves a single metatype.
+      operationId: GetType
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: metatype_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/MetatypeResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    put:
+      tags:
+        - Metatypes
+      summary: Update Metatype
+      description: Update a single Metatype in storage. Will fail if the updated name has already been taken.
+      operationId: UpdateType
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: metatype_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTypeRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/MetatypeResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+    delete:
+      tags:
+        - Metatypes
+      summary: Archive Metatype
+      description: 'Archives the metatype. This is preferred over deletion as deletion has a cascading effect on the deleted metatype''s keys, relationships, and relationship keys. When in doubt, archive over delete. We''d rather have tombstones than cremating the metatype.'
+      operationId: ArchiveType
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: metatype_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: metatype_id
+        in: path
+        required: true
+  '/containers/{container_id}/metatypes/{metatype_id}/keys':
+    get:
+      tags:
+        - Metatype Keys
+      summary: List Metatype's Keys
+      description: Lists all currently valid and available keys for the metatype.
+      operationId: ListType'sKeys
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: metatype_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/KeyResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    post:
+      tags:
+        - Metatype Keys
+      summary: New Type Key
+      description: |-
+        Creates a new key for a metatype. Keys consist of a unique key name (unique to the metatype only), key type, default values, and allowed values. Of those, only the first two are required.
+
+        The `dataType` field accepts only one of the following values: number, string, date, boolean, enumeration, file. 
+
+        The fields `defaultValue` and `options` will only accept an array of the following types: string, boolean, number, float.
+
+        Pass in an array for bulk creation.
+
+        Currently the validation and cardinality functionality of keys are NOT checked at data insertion.
+      operationId: NewTypeKey
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: metatype_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTypeKeyRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/KeyResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: metatype_id
+        in: path
+        required: true
+  '/containers/{container_id}/metatypes/{metatype_id}/keys/{key_id}':
+    get:
+      tags:
+        - Metatype Keys
+      summary: Get Metatype Key
+      description: Retrieve the specified key for the metatype.
+      operationId: GetTypeKey
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: metatype_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: key_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/KeyResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    put:
+      tags:
+        - Metatype Keys
+      summary: Update Type Key
+      description: Updates a single key for a metatype.
+      operationId: UpdateTypeKey
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: metatype_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: key_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTypeKeyRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/KeyResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+    delete:
+      tags:
+        - Metatype Keys
+      summary: Archive Type Key
+      description: Archiving the metatype key prevents any new types from implementing the key. It *does not remove key/value pairs on existing types*. We highly recommend you archive type keys instead of deleting them so that previous data is not affected.
+      operationId: ArchiveTypeKey
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: metatype_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: key_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: metatype_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: key_id
+        in: path
+        required: true
+  '/containers/{container_id}/metatype_relationships':
+    get:
+      tags:
+        - Metatype Relationships
+      summary: List Container Metatype Relationships
+      description: List metatype relationships. Describes the connection between two metatypes and acts as a vehicle for relationship specific keys.
+      operationId: ListContainerTypeRelationships
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Filter metatype relationships with names that match this pattern
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - schema:
+            type: string
+          in: query
+          name: description
+          description: Filter metatype relationships with descriptions that match this pattern
+        - schema:
+            type: string
+          in: query
+          name: archived
+          description: Set to true to include archived metatype relationships
+        - schema:
+            type: string
+          in: query
+          name: count
+          description: Set to true to return an integer count of the number of metatype relationships
+        - schema:
+            type: string
+          in: query
+          name: loadKeys
+          description: Set to false to not return the keys for the selected metatype relationships (true by default)
+        - schema:
+            type: string
+          in: query
+          name: sortBy
+          description: 'Supply the name of a metatype relationship attribute (name, created_at, etc) by which to sort'
+        - schema:
+            type: string
+          in: query
+          name: sortDesc
+          description: Set true to sort descending
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MetatypeRelationshipResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    post:
+      tags:
+        - Metatype Relationships
+      summary: New Type Relationship
+      description: |-
+        Create a new metatype relationship. Describes the connection that could exist between two metatypes and acts as a vehicle for relationship specific keys.
+
+        Pass in an array for bulk creation.
+      operationId: NewTypeRelationship
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTypeRelationshipRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MetatypeRelationshipResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+  '/containers/{container_id}/metatype_relationships/{relationship_id}':
+    get:
+      tags:
+        - Metatype Relationships
+      summary: Get Type Relationship
+      description: Retrieve a single Metatype Relationship.
+      operationId: GetTypeRelationship
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: relationship_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/MetatypeRelationshipResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    put:
+      tags:
+        - Metatype Relationships
+      summary: Update Metatype Relationship
+      operationId: UpdateTypeRelationship
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: relationship_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTypeRelationshipRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/MetatypeRelationshipResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+      description: ''
+    delete:
+      tags:
+        - Metatype Relationships
+      summary: Archive Type Relationship
+      description: Archive the metatype relationship.
+      operationId: ArchiveTypeRelationship
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: relationship_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+  '/containers/{container_id}/metatype_relationships/{relationship_id}/keys':
+    get:
+      tags:
+        - Metatype Relationship Keys
+      summary: List Metatype Relationship Keys
+      description: Retrieves all keys for a Metatype Relationship.
+      operationId: ListTypeRelationshipKeys
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: relationship_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RelationshipKeyResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    post:
+      tags:
+        - Metatype Relationship Keys
+      summary: New Type Relationship Key
+      description: |-
+        Creates a new key for a metatype relationship. Keys consist of a unique key name (unique to the metatype relationship), key type, default values, and allowed values. Of those, only the first two are required.
+
+        The `dataType` field accepts only one of the following values: number, string, date, boolean, enumeration, file. 
+
+        The fields `defaultValue` and `options` will only accept an array of the following types: string, boolean, number, float.
+      operationId: NewTypeRelationshipKey
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: relationship_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTypeRelationshipKeyRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RelationshipKeyResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+  '/containers/{container_id}/metatype_relationships/{relationship_id}/keys/{key_id}':
+    get:
+      tags:
+        - Metatype Relationship Keys
+      summary: Get Metatype Relationship Key
+      description: Retrieve a single key for a Metatype Relationship by id.
+      operationId: GetTypeRelationshipKey
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: relationship_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: key_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/RelationshipKeyResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    put:
+      tags:
+        - Metatype Relationship Keys
+      summary: Update Metaype Relationship Key
+      description: Updates a Metatype Relationship key. The update must follow the same format as creation.
+      operationId: UpdateTypeRelationshipKey
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: relationship_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: key_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelationshipKeyResponse'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/RelationshipKeyResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+    delete:
+      tags:
+        - Metatype Relationship Keys
+      summary: Archive Metatype Relationship Key
+      description: Archives a Metatype Relationship Key.
+      operationId: ArchiveTypeRelationshipKey
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: relationship_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: key_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+  '/containers/{container_id}/metatype_relationship_pairs':
+    get:
+      tags:
+        - Metatype Relationship Pairs
+      summary: List Metatype Relationship Pairs
+      description: List all Metatype Relationship Pairs for current container.
+      operationId: ListTypeRelationshipPairs
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Filter metatype relationship pairs with names that match this pattern
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - schema:
+            type: string
+          in: query
+          name: archived
+          description: Set to true to include archived metatype relationship pairs
+        - schema:
+            type: string
+          in: query
+          name: count
+          description: Set to true to return an integer count of the number of metatype relationship pairs
+        - schema:
+            type: string
+          in: query
+          name: loadRelationships
+          description: Set to false to not return the relationships for the selected metatype relationship pairs (true by default)
+        - schema:
+            type: string
+          in: query
+          name: destinationID
+          description: Filter destination by metatype ID
+        - schema:
+            type: string
+          in: query
+          name: originID
+          description: Filter origin by metatype ID
+        - schema:
+            type: string
+          in: query
+          name: metatypeID
+          description: Filter by metatype ID
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RelationshipPairResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    post:
+      tags:
+        - Metatype Relationship Pairs
+      summary: New Metatype Relationship Pair
+      description: |-
+        Create a new Metaype Relationship Pair. Describes the connection between two metatypes by connecting them using a Metatype Relationship.
+
+        Pass in an array for bulk creation.
+      operationId: NewTypeRelationshipPair
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTypeRelationshipPairRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RelationshipPairResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+  '/containers/{container_id}/metatype_relationship_pairs/{pair_id}':
+    get:
+      tags:
+        - Metatype Relationship Pairs
+      summary: Get Metatype Relationship Pair
+      description: Retrieves a single Metatype Relationship Pair.
+      operationId: GetTypeRelationshipPair
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pair_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/RelationshipPairResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    delete:
+      tags:
+        - Metatype Relationship Pairs
+      summary: Archive Metatype Relationship Pair
+      description: Archives a Metatype Relationship Pair.
+      operationId: ArchiveTypePair
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pair_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+    put:
+      summary: Update Metaype Relationship Pair
+      operationId: UpdateTypePair
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pair_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/RelationshipPairResponse'
+                  isError:
+                    type: boolean
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTypeRelationshipPairRequest'
+  '/containers/{container_id}/import/datasources':
+    get:
+      tags:
+        - Data Sources
+      summary: List Data Sources
+      operationId: ListDataSources
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DataSourceResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    post:
+      tags:
+        - Data Sources
+      summary: Create Data Source
+      description: 'Create new datasource. Supported data source types are `http`, `standard` (or `manual`), and `jazz`'
+      operationId: CreateDataSource
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDataSourceRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/DataSourceResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+  '/containers/{container_id}/import/datasources/{data_source_id}/files':
+    post:
+      tags:
+        - Data Sources
+      summary: Upload File
+      description: 'Uploads a file and metadata to Deep Lynx. This endpoint will accept multiple files and multiple metadata properties as form values. If metadata (additional key value pairs) are provided, an import is created for the data source in addition to the file upload. Transformations can be applied to this import to create nodes and edges in the graph with metadata for the uploaded file(s).'
+      operationId: UploadFile
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - properties:
+                      value:
+                        $ref: '#/components/schemas/FileResponse'
+                      isError:
+                        type: boolean
+                  - properties:
+                      value:
+                        $ref: '#/components/schemas/FileInfoResponse'
+                      isError:
+                        type: boolean
+                type: object
+      deprecated: false
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+  '/containers/{container_id}/files/{file_id}/download':
+    get:
+      tags:
+        - Data Sources
+      summary: Download File
+      description: Downloads a previously uploaded file.
+      operationId: DownloadFile
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: file_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content: {}
+      deprecated: false
+  '/containers/{container_id}/files/{file_id}':
+    get:
+      tags:
+        - Data Sources
+      summary: Get File
+      description: Get information about a file by ID.
+      operationId: GetFile
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: file_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/FileInfoResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+  '/containers/{container_id}/import/datasources/{data_source_id}/imports':
+    get:
+      tags:
+        - Data Sources
+      summary: List Imports for Data Source
+      operationId: ListImportsforDataSource
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DataSourceImportResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    post:
+      tags:
+        - Data Sources
+      summary: Create Manual Import
+      description: Create a manual import.
+      operationId: CreateManualImport
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                test: test
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/CreateManualImportResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+  '/containers/{container_id}/import/datasources/{data_source_id}':
+    get:
+      tags:
+        - Data Sources
+      summary: Get Data Source
+      description: Retrieve a single data source by ID.
+      operationId: GetDataSource
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/DataSourceResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    put:
+      tags:
+        - Data Sources
+      summary: Set Data Source Configuration
+      description: Updates a data source's configuration in storage. Note that this request body's structure must match that of the data source's adapter type.
+      operationId: SetConfiguration
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetConfigurationRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/DataSourceResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+    delete:
+      tags:
+        - Data Sources
+      summary: Delete Data Source
+      description: 'Archive a data source, with options to permanently remove it (and associated data).'
+      operationId: DeleteDataSource
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - schema:
+            type: string
+          in: query
+          name: archive
+          description: Set to true to archive the data source.
+        - schema:
+            type: string
+          in: query
+          name: forceDelete
+          description: Set to true to force deletion of the data source.
+        - schema:
+            type: string
+          in: query
+          name: removeData
+          description: Set to true to remove data associated with the data source.
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+  '/containers/{container_id}/import/datasources/{data_source_id}/active':
+    post:
+      tags:
+        - Data Sources
+      summary: Set Data Source Active
+      description: Sets a data source active.
+      operationId: PostSetActive
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+    delete:
+      tags:
+        - Data Sources
+      summary: Set Data Source Inactive
+      description: Sets a data source inactive.
+      operationId: SetInactive
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+  '/containers/{container_id}/data/export':
+    post:
+      tags:
+        - Data Export
+      summary: New Data Export
+      description: Create a new data export with the included configuration. Configuration values may be encrypted depending on the adapter you've choosen. See the readme for the exporters for more information.
+      operationId: NewDataExport
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewDataExportRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content: {}
+      deprecated: false
+      x-codegen-request-body-name: Body
+    get:
+      summary: List Exports
+      operationId: get-containers-container_id-data-export
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GetExportResponse'
+                  isError:
+                    type: boolean
+      description: List data exports for the container.
+      parameters:
+        - schema:
+            type: boolean
+          in: query
+          name: count
+          description: boolean indicating if the return value should be a count only
+        - schema:
+            type: integer
+            minimum: 0
+          in: query
+          name: limit
+        - schema:
+            type: integer
+            minimum: 0
+          in: query
+          name: offset
+        - schema:
+            type: string
+          in: query
+          name: sortBy
+          description: column to sort results by
+        - schema:
+            type: boolean
+          in: query
+          name: sortDesc
+          description: boolean indicating if results should be in descending order
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+  '/containers/{container_id}/data/export/{export_id}':
+    get:
+      tags:
+        - Data Export
+      summary: Get Data Export
+      description: Fetch a data export record by ID
+      operationId: GetDataExport
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: export_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/GetExportResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    put:
+      tags:
+        - Data Export
+      summary: Stop Data Export
+      description: Stops a data export. Please note that this just sends a "stop" signal. The application's export adapter determines how to handle the said signal. In some cases the export stopping might not be immediate.
+      operationId: StopDataExport
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: export_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+      x-codegen-request-body-name: Body
+    post:
+      tags:
+        - Data Export
+      summary: Start Data Export
+      description: Start or restart a data export by id.
+      operationId: StartDataExport
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: export_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+    delete:
+      tags:
+        - Data Export
+      summary: Delete Data Export
+      description: Deletes a data export record. This does not guarantee the export will stop immediately.
+      operationId: DeleteDataExport
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: export_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+  '/containers/{container_id}/users/{user_id}':
+    get:
+      tags:
+        - Users
+      summary: Get User
+      description: Retrieve a user by ID
+      operationId: GetUser
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/UserResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+  '/containers/{container_id}/users':
+    get:
+      tags:
+        - Users
+      summary: List Users
+      description: List Users
+      operationId: ListUsers
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+  '/containers/{container_id}/users/{user_id}/roles':
+    get:
+      tags:
+        - Users
+      summary: List User's Roles
+      description: List Users' roles
+      operationId: ListUser'sRoles
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      type: string
+                  isError:
+                    type: boolean
+      deprecated: false
+  '/containers/{container_id}/users/roles':
+    post:
+      tags:
+        - Users
+      summary: Assign Role
+      description: 'Assign a role to a user, roles must consist of role name and domain'
+      operationId: AssignRole
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRoleRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+      x-codegen-request-body-name: Body
+  '/containers/{container_id}/users/invite':
+    get:
+      tags:
+        - Users
+      summary: List Invited Users for Container
+      description: List all invitations to container.
+      operationId: ListInvitedUsersforContainer
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content: {}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/404NotFound'
+      deprecated: false
+    post:
+      tags:
+        - Users
+      summary: Invite User to Container
+      description: Create a new user using the username_password identity type.
+      operationId: InviteUsertoContainer
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content: {}
+      deprecated: false
+  '/containers/{container_id}/import/datasources/{data_source_id}/mappings':
+    get:
+      tags:
+        - Data Type Mappings
+      summary: List Type Mappings
+      description: Lists type mappings from storage
+      operationId: ListTypeMappings
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: needsTransformations
+          in: query
+          description: boolean indicating if the return should consist of only mappings that need transformations
+          schema:
+            type: boolean
+        - name: count
+          in: query
+          description: boolean indicating if the return value should be a count only
+          schema:
+            type: boolean
+        - name: sortBy
+          in: query
+          description: column to sort results by
+          schema:
+            type: string
+        - name: sortDesc
+          in: query
+          description: boolean indicating if results should be in descending order
+          schema:
+            type: boolean
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - schema:
+            type: string
+          in: query
+          name: resultingMetatypeName
+          description: 'if supplied, filters returned transformations by those that produce the resulting metatype'
+        - schema:
+            type: string
+          in: query
+          name: resultingMetatypeRelationshipName
+          description: 'if supplied, filters returned transformations by those that produce the resulting metatype relationship'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TypeMappingResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+  '/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}':
+    get:
+      tags:
+        - Data Type Mappings
+      summary: Get Data Type Mapping
+      description: Retrieve a type mapping from storage.
+      operationId: GetDataTypeMapping
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: mapping_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/TypeMappingResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    delete:
+      tags:
+        - Data Type Mappings
+      summary: Delete Data Type Mapping
+      description: Permanently removes type mapping from storage.
+      operationId: DeleteDataTypeMapping
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: mapping_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+      x-codegen-request-body-name: Body
+    put:
+      summary: Update Data Type Mapping
+      operationId: put-containers-container_id-import-datasources-data_source_id-mappings-mapping_id
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/TypeMappingResponse'
+                  isError:
+                    type: boolean
+      description: Updates a data type mapping.
+    parameters: []
+  '/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}/transformations':
+    get:
+      tags:
+        - Data Type Mappings
+      summary: List Type Mapping's Transformations
+      description: List transformations for a type mapping from storage.
+      operationId: GetTypeMapping'sTransformations
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: mapping_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TransformationResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    post:
+      tags:
+        - Data Type Mappings
+      summary: Create Type Mapping's Transformations
+      description: Create a transformation for the type mapping.
+      operationId: CreateTypeMapping'sTransformations
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: mapping_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTypeMappingTransformationsRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/TransformationResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+  '/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}/transformations/{transformation_id}':
+    put:
+      tags:
+        - Data Type Mappings
+      summary: Update Type Mapping's Transformations
+      description: Update a transformation.
+      operationId: EditTypeMapping'sTransformations
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: mapping_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: transformation_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTypeMappingTransformationsRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/TransformationResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+    delete:
+      tags:
+        - Data Type Mappings
+      summary: Delete Type Mapping's Transformations
+      description: Delete a transformation.
+      operationId: DeleteTypeMapping'sTransformations
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: mapping_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: transformation_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+  '/containers/{container_id}/import/imports/{import_id}/data':
+    get:
+      tags:
+        - Imports
+      summary: List Import's Data
+      operationId: ListImport'sData
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: import_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - schema:
+            type: string
+          in: query
+          name: count
+          description: boolean indicating if the return value should be a count only
+        - schema:
+            type: integer
+            minimum: 0
+          in: query
+          name: limit
+        - schema:
+            type: integer
+            minimum: 0
+          in: query
+          name: offset
+        - schema:
+            type: string
+          in: query
+          name: sortBy
+          description: column to sort results by
+        - schema:
+            type: boolean
+          in: query
+          name: sortDesc
+          description: boolean indicating if results should be in descending order
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/ImportResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+  '/containers/{container_id}/import/imports/{import_id}':
+    delete:
+      tags:
+        - Imports
+      summary: Delete Import
+      description: Delete import will delete an import ONLY IF the import has not been processed.
+      operationId: DeleteImport
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: import_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content: {}
+      deprecated: false
+  '/containers/{container_id}/import/imports/{import_id}/data/{data_id}':
+    get:
+      tags:
+        - Imports
+      summary: Get Import Data
+      description: Retrieve a single piece of data from an import.
+      operationId: GetImportData
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: import_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/ImportResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    delete:
+      tags:
+        - Imports
+      summary: Delete Import Data
+      description: Delete a single piece of data from an import.
+      operationId: DeleteImportData
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: import_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+    put:
+      summary: Update Import Data
+      operationId: put-containers-container_id-import-imports-import_id-data-data_id
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/ImportResponse'
+                  isError:
+                    type: boolean
+      description: Update the data of an existing import.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataStaging'
+  /events:
+    get:
+      tags:
+        - Events
+      summary: List Registered Events
+      description: Lists all registered events
+      operationId: ListRegisteredEvents
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    post:
+      tags:
+        - Events
+      summary: Create Registered Event
+      description: 'Create new registered event. An app_name, app_url, and type must be provided. Either a container_id or data_source_id must also be provided.'
+      operationId: CreateRegisteredEvent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRegisteredEventRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/EventResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+      x-codegen-request-body-name: Body
+  '/events/{event_id}':
+    get:
+      tags:
+        - Events
+      summary: Get Registered Event
+      description: Retrieve a registered event
+      operationId: GetRegisteredEvent
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/EventResponse'
+                  isError:
+                    type: boolean
+      deprecated: false
+    put:
+      tags:
+        - Events
+      summary: Update Registered Event
+      description: 'Update a registered event. If the "active" query paramter is provided with a value of true or false, the event will be activated/deactivated.'
+      operationId: UpdateRegisteredEvent
+      parameters:
+        - name: active
+          in: query
+          schema:
+            type: boolean
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRegisteredEventRequest'
+        description: ''
+    delete:
+      tags:
+        - Events
+      summary: Delete Registered Event
+      operationId: DeleteRegisteredEvent
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      deprecated: false
+      description: Delete a registered event.
+  /health:
+    get:
+      tags:
+        - Misc
+      summary: Health
+      description: 'Simple endpoint, returns 200 on call. Can be used for a simple Up monitor by an external service.'
+      operationId: Health
+      responses:
+        '200':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: OK
+      deprecated: false
+  /oauth/token:
+    get:
+      tags:
+        - Misc
+      summary: OAuth - Token
+      operationId: OAuth-Token
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: x-api-secret
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: x-api-expiry
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content: {}
+      deprecated: false
+    parameters: []
+  /oauth/authorize:
+    post:
+      summary: ''
+      operationId: post-oauth-authorize
+      responses:
+        '200':
+          description: OK
+  /oauth/exchange:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses: {}
+      operationId: get-oauth-exchange
+  /users:
+    get:
+      summary: List Users
+      tags: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserResponse'
+                  isError:
+                    type: boolean
+      operationId: get-users
+      description: List users.
+      parameters:
+        - schema:
+            type: boolean
+          in: query
+          name: count
+          description: boolean indicating if the return value should be a count only
+        - schema:
+            type: string
+          in: query
+          name: loadKeys
+        - schema:
+            type: integer
+            minimum: 0
+          in: query
+          name: limit
+        - schema:
+            type: integer
+            minimum: 0
+          in: query
+          name: offset
+        - schema:
+            type: string
+          in: query
+          name: sortBy
+          description: column to sort results by
+        - schema:
+            type: boolean
+          in: query
+          name: sortDesc
+          description: boolean indicating if results should be in descending order
+  /users/permissions:
+    get:
+      summary: List User Permissions
+      tags: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      type: string
+                  isError:
+                    type: boolean
+      operationId: get-users-permissions
+      description: List permissions for the user.
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    CreateRequest:
+      title: CreateRequest
+      type: object
+      example:
+        name: Test Container
+        description: Test Container Description
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+    UpdateRequest:
+      title: UpdateRequest
+      type: object
+      example:
+        name: Test Container
+        description: Final Test Description
+        config:
+          data_versioning_enabled: false
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        config:
+          type: object
+          nullable: true
+          properties:
+            data_versioning_enabled:
+              type: boolean
+      required:
+        - name
+      x-examples:
+        ContainerUpdateExample:
+          value:
+            name: Test Container
+            description: Final Test Description
+            config:
+              data_versioning_enabled: false
+    BatchUpdateRequest:
+      type: array
+      description: ''
+      minItems: 1
+      uniqueItems: true
+      items:
+        type: object
+        required:
+          - name
+          - description
+          - id
+        properties:
+          name:
+            type: string
+            minLength: 1
+          description:
+            type: string
+            minLength: 1
+          id:
+            type: string
+      x-examples:
+        example-1:
+          - name: Test Container
+            description: Test Container New Description
+            id: ''
+    CreateOrUpdateNodesRequest:
+      title: CreateOrUpdateNodesRequest
+      type: object
+      example:
+        container_id: required
+        id: optional - but required to update the node from this endpoint
+        original_data_id: optional
+        data_source_id: required
+        data_type_mapping_id: optional
+        metatype_id: required
+        modified_at: optional - set to update node along with the id to update if it exists
+        properties: {}
+      properties:
+        id:
+          type: string
+        container_id:
+          type: string
+        original_data_id:
+          type: string
+        data_source_id:
+          type: string
+        data_type_mapping_id:
+          type: string
+        metatype_id:
+          type: string
+        modified_at:
+          type: string
+        properties:
+          type: object
+      required:
+        - container_id
+        - data_source_id
+        - metatype_id
+        - properties
+    ArchiveNodeRequest:
+      title: ArchiveNodeRequest
+      required:
+        - container_id
+        - data_source_id
+        - data_type_mapping_id
+        - metatype_id
+        - modified_at
+        - original_data_id
+        - properties
+      type: object
+      properties:
+        container_id:
+          type: string
+        original_data_id:
+          type: string
+        data_source_id:
+          type: string
+        data_type_mapping_id:
+          type: string
+        metatype_id:
+          type: string
+        modified_at:
+          type: string
+        properties:
+          type: object
+          properties: {}
+      example:
+        container_id: required
+        original_data_id: optional
+        data_source_id: required
+        data_type_mapping_id: optional
+        metatype_id: required
+        modified_at: optional - set to update node if it exists
+        properties: {}
+    CreateOrUpdateEdgesRequest:
+      title: CreateOrUpdateEdgesRequest
+      required:
+        - container_id
+        - data_source_id
+        - destination_node_id
+        - destination_node_original_id
+        - modified_at
+        - origin_node_id
+        - origin_node_original_id
+        - original_data_id
+        - properties
+        - relationship_pair_id
+      type: object
+      properties:
+        container_id:
+          type: string
+        original_data_id:
+          type: string
+        data_source_id:
+          type: string
+        origin_node_id:
+          type: string
+        destination_node_id:
+          type: string
+        origin_node_original_id:
+          type: string
+        destination_node_original_id:
+          type: string
+        relationship_pair_id:
+          type: string
+        modified_at:
+          type: string
+        properties:
+          type: object
+          properties: {}
+      example:
+        container_id: required
+        original_data_id: required
+        data_source_id: required
+        origin_node_id: required (if origin_node_original_id not set)
+        destination_node_id: required (if destination_node_original_id not set)
+        origin_node_original_id: 'create edge based on original ID of node, not Deep Lynx ID'
+        destination_node_original_id: 'create edge based on original ID of node, not Deep Lynx ID'
+        relationship_pair_id: required
+        modified_at: will attempt to update edge if exists
+        properties: {}
+    ArchiveEdgeRequest:
+      title: ArchiveEdgeRequest
+      required:
+        - container_id
+        - data_source_id
+        - data_type_mapping_id
+        - metatype_id
+        - modified_at
+        - original_data_id
+        - properties
+      type: object
+      properties:
+        container_id:
+          type: string
+        original_data_id:
+          type: string
+        data_source_id:
+          type: string
+        data_type_mapping_id:
+          type: string
+        metatype_id:
+          type: string
+        modified_at:
+          type: string
+        properties:
+          type: object
+          properties: {}
+      example:
+        container_id: required
+        original_data_id: optional
+        data_source_id: required
+        data_type_mapping_id: optional
+        metatype_id: required
+        modified_at: optional - set to update node if it exists
+        properties: {}
+    NewTypeRequest:
+      title: NewTypeRequest
+      required:
+        - description
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      example:
+        name: Equipment
+        description: Physical piece of equipement
+    UpdateTypeRequest:
+      title: UpdateTypeRequest
+      required:
+        - description
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      example:
+        name: Updated Metatype Name
+        description: Final Description
+    NewTypeKeyRequest:
+      title: NewTypeKeyRequest
+      required:
+        - cardinality
+        - data_type
+        - defaultValue
+        - description
+        - name
+        - options
+        - property_name
+        - required
+        - unique
+        - validation
+      type: object
+      properties:
+        name:
+          type: string
+        required:
+          type: boolean
+        property_name:
+          type: string
+        description:
+          type: string
+        data_type:
+          type: string
+        cardinality:
+          type: integer
+          format: int32
+        validation:
+          $ref: '#/components/schemas/Validation'
+        unique:
+          type: boolean
+        options:
+          type: array
+          items:
+            type: string
+        defaultValue:
+          type: string
+      example:
+        name: File Name
+        required: true
+        property_name: fileName
+        description: File Upload Name
+        data_type: string
+        cardinality: 1
+        validation:
+          regex: ''
+          min: 0
+          max: 0
+        unique: true
+        options:
+          - ''
+        defaultValue: can be any type
+    Validation:
+      title: Validation
+      required:
+        - max
+        - min
+        - regex
+      type: object
+      properties:
+        regex:
+          type: string
+        min:
+          type: integer
+          format: int32
+        max:
+          type: integer
+          format: int32
+      example:
+        regex: ''
+        min: 0
+        max: 0
+    UpdateTypeKeyRequest:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          name: File Name
+          description: File
+          property_name: fileName
+          data_type: string
+          required: true
+          metatype_id: aaa5baa4-59ef-4e48-a111-b96ca2a4d2bc
+          id: 9728430b-c46e-4ad8-8568-60e719e04c7e
+          options:
+            - ''
+          default_value: null
+          archived: false
+          created_at: '2021-08-13T15:49:04.264Z'
+          modified_at: '2021-08-13T15:49:04.264Z'
+          created_by: fc320d67-9ab0-45b1-ac51-febb1960a97b
+          modified_by: fc320d67-9ab0-45b1-ac51-febb1960a97b
+          validation:
+            max: 0
+            min: 0
+            regex: ''
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        property_name:
+          type: string
+          minLength: 1
+        data_type:
+          type: string
+          minLength: 1
+        required:
+          type: boolean
+        metatype_id:
+          type: string
+          minLength: 1
+        id:
+          type: string
+          minLength: 1
+        options:
+          type: array
+          items:
+            type: object
+        default_value: {}
+        archived:
+          type: boolean
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        validation:
+          type: object
+          required:
+            - max
+            - min
+            - regex
+          properties:
+            max:
+              type: number
+            min:
+              type: number
+            regex:
+              type: string
+      required:
+        - name
+        - description
+        - property_name
+        - data_type
+        - required
+        - metatype_id
+        - id
+        - archived
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+        - validation
+    NewTypeRelationshipRequest:
+      title: NewTypeRelationshipRequest
+      required:
+        - description
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      example:
+        name: Relationhip Test
+        description: string
+    UpdateTypeRelationshipRequest:
+      title: UpdateTypeRelationshipRequest
+      required:
+        - description
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      example:
+        name: Update Test
+        description: Final Test Description
+    NewTypeRelationshipKeyRequest:
+      title: NewTypeRelationshipKeyRequest
+      required:
+        - cardinality
+        - data_type
+        - defaultValue
+        - description
+        - name
+        - options
+        - property_name
+        - required
+        - unique
+        - validation
+      type: object
+      properties:
+        name:
+          type: string
+        required:
+          type: boolean
+        property_name:
+          type: string
+        description:
+          type: string
+        data_type:
+          type: string
+        cardinality:
+          type: integer
+          format: int32
+        validation:
+          $ref: '#/components/schemas/Validation'
+        unique:
+          type: boolean
+        options:
+          type: array
+          items:
+            type: string
+        defaultValue:
+          type: string
+      example:
+        name: File Name
+        required: true
+        property_name: fileName
+        description: File Upload Name
+        data_type: string
+        cardinality: 1
+        validation:
+          regex: ''
+          min: 0
+          max: 0
+        unique: true
+        options:
+          - ''
+        defaultValue: can be any type
+    UpdateTypeRelationshipKeyRequest:
+      title: UpdateTypeRelationshipKeyRequest
+      required:
+        - data_type
+        - default_value
+        - description
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        data_type:
+          type: string
+        default_value:
+          type: string
+      example:
+        name: Updated Name
+        description: Updated Name Description
+        data_type: string
+        default_value: optional - data structure here is dependent on dataType value
+    NewTypeRelationshipPairRequest:
+      title: NewTypeRelationshipPairRequest
+      required:
+        - description
+        - destination_metatype_id
+        - name
+        - origin_metatype_id
+        - relationship_id
+        - relationship_type
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        origin_metatype_id:
+          type: string
+        destination_metatype_id:
+          type: string
+        relationship_id:
+          type: string
+        relationship_type:
+          type: string
+      example:
+        name: Relationship Pair Test
+        description: Relationship Pair Test description
+        origin_metatype_id: 566e3862-6853-45af-8a45-3050576dfb9a
+        destination_metatype_id: 8bcc0b06-bb44-4176-a581-aa68eafca7f3
+        relationship_id: 885e3fca-5066-4be8-a720-63b3c4744e97
+        relationship_type: 'many:many'
+    CreateDataSourceRequest:
+      title: CreateDataSourceRequest
+      required:
+        - active
+        - adapter_type
+        - config
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+        adapter_type:
+          type: string
+        active:
+          type: boolean
+        config:
+          $ref: '#/components/schemas/Config'
+      example:
+        name: testing data source
+        adapter_type: http OR manual
+        active: true
+        config:
+          endpoint: ''
+          auth_method: basic
+          username: test
+          password: test
+    Config:
+      title: Config
+      required:
+        - auth_method
+        - endpoint
+        - password
+        - username
+      type: object
+      properties:
+        endpoint:
+          type: string
+        auth_method:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+      example:
+        endpoint: ''
+        auth_method: basic
+        username: test
+        password: test
+    CreateManualImportRequest:
+      title: CreateManualImportRequest
+      required:
+        - test
+      type: object
+      properties:
+        test:
+          type: string
+      example:
+        test: test
+    SetConfigurationRequest:
+      title: SetConfigurationRequest
+      required:
+        - auth_method
+        - endpoint
+        - password
+        - username
+      type: object
+      properties:
+        endpoint:
+          type: string
+        auth_method:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+      example:
+        endpoint: ''
+        auth_method: basic
+        username: test
+        password: test
+    NewDataExportRequest:
+      title: NewDataExportRequest
+      required:
+        - adapter
+        - config
+      type: object
+      properties:
+        adapter:
+          type: string
+        config:
+          $ref: '#/components/schemas/Config1'
+      example:
+        adapter: gremlin
+        config:
+          traversal_source: g
+          graphson_v1: false
+          user: ''
+          key: ''
+          endpoint: localhost
+          port: '8182'
+          path: /gremlin
+          writes_per_second: 300
+    Config1:
+      title: Config1
+      required:
+        - endpoint
+        - graphson_v1
+        - key
+        - path
+        - port
+        - traversal_source
+        - user
+        - writes_per_second
+      type: object
+      properties:
+        traversal_source:
+          type: string
+        graphson_v1:
+          type: boolean
+        user:
+          type: string
+        key:
+          type: string
+        endpoint:
+          type: string
+        port:
+          type: string
+        path:
+          type: string
+        writes_per_second:
+          type: integer
+          format: int32
+      example:
+        traversal_source: g
+        graphson_v1: false
+        user: ''
+        key: ''
+        endpoint: localhost
+        port: '8182'
+        path: /gremlin
+        writes_per_second: 300
+    AssignRoleRequest:
+      title: AssignRoleRequest
+      required:
+        - container_id
+        - role_name
+        - user_id
+      type: object
+      properties:
+        user_id:
+          type: string
+        container_id:
+          type: string
+        role_name:
+          type: string
+      example:
+        user_id: fb127f5f-0318-4866-9570-10ec81a85cc2
+        container_id: 2a49dc7b-cf56-4e03-85e7-14ac8f0e4b40
+        role_name: admin
+    ResetPasswordRequest:
+      title: ResetPasswordRequest
+      required:
+        - email
+        - new_password
+        - token
+      type: object
+      properties:
+        email:
+          type: string
+        token:
+          type: string
+        new_password:
+          type: string
+      example:
+        email: ''
+        token: ''
+        new_password: ''
+    CreateTypeMappingTransformationsRequest:
+      title: CreateTypeMappingTransformationsRequest
+      type: object
+      example:
+        metatype_id: ''
+        conditions:
+          - key: RADIUS
+            operator: eq
+            value: CIRCLE
+        keys:
+          - key: RADIUS
+            metatype_key_id: Example
+      properties:
+        metatype_id:
+          type: string
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransformationCondition'
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransformationKeyResponse'
+      required:
+        - metatype_id
+        - conditions
+        - keys
+    TransformationCondition:
+      title: TransformationCondition
+      required:
+        - key
+        - operator
+        - value
+      type: object
+      properties:
+        key:
+          type: string
+        operator:
+          type: string
+        value:
+          type: string
+      example:
+        key: RADIUS
+        operator: eq
+        value: CIRCLE
+    Key:
+      title: Key
+      required:
+        - key
+        - metatype_key_id
+      type: object
+      properties:
+        key:
+          type: string
+        metatype_key_id:
+          type: string
+      example:
+        key: RADIUS
+        metatype_key_id: ''
+    EditTypeMappingTransformationsRequest:
+      title: EditTypeMappingTransformationsRequest
+      required:
+        - conditions
+        - keys
+        - metatype_id
+      type: object
+      properties:
+        metatype_id:
+          type: string
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransformationCondition'
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/Key'
+      example:
+        metatype_id: ''
+        conditions:
+          - key: RADIUS
+            operator: eq
+            value: CIRCLE
+        keys:
+          - key: RADIUS
+            metatype_key_id: ''
+    DeleteDataTypeMappingRequest:
+      title: DeleteDataTypeMappingRequest
+      required:
+        - example_payload
+        - keys
+        - metatype_id
+        - type_key
+        - type_value
+        - unique_identifier_key
+      type: object
+      properties:
+        type_key:
+          type: string
+        type_value:
+          type: string
+        unique_identifier_key:
+          type: string
+        metatype_id:
+          type: string
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/Key'
+        example_payload:
+          $ref: '#/components/schemas/ExamplePayload'
+      example:
+        type_key: type
+        type_value: EQUIPMENT
+        unique_identifier_key: id
+        metatype_id: ''
+        keys:
+          - key: RADIUS
+            metatype_key_id: ''
+        example_payload:
+          RADIUS: 0.1
+    ExamplePayload:
+      title: ExamplePayload
+      required:
+        - RADIUS
+      type: object
+      properties:
+        RADIUS:
+          type: number
+          format: double
+      example:
+        RADIUS: 0.1
+    CreateRegisteredEventRequest:
+      title: CreateRegisteredEventRequest
+      required:
+        - app_name
+        - app_url
+        - container_id
+        - event_type
+      type: object
+      properties:
+        app_name:
+          type: string
+        app_url:
+          type: string
+        container_id:
+          type: string
+        event_type:
+          type: string
+      example:
+        app_name: test app
+        app_url: 'http://localhost:8099/test'
+        container_id: 6d1a2895-a689-4760-a515-a3a3b49ae882
+        event_type: data_source_created
+    ContainerResponse:
+      description: ''
+      type: object
+      x-examples:
+        ContainerResponseExample:
+          value:
+            value:
+              - name: Test Container 4
+                description: Test Container Description
+                id: 07b1e35e-0a7c-476d-ada8-5906b16da1b8
+                archived: false
+                created_at: '2021-08-06T21:17:49.545Z'
+                modified_at: '2021-08-06T21:17:49.545Z'
+                created_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+                modified_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+                config: null
+                active_graph_id: 0cc62f41-ceaa-4a68-8f1c-7856525c2668
+            isError: false
+          isError: false
+      properties:
+        value:
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                minLength: 1
+              description:
+                type: string
+                minLength: 1
+              id:
+                type: string
+                minLength: 1
+              archived:
+                type: boolean
+              created_at:
+                type: string
+                minLength: 1
+              modified_at:
+                type: string
+                minLength: 1
+              created_by:
+                type: string
+                minLength: 1
+              modified_by:
+                type: string
+                minLength: 1
+              config:
+                type: object
+                nullable: true
+              active_graph_id:
+                type: string
+                minLength: 1
+            required:
+              - name
+              - description
+              - id
+              - archived
+              - created_at
+              - modified_at
+              - created_by
+              - modified_by
+              - config
+        isError:
+          type: boolean
+      required:
+        - value
+        - isError
+    Error:
+      description: ''
+      type: object
+      properties:
+        isError:
+          type: boolean
+        error:
+          type: object
+          properties:
+            errorCode:
+              type: number
+            error:
+              type: string
+              minLength: 1
+          required:
+            - errorCode
+            - error
+      required:
+        - isError
+        - error
+      x-examples: {}
+    Generic200:
+      description: ''
+      type: object
+      properties:
+        value:
+          type: boolean
+        isError:
+          type: boolean
+      required:
+        - value
+        - isError
+      x-examples:
+        Generic200Response:
+          value:
+            value: true
+            isError: false
+          isError: false
+    ContainerImportSuccess:
+      description: ''
+      type: object
+      properties:
+        value:
+          type: string
+          minLength: 1
+        isError:
+          type: boolean
+      required:
+        - value
+        - isError
+      x-examples:
+        example-1:
+          value: 35bfbf46-5b50-49f5-a325-e5f03f43c3aa
+          isError: false
+    ContainerImportRequest:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          name: string
+          description: string
+          data_versioning_enabled: true
+          path: string
+          file: string
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        data_versioning_enabled:
+          type: boolean
+        path:
+          type: string
+          minLength: 1
+        file:
+          type: string
+          minLength: 1
+      required:
+        - name
+        - description
+        - data_versioning_enabled
+    NodeResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          properties: {}
+          id: c9e8aef5-d13e-49af-b1af-d840e51c6689
+          container_id: d3cd0199-6511-4c0d-b634-efeff989a8f6
+          metatype:
+            name: ''
+            description: ''
+            id: 4983eb3a-7cae-4cc0-a62f-07ea863be646
+          metatype_name: Example
+          graph_id: c29870ad-479b-432b-a88a-093b4d85b58a
+          archived: false
+          created_at: '2021-08-10T15:05:08.393Z'
+          modified_at: null
+          original_data_id: 9c230bc3-a0b8-48ad-b7bf-11065efd7c60
+          data_source_id: f02494db-2210-4d78-ae43-3e3abbdad0e1
+          deleted_at: null
+          data_staging_id: 19
+          import_data_id: e475010f-7afa-4027-9488-e159dff33c7f
+          type_mapping_transformation_id: ea4e36af-805a-4b32-b299-ed223d9b2f22
+          composite_original_id: d3cd0199-6511-4c0d-b634-efeff989a8f6+f02494db-2210-4d78-ae43-3e3abbdad0e1
+          created_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
+          modified_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
+          value:
+            properties: {}
+            id: c9e8aef5-d13e-49af-b1af-d840e51c6689
+            container_id: d3cd0199-6511-4c0d-b634-efeff989a8f6
+            metatype:
+              name: ''
+              description: ''
+              id: 4983eb3a-7cae-4cc0-a62f-07ea863be646
+            metatype_name: Example
+            graph_id: c29870ad-479b-432b-a88a-093b4d85b58a
+            archived: false
+            created_at: '2021-08-10T15:05:08.393Z'
+            modified_at: null
+            original_data_id: bc3-a0b8-48ad-b7bf-11065efd7c60
+            data_source_id: f02494db-2210-4d78-ae43-3e3abbdad0e1
+            deleted_at: null
+            data_staging_id: 19
+            import_data_id: e475010f-7afa-4027-9488-e159dff33c7f
+            type_mapping_transformation_id: ea4e36af-805a-4b32-b299-ed223d9b2f22
+            composite_original_id: d3cd0199-6511-4c0d-b634-efeff989a8f6+f02494db-2210-4d7
+            created_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
+            modified_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
+      properties:
+        properties:
+          type: object
+        id:
+          type: string
+          minLength: 1
+        container_id:
+          type: string
+          minLength: 1
+        metatype:
+          type: object
+          required:
+            - name
+            - description
+            - id
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            id:
+              type: string
+              minLength: 1
+        metatype_name:
+          type: string
+          minLength: 1
+        graph_id:
+          type: string
+          minLength: 1
+        archived:
+          type: boolean
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          nullable: true
+        original_data_id:
+          type: string
+          minLength: 1
+        data_source_id:
+          type: string
+          minLength: 1
+        deleted_at:
+          type: string
+          nullable: true
+        data_staging_id:
+          type: number
+        import_data_id:
+          type: string
+          minLength: 1
+        type_mapping_transformation_id:
+          type: string
+          minLength: 1
+        composite_original_id:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+      required:
+        - properties
+        - id
+        - container_id
+        - metatype
+        - metatype_name
+        - graph_id
+        - archived
+        - created_at
+        - original_data_id
+        - data_source_id
+        - data_staging_id
+        - import_data_id
+        - type_mapping_transformation_id
+        - composite_original_id
+        - created_by
+        - modified_by
+    EdgeResponse:
+      description: ''
+      type: object
+      x-examples: {}
+      properties:
+        properties:
+          type: object
+        id:
+          type: string
+          minLength: 1
+        container_id:
+          type: string
+          minLength: 1
+        relationship_pair_id:
+          type: string
+          minLength: 1
+        graph_id:
+          type: string
+          minLength: 1
+        origin_node_id:
+          type: string
+          minLength: 1
+        destination_node_id:
+          type: string
+          minLength: 1
+        archived:
+          type: boolean
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          nullable: true
+        original_data_id:
+          type: string
+          nullable: true
+        data_source_id:
+          type: string
+          minLength: 1
+        origin_node_original_id:
+          type: string
+          minLength: 1
+        destination_node_original_id:
+          type: string
+          minLength: 1
+        deleted_at:
+          type: string
+          nullable: true
+        data_staging_id:
+          type: number
+        import_data_id:
+          type: string
+          minLength: 1
+        type_mapping_transformation_id:
+          type: string
+          minLength: 1
+        composite_original_id: {}
+        origin_node_composite_original_id:
+          type: string
+          minLength: 1
+        destination_node_composite_original_id:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+      required:
+        - properties
+        - id
+        - container_id
+        - relationship_pair_id
+        - graph_id
+        - origin_node_id
+        - destination_node_id
+        - archived
+        - created_at
+        - data_source_id
+        - origin_node_original_id
+        - destination_node_original_id
+        - data_staging_id
+        - import_data_id
+        - type_mapping_transformation_id
+        - origin_node_composite_original_id
+        - destination_node_composite_original_id
+        - created_by
+        - modified_by
+    MetatypeResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          name: Entity
+          description: An entity is anything that exists or has existed or will exist
+          container_id: d3cd0199-6511-4c0d-b634-efeff989a8f6
+          id: aaa5baa4-59ef-4e48-a111-b96ca2a4d2bc
+          archived: false
+          created_at: '2021-08-09T18:39:17.604Z'
+          modified_at: '2021-08-12T22:03:02.830Z'
+          created_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
+          modified_by: 6a005d8f-1026-4497-9ba9-2db413bf3119
+          keys: []
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        container_id:
+          type: string
+          minLength: 1
+        id:
+          type: string
+          minLength: 1
+        archived:
+          type: boolean
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyResponse'
+      required:
+        - name
+        - description
+        - container_id
+        - id
+        - archived
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+    KeyResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          name: name
+          description: ''
+          property_name: name
+          data_type: string
+          required: false
+          metatype_id: aaa5baa4-59ef-4e48-a111-b96ca2a4d2bc
+          id: feb787cf-189c-4349-aa40-08e106a11d5b
+          options: null
+          default_value: null
+          archived: false
+          created_at: '2021-08-09T18:39:19.129Z'
+          modified_at: '2021-08-12T22:03:03.952Z'
+          created_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
+          modified_by: 6a005d8f-1026-4497-9ba9-2db413bf3119
+          validation:
+            max: 0
+            min: 0
+            regex: ''
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        property_name:
+          type: string
+          minLength: 1
+        data_type:
+          type: string
+          minLength: 1
+        required:
+          type: boolean
+        metatype_id:
+          type: string
+          minLength: 1
+        id:
+          type: string
+          minLength: 1
+        options:
+          type: array
+          nullable: true
+          items: {}
+        default_value:
+          type: string
+          nullable: true
+        archived:
+          type: boolean
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        validation:
+          type: object
+          required:
+            - max
+            - min
+            - regex
+          properties:
+            max:
+              type: number
+            min:
+              type: number
+            regex:
+              type: string
+      required:
+        - name
+        - description
+        - property_name
+        - data_type
+        - required
+        - metatype_id
+        - id
+        - archived
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+        - validation
+    MetatypeRelationshipResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          name: locates
+          description: A locates B if B is contained within a subset of the spatial region occupied by A at some time t.
+          container_id: d3cd0199-6511-4c0d-b634-efeff989a8f6
+          id: b0d66ebb-58d4-4933-9ed2-29302d0c1aea
+          archived: false
+          created_at: '2021-08-09T18:39:17.531Z'
+          modified_at: '2021-08-12T22:03:02.791Z'
+          created_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
+          modified_by: 6a005d8f-1026-4497-9ba9-2db413bf3119
+          keys: []
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        container_id:
+          type: string
+          minLength: 1
+        id:
+          type: string
+          minLength: 1
+        archived:
+          type: boolean
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        keys:
+          type: array
+          items:
+            type: object
+      required:
+        - name
+        - description
+        - container_id
+        - id
+        - archived
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+    RelationshipKeyResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          name: File Name
+          description: File Upload Name
+          property_name: fileName
+          data_type: string
+          required: true
+          cardinality: 1
+          validation:
+            max: 0
+            min: 0
+            regex: ''
+          unique: true
+          options:
+            - ''
+          defaultValue: can be any type
+          metatype_relationship_id: b0d66ebb-58d4-4933-9ed2-29302d0c1aea
+          id: 1ef3ee3f-c188-4a5f-9da2-ad6ad79eb69d
+          default_value: null
+          archived: false
+          created_at: '2021-08-13T16:17:12.145Z'
+          modified_at: '2021-08-13T16:17:12.145Z'
+          created_by: 6df185b0-e511-44e6-9692-2b04b51701d9
+          modified_by: 6df185b0-e511-44e6-9692-2b04b51701d9
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        property_name:
+          type: string
+          minLength: 1
+        data_type:
+          type: string
+          minLength: 1
+        required:
+          type: boolean
+        cardinality:
+          type: number
+        validation:
+          type: object
+          required:
+            - max
+            - min
+            - regex
+          properties:
+            max:
+              type: number
+            min:
+              type: number
+            regex:
+              type: string
+        unique:
+          type: boolean
+        options:
+          type: array
+          items:
+            type: object
+        defaultValue:
+          type: string
+          minLength: 1
+        metatype_relationship_id:
+          type: string
+          minLength: 1
+        id:
+          type: string
+          minLength: 1
+        default_value: {}
+        archived:
+          type: boolean
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+      required:
+        - name
+        - description
+        - property_name
+        - data_type
+        - required
+        - cardinality
+        - validation
+        - unique
+        - defaultValue
+        - metatype_relationship_id
+        - id
+        - archived
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+    RelationshipPairResponse:
+      description: ''
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        relationship_type:
+          type: string
+          minLength: 1
+        relationship_id:
+          type: string
+          minLength: 1
+        origin_metatype_id:
+          type: string
+          minLength: 1
+        destination_metatype_id:
+          type: string
+          minLength: 1
+        id:
+          type: string
+          minLength: 1
+        archived:
+          type: boolean
+        container_id:
+          type: string
+          minLength: 1
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        origin_metatype_name:
+          type: string
+          minLength: 1
+        destination_metatype_name:
+          type: string
+          minLength: 1
+        relationship_pair_name:
+          type: string
+          minLength: 1
+        destination_metatype:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            id:
+              type: string
+              minLength: 1
+          required:
+            - name
+            - description
+            - id
+        origin_metatype:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            id:
+              type: string
+              minLength: 1
+          required:
+            - name
+            - description
+            - id
+        relationship:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            id:
+              type: string
+              minLength: 1
+          required:
+            - name
+            - description
+            - id
+      required:
+        - name
+        - description
+        - relationship_type
+        - relationship_id
+        - origin_metatype_id
+        - destination_metatype_id
+        - id
+        - archived
+        - container_id
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+        - origin_metatype_name
+        - destination_metatype_name
+        - relationship_pair_name
+        - destination_metatype
+        - origin_metatype
+        - relationship
+      x-examples:
+        example-1:
+          name: 'RequestForQuote : decomposedBy : Section'
+          description: Identifies the children of some entity.
+          relationship_type: 'many:many'
+          relationship_id: 3f84e557-accd-4e19-8722-9bc054184baa
+          origin_metatype_id: 7806ca62-a38d-4b3d-a53a-281d81667ecc
+          destination_metatype_id: 0b3f345f-54c3-4512-852c-bb6f802f3ff9
+          id: 6cb279bc-f4f0-41f9-936f-f17474df0c5f
+          archived: false
+          container_id: d3cd0199-6511-4c0d-b634-efeff989a8f6
+          created_at: '2021-08-09T18:39:30.249Z'
+          modified_at: '2021-08-12T22:03:04.532Z'
+          created_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
+          modified_by: 6a005d8f-1026-4497-9ba9-2db413bf3119
+          origin_metatype_name: RequestForQuote
+          destination_metatype_name: Section
+          relationship_pair_name: decomposedBy
+          destination_metatype:
+            name: ''
+            description: ''
+            id: 0b3f345f-54c3-4512-852c-bb6f802f3ff9
+          origin_metatype:
+            name: ''
+            description: ''
+            id: 0b3f345f-54c3-4512-852c-bb6f802f3ff9
+          relationship:
+            name: ''
+            description: ''
+            id: 3f84e557-accd-4e19-8722-9bc054184baa
+    DataSourceResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          adapter_type: standard
+          status: ready
+          active: true
+          config:
+            kind: standard
+            data_type: json
+            data_format: json
+          id: fc218b62-5917-4e52-b7a7-25f399a25811
+          container_id: d3cd0199-6511-4c0d-b634-efeff989a8f6
+          name: Sample
+          data_format: null
+          created_at: '2021-08-09T18:40:14.846Z'
+          modified_at: '2021-08-09T18:40:14.846Z'
+          created_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
+          modified_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
+          archived: false
+          status_message: null
+      properties:
+        adapter_type:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          minLength: 1
+        active:
+          type: boolean
+        config:
+          type: object
+          required:
+            - kind
+            - data_type
+            - data_format
+          properties:
+            kind:
+              type: string
+              minLength: 1
+            data_type:
+              type: string
+              minLength: 1
+            data_format:
+              type: string
+              minLength: 1
+        id:
+          type: string
+          minLength: 1
+        container_id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        data_format:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        archived:
+          type: boolean
+        status_message:
+          type: string
+          nullable: true
+      required:
+        - adapter_type
+        - status
+        - active
+        - config
+        - id
+        - container_id
+        - name
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+        - archived
+    FileResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          status: ready
+          id: f98827b8-67c5-42f3-86cd-b7bf8490743c
+          data_source_id: fc218b62-5917-4e52-b7a7-25f399a25811
+          created_at: '2021-08-13T17:25:58.052Z'
+          modified_at: '2021-08-13T17:25:58.052Z'
+          created_by: 6df185b0-e511-44e6-9692-2b04b51701d9
+          modified_by: 6df185b0-e511-44e6-9692-2b04b51701d9
+          reference: manual upload
+          status_message: null
+      properties:
+        status:
+          type: string
+          minLength: 1
+        id:
+          type: string
+          minLength: 1
+        data_source_id:
+          type: string
+          minLength: 1
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        reference:
+          type: string
+          minLength: 1
+        status_message:
+          type: string
+          nullable: true
+      required:
+        - status
+        - id
+        - data_source_id
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+        - reference
+    FileInfoResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          metadata: {}
+          id: f7bc7f76-dca4-4733-8ff2-d2b63625a58b
+          file_name: NOTICE.txt
+          file_size: 1.794
+          adapter_file_path: /path/to/file/fc218b62-5917-4e52-b7a7-25f399a25811/
+          adapter: filesystem
+          data_source_id: fc218b62-5917-4e52-b7a7-25f399a25811
+          created_at: '2021-08-13T17:25:58.051Z'
+          modified_at: '2021-08-13T17:25:58.051Z'
+          created_by: 6df185b0-e511-44e6-9692-2b04b51701d9
+          modified_by: 6df185b0-e511-44e6-9692-2b04b51701d9
+          container_id: d3cd0199-6511-4c0d-b634-efeff989a8f6
+          md5hash: bc7244e7706e211cc818fb10e4160957
+      properties:
+        metadata:
+          type: object
+        id:
+          type: string
+          minLength: 1
+        file_name:
+          type: string
+          minLength: 1
+        file_size:
+          type: number
+        adapter_file_path:
+          type: string
+          minLength: 1
+        adapter:
+          type: string
+          minLength: 1
+        data_source_id:
+          type: string
+          minLength: 1
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        container_id:
+          type: string
+          minLength: 1
+        md5hash:
+          type: string
+          minLength: 1
+      required:
+        - id
+        - file_name
+        - file_size
+        - adapter_file_path
+        - adapter
+        - data_source_id
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+        - container_id
+        - md5hash
+    DataSourceImportResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          status: completed
+          id: 2b0b7423-c77d-4ea3-9266-7e466ce0fbff
+          data_source_id: fc218b62-5917-4e52-b7a7-25f399a25811
+          created_at: '2021-08-09T21:26:31.033Z'
+          modified_at: '2021-08-09T21:27:01.029Z'
+          created_by: 31e3da13-f170-4571-9ed7-80184bc0bf57
+          modified_by: 31e3da13-f170-4571-9ed7-80184bc0bf57
+          reference: manual upload
+          status_message: null
+          records_inserted: '0'
+          total_records: '1'
+      properties:
+        status:
+          type: string
+          minLength: 1
+        id:
+          type: string
+          minLength: 1
+        data_source_id:
+          type: string
+          minLength: 1
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        reference:
+          type: string
+          minLength: 1
+        status_message:
+          type: string
+          nullable: true
+        records_inserted:
+          type: string
+          minLength: 1
+        total_records:
+          type: string
+          minLength: 1
+      required:
+        - status
+        - id
+        - data_source_id
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+        - reference
+        - records_inserted
+        - total_records
+    CreateManualImportResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          status: ready
+          id: 2ff12802-222c-472c-95f0-ee364ad93d43
+          data_source_id: fc218b62-5917-4e52-b7a7-25f399a25811
+          created_at: '2021-08-13T17:35:07.386Z'
+          modified_at: '2021-08-13T17:35:07.386Z'
+          created_by: 6df185b0-e511-44e6-9692-2b04b51701d9
+          modified_by: 6df185b0-e511-44e6-9692-2b04b51701d9
+          reference: manual upload
+          status_message: null
+      properties:
+        status:
+          type: string
+          minLength: 1
+        id:
+          type: string
+          minLength: 1
+        data_source_id:
+          type: string
+          minLength: 1
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        reference:
+          type: string
+          minLength: 1
+        status_message:
+          type: string
+          nullable: true
+      required:
+        - status
+        - id
+        - data_source_id
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+        - reference
+    GetExportResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          adapter: gremlin
+          status: completed
+          config:
+            kind: standard
+            key: ''
+            path: /gremlin
+            port: '8181'
+            user: ''
+            endpoint: localhost
+            graphson_v1: false
+            traversal_source: g
+            writes_per_second: 300
+          id: d98aa600-7a61-4609-be85-9f510af1610a
+          container_id: 35bfbf46-5b50-49f5-a325-e5f03f43c3aa
+          created_at: '2021-08-26T21:09:45.170Z'
+          modified_at: '2021-08-26T21:09:45.232Z'
+          created_by: cad5491e-5d82-47ed-b4de-2d0c9ea7d545
+          modified_by: system
+          status_message: null
+          destination_type: null
+      properties:
+        adapter:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          minLength: 1
+        config:
+          type: object
+          required:
+            - kind
+            - key
+            - path
+            - port
+            - user
+            - endpoint
+            - graphson_v1
+            - traversal_source
+            - writes_per_second
+          properties:
+            kind:
+              type: string
+              minLength: 1
+            key:
+              type: string
+            path:
+              type: string
+              minLength: 1
+            port:
+              type: string
+              minLength: 1
+            user:
+              type: string
+            endpoint:
+              type: string
+              minLength: 1
+            graphson_v1:
+              type: boolean
+            traversal_source:
+              type: string
+              minLength: 1
+            writes_per_second:
+              type: number
+        id:
+          type: string
+          minLength: 1
+        container_id:
+          type: string
+          minLength: 1
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        status_message:
+          type: string
+          nullable: true
+        destination_type:
+          type: string
+          nullable: true
+      required:
+        - adapter
+        - status
+        - config
+        - id
+        - container_id
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+    UserResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          identity_provider: username_password
+          display_name: Super User
+          email: admin@admin.com
+          admin: true
+          active: true
+          reset_required: false
+          email_valid: false
+          permissions: []
+          roles: []
+          id: dc286640-05c2-4c62-8468-8131c01e3473
+          identity_provider_id: null
+          created_at: '2021-08-09T06:00:00.000Z'
+          modified_at: '2021-08-09T06:00:00.000Z'
+          created_by: system
+          modified_by: system
+          reset_token_issued: null
+          keys: []
+      properties:
+        identity_provider:
+          type: string
+          minLength: 1
+        display_name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          minLength: 1
+        admin:
+          type: boolean
+        active:
+          type: boolean
+        reset_required:
+          type: boolean
+        email_valid:
+          type: boolean
+        permissions:
+          type: array
+          items:
+            type: object
+        roles:
+          type: array
+          items:
+            type: object
+        id:
+          type: string
+          minLength: 1
+        identity_provider_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        reset_token_issued:
+          type: string
+          nullable: true
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserKeyResponse'
+      required:
+        - identity_provider
+        - display_name
+        - email
+        - admin
+        - active
+        - reset_required
+        - email_valid
+        - permissions
+        - roles
+        - id
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+    UserKeyResponse:
+      description: ''
+      type: object
+      properties:
+        key:
+          type: string
+          minLength: 1
+        secret_raw:
+          type: string
+          minLength: 1
+        user_id:
+          type: string
+          minLength: 1
+      required:
+        - key
+        - secret_raw
+        - user_id
+      x-examples:
+        example-1:
+          key: MzUyOWQ3ODEtYmRkYS00M2E4LThjYzItZTExOTYxMDIzZTg4
+          secret_raw: NThhYTFmZmMtM2RlZS00OTAxLWI3MDgtMDM3ZWJhNTJhZDYz
+          user_id: dc286640-05c2-4c62-8468-8131c01e3473
+    404NotFound:
+      description: ''
+      type: object
+      properties:
+        isError:
+          type: boolean
+        error:
+          type: object
+          properties:
+            errorCode:
+              type: number
+            error:
+              type: string
+              minLength: 1
+          required:
+            - errorCode
+            - error
+      required:
+        - isError
+        - error
+      x-examples:
+        example-1:
+          isError: true
+          error:
+            errorCode: 404
+            error: unable to find user
+    TypeMappingResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          active: false
+          id: 43ddc813-3d39-4a71-b106-9bed355d6dcc
+          container_id: 6e459f9b-fa0c-47b7-ab5f-cadd2f709ca3
+          data_source_id: 6ed540f2-78aa-431e-b385-9ca3be34344f
+          shape_hash: 9ZH9H7c7i4EoQ+g4UWOAbawlJWxxKVod+QRPrDIDxjs=
+          created_at: '2021-08-31T19:14:54.607Z'
+          modified_at: '2021-08-31T19:14:54.607Z'
+          sample_payload: {}
+          created_by: 1e785048-5a7d-4be8-8903-73bd0e31da13
+          modified_by: 1e785048-5a7d-4be8-8903-73bd0e31da13
+      properties:
+        active:
+          type: boolean
+        id:
+          type: string
+          minLength: 1
+        container_id:
+          type: string
+          minLength: 1
+        data_source_id:
+          type: string
+          minLength: 1
+        shape_hash:
+          type: string
+          minLength: 1
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        sample_payload:
+          type: object
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        transformations:
+          type: array
+          items: {}
+      required:
+        - active
+        - id
+        - container_id
+        - data_source_id
+        - shape_hash
+        - created_at
+        - modified_at
+        - sample_payload
+        - created_by
+        - modified_by
+    TransformationResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          conditions: []
+          keys: []
+          id: b70b3f22-efc7-4d94-9cb4-f81f23b7b71b
+          type_mapping_id: 8d24f81f-32cd-4e8d-bae7-e2e6faa6f9c6
+          metatype_id: bcee5d5d-3725-4a2d-80a0-75784ce42fad
+          metatype_relationship_pair_id: null
+          origin_id_key: null
+          destination_id_key: null
+          unique_identifier_key: null
+          root_array: null
+          created_at: '2021-08-31T21:37:41.136Z'
+          modified_at: '2021-08-31T21:37:41.136Z'
+          created_by: bdc90252-b44b-46f6-afff-a1c2f6af1560
+          modified_by: bdc90252-b44b-46f6-afff-a1c2f6af1560
+          archived: false
+          metatype_name: MachineLearningModel
+          metatype_relationship_pair_name: null
+          container_id: 6e459f9b-fa0c-47b7-ab5f-cadd2f709ca3
+          shape_hash: 9Gl1DEOJoD8hVNS8LH8tMhxAk266y25rLge0l/ZYIrk=
+          data_source_id: 6ed540f2-78aa-431e-b385-9ca3be34344f
+      properties:
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransformationCondition'
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransformationKeyResponse'
+        id:
+          type: string
+          minLength: 1
+        type_mapping_id:
+          type: string
+          minLength: 1
+        metatype_id:
+          type: string
+          minLength: 1
+          nullable: true
+        metatype_relationship_pair_id:
+          type: string
+          nullable: true
+        origin_id_key:
+          type: string
+          nullable: true
+        destination_id_key:
+          type: string
+          nullable: true
+        unique_identifier_key:
+          type: string
+          nullable: true
+        root_array:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        archived:
+          type: boolean
+        metatype_name:
+          type: string
+          minLength: 1
+          nullable: true
+        metatype_relationship_pair_name:
+          type: string
+          nullable: true
+        container_id:
+          type: string
+          minLength: 1
+        shape_hash:
+          type: string
+          minLength: 1
+        data_source_id:
+          type: string
+          minLength: 1
+      required:
+        - conditions
+        - keys
+        - id
+        - type_mapping_id
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+        - archived
+        - container_id
+        - shape_hash
+        - data_source_id
+    TransformationKeyResponse:
+      description: ''
+      type: object
+      properties:
+        key:
+          type: string
+          minLength: 1
+        metatype_key_id:
+          type: string
+          minLength: 1
+      required:
+        - key
+        - metatype_key_id
+      x-examples:
+        example-1:
+          key: file name
+          metatype_key_id: a1cdc78f-01be-4d06-a7e7-6981e67d6678
+    ImportResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          errors: null
+          data_source_config:
+            kind: standard
+            data_type: json
+          id: 39
+          data_source_id: 6ed540f2-78aa-431e-b385-9ca3be34344f
+          import_id: 013112d6-ab2b-4f71-81ec-3a5a38b21afc
+          data: {}
+          inserted_at: '2021-08-31T23:23:18.712Z'
+          created_at: '2021-08-31T23:22:30.354Z'
+          shape_hash: 3uiJ0SgkA/jG6IQ8dSFBtMmQShvRsKlBRXDCwMkws3c=
+          container_id: 6e459f9b-fa0c-47b7-ab5f-cadd2f709ca3
+      properties:
+        errors:
+          type: string
+          nullable: true
+        data_source_config:
+          type: object
+          required:
+            - kind
+            - data_type
+          properties:
+            kind:
+              type: string
+              minLength: 1
+            data_type:
+              type: string
+              minLength: 1
+            data_format:
+              type: string
+        id:
+          type: number
+        data_source_id:
+          type: string
+          minLength: 1
+        import_id:
+          type: string
+          minLength: 1
+        data:
+          type: object
+        inserted_at:
+          type: string
+          minLength: 1
+        created_at:
+          type: string
+          minLength: 1
+        shape_hash:
+          type: string
+          minLength: 1
+        container_id:
+          type: string
+          minLength: 1
+      required:
+        - data_source_config
+        - id
+        - data_source_id
+        - import_id
+        - data
+        - inserted_at
+        - created_at
+        - shape_hash
+    EventResponse:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          active: true
+          id: 18c8de75-c551-4dbe-9a1f-ee0ffabf69a4
+          app_name: Example
+          app_url: 'http://0.0.0.0:5001/event'
+          data_source_id: fc218b62-5917-4e52-b7a7-25f399a25811
+          container_id: null
+          event_type: data_ingested
+          created_at: '2021-08-09T20:21:22.589Z'
+          modified_at: '2021-08-09T20:21:22.589Z'
+          created_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
+          modified_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
+      properties:
+        active:
+          type: boolean
+        id:
+          type: string
+          minLength: 1
+        app_name:
+          type: string
+          minLength: 1
+        app_url:
+          type: string
+          minLength: 1
+        data_source_id:
+          type: string
+          minLength: 1
+          nullable: true
+        container_id:
+          type: string
+          nullable: true
+        event_type:
+          type: string
+          minLength: 1
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+      required:
+        - active
+        - id
+        - app_name
+        - app_url
+        - event_type
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+    UpdateRegisteredEventRequest:
+      description: ''
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        app_name:
+          type: string
+          minLength: 1
+        app_url:
+          type: string
+          minLength: 1
+        container_id:
+          type: string
+          minLength: 1
+        event_type:
+          type: string
+          minLength: 1
+      required:
+        - id
+        - app_name
+        - app_url
+        - container_id
+        - event_type
+      x-examples:
+        example-1:
+          id: UUID
+          app_name: test app
+          app_url: 'http://localhost:8099/test'
+          container_id: 6d1a2895-a689-4760-a515-a3a3b49ae882
+          event_type: data_source_created
+    DataStaging:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          data_source_id: dataSourceID
+          import_id: importRecordID
+          data: {}
+          shape_hash: test_hash
+      properties:
+        data_source_id:
+          type: string
+          minLength: 1
+        import_id:
+          type: string
+          minLength: 1
+        data:
+          type: object
+        shape_hash:
+          type: string
+          minLength: 1
+      required:
+        - data_source_id
+        - import_id
+        - data
+  responses: {}

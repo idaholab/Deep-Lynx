@@ -206,6 +206,9 @@ export class Router {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore - as of 1/6/2021 passport.js types haven't been updated
         passport.serializeUser((user: User, done: any) => {
+            if (typeof user === 'string') {
+                user = JSON.parse(user);
+            }
             user.password = '';
             done(null, user.id);
         });

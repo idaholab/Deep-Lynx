@@ -207,11 +207,18 @@ export default class MetatypeRelationship extends BaseDomainClass {
                         if (key.validation === null || key.validation === undefined) continue;
 
                         if (key.validation.min || key.validation.max) {
-                            if (key.validation.min !== undefined || input[key.property_name] < key.validation.min) {
+
+                            // count the number of matching properties passed
+                            let count = 0;
+                            if (input.hasOwnProperty(key.property_name)) {
+                                count++;
+                            }
+
+                            if (key.validation.min !== undefined && key.validation.min > count) {
                                 resolve(Result.Failure(`validation of ${key.property_name} failed, less than min`));
                             }
 
-                            if (key.validation.max !== undefined || input[key.property_name] > key.validation.max) {
+                            if (key.validation.max !== undefined && key.validation.max < count) {
                                 resolve(Result.Failure(`validation of ${key.property_name} failed, more than max`));
                             }
                         }
