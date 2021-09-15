@@ -613,21 +613,25 @@ export default class TypeTransformation extends BaseDomainClass {
     }
 
     static getNestedValue(key: string, payload: any, index?: number[]): any {
-        const copiedIndex = index ? [...index] : undefined;
-        if (key.split('.').length > 1) {
-            const keys = key.split('.');
-            const parent = keys.shift();
+        try {
+            const copiedIndex = index ? [...index] : undefined;
+            if (key.split('.').length > 1) {
+                const keys = key.split('.');
+                const parent = keys.shift();
 
-            if (Array.isArray(payload)) {
-                const currentIndex = copiedIndex?.shift();
+                if (Array.isArray(payload)) {
+                    const currentIndex = copiedIndex?.shift();
 
-                return this.getNestedValue(keys.join('.'), payload[currentIndex!], copiedIndex);
+                    return this.getNestedValue(keys.join('.'), payload[currentIndex!], copiedIndex);
+                }
+
+                return this.getNestedValue(keys.join('.'), payload[parent!], copiedIndex);
             }
 
-            return this.getNestedValue(keys.join('.'), payload[parent!], copiedIndex);
+            return payload[key];
+        } catch {
+            return undefined;
         }
-
-        return payload[key];
     }
 
     // convertValue will return a Conversion on successful or unsuccessful conversion, and null
