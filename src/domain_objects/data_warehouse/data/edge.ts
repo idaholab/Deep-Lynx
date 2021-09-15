@@ -1,10 +1,29 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {IsBoolean, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, IsUUID, ValidateIf} from 'class-validator';
-import {Expose, plainToClass, Transform} from 'class-transformer';
+import {IsArray, IsBoolean, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
+import {Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Container from '../ontology/container';
 import MetatypeRelationshipPair, {MetatypeRelationshipPairID} from '../ontology/metatype_relationship_pair';
 import Node from './node';
+import {Conversion} from '../etl/type_transformation';
 
+export class EdgeMetadata {
+    @IsOptional()
+    @IsArray()
+    @Type(() => Conversion)
+    conversions: Conversion[] = [];
+
+    @IsOptional()
+    @IsArray()
+    @Type(() => Conversion)
+    failed_conversions: Conversion[] = [];
+
+    constructor(input: {conversions?: Conversion[]; failed_conversions?: Conversion[]}) {
+        if (input) {
+            if (input.conversions) this.conversions = input.conversions;
+            if (input.failed_conversions) this.failed_conversions = input.failed_conversions;
+        }
+    }
+}
 /*
     Edge represents an edge record in the Deep Lynx database and the various
     validations required for said record to be considered valid.
@@ -102,6 +121,11 @@ export default class Edge extends BaseDomainClass {
     @IsOptional()
     destination_node_original_id?: string;
 
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => EdgeMetadata)
+    metadata?: EdgeMetadata;
+
     constructor(input: {
         container_id: Container | string;
         metatype_relationship_pair: MetatypeRelationshipPair | string;
@@ -121,6 +145,7 @@ export default class Edge extends BaseDomainClass {
         destination_node_composite_original_id?: string;
         origin_node_original_id?: string;
         destination_node_original_id?: string;
+        metadata?: EdgeMetadata;
     }) {
         super();
 
@@ -144,6 +169,7 @@ export default class Edge extends BaseDomainClass {
             if (input.origin_node_original_id) this.origin_node_original_id = input.origin_node_original_id;
             if (input.destination_node_composite_original_id) this.destination_node_composite_original_id = input.destination_node_composite_original_id;
             if (input.destination_node_original_id) this.destination_node_original_id = input.destination_node_original_id;
+            if (input.metadata) this.metadata = input.metadata;
         }
     }
 }

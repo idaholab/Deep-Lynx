@@ -410,6 +410,13 @@ export default {
                 'Data may have already been generated using this Transformation. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Transformation. If you would like to keep this data and orphan it, please uncheck the box below.',
         },
         dataMapping: {
+            mapping: 'Mapping',
+            configuration: 'Configuration',
+            onConversionError: 'On Conversion Errors',
+            onKeyExtractionError: 'On Key Extraction Errors',
+            fail: 'Fail All Keys',
+            failOnRequired: 'Fail Required Keys Only',
+            ignore: 'Ignore',
             autopopulate: 'Autopopulate Keys',
             viewArchivedTransformation: 'View Archived Transformation',
             importedSuccessfully: 'Import Status',

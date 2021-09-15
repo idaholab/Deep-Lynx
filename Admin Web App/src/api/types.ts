@@ -233,6 +233,15 @@ export type TypeMappingTransformationCondition = {
     subexpressions: TypeMappingTransformationSubexpression[];
 };
 
+// Actions that can be performed when a transformation encounters an error
+export type TransformationErrorAction = 'ignore' | 'fail on required' | 'fail';
+export const TransformationErrorActions: TransformationErrorAction[] = ['ignore', 'fail on required', 'fail'];
+
+export type TypeMappingTransformationConfiguration = {
+    on_conversion_error: TransformationErrorAction;
+    on_key_extraction_error: TransformationErrorAction;
+};
+
 export type TypeMappingTransformationT = {
     id: string;
     root_array: string;

@@ -112,6 +112,7 @@ export default class NodeMapper extends Mapper {
                   import_data_id,
                   data_staging_id,
                   composite_original_id,
+                  metadata,
                   created_by,
                   modified_by) VALUES %L
             ON CONFLICT (composite_original_id, data_source_id)
@@ -128,6 +129,7 @@ export default class NodeMapper extends Mapper {
                 data_staging_id = excluded.data_staging_id,
                 composite_original_id = excluded.composite_original_id,
                 modified_by = excluded.modified_by,
+                metadata = excluded.metadata,
                 modified_at = NOW()
             RETURNING *`;
 
@@ -143,6 +145,7 @@ export default class NodeMapper extends Mapper {
             n.import_data_id,
             n.data_staging_id,
             n.composite_original_id,
+            JSON.stringify(n.metadata),
             userID,
             userID,
         ]);
@@ -162,6 +165,7 @@ export default class NodeMapper extends Mapper {
                 import_data_id = u.import_data_id::uuid,
                 data_staging_id = u.data_staging_id::int4,
                 composite_original_id = u.composite_original_id,
+                metadata = u.metadata::jsonb,
                 modified_by = u.modified_by,
                 modified_at = NOW()
                 FROM(VALUES %L) AS u(
@@ -176,6 +180,7 @@ export default class NodeMapper extends Mapper {
                         import_data_id,
                         data_staging_id,
                         composite_original_id,
+                        metadata,
                         modified_by)
                 WHERE u.id::uuid = n.id RETURNING n.*`;
 
@@ -191,6 +196,7 @@ export default class NodeMapper extends Mapper {
             n.import_data_id,
             n.data_staging_id,
             n.composite_original_id,
+            JSON.stringify(n.metadata),
             userID,
             userID,
         ]);

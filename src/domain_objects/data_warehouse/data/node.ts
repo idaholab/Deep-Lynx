@@ -1,9 +1,29 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {IsBoolean, IsNumber, IsObject, IsOptional, IsString, IsUUID, ValidateIf} from 'class-validator';
-import {Expose, plainToClass, Transform} from 'class-transformer';
+import {IsArray, IsBoolean, IsNumber, IsObject, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
+import {Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Metatype, {MetatypeID} from '../ontology/metatype';
 import Container from '../ontology/container';
 import Edge from './edge';
+import {Conversion} from '../etl/type_transformation';
+
+export class NodeMetadata {
+    @IsOptional()
+    @IsArray()
+    @Type(() => Conversion)
+    conversions: Conversion[] = [];
+
+    @IsOptional()
+    @IsArray()
+    @Type(() => Conversion)
+    failed_conversions: Conversion[] = [];
+
+    constructor(input: {conversions?: Conversion[]; failed_conversions?: Conversion[]}) {
+        if (input) {
+            if (input.conversions) this.conversions = input.conversions;
+            if (input.failed_conversions) this.failed_conversions = input.failed_conversions;
+        }
+    }
+}
 
 /*
     Node represents a node record in the Deep Lynx database and the various
@@ -75,6 +95,11 @@ export default class Node extends BaseDomainClass {
     @IsUUID()
     graph_id?: string;
 
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => NodeMetadata)
+    metadata?: NodeMetadata;
+
     constructor(input: {
         container_id: Container | string;
         metatype: Metatype | string;
@@ -88,6 +113,7 @@ export default class Node extends BaseDomainClass {
         data_source_id?: string;
         type_mapping_transformation_id?: string;
         graph_id?: string;
+        metadata?: NodeMetadata;
     }) {
         super();
 
@@ -96,8 +122,8 @@ export default class Node extends BaseDomainClass {
             input.metatype instanceof Metatype
                 ? (this.metatype = input.metatype)
                 : (this.metatype = plainToClass(Metatype, {
-                    id: input.metatype,
-                }));
+                      id: input.metatype,
+                  }));
             if (input.metatype_name) this.metatype_name = input.metatype_name;
             this.properties = input.properties;
             if (input.original_data_id) this.original_data_id = input.original_data_id;
@@ -108,6 +134,7 @@ export default class Node extends BaseDomainClass {
             if (input.data_source_id) this.data_source_id = input.data_source_id;
             if (input.type_mapping_transformation_id) this.type_mapping_transformation_id = input.type_mapping_transformation_id;
             if (input.graph_id) this.graph_id = input.graph_id;
+            if (input.metadata) this.metadata = input.metadata;
         }
     }
 }

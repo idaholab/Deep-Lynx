@@ -343,6 +343,8 @@ export default class StandardDataSourceImpl implements DataSource {
                         // skip if the transformation is archived
                         if (transformation.archived) continue;
 
+                        // keep in mind that any conversion errors that didn't cause the complete failure of the transformation
+                        // will be contained in the metadata object on the transformed object
                         const results = await transformation.applyTransformation(row);
                         if (results.isError) {
                             await stagingRepo.addError(row.id!, `unable to apply transformation ${transformation.id} to data ${row.id}: ${results.error}`);

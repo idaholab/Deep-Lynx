@@ -3,10 +3,10 @@ import Result from '../../../common_classes/result';
 import MetatypeKeyMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
 import MetatypeRelationshipKeyMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper';
 import Logger from '../../../services/logger';
-import Node from '../data/node';
-import Edge from '../data/edge';
+import Node, {NodeMetadata} from '../data/node';
+import Edge, {EdgeMetadata} from '../data/edge';
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
-import {IsDefined, IsIn, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
+import {IsDefined, IsEnum, IsIn, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
 import {Type} from 'class-transformer';
 import {DataStaging} from '../import/import';
 import MetatypeRelationshipKey from '../ontology/metatype_relationship_key';
@@ -95,6 +95,23 @@ export class KeyMapping extends NakedDomainClass {
     }
 }
 
+// Actions that can be performed when a transformation encounters an error
+export type TransformationErrorAction = 'ignore' | 'fail on required' | 'fail';
+export const TransformationErrorActions: TransformationErrorAction[] = ['ignore', 'fail on required', 'fail'];
+
+/*
+    TransformationConfiguration represents configuration options that the type transformation process
+    relies on. Use cases include dictating whether or not automatic type conversion should be attempted
+    and the action to take if it fails
+ */
+export class TransformationConfiguration {
+    @IsEnum(TransformationErrorActions)
+    on_conversion_error: TransformationErrorAction = 'fail on required';
+
+    @IsEnum(TransformationErrorActions)
+    on_key_extraction_error: TransformationErrorAction = 'fail on required';
+}
+
 /*
     TypeTransformation represents a data type transformation record in the
     Deep Lynx database and the various validations required for said record to
@@ -165,6 +182,10 @@ export default class TypeTransformation extends BaseDomainClass {
     @IsOptional()
     archived?: boolean;
 
+    @ValidateNested()
+    @Type(() => TransformationConfiguration)
+    config: TransformationConfiguration = new TransformationConfiguration();
+
     constructor(input: {
         type_mapping_id: string;
         conditions?: Condition[];
@@ -177,6 +198,7 @@ export default class TypeTransformation extends BaseDomainClass {
         unique_identifier_key?: string;
         container_id?: string;
         data_source_id?: string;
+        config?: TransformationConfiguration;
     }) {
         super();
 
@@ -192,6 +214,7 @@ export default class TypeTransformation extends BaseDomainClass {
             if (input.unique_identifier_key) this.unique_identifier_key = input.unique_identifier_key;
             if (input.container_id) this.container_id = input.container_id;
             if (input.data_source_id) this.data_source_id = input.data_source_id;
+            if (input.config) this.config = input.config;
         }
     }
 
@@ -316,32 +339,135 @@ export default class TypeTransformation extends BaseDomainClass {
     private async generateResults(data: DataStaging, index?: number[]): Promise<Result<Node[] | Edge[]>> {
         const newPayload: {[key: string]: any} = {};
         const newPayloadRelationship: {[key: string]: any} = {};
+        const failedConversions: Conversion[] = [];
+        const conversions: Conversion[] = [];
 
         if (this.keys) {
             for (const k of this.keys) {
-                // the value can either be a constant value or an indicator of where to
-                // fetch the value from the original payload
-                let value: any = k.value;
-
-                if (k.key) {
-                    value = TypeTransformation.getNestedValue(k.key, data.data, index);
-                }
-                if (typeof value === 'undefined') continue;
-
                 // separate the metatype and metatype relationship keys from each other
                 // the type mapping _should_ have easily handled the combination of keys
                 if (k.metatype_key_id) {
                     const fetched = await MetatypeKeyMapper.Instance.Retrieve(k.metatype_key_id);
                     if (fetched.isError) return Promise.resolve(Result.Failure('unable to fetch keys to map payload'));
 
-                    newPayload[fetched.value.property_name] = value;
+                    newPayload[fetched.value.property_name] = k.value;
+                    if (k.key) {
+                        const value = TypeTransformation.getNestedValue(k.key, data.data, index);
+
+                        if (typeof value === 'undefined') {
+                            switch (this.config.on_key_extraction_error) {
+                                case 'fail': {
+                                    break;
+                                }
+
+                                // continue only if the key is not required
+                                case 'fail on required': {
+                                    if (fetched.value.required) {
+                                        return Promise.resolve(Result.Failure('unable to fetch data from payload for a required key'));
+                                    } else continue;
+                                }
+
+                                // ignore means we can skip this key
+                                case 'ignore': {
+                                    continue;
+                                }
+                            }
+                        }
+
+                        const conversion = TypeTransformation.convertValue(fetched.value, value);
+                        if (conversion === null) {
+                            newPayload[fetched.value.property_name] = value;
+                        } else {
+                            if (conversion.errors) {
+                                failedConversions.push(conversion);
+
+                                switch (this.config.on_conversion_error) {
+                                    case 'fail': {
+                                        break;
+                                    }
+
+                                    // continue only if the key is not required
+                                    case 'fail on required': {
+                                        if (fetched.value.required) {
+                                            return Promise.resolve(Result.Failure('unable to fetch data from payload for a required key'));
+                                        } else continue;
+                                    }
+
+                                    // ignore means we can skip this key
+                                    case 'ignore': {
+                                        continue;
+                                    }
+                                }
+                            } else {
+                                newPayload[fetched.value.property_name] = conversion.converted_value;
+                                conversions.push(conversion);
+                            }
+                        }
+                    }
                 }
 
                 if (k.metatype_relationship_key_id) {
                     const fetched = await MetatypeRelationshipKeyMapper.Instance.Retrieve(k.metatype_relationship_key_id);
                     if (fetched.isError) return Promise.resolve(Result.Failure('unable to fetch keys to map payload'));
 
-                    newPayloadRelationship[fetched.value.property_name] = value;
+                    newPayloadRelationship[fetched.value.property_name] = k.value;
+                    if (k.key) {
+                        const value = TypeTransformation.getNestedValue(k.key, data.data, index);
+
+                        if (typeof value === 'undefined') {
+                            switch (this.config.on_key_extraction_error) {
+                                case 'fail': {
+                                    break;
+                                }
+
+                                // continue only if the key is not required
+                                case 'fail on required': {
+                                    if (fetched.value.required) {
+                                        return Promise.resolve(Result.Failure('unable to fetch data from payload for a required key'));
+                                    } else {
+                                        continue;
+                                    }
+                                }
+
+                                // ignore means we can skip this key
+                                case 'ignore': {
+                                    continue;
+                                }
+                            }
+                        }
+
+                        const conversion = TypeTransformation.convertValue(fetched.value, value);
+                        if (conversion === null) {
+                            newPayload[fetched.value.property_name] = value;
+                        } else {
+                            if (conversion.errors) {
+                                failedConversions.push(conversion);
+
+                                switch (this.config.on_conversion_error) {
+                                    case 'fail': {
+                                        break;
+                                    }
+
+                                    // continue only if the key is not required
+                                    case 'fail on required': {
+                                        if (fetched.value.required) {
+                                            return Promise.resolve(Result.Failure('unable to fetch data from payload for a required key'));
+                                        } else {
+                                            continue;
+                                        }
+                                    }
+
+                                    // ignore means we can skip this key
+                                    case 'ignore': {
+                                        continue;
+                                    }
+                                }
+                            } else {
+                                newPayload[fetched.value.property_name] = conversion.converted_value;
+                                conversions.push(conversion);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -356,6 +482,10 @@ export default class TypeTransformation extends BaseDomainClass {
                 container_id: this.container_id!,
                 data_staging_id: data.id,
                 import_data_id: data.import_id,
+                metadata: new NodeMetadata({
+                    conversions,
+                    failed_conversions: failedConversions,
+                }),
             });
 
             if (this.unique_identifier_key) {
@@ -390,6 +520,10 @@ export default class TypeTransformation extends BaseDomainClass {
                 destination_node_composite_original_id: `${this.container_id}+${this.data_source_id}+${
                     this.destination_id_key
                 }+${TypeTransformation.getNestedValue(this.destination_id_key!, data.data, index)}`,
+                metadata: new EdgeMetadata({
+                    conversions,
+                    failed_conversions: failedConversions,
+                }),
             });
 
             if (this.unique_identifier_key) {
@@ -494,5 +628,119 @@ export default class TypeTransformation extends BaseDomainClass {
         }
 
         return payload[key];
+    }
+
+    // convertValue will return a Conversion on successful or unsuccessful conversion, and null
+    // on values that need no conversion
+    static convertValue(key: MetatypeKey | MetatypeRelationshipKey, value: any): Conversion | null {
+        if (typeof value === 'undefined' || value === null || value === 'null') {
+            return new Conversion({original_value: value, errors: 'unable to convert value, value is null or undefined'});
+        }
+
+        switch (key.data_type) {
+            case 'number': {
+                if (typeof value === 'number') {
+                    return null;
+                }
+
+                const convertedValue = parseFloat(value);
+                if (isNaN(convertedValue)) {
+                    return new Conversion({original_value: value, errors: 'unable to convert value to number'});
+                }
+
+                return convertedValue % 1 === 0
+                    ? new Conversion({original_value: value, converted_value: Math.floor(convertedValue)})
+                    : new Conversion({original_value: value, converted_value: convertedValue});
+            }
+
+            // because dates can be formatted in various ways, all we can really do for conversion is to
+            // set it to string - Deep Lynx only checks to see if dates are strings currently
+            case 'date': {
+                if (typeof value === 'string') {
+                    return null;
+                }
+
+                return new Conversion({original_value: value, converted_value: String(value)});
+            }
+
+            case 'string': {
+                if (typeof value === 'string') {
+                    return null;
+                }
+
+                return new Conversion({original_value: value, converted_value: String(value)});
+            }
+
+            case 'boolean': {
+                if (typeof value === 'boolean') {
+                    return null;
+                }
+
+                if (typeof value === 'string') {
+                    return new Conversion({
+                        original_value: value,
+                        converted_value: value.includes('true') || value.includes('TRUE') || value.includes('True') || value.includes('1'),
+                    });
+                }
+
+                // only 1 dictates true here
+                if (typeof value === 'number') {
+                    const converted_value = value === 1;
+                    return new Conversion({original_value: value, converted_value});
+                }
+
+                // anything else dictates failure
+                return new Conversion({original_value: value, errors: 'unable to convert boolean, must be a boolean, string, or number to attempt conversion'});
+            }
+
+            // enumerations are currently string only values
+            case 'enumeration': {
+                if (typeof value === 'string') {
+                    return null;
+                }
+                return new Conversion({original_value: value, converted_value: String(value)});
+            }
+
+            // files are generally filenames or URLs - as such, convert to string
+            case 'file': {
+                if (typeof value === 'string') {
+                    return null;
+                }
+                return new Conversion({original_value: value, converted_value: String(value)});
+            }
+
+            case 'list': {
+                if (Array.isArray(value)) {
+                    return null;
+                }
+                return new Conversion({original_value: value, converted_value: [value]});
+            }
+
+            // covers the "unknown" type where no conversion is necessary
+            default: {
+                return null;
+            }
+        }
+    }
+}
+
+// Conversion represents a type transformations attempt to convert a value from a payload to the proper type
+export class Conversion {
+    @IsDefined()
+    original_value: any;
+
+    @IsOptional()
+    converted_value?: any;
+
+    @IsOptional()
+    @IsString()
+    errors?: string;
+
+    constructor(input: {original_value: any; converted_value?: any; errors?: string}) {
+        if (input) {
+            this.original_value = input.original_value;
+            if (typeof input.converted_value !== 'undefined') this.converted_value = input.converted_value;
+            if (input.errors) this.errors = input.errors;
+        }
     }
 }
