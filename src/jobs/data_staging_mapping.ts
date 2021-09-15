@@ -67,7 +67,6 @@ void postgresAdapter.init().then(() => {
             // we use the mapping mapper here because we don't need to worry about validation
             // or saving transformations at this point, we just want the straight upsert
             const mappingMapper = TypeMappingMapper.Instance;
-            const mappingsToSave = Array.from(mappings, ([name, value]) => value);
 
             saveOperations.push(stagingRepo.bulkSave(results.value));
             saveOperations.push(
