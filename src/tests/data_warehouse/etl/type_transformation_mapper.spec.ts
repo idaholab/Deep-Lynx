@@ -283,6 +283,10 @@ describe('A Data Type Mapping Transformation', async () => {
 
         value = TypeTransformation.getNestedValue('car_maintenance.maintenance_entries.[].parts_list.[].id', test_payload[0], [0, 1]);
         expect(value).eq('pan');
+
+        // need to be able to handle undefined without completely crashing
+        value = TypeTransformation.getNestedValue('car_main.garbage', test_payload[0], [0, 1]);
+        expect(value).undefined;
     });
 
     it('can convert values from payload type to the type specified on a key', async () => {
