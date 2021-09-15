@@ -3,7 +3,7 @@ import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/post
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import Container from '../../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import MetatypeMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import MetatypeKeyMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
@@ -11,7 +11,7 @@ import TypeMappingMapper from '../../../data_access_layer/mappers/data_warehouse
 import Metatype from '../../../domain_objects/data_warehouse/ontology/metatype';
 import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
 import TypeTransformationMapper from '../../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper';
-import TypeTransformation, { Condition, KeyMapping } from '../../../domain_objects/data_warehouse/etl/type_transformation';
+import TypeTransformation, {Condition, KeyMapping} from '../../../domain_objects/data_warehouse/etl/type_transformation';
 import MetatypeKey from '../../../domain_objects/data_warehouse/ontology/metatype_key';
 import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
@@ -32,8 +32,8 @@ describe('A Data Type Mapping Transformation', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -58,8 +58,8 @@ describe('A Data Type Mapping Transformation', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -78,8 +78,8 @@ describe('A Data Type Mapping Transformation', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -90,8 +90,8 @@ describe('A Data Type Mapping Transformation', async () => {
             new TypeMapping({
                 container_id: containerID,
                 data_source_id: exp.value.id!,
-                sample_payload: test_raw_payload
-            })
+                sample_payload: test_raw_payload,
+            }),
         );
 
         const transformation = await TypeTransformationMapper.Instance.Create(
@@ -103,16 +103,16 @@ describe('A Data Type Mapping Transformation', async () => {
                     new Condition({
                         key: 'RADIUS',
                         operator: '==',
-                        value: 'CIRCLE'
-                    })
+                        value: 'CIRCLE',
+                    }),
                 ],
                 keys: [
                     new KeyMapping({
                         key: 'RADIUS',
-                        metatype_key_id: keys.value[0].id
-                    })
-                ]
-            })
+                        metatype_key_id: keys.value[0].id,
+                    }),
+                ],
+            }),
         );
 
         expect(transformation.isError).false;
@@ -131,8 +131,8 @@ describe('A Data Type Mapping Transformation', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -151,8 +151,8 @@ describe('A Data Type Mapping Transformation', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -163,8 +163,8 @@ describe('A Data Type Mapping Transformation', async () => {
             new TypeMapping({
                 container_id: containerID,
                 data_source_id: exp.value.id!,
-                sample_payload: test_raw_payload
-            })
+                sample_payload: test_raw_payload,
+            }),
         );
 
         const transformation = await TypeTransformationMapper.Instance.Create(
@@ -175,10 +175,10 @@ describe('A Data Type Mapping Transformation', async () => {
                 keys: [
                     new KeyMapping({
                         key: 'RADIUS',
-                        metatype_key_id: keys.value[0].id
-                    })
-                ]
-            })
+                        metatype_key_id: keys.value[0].id,
+                    }),
+                ],
+            }),
         );
 
         expect(transformation.isError).false;
@@ -204,8 +204,8 @@ describe('A Data Type Mapping Transformation', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -224,8 +224,8 @@ describe('A Data Type Mapping Transformation', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -236,8 +236,8 @@ describe('A Data Type Mapping Transformation', async () => {
             new TypeMapping({
                 container_id: containerID,
                 data_source_id: exp.value.id!,
-                sample_payload: test_raw_payload
-            })
+                sample_payload: test_raw_payload,
+            }),
         );
 
         const transformation = await TypeTransformationMapper.Instance.Create(
@@ -248,10 +248,10 @@ describe('A Data Type Mapping Transformation', async () => {
                 keys: [
                     new KeyMapping({
                         key: 'RADIUS',
-                        metatype_key_id: keys.value[0].id
-                    })
-                ]
-            })
+                        metatype_key_id: keys.value[0].id,
+                    }),
+                ],
+            }),
         );
 
         expect(transformation.isError).false;
@@ -284,6 +284,82 @@ describe('A Data Type Mapping Transformation', async () => {
         value = TypeTransformation.getNestedValue('car_maintenance.maintenance_entries.[].parts_list.[].id', test_payload[0], [0, 1]);
         expect(value).eq('pan');
     });
+
+    it('can convert values from payload type to the type specified on a key', async () => {
+        // we don't need much on the metatype key to trigger the conversion, so no need to save them to check conversion
+        let conversion = TypeTransformation.convertValue({data_type: 'string'} as MetatypeKey, 'test');
+        // null on no conversion needed
+        expect(conversion).null;
+
+        conversion = TypeTransformation.convertValue({data_type: 'string'} as MetatypeKey, 1.2);
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).eq('1.2');
+
+        conversion = TypeTransformation.convertValue({data_type: 'string'} as MetatypeKey, true);
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).eq('true');
+
+        conversion = TypeTransformation.convertValue({data_type: 'number'} as MetatypeKey, '1');
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).eq(1);
+
+        conversion = TypeTransformation.convertValue({data_type: 'number'} as MetatypeKey, '.02');
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).eq(0.02);
+
+        conversion = TypeTransformation.convertValue({data_type: 'number'} as MetatypeKey, '5.600e-3');
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).eq(0.0056);
+
+        conversion = TypeTransformation.convertValue({data_type: 'number'} as MetatypeKey, 'false');
+        expect(conversion?.errors).not.undefined;
+
+        conversion = TypeTransformation.convertValue({data_type: 'date'} as MetatypeKey, new Date());
+        expect(conversion?.errors).undefined;
+
+        // should convert to a string
+        conversion = TypeTransformation.convertValue({data_type: 'enumeration'} as MetatypeKey, 1);
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).eq('1');
+
+        // should convert to an array
+        conversion = TypeTransformation.convertValue({data_type: 'list'} as MetatypeKey, 1);
+        expect(conversion?.errors).undefined;
+        expect(Array.isArray(conversion?.converted_value)).true;
+
+        conversion = TypeTransformation.convertValue({data_type: 'list'} as MetatypeKey, [1]);
+        expect(conversion).null;
+
+        conversion = TypeTransformation.convertValue({data_type: 'boolean'} as MetatypeKey, 1);
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).true;
+
+        conversion = TypeTransformation.convertValue({data_type: 'boolean'} as MetatypeKey, 0);
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).false;
+
+        conversion = TypeTransformation.convertValue({data_type: 'boolean'} as MetatypeKey, 'true');
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).true;
+
+        conversion = TypeTransformation.convertValue({data_type: 'boolean'} as MetatypeKey, 'True');
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).true;
+
+        conversion = TypeTransformation.convertValue({data_type: 'boolean'} as MetatypeKey, '1');
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).true;
+
+        conversion = TypeTransformation.convertValue({data_type: 'boolean'} as MetatypeKey, 'false');
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).false;
+
+        conversion = TypeTransformation.convertValue({data_type: 'boolean'} as MetatypeKey, '0');
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).false;
+
+        return Promise.resolve();
+    });
 });
 
 export const test_keys: MetatypeKey[] = [
@@ -292,7 +368,7 @@ export const test_keys: MetatypeKey[] = [
         description: 'flower name',
         required: true,
         property_name: 'flower_name',
-        data_type: 'string'
+        data_type: 'string',
     }),
     new MetatypeKey({
         name: 'Test2',
@@ -300,15 +376,15 @@ export const test_keys: MetatypeKey[] = [
         required: true,
         property_name: 'color',
         data_type: 'enumeration',
-        options: ['yellow', 'blue']
+        options: ['yellow', 'blue'],
     }),
     new MetatypeKey({
         name: 'Test Not Required',
         description: 'not required',
         required: false,
         property_name: 'notRequired',
-        data_type: 'number'
-    })
+        data_type: 'number',
+    }),
 ];
 
 const test_raw_payload = {
@@ -318,8 +394,8 @@ const test_raw_payload = {
     TEST: 'TEST',
     ITEM_ID: '123',
     ATTRIBUTES: {
-        WHEELS: 1
-    }
+        WHEELS: 1,
+    },
 };
 
 const test_payload = [
@@ -330,34 +406,34 @@ const test_payload = [
             manufacturer: {
                 id: 'UUID',
                 name: 'Test Cars Inc',
-                location: 'Seattle, WA'
+                location: 'Seattle, WA',
             },
             tire_pressures: [
                 {
                     id: 'tire0',
                     measurement_unit: 'PSI',
                     measurement: 35.08,
-                    measurement_name: 'tire pressure'
+                    measurement_name: 'tire pressure',
                 },
                 {
                     id: 'tire1',
                     measurement_unit: 'PSI',
                     measurement: 35.45,
-                    measurement_name: 'tire pressure'
+                    measurement_name: 'tire pressure',
                 },
                 {
                     id: 'tire2',
                     measurement_unit: 'PSI',
                     measurement: 34.87,
-                    measurement_name: 'tire pressure'
+                    measurement_name: 'tire pressure',
                 },
                 {
                     id: 'tire3',
                     measurement_unit: 'PSI',
                     measurement: 37.22,
-                    measurement_name: 'tire pressure'
-                }
-            ]
+                    measurement_name: 'tire pressure',
+                },
+            ],
         },
         car_maintenance: {
             id: 'UUID',
@@ -374,15 +450,15 @@ const test_payload = [
                             id: 'oil',
                             name: 'synthetic oil',
                             price: 45.66,
-                            quantity: 1
+                            quantity: 1,
                         },
                         {
                             id: 'pan',
                             name: 'oil pan',
                             price: 15.5,
-                            quantity: 1
-                        }
-                    ]
+                            quantity: 1,
+                        },
+                    ],
                 },
                 {
                     id: 2,
@@ -393,23 +469,23 @@ const test_payload = [
                             id: 'tire',
                             name: 'all terrain tire',
                             price: 150.99,
-                            quantity: 4
+                            quantity: 4,
                         },
                         {
                             id: 'wrench',
                             name: 'wrench',
                             price: 4.99,
-                            quantity: 1
+                            quantity: 1,
                         },
                         {
                             id: 'bolts',
                             name: 'bolts',
                             price: 1.99,
-                            quantity: 5
-                        }
-                    ]
-                }
-            ]
-        }
-    }
+                            quantity: 5,
+                        },
+                    ],
+                },
+            ],
+        },
+    },
 ];

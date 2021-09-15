@@ -163,11 +163,36 @@
 
               </v-form>
 
+
+              <h3 style="padding-top: 10px">{{$t("dataMapping.configuration")}} <info-tooltip :message="$t('dataMapping.configurationHelp')"></info-tooltip></h3>
+              <v-row>
+                <v-col :cols="6">
+                  <v-form>
+                    <v-select
+                        :items="actionErrors()"
+                        v-model="onConversionError"
+                    >
+                      <template v-slot:label>{{$t('dataMapping.onConversionError')}}</template>
+                    </v-select>
+                  </v-form>
+                </v-col>
+                <v-col :cols="6">
+                  <v-form>
+                    <v-select
+                        :items="actionErrors()"
+                        v-model="onKeyExtractionError"
+                    >
+                      <template v-slot:label>{{$t('dataMapping.onKeyExtractionError')}}</template>
+                    </v-select>
+                  </v-form>
+                </v-col>
+              </v-row>
+
               <v-form
                   ref="mainForm"
                   v-model="mainFormValid"
               >
-
+                <h3 style="padding-top: 10px">{{$t("dataMapping.mapping")}} <info-tooltip :message="$t('dataMapping.mappingHelp')"></info-tooltip></h3>
                 <v-select
                     :items="payloadTypes()"
                     v-model="payloadType"
@@ -473,8 +498,8 @@ import {
   MetatypeKeyT,
   MetatypeRelationshipKeyT,
   MetatypeRelationshipPairT,
-  MetatypeT,
-  TypeMappingTransformationCondition,
+  MetatypeT, TransformationErrorAction, TransformationErrorActions,
+  TypeMappingTransformationCondition, TypeMappingTransformationConfiguration,
   TypeMappingTransformationPayloadT,
   TypeMappingTransformationSubexpression,
   TypeMappingTransformationT
@@ -525,6 +550,9 @@ export default class TransformationDialog extends Vue {
   conditionOperator: {text: string; value: any; requiresValue: boolean} | null = null
   conditionValue = ""
   conditions: TypeMappingTransformationCondition[] = []
+  onConversionError: TransformationErrorAction = 'fail on required'
+  onKeyExtractionError: TransformationErrorAction = 'fail on required'
+
 
   subexpressionExpression = ""
   subexpressionKey = ""
@@ -593,6 +621,20 @@ export default class TransformationDialog extends Vue {
         value: "value"
       },
       {text: this.$t('dataMapping.actions'), value: "actions", sortable: false}
+    ]
+  }
+
+  actionErrors() {
+    return [{
+      text: this.$t('dataMapping.failOnRequired'),
+      value: 'fail on required'
+    },{
+      text: this.$t('dataMapping.fail'),
+      value: 'fail'
+    },{
+      text: this.$t('dataMapping.ignore'),
+      value: 'ignore'
+    },
     ]
   }
 

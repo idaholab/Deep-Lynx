@@ -1,5 +1,5 @@
 import Mapper from '../../mapper';
-import { PoolClient, QueryConfig } from 'pg';
+import {PoolClient, QueryConfig} from 'pg';
 import Result from '../../../../common_classes/result';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import uuid from 'uuid';
@@ -36,7 +36,7 @@ export default class EdgeMapper extends Mapper {
     public async CreateOrUpdateByCompositeID(userID: string, edge: Edge, transaction?: PoolClient): Promise<Result<Edge>> {
         const r = await super.run(this.createOrUpdateStatement(userID, edge), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -46,14 +46,14 @@ export default class EdgeMapper extends Mapper {
     public BulkCreateOrUpdateByCompositeID(userID: string, edges: Edge[], transaction?: PoolClient): Promise<Result<Edge[]>> {
         return super.run(this.createOrUpdateStatement(userID, ...edges), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
     public async Update(userID: string, edge: Edge, transaction?: PoolClient): Promise<Result<Edge>> {
         const r = await super.run(this.fullUpdateStatement(userID, edge), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -61,7 +61,7 @@ export default class EdgeMapper extends Mapper {
     }
 
     public async UpdateByCompositeOriginalID(userID: string, edge: Edge, transaction?: PoolClient): Promise<Result<Edge>> {
-        const r = await super.run(this.updateByCompositeOriginalIDStatement(userID, edge), { transaction, resultClass });
+        const r = await super.run(this.updateByCompositeOriginalIDStatement(userID, edge), {transaction, resultClass});
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
         return Promise.resolve(Result.Success(r.value[0]));
@@ -70,19 +70,19 @@ export default class EdgeMapper extends Mapper {
     public BulkUpdate(userID: string, edges: Edge[], transaction?: PoolClient): Promise<Result<Edge[]>> {
         return super.run(this.fullUpdateStatement(userID, ...edges), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
     public Retrieve(id: string, transaction?: PoolClient): Promise<Result<Edge>> {
         return super.retrieve<Edge>(this.retrieveStatement(id), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
     public RetrieveByCompositeID(compositeID: string, dataSourceID: string, transaction?: PoolClient): Promise<Result<Edge>> {
-        return super.retrieve<Edge>(this.retrieveByCompositeIDStatement(compositeID, dataSourceID), { transaction, resultClass });
+        return super.retrieve<Edge>(this.retrieveByCompositeIDStatement(compositeID, dataSourceID), {transaction, resultClass});
     }
 
     public Delete(id: string): Promise<Result<boolean>> {
@@ -115,6 +115,7 @@ export default class EdgeMapper extends Mapper {
             composite_original_id,
             origin_node_composite_original_id,
             destination_node_composite_original_id,
+            metadata,
             created_by,
             modified_by) VALUES %L
                       ON CONFLICT (composite_original_id, data_source_id)
@@ -137,6 +138,7 @@ export default class EdgeMapper extends Mapper {
             origin_node_composite_original_id = excluded.origin_node_composite_original_id,
             destination_node_composite_original_id = excluded.destination_node_composite_original_id,
             modified_by = excluded.modified_by,
+            metadata = excluded.metadata,
             modified_at = NOW()
             RETURNING *`;
 
@@ -158,8 +160,9 @@ export default class EdgeMapper extends Mapper {
             e.composite_original_id,
             e.origin_node_composite_original_id,
             e.destination_node_original_id,
+            JSON.stringify(e.metadata),
             userID,
-            userID
+            userID,
         ]);
 
         return format(text, values);
@@ -183,6 +186,7 @@ export default class EdgeMapper extends Mapper {
                             composite_original_id = u.composite_original_id,
                             origin_node_composite_original_id = u.origin_node_composite_original_id,
                             destination_node_composite_original_id = u.destination_node_composite_original_id,
+                            metadata = u.metadata::jsonb,
                             modified_by = u.modified_by,
                             modified_at = NOW()
                       FROM(VALUES %L) as u(
@@ -202,6 +206,7 @@ export default class EdgeMapper extends Mapper {
                           composite_original_id,
                           origin_node_composite_original_id,
                           destination_node_composite_original_id,
+                          metadata,
                           modified_by)
                       WHERE u.id::uuid = e.id RETURNING e.*`;
 
@@ -223,7 +228,8 @@ export default class EdgeMapper extends Mapper {
             e.composite_original_id,
             e.origin_node_composite_original_id,
             e.destination_node_original_id,
-            userID
+            JSON.stringify(e.metadata),
+            userID,
         ]);
 
         return format(text, values);
@@ -247,6 +253,7 @@ export default class EdgeMapper extends Mapper {
                             composite_original_id = u.composite_original_id,
                             origin_node_composite_original_id = u.origin_node_composite_original_id,
                             destination_node_composite_original_id = u.destination_node_composite_original_id,
+                            metadata = u.metadata::jsonb,
                             modified_by = u.modified_by,
                             modified_at = NOW()
                       FROM(VALUES %L) as u(
@@ -265,6 +272,7 @@ export default class EdgeMapper extends Mapper {
                           composite_original_id,
                           origin_node_composite_original_id,
                           destination_node_composite_original_id,
+                          metadata,
                           modified_by)
                       WHERE u.composite_original_id = e.composite_original_id RETURNING *`;
 
@@ -285,7 +293,8 @@ export default class EdgeMapper extends Mapper {
             e.composite_original_id,
             e.origin_node_composite_original_id,
             e.destination_node_original_id,
-            userID
+            JSON.stringify(e.metadata),
+            userID,
         ]);
 
         return format(text, values);
@@ -294,28 +303,28 @@ export default class EdgeMapper extends Mapper {
     private retrieveStatement(id: string): QueryConfig {
         return {
             text: `SELECT * FROM edges WHERE id = $1 AND NOT archived`,
-            values: [id]
+            values: [id],
         };
     }
 
     private retrieveByCompositeIDStatement(compositeID: string, dataSourceID: string): QueryConfig {
         return {
             text: `SELECT * FROM edges WHERE composite_original_id = $1 AND data_source_id = $2 AND NOT archived`,
-            values: [compositeID, dataSourceID]
+            values: [compositeID, dataSourceID],
         };
     }
 
     private archiveStatement(userID: string, edgeID: string): QueryConfig {
         return {
             text: `UPDATE edges SET archived = true, modified_by = $1, modified_at = NOW()  WHERE id = $2`,
-            values: [userID, edgeID]
+            values: [userID, edgeID],
         };
     }
 
     private deleteStatement(edgeID: string): QueryConfig {
         return {
             text: `DELETE FROM edges WHERE id = $1`,
-            values: [edgeID]
+            values: [edgeID],
         };
     }
 }
