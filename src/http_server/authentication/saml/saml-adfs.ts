@@ -36,6 +36,7 @@ export function SetSamlAdfs(app: express.Application) {
                 RACComparison: 'exact',
                 disableRequestedAuthnContext: true,
                 identifierFormat: null,
+                decryptionPvk: fs.readFileSync(Config.saml_adfs_private_cert_path, 'utf-8'),
             },
             (profile: any, done: any) => {
                 const storage = UserMapper.Instance;
