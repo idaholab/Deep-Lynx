@@ -87,7 +87,7 @@ export default class UserRepository extends Repository implements RepositoryInte
         // we must wrap the hashing in a try/catch block as we're using await when
         // attempting to hash the password
         try {
-            if (u.password !== '') u.password = await bcrypt.hash(u.password, 10);
+            if (u.password && u.password !== '') u.password = await bcrypt.hash(u.password, 10);
             u.email_validation_token = await uidgen.generate();
         } catch (error) {
             await this.#mapper.rollbackTransaction(transaction.value);
