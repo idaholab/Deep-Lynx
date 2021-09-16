@@ -52,6 +52,8 @@ export class Config {
     private readonly _saml_adfs_entry_point: string;
     private readonly _saml_adfs_issuer: string;
     private readonly _saml_adfs_callback: string;
+    private readonly _saml_adfs_claims_name: string;
+    private readonly _saml_adfs_claims_email: string;
     private readonly _saml_adfs_private_cert_path: string | undefined;
     private readonly _saml_adfs_public_cert_path: string | undefined;
 
@@ -126,6 +128,8 @@ export class Config {
         this._superuser_email = process.env.SUPERUSER_EMAIL || 'admin@admin.com';
         this._superuser_password = process.env.SUPERUSER_PASSWORD || '';
 
+        this._saml_adfs_claims_name = process.env.SAML_ADFS_CLAIMS_NAME || '';
+        this._saml_adfs_claims_email = process.env.SAML_ADFS_CLAIMS_EMAIL || '';
         this._saml_adfs_entry_point = process.env.SAML_ADFS_ENTRY_POINT || '';
         this._saml_adfs_issuer = process.env.SAML_ADFS_ISSUER || '';
         this._saml_adfs_callback = process.env.SAML_ADFS_CALLBACK || 'http://localhost:8090/oauth/saml';
@@ -312,6 +316,14 @@ export class Config {
 
     get auth_strategy(): string {
         return this._auth_strategy;
+    }
+
+    get saml_claims_name(): string {
+        return this._saml_adfs_claims_name;
+    }
+
+    get saml_claims_email(): string {
+        return this._saml_adfs_claims_email;
     }
 
     get saml_enabled(): boolean {
