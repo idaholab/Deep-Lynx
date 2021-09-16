@@ -18,10 +18,19 @@ export function SetSamlAdfs(app: express.Application) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - as of 1/6/2021 passport.js types haven't been updated
     passport.serializeUser((user: User, done: any) => {
-        done(null, user);
+        if (typeof user === 'string') {
+            user = JSON.parse(user);
+        }
+        user.password = '';
+        done(null, user.id);
     });
-    passport.deserializeUser((user: User, done: any) => {
-        done(null, user);
+
+    passport.deserializeUser((user: string, done: any) => {
+        void UserMapper.Instance.Retrieve(user).then((result) => {
+            if (result.isError) done('unable to retrieve user', null);
+
+            done(null, result.value);
+        });
     });
 
     passport.use(
