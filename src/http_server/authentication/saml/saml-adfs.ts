@@ -35,6 +35,7 @@ export function SetSamlAdfs(app: express.Application) {
                 signatureAlgorithm: 'sha256',
                 RACComparison: 'exact',
                 disableRequestedAuthnContext: true,
+                identifierFormat: null,
             },
             (profile: any, done: any) => {
                 const storage = UserMapper.Instance;
