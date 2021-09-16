@@ -32,7 +32,6 @@ export function SetSamlAdfs(app: express.Application) {
                 callbackUrl: Config.saml_adfs_callback,
                 privateCert: fs.readFileSync(Config.saml_adfs_private_cert_path, 'utf-8'),
                 cert: fs.readFileSync(Config.saml_adfs_public_cert_path, 'utf-8'),
-                authnContext: 'http://schemas.microsoft.com/ws/2008/06/identity/authenticationmethod/password',
                 signatureAlgorithm: 'sha256',
                 RACComparison: 'exact',
             },
@@ -41,7 +40,7 @@ export function SetSamlAdfs(app: express.Application) {
 
                 return new Promise((resolve) => {
                     storage
-                        .RetrieveByIdentityProviderID(profile['http://schemas.microsoft.com/identity/claims/objectidentifier'])
+                        .RetrieveByEmail(profile[Config.saml_claims_email])
                         .then((result) => {
                             if (result.isError && result.error?.errorCode !== 404) {
                                 resolve(done(result.error, false));
@@ -56,10 +55,10 @@ export function SetSamlAdfs(app: express.Application) {
                                         .Create(
                                             'saml-adfs login',
                                             new User({
-                                                identity_provider_id: profile['http://schemas.microsoft.com/identity/claims/objectidentifier'],
+                                                identity_provider_id: profile[Config.saml_claims_email],
                                                 identity_provider: 'saml_adfs',
-                                                display_name: profile['http://schemas.microsoft.com/identity/claims/displayname'],
-                                                email: profile.nameID,
+                                                display_name: profile[Config.saml_claims_name],
+                                                email: profile[Config.saml_claims_email],
                                                 admin: users.value.length === 0,
                                             }),
                                         )
