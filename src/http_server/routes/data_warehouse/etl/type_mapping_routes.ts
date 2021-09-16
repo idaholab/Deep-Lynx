@@ -389,7 +389,6 @@ export default class TypeMappingRoutes {
     // should be an array of type mapping classes, previously generated using the export route
     private static importTypeMappings(req: Request, res: Response, next: NextFunction) {
         const user = req.currentUser!;
-        const busboy = new Busboy({headers: req.headers});
         const importResults: Promise<Result<TypeMapping>[]>[] = [];
 
         if (!req.dataSource) {
@@ -405,11 +404,12 @@ export default class TypeMappingRoutes {
 
             repo.importToDataSource(req.dataSource.DataSourceRecord?.id!, user, ...payload)
                 .then((results) => {
-                    res.status(201).json(serialize(results));
+                    res.status(201).json(results);
                     next();
                 })
                 .catch((e) => res.status(500).send(e));
         } else {
+            const busboy = new Busboy({headers: req.headers});
             busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
                 const repo = new TypeMappingRepository();
 

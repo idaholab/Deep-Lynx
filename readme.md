@@ -5,7 +5,7 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 `Deep Lynx` is documented in the following ways
 
 1. [Wiki](https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Home)
-2. API level documentation in the form of Postman and Swagger collections - found in `api_documentation`
+2. API level documentation in the form of an OpenAPI (Swagger) collection - found in the `API Documentation` folder
 
 **Requirements**
 

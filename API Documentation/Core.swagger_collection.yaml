@@ -42,6 +42,8 @@ tags:
     description: These endpoints allow for retrieving or deleting the data associated with  a given import from a Data Source.
   - name: Events
     description: 'An application may create a Registered Event with Deep Lynx in order to  receive messages from Deep Lynx concerning the event type registered. This  system may be used to receive alerts when other Data Sources have ingested data, a new data source is created, etc.'
+  - name: Authentication
+    description: 'These endpoints provide users and applications the ability to authenticate with Deep Lynx.'
   - name: Misc
     description: ''
 security:
@@ -51,9 +53,9 @@ paths:
     get:
       tags:
         - Containers
-      summary: List
+      summary: List Containers
       description: List all containers.
-      operationId: List
+      operationId: ListContainers
       parameters: []
       responses:
         '200':
@@ -66,9 +68,9 @@ paths:
     put:
       tags:
         - Containers
-      summary: Batch Update
+      summary: Container Batch Update
       description: 'Accepts an array of container objects - will attempt to update all of them in a single transaction. If the update fails, none of them will go through.'
-      operationId: BatchUpdate
+      operationId: ContainerBatchUpdate
       requestBody:
         content:
           application/json:
@@ -93,12 +95,12 @@ paths:
     post:
       tags:
         - Containers
-      summary: Create
+      summary: Create Container
       description: |-
         Creates a new container object. Containers are the root level object and are considered to contain both the ontology(in form of Metatypes, Metatype Keys, and MetatypeRelationships) as well as the data stored under that ontology.
 
         Endpoint will accept both a single container request object, or an array of container request objects
-      operationId: Create
+      operationId: CreateContainer
       requestBody:
         content:
           application/json:
@@ -133,9 +135,9 @@ paths:
     get:
       tags:
         - Containers
-      summary: Fetch by ID
-      description: Fetch container by ID.
-      operationId: FetchbyID
+      summary: Retrieve Container
+      description: Retrieve container by ID.
+      operationId: RetrieveContainer
       parameters:
         - name: container_id
           in: path
@@ -159,9 +161,9 @@ paths:
     put:
       tags:
         - Containers
-      summary: Update
+      summary: Update Container
       description: Updates the container. This will fail if a container already exists with the proposed updated name.
-      operationId: Update
+      operationId: UpdateContainer
       parameters:
         - name: container_id
           in: path
@@ -186,9 +188,9 @@ paths:
     delete:
       tags:
         - Containers
-      summary: Archive
+      summary: Archive Container
       description: 'Archives a Container. This is preferred over deletion as deletion has a cascading effect on the deleted type''s keys, relationships, and relationship keys. When in doubt, archive over delete. We''d rather have tombstones than cremating the type.'
-      operationId: Archive
+      operationId: ArchiveContainer
       parameters:
         - name: container_id
           in: path
@@ -212,9 +214,9 @@ paths:
     post:
       tags:
         - Containers
-      summary: Set Active
+      summary: Set Container Active
       description: Unarchives a Container. This is the only way to update this value of a container via API.
-      operationId: SetActive
+      operationId: SetContainerActive
       parameters:
         - name: container_id
           in: path
@@ -233,9 +235,9 @@ paths:
     post:
       tags:
         - Containers
-      summary: Import
+      summary: Import Container
       description: 'An optional query param "dryrun" may be included with a value of "true" in order to return a HTML formatted string explaining the name and description of the container along with the number of metatypes, metatype relationships, and metatype keys to be created. This request uses a form-data body. If the ontology to be imported is being referenced via url, provide the url via a "path" field. Otherwise a local file may be provided. A file takes precedence over a "path" value if both are provided.'
-      operationId: Import
+      operationId: ImportContainer
       requestBody:
         content:
           multipart/form-data:
@@ -274,8 +276,8 @@ paths:
     put:
       tags:
         - Containers
-      summary: Update Import
-      operationId: UpdateImport
+      summary: Update Container Import
+      operationId: UpdateContainerImport
       parameters:
         - name: container_id
           in: path
@@ -296,7 +298,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ContainerImportSuccess'
       deprecated: false
-      description: ''
+      description: Updates an existing container via an ontology file.
     parameters:
       - schema:
           type: string
@@ -307,9 +309,9 @@ paths:
     post:
       tags:
         - Containers
-      summary: Repair Permissions
+      summary: Repair Container Permissions
       description: Repairs a container's permission set
-      operationId: RepairPermissions
+      operationId: RepairContainerPermissions
       parameters:
         - name: container_id
           in: path
@@ -658,8 +660,16 @@ paths:
                     type: boolean
       deprecated: false
     post:
+      tags:
+        - Graph
       summary: Create or Update Edges
-      operationId: post-containers-container_id-graphs-edges
+      operationId: CreateOrUpdateEdges
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: ''
@@ -679,7 +689,7 @@ paths:
         - Metatypes
       summary: List Metatypes
       description: 'List all metatypes that the container has access to. '
-      operationId: ListTypes
+      operationId: ListMetatypes
       parameters:
         - name: limit
           in: query
@@ -751,9 +761,9 @@ paths:
     post:
       tags:
         - Metatypes
-      summary: New Metatype
+      summary: Create Metatype
       description: Create a new metatype. Pass in an array for bulk creation.
-      operationId: NewType
+      operationId: CreateMetatype
       parameters:
         - name: container_id
           in: path
@@ -786,9 +796,9 @@ paths:
     get:
       tags:
         - Metatypes
-      summary: Get Metatype
+      summary: Retrieve Metatype
       description: Retrieves a single metatype.
-      operationId: GetType
+      operationId: RetrieveMetaype
       parameters:
         - name: container_id
           in: path
@@ -818,7 +828,7 @@ paths:
         - Metatypes
       summary: Update Metatype
       description: Update a single Metatype in storage. Will fail if the updated name has already been taken.
-      operationId: UpdateType
+      operationId: UpdateMetatype
       parameters:
         - name: container_id
           in: path
@@ -855,7 +865,7 @@ paths:
         - Metatypes
       summary: Archive Metatype
       description: 'Archives the metatype. This is preferred over deletion as deletion has a cascading effect on the deleted metatype''s keys, relationships, and relationship keys. When in doubt, archive over delete. We''d rather have tombstones than cremating the metatype.'
-      operationId: ArchiveType
+      operationId: ArchiveMetatype
       parameters:
         - name: container_id
           in: path
@@ -892,7 +902,7 @@ paths:
         - Metatype Keys
       summary: List Metatype's Keys
       description: Lists all currently valid and available keys for the metatype.
-      operationId: ListType'sKeys
+      operationId: ListMetatypesKeys
       parameters:
         - name: container_id
           in: path
@@ -922,7 +932,7 @@ paths:
     post:
       tags:
         - Metatype Keys
-      summary: New Type Key
+      summary: Create Metatype Key
       description: |-
         Creates a new key for a metatype. Keys consist of a unique key name (unique to the metatype only), key type, default values, and allowed values. Of those, only the first two are required.
 
@@ -933,7 +943,7 @@ paths:
         Pass in an array for bulk creation.
 
         Currently the validation and cardinality functionality of keys are NOT checked at data insertion.
-      operationId: NewTypeKey
+      operationId: CreateMetatypeKey
       parameters:
         - name: container_id
           in: path
@@ -982,9 +992,9 @@ paths:
     get:
       tags:
         - Metatype Keys
-      summary: Get Metatype Key
+      summary: Retrieve Metatype Key
       description: Retrieve the specified key for the metatype.
-      operationId: GetTypeKey
+      operationId: RetrieveMetatypeKey
       parameters:
         - name: container_id
           in: path
@@ -1017,9 +1027,9 @@ paths:
     put:
       tags:
         - Metatype Keys
-      summary: Update Type Key
+      summary: Update Metatype Key
       description: Updates a single key for a metatype.
-      operationId: UpdateTypeKey
+      operationId: UpdateMetatypeKey
       parameters:
         - name: container_id
           in: path
@@ -1059,9 +1069,9 @@ paths:
     delete:
       tags:
         - Metatype Keys
-      summary: Archive Type Key
+      summary: Archive Metatype Key
       description: Archiving the metatype key prevents any new types from implementing the key. It *does not remove key/value pairs on existing types*. We highly recommend you archive type keys instead of deleting them so that previous data is not affected.
-      operationId: ArchiveTypeKey
+      operationId: ArchiveMetatypeKey
       parameters:
         - name: container_id
           in: path
@@ -1106,9 +1116,9 @@ paths:
     get:
       tags:
         - Metatype Relationships
-      summary: List Container Metatype Relationships
+      summary: List Metatype Relationships
       description: List metatype relationships. Describes the connection between two metatypes and acts as a vehicle for relationship specific keys.
-      operationId: ListContainerTypeRelationships
+      operationId: ListMetatypeRelationships
       parameters:
         - name: limit
           in: query
@@ -1180,12 +1190,12 @@ paths:
     post:
       tags:
         - Metatype Relationships
-      summary: New Type Relationship
+      summary: Create Metatype Relationship
       description: |-
         Create a new metatype relationship. Describes the connection that could exist between two metatypes and acts as a vehicle for relationship specific keys.
 
         Pass in an array for bulk creation.
-      operationId: NewTypeRelationship
+      operationId: CreateMetatypeRelationship
       parameters:
         - name: container_id
           in: path
@@ -1218,9 +1228,9 @@ paths:
     get:
       tags:
         - Metatype Relationships
-      summary: Get Type Relationship
+      summary: Retrieve Metatype Relationship
       description: Retrieve a single Metatype Relationship.
-      operationId: GetTypeRelationship
+      operationId: RetrieveMetatypeRelationship
       parameters:
         - name: container_id
           in: path
@@ -1249,7 +1259,7 @@ paths:
       tags:
         - Metatype Relationships
       summary: Update Metatype Relationship
-      operationId: UpdateTypeRelationship
+      operationId: UpdateMetatypeRelationship
       parameters:
         - name: container_id
           in: path
@@ -1281,13 +1291,13 @@ paths:
                     type: boolean
       deprecated: false
       x-codegen-request-body-name: Body
-      description: ''
+      description: Updates the specified metatype relationship.
     delete:
       tags:
         - Metatype Relationships
-      summary: Archive Type Relationship
+      summary: Archive Metatype Relationship
       description: Archive the metatype relationship.
-      operationId: ArchiveTypeRelationship
+      operationId: ArchiveMetatypeRelationship
       parameters:
         - name: container_id
           in: path
@@ -1313,7 +1323,7 @@ paths:
         - Metatype Relationship Keys
       summary: List Metatype Relationship Keys
       description: Retrieves all keys for a Metatype Relationship.
-      operationId: ListTypeRelationshipKeys
+      operationId: ListMetatypeRelationshipKeys
       parameters:
         - name: container_id
           in: path
@@ -1343,14 +1353,14 @@ paths:
     post:
       tags:
         - Metatype Relationship Keys
-      summary: New Type Relationship Key
+      summary: Create Metatype Relationship Key
       description: |-
         Creates a new key for a metatype relationship. Keys consist of a unique key name (unique to the metatype relationship), key type, default values, and allowed values. Of those, only the first two are required.
 
         The `dataType` field accepts only one of the following values: number, string, date, boolean, enumeration, file. 
 
         The fields `defaultValue` and `options` will only accept an array of the following types: string, boolean, number, float.
-      operationId: NewTypeRelationshipKey
+      operationId: CreateMetatypeRelationshipKey
       parameters:
         - name: container_id
           in: path
@@ -1388,9 +1398,9 @@ paths:
     get:
       tags:
         - Metatype Relationship Keys
-      summary: Get Metatype Relationship Key
+      summary: Retrieve Metatype Relationship Key
       description: Retrieve a single key for a Metatype Relationship by id.
-      operationId: GetTypeRelationshipKey
+      operationId: RetrieveMetatypeRelationshipKey
       parameters:
         - name: container_id
           in: path
@@ -1425,7 +1435,7 @@ paths:
         - Metatype Relationship Keys
       summary: Update Metaype Relationship Key
       description: Updates a Metatype Relationship key. The update must follow the same format as creation.
-      operationId: UpdateTypeRelationshipKey
+      operationId: UpdateMetatypeRelationshipKey
       parameters:
         - name: container_id
           in: path
@@ -1467,7 +1477,7 @@ paths:
         - Metatype Relationship Keys
       summary: Archive Metatype Relationship Key
       description: Archives a Metatype Relationship Key.
-      operationId: ArchiveTypeRelationshipKey
+      operationId: ArchiveMetatypeRelationshipKey
       parameters:
         - name: container_id
           in: path
@@ -1498,7 +1508,7 @@ paths:
         - Metatype Relationship Pairs
       summary: List Metatype Relationship Pairs
       description: List all Metatype Relationship Pairs for current container.
-      operationId: ListTypeRelationshipPairs
+      operationId: ListMetatypeRelationshipPairs
       parameters:
         - name: limit
           in: query
@@ -1570,12 +1580,12 @@ paths:
     post:
       tags:
         - Metatype Relationship Pairs
-      summary: New Metatype Relationship Pair
+      summary: Create Metatype Relationship Pair
       description: |-
         Create a new Metaype Relationship Pair. Describes the connection between two metatypes by connecting them using a Metatype Relationship.
 
         Pass in an array for bulk creation.
-      operationId: NewTypeRelationshipPair
+      operationId: CreateMetatypeRelationshipPair
       parameters:
         - name: container_id
           in: path
@@ -1608,9 +1618,9 @@ paths:
     get:
       tags:
         - Metatype Relationship Pairs
-      summary: Get Metatype Relationship Pair
+      summary: Retrieve Metatype Relationship Pair
       description: Retrieves a single Metatype Relationship Pair.
-      operationId: GetTypeRelationshipPair
+      operationId: RetrieveMetatypeRelationshipPair
       parameters:
         - name: container_id
           in: path
@@ -1640,7 +1650,7 @@ paths:
         - Metatype Relationship Pairs
       summary: Archive Metatype Relationship Pair
       description: Archives a Metatype Relationship Pair.
-      operationId: ArchiveTypePair
+      operationId: ArchiveMetatypeRelationshipPair
       parameters:
         - name: container_id
           in: path
@@ -1661,8 +1671,10 @@ paths:
                 $ref: '#/components/schemas/Generic200'
       deprecated: false
     put:
+      tags:
+        - Metatype Relationship Pairs
       summary: Update Metaype Relationship Pair
-      operationId: UpdateTypePair
+      operationId: UpdateMetatypeRelationshipPair
       parameters:
         - name: container_id
           in: path
@@ -1691,6 +1703,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/NewTypeRelationshipPairRequest'
+      description: Updates the specified metatype relationship pair.
   '/containers/{container_id}/import/datasources':
     get:
       tags:
@@ -1718,6 +1731,7 @@ paths:
                   isError:
                     type: boolean
       deprecated: false
+      description: List the datasources for the container.
     post:
       tags:
         - Data Sources
@@ -1822,9 +1836,9 @@ paths:
     get:
       tags:
         - Data Sources
-      summary: Get File
+      summary: Retrieve File
       description: Get information about a file by ID.
-      operationId: GetFile
+      operationId: RetrieveFile
       parameters:
         - name: container_id
           in: path
@@ -1854,7 +1868,7 @@ paths:
       tags:
         - Data Sources
       summary: List Imports for Data Source
-      operationId: ListImportsforDataSource
+      operationId: ListImportsForDataSource
       parameters:
         - name: container_id
           in: path
@@ -1881,6 +1895,7 @@ paths:
                   isError:
                     type: boolean
       deprecated: false
+      description: List the imports for the datasource.
     post:
       tags:
         - Data Sources
@@ -1924,9 +1939,9 @@ paths:
     get:
       tags:
         - Data Sources
-      summary: Get Data Source
+      summary: Retrieve Data Source
       description: Retrieve a single data source by ID.
-      operationId: GetDataSource
+      operationId: RetrieveDataSource
       parameters:
         - name: container_id
           in: path
@@ -1956,7 +1971,7 @@ paths:
         - Data Sources
       summary: Set Data Source Configuration
       description: Updates a data source's configuration in storage. Note that this request body's structure must match that of the data source's adapter type.
-      operationId: SetConfiguration
+      operationId: SetDataSourceConfiguration
       parameters:
         - name: container_id
           in: path
@@ -1991,9 +2006,9 @@ paths:
     delete:
       tags:
         - Data Sources
-      summary: Delete Data Source
+      summary: Archive Data Source
       description: 'Archive a data source, with options to permanently remove it (and associated data).'
-      operationId: DeleteDataSource
+      operationId: ArchiveDataSource
       parameters:
         - name: container_id
           in: path
@@ -2034,7 +2049,7 @@ paths:
         - Data Sources
       summary: Set Data Source Active
       description: Sets a data source active.
-      operationId: PostSetActive
+      operationId: SetDataSourceActive
       parameters:
         - name: container_id
           in: path
@@ -2059,7 +2074,7 @@ paths:
         - Data Sources
       summary: Set Data Source Inactive
       description: Sets a data source inactive.
-      operationId: SetInactive
+      operationId: SetDataSourceInactive
       parameters:
         - name: container_id
           in: path
@@ -2083,9 +2098,9 @@ paths:
     post:
       tags:
         - Data Export
-      summary: New Data Export
+      summary: Create Data Export
       description: Create a new data export with the included configuration. Configuration values may be encrypted depending on the adapter you've choosen. See the readme for the exporters for more information.
-      operationId: NewDataExport
+      operationId: CreateDataExport
       parameters:
         - name: container_id
           in: path
@@ -2105,8 +2120,10 @@ paths:
       deprecated: false
       x-codegen-request-body-name: Body
     get:
-      summary: List Exports
-      operationId: get-containers-container_id-data-export
+      tags:
+        - Data Export
+      summary: List Data Exports
+      operationId: ListDataExports
       responses:
         '200':
           description: ''
@@ -2158,9 +2175,9 @@ paths:
     get:
       tags:
         - Data Export
-      summary: Get Data Export
+      summary: Retrieve Data Export
       description: Fetch a data export record by ID
-      operationId: GetDataExport
+      operationId: RetrieveDataExport
       parameters:
         - name: container_id
           in: path
@@ -2265,9 +2282,9 @@ paths:
     get:
       tags:
         - Users
-      summary: Get User
+      summary: Retrieve User
       description: Retrieve a user by ID
-      operationId: GetUser
+      operationId: RetrieveUser
       parameters:
         - name: container_id
           in: path
@@ -2297,8 +2314,8 @@ paths:
       tags:
         - Users
       summary: List Users
-      description: List Users
-      operationId: ListUsers
+      description: List Users for container.
+      operationId: ListUsersForContainer
       parameters:
         - name: limit
           in: query
@@ -2338,7 +2355,7 @@ paths:
         - Users
       summary: List User's Roles
       description: List Users' roles
-      operationId: ListUser'sRoles
+      operationId: ListUsersRoles
       parameters:
         - name: container_id
           in: path
@@ -2369,9 +2386,9 @@ paths:
     post:
       tags:
         - Users
-      summary: Assign Role
+      summary: Assign User Role
       description: 'Assign a role to a user, roles must consist of role name and domain'
-      operationId: AssignRole
+      operationId: AssignUserRole
       parameters:
         - name: container_id
           in: path
@@ -2399,7 +2416,7 @@ paths:
         - Users
       summary: List Invited Users for Container
       description: List all invitations to container.
-      operationId: ListInvitedUsersforContainer
+      operationId: ListInvitedUsersForContainer
       parameters:
         - name: container_id
           in: path
@@ -2422,7 +2439,7 @@ paths:
         - Users
       summary: Invite User to Container
       description: Create a new user using the username_password identity type.
-      operationId: InviteUsertoContainer
+      operationId: InviteUserToContainer
       parameters:
         - name: container_id
           in: path
@@ -2438,9 +2455,9 @@ paths:
     get:
       tags:
         - Data Type Mappings
-      summary: List Type Mappings
+      summary: List Data Type Mappings
       description: Lists type mappings from storage
-      operationId: ListTypeMappings
+      operationId: ListDataTypeMappings
       parameters:
         - name: limit
           in: query
@@ -2511,9 +2528,9 @@ paths:
     get:
       tags:
         - Data Type Mappings
-      summary: Get Data Type Mapping
+      summary: Retrieve Data Type Mapping
       description: Retrieve a type mapping from storage.
-      operationId: GetDataTypeMapping
+      operationId: RetrieveDataTypeMapping
       parameters:
         - name: container_id
           in: path
@@ -2575,8 +2592,26 @@ paths:
       deprecated: false
       x-codegen-request-body-name: Body
     put:
+      tags:
+        - Data Type Mappings
       summary: Update Data Type Mapping
-      operationId: put-containers-container_id-import-datasources-data_source_id-mappings-mapping_id
+      operationId: UpdateDataTypeMapping
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: mapping_id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: ''
@@ -2590,14 +2625,19 @@ paths:
                   isError:
                     type: boolean
       description: Updates a data type mapping.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TypeMappingResponse'
     parameters: []
   '/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}/transformations':
     get:
       tags:
         - Data Type Mappings
-      summary: List Type Mapping's Transformations
+      summary: List Data Type Mapping's Transformations
       description: List transformations for a type mapping from storage.
-      operationId: GetTypeMapping'sTransformations
+      operationId: ListTransformations
       parameters:
         - name: container_id
           in: path
@@ -2632,9 +2672,9 @@ paths:
     post:
       tags:
         - Data Type Mappings
-      summary: Create Type Mapping's Transformations
+      summary: Create Data Type Mapping's Transformations
       description: Create a transformation for the type mapping.
-      operationId: CreateTypeMapping'sTransformations
+      operationId: CreateTransformation
       parameters:
         - name: container_id
           in: path
@@ -2675,9 +2715,9 @@ paths:
     put:
       tags:
         - Data Type Mappings
-      summary: Update Type Mapping's Transformations
+      summary: Update Data Type Mapping's Transformations
       description: Update a transformation.
-      operationId: EditTypeMapping'sTransformations
+      operationId: UpdateTransformation
       parameters:
         - name: container_id
           in: path
@@ -2722,9 +2762,9 @@ paths:
     delete:
       tags:
         - Data Type Mappings
-      summary: Delete Type Mapping's Transformations
+      summary: Delete Data Type Mapping's Transformations
       description: Delete a transformation.
-      operationId: DeleteTypeMapping'sTransformations
+      operationId: DeleteTransformation
       parameters:
         - name: container_id
           in: path
@@ -2759,7 +2799,7 @@ paths:
       tags:
         - Imports
       summary: List Import's Data
-      operationId: ListImport'sData
+      operationId: ListImportsData
       parameters:
         - name: container_id
           in: path
@@ -2809,6 +2849,7 @@ paths:
                   isError:
                     type: boolean
       deprecated: false
+      description: List the data for an import.
   '/containers/{container_id}/import/imports/{import_id}':
     delete:
       tags:
@@ -2836,9 +2877,9 @@ paths:
     get:
       tags:
         - Imports
-      summary: Get Import Data
+      summary: Retrieve Import Data
       description: Retrieve a single piece of data from an import.
-      operationId: GetImportData
+      operationId: RetrieveImportData
       parameters:
         - name: container_id
           in: path
@@ -2901,8 +2942,27 @@ paths:
                 $ref: '#/components/schemas/Generic200'
       deprecated: false
     put:
+      tags:
+        - Imports
       summary: Update Import Data
-      operationId: put-containers-container_id-import-imports-import_id-data-data_id
+      operationId: UpdateImportData
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: import_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
       responses:
         '200':
           description: ''
@@ -2973,9 +3033,9 @@ paths:
     get:
       tags:
         - Events
-      summary: Get Registered Event
+      summary: Retrieve Registered Event
       description: Retrieve a registered event
-      operationId: GetRegisteredEvent
+      operationId: RetrieveRegisteredEvent
       parameters:
         - name: event_id
           in: path
@@ -3064,48 +3124,69 @@ paths:
   /oauth/token:
     get:
       tags:
-        - Misc
-      summary: OAuth - Token
-      operationId: OAuth-Token
+        - Authentication
+      summary: Retrieve OAuth Token
+      operationId: RetrieveOAuthToken
       parameters:
         - name: x-api-key
           in: header
           required: true
           schema:
             type: string
+          description: The API key
         - name: x-api-secret
           in: header
           required: true
           schema:
             type: string
+          description: The API secret
         - name: x-api-expiry
           in: header
-          required: true
           schema:
             type: string
+          description: The API expiry date
       responses:
         '200':
           description: ''
-          content: {}
+          content:
+            application/json:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized
+          content:
+            text/plain:
+              schema:
+                type: string
+                pattern: unauthorized
+                default: unauthorized
       deprecated: false
+      description: Returns an OAuth token. The API key and secret must be supplied.
     parameters: []
-  /oauth/authorize:
+  /oauth/exchange:
     post:
-      summary: ''
-      operationId: post-oauth-authorize
+      tags:
+        - Authentication
+      summary: Exchange OAuth Token
+      operationId: ExchangeOAuthToken
       responses:
         '200':
-          description: OK
-  /oauth/exchange:
-    get:
-      summary: Your GET endpoint
-      tags: []
-      responses: {}
-      operationId: get-oauth-exchange
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenExchangeRequest'
+      description: 'Exchanges credentials for a JSON Web Token (JWT). Multiple authentication flows are supported, see Deep Lynx documentation for details.'
   /users:
     get:
       summary: List Users
-      tags: []
+      tags:
+        - Users
       responses:
         '200':
           description: ''
@@ -3120,7 +3201,7 @@ paths:
                       $ref: '#/components/schemas/UserResponse'
                   isError:
                     type: boolean
-      operationId: get-users
+      operationId: ListUsers
       description: List users.
       parameters:
         - schema:
@@ -3129,9 +3210,10 @@ paths:
           name: count
           description: boolean indicating if the return value should be a count only
         - schema:
-            type: string
+            type: boolean
           in: query
           name: loadKeys
+          description: 'if supplied, the API keys for the user will also be returned'
         - schema:
             type: integer
             minimum: 0
@@ -3155,7 +3237,8 @@ paths:
   /users/permissions:
     get:
       summary: List User Permissions
-      tags: []
+      tags:
+        - Users
       responses:
         '200':
           description: ''
@@ -3170,8 +3253,272 @@ paths:
                       type: string
                   isError:
                     type: boolean
-      operationId: get-users-permissions
+      operationId: ListUserPermissions
       description: List permissions for the user.
+  '/containers/{container_id}/datasources/{source_id}/imports':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: source_id
+        in: path
+        required: true
+    post:
+      tags:
+        - Imports
+      summary: Create Import
+      operationId: CreateImport
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/CreateManualImportResponse'
+                  isError:
+                    type: boolean
+      description: Creates a new import.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: ''
+              type: object
+              x-examples:
+                example-1:
+                  data_source_id: 1294f879-7f15-40e7-86f4-56177108ba23
+                  reference: testing upload
+              properties:
+                data_source_id:
+                  type: string
+                  minLength: 1
+                reference:
+                  type: string
+                  minLength: 1
+                status_message:
+                  type: string
+              required:
+                - data_source_id
+        description: ''
+  '/containers/{container_id}/datasources/{source_id}/imports/{import_id}/data':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: source_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: import_id
+        in: path
+        required: true
+    post:
+      tags:
+        - Imports
+      summary: Add Data to Import
+      operationId: AddDataToImport
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    $ref: '#/components/schemas/CreateManualImportResponse'
+                  isError:
+                    type: boolean
+      description: Adds data to an existing import. Accepts an array of JSON objects or a file in JSON or CSV format.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+  '/containers/{container_id}/import/datasources/{source_id}/mappings/export':
+    post:
+      tags:
+        - Data Type Mappings
+      summary: Export Type Mappings
+      operationId: ExportTypeMappings
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TypeMappingResponse'
+      description: 'Export type mappings for a datasource. Providing a JSON body is optional. If provided, the mapping_ids may be specified to indicate certain type mapping IDs to return. Additionally, a target data source may be provided to which the mappings will be copied.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TypeMappingExportPayload'
+        description: ''
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: source_id
+        in: path
+        required: true
+  '/containers/{container_id}/import/datasources/{source_id}/mappings/import':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: source_id
+        in: path
+        required: true
+    post:
+      tags:
+        - Data Type Mappings
+      summary: Import Data Type Mappings
+      operationId: ImportDataTypeMappings
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    value:
+                      $ref: '#/components/schemas/TypeMappingResponse'
+                    isError:
+                      type: boolean
+      description: 'Import type mappings for a datasource. Accepts either a JSON body or actual JSON file. The payload should be an array of type mapping classes, previously generated using the export route.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+  '/users/{user_id}':
+    parameters:
+      - schema:
+          type: string
+        name: user_id
+        in: path
+        required: true
+    put:
+      tags:
+        - Users
+      summary: Update User
+      operationId: UpdateUser
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      description: Updates the specified user.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserResponse'
+    delete:
+      tags:
+        - Users
+      summary: Delete User
+      operationId: DeleteUser
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      description: Deletes the specified user.
+  /users/invite:
+    get:
+      summary: Accept Container Invite
+      tags:
+        - Users
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200'
+      operationId: AcceptContainerInvite
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: token
+          description: the token supplied in the container invite
+          required: true
+      description: Accepts a container invite for the current user. The token received in the container invite previously must be attached to this request as a query parameter.
+  /users/invites:
+    get:
+      summary: List Outstanding Invites
+      tags:
+        - Users
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContainerInviteResponse'
+                  isError:
+                    type: boolean
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/404NotFound'
+      operationId: ListOutstandingInvites
+      description: Lists the outstanding container invites for the current user.
 components:
   securitySchemes:
     BearerAuth:
@@ -3276,41 +3623,6 @@ components:
         - data_source_id
         - metatype_id
         - properties
-    ArchiveNodeRequest:
-      title: ArchiveNodeRequest
-      required:
-        - container_id
-        - data_source_id
-        - data_type_mapping_id
-        - metatype_id
-        - modified_at
-        - original_data_id
-        - properties
-      type: object
-      properties:
-        container_id:
-          type: string
-        original_data_id:
-          type: string
-        data_source_id:
-          type: string
-        data_type_mapping_id:
-          type: string
-        metatype_id:
-          type: string
-        modified_at:
-          type: string
-        properties:
-          type: object
-          properties: {}
-      example:
-        container_id: required
-        original_data_id: optional
-        data_source_id: required
-        data_type_mapping_id: optional
-        metatype_id: required
-        modified_at: optional - set to update node if it exists
-        properties: {}
     CreateOrUpdateEdgesRequest:
       title: CreateOrUpdateEdgesRequest
       required:
@@ -3357,41 +3669,6 @@ components:
         destination_node_original_id: 'create edge based on original ID of node, not Deep Lynx ID'
         relationship_pair_id: required
         modified_at: will attempt to update edge if exists
-        properties: {}
-    ArchiveEdgeRequest:
-      title: ArchiveEdgeRequest
-      required:
-        - container_id
-        - data_source_id
-        - data_type_mapping_id
-        - metatype_id
-        - modified_at
-        - original_data_id
-        - properties
-      type: object
-      properties:
-        container_id:
-          type: string
-        original_data_id:
-          type: string
-        data_source_id:
-          type: string
-        data_type_mapping_id:
-          type: string
-        metatype_id:
-          type: string
-        modified_at:
-          type: string
-        properties:
-          type: object
-          properties: {}
-      example:
-        container_id: required
-        original_data_id: optional
-        data_source_id: required
-        data_type_mapping_id: optional
-        metatype_id: required
-        modified_at: optional - set to update node if it exists
         properties: {}
     NewTypeRequest:
       title: NewTypeRequest
@@ -3666,28 +3943,6 @@ components:
         options:
           - ''
         defaultValue: can be any type
-    UpdateTypeRelationshipKeyRequest:
-      title: UpdateTypeRelationshipKeyRequest
-      required:
-        - data_type
-        - default_value
-        - description
-        - name
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        data_type:
-          type: string
-        default_value:
-          type: string
-      example:
-        name: Updated Name
-        description: Updated Name Description
-        data_type: string
-        default_value: optional - data structure here is dependent on dataType value
     NewTypeRelationshipPairRequest:
       title: NewTypeRelationshipPairRequest
       required:
@@ -3734,7 +3989,7 @@ components:
         active:
           type: boolean
         config:
-          $ref: '#/components/schemas/Config'
+          $ref: '#/components/schemas/DataSourceConfig'
       example:
         name: testing data source
         adapter_type: http OR manual
@@ -3744,8 +3999,8 @@ components:
           auth_method: basic
           username: test
           password: test
-    Config:
-      title: Config
+    DataSourceConfig:
+      title: DataSourceConfig
       required:
         - auth_method
         - endpoint
@@ -3766,16 +4021,6 @@ components:
         auth_method: basic
         username: test
         password: test
-    CreateManualImportRequest:
-      title: CreateManualImportRequest
-      required:
-        - test
-      type: object
-      properties:
-        test:
-          type: string
-      example:
-        test: test
     SetConfigurationRequest:
       title: SetConfigurationRequest
       required:
@@ -3808,7 +4053,7 @@ components:
         adapter:
           type: string
         config:
-          $ref: '#/components/schemas/Config1'
+          $ref: '#/components/schemas/DataExportConfig'
       example:
         adapter: gremlin
         config:
@@ -3820,8 +4065,8 @@ components:
           port: '8182'
           path: /gremlin
           writes_per_second: 300
-    Config1:
-      title: Config1
+    DataExportConfig:
+      title: DataExportConfig
       required:
         - endpoint
         - graphson_v1
@@ -3877,24 +4122,6 @@ components:
         user_id: fb127f5f-0318-4866-9570-10ec81a85cc2
         container_id: 2a49dc7b-cf56-4e03-85e7-14ac8f0e4b40
         role_name: admin
-    ResetPasswordRequest:
-      title: ResetPasswordRequest
-      required:
-        - email
-        - new_password
-        - token
-      type: object
-      properties:
-        email:
-          type: string
-        token:
-          type: string
-        new_password:
-          type: string
-      example:
-        email: ''
-        token: ''
-        new_password: ''
     CreateTypeMappingTransformationsRequest:
       title: CreateTypeMappingTransformationsRequest
       type: object
@@ -3940,93 +4167,6 @@ components:
         key: RADIUS
         operator: eq
         value: CIRCLE
-    Key:
-      title: Key
-      required:
-        - key
-        - metatype_key_id
-      type: object
-      properties:
-        key:
-          type: string
-        metatype_key_id:
-          type: string
-      example:
-        key: RADIUS
-        metatype_key_id: ''
-    EditTypeMappingTransformationsRequest:
-      title: EditTypeMappingTransformationsRequest
-      required:
-        - conditions
-        - keys
-        - metatype_id
-      type: object
-      properties:
-        metatype_id:
-          type: string
-        conditions:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransformationCondition'
-        keys:
-          type: array
-          items:
-            $ref: '#/components/schemas/Key'
-      example:
-        metatype_id: ''
-        conditions:
-          - key: RADIUS
-            operator: eq
-            value: CIRCLE
-        keys:
-          - key: RADIUS
-            metatype_key_id: ''
-    DeleteDataTypeMappingRequest:
-      title: DeleteDataTypeMappingRequest
-      required:
-        - example_payload
-        - keys
-        - metatype_id
-        - type_key
-        - type_value
-        - unique_identifier_key
-      type: object
-      properties:
-        type_key:
-          type: string
-        type_value:
-          type: string
-        unique_identifier_key:
-          type: string
-        metatype_id:
-          type: string
-        keys:
-          type: array
-          items:
-            $ref: '#/components/schemas/Key'
-        example_payload:
-          $ref: '#/components/schemas/ExamplePayload'
-      example:
-        type_key: type
-        type_value: EQUIPMENT
-        unique_identifier_key: id
-        metatype_id: ''
-        keys:
-          - key: RADIUS
-            metatype_key_id: ''
-        example_payload:
-          RADIUS: 0.1
-    ExamplePayload:
-      title: ExamplePayload
-      required:
-        - RADIUS
-      type: object
-      properties:
-        RADIUS:
-          type: number
-          format: double
-      example:
-        RADIUS: 0.1
     CreateRegisteredEventRequest:
       title: CreateRegisteredEventRequest
       required:
@@ -4074,47 +4214,7 @@ components:
           uniqueItems: true
           minItems: 1
           items:
-            type: object
-            properties:
-              name:
-                type: string
-                minLength: 1
-              description:
-                type: string
-                minLength: 1
-              id:
-                type: string
-                minLength: 1
-              archived:
-                type: boolean
-              created_at:
-                type: string
-                minLength: 1
-              modified_at:
-                type: string
-                minLength: 1
-              created_by:
-                type: string
-                minLength: 1
-              modified_by:
-                type: string
-                minLength: 1
-              config:
-                type: object
-                nullable: true
-              active_graph_id:
-                type: string
-                minLength: 1
-            required:
-              - name
-              - description
-              - id
-              - archived
-              - created_at
-              - modified_at
-              - created_by
-              - modified_by
-              - config
+            $ref: '#/components/schemas/ContainerModel'
         isError:
           type: boolean
       required:
@@ -5179,6 +5279,7 @@ components:
         reference:
           type: string
           minLength: 1
+          nullable: true
         status_message:
           type: string
           nullable: true
@@ -5190,7 +5291,6 @@ components:
         - modified_at
         - created_by
         - modified_by
-        - reference
     GetExportResponse:
       description: ''
       type: object
@@ -5377,10 +5477,6 @@ components:
         - permissions
         - roles
         - id
-        - created_at
-        - modified_at
-        - created_by
-        - modified_by
     UserKeyResponse:
       description: ''
       type: object
@@ -5475,18 +5571,18 @@ components:
           minLength: 1
         transformations:
           type: array
-          items: {}
+          items:
+            $ref: '#/components/schemas/TransformationResponse'
+        resulting_metatype_name:
+          type: string
+          nullable: true
+        resulting_metatype_relationship_name:
+          type: string
+          nullable: true
       required:
         - active
-        - id
-        - container_id
-        - data_source_id
         - shape_hash
-        - created_at
-        - modified_at
         - sample_payload
-        - created_by
-        - modified_by
     TransformationResponse:
       description: ''
       type: object
@@ -5579,16 +5675,7 @@ components:
       required:
         - conditions
         - keys
-        - id
-        - type_mapping_id
-        - created_at
-        - modified_at
-        - created_by
-        - modified_by
         - archived
-        - container_id
-        - shape_hash
-        - data_source_id
     TransformationKeyResponse:
       description: ''
       type: object
@@ -5789,4 +5876,101 @@ components:
         - data_source_id
         - import_id
         - data
+    TypeMappingExportPayload:
+      title: TypeMappingExportPayload
+      type: object
+      properties:
+        mapping_ids:
+          type: array
+          items:
+            type: string
+        target_data_source:
+          type: string
+      required:
+        - mapping_ids
+    ContainerInviteResponse:
+      title: ContainerInviteResponse
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        origin_user:
+          type: string
+        token:
+          type: string
+        issued:
+          type: string
+        container:
+          $ref: '#/components/schemas/ContainerModel'
+    ContainerModel:
+      description: ''
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        id:
+          type: string
+          minLength: 1
+        archived:
+          type: boolean
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        config: {}
+        active_graph_id:
+          type: string
+          minLength: 1
+      required:
+        - name
+        - description
+        - id
+        - archived
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+        - active_graph_id
+      x-examples:
+        example-1:
+          name: Test Container 4
+          description: Test Container Description
+          id: 07b1e35e-0a7c-476d-ada8-5906b16da1b8
+          archived: false
+          created_at: '2021-08-06T21:17:49.545Z'
+          modified_at: '2021-08-06T21:17:49.545Z'
+          created_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+          modified_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+          config: null
+          active_graph_id: 0cc62f41-ceaa-4a68-8f1c-7856525c2668
+    TokenExchangeRequest:
+      title: TokenExchangeRequest
+      type: object
+      properties:
+        client_id:
+          type: string
+        code:
+          type: string
+        grant_type:
+          type: string
+        redirect_uri:
+          type: string
+        client_secret:
+          type: string
+        code_verifier:
+          type: string
   responses: {}
