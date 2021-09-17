@@ -92,11 +92,13 @@ export default class StandardDataSourceImpl implements DataSource {
             importID = newImport.value.id!;
         }
 
-        const lockedNewImport = await this.#importRepo.findByIDAndLock(importID, transaction);
-        if (lockedNewImport.isError) {
+        // we used to lock this for receiving data, but it makes no sense as this is an additive process which does not
+        // modify the import in any way. Locking prevented the mapper from running correctly.
+        const retrievedImport = await this.#importRepo.findByID(importID);
+        if (retrievedImport.isError) {
             if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
-            Logger.error(`unable to retrieve and lock import ${lockedNewImport.error}`);
-            return Promise.resolve(Result.Failure(`unable to retrieve and lock import ${lockedNewImport.error?.error}`));
+            Logger.error(`unable to retrieve and lock import ${retrievedImport.error}`);
+            return Promise.resolve(Result.Failure(`unable to retrieve and lock import ${retrievedImport.error?.error}`));
         }
 
         // basically a buffer, once it's full we'll write these records to the database and wipe to start again
@@ -113,7 +115,7 @@ export default class StandardDataSourceImpl implements DataSource {
             recordBuffer.push(
                 new DataStaging({
                     data_source_id: this.DataSourceRecord!.id!,
-                    import_id: lockedNewImport.value.id!,
+                    import_id: retrievedImport.value.id!,
                     data,
                     shape_hash: options && options.generateShapeHash ? TypeMapping.objectToShapeHash(data) : undefined,
                 }),
@@ -173,7 +175,7 @@ export default class StandardDataSourceImpl implements DataSource {
             if (commit.isError) return Promise.resolve(Result.Pass(commit));
         }
 
-        return new Promise((resolve) => resolve(Result.Success(lockedNewImport.value)));
+        return new Promise((resolve) => resolve(Result.Success(retrievedImport.value)));
     }
 
     /*
