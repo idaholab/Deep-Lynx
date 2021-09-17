@@ -27,7 +27,7 @@ void postgresAdapter.init().then(() => {
         })
         .then((results) => {
             if (results.isError) {
-                Logger.error('unable to list records for data staging mapping assignment loop');
+                Logger.error(`unable to list records for data staging mapping assignment loop ${results.error?.error}`);
                 process.exit(1);
                 return;
             }
