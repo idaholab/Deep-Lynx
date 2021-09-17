@@ -21,8 +21,8 @@ export default class ImportRepository extends Repository implements RepositoryIn
         return Promise.resolve(Result.Failure(`import must have id`));
     }
 
-    findByID(id: string): Promise<Result<Import>> {
-        return this.#mapper.Retrieve(id);
+    findByID(id: string, transaction?: PoolClient): Promise<Result<Import>> {
+        return this.#mapper.Retrieve(id, transaction);
     }
 
     // locking is only done in the context of a transaction, so one must be included

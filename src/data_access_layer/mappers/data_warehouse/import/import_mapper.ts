@@ -40,8 +40,8 @@ export default class ImportMapper extends Mapper {
         return Promise.resolve(Result.Success(r.value[0]));
     }
 
-    public Retrieve(id: string): Promise<Result<Import>> {
-        return super.retrieve(this.retrieveStatement(id), {resultClass});
+    public Retrieve(id: string, transaction?: PoolClient): Promise<Result<Import>> {
+        return super.retrieve(this.retrieveStatement(id), {resultClass, transaction});
     }
 
     // client is not optional here as the lock only applies if your call is in the

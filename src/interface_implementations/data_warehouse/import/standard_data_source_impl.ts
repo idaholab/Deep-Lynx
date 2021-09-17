@@ -94,7 +94,7 @@ export default class StandardDataSourceImpl implements DataSource {
 
         // we used to lock this for receiving data, but it makes no sense as this is an additive process which does not
         // modify the import in any way. Locking prevented the mapper from running correctly.
-        const retrievedImport = await this.#importRepo.findByID(importID);
+        const retrievedImport = await this.#importRepo.findByID(importID, transaction);
         if (retrievedImport.isError) {
             if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
             Logger.error(`unable to retrieve and lock import ${retrievedImport.error}`);
