@@ -294,7 +294,9 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
                                 artifact.collaboration.attributes.objectType.customAttribute = transformed;
 
                                 // we also cleanup the rich text body by stripping out the HTML
-                                artifact.content.text.richTextBody = artifact.content.text.richTextBody.replace(/<\/?[^>]+(>|$)/g, '').trim();
+                                if (artifact.content?.text?.richTextBody) {
+                                    artifact.content.text.richTextBody = artifact.content.text.richTextBody.replace(/<\/?[^>]+(>|$)/g, '').trim();
+                                }
 
                                 this.push(artifact);
                             }
