@@ -200,8 +200,9 @@ export default class DataStagingRepository extends Repository implements Reposit
         const results = await super.count(transaction);
 
         this._rawQuery = [
-            `SELECT data_staging.*, data_sources.container_id FROM data_staging 
-            LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id`,
+            `SELECT data_staging.*, data_sources.container_id, data_sources.config AS data_source_config
+             FROM data_staging
+                      LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id`,
         ];
 
         return Promise.resolve(Result.Pass(results));

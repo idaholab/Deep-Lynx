@@ -72,9 +72,14 @@ export default class TypeMapping extends BaseDomainClass {
         // first remove all stop nodes from the object if required, used for data normalization by some data sources
         if (options && options.stop_nodes) {
             const removeStopNodes = (root: any) => {
+                if (typeof root !== 'object' || root === null) {
+                    return;
+                }
+
                 Object.keys(root).forEach((key) => {
                     if (options.stop_nodes?.includes(key)) {
                         delete root[key];
+                        return;
                     } else if (typeof root[key] === 'object') {
                         removeStopNodes(root[key]);
                     }
