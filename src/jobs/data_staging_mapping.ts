@@ -88,8 +88,8 @@ void postgresAdapter.init().then(() => {
                     process.exit(1);
                 });
         })
-        .catch(() => {
-            Logger.error('unable to list records for data staging mapping assignment loop');
+        .catch((e) => {
+            Logger.error(`unable to process records for data staging mapping assignment loop ${e}`);
             process.exit(1);
         });
 });
