@@ -498,8 +498,8 @@ import {
   MetatypeKeyT,
   MetatypeRelationshipKeyT,
   MetatypeRelationshipPairT,
-  MetatypeT, TransformationErrorAction, TransformationErrorActions,
-  TypeMappingTransformationCondition, TypeMappingTransformationConfiguration,
+  MetatypeT, TransformationErrorAction,
+  TypeMappingTransformationCondition,
   TypeMappingTransformationPayloadT,
   TypeMappingTransformationSubexpression,
   TypeMappingTransformationT

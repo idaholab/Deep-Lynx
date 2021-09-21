@@ -3,7 +3,7 @@ import VueRouter from 'vue-router';
 import Home from '@/pages/Home.vue';
 import ContainerSelect from '@/pages/ContainerSelect.vue';
 import Login from '@/pages/Login.vue';
-import {IsLoggedIn, LoginFromToken, RefreshPermissions} from '@/auth/authentication_service';
+import {IsLoggedIn, LoginFromToken} from '@/auth/authentication_service';
 import ContainerInvite from '@/pages/ContainerInvite.vue';
 
 Vue.use(VueRouter);

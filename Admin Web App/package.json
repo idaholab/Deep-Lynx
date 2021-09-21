@@ -18,7 +18,7 @@
     "jwt-decode": "^2.2.0",
     "node-forge": "^0.10.0",
     "ssri": "^8.0.1",
-    "uuid": "^8.3.1",
+    "uuid": "^8.3.2",
     "vue": "^2.6.12",
     "vue-class-component": "^7.2.6",
     "vue-i18n": "^8.25.0",
