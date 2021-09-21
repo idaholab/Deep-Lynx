@@ -97,6 +97,35 @@ export type MetatypeRelationshipKeyT = {
     modified_by: string;
 };
 
+export type NodeT = {
+    id: string;
+    metatype: MetatypeT;
+    properties: PropertyT[];
+    raw_properties: string; // JSON string with the raw properties
+    container_id: string;
+    original_data_id: string;
+    data_source_id: string;
+    created_at: string;
+    modified_at: string;
+    incoming_edges: EdgeT[];
+    outgoing_edges: EdgeT[];
+};
+
+export type EdgeT = {
+    id: string;
+    container_id: string;
+    data_source_id: string;
+    relationship: MetatypeRelationshipT;
+    destination_node?: NodeT;
+    origin_node?: NodeT;
+};
+
+export type PropertyT = {
+    key: string;
+    value: string;
+    type: string;
+};
+
 export type DataSourceT = {
     id?: string;
     container_id?: string;
