@@ -347,14 +347,25 @@ export default class OAuthRoutes {
         // so that we can restore it as part of the redirect
         if (oauthRequest) {
             const token = Buffer.from(uuid.v4()).toString('base64');
-            Cache.set(token, classToPlain(oauthRequest), 60 * 10);
-            req.query.RelayState = token;
-        }
+            Cache.set(token, classToPlain(oauthRequest), 60 * 10).then((set) => {
+                if (!set) {
+                    res.redirect(buildUrl('/', {queryParams: {error: `unable to set RelayState in cache`}}));
+                    return;
+                }
 
-        passport.authenticate('saml', {
-            failureRedirect: '/unauthorized',
-            failureFlash: true,
-        })(req, res);
+                req.query.RelayState = token;
+
+                passport.authenticate('saml', {
+                    failureRedirect: '/unauthorized',
+                    failureFlash: true,
+                })(req, res);
+            });
+        } else {
+            passport.authenticate('saml', {
+                failureRedirect: '/unauthorized',
+                failureFlash: true,
+            })(req, res);
+        }
     }
 
     private static saml(req: Request, res: Response, next: NextFunction) {
@@ -370,21 +381,20 @@ export default class OAuthRoutes {
 
             req.logIn(user, () => {
                 if (req.body.RelayState) {
-                    const oauthRequest = Cache.get<object>(req.body.RelayState as string);
-                    // TODO: correct this to be truly async
-                    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                    if (oauthRequest) {
-                        res.redirect(
-                            buildUrl('/oauth/authorize', {
-                                queryParams: oauthRequest,
-                            }),
-                        );
-                        return;
-                    }
+                    Cache.get<object>(req.body.RelayState as string).then((oauthRequest) => {
+                        if (oauthRequest) {
+                            res.redirect(
+                                buildUrl('/oauth/authorize', {
+                                    queryParams: oauthRequest,
+                                }),
+                            );
+                            return;
+                        }
+                    });
+                } else {
+                    res.redirect('/oauth/profile');
+                    return;
                 }
-
-                res.redirect('/oauth/profile');
-                return;
             });
         })(req, res, next);
     }
