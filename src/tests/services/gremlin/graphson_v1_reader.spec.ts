@@ -1,7 +1,7 @@
-import { expect } from 'chai';
-import { structure } from 'gremlin';
-import { GraphSONReaderV1 } from '../../../services/gremlin/graphson_v1_reader/reader';
-import { GraphsonTestBodies } from './graphson_test_bodies';
+import {expect} from 'chai';
+import {structure} from 'gremlin';
+import {GraphSONReaderV1} from '../../../services/gremlin/graphson_v1_reader/reader';
+import {GraphsonTestBodies} from './graphson_test_bodies';
 
 describe('When GraphSON v1.0 vertex data is parsed', () => {
     const reader = new GraphSONReaderV1();
@@ -42,7 +42,7 @@ describe('When GraphSON v1.0 vertex data is parsed', () => {
     it('parser should handle undefined properties', (done) => {
         try {
             parsed = reader.read(example);
-        } catch (err) {
+        } catch (err: any) {
             done(new Error(err));
         }
 

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { BaseDomainClass } from '../../common_classes/base_domain_class';
+import {BaseDomainClass} from '../../common_classes/base_domain_class';
 import {
     IsArray,
     IsBoolean,
@@ -13,11 +13,11 @@ import {
     registerDecorator,
     ValidateIf,
     ValidationArguments,
-    ValidationOptions
+    ValidationOptions,
 } from 'class-validator';
 import Config from '../../services/config';
 import uuid from 'uuid';
-import { Exclude, Expose, plainToClass, Transform, Type } from 'class-transformer';
+import {Exclude, Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Container from '../data_warehouse/ontology/container';
 import bcrypt from 'bcrypt';
 import Result from '../../common_classes/result';
@@ -49,7 +49,7 @@ export class User extends BaseDomainClass {
 
     @IsString()
     @IsOptional()
-    @Exclude({ toPlainOnly: true }) // we never want this to show up in a return
+    @Exclude({toPlainOnly: true}) // we never want this to show up in a return
     password?: string;
 
     @IsBoolean()
@@ -63,7 +63,7 @@ export class User extends BaseDomainClass {
 
     @IsString()
     @IsOptional()
-    @Exclude({ toPlainOnly: true }) // we never want this to show up in a return
+    @Exclude({toPlainOnly: true}) // we never want this to show up in a return
     reset_token?: string;
 
     @IsBoolean()
@@ -71,7 +71,7 @@ export class User extends BaseDomainClass {
 
     @IsString()
     @IsOptional()
-    @Exclude({ toPlainOnly: true }) // we never want this to show up in a return
+    @Exclude({toPlainOnly: true}) // we never want this to show up in a return
     email_validation_token?: string;
 
     @IsArray()
@@ -177,7 +177,7 @@ export class KeyPair extends BaseDomainClass {
     user_id?: string;
 
     @IsOptional()
-    @Exclude({ toPlainOnly: true }) // we never want to show the secret when this is serialized to an object
+    @Exclude({toPlainOnly: true}) // we never want to show the secret when this is serialized to an object
     secret?: string;
 
     constructor(userID?: string) {
@@ -191,7 +191,7 @@ export class KeyPair extends BaseDomainClass {
             this.secret = hashedSecret;
 
             return Promise.resolve(Result.Success(true));
-        } catch (error) {
+        } catch (error: any) {
             return Promise.resolve(Result.Failure(`unable to hash secret ${error.toString()}`));
         }
     }
@@ -209,7 +209,7 @@ export class ResetUserPasswordPayload extends BaseDomainClass {
     @IsString()
     new_password?: string;
 
-    constructor(input?: { email?: string; token?: string; newPassword?: string }) {
+    constructor(input?: {email?: string; token?: string; newPassword?: string}) {
         super();
         if (input) {
             if (input.email) this.email = input.email;
@@ -229,7 +229,7 @@ export class AssignUserRolePayload extends BaseDomainClass {
     @IsIn(['editor', 'user', 'admin'])
     role_name?: string;
 
-    constructor(input?: { userID?: string; containerID?: string; roleName?: string }) {
+    constructor(input?: {userID?: string; containerID?: string; roleName?: string}) {
         super();
         if (input) {
             if (input.userID) this.user_id = input.userID;
@@ -258,22 +258,22 @@ export class ContainerUserInvite extends BaseDomainClass {
     // the container for the invite email, we're going to include and load
     // the full container class instead of just doing the ID. The repository
     // should load the relationship on demand
-    @ContainerID({ message: 'Container must have valid ID' })
-    @Expose({ name: 'container_id', toClassOnly: true })
+    @ContainerID({message: 'Container must have valid ID'})
+    @Expose({name: 'container_id', toClassOnly: true})
     @Transform(
-        ({ value }) => {
+        ({value}) => {
             const container = plainToClass(Container, {});
             container.id = value;
             return container;
         },
-        { toClassOnly: true }
+        {toClassOnly: true},
     )
     container: Container | undefined;
 
     @Type(() => Date)
     issued?: Date;
 
-    constructor(input: { email: string; originUser?: User; token?: string; container: string | Container }) {
+    constructor(input: {email: string; originUser?: User; token?: string; container: string | Container}) {
         super();
 
         if (input) {
@@ -284,7 +284,7 @@ export class ContainerUserInvite extends BaseDomainClass {
                 this.container = input.container;
             } else {
                 this.container = plainToClass(Container, {
-                    id: input.container
+                    id: input.container,
                 });
             }
         }
@@ -301,7 +301,7 @@ export const SuperUser = new User({
     email: Config.superuser_email,
     password: Config.superuser_password,
     active: true,
-    admin: true
+    admin: true,
 });
 
 /*
@@ -318,8 +318,8 @@ export function UserID(validationOptions?: ValidationOptions) {
             validator: {
                 validate(value: any, args: ValidationArguments) {
                     return value instanceof User && validator.isUUID(value.id);
-                }
-            }
+                },
+            },
         });
     };
 }
@@ -336,8 +336,8 @@ export function ContainerID(validationOptions?: ValidationOptions) {
             validator: {
                 validate(value: any, args: ValidationArguments) {
                     return value instanceof Container && validator.isUUID(value.id!);
-                }
-            }
+                },
+            },
         });
     };
 }

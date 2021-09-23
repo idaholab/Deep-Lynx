@@ -45,7 +45,7 @@ export default class Mapper {
     async completeTransaction(transactionClient: PoolClient): Promise<Result<boolean>> {
         try {
             await transactionClient.query('COMMIT');
-        } catch (e) {
+        } catch (e: any) {
             return new Promise((resolve) => resolve(Result.Failure(e.message)));
         }
 
