@@ -6,6 +6,7 @@
     <select-data-source
         :containerID="containerID"
         :showArchived="true"
+        :dataSourceID="argument"
         @selected="setDataSource">
     </select-data-source>
 
@@ -160,6 +161,9 @@ export default class DataImports extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
 
+  @Prop({required: false, default: ""})
+  readonly argument!: string;
+
 
   errorMessage = ""
   dataErrorMessage = ""
@@ -243,6 +247,7 @@ export default class DataImports extends Vue {
 
   setDataSource(dataSource: any) {
     this.selectedDataSource = dataSource
+    this.$router.replace(`/containers/${this.containerID}/data-imports/${this.selectedDataSource?.id}`)
     this.listImports()
 
     this.$client.countImports(this.containerID, dataSource.id)

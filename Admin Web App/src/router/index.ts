@@ -1,12 +1,40 @@
 import Vue from 'vue';
-import VueRouter from 'vue-router';
+import VueRouter, {Route} from 'vue-router';
 import Home from '@/pages/Home.vue';
 import ContainerSelect from '@/pages/ContainerSelect.vue';
 import Login from '@/pages/Login.vue';
 import {IsLoggedIn, LoginFromToken} from '@/auth/authentication_service';
 import ContainerInvite from '@/pages/ContainerInvite.vue';
+import {RawLocation} from 'vue-router/types/router';
 
 Vue.use(VueRouter);
+
+// we do this so we can easily ignore the duplicate navigation error, as we constantly see that on the home page
+// due to how I handled routing
+const originalReplace = VueRouter.prototype.replace;
+VueRouter.prototype.replace = function replace(location: RawLocation): Promise<Route> {
+    return new Promise((resolve, reject) => {
+        originalReplace.call(
+            this,
+            location,
+            () => {
+                // on complete
+
+                resolve(this.currentRoute);
+            },
+            (error) => {
+                // on abort
+
+                // only ignore NavigationDuplicated error
+                if (error.name === 'NavigationDuplicated' || error.message.includes('Avoided redundant navigation to current location')) {
+                    resolve(this.currentRoute);
+                } else {
+                    reject(error);
+                }
+            },
+        );
+    });
+};
 
 const routes = [
     {
@@ -21,8 +49,14 @@ const routes = [
         props: true,
     },
     {
-        path: '/containers/:containerID/:view',
+        path: '/containers/:containerID/:view/',
         name: 'Home View',
+        component: Home,
+        props: true,
+    },
+    {
+        path: '/containers/:containerID/:view/:arguments',
+        name: 'Home View Arguments',
         component: Home,
         props: true,
     },

@@ -11,6 +11,7 @@
       <select-data-source
           :containerID="containerID"
           :show-archived="true"
+          :dataSourceID="argument"
           @selected="setDataSource">
       </select-data-source>
       <v-tabs v-if="selectedDataSource !== null" grow>
@@ -341,6 +342,9 @@ export default class DataMapping extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
 
+  @Prop({required: false, default: ""})
+  readonly argument!: string;
+
   errorMessage = ""
   dataDialog = false
   mappingDialog = false
@@ -502,6 +506,7 @@ export default class DataMapping extends Vue {
 
   setDataSource(dataSource: any) {
     this.selectedDataSource = dataSource
+    this.$router.replace(`/containers/${this.containerID}/data-imports/${this.selectedDataSource?.id}`)
   }
 
   loadTypeMappings() {

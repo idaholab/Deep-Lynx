@@ -21,8 +21,8 @@ export default class OperatorsSelect extends Vue {
   disabled?: boolean
 
   operators = [
-    {text: '==', value: 'eq'},
-    {text: '!=', value: 'neq'},
+    {text: 'equals', value: 'eq'},
+    {text: 'not equals', value: 'neq'},
     {text: 'like', value: 'like'},
     {text: 'in', value: 'in'},
   ]
