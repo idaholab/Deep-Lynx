@@ -62,19 +62,6 @@ declare module 'gremlin' {
         // lived in a sub-folder in process. Declaring the functions in a nested namespace
         // solves this problem.
         namespace io {
-            // these types are only needed if you're using the GraphSON v1 reader/writer
-            // directly. You shouldn't need these declarations if you've decided to brave the NPM package.
-            class GraphSONReader {
-                constructor(options?: any);
-                read(obj: any): any;
-            }
-
-            class GraphSONWriter {
-                constructor(options?: any);
-                adaptObject(value: any): any;
-                write(obj: any): string;
-            }
-
             class TypeSerializer {}
 
             class VertexSerializer extends TypeSerializer {

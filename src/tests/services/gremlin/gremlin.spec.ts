@@ -1,9 +1,9 @@
 import faker from 'faker';
-import { expect } from 'chai';
-import { structure } from 'gremlin';
+import {expect} from 'chai';
+import {structure} from 'gremlin';
 import GremlinAdapter from '../../../services/gremlin/gremlin';
 import Logger from '../../../services/logger';
-import { GremlinExportConfig } from '../../../domain_objects/data_warehouse/export/export';
+import {GremlinExportConfig} from '../../../domain_objects/data_warehouse/export/export';
 
 describe('A Gremlin Adapter', async () => {
     let g: GremlinAdapter | undefined;
@@ -23,14 +23,14 @@ describe('A Gremlin Adapter', async () => {
                 endpoint: process.env.GREMLIN_PLUGIN_ENDPOINT || 'localhost',
                 port: process.env.GREMLIN_PLUGIN_PORT || '8182',
                 path: process.env.GREMLIN_PLUGIN_ROOT_PATH || '/gremlin',
-                writes_per_second: +process.env.GREMLIN_WRITES_PER_SECOND! || 300
-            })
+                writes_per_second: +process.env.GREMLIN_WRITES_PER_SECOND! || 300,
+            }),
         );
     });
 
     it('can add a simple vertex', (done) => {
         g!.vertices
-            .add('person', { name: faker.name.findName() })
+            .add('person', {name: faker.name.findName()})
             .then((resp) => {
                 expect(resp.isError).false;
                 expect(resp.value).not.to.be.undefined;
@@ -46,7 +46,7 @@ describe('A Gremlin Adapter', async () => {
     it('can retrieve a vertex', async () => {
         const vertex = await g!.vertices.add('person', {
             name: faker.name.findName(),
-            hobbies: ['baking']
+            hobbies: ['baking'],
         });
         g!.vertices.retrieve(vertex.value.id).then((resp) => {
             expect(resp.isError).false;
@@ -58,11 +58,11 @@ describe('A Gremlin Adapter', async () => {
             const firstName: string = faker.name.findName();
             const secondName: string = faker.name.findName();
 
-            const vertex = await g!.vertices.add('person', { name: firstName });
+            const vertex = await g!.vertices.add('person', {name: firstName});
             expect(vertex.value).not.to.be.undefined;
 
             let updated = await g!.vertices.update(vertex.value.id, {
-                name: secondName
+                name: secondName,
             });
 
             expect(updated.value).not.to.be.undefined;
@@ -72,7 +72,7 @@ describe('A Gremlin Adapter', async () => {
             updated = await g!.vertices.retrieve(vertex.value.id);
             expect(updated.value).not.to.be.undefined;
             expect(updated.value.id).eql(vertex.value.id);
-        } catch (err) {
+        } catch (err: any) {
             throw new Error(err);
         }
     });
@@ -81,14 +81,14 @@ describe('A Gremlin Adapter', async () => {
         try {
             let vertex = await g!.vertices.add('person', {
                 name: faker.name.findName(),
-                hobbies: ['baking']
+                hobbies: ['baking'],
             });
             vertex = await g!.vertices.retrieve(vertex.value.id);
             expect(vertex.value).not.to.be.undefined;
 
             const deleted = await g!.vertices.permanentlyDelete(vertex.value.id);
             expect(deleted.value).true;
-        } catch (err) {
+        } catch (err: any) {
             throw new Error(err);
         }
     });
@@ -96,16 +96,16 @@ describe('A Gremlin Adapter', async () => {
     it('can add an edge between two vertices', async () => {
         try {
             const v1 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
             const v2 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
 
             const edge = await g!.edges.add(v1.value.id, v2.value.id, faker.random.word());
             expect(edge.value).not.to.be.undefined;
             expect(edge.value).instanceof(structure.Edge);
-        } catch (err) {
+        } catch (err: any) {
             throw new Error(err);
         }
     });
@@ -132,16 +132,16 @@ describe('A Gremlin Adapter', async () => {
     it('can add an edge with properties between two vertices', async () => {
         try {
             const v1 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
             const v2 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
 
-            const edge = await g!.edges.add(v1.value.id, v2.value.id, faker.random.word(), { name: `${faker.random.word()}` });
+            const edge = await g!.edges.add(v1.value.id, v2.value.id, faker.random.word(), {name: `${faker.random.word()}`});
             expect(edge.value).not.to.be.undefined;
             expect(edge.value).instanceof(structure.Edge);
-        } catch (err) {
+        } catch (err: any) {
             throw new Error(err);
         }
     });
@@ -149,10 +149,10 @@ describe('A Gremlin Adapter', async () => {
     it('can retrieve all vertices attached to outward edges by vertex type', async () => {
         try {
             const v1 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
             const v2 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
 
             const edge = await g!.edges.add(v1.value.id, v2.value.id, faker.random.word());
@@ -164,7 +164,7 @@ describe('A Gremlin Adapter', async () => {
 
             const noResults = vertices.value.filter((vertex) => vertex.id !== v2.value.id);
             expect(noResults).empty;
-        } catch (err) {
+        } catch (err: any) {
             throw new Error(err);
         }
     });
@@ -172,10 +172,10 @@ describe('A Gremlin Adapter', async () => {
     it('can retrieve all vertices attached to inward edges by vertex type', async () => {
         try {
             const v1 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
             const v2 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
 
             const edge = await g!.edges.add(v1.value.id, v2.value.id, faker.random.word());
@@ -186,7 +186,7 @@ describe('A Gremlin Adapter', async () => {
 
             const noResults = vertices.value.filter((vertex) => vertex.id !== v1.value.id);
             expect(noResults).empty;
-        } catch (err) {
+        } catch (err: any) {
             throw new Error(err);
         }
     });
@@ -194,10 +194,10 @@ describe('A Gremlin Adapter', async () => {
     it('can retrieve all vertices attached to outward edges by edge type', async () => {
         try {
             const v1 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
             const v2 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
             const relationshipType = faker.random.word();
 
@@ -210,7 +210,7 @@ describe('A Gremlin Adapter', async () => {
 
             const noResults = vertices.value.filter((vertex) => vertex.id !== v2.value.id);
             expect(noResults).empty;
-        } catch (err) {
+        } catch (err: any) {
             throw new Error(err);
         }
     });
@@ -218,10 +218,10 @@ describe('A Gremlin Adapter', async () => {
     it('can retrieve all vertices attached to inward edges by edge type', async () => {
         try {
             const v1 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
             const v2 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
             const relationshipType = faker.random.word();
 
@@ -232,7 +232,7 @@ describe('A Gremlin Adapter', async () => {
 
             const noResults = vertices.value.filter((vertex) => vertex.id !== v1.value.id);
             expect(noResults).empty;
-        } catch (err) {
+        } catch (err: any) {
             throw new Error(err);
         }
     });
@@ -240,10 +240,10 @@ describe('A Gremlin Adapter', async () => {
     it('can retrieve all vertices attached to inward edges by edge and vertex type', async () => {
         try {
             const v1 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
             const v2 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
             const relationshipType = faker.random.word();
 
@@ -254,7 +254,7 @@ describe('A Gremlin Adapter', async () => {
 
             const noResults = vertices.value.filter((vertex) => vertex.id !== v1.value.id);
             expect(noResults).empty;
-        } catch (err) {
+        } catch (err: any) {
             throw new Error(err);
         }
     });
@@ -262,10 +262,10 @@ describe('A Gremlin Adapter', async () => {
     it('can retrieve all vertices attached to outward edges by edge and vertex type', async () => {
         try {
             const v1 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
             const v2 = await g!.vertices.add('person', {
-                name: faker.name.findName()
+                name: faker.name.findName(),
             });
             const relationshipType = faker.random.word();
 
@@ -278,17 +278,17 @@ describe('A Gremlin Adapter', async () => {
 
             const noResults = vertices.value.filter((vertex) => vertex.id !== v2.value.id);
             expect(noResults).empty;
-        } catch (err) {
+        } catch (err: any) {
             throw new Error(err);
         }
     });
 
     it('can retrieve a valid child vertex', async () => {
         const v1 = await g!.vertices.add('person', {
-            name: faker.name.findName()
+            name: faker.name.findName(),
         });
         const v2 = await g!.vertices.add('person', {
-            name: faker.name.findName()
+            name: faker.name.findName(),
         });
 
         const relationshipType = faker.random.word();
