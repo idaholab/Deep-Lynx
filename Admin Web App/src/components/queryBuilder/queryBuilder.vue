@@ -1,74 +1,105 @@
 <template>
-  <div>
-  <v-row>
-    <v-col :cols="3">
-      <v-card class="mx-auto">
-        <v-card-title>{{$t('queryBuilder.previousQueries')}}</v-card-title>
-        <div v-for="result of previousResults" :key="result.id">
-          <v-list-item
+  <v-container>
+    <v-row>
+      <v-col :cols="3">
+        <v-card class="mx-auto">
+          <v-card-title class="query-results-title">{{$t('queryBuilder.previousQueries')}}</v-card-title>
+          <v-list style="max-height: 400px" class="overflow-y-auto">
+            <v-list-item
+              v-if="previousResults.length === 0">
+              <v-list-item-content>
+                <v-list-item-subtitle>No queries to display</v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>            
+            <v-list-item
+              v-for="result of previousResults" :key="result.id"
               @click="setResult(result)"
               color="warning"
               :input-value="results && result.id === results.id"
               two-line>
-            <v-list-item-content>
-              <v-list-item-title>{{result.ran.toISOString().split('T').join(' ').substr(0, 19)}}</v-list-item-title>
-              <v-list-item-subtitle>{{result.nodes.length}} {{$t('queryBuilder.results')}}</v-list-item-subtitle>
-            </v-list-item-content>
-          </v-list-item>
-        </div>
-      </v-card>
-    </v-col>
-    <v-col :cols="9">
-      <error-banner :message="errorMessage"></error-banner>
-      <v-tabs grow>
-        <v-tab @click="activeTab = 'queryBuilder'">{{$t('queryBuilder.queryBuilder')}}</v-tab>
-        <v-tab @click="activeTab = 'rawEditor'" disabled>{{$t('queryBuilder.rawEditor')}}</v-tab>
-      </v-tabs>
-
-      <v-row>
-        <v-col :cols="12" align="center">
-          <div v-for="part in queryParts" :key="part.id" style="margin-top: 10px">
-            <v-card>
-              <v-card-title>
-                {{$t(`queryBuilder.${part.componentName}`)}}
-                <v-flex class="text-right">
-                   <v-icon v-if="!results" class="justify-right" @click="removeQueryPart(part)">mdi-window-close</v-icon>
-                </v-flex>
-              </v-card-title>
-              <component
-                  v-bind:is="part.componentName"
-                  :disabled="results !== null"
-                  :containerID="containerID"
-                  :queryPart="part"
-                  @update="updateQueryPart(part, ...arguments)"></component>
-            </v-card>
-          </div>
-        </v-col>
-
-        <v-col v-if="!results" :cols="12" align="center">{{$t('queryBuilder.clickToAdd')}}</v-col>
-        <v-col v-if="!results" :cols="12" align="center">
-          <add-dialog @selected="addQueryPart"></add-dialog>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col :cols="6" align="left">
-          <v-btn v-if="!results" :disabled="queryParts.length <= 0" @click="submitQuery">
-            <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
-            <span v-if="!loading">{{$t('queryBuilder.runQuery')}}</span>
-          </v-btn>
-          <v-btn v-if="results" @click="submitQuery">
-            <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
-            <span v-if="!loading">{{$t('queryBuilder.resubmitQuery')}}</span>
-          </v-btn>
-        </v-col>
-        <v-col :cols="6" align="right">
-          <v-btn v-if="!results" color="warning"  @click="resetQuery">{{$t('queryBuilder.resetQuery')}}</v-btn>
-          <v-btn v-if="results" color="success"  @click="resetQuery">{{$t('queryBuilder.newQuery')}}</v-btn>
-        </v-col>
-      </v-row>
-    </v-col>
-  </v-row>
-  </div>
+              <v-list-item-content>
+                <v-list-item-title>{{result.ran.toISOString().split('T').join(' ').substr(0, 19)}}</v-list-item-title>
+                <v-list-item-subtitle>{{result.nodes.length}} {{$t('queryBuilder.results')}}</v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-card>
+      </v-col>
+      <v-col :cols="9">
+        <v-snackbar :message="errorMessage"></v-snackbar>
+        <!-- <error-banner :message="errorMessage"></error-banner> -->
+        <v-card>
+          <v-tabs v-model="activeTab" background-color="lightgray" slider-color="darkgray">
+            <v-tab @click="activeTab = 'queryBuilder'">{{$t('queryBuilder.queryBuilder')}}</v-tab>
+            <v-tab @click="activeTab = 'rawEditor'" disabled>{{$t('queryBuilder.rawEditor')}}</v-tab>
+            <v-spacer />
+            <v-btn v-if="!results" color="warning" style="margin: 6px;" @click="resetQuery">{{$t('queryBuilder.resetQuery')}}</v-btn>
+            <v-btn v-if="results" color="success" style="margin: 6px;" @click="resetQuery">{{$t('queryBuilder.newQuery')}}</v-btn>
+          </v-tabs>
+          <v-tabs-items v-model="activeTab">
+            <v-tab-item class="mx-5">
+              <v-row>
+                <v-col :cols="12" align="center">
+                  <v-card v-for="part in queryParts" :key="part.id" style="margin-top: 10px">
+                    <v-card-title>
+                      {{$t(`queryBuilder.${part.componentName}`)}}
+                      <v-flex class="text-right">
+                        <v-icon v-if="!results" class="justify-right" @click="removeQueryPart(part)">mdi-window-close</v-icon>
+                      </v-flex>
+                    </v-card-title>
+                    <component
+                      v-bind:is="part.componentName"
+                      :disabled="results !== null"
+                      :containerID="containerID"
+                      :queryPart="part"
+                      @update="updateQueryPart(part, ...arguments)"></component>
+                  </v-card>
+                  <v-card v-if="!results" style="margin-top: 10px" class="pa-4">
+                    <p class="mb-2">{{$t('queryBuilder.clickToAdd')}}</p>
+                    <add-dialog @selected="addQueryPart"></add-dialog>
+                  </v-card>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col class="d-flex flex-row">
+                  <v-spacer />
+                  <div class="mr-5">
+                    <v-select
+                      :items="limitOptions"
+                      v-model="limit"
+                      :label="$t('queryBuilder.recordLimit')"
+                      style="max-width: 60px;"
+                    >
+                    </v-select>
+                  </div>
+                  <div>
+                    <v-btn v-if="!results" :disabled="queryParts.length <= 0" @click="submitQuery" style="margin-top: 15px">
+                      <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
+                      <span v-if="!loading">{{$t('queryBuilder.runQuery')}}</span>
+                    </v-btn>
+                    <v-btn v-if="results" @click="submitQuery" style="margin-top: 15px">
+                      <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
+                      <span v-if="!loading">{{$t('queryBuilder.resubmitQuery')}}</span>
+                    </v-btn>
+                  </div>
+                </v-col>
+              </v-row>
+            </v-tab-item>
+            <v-tab-item>
+              <v-row>
+                <v-col
+                    cols="8"
+                    class="graph"
+                >
+                  Editor goes here
+                </v-col>
+              </v-row>
+            </v-tab-item>
+          </v-tabs-items>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts">
@@ -87,11 +118,14 @@ export default class QueryBuilder extends Vue {
   @Prop({required: true})
   readonly containerID!: string
 
+  activeTab = 'queryBuilder'
   loading = false
   errorMessage = ""
   queryParts: QueryPart[] = []
   previousResults: ResultSet[] = []
   results: ResultSet | null = null
+  limit = 25
+  limitOptions = [25, 50, 75, 100]
 
   addQueryPart(componentName: string) {
     this.queryParts.push({
@@ -122,27 +156,27 @@ export default class QueryBuilder extends Vue {
     this.results = {id, query: this.queryParts, nodes: []}
 
     this.$client.submitGraphQLQuery(this.containerID, this.buildQuery())
-    .then(results => {
-      if(results.errors) {
-        this.errorMessage = (results.errors as string[]).join(' ')
-        return
-      }
+        .then(results => {
+          if(results.errors) {
+            this.errorMessage = (results.errors as string[]).join(' ')
+            return
+          }
 
-      this.previousResults.push({
-        id: id,
-        query: JSON.parse(JSON.stringify(this.queryParts)),
-        nodes: results.data.nodes,
-        ran: new Date()
-      })
+          this.previousResults.push({
+            id: id,
+            query: JSON.parse(JSON.stringify(this.queryParts)),
+            nodes: results.data.nodes,
+            ran: new Date()
+          })
 
-      this.results = {id, query: this.queryParts, nodes: results.data.nodes}
-      this.$emit('results', this.results)
-    })
-    .catch(e => {
-      this.errorMessage = e
-      this.results = null
-    })
-    .finally(() => this.loading = false)
+          this.results = {id, query: this.queryParts, nodes: results.data.nodes}
+          this.$emit('results', this.results)
+        })
+        .catch(e => {
+          this.errorMessage = e
+          this.results = null
+        })
+        .finally(() => this.loading = false)
   }
 
   setResult(result: ResultSet) {
@@ -193,7 +227,7 @@ export default class QueryBuilder extends Vue {
     return {
       query: `
       {
-    nodes (where: {AND:
+    nodes (limit: ${this.limit}, where: {AND:
       [${String(AND)}]
      }) {
         id
@@ -284,3 +318,11 @@ type ResultSet = {
   ran?: Date;
 }
 </script>
+
+<style lang="scss">
+  .query-results-title {
+    background-color: $lightgray!important;
+    padding: 17px;
+    font-size: .85rem;
+  }
+</style>

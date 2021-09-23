@@ -65,6 +65,11 @@ export default class SelectDataSource extends Vue {
           }
         })
         .catch(e => this.errorMessage = e)
+        .finally(() => {
+          if(this.selected) {
+            this.$emit('selected', this.selected)
+          }
+        })
   }
 
   setDataSource(source: DataSourceT) {

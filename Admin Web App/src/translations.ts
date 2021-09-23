@@ -14,8 +14,8 @@ export default {
             ontologyUpdateDescription: 'Update via Ontology File',
             import: 'Import',
             data: 'Data',
-            graphqlQueries: 'GraphQL Queries',
-            graphqlQueriesDescription: 'Perform GraphQL Queries',
+            dataQuery: 'Data Query',
+            dataQueryDescription: 'Query Processed Data',
             dataSources: 'Data Sources',
             dataSourcesDescription: 'Configure Data Import Sources',
             dataExplorer: 'Explorer',
@@ -44,6 +44,10 @@ export default {
             save: 'Save',
             create: 'Create',
             changeContainer: 'Change Container',
+        },
+        queryData: {
+            results: 'Results',
+            queryData: 'Query Processed Data',
         },
         exportMapping: {
             title: 'Export Type Mappings',
@@ -681,6 +685,7 @@ export default {
             requiredField: 'Required Field',
         },
         queryBuilder: {
+            recordLimit: 'Limit',
             previousQueries: 'Previous Queries',
             queryBuilder: 'Query Builder',
             rawEditor: 'Raw Query Editor',
@@ -718,8 +723,6 @@ export default {
             metatypeRelationshipPairsDescription: 'Modificar pares de clase / relación',
             import: 'Importar',
             data: 'Data',
-            graphqlQueries: 'Consultas de GraphQL',
-            graphqlQueriesDescription: 'Realizar consultas de GraphQL',
             dataSources: 'Orígenes de datos',
             dataSourcesDescription: 'Configurar orígenes de datos',
             dataExplorer: 'Explorar',

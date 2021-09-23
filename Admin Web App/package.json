@@ -12,6 +12,7 @@
     "@types/uuid": "^8.3.0",
     "axios": "^0.21.1",
     "build-url": "^6.0.1",
+    "cytoscape-cola": "^2.5.0",
     "element-ui": "^2.14.1",
     "highlight.js": "^10.4.1",
     "is-svg": "^4.3.1",
@@ -21,12 +22,15 @@
     "uuid": "^8.3.2",
     "vue": "^2.6.12",
     "vue-class-component": "^7.2.6",
+    "vue-cytoscape": "^1.0.8",
     "vue-i18n": "^8.25.0",
     "vue-json-component": "^0.4.1",
+    "vue-prism-editor": "^1.2.2",
     "vue-property-decorator": "^8.5.1",
     "vue-router": "^3.4.9",
     "vuetify": "^2.3.19",
-    "vuex": "^3.6.0"
+    "vuex": "^3.6.0",
+    "webcola": "^3.4.0"
   },
   "devDependencies": {
     "@mdi/js": "^5.8.55",
@@ -41,6 +45,7 @@
     "cross-env": "^7.0.3",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.1.2",
+    "prismjs": "^1.23.0",
     "sass": "^1.30.0",
     "sass-loader": "^8.0.0",
     "tslib": "^2.0.3",

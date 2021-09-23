@@ -78,7 +78,15 @@
             <v-list-item-title>{{$t("home.data")}}</v-list-item-title>
           </template>
 
-
+          <v-list-item two-line link
+                       v-if="$auth.Auth('data', 'write', containerID)"
+                       @click="setActiveComponent('data-query')"
+                       :input-value="currentMainComponent === 'DataQuery'">
+            <v-list-item-content>
+              <v-list-item-title>{{$t("home.dataQuery")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("home.dataQueryDescription")}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
           <v-list-item two-line link
                        v-if="$auth.Auth('data', 'write', containerID)"
                        @click="setActiveComponent('data-sources')"
@@ -193,7 +201,7 @@
     <v-main style="padding: 64px 0px 36px 36px">
       <v-container>
         <!-- we provide both containerID and container as some of the components require either/or or both -->
-        <component v-bind:is="currentMainComponent" :containerID="containerID" :container="container"></component>
+        <component v-bind:is="currentMainComponent" :containerID="containerID" :container="container" :argument="argument"></component>
       </v-container>
     </v-main>
   </div>
@@ -209,6 +217,7 @@ import TaxonomyImport from "@/views/TaxonomyImport.vue"
 import DataExplorer from "@/views/DataExplorer.vue"
 import DataExport from "@/views/DataExport.vue"
 import DataImports from "@/views/DataImports.vue"
+import DataQuery from "@/views/DataQuery.vue"
 import DataSources from "@/views/DataSources.vue"
 import DataMapping from "@/views/DataMapping.vue"
 import Settings from "@/views/Settings.vue"
@@ -233,6 +242,7 @@ import Config from "@/config";
     TaxonomyImport,
     DataExplorer,
     DataExport,
+    DataQuery,
     DataSources,
     DataMapping,
     Settings,
@@ -243,6 +253,7 @@ import Config from "@/config";
 export default class Home extends Vue {
   @Prop(String) readonly containerID: string | undefined
   @Prop(String) readonly view: string | undefined
+  @Prop({default: ""}) readonly arguments!: string
 
   errorMessage = ""
   drawer = null
@@ -250,6 +261,7 @@ export default class Home extends Vue {
   container: ContainerT | null = null
   currentMainComponent: string | null = ''
   componentName: string | TranslateResult = 'Home'
+  argument: string = this.arguments
 
   mounted() {
     this.user = this.$auth.CurrentUser();
@@ -270,90 +282,112 @@ export default class Home extends Vue {
       case "metatypes": {
         this.currentMainComponent = "Metatypes";
         this.componentName = this.$t('home.metatypes')
+        this.$router.replace(`/containers/${this.containerID}/metatypes`)
         break;
       }
 
       case "metatype-relationships": {
         this.currentMainComponent = "MetatypeRelationships";
         this.componentName = this.$t('home.metatypeRelationships')
+        this.$router.replace(`/containers/${this.containerID}/metatype-relationships`)
         break;
       }
 
       case "metatype-relationship-pairs": {
         this.currentMainComponent = "MetatypeRelationshipPairs";
         this.componentName = this.$t('home.metatypeRelationshipPairs')
+        this.$router.replace(`/containers/${this.containerID}/metatype-relationship-pairs`)
         break;
       }
 
       case "ontology-update": {
         this.currentMainComponent = "OntologyUpdate";
         this.componentName = this.$t('home.ontologyUpdate')
+        this.$router.replace(`/containers/${this.containerID}/ontology-update`)
         break;
       }
 
       case "taxonomy-import": {
         this.currentMainComponent = "TaxonomyImport";
         this.componentName = this.$t('home.import')
+        this.$router.replace(`/containers/${this.containerID}/taxonomy-import`)
+        break;
+      }
+
+      case "data-query": {
+        this.currentMainComponent = "DataQuery";
+        this.componentName = this.$t('home.dataQuery')
+        this.$router.replace(`/containers/${this.containerID}/data-query`)
         break;
       }
 
       case "data-sources": {
         this.currentMainComponent = "DataSources";
         this.componentName = this.$t('home.dataSources')
+        this.$router.replace(`/containers/${this.containerID}/data-sources`)
         break;
       }
 
       case "data-export": {
         this.currentMainComponent = "DataExport";
         this.componentName = this.$t('home.dataExport')
+        this.$router.replace(`/containers/${this.containerID}/data-export`)
         break;
       }
 
       case "data-explorer": {
         this.currentMainComponent = "DataExplorer";
         this.componentName = this.$t('home.dataExplorer')
+        this.$router.replace(`/containers/${this.containerID}/data-explorer`)
         break;
       }
 
       case "data-mapping": {
         this.currentMainComponent = "DataMapping";
         this.componentName = this.$t('home.dataMapping')
+        this.$router.replace(`/containers/${this.containerID}/data-mapping`)
         break;
       }
 
       case "data-imports": {
         this.currentMainComponent = "DataImports"
         this.componentName = this.$t('home.dataImports')
+        this.$router.replace(`/containers/${this.containerID}/data-imports/${this.arguments}`)
         break;
       }
 
       case "settings": {
         this.currentMainComponent = "Settings";
         this.componentName = this.$t('home.settings')
+        this.$router.replace(`/containers/${this.containerID}/settings`)
         break;
       }
 
       case "users": {
         this.currentMainComponent = "Users";
         this.componentName = this.$t('home.users')
+        this.$router.replace(`/containers/${this.containerID}/users`)
         break;
       }
 
       case "container-users": {
         this.currentMainComponent = "ContainerUsers";
         this.componentName = this.$t('home.containerUsers')
+        this.$router.replace(`/containers/${this.containerID}/container-users`)
         break;
       }
 
       case "containers": {
         this.currentMainComponent = "Containers"
         this.componentName = this.$t('home.containers')
+        this.$router.replace(`/containers/${this.containerID}/containers`)
         break;
       }
 
       case "access-keys": {
         this.currentMainComponent = "AccessKeys"
         this.componentName = this.$t('home.accessKeys')
+        this.$router.replace(`/containers/${this.containerID}/access-keys`)
         break;
       }
 

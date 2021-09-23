@@ -420,7 +420,7 @@ describe('We can generate test data', async () => {
                     ],
                     maintenance_entries: [
                         {
-                            id: Math.floor(Math.random() * 10000),
+                            id: Math.floor(Math.random() * 100000),
                             check_engine_light_flag: Math.random() > 0.5, // random boolean generation
                             type: 'oil change',
                             parts_list: [
@@ -446,7 +446,7 @@ describe('We can generate test data', async () => {
                             ],
                         },
                         {
-                            id: Math.floor(Math.random() * 10000),
+                            id: Math.floor(Math.random() * 100000),
                             check_engine_light_flag: Math.random() > 0.5, // random boolean generation
                             type: 'tire rotation',
                             parts_list: [
@@ -603,7 +603,7 @@ describe('We can generate test data', async () => {
         expect(edges.value.length).gt(1);
 
         return Promise.resolve();
-    }).timeout(30000);
+    }).timeout(120000);
 });
 
 const test_payload: {[key: string]: any}[] = [
