@@ -127,6 +127,24 @@ export default class FileMapper extends Mapper {
         });
     }
 
+    public async ListForNode(nodeID: string): Promise<Result<File[]>> {
+        return super.rows<File>(this.filesForNodeStatement(nodeID), {
+            resultClass,
+        });
+    }
+
+    public async ListForEdge(edgeID: string): Promise<Result<File[]>> {
+        return super.rows<File>(this.filesForEdgeStatement(edgeID), {
+            resultClass,
+        });
+    }
+
+    public async ListForDataStaging(stagingID: number): Promise<Result<File[]>> {
+        return super.rows<File>(this.filesForDataStagingStatement(stagingID), {
+            resultClass,
+        });
+    }
+
     public async Delete(fileID: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(fileID));
     }
@@ -234,6 +252,27 @@ export default class FileMapper extends Mapper {
         return {
             text: `SELECT * FROM files WHERE id IN($1)`,
             values: ids,
+        };
+    }
+
+    private filesForNodeStatement(nodeID: string): QueryConfig {
+        return {
+            text: `SELECT files.* FROM node_files LEFT JOIN files ON files.id = node_files.file_id WHERE node_id = $1`,
+            values: [nodeID],
+        };
+    }
+
+    private filesForEdgeStatement(edgeID: string): QueryConfig {
+        return {
+            text: `SELECT files.* FROM edge_files LEFT JOIN files ON files.id = edge_files.file_id WHERE edge_id = $1`,
+            values: [edgeID],
+        };
+    }
+
+    private filesForDataStagingStatement(dataStagingID: number): QueryConfig {
+        return {
+            text: `SELECT files.* FROM data_staging_files LEFT JOIN files ON files.id = data_staging_files.file_id WHERE data_staging_id = $1`,
+            values: [dataStagingID],
         };
     }
 }
