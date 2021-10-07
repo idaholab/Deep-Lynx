@@ -97,6 +97,18 @@ export type MetatypeRelationshipKeyT = {
     modified_by: string;
 };
 
+export type FileT = {
+    id: string;
+    container_id: string;
+    data_source_id: string;
+    file_name: string;
+    file_size: number;
+    md5hash: string;
+    adapter_file_path: string;
+    adapter: 'filesystem' | 'azure_blob' | 'mock';
+    metadata: object;
+};
+
 export type NodeT = {
     id: string;
     metatype: MetatypeT;

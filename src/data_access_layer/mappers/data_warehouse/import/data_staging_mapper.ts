@@ -98,6 +98,14 @@ export default class DataStagingMapper extends Mapper {
         });
     }
 
+    public AddFile(id: number, fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.addFile(id, fileID));
+    }
+
+    public RemoveFile(id: number, fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.removeFile(id, fileID));
+    }
+
     public async Delete(id: number): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id));
     }
@@ -223,6 +231,20 @@ export default class DataStagingMapper extends Mapper {
         return {
             text: `UPDATE data_staging SET errors = array_append(errors, $1) WHERE id = $2`,
             values: [error, id],
+        };
+    }
+
+    private addFile(id: number, fileID: string): QueryConfig {
+        return {
+            text: `INSERT INTO data_staging_files(data_staging_id, file_id) VALUES ($1, $2)`,
+            values: [id, fileID],
+        };
+    }
+
+    private removeFile(id: number, fileID: string): QueryConfig {
+        return {
+            text: `DELETE FROM data_staging_files WHERE data_staging_id = $1 AND file_id = $2`,
+            values: [id, fileID],
         };
     }
 }

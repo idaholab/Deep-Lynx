@@ -1,5 +1,6 @@
 import Container from '../../domain_objects/data_warehouse/ontology/container';
 import Metatype from '../../domain_objects/data_warehouse/ontology/metatype';
+import File from '../../domain_objects/data_warehouse/data/file';
 import MetatypeRelationship from '../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import MetatypeRelationshipPair from '../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import MetatypeKey from '../../domain_objects/data_warehouse/ontology/metatype_key';
@@ -39,6 +40,7 @@ declare global {
             dataImport?: Import;
             dataStagingRecord?: DataStaging;
             dataSource?: DataSource;
+            file?: File;
         }
     }
 }

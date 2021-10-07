@@ -9,6 +9,8 @@ import EdgeMapper from '../../../mappers/data_warehouse/data/edge_mapper';
 import Node from '../../../../domain_objects/data_warehouse/data/node';
 import MetatypeRelationshipPairRepository from '../ontology/metatype_relationship_pair_repository';
 import NodeRepository from './node_repository';
+import File from '../../../../domain_objects/data_warehouse/data/file';
+import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 
 /*
     EdgeRepository contains methods for persisting and retrieving edges
@@ -19,6 +21,7 @@ import NodeRepository from './node_repository';
  */
 export default class EdgeRepository extends Repository implements RepositoryInterface<Edge> {
     #mapper: EdgeMapper = EdgeMapper.Instance;
+    #fileMapper: FileMapper = FileMapper.Instance;
     #nodeRepo: NodeRepository = new NodeRepository();
     #pairRepo: MetatypeRelationshipPairRepository = new MetatypeRelationshipPairRepository();
 
@@ -170,7 +173,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
 
                                     edge.metatypeRelationshipPair = pair.value;
 
-                                    edge.metatypeRelationshipPair!
+                                    edge.metatypeRelationshipPair
                                         .relationship!.validateAndTransformProperties(edge.properties)
                                         .then((transformed) => {
                                             if (transformed.isError) {
@@ -396,6 +399,30 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         }
 
         return Promise.resolve(Result.Success(true));
+    }
+
+    addFile(edge: Edge, fileID: string): Promise<Result<boolean>> {
+        if (!edge.id) {
+            return Promise.resolve(Result.Failure('edge must have id'));
+        }
+
+        return this.#mapper.AddFile(edge.id, fileID);
+    }
+
+    removeFile(edge: Edge, fileID: string): Promise<Result<boolean>> {
+        if (!edge.id) {
+            return Promise.resolve(Result.Failure('edge must have id'));
+        }
+
+        return this.#mapper.RemoveFile(edge.id, fileID);
+    }
+
+    listFiles(edge: Edge): Promise<Result<File[]>> {
+        if (!edge.id) {
+            return Promise.resolve(Result.Failure('edge must have id'));
+        }
+
+        return this.#fileMapper.ListForEdge(edge.id);
     }
 
     id(operator: string, value: any) {

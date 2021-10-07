@@ -17,6 +17,7 @@ import {
     TypeMappingTransformationT,
     ExportT,
     ResultT,
+    FileT,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -350,6 +351,28 @@ export class Client {
 
     dataSourceJSONFileImport(containerID: string, dataSourceID: string, file: File): Promise<boolean> {
         return this.postFile(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`, 'import', file);
+    }
+
+    async uploadFile(containerID: string, dataSourceID: string, file: File): Promise<FileT> {
+        const results = await this.postFileRawReturn<ResultT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/files`, 'import', file);
+
+        return new Promise((resolve, reject) => {
+            if (results[0].isError) reject(results[0].error);
+
+            resolve(new Promise((r) => r(results[0].value as FileT)));
+        });
+    }
+
+    attachFileToNode(containerID: string, nodeID: string, fileID: string): Promise<boolean> {
+        return this.put(`/containers/${containerID}/graphs/nodes/${nodeID}/files/${fileID}`);
+    }
+
+    detachFileFromNode(containerID: string, nodeID: string, fileID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/graphs/nodes/${nodeID}/files/${fileID}`);
+    }
+
+    listNodeFiles(containerID: string, nodeID: string): Promise<FileT[]> {
+        return this.get<FileT[]>(`/containers/${containerID}/graphs/nodes/${nodeID}/files`);
     }
 
     listDataSources(containerID: string, archived = false): Promise<DataSourceT[]> {
@@ -879,7 +902,7 @@ export class Client {
         });
     }
 
-    private async put<T>(uri: string, data: any): Promise<T> {
+    private async put<T>(uri: string, data?: any): Promise<T> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
 

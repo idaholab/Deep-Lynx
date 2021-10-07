@@ -12,17 +12,25 @@ const edgeRepo = new EdgeRepository();
 
 export default class GraphRoutes {
     public static mount(app: Application, middleware: any[]) {
-        app.post('/containers/:containerID/graphs/nodes/', ...middleware, authInContainer('write', 'containers'), this.createOrUpdateNodes);
-        app.get('/containers/:containerID/graphs/nodes/metatype/:metatypeID', ...middleware, authInContainer('read', 'containers'), this.listNodesByMetatypeID);
-        app.get('/containers/:containerID/graphs/nodes/', ...middleware, authInContainer('read', 'containers'), this.listNodes);
-        app.get('/containers/:containerID/graphs/nodes/:nodeID', ...middleware, authInContainer('read', 'containers'), this.retrieveNode);
+        app.post('/containers/:containerID/graphs/nodes/', ...middleware, authInContainer('write', 'data'), this.createOrUpdateNodes);
+        app.get('/containers/:containerID/graphs/nodes/metatype/:metatypeID', ...middleware, authInContainer('read', 'data'), this.listNodesByMetatypeID);
+        app.get('/containers/:containerID/graphs/nodes/', ...middleware, authInContainer('read', 'data'), this.listNodes);
+        app.get('/containers/:containerID/graphs/nodes/:nodeID', ...middleware, authInContainer('read', 'data'), this.retrieveNode);
 
-        app.post('/containers/:containerID/graphs/edges/', ...middleware, authInContainer('write', 'containers'), this.createOrUpdateEdges);
-        app.get('/containers/:containerID/graphs/edges/:edgeID', ...middleware, authInContainer('read', 'containers'), this.retrieveEdge);
-        app.get('/containers/:containerID/graphs/edges/', ...middleware, authInContainer('read', 'containers'), this.listEdges);
+        app.get('/containers/:containerID/graphs/nodes/:nodeID/files', ...middleware, authInContainer('read', 'data'), this.listFilesForNode);
+        app.put('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.attachFileToNode);
+        app.delete('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.detachFileFromNode);
 
-        app.delete('/containers/:containerID/graphs/nodes/:nodeID', ...middleware, authInContainer('write', 'containers'), this.archiveNode);
-        app.delete('/containers/:containerID/graphs/edges/:edgeID', ...middleware, authInContainer('write', 'containers'), this.archiveEdge);
+        app.post('/containers/:containerID/graphs/edges/', ...middleware, authInContainer('write', 'data'), this.createOrUpdateEdges);
+        app.get('/containers/:containerID/graphs/edges/:edgeID', ...middleware, authInContainer('read', 'data'), this.retrieveEdge);
+        app.get('/containers/:containerID/graphs/edges/', ...middleware, authInContainer('read', 'data'), this.listEdges);
+
+        app.get('/containers/:containerID/graphs/edges/:edgeID/files', ...middleware, authInContainer('read', 'data'), this.listFilesForEdge);
+        app.put('/containers/:containerID/graphs/edges/:edgeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.attachFileToEdge);
+        app.delete('/containers/:containerID/graphs/edges/:edgeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.detachFileFromEdge);
+
+        app.delete('/containers/:containerID/graphs/nodes/:nodeID', ...middleware, authInContainer('write', 'data'), this.archiveNode);
+        app.delete('/containers/:containerID/graphs/edges/:edgeID', ...middleware, authInContainer('write', 'data'), this.archiveEdge);
     }
     private static listNodes(req: Request, res: Response, next: NextFunction) {
         // fresh instance of the repo to avoid filter issues
@@ -258,6 +266,96 @@ export default class GraphRoutes {
                 .finally(() => next());
         } else {
             Result.Failure('node not found', 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static listFilesForNode(req: Request, res: Response, next: NextFunction) {
+        if (req.node) {
+            nodeRepo
+                .listFiles(req.node)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
+        } else {
+            Result.Failure(`node not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static attachFileToNode(req: Request, res: Response, next: NextFunction) {
+        if (req.node && req.file) {
+            nodeRepo
+                .addFile(req.node, req.file.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
+        } else {
+            Result.Failure(`node or file not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static detachFileFromNode(req: Request, res: Response, next: NextFunction) {
+        if (req.node && req.file) {
+            nodeRepo
+                .removeFile(req.node, req.file.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
+        } else {
+            Result.Failure(`node or file not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static listFilesForEdge(req: Request, res: Response, next: NextFunction) {
+        if (req.edge) {
+            edgeRepo
+                .listFiles(req.edge)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
+        } else {
+            Result.Failure(`edge not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static attachFileToEdge(req: Request, res: Response, next: NextFunction) {
+        if (req.edge && req.file) {
+            edgeRepo
+                .addFile(req.edge, req.file.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
+        } else {
+            Result.Failure(`edge or file not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static detachFileFromEdge(req: Request, res: Response, next: NextFunction) {
+        if (req.edge && req.file) {
+            edgeRepo
+                .removeFile(req.edge, req.file.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
+        } else {
+            Result.Failure(`edge or file not found`, 404).asResponse(res);
             next();
         }
     }

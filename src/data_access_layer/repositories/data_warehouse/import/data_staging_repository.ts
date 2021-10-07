@@ -4,6 +4,10 @@ import DataStagingMapper from '../../../mappers/data_warehouse/import/data_stagi
 import Result from '../../../../common_classes/result';
 import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
+import Edge from '../../../../domain_objects/data_warehouse/data/edge';
+import Node from '../../../../domain_objects/data_warehouse/data/node';
+import File from '../../../../domain_objects/data_warehouse/data/file';
+import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 
 /*
     DataStaging contains methods for persisting and retrieving an import's data
@@ -15,6 +19,7 @@ import {User} from '../../../../domain_objects/access_management/user';
  */
 export default class DataStagingRepository extends Repository implements RepositoryInterface<DataStaging> {
     #mapper = DataStagingMapper.Instance;
+    #fileMapper = FileMapper.Instance;
 
     delete(t: DataStaging): Promise<Result<boolean>> {
         if (t.id) {
@@ -158,6 +163,30 @@ export default class DataStagingRepository extends Repository implements Reposit
     // add an error to an existing error set
     addError(id: number, errors: string, transaction?: PoolClient): Promise<Result<boolean>> {
         return this.#mapper.AddError(id, errors, transaction);
+    }
+
+    addFile(t: DataStaging, fileID: string): Promise<Result<boolean>> {
+        if (!t.id) {
+            return Promise.resolve(Result.Failure('staging record must have id'));
+        }
+
+        return this.#mapper.AddFile(t.id, fileID);
+    }
+
+    removeFile(t: DataStaging, fileID: string): Promise<Result<boolean>> {
+        if (!t.id) {
+            return Promise.resolve(Result.Failure('staging record must have id'));
+        }
+
+        return this.#mapper.RemoveFile(t.id, fileID);
+    }
+
+    listFiles(t: DataStaging): Promise<Result<File[]>> {
+        if (!t.id) {
+            return Promise.resolve(Result.Failure('staging record must have id'));
+        }
+
+        return this.#fileMapper.ListForDataStaging(t.id);
     }
 
     constructor() {

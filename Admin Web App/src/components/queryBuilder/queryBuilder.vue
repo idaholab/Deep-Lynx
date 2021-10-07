@@ -124,8 +124,8 @@ export default class QueryBuilder extends Vue {
   queryParts: QueryPart[] = []
   previousResults: ResultSet[] = []
   results: ResultSet | null = null
-  limit = 25
-  limitOptions = [25, 50, 75, 100]
+  limit = 100
+  limitOptions = [100, 250, 500, 1000]
 
   addQueryPart(componentName: string) {
     this.queryParts.push({
@@ -302,7 +302,7 @@ export default class QueryBuilder extends Vue {
 }
 
 // use Object.assign to copy over the result from the event
-type QueryPart = {
+export type QueryPart = {
   id: string; // needed for uniqueness, assigned here not by component
   componentName: string;
   property?: string;
@@ -311,7 +311,7 @@ type QueryPart = {
   nested?: QueryPart[];
 }
 
-type ResultSet = {
+export type ResultSet = {
   id: string;
   query: QueryPart[];
   nodes: NodeT[];

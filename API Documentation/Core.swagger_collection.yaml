@@ -43,7 +43,7 @@ tags:
   - name: Events
     description: 'An application may create a Registered Event with Deep Lynx in order to  receive messages from Deep Lynx concerning the event type registered. This  system may be used to receive alerts when other Data Sources have ingested data, a new data source is created, etc.'
   - name: Authentication
-    description: 'These endpoints provide users and applications the ability to authenticate with Deep Lynx.'
+    description: These endpoints provide users and applications the ability to authenticate with Deep Lynx.
   - name: Misc
     description: ''
 security:
@@ -3519,6 +3519,104 @@ paths:
                 $ref: '#/components/schemas/404NotFound'
       operationId: ListOutstandingInvites
       description: Lists the outstanding container invites for the current user.
+  '/containers/{container_id}/graphs/nodes/{node_id}/files':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: node_id
+        in: path
+        required: true
+    get:
+      summary: List Node Files
+      tags: []
+      responses: {}
+      operationId: get-containers-container_id-graphs-nodes-node_id-files
+      description: Lists all attached files for node.
+  '/containers/{container_id}/graphs/nodes/{node_id}/files/{file_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: node_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: file_id
+        in: path
+        required: true
+    put:
+      summary: Attach Node File
+      operationId: put-containers-container_id-graphs-nodes-node_id-files-file_id
+      responses:
+        '200':
+          description: OK
+      description: Attach a file to a node.
+    delete:
+      summary: Detach Node File
+      operationId: delete-containers-container_id-graphs-nodes-node_id-files-file_id
+      responses:
+        '200':
+          description: OK
+      description: Detach file from node
+  '/containers/{container_id}/graphs/edges/{edge_id}/files/{file_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: file_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: edge_id
+        in: path
+        required: true
+    put:
+      summary: Attach Edge File
+      operationId: put-containers-container_id-graphs-nodes-node_id-files-file_id
+      responses:
+        '200':
+          description: OK
+      description: Attach a file to an edge.
+    delete:
+      summary: Detach Node File
+      operationId: delete-containers-container_id-graphs-nodes-node_id-files-file_id
+      responses:
+        '200':
+          description: OK
+      description: Detach file from an edge.
+  '/containers/{container_id}/graphs/edges/{edge_id}/files':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: edge_id
+        in: path
+        required: true
+    get:
+      summary: List Edge Files
+      tags: []
+      responses: {}
+      operationId: get-containers-container_id-graphs-nodes-node_id-files
+      description: Lists all attached files for edge.
 components:
   securitySchemes:
     BearerAuth:

@@ -67,6 +67,14 @@ export default class NodeMapper extends Mapper {
         });
     }
 
+    public AddFile(id: string, fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.addFile(id, fileID));
+    }
+
+    public RemoveFile(id: string, fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.removeFile(id, fileID));
+    }
+
     public Delete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id), {transaction});
     }
@@ -238,6 +246,20 @@ export default class NodeMapper extends Mapper {
         return {
             text: `DELETE FROM nodes WHERE id = $1`,
             values: [nodeID],
+        };
+    }
+
+    private addFile(nodeID: string, fileID: string): QueryConfig {
+        return {
+            text: `INSERT INTO node_files(node_id, file_id) VALUES ($1, $2)`,
+            values: [nodeID, fileID],
+        };
+    }
+
+    private removeFile(nodeID: string, fileID: string): QueryConfig {
+        return {
+            text: `DELETE FROM node_files WHERE node_id = $1 AND file_id = $2`,
+            values: [nodeID, fileID],
         };
     }
 }

@@ -85,6 +85,14 @@ export default class EdgeMapper extends Mapper {
         return super.retrieve<Edge>(this.retrieveByCompositeIDStatement(compositeID, dataSourceID), {transaction, resultClass});
     }
 
+    public AddFile(id: string, fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.addFile(id, fileID));
+    }
+
+    public RemoveFile(id: string, fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.removeFile(id, fileID));
+    }
+
     public Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id));
     }
@@ -325,6 +333,20 @@ export default class EdgeMapper extends Mapper {
         return {
             text: `DELETE FROM edges WHERE id = $1`,
             values: [edgeID],
+        };
+    }
+
+    private addFile(edgeID: string, fileID: string): QueryConfig {
+        return {
+            text: `INSERT INTO edge_files(edge_id, file_id) VALUES ($1, $2)`,
+            values: [edgeID, fileID],
+        };
+    }
+
+    private removeFile(edgeID: string, fileID: string): QueryConfig {
+        return {
+            text: `DELETE FROM edge_files WHERE edge_id = $1 AND file_id = $2`,
+            values: [edgeID, fileID],
         };
     }
 }

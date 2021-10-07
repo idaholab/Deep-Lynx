@@ -6,6 +6,8 @@ import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
 import MetatypeRepository from '../ontology/metatype_repository';
 import Logger from '../../../../services/logger';
+import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
+import File from '../../../../domain_objects/data_warehouse/data/file';
 
 /*
     NodeRepository contains methods for persisting and retrieving nodes
@@ -16,6 +18,7 @@ import Logger from '../../../../services/logger';
  */
 export default class NodeRepository extends Repository implements RepositoryInterface<Node> {
     #mapper: NodeMapper = NodeMapper.Instance;
+    #fileMapper: FileMapper = FileMapper.Instance;
     #metatypeRepo: MetatypeRepository = new MetatypeRepository();
 
     constructor() {
@@ -233,6 +236,30 @@ export default class NodeRepository extends Repository implements RepositoryInte
         }
 
         return Promise.resolve(Result.Success(true));
+    }
+
+    addFile(node: Node, fileID: string): Promise<Result<boolean>> {
+        if (!node.id) {
+            return Promise.resolve(Result.Failure('node must have id'));
+        }
+
+        return this.#mapper.AddFile(node.id, fileID);
+    }
+
+    removeFile(node: Node, fileID: string): Promise<Result<boolean>> {
+        if (!node.id) {
+            return Promise.resolve(Result.Failure('node must have id'));
+        }
+
+        return this.#mapper.RemoveFile(node.id, fileID);
+    }
+
+    listFiles(node: Node): Promise<Result<File[]>> {
+        if (!node.id) {
+            return Promise.resolve(Result.Failure('node must have id'));
+        }
+
+        return this.#fileMapper.ListForNode(node.id);
     }
 
     id(operator: string, value: any) {
