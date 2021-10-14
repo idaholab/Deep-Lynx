@@ -17,7 +17,6 @@ import TypeMappingMapper from '../data_access_layer/mappers/data_warehouse/etl/t
 const postgresAdapter = PostgresAdapter.Instance;
 
 void postgresAdapter.init().then(() => {
-    Logger.debug('starting data staging mapping assignment loop');
     const repo = new DataStagingRepository();
 
     repo.where()

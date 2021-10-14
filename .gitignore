@@ -7,6 +7,7 @@ settings.json
 combined.log
 exceptions.log
 node_modules
+profile-logs
 .vscode/
 /src/access_management/authentication/saml/*.crt
 /src/access_management/authentication/saml/*.key

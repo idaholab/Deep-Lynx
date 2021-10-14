@@ -46,6 +46,7 @@
                                 </template>
                                 <template slot="append-outer"><info-tooltip :message="$t('containers.owlUrlHelp')"></info-tooltip> </template>
                               </v-text-field>
+                              <!-- Uncomment once we actually have versioning
                               <v-checkbox v-model="newContainer.config.data_versioning_enabled">
                                 <template v-slot:label>
                                   {{$t('containers.dataVersioningEnabled')}}
@@ -53,6 +54,7 @@
 
                                 <template slot="append-outer"><info-tooltip :message="$t('containers.dataVersioningHelp')"></info-tooltip> </template>
                               </v-checkbox>
+                              -->
                             </v-form>
                         </v-col>
                     </v-row>

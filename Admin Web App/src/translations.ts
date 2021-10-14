@@ -101,6 +101,8 @@ export default {
             searchName: 'Search Name',
             searchDescription: 'Search Description',
             metatypeSuccessfullyCreated: 'Metatype created successfully',
+            id: 'ID',
+            copyID: 'Click to Copy ',
         },
         editMetatype: {
             editMetatype: 'Edit Metatype',
@@ -322,6 +324,8 @@ export default {
             actions: 'Actions',
             searchName: 'Search Name',
             searchDescription: 'Search Description',
+            id: 'ID',
+            copyID: 'Click to Copy ',
         },
         metatypeRelationshipPairs: {
             formTitle: 'New Relationship Pair',
@@ -334,6 +338,8 @@ export default {
             destinationMetatype: 'Search Destination Metatype',
             relationship: 'Search Relationship',
             pairSuccessfullyCreated: 'Successfully Created Metatype Relationship Pair',
+            id: 'ID',
+            copyID: 'Click to Copy ',
         },
         ontologyUpdate: {
             formTitle: 'Update Taxonomy via Ontology File',
@@ -658,6 +664,9 @@ export default {
             acceptTitle: 'Accept Invitation to Join Container',
             acceptDescription: 'By clicking the button below you are accepting an invitation to be a part of the container ',
             loginToAccept: 'Login to Accept Invitation',
+            inviteSuccessful: 'Invitation Accepted Successfully',
+            inviteSuccessfulDescription: 'You may now choose this container from the container selection screen',
+            containerSelect: 'Container Selection',
         },
         exports: {
             title: 'Export Container Data',

@@ -397,20 +397,13 @@ export default class ImportRoutes {
             // via the normal file querying channels
             if (metadataFieldCount === 0) {
                 void Promise.all(files).then((results) => {
-                    if (results[0].isError) {
-                        res.status(500).json(results);
-                        next();
-                        return;
-                    } else {
-                        res.status(200).json(results);
-                        next();
-                        return;
-                    }
+                    res.status(200).json(results);
+                    next();
+                    return;
                 });
             } else {
                 // update the passed meta information with the file name deep lynx
                 // has stored it under
-                // eslint-disable-next-line @typescript-eslint/no-for-in-array
                 const user = req.currentUser!;
 
                 if (files.length <= 0) {
@@ -420,21 +413,30 @@ export default class ImportRoutes {
                 }
 
                 void Promise.all(files).then((results) => {
-                    if (results[0].isError) {
-                        res.status(500).json(results);
-                        next();
-                        return;
-                    } else {
-                        metadata['deep-lynx-files'] = results;
+                    const updatePromises: Promise<Result<boolean>>[] = [];
+                    // eslint-disable-next-line @typescript-eslint/no-for-in-array
+                    for (const i in results) {
+                        if (results[i].isError) {
+                            continue;
+                        }
 
-                        req.dataSource
-                            ?.ReceiveData(toStream([metadata]), user)
-                            .then((result) => {
-                                result.asResponse(res);
-                            })
-                            .catch((err) => res.status(500).send(err))
-                            .finally(() => next());
+                        results[i].value.metadata = metadata;
+                        updatePromises.push(new FileRepository().save(results[i].value, user));
                     }
+
+                    void Promise.all(updatePromises)
+                        .then(() => {
+                            if (results.length === 1) {
+                                results[0].asResponse(res);
+                                next();
+                                return;
+                            }
+
+                            Result.Success(results).asResponse(res);
+                            next();
+                            return;
+                        })
+                        .catch((err) => res.status(500).send(err));
                 });
             }
         });

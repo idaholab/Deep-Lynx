@@ -310,7 +310,7 @@ export default class UserRepository extends Repository implements RepositoryInte
         // authentication, but I've found that in a few places we need this additional
         // check as the route might not have all the information needed to make a
         // permissions check when assigning roles
-        const authed = await Authorization.AuthUser(user, 'write', 'users');
+        const authed = await Authorization.AuthUser(user, 'write', 'users', payload.container_id);
         if (!authed) return Promise.resolve(Result.Error(ErrorUnauthorized));
 
         return Promise.resolve(Result.Success(await Authorization.AssignRole(payload.user_id!, payload.role_name!, payload.container_id)));

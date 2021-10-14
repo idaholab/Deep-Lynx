@@ -16,7 +16,7 @@
         <error-banner :message="errorMessage"></error-banner>
         <success-banner :message="successMessage"></success-banner>
         <v-alert type="success" v-if="createdRelationship">
-          {{$t('metatypeRelationships.metatypeSuccessfullyCreated')}} -
+          {{$t('metatypeRelationships.relationshipSuccessfullyCreated')}} -
           <span>
             <edit-metatype-relationship-dialog :metatypeRelationship="createdRelationship"></edit-metatype-relationship-dialog>
           </span>
@@ -40,6 +40,17 @@
           </v-col>
         </v-row>
       </template>
+
+      <template v-slot:[`item.id`]="{ item }">
+        <v-tooltip top>
+          <template v-slot:activator="{on, attrs}">
+            <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
+          </template>
+          <span>{{$t('metatypes.copyID')}}</span>
+          <span>{{item.id}}</span>
+        </v-tooltip>
+      </template>
+
       <template v-slot:[`item.actions`]="{ item }">
         <edit-metatype-relationship-dialog :metatypeRelationship="item" :icon="true" @metatypeRelationshipEdited="loadMetatypeRelationships"></edit-metatype-relationship-dialog>
         <v-icon
@@ -58,6 +69,7 @@ import {MetatypeRelationshipT} from '@/api/types';
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import EditMetatypeRelationshipDialog from "@/components/editMetatypeRelationshipDialog.vue";
 import CreateMetatypeRelationshipDialog from "@/components/createMetatypeRelationshipDialog.vue";
+import {mdiFileDocumentMultiple} from "@mdi/js";
 
 @Component({components: {
     EditMetatypeRelationshipDialog,
@@ -67,6 +79,7 @@ export default class MetatypeRelationships extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
 
+  copy = mdiFileDocumentMultiple
   errorMessage = ""
   successMessage = ""
   loading = false
@@ -105,6 +118,7 @@ export default class MetatypeRelationships extends Vue {
 
   headers() {
     return [
+      { text: this.$t('metatypeRelationships.id'), value: 'id' },
       { text: this.$t('metatypeRelationships.name'), value: 'name' },
       { text: this.$t('metatypeRelationships.description'), value: 'description'},
       { text: this.$t('metatypeRelationships.actions'), value: 'actions', sortable: false }
@@ -164,6 +178,10 @@ export default class MetatypeRelationships extends Vue {
     this.createdRelationship = relationship
     this.countRelationships()
     this.loadMetatypeRelationships()
+  }
+
+  copyID(id: string) {
+    navigator.clipboard.writeText(id)
   }
 }
 </script>

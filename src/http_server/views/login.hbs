@@ -28,7 +28,9 @@
                             <input type='hidden' name='{{@key}}' value='{{this}}' />
                         {{/each}}
                     {{/if}}
+
                     <div class='mb-5'>
+                    {{#unless saml_enabled}}
                         <div class='form-group'>
                             <label for='email'>Email address</label>
                             <input type='email' class='form-control' id='email' name='username' placeholder='name@example.com' required />
@@ -41,12 +43,10 @@
                     <div class='w-100 px-4'>
                         <button type='submit' class='btn btn-lg btn-custom mb-2 btn-block'>Login</button>
                     </div>
-                    <div class='row my-3 mx-0 justify-content-center align-items-center divider-container'>
-                        <hr class='w-100' />
-                        <span class='px-2'>or</span>
-                    </div>
+                    {{/unless}}
+
                     {{#if saml_enabled}}
-                        <div class='w-100 px-4'>
+                        <div class='w-100 px-4' style="margin-top: 150px;">
                             <a href='{{{loginWithWindowsLink}}}' class='btn btn-custom mb-2 btn-block' role='button'>
                                 <svg style='width:22px; height:22px; padding-right:2px;' viewBox='0 0 24 24'>
                                     <path
@@ -54,15 +54,17 @@
                                         d='M3,12V6.75L9,5.43V11.91L3,12M20,3V11.75L10,11.9V5.21L20,3M3,13L9,13.09V19.9L3,18.75V13M20,13.25V22L10,20.09V13.1L20,13.25Z'
                                     ></path>
                                 </svg>
-                                Login with Windows
+                                Login with SSO
                             </a>
                         </div>
                     {{/if}}
                 </form>
+                {{#unless saml_enabled}}
                 <div class='w-100 d-flex'>
                     <a class='login-link' href='{{{registerLink}}}'>Need an Account?</a>
                     <a class='login-link ml-auto' href='/reset-password'>Forgot Password?</a>
                 </div>
+                {{/unless}}
             </div>
         </div>
     </div>

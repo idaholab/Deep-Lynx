@@ -16,7 +16,6 @@ import Config from '../services/config';
 const postgresAdapter = PostgresAdapter.Instance;
 
 void postgresAdapter.init().then(() => {
-    Logger.debug('starting data processing job');
     const repo = new DataSourceRepository();
 
     const queue = new PQueue({concurrency: Config.data_source_concurrency});

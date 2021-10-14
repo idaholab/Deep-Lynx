@@ -151,7 +151,14 @@ export class Router {
         this.app.use(express.static(Config.asset_dir));
 
         this.app.use([this.perfMiddleware.Pre()]); // performance middleware
-        this.app.use(helmet()); // helmet contains a bunch of pre-built http protections
+        this.app.use(
+            helmet({
+                // set the max age of the strict transport security header
+                hsts: {
+                    maxAge: 31536000,
+                },
+            }),
+        ); // helmet contains a bunch of pre-built http protections
 
         // TODO: change before attempting to deploy this application to production
         this.app.use(
