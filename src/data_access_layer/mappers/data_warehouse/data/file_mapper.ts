@@ -208,7 +208,7 @@ export default class FileMapper extends Mapper {
                   modified_by)
                   WHERE u.id::uuid = f.id RETURNING f.*`;
         const values = files.map((file) => [
-            uuid.v4(),
+            file.id,
             file.container_id,
             file.file_name,
             file.file_size,

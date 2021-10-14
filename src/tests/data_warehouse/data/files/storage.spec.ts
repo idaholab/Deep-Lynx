@@ -1,5 +1,5 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../../../services/logger';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
@@ -26,8 +26,8 @@ describe('A File can', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -41,8 +41,8 @@ describe('A File can', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -71,8 +71,8 @@ describe('A File can', async () => {
                 adapter_file_path: faker.name.findName(),
                 adapter: 'filesystem',
                 data_source_id: dataSourceID,
-                container_id: containerID
-            })
+                container_id: containerID,
+            }),
         );
 
         expect(file.isError).false;
@@ -93,8 +93,8 @@ describe('A File can', async () => {
                 adapter_file_path: faker.name.findName(),
                 adapter: 'filesystem',
                 data_source_id: dataSourceID,
-                container_id: containerID
-            })
+                container_id: containerID,
+            }),
         );
 
         const retrieved = await mapper.Retrieve(file.value.id!);
@@ -116,8 +116,8 @@ describe('A File can', async () => {
                 adapter_file_path: faker.name.findName(),
                 adapter: 'filesystem',
                 data_source_id: dataSourceID,
-                container_id: containerID
-            })
+                container_id: containerID,
+            }),
         );
 
         expect(file.isError).false;
@@ -129,6 +129,7 @@ describe('A File can', async () => {
         const retrieved = await mapper.Retrieve(file.value.id!);
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(file.value.id);
+        expect(file.value.adapter).eq('azure_blob');
 
         return mapper.Delete(file.value.id!);
     });

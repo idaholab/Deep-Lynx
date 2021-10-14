@@ -41,6 +41,17 @@
           </v-col>
         </v-row>
       </template>
+
+      <template v-slot:[`item.id`]="{ item }">
+        <v-tooltip top>
+          <template v-slot:activator="{on, attrs}">
+            <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
+          </template>
+          <span>{{$t('metatypes.copyID')}}</span>
+          <span>{{item.id}}</span>
+        </v-tooltip>
+      </template>
+
       <template v-slot:[`item.actions`]="{ item }">
         <edit-metatype-dialog :metatype="item" :icon="true" @metatypeEdited="loadMetatypes()"></edit-metatype-dialog>
         <v-icon
@@ -59,6 +70,7 @@ import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import { MetatypeT } from '@/api/types';
 import EditMetatypeDialog from "@/components/editMetatypeDialog.vue";
 import CreateMetatypeDialog from "@/components/createMetatypeDialog.vue";
+import {mdiFileDocumentMultiple} from "@mdi/js";
 
 @Component({components: {
     EditMetatypeDialog,
@@ -68,6 +80,7 @@ export default class Metatypes extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
 
+  copy = mdiFileDocumentMultiple
   errorMessage = ""
   successMessage = ""
   metatypesLoading = false
@@ -106,6 +119,7 @@ export default class Metatypes extends Vue {
 
   headers() {
     return  [
+      { text: this.$t('metatypes.id'), value: 'id' },
       { text: this.$t('metatypes.name'), value: 'name' },
       { text: this.$t('metatypes.description'), value: 'description'},
       { text: this.$t('metatypes.actions'), value: 'actions', sortable: false }
@@ -164,6 +178,10 @@ export default class Metatypes extends Vue {
     this.createdMetatype = metatype
     this.countMetatypes()
     this.loadMetatypes()
+  }
+
+  copyID(id: string) {
+    navigator.clipboard.writeText(id)
   }
 }
 </script>

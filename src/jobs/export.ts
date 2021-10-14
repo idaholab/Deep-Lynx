@@ -17,7 +17,6 @@ const postgresAdapter = PostgresAdapter.Instance;
 
 void postgresAdapter.init().then(() => {
     const exporterRepo = new ExporterRepository();
-    Logger.debug('starting export processing job');
 
     const queue = new PQueue({concurrency: Config.export_data_concurrency});
 

@@ -40,6 +40,17 @@
           </v-col>
         </v-row>
       </template>
+
+      <template v-slot:[`item.id`]="{ item }">
+        <v-tooltip top>
+          <template v-slot:activator="{on, attrs}">
+            <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
+          </template>
+          <span>{{$t('metatypes.copyID')}}</span>
+          <span>{{item.id}}</span>
+        </v-tooltip>
+      </template>
+
       <template v-slot:[`item.actions`]="{ item }">
       <edit-relationship-pair-dialog :pair="item" :icon="true" @pairEdited="loadMetatypeRelationshipPairs()"></edit-relationship-pair-dialog>
         <v-icon
@@ -58,6 +69,7 @@ import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import { MetatypeRelationshipT, MetatypeRelationshipPairT } from '@/api/types';
 import CreateRelationshipPairDialog from "@/components/createRelationshipPairDialog.vue";
 import EditRelationshipPairDialog from "@/components/editRelationshipPairDialog.vue";
+import {mdiFileDocumentMultiple} from "@mdi/js";
 
 @Component({components: {
   CreateRelationshipPairDialog,
@@ -67,6 +79,7 @@ export default class MetatypeRelationshipPairs extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
 
+  copy = mdiFileDocumentMultiple
   errorMessage = ""
   successMessage = ""
   loading = false
@@ -109,6 +122,7 @@ export default class MetatypeRelationshipPairs extends Vue {
 
   headers() {
     return [
+      { text: this.$t('metatypeRelationshipPairs.id'), value: 'id' },
       { text: this.$t('metatypeRelationshipPairs.name'), value: 'name' },
       { text: this.$t('metatypeRelationshipPairs.description'), value: 'description'},
       { text: this.$t('metatypeRelationshipPairs.actions'), value: 'actions', sortable: false }
@@ -166,6 +180,10 @@ export default class MetatypeRelationshipPairs extends Vue {
     this.createdMetatypeRelationshipPair = pair
     this.countRelationshipPairs()
     this.loadMetatypeRelationshipPairs()
+  }
+
+  copyID(id: string) {
+    navigator.clipboard.writeText(id)
   }
 }
 </script>

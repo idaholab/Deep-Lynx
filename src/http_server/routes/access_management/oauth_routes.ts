@@ -23,6 +23,7 @@ const buildUrl = require('build-url');
 const userRepo = new UserRepository();
 const keyRepo = new KeyPairRepository();
 const oauthRepo = new OAuthRepository();
+import DOMPurify from 'isomorphic-dompurify';
 
 /*
     OAuthRoutes contain all routes pertaining to oauth application management and
@@ -273,8 +274,8 @@ export default class OAuthRoutes {
             // @ts-ignore
             _csrfToken: req.csrfToken(),
             oauthRequest: serialize(oauthRepo.authorizationFromRequest(req)),
-            _success: req.query.success,
-            _error: req.query.error,
+            _success: req.query.success ? DOMPurify.sanitize(req.query.success as string) : undefined,
+            _error: req.query.error ? DOMPurify.sanitize(req.query.error as string) : undefined,
         });
     }
 
@@ -334,8 +335,8 @@ export default class OAuthRoutes {
             loginWithWindowsLink: buildUrl('/login-saml', {
                 queryParams: req.query,
             }),
-            _success: req.query.success,
-            _error: req.query.error,
+            _success: req.query.success ? DOMPurify.sanitize(req.query.success as string) : undefined,
+            _error: req.query.error ? DOMPurify.sanitize(req.query.errory as string) : undefined,
             saml_enabled: Config.saml_enabled,
         });
     }
