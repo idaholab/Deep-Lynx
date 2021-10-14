@@ -19,6 +19,8 @@
     "jwt-decode": "^2.2.0",
     "node-forge": "^0.10.0",
     "ssri": "^8.0.1",
+    "three": "^0.132.2",
+    "three-mesh-bvh": "^0.4.3",
     "uuid": "^8.3.2",
     "vue": "^2.6.12",
     "vue-class-component": "^7.2.6",
@@ -30,6 +32,7 @@
     "vue-router": "^3.4.9",
     "vuetify": "^2.3.19",
     "vuex": "^3.6.0",
+    "web-ifc-three": "^0.0.67",
     "webcola": "^3.4.0"
   },
   "devDependencies": {

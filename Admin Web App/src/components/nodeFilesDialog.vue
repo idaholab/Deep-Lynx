@@ -62,6 +62,8 @@
           >
             mdi-delete
           </v-icon>
+          <!-- not the world's best if statement for catching IFC files, but will work in 99% of the cases -->
+          <ifc-viewer v-if="item.file_name.includes('.ifc')" :file="item" :icon="true"></ifc-viewer>
         </template>
       </v-data-table>
     </v-col>
@@ -72,8 +74,9 @@
 import {Component, Prop, Vue} from "vue-property-decorator";
 import {FileT, NodeT} from "@/api/types";
 import {mdiFileDocumentMultiple} from "@mdi/js";
+import IfcViewer from "@/components/ifcViewer.vue";
 
-@Component
+@Component({components: {IfcViewer}})
 export default class NodeFilesDialog extends Vue {
   @Prop({required: true})
   readonly node!: NodeT
