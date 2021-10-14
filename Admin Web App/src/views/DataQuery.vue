@@ -143,6 +143,8 @@ import QueryBuilder from "../components/queryBuilder/queryBuilder.vue"
 import NodeFilesDialog from "@/components/nodeFilesDialog.vue";
 import {Component, Prop, Vue} from "vue-property-decorator";
 import {NodeT} from "@/api/types";
+import IfcViewer from "@/components/ifcViewer.vue";
+
 import {ResultSet} from "@/components/queryBuilder/queryBuilder.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
 let resolveCy: any = null

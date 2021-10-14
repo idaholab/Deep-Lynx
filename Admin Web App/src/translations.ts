@@ -72,6 +72,14 @@ export default {
             addFile: 'Add File',
             selectFile: 'Select File to Upload',
         },
+        ifcViewer: {
+            loadWarning:
+                'Loading an IFC file into the browser can be a resource and time consuming process. If the file is large, or your connection to Deep Lynx slow, it may take several minutes for the file to load and render. Please be patient.',
+            loadModel: 'Load IFC File',
+            resetModel: 'Reset IFC File',
+            Model: 'Model',
+            Properties: 'Properties',
+        },
         exportMapping: {
             title: 'Export Type Mappings',
             export: 'Export',
