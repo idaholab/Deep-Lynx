@@ -20,13 +20,39 @@ export class NakedDomainClass {
     onDecodeError(resolve: (check: any) => void): (e: Errors) => void {
         return (e: ValidationError[]) => {
             const errorStrings: string[] = [];
-            for (const error of e) {
-                const last = error.context[error.context.length - 1];
+            // init prevKeyName to first key name
+            let prevKeyName = e[0].context[e[0].context.length - 2].key
+            let errorValue
+            let possibleTypes: string[] = []
 
-                errorStrings.push(`Invalid Value '${error.value}' supplied for field '${last.key}'`);
+            for (const error of e) {
+                const keyName = error.context[error.context.length - 2].key
+                errorValue = error.value
+
+                // if we are looking at a previous key, append the type and continue
+                // else if we are looking at a new key, push previous to errorStrings and set new value and keyName
+                if (keyName === prevKeyName) {
+                    // concatenate possible types to handle union types
+                    possibleTypes.push(error.context[error.context.length - 1].type.name)
+                } else {
+                    errorStrings.push(`Invalid value '${errorValue}' supplied for field '${prevKeyName}'. ` +
+                        `Type supplied should be ${possibleTypes.join(' or ')}.`);
+
+                    // reset possibleTypes and update prevKeyName
+                    possibleTypes = []
+                    prevKeyName = keyName
+
+                    // the previous validation has been taken care of, handle this validation by adding to possibleTypes
+                    possibleTypes.push(error.context[error.context.length - 1].type.name)
+                }
+
             }
 
-            resolve(Result.Failure(errorStrings.join(',')));
+            // last error needs to be pushed to errorStrings
+            errorStrings.push(`Invalid value '${errorValue}' supplied for '${prevKeyName}'. ` +
+                `Type supplied should be ${possibleTypes.join(' or ')}.`);
+
+            resolve(Result.Failure(errorStrings.join(' ')));
         };
     }
 }

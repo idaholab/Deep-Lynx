@@ -48,6 +48,7 @@ import DataSourceRoutes from './data_warehouse/import/data_source_routes';
 import {SetJWTAuthMethod} from '../authentication/jwt';
 import {SetLocalAuthMethod} from '../authentication/local';
 import QueryRoutes from './data_warehouse/data/query/query_routes';
+import RSARoutes from './access_management/rsa_routes';
 import GraphRoutes from './data_warehouse/data/graph_routes';
 import OAuthRoutes from './access_management/oauth_routes';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
@@ -135,6 +136,8 @@ export class Router {
         // OAuth and Identity Provider routes - these are the only routes that serve up
         // webpages. WE ALSO MOUNT THE '/' ENDPOINT HERE
         OAuthRoutes.mount(this.app, [oauthAppContext()]);
+
+        RSARoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
 
         this.mountPostMiddleware();
     }

@@ -207,7 +207,7 @@ export default class ImportRoutes {
     // createManualImport will accept either a file or a raw JSON body
     private static createManualImport(req: Request, res: Response, next: NextFunction) {
         if (req.dataSource) {
-            if (req.headers['content-type'] === 'application/json') {
+            if (req.headers['content-type']?.includes('application/json')) {
                 req.dataSource
                     .ReceiveData(req, req.currentUser!)
                     .then((result) => {
@@ -447,7 +447,7 @@ export default class ImportRoutes {
     // createManualImport will accept either a file or a raw JSON body
     private static addDataToImport(req: Request, res: Response, next: NextFunction) {
         if (req.dataSource && req.dataImport) {
-            if (req.headers['content-type'] === 'application/json' || req.headers['Content-Type'] === 'application/json') {
+            if (req.headers['content-type']?.includes('application/json') || req.headers['Content-Type']?.includes('application/json')) {
                 req.dataSource
                     .ReceiveData(req, req.currentUser!, {importID: req.dataImport.id})
                     .then((result) => {
