@@ -16,6 +16,8 @@ export default class MetatypeRoutes {
         app.get('/containers/:containerID/metatypes', ...middleware, authInContainer('read', 'ontology'), this.listMetatypes);
         app.put('/containers/:containerID/metatypes/:metatypeID', ...middleware, authInContainer('write', 'ontology'), this.updateMetatype);
         app.delete('/containers/:containerID/metatypes/:metatypeID', ...middleware, authInContainer('write', 'ontology'), this.archiveMetatype);
+
+        app.post('/containers/:containerID/metatypes/:metatypeID', ...middleware, authInContainer('read', 'ontology'), this.validateProperties);
     }
     private static createMetatype(req: Request, res: Response, next: NextFunction) {
         let toCreate: Metatype[] = [];
@@ -130,6 +132,27 @@ export default class MetatypeRoutes {
         if (req.metatype) {
             repo.archive(req.currentUser!, req.metatype)
                 .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
+        } else {
+            Result.Failure('metatype not found', 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static async validateProperties(req: Request, res: Response, next: NextFunction) {
+        if (req.metatype && req.container) {
+            const metatype = await repo.findByID(req.metatype.id!, true);
+
+            metatype.value.validateAndTransformProperties(req.body)
+                .then((result) => {
+                    if (result.isError) {
+                        result.asResponse(res);
+                        return;
+                    }
+
                     result.asResponse(res);
                 })
                 .catch((err) => res.status(500).send(err))

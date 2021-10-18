@@ -608,7 +608,8 @@ export default class OAuthRoutes {
     private static getToken(req: Request, res: Response, next: NextFunction) {
         const key = req.header('x-api-key');
         const secret = req.header('x-api-secret');
-        const expiry = req.header('x-api-expiry');
+        // provide a sane default of a 24 hour token expiry
+        const expiry = req.header('x-api-expiry') || '24h';
 
         if (key && secret) {
             keyRepo.validateKeyPair(key, secret).then((valid) => {

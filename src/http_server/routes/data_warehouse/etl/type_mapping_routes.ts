@@ -398,7 +398,7 @@ export default class TypeMappingRoutes {
         }
 
         // if we have a json body, ignore anything else and simply run the import with the json
-        if (req.headers['content-type'] === 'application/json') {
+        if (req.headers['content-type']?.includes('application/json')) {
             const repo = new TypeMappingRepository();
             const payload = plainToClass(TypeMapping, req.body);
 

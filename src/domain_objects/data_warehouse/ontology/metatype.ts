@@ -3,7 +3,7 @@ import {IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength, register
 import MetatypeKey from './metatype_key';
 import * as t from 'io-ts';
 import Result from '../../../common_classes/result';
-import {pipe} from 'fp-ts/pipeable';
+import {pipe} from 'fp-ts/lib/function';
 import {fold} from 'fp-ts/Either';
 import {Type} from 'class-transformer';
 import validator from 'validator';
@@ -201,6 +201,7 @@ export default class Metatype extends BaseDomainClass {
 
         const onValidateSuccess = (resolve: (r: any) => void): ((c: any) => void) => {
             return (cts: any) => {
+                const errorStrings: string[] = [];
                 // now that we know the payload matches the shape of the data required, run additional validation
                 // such as regex pattern matching on string payloads
                 if (this.keys)
@@ -216,11 +217,13 @@ export default class Metatype extends BaseDomainClass {
                             }
 
                             if (key.validation.min !== undefined && key.validation.min > count) {
-                                resolve(Result.Failure(`validation of ${key.property_name} failed, less than min`));
+                                errorStrings.push(`Validation of ${key.property_name} failed, this key is required. ` +
+                                    `${count} provided, less than min (${key.validation.min}).`);
                             }
 
                             if (key.validation.max !== undefined && key.validation.max < count) {
-                                resolve(Result.Failure(`validation of ${key.property_name} failed, more than max`));
+                                errorStrings.push(`Validation of ${key.property_name} failed, too many of this key provided. ` +
+                                    `${count} provided, more than max (${key.validation.max}).`);
                             }
                         }
 
@@ -228,12 +231,17 @@ export default class Metatype extends BaseDomainClass {
                             const matcher = new RegExp(key.validation.regex);
 
                             if (!matcher.test(input[key.property_name])) {
-                                resolve(Result.Failure(`validation of ${key.property_name} failed, regex mismatch `));
+                                errorStrings.push(`Validation of ${key.property_name} failed, regex mismatch. Should match ${key.validation.regex}.`);
                             }
                         }
                     }
 
-                resolve(Result.Success(cts));
+                if (errorStrings.length > 0) {
+                    resolve(Result.Failure(errorStrings.join(' ')));
+                } else {
+                    resolve(Result.Success(cts));
+                }
+
             };
         };
 

@@ -6,13 +6,17 @@ info:
 
     The Deep Lynx Core API delivers a few main features.
 
-    1. Core provides a set of methods and endpoints for manipulating data in an object oriented database. This allows us to store complex datatypes as records and then to compile them into actual, modifiable objects at run-time. Users can store taxonomies or ontologies in a readable format.
+    1. Provides a set of methods and endpoints for manipulating data in an object oriented database. This allows us to store complex datatypes as records and then to compile them into actual, modifiable objects at run-time. Users can store taxonomies or ontologies in a readable format.
 
-    2. Core provides methods for storing and retrieving data in a graph database. This data is structured and validated against the aformentioned object oriented database before storage.
+    2. Provides methods for storing and retrieving data in a graph database. This data is structured and validated against the aformentioned object oriented database before storage.
   contact: {}
   version: '1.0'
+  license:
+    name: MIT
+    url: 'https://github.com/idaholab/Deep-Lynx/blob/master/LICENSE'
 servers:
   - url: 'http://localhost:8090'
+    description: Localhost
 tags:
   - name: Containers
     description: 'Containers are considered a root object with only users and organizations as potential parents. Containers separate object defintions (as declared in Metatypes) from each other and allow for versioning and access control. '
@@ -63,7 +67,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerResponse'
+                $ref: '#/components/schemas/ListContainerResponse'
       deprecated: false
     put:
       tags:
@@ -75,7 +79,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BatchUpdateRequest'
+              $ref: '#/components/schemas/BatchContainerUpdateRequest'
         required: true
       responses:
         '200':
@@ -83,13 +87,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerResponse'
+                $ref: '#/components/schemas/BatchUpdateContainerResponse'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ErrorResponse'
       deprecated: false
       x-codegen-request-body-name: Body
     post:
@@ -105,7 +109,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateRequest'
+              $ref: '#/components/schemas/CreateContainerRequest'
         required: true
       responses:
         '200':
@@ -113,14 +117,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerResponse'
+                $ref: '#/components/schemas/CreateContainerResponse'
               examples: {}
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ErrorResponse'
               examples:
                 example-1:
                   value:
@@ -150,13 +154,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerResponse'
+                $ref: '#/components/schemas/GetContainerResponse'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ErrorResponse'
       deprecated: false
     put:
       tags:
@@ -174,7 +178,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateRequest'
+              $ref: '#/components/schemas/UpdateContainerRequest'
         required: true
       responses:
         '200':
@@ -182,7 +186,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerResponse'
+                $ref: '#/components/schemas/UpdateContainerResponse'
       deprecated: false
       x-codegen-request-body-name: Body
     delete:
@@ -208,7 +212,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
   '/containers/{container_id}/active':
     post:
@@ -229,14 +233,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
   /containers/import:
     post:
       tags:
         - Containers
       summary: Import Container
-      description: 'An optional query param "dryrun" may be included with a value of "true" in order to return a HTML formatted string explaining the name and description of the container along with the number of metatypes, metatype relationships, and metatype keys to be created. This request uses a form-data body. If the ontology to be imported is being referenced via url, provide the url via a "path" field. Otherwise a local file may be provided. A file takes precedence over a "path" value if both are provided.'
+      description: 'An optional query param `dryrun` may be included with a value of `true` in order to return a HTML formatted string explaining the name and description of the container along with the number of metatypes, metatype relationships, and metatype keys to be created. This request uses a form-data body. If the ontology to be imported is being referenced via url, provide the url via a `path` field. Otherwise a local file may be provided. A file takes precedence over a `path` value if both are provided.'
       operationId: ImportContainer
       requestBody:
         content:
@@ -258,13 +262,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerImportSuccess'
+                $ref: '#/components/schemas/ContainerImportResponse'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ErrorResponse'
       deprecated: false
       parameters:
         - schema:
@@ -296,7 +300,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerImportSuccess'
+                $ref: '#/components/schemas/ContainerImportUpdateResponse'
       deprecated: false
       description: Updates an existing container via an ontology file.
     parameters:
@@ -324,7 +328,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
               examples:
                 example-1:
                   value:
@@ -408,20 +412,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/NodeResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListNodesResponse'
       deprecated: false
     post:
       tags:
         - Graph
       summary: Create Or Update Nodes
-      description: This endpoint will either create new nodes or update nodes if a "modified_at" property with a valid DateTime is passed.
+      description: This endpoint will either create new nodes or update nodes if a `modified_at` property with a valid DateTime is passed.
       operationId: CreateOrUpdateNodes
       parameters:
         - name: container_id
@@ -441,7 +438,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
       x-codegen-request-body-name: Body
   '/containers/{container_id}/graphs/nodes/{node_id}':
@@ -468,12 +465,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/NodeResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/GetNodeResponse'
       deprecated: false
     delete:
       tags:
@@ -497,7 +489,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
       x-codegen-request-body-name: Body
       description: Archives a node
@@ -537,72 +529,8 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/NodeResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListNodesByMetatypeResponse'
       deprecated: false
-  '/containers/{container_id}/graphs/edges/{edge_id}':
-    get:
-      tags:
-        - Graph
-      summary: Retrieve Edge
-      operationId: RetrieveEdge
-      parameters:
-        - name: container_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: edge_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/EdgeResponse'
-                  isError:
-                    type: boolean
-      deprecated: false
-      description: Retrieve a single edge
-    delete:
-      tags:
-        - Graph
-      summary: Archive Edge
-      operationId: ArchiveEdge
-      parameters:
-        - name: container_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: edge_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Generic200'
-      deprecated: false
-      x-codegen-request-body-name: Body
-      description: Archives an edge
   '/containers/{container_id}/graphs/edges':
     get:
       tags:
@@ -650,14 +578,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/EdgeResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListEdgesResponse'
       deprecated: false
     post:
       tags:
@@ -676,13 +597,201 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
-      description: This endpoint will either create new edges or update edges if a "modified_at" property with a valid DateTime is passed.
+                $ref: '#/components/schemas/Generic200Response'
+      description: This endpoint will either create new edges or update edges if a `modified_at` property with a valid DateTime is passed.
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateOrUpdateEdgesRequest'
+  '/containers/{container_id}/graphs/edges/{edge_id}':
+    get:
+      tags:
+        - Graph
+      summary: Retrieve Edge
+      operationId: RetrieveEdge
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: edge_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEdgeResponse'
+      deprecated: false
+      description: Retrieve a single edge
+    delete:
+      tags:
+        - Graph
+      summary: Archive Edge
+      operationId: ArchiveEdge
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: edge_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      deprecated: false
+      x-codegen-request-body-name: Body
+      description: Archives an edge
+  '/containers/{container_id}/graphs/nodes/{node_id}/files':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: node_id
+        in: path
+        required: true
+    get:
+      summary: List Node Files
+      tags:
+        - Graph
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListNodeFiles'
+      operationId: ListNodeFiles
+      description: Lists all attached files for node.
+  '/containers/{container_id}/graphs/nodes/{node_id}/files/{file_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: node_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: file_id
+        in: path
+        required: true
+    put:
+      summary: Attach Node File
+      tags:
+        - Graph
+      operationId: AttachNodeFile
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      description: Attach a file to a node.
+    delete:
+      summary: Detach Node File
+      tags:
+        - Graph
+      operationId: DeleteNodeFile
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      description: Detach file from node
+  '/containers/{container_id}/graphs/edges/{edge_id}/files':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: edge_id
+        in: path
+        required: true
+    get:
+      summary: List Edge Files
+      tags:
+        - Graph
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEdgeFiles'
+      operationId: ListEdgeFiles
+      description: Lists all attached files for edge.
+  '/containers/{container_id}/graphs/edges/{edge_id}/files/{file_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: file_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: edge_id
+        in: path
+        required: true
+    put:
+      summary: Attach Edge File
+      tags:
+        - Graph
+      operationId: AttachEdgeFile
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      description: Attach a file to an edge.
+    delete:
+      summary: Detach Node File
+      tags:
+        - Graph
+      operationId: DetachNodeFile
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      description: Detach file from an edge.
   '/containers/{container_id}/metatypes':
     get:
       tags:
@@ -749,14 +858,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/MetatypeResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListMetatypesResponse'
       deprecated: false
     post:
       tags:
@@ -774,7 +876,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewTypeRequest'
+              $ref: '#/components/schemas/NewMetatypeRequest'
         required: true
       responses:
         '200':
@@ -782,14 +884,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/MetatypeResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/CreateMetatypesResponse'
       deprecated: false
       x-codegen-request-body-name: Body
   '/containers/{container_id}/metatypes/{metatype_id}':
@@ -816,12 +911,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/MetatypeResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/GetMetatypeResponse'
       deprecated: false
     put:
       tags:
@@ -844,7 +934,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateTypeRequest'
+              $ref: '#/components/schemas/UpdateMetatypeRequest'
         required: true
       responses:
         '200':
@@ -852,12 +942,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/MetatypeResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/UpdateMetatypeResponse'
       deprecated: false
       x-codegen-request-body-name: Body
     delete:
@@ -883,7 +968,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
     parameters:
       - schema:
@@ -896,6 +981,31 @@ paths:
         name: metatype_id
         in: path
         required: true
+    post:
+      tags:
+        - Authentication
+      summary: Validate Metatype Properties
+      operationId: post-containers-container_id-metatypes-metatype_id
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateMetatypePropertiesResponse'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: Returns any errors associated with the intended properties or keys for a metatype or else the data itself if no errors are present.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
   '/containers/{container_id}/metatypes/{metatype_id}/keys':
     get:
       tags:
@@ -920,14 +1030,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/KeyResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListMetatypeKeysResponse'
       deprecated: false
     post:
       tags:
@@ -959,7 +1062,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewTypeKeyRequest'
+              $ref: '#/components/schemas/NewMetatypeKeyRequest'
         required: true
       responses:
         '200':
@@ -967,14 +1070,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/KeyResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/CreateMetatypeKeysResponse'
       deprecated: false
       x-codegen-request-body-name: Body
     parameters:
@@ -1017,12 +1113,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/KeyResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/GetMetatypeKeyResponse'
       deprecated: false
     put:
       tags:
@@ -1050,7 +1141,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateTypeKeyRequest'
+              $ref: '#/components/schemas/UpdateMetatypeKeyRequest'
         required: true
       responses:
         '200':
@@ -1058,12 +1149,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/KeyResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/UpdateMetatypeKeyResponse'
       deprecated: false
       x-codegen-request-body-name: Body
     delete:
@@ -1094,7 +1180,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
     parameters:
       - schema:
@@ -1178,14 +1264,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/MetatypeRelationshipResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListMetatypeRelationshipsResponse'
       deprecated: false
     post:
       tags:
@@ -1206,7 +1285,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewTypeRelationshipRequest'
+              $ref: '#/components/schemas/NewMetatypeRelationshipRequest'
         required: true
       responses:
         '200':
@@ -1214,14 +1293,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/MetatypeRelationshipResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/CreateMetatypeRelationshipsResponse'
       deprecated: false
       x-codegen-request-body-name: Body
   '/containers/{container_id}/metatype_relationships/{relationship_id}':
@@ -1248,12 +1320,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/MetatypeRelationshipResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/GetMetatypeRelationshipResponse'
       deprecated: false
     put:
       tags:
@@ -1275,7 +1342,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateTypeRelationshipRequest'
+              $ref: '#/components/schemas/UpdateMetatypeRelationshipRequest'
         required: true
       responses:
         '200':
@@ -1283,12 +1350,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/MetatypeRelationshipResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/UpdateMetatypeRelationshipResponse'
       deprecated: false
       x-codegen-request-body-name: Body
       description: Updates the specified metatype relationship.
@@ -1315,7 +1377,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
   '/containers/{container_id}/metatype_relationships/{relationship_id}/keys':
     get:
@@ -1341,14 +1403,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/RelationshipKeyResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListMetatypeRelationshipKeysResponse'
       deprecated: false
     post:
       tags:
@@ -1376,7 +1431,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewTypeRelationshipKeyRequest'
+              $ref: '#/components/schemas/NewMetatypeRelationshipKeyRequest'
         required: true
       responses:
         '200':
@@ -1384,14 +1439,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/RelationshipKeyResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/CreateMetatypeRelationshipKeysResponse'
       deprecated: false
       x-codegen-request-body-name: Body
   '/containers/{container_id}/metatype_relationships/{relationship_id}/keys/{key_id}':
@@ -1423,12 +1471,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/RelationshipKeyResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/GetMetatypeRelationshipKeyResponse'
       deprecated: false
     put:
       tags:
@@ -1456,7 +1499,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RelationshipKeyResponse'
+              $ref: '#/components/schemas/RelationshipKey'
         required: true
       responses:
         '200':
@@ -1464,12 +1507,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/RelationshipKeyResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/UpdateMetatypeRelationshipKeyResponse'
       deprecated: false
       x-codegen-request-body-name: Body
     delete:
@@ -1500,7 +1538,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
   '/containers/{container_id}/metatype_relationship_pairs':
     get:
@@ -1568,14 +1606,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/RelationshipPairResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListMetatypeRelationshipPairsResponse'
       deprecated: false
     post:
       tags:
@@ -1596,7 +1627,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewTypeRelationshipPairRequest'
+              $ref: '#/components/schemas/NewMetatypeRelationshipPairRequest'
         required: true
       responses:
         '200':
@@ -1604,14 +1635,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/RelationshipPairResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/CreateMetatypeRelationshipPairsResponse'
       deprecated: false
       x-codegen-request-body-name: Body
   '/containers/{container_id}/metatype_relationship_pairs/{pair_id}':
@@ -1638,12 +1662,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/RelationshipPairResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/GetMetatypeRelationshipPairResponse'
       deprecated: false
     delete:
       tags:
@@ -1668,7 +1687,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
     put:
       tags:
@@ -1692,17 +1711,12 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/RelationshipPairResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/UpdateMetatypeRelationshipPairResponse'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewTypeRelationshipPairRequest'
+              $ref: '#/components/schemas/NewMetatypeRelationshipPairRequest'
       description: Updates the specified metatype relationship pair.
   '/containers/{container_id}/import/datasources':
     get:
@@ -1722,21 +1736,14 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/DataSourceResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListDataSourcesResponse'
       deprecated: false
       description: List the datasources for the container.
     post:
       tags:
         - Data Sources
       summary: Create Data Source
-      description: 'Create new datasource. Supported data source types are `http`, `standard` (or `manual`), and `jazz`'
+      description: 'Create new datasource. Supported data source types are `http`, `standard` (or `manual`), `jazz`, and `aveva`.'
       operationId: CreateDataSource
       parameters:
         - name: container_id
@@ -1756,12 +1763,216 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/DataSourceResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/CreateDataSourcesResponse'
+      deprecated: false
+      x-codegen-request-body-name: Body
+  '/containers/{container_id}/import/datasources/{data_source_id}':
+    get:
+      tags:
+        - Data Sources
+      summary: Retrieve Data Source
+      description: Retrieve a single data source by ID.
+      operationId: RetrieveDataSource
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDataSourceResponse'
+      deprecated: false
+    put:
+      tags:
+        - Data Sources
+      summary: Set Data Source Configuration
+      description: Updates a data source's configuration in storage. Note that this request body's structure must match that of the data source's adapter type.
+      operationId: SetDataSourceConfiguration
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDataSourceConfig'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateDataSourceResponse'
+      deprecated: false
+      x-codegen-request-body-name: Body
+    delete:
+      tags:
+        - Data Sources
+      summary: Archive Data Source
+      description: 'Archive a data source, with options to permanently remove it (and associated data).'
+      operationId: ArchiveDataSource
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - schema:
+            type: string
+          in: query
+          name: archive
+          description: Set to true to archive the data source.
+        - schema:
+            type: string
+          in: query
+          name: forceDelete
+          description: Set to true to force deletion of the data source.
+        - schema:
+            type: string
+          in: query
+          name: removeData
+          description: Set to true to remove data associated with the data source.
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      deprecated: false
+  '/containers/{container_id}/import/datasources/{data_source_id}/active':
+    post:
+      tags:
+        - Data Sources
+      summary: Set Data Source Active
+      description: Sets a data source active.
+      operationId: SetDataSourceActive
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      deprecated: false
+    delete:
+      tags:
+        - Data Sources
+      summary: Set Data Source Inactive
+      description: Sets a data source inactive.
+      operationId: SetDataSourceInactive
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      deprecated: false
+  '/containers/{container_id}/import/datasources/{data_source_id}/imports':
+    get:
+      tags:
+        - Data Sources
+      summary: List Imports for Data Source
+      operationId: ListImportsForDataSource
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListDataSourceImportsResponse'
+      deprecated: false
+      description: List the imports for the datasource.
+    post:
+      tags:
+        - Data Sources
+      summary: Create Manual Import
+      description: Create a manual import.
+      operationId: CreateManualImport
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                test: test
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateManualImportResponse'
       deprecated: false
       x-codegen-request-body-name: Body
   '/containers/{container_id}/import/datasources/{data_source_id}/files':
@@ -1788,18 +1999,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - properties:
-                      value:
-                        $ref: '#/components/schemas/FileResponse'
-                      isError:
-                        type: boolean
-                  - properties:
-                      value:
-                        $ref: '#/components/schemas/FileInfoResponse'
-                      isError:
-                        type: boolean
-                type: object
+                $ref: '#/components/schemas/UploadFileResponse'
       deprecated: false
       requestBody:
         content:
@@ -1856,243 +2056,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/FileInfoResponse'
-                  isError:
-                    type: boolean
-      deprecated: false
-  '/containers/{container_id}/import/datasources/{data_source_id}/imports':
-    get:
-      tags:
-        - Data Sources
-      summary: List Imports for Data Source
-      operationId: ListImportsForDataSource
-      parameters:
-        - name: container_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: data_source_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/DataSourceImportResponse'
-                  isError:
-                    type: boolean
-      deprecated: false
-      description: List the imports for the datasource.
-    post:
-      tags:
-        - Data Sources
-      summary: Create Manual Import
-      description: Create a manual import.
-      operationId: CreateManualImport
-      parameters:
-        - name: container_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: data_source_id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              example:
-                test: test
-        required: true
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/CreateManualImportResponse'
-                  isError:
-                    type: boolean
-      deprecated: false
-      x-codegen-request-body-name: Body
-  '/containers/{container_id}/import/datasources/{data_source_id}':
-    get:
-      tags:
-        - Data Sources
-      summary: Retrieve Data Source
-      description: Retrieve a single data source by ID.
-      operationId: RetrieveDataSource
-      parameters:
-        - name: container_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: data_source_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/DataSourceResponse'
-                  isError:
-                    type: boolean
-      deprecated: false
-    put:
-      tags:
-        - Data Sources
-      summary: Set Data Source Configuration
-      description: Updates a data source's configuration in storage. Note that this request body's structure must match that of the data source's adapter type.
-      operationId: SetDataSourceConfiguration
-      parameters:
-        - name: container_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: data_source_id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SetConfigurationRequest'
-        required: true
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/DataSourceResponse'
-                  isError:
-                    type: boolean
-      deprecated: false
-      x-codegen-request-body-name: Body
-    delete:
-      tags:
-        - Data Sources
-      summary: Archive Data Source
-      description: 'Archive a data source, with options to permanently remove it (and associated data).'
-      operationId: ArchiveDataSource
-      parameters:
-        - name: container_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: data_source_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - schema:
-            type: string
-          in: query
-          name: archive
-          description: Set to true to archive the data source.
-        - schema:
-            type: string
-          in: query
-          name: forceDelete
-          description: Set to true to force deletion of the data source.
-        - schema:
-            type: string
-          in: query
-          name: removeData
-          description: Set to true to remove data associated with the data source.
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Generic200'
-      deprecated: false
-  '/containers/{container_id}/import/datasources/{data_source_id}/active':
-    post:
-      tags:
-        - Data Sources
-      summary: Set Data Source Active
-      description: Sets a data source active.
-      operationId: SetDataSourceActive
-      parameters:
-        - name: container_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: data_source_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Generic200'
-      deprecated: false
-    delete:
-      tags:
-        - Data Sources
-      summary: Set Data Source Inactive
-      description: Sets a data source inactive.
-      operationId: SetDataSourceInactive
-      parameters:
-        - name: container_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: data_source_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/GetFileInfoResponse'
       deprecated: false
   '/containers/{container_id}/data/export':
     post:
@@ -2116,7 +2080,10 @@ paths:
       responses:
         '200':
           description: ''
-          content: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
       x-codegen-request-body-name: Body
     get:
@@ -2130,14 +2097,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/GetExportResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListDataExportsResponse'
       description: List data exports for the container.
       parameters:
         - schema:
@@ -2195,18 +2155,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/GetExportResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/GetDataExportResponse'
       deprecated: false
     put:
       tags:
         - Data Export
       summary: Stop Data Export
-      description: Stops a data export. Please note that this just sends a "stop" signal. The application's export adapter determines how to handle the said signal. In some cases the export stopping might not be immediate.
+      description: Stops a data export. Please note that this just sends a **stop** signal. The application's export adapter determines how to handle the said signal. In some cases the export stopping might not be immediate.
       operationId: StopDataExport
       parameters:
         - name: container_id
@@ -2225,7 +2180,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
       x-codegen-request-body-name: Body
     post:
@@ -2251,7 +2206,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
     delete:
       tags:
@@ -2276,44 +2231,151 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
-  '/containers/{container_id}/users/{user_id}':
+  /users:
     get:
+      summary: List Users
       tags:
         - Users
-      summary: Retrieve User
-      description: Retrieve a user by ID
-      operationId: RetrieveUser
-      parameters:
-        - name: container_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: user_id
-          in: path
-          required: true
-          schema:
-            type: string
       responses:
         '200':
           description: ''
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/UserResponse'
-                  isError:
-                    type: boolean
-      deprecated: false
+                $ref: '#/components/schemas/ListUsersResponse'
+      operationId: ListUsers
+      description: List users.
+      parameters:
+        - schema:
+            type: boolean
+          in: query
+          name: count
+          description: boolean indicating if the return value should be a count only
+        - schema:
+            type: boolean
+          in: query
+          name: loadKeys
+          description: 'if supplied, the API keys for the user will also be returned'
+        - schema:
+            type: integer
+            minimum: 0
+          in: query
+          name: limit
+        - schema:
+            type: integer
+            minimum: 0
+          in: query
+          name: offset
+        - schema:
+            type: string
+          in: query
+          name: sortBy
+          description: column to sort results by
+        - schema:
+            type: boolean
+          in: query
+          name: sortDesc
+          description: boolean indicating if results should be in descending order
+  '/users/{user_id}':
+    parameters:
+      - schema:
+          type: string
+        name: user_id
+        in: path
+        required: true
+    put:
+      tags:
+        - Users
+      summary: Update User
+      operationId: UpdateUser
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      description: Updates the specified user.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+    delete:
+      tags:
+        - Users
+      summary: Delete User
+      operationId: DeleteUser
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      description: Deletes the specified user.
+  /users/invite:
+    get:
+      summary: Accept Container Invite
+      tags:
+        - Users
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      operationId: AcceptContainerInvite
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: token
+          description: the token supplied in the container invite
+          required: true
+      description: Accepts a container invite for the current user. The token received in the container invite previously must be attached to this request as a query parameter.
+  /users/invites:
+    get:
+      summary: List Outstanding Invites
+      tags:
+        - Users
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListUserInvitesResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound404'
+      operationId: ListOutstandingInvites
+      description: Lists the outstanding container invites for the current user.
+  /users/permissions:
+    get:
+      summary: List User Permissions
+      tags:
+        - Users
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListUserPermissionsResponse'
+      operationId: ListUserPermissions
+      description: List permissions for the user.
   '/containers/{container_id}/users':
     get:
       tags:
         - Users
-      summary: List Users
+      summary: List Users for Container
       description: List Users for container.
       operationId: ListUsersForContainer
       parameters:
@@ -2340,14 +2402,33 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/UserResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListUsersForContainerResponse'
+      deprecated: false
+  '/containers/{container_id}/users/{user_id}':
+    get:
+      tags:
+        - Users
+      summary: Retrieve User
+      description: Retrieve a user by ID
+      operationId: RetrieveUser
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserResponse'
       deprecated: false
   '/containers/{container_id}/users/{user_id}/roles':
     get:
@@ -2373,14 +2454,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      type: string
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListUserRoles'
       deprecated: false
   '/containers/{container_id}/users/roles':
     post:
@@ -2407,7 +2481,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
       x-codegen-request-body-name: Body
   '/containers/{container_id}/users/invite':
@@ -2426,13 +2500,16 @@ paths:
       responses:
         '200':
           description: ''
-          content: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListContainerInvitesResponse'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/404NotFound'
+                $ref: '#/components/schemas/NotFound404'
       deprecated: false
     post:
       tags:
@@ -2449,14 +2526,22 @@ paths:
       responses:
         '200':
           description: ''
-          content: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContainerInvite'
   '/containers/{container_id}/import/datasources/{data_source_id}/mappings':
     get:
       tags:
         - Data Type Mappings
       summary: List Data Type Mappings
-      description: Lists type mappings from storage
+      description: Lists data type mappings for the data source
       operationId: ListDataTypeMappings
       parameters:
         - name: limit
@@ -2515,21 +2600,14 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/TypeMappingResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListDataTypeMappingResponse'
       deprecated: false
   '/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}':
     get:
       tags:
         - Data Type Mappings
       summary: Retrieve Data Type Mapping
-      description: Retrieve a type mapping from storage.
+      description: Retrieve a data type mapping
       operationId: RetrieveDataTypeMapping
       parameters:
         - name: container_id
@@ -2553,18 +2631,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/TypeMappingResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/GetDataTypeMappingResponse'
       deprecated: false
     delete:
       tags:
         - Data Type Mappings
       summary: Delete Data Type Mapping
-      description: Permanently removes type mapping from storage.
+      description: Permanently remove data type mapping.
       operationId: DeleteDataTypeMapping
       parameters:
         - name: container_id
@@ -2588,7 +2661,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
       x-codegen-request-body-name: Body
     put:
@@ -2618,19 +2691,85 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/TypeMappingResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/UpdateDataTypeMappingResponse'
       description: Updates a data type mapping.
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TypeMappingResponse'
+              $ref: '#/components/schemas/TypeMapping'
     parameters: []
+  '/containers/{container_id}/import/datasources/{data_source_id}/mappings/export':
+    post:
+      tags:
+        - Data Type Mappings
+      summary: Export Type Mappings
+      operationId: ExportTypeMappings
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TypeMapping'
+      description: 'Export type mappings for a datasource. Providing a JSON body is optional. If provided, the mapping_ids may be specified to indicate certain type mapping IDs to return. Additionally, a target data source may be provided to which the mappings will be copied.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TypeMappingExportPayload'
+        description: ''
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: data_source_id
+        in: path
+        required: true
+  '/containers/{container_id}/import/datasources/{data_source_id}/mappings/import':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: data_source_id
+        in: path
+        required: true
+    post:
+      tags:
+        - Data Type Mappings
+      summary: Import Data Type Mappings
+      operationId: ImportDataTypeMappings
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportDataTypeMappingResponse'
+      description: 'Import type mappings for a datasource. Accepts either a JSON body or actual JSON file. The payload should be an array of type mapping classes, previously generated using the export route.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
   '/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}/transformations':
     get:
       tags:
@@ -2660,14 +2799,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/TransformationResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListTransformationResponse'
       deprecated: false
     post:
       tags:
@@ -2703,12 +2835,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/TransformationResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/CreateTransformationResponse'
       deprecated: false
       x-codegen-request-body-name: Body
   '/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}/transformations/{transformation_id}':
@@ -2751,12 +2878,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/TransformationResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/UpdateTransformationResponse'
       deprecated: false
       x-codegen-request-body-name: Body
     delete:
@@ -2792,7 +2914,30 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
+      deprecated: false
+  '/containers/{container_id}/import/imports/{import_id}':
+    delete:
+      tags:
+        - Imports
+      summary: Delete Import
+      description: Delete import will delete an import ONLY IF the import has not been processed.
+      operationId: DeleteImport
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: import_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content: {}
       deprecated: false
   '/containers/{container_id}/import/imports/{import_id}/data':
     get:
@@ -2842,37 +2987,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/ImportResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListImportDataResponse'
       deprecated: false
       description: List the data for an import.
-  '/containers/{container_id}/import/imports/{import_id}':
-    delete:
-      tags:
-        - Imports
-      summary: Delete Import
-      description: Delete import will delete an import ONLY IF the import has not been processed.
-      operationId: DeleteImport
-      parameters:
-        - name: container_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: import_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content: {}
-      deprecated: false
   '/containers/{container_id}/import/imports/{import_id}/data/{data_id}':
     get:
       tags:
@@ -2903,12 +3020,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/ImportResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/GetImportDataResponse'
       deprecated: false
     delete:
       tags:
@@ -2939,7 +3051,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
     put:
       tags:
@@ -2969,18 +3081,103 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/ImportResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/UpdateImportDataResponse'
       description: Update the data of an existing import.
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/DataStaging'
+  '/containers/{container_id}/datasources/{data_source_id}/imports':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: data_source_id
+        in: path
+        required: true
+    post:
+      tags:
+        - Imports
+      summary: Create Import
+      operationId: CreateImport
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImportResponse'
+      description: Creates a new import.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: ''
+              type: object
+              x-examples:
+                example-1:
+                  data_source_id: 1294f879-7f15-40e7-86f4-56177108ba23
+                  reference: testing upload
+              properties:
+                data_source_id:
+                  type: string
+                  minLength: 1
+                reference:
+                  type: string
+                  minLength: 1
+                status_message:
+                  type: string
+              required:
+                - data_source_id
+        description: ''
+  '/containers/{container_id}/datasources/{data_source_id}/imports/{import_id}/data':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: import_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: data_source_id
+        in: path
+        required: true
+    post:
+      tags:
+        - Imports
+      summary: Add Data to Import
+      operationId: AddDataToImport
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddDataToImportResponse'
+      description: Adds data to an existing import. Accepts an array of JSON objects or a file in JSON or CSV format.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
   /events:
     get:
       tags:
@@ -2994,20 +3191,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/EventResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/ListEventsResponse'
       deprecated: false
     post:
       tags:
         - Events
       summary: Create Registered Event
-      description: 'Create new registered event. An app_name, app_url, and type must be provided. Either a container_id or data_source_id must also be provided.'
+      description: 'Create new registered event. An `app_name`, `app_url`, and `event_type` must be provided. Either a `container_id` or `data_source_id` must also be provided.'
       operationId: CreateRegisteredEvent
       requestBody:
         content:
@@ -3021,12 +3211,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/EventResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/CreateEventResponse'
       deprecated: false
       x-codegen-request-body-name: Body
   '/events/{event_id}':
@@ -3048,18 +3233,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/EventResponse'
-                  isError:
-                    type: boolean
+                $ref: '#/components/schemas/GetEventResponse'
       deprecated: false
     put:
       tags:
         - Events
       summary: Update Registered Event
-      description: 'Update a registered event. If the "active" query paramter is provided with a value of true or false, the event will be activated/deactivated.'
+      description: 'Update a registered event. If the `active` query paramter is provided with a value of true or false, the event will be activated/deactivated.'
       operationId: UpdateRegisteredEvent
       parameters:
         - name: active
@@ -3077,7 +3257,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
       requestBody:
         content:
@@ -3102,25 +3282,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200'
+                $ref: '#/components/schemas/Generic200Response'
       deprecated: false
       description: Delete a registered event.
-  /health:
-    get:
-      tags:
-        - Misc
-      summary: Health
-      description: 'Simple endpoint, returns 200 on call. Can be used for a simple Up monitor by an external service.'
-      operationId: Health
-      responses:
-        '200':
-          description: ''
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: OK
-      deprecated: false
   /oauth/token:
     get:
       tags:
@@ -3182,449 +3346,864 @@ paths:
             schema:
               $ref: '#/components/schemas/TokenExchangeRequest'
       description: 'Exchanges credentials for a JSON Web Token (JWT). Multiple authentication flows are supported, see Deep Lynx documentation for details.'
-  /users:
+  /health:
     get:
-      summary: List Users
       tags:
-        - Users
+        - Misc
+      summary: Health
+      description: 'Simple endpoint, returns 200 on call. Can be used for a simple Up monitor by an external service.'
+      operationId: Health
       responses:
         '200':
           description: ''
           content:
-            application/json:
+            text/plain:
               schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/UserResponse'
-                  isError:
-                    type: boolean
-      operationId: ListUsers
-      description: List users.
-      parameters:
-        - schema:
-            type: boolean
-          in: query
-          name: count
-          description: boolean indicating if the return value should be a count only
-        - schema:
-            type: boolean
-          in: query
-          name: loadKeys
-          description: 'if supplied, the API keys for the user will also be returned'
-        - schema:
-            type: integer
-            minimum: 0
-          in: query
-          name: limit
-        - schema:
-            type: integer
-            minimum: 0
-          in: query
-          name: offset
-        - schema:
-            type: string
-          in: query
-          name: sortBy
-          description: column to sort results by
-        - schema:
-            type: boolean
-          in: query
-          name: sortDesc
-          description: boolean indicating if results should be in descending order
-  /users/permissions:
-    get:
-      summary: List User Permissions
-      tags:
-        - Users
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      type: string
-                  isError:
-                    type: boolean
-      operationId: ListUserPermissions
-      description: List permissions for the user.
-  '/containers/{container_id}/datasources/{source_id}/imports':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: source_id
-        in: path
-        required: true
+                type: string
+                example: OK
+      deprecated: false
+  /rsa/initialize:
     post:
       tags:
-        - Imports
-      summary: Create Import
-      operationId: CreateImport
+        - Authentication
+      summary: RSA Initialize
+      operationId: post-rsa-initialize
       responses:
         '200':
           description: ''
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/CreateManualImportResponse'
-                  isError:
-                    type: boolean
-      description: Creates a new import.
+                $ref: '#/components/schemas/RSAResponse'
+      description: |-
+        Used to begin (and optionally complete) an RSA authentication. Either a user's ID may be provided and the SecurID provided in a later `verify` request, 
+        or else the user may provide both the user ID (`subjectName`) and `securID` at once to `initialize` to complete the authentication request. 
+        The `securID` is the combination of the user's memorized token and 6 digit temporary RSA pin (with no spaces or characters between them).
       requestBody:
         content:
           application/json:
             schema:
-              description: ''
-              type: object
-              x-examples:
-                example-1:
-                  data_source_id: 1294f879-7f15-40e7-86f4-56177108ba23
-                  reference: testing upload
-              properties:
-                data_source_id:
-                  type: string
-                  minLength: 1
-                reference:
-                  type: string
-                  minLength: 1
-                status_message:
-                  type: string
-              required:
-                - data_source_id
-        description: ''
-  '/containers/{container_id}/datasources/{source_id}/imports/{import_id}/data':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: source_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: import_id
-        in: path
-        required: true
+              $ref: '#/components/schemas/RSAInitRequest'
+  /rsa/verify:
     post:
       tags:
-        - Imports
-      summary: Add Data to Import
-      operationId: AddDataToImport
+        - Authentication
+      summary: RSA Verify
+      operationId: post-rsa-verify
       responses:
         '200':
           description: ''
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  value:
-                    $ref: '#/components/schemas/CreateManualImportResponse'
-                  isError:
-                    type: boolean
-      description: Adds data to an existing import. Accepts an array of JSON objects or a file in JSON or CSV format.
+                $ref: '#/components/schemas/RSAResponse'
       requestBody:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                type: object
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-  '/containers/{container_id}/import/datasources/{source_id}/mappings/export':
+              $ref: '#/components/schemas/RSAVerifyRequest'
+      description: Provides RSA with the user's SecurID to complete authentication
+  /rsa/status:
     post:
       tags:
-        - Data Type Mappings
-      summary: Export Type Mappings
-      operationId: ExportTypeMappings
+        - Authentication
+      summary: RSA Status
+      operationId: post-rsa-status
       responses:
         '200':
           description: ''
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TypeMappingResponse'
-      description: 'Export type mappings for a datasource. Providing a JSON body is optional. If provided, the mapping_ids may be specified to indicate certain type mapping IDs to return. Additionally, a target data source may be provided to which the mappings will be copied.'
+                $ref: '#/components/schemas/RSAStatusResponse'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TypeMappingExportPayload'
-        description: ''
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: source_id
-        in: path
-        required: true
-  '/containers/{container_id}/import/datasources/{source_id}/mappings/import':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: source_id
-        in: path
-        required: true
+              $ref: '#/components/schemas/RSAStatusRequest'
+      description: Returns the status of an RSA authentication attempt
+  /rsa/cancel:
     post:
       tags:
-        - Data Type Mappings
-      summary: Import Data Type Mappings
-      operationId: ImportDataTypeMappings
+        - Authentication
+      summary: RSA Cancel
+      operationId: post-rsa-cancel
       responses:
         '200':
           description: ''
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    value:
-                      $ref: '#/components/schemas/TypeMappingResponse'
-                    isError:
-                      type: boolean
-      description: 'Import type mappings for a datasource. Accepts either a JSON body or actual JSON file. The payload should be an array of type mapping classes, previously generated using the export route.'
+                $ref: '#/components/schemas/RSAResponse'
       requestBody:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                type: object
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-  '/users/{user_id}':
-    parameters:
-      - schema:
-          type: string
-        name: user_id
-        in: path
-        required: true
-    put:
-      tags:
-        - Users
-      summary: Update User
-      operationId: UpdateUser
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Generic200'
-      description: Updates the specified user.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserResponse'
-    delete:
-      tags:
-        - Users
-      summary: Delete User
-      operationId: DeleteUser
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Generic200'
-      description: Deletes the specified user.
-  /users/invite:
-    get:
-      summary: Accept Container Invite
-      tags:
-        - Users
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Generic200'
-      operationId: AcceptContainerInvite
-      parameters:
-        - schema:
-            type: string
-          in: query
-          name: token
-          description: the token supplied in the container invite
-          required: true
-      description: Accepts a container invite for the current user. The token received in the container invite previously must be attached to this request as a query parameter.
-  /users/invites:
-    get:
-      summary: List Outstanding Invites
-      tags:
-        - Users
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  value:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ContainerInviteResponse'
-                  isError:
-                    type: boolean
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/404NotFound'
-      operationId: ListOutstandingInvites
-      description: Lists the outstanding container invites for the current user.
-  '/containers/{container_id}/graphs/nodes/{node_id}/files':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: node_id
-        in: path
-        required: true
-    get:
-      summary: List Node Files
-      tags: []
-      responses: {}
-      operationId: get-containers-container_id-graphs-nodes-node_id-files
-      description: Lists all attached files for node.
-  '/containers/{container_id}/graphs/nodes/{node_id}/files/{file_id}':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: node_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: file_id
-        in: path
-        required: true
-    put:
-      summary: Attach Node File
-      operationId: put-containers-container_id-graphs-nodes-node_id-files-file_id
-      responses:
-        '200':
-          description: OK
-      description: Attach a file to a node.
-    delete:
-      summary: Detach Node File
-      operationId: delete-containers-container_id-graphs-nodes-node_id-files-file_id
-      responses:
-        '200':
-          description: OK
-      description: Detach file from node
-  '/containers/{container_id}/graphs/edges/{edge_id}/files/{file_id}':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: file_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: edge_id
-        in: path
-        required: true
-    put:
-      summary: Attach Edge File
-      operationId: put-containers-container_id-graphs-nodes-node_id-files-file_id
-      responses:
-        '200':
-          description: OK
-      description: Attach a file to an edge.
-    delete:
-      summary: Detach Node File
-      operationId: delete-containers-container_id-graphs-nodes-node_id-files-file_id
-      responses:
-        '200':
-          description: OK
-      description: Detach file from an edge.
-  '/containers/{container_id}/graphs/edges/{edge_id}/files':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: edge_id
-        in: path
-        required: true
-    get:
-      summary: List Edge Files
-      tags: []
-      responses: {}
-      operationId: get-containers-container_id-graphs-nodes-node_id-files
-      description: Lists all attached files for edge.
+              $ref: '#/components/schemas/RSACancelRequest'
+      description: Cancels an RSA authentication attempt
 components:
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
   schemas:
-    CreateRequest:
-      title: CreateRequest
+    ListContainerResponse:
+      description: ''
+      type: object
+      x-examples:
+        ContainerResponseExample:
+          value:
+            - name: Test Container 4
+              description: Test Container Description
+              id: 07b1e35e-0a7c-476d-ada8-5906b16da1b8
+              archived: false
+              created_at: '2021-08-06T21:17:49.545Z'
+              modified_at: '2021-08-06T21:17:49.545Z'
+              created_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+              modified_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+              config: null
+              active_graph_id: 0cc62f41-ceaa-4a68-8f1c-7856525c2668
+          isError: false
+      properties:
+        value:
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/Container'
+        isError:
+          type: boolean
+      required:
+        - value
+        - isError
+    CreateContainerResponse:
+      description: ''
+      type: object
+      x-examples:
+        ContainerResponseExample:
+          value:
+            - name: Test Container 4
+              description: Test Container Description
+              id: 07b1e35e-0a7c-476d-ada8-5906b16da1b8
+              archived: false
+              created_at: '2021-08-06T21:17:49.545Z'
+              modified_at: '2021-08-06T21:17:49.545Z'
+              created_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+              modified_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+              config: null
+              active_graph_id: 0cc62f41-ceaa-4a68-8f1c-7856525c2668
+          isError: false
+      properties:
+        value:
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/Container'
+        isError:
+          type: boolean
+      required:
+        - value
+        - isError
+    BatchUpdateContainerResponse:
+      description: ''
+      type: object
+      x-examples:
+        ContainerResponseExample:
+          value:
+            - name: Test Container 4
+              description: Test Container Description
+              id: 07b1e35e-0a7c-476d-ada8-5906b16da1b8
+              archived: false
+              created_at: '2021-08-06T21:17:49.545Z'
+              modified_at: '2021-08-06T21:17:49.545Z'
+              created_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+              modified_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+              config: null
+              active_graph_id: 0cc62f41-ceaa-4a68-8f1c-7856525c2668
+          isError: false
+      properties:
+        value:
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/Container'
+        isError:
+          type: boolean
+      required:
+        - value
+        - isError
+    GetContainerResponse:
+      description: ''
+      type: object
+      x-examples:
+        ContainerResponseExample:
+          value:
+            - name: Test Container 4
+              description: Test Container Description
+              id: 07b1e35e-0a7c-476d-ada8-5906b16da1b8
+              archived: false
+              created_at: '2021-08-06T21:17:49.545Z'
+              modified_at: '2021-08-06T21:17:49.545Z'
+              created_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+              modified_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+              config: null
+              active_graph_id: 0cc62f41-ceaa-4a68-8f1c-7856525c2668
+          isError: false
+      properties:
+        value:
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/Container'
+        isError:
+          type: boolean
+      required:
+        - value
+        - isError
+    UpdateContainerResponse:
+      description: ''
+      type: object
+      x-examples:
+        ContainerResponseExample:
+          value:
+            - name: Test Container 4
+              description: Test Container Description
+              id: 07b1e35e-0a7c-476d-ada8-5906b16da1b8
+              archived: false
+              created_at: '2021-08-06T21:17:49.545Z'
+              modified_at: '2021-08-06T21:17:49.545Z'
+              created_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+              modified_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+              config: null
+              active_graph_id: 0cc62f41-ceaa-4a68-8f1c-7856525c2668
+          isError: false
+      properties:
+        value:
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/Container'
+        isError:
+          type: boolean
+      required:
+        - value
+        - isError
+    ContainerImportResponse:
+      description: ''
+      type: object
+      properties:
+        value:
+          type: string
+          minLength: 1
+        isError:
+          type: boolean
+      required:
+        - value
+        - isError
+      x-examples:
+        example-1:
+          value: 35bfbf46-5b50-49f5-a325-e5f03f43c3aa
+          isError: false
+    ContainerImportUpdateResponse:
+      description: ''
+      type: object
+      properties:
+        value:
+          type: string
+          minLength: 1
+        isError:
+          type: boolean
+      required:
+        - value
+        - isError
+      x-examples:
+        example-1:
+          value: 35bfbf46-5b50-49f5-a325-e5f03f43c3aa
+          isError: false
+    ListNodesResponse:
+      title: ListNodesResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/Node'
+        isError:
+          type: boolean
+    GetNodeResponse:
+      title: GetNodeResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/Node'
+        isError:
+          type: boolean
+    ListNodesByMetatypeResponse:
+      title: ListNodesResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/Node'
+        isError:
+          type: boolean
+    ListNodeFiles:
+      title: ListNodeFiles
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileInfo'
+        isError:
+          type: boolean
+    ListEdgesResponse:
+      title: ListEdgesResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/Edge'
+        isError:
+          type: boolean
+    GetEdgeResponse:
+      title: GetEdgeResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/Edge'
+        isError:
+          type: boolean
+    ListEdgeFiles:
+      title: ListEdgeFiles
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileInfo'
+        isError:
+          type: boolean
+    ListMetatypesResponse:
+      title: ListMetatypesResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/Metatype'
+        isError:
+          type: boolean
+    CreateMetatypesResponse:
+      title: CreateMetatypesResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/Metatype'
+        isError:
+          type: boolean
+    GetMetatypeResponse:
+      title: GetMetatypeResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/Metatype'
+        isError:
+          type: boolean
+    UpdateMetatypeResponse:
+      title: UpdateMetatypeResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/Metatype'
+        isError:
+          type: boolean
+    ValidateMetatypePropertiesResponse:
+      title: ValidateMetatypePropertiesResponse
+      type: object
+      properties:
+        value:
+          type: object
+        isError:
+          type: boolean
+      required:
+        - value
+        - isError
+    ListMetatypeKeysResponse:
+      title: ListMetatypeKeysResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetatypeKey'
+        isError:
+          type: boolean
+    CreateMetatypeKeysResponse:
+      title: CreateMetatypeKeysResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetatypeKey'
+        isError:
+          type: boolean
+    GetMetatypeKeyResponse:
+      title: GetMetatypeKeyResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/MetatypeKey'
+        isError:
+          type: boolean
+    UpdateMetatypeKeyResponse:
+      title: UpdateMetatypeKeyResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/MetatypeKey'
+        isError:
+          type: boolean
+    ListMetatypeRelationshipsResponse:
+      title: ListMetatypeRelationshipsResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetatypeRelationship'
+        isError:
+          type: boolean
+    CreateMetatypeRelationshipsResponse:
+      title: CreateMetatypeRelationshipsResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetatypeRelationship'
+        isError:
+          type: boolean
+    GetMetatypeRelationshipResponse:
+      title: GetMetatypeRelationshipResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/MetatypeRelationship'
+        isError:
+          type: boolean
+    UpdateMetatypeRelationshipResponse:
+      title: UpdateMetatypeRelationshipResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/MetatypeRelationship'
+        isError:
+          type: boolean
+    ListMetatypeRelationshipKeysResponse:
+      title: ListMetatypeRelationshipKeysResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelationshipKey'
+        isError:
+          type: boolean
+    CreateMetatypeRelationshipKeysResponse:
+      title: CreateMetatypeRelationshipKeysResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelationshipKey'
+        isError:
+          type: boolean
+    GetMetatypeRelationshipKeyResponse:
+      title: GetMetatypeRelationshipKeyResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/RelationshipKey'
+        isError:
+          type: boolean
+    UpdateMetatypeRelationshipKeyResponse:
+      title: UpdateMetatypeRelationshipKeyResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/RelationshipKey'
+        isError:
+          type: boolean
+    ListMetatypeRelationshipPairsResponse:
+      title: ListMetatypeRelationshipPairsResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelationshipPair'
+        isError:
+          type: boolean
+    CreateMetatypeRelationshipPairsResponse:
+      title: CreateMetatypeRelationshipPairsResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelationshipPair'
+        isError:
+          type: boolean
+    GetMetatypeRelationshipPairResponse:
+      title: GetMetatypeRelationshipPairResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/RelationshipPair'
+        isError:
+          type: boolean
+    UpdateMetatypeRelationshipPairResponse:
+      title: UpdateMetatypeRelationshipPairResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/RelationshipPair'
+        isError:
+          type: boolean
+    ListDataSourcesResponse:
+      title: ListDataSourcesResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataSource'
+        isError:
+          type: boolean
+    CreateDataSourcesResponse:
+      title: CreateDataSourcesResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/DataSource'
+        isError:
+          type: boolean
+    GetDataSourceResponse:
+      title: GetDataSourceResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/DataSource'
+        isError:
+          type: boolean
+    UpdateDataSourceResponse:
+      title: UpdateDataSourceResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/DataSource'
+        isError:
+          type: boolean
+    ListDataSourceImportsResponse:
+      title: ListDataSourceImportsResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataSourceImport'
+        isError:
+          type: boolean
+    CreateManualImportResponse:
+      title: CreateManualImportResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/CreateManualImport'
+        isError:
+          type: boolean
+    UploadFileResponse:
+      title: UploadFileResponse
+      oneOf:
+        - properties:
+            value:
+              $ref: '#/components/schemas/FileModel'
+            isError:
+              type: boolean
+        - properties:
+            value:
+              $ref: '#/components/schemas/FileInfo'
+            isError:
+              type: boolean
+      type: object
+    GetFileInfoResponse:
+      title: GetFileInfoResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/FileInfo'
+        isError:
+          type: boolean
+    GetDataExportResponse:
+      title: GetDataExportResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/Exporter'
+        isError:
+          type: boolean
+    ListDataExportsResponse:
+      title: ListDataExportsResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/Exporter'
+        isError:
+          type: boolean
+    GetUserResponse:
+      title: GetUserResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/User'
+        isError:
+          type: boolean
+    ListUsersResponse:
+      title: ListUsersResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        isError:
+          type: boolean
+    ListUserInvitesResponse:
+      title: ListUserInvitesResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerInvite'
+        isError:
+          type: boolean
+    ListUserPermissionsResponse:
+      title: ListUserPermissionsResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            type: string
+        isError:
+          type: boolean
+    ListUsersForContainerResponse:
+      title: ListUsersForContainerResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        isError:
+          type: boolean
+    ListUserRoles:
+      title: ListUserRoles
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            type: string
+        isError:
+          type: boolean
+    ListContainerInvitesResponse:
+      title: ListContainerInvitesResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerInvite'
+        isError:
+          type: boolean
+    ListDataTypeMappingResponse:
+      title: ListDataTypeMappingResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/TypeMapping'
+        isError:
+          type: boolean
+    GetDataTypeMappingResponse:
+      title: GetDataTypeMappingResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/TypeMapping'
+        isError:
+          type: boolean
+    UpdateDataTypeMappingResponse:
+      title: UpdateDataTypeMappingResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/TypeMapping'
+        isError:
+          type: boolean
+    ImportDataTypeMappingResponse:
+      title: ImportDataTypeMappingResponse
+      type: array
+      items:
+        type: object
+        properties:
+          value:
+            $ref: '#/components/schemas/TypeMapping'
+          isError:
+            type: boolean
+    ListTransformationResponse:
+      title: ListTransformationResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transformation'
+        isError:
+          type: boolean
+    CreateTransformationResponse:
+      title: CreateTransformationResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/Transformation'
+        isError:
+          type: boolean
+    UpdateTransformationResponse:
+      title: UpdateTransformationResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/Transformation'
+        isError:
+          type: boolean
+    ListImportDataResponse:
+      title: ListImportDataResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportModel'
+        isError:
+          type: boolean
+    GetImportDataResponse:
+      title: GetImportDataResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/ImportModel'
+        isError:
+          type: boolean
+    UpdateImportDataResponse:
+      title: UpdateImportDataResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/ImportModel'
+        isError:
+          type: boolean
+    CreateImportResponse:
+      title: CreateImportResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/CreateManualImport'
+        isError:
+          type: boolean
+    AddDataToImportResponse:
+      title: AddDataToImportResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/CreateManualImport'
+        isError:
+          type: boolean
+    ListEventsResponse:
+      title: ListEventsResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+        isError:
+          type: boolean
+    CreateEventResponse:
+      title: CreateEventResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/Event'
+        isError:
+          type: boolean
+    GetEventResponse:
+      title: GetEventResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/Event'
+        isError:
+          type: boolean
+    Generic200Response:
+      title: Generic200Response
+      description: ''
+      type: object
+      properties:
+        value:
+          type: boolean
+        isError:
+          type: boolean
+      required:
+        - value
+        - isError
+      x-examples:
+        Generic200Response:
+          value:
+            value: true
+            isError: false
+          isError: false
+    ErrorResponse:
+      title: ErrorResponse
+      description: ''
+      type: object
+      x-examples: {}
+      properties:
+        isError:
+          type: boolean
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+      required:
+        - isError
+        - error
+    CreateContainerRequest:
+      title: CreateContainerRequest
       type: object
       example:
         name: Test Container
@@ -3634,8 +4213,10 @@ components:
           type: string
         description:
           type: string
-    UpdateRequest:
-      title: UpdateRequest
+      required:
+        - name
+    UpdateContainerRequest:
+      title: UpdateContainerRequest
       type: object
       example:
         name: Test Container
@@ -3662,7 +4243,8 @@ components:
             description: Final Test Description
             config:
               data_versioning_enabled: false
-    BatchUpdateRequest:
+    BatchContainerUpdateRequest:
+      title: BatchContainerUpdateRequest
       type: array
       description: ''
       minItems: 1
@@ -3768,8 +4350,8 @@ components:
         relationship_pair_id: required
         modified_at: will attempt to update edge if exists
         properties: {}
-    NewTypeRequest:
-      title: NewTypeRequest
+    NewMetatypeRequest:
+      title: NewMetatypeRequest
       required:
         - description
         - name
@@ -3782,8 +4364,8 @@ components:
       example:
         name: Equipment
         description: Physical piece of equipement
-    UpdateTypeRequest:
-      title: UpdateTypeRequest
+    UpdateMetatypeRequest:
+      title: UpdateMetatypeRequest
       required:
         - description
         - name
@@ -3796,8 +4378,8 @@ components:
       example:
         name: Updated Metatype Name
         description: Final Description
-    NewTypeKeyRequest:
-      title: NewTypeKeyRequest
+    NewMetatypeKeyRequest:
+      title: NewMetatypeKeyRequest
       required:
         - cardinality
         - data_type
@@ -3825,7 +4407,7 @@ components:
           type: integer
           format: int32
         validation:
-          $ref: '#/components/schemas/Validation'
+          $ref: '#/components/schemas/KeyValidation'
         unique:
           type: boolean
         options:
@@ -3849,8 +4431,8 @@ components:
         options:
           - ''
         defaultValue: can be any type
-    Validation:
-      title: Validation
+    KeyValidation:
+      title: KeyValidation
       required:
         - max
         - min
@@ -3869,7 +4451,8 @@ components:
         regex: ''
         min: 0
         max: 0
-    UpdateTypeKeyRequest:
+    UpdateMetatypeKeyRequest:
+      title: UpdateMetatypeKeyRequest
       description: ''
       type: object
       x-examples:
@@ -3960,8 +4543,8 @@ components:
         - created_by
         - modified_by
         - validation
-    NewTypeRelationshipRequest:
-      title: NewTypeRelationshipRequest
+    NewMetatypeRelationshipRequest:
+      title: NewMetatypeRelationshipRequest
       required:
         - description
         - name
@@ -3974,8 +4557,8 @@ components:
       example:
         name: Relationhip Test
         description: string
-    UpdateTypeRelationshipRequest:
-      title: UpdateTypeRelationshipRequest
+    UpdateMetatypeRelationshipRequest:
+      title: UpdateMetatypeRelationshipRequest
       required:
         - description
         - name
@@ -3988,8 +4571,8 @@ components:
       example:
         name: Update Test
         description: Final Test Description
-    NewTypeRelationshipKeyRequest:
-      title: NewTypeRelationshipKeyRequest
+    NewMetatypeRelationshipKeyRequest:
+      title: NewMetatypeRelationshipKeyRequest
       required:
         - cardinality
         - data_type
@@ -4017,7 +4600,7 @@ components:
           type: integer
           format: int32
         validation:
-          $ref: '#/components/schemas/Validation'
+          $ref: '#/components/schemas/KeyValidation'
         unique:
           type: boolean
         options:
@@ -4041,8 +4624,8 @@ components:
         options:
           - ''
         defaultValue: can be any type
-    NewTypeRelationshipPairRequest:
-      title: NewTypeRelationshipPairRequest
+    NewMetatypeRelationshipPairRequest:
+      title: NewMetatypeRelationshipPairRequest
       required:
         - description
         - destination_metatype_id
@@ -4073,21 +4656,7 @@ components:
         relationship_type: 'many:many'
     CreateDataSourceRequest:
       title: CreateDataSourceRequest
-      required:
-        - active
-        - adapter_type
-        - config
-        - name
       type: object
-      properties:
-        name:
-          type: string
-        adapter_type:
-          type: string
-        active:
-          type: boolean
-        config:
-          $ref: '#/components/schemas/DataSourceConfig'
       example:
         name: testing data source
         adapter_type: http OR manual
@@ -4097,14 +4666,26 @@ components:
           auth_method: basic
           username: test
           password: test
-    DataSourceConfig:
-      title: DataSourceConfig
+      properties:
+        name:
+          type: string
+        adapter_type:
+          type: string
+        active:
+          type: boolean
+        config:
+          $ref: '#/components/schemas/CreateDataSourceConfig'
       required:
-        - auth_method
-        - endpoint
-        - password
-        - username
+        - name
+        - adapter_type
+    CreateDataSourceConfig:
+      title: CreateDataSourceConfig
       type: object
+      example:
+        endpoint: ''
+        auth_method: basic
+        username: test
+        password: test
       properties:
         endpoint:
           type: string
@@ -4114,33 +4695,9 @@ components:
           type: string
         password:
           type: string
-      example:
-        endpoint: ''
-        auth_method: basic
-        username: test
-        password: test
-    SetConfigurationRequest:
-      title: SetConfigurationRequest
       required:
-        - auth_method
         - endpoint
-        - password
-        - username
-      type: object
-      properties:
-        endpoint:
-          type: string
-        auth_method:
-          type: string
-        username:
-          type: string
-        password:
-          type: string
-      example:
-        endpoint: ''
-        auth_method: basic
-        username: test
-        password: test
+        - auth_method
     NewDataExportRequest:
       title: NewDataExportRequest
       required:
@@ -4242,7 +4799,7 @@ components:
         keys:
           type: array
           items:
-            $ref: '#/components/schemas/TransformationKeyResponse'
+            $ref: '#/components/schemas/TransformationKey'
       required:
         - metatype_id
         - conditions
@@ -4287,92 +4844,40 @@ components:
         app_url: 'http://localhost:8099/test'
         container_id: 6d1a2895-a689-4760-a515-a3a3b49ae882
         event_type: data_source_created
-    ContainerResponse:
-      description: ''
-      type: object
-      x-examples:
-        ContainerResponseExample:
-          value:
-            value:
-              - name: Test Container 4
-                description: Test Container Description
-                id: 07b1e35e-0a7c-476d-ada8-5906b16da1b8
-                archived: false
-                created_at: '2021-08-06T21:17:49.545Z'
-                modified_at: '2021-08-06T21:17:49.545Z'
-                created_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
-                modified_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
-                config: null
-                active_graph_id: 0cc62f41-ceaa-4a68-8f1c-7856525c2668
-            isError: false
-          isError: false
-      properties:
-        value:
-          type: array
-          uniqueItems: true
-          minItems: 1
-          items:
-            $ref: '#/components/schemas/ContainerModel'
-        isError:
-          type: boolean
-      required:
-        - value
-        - isError
-    Error:
+    UpdateRegisteredEventRequest:
       description: ''
       type: object
       properties:
-        isError:
-          type: boolean
-        error:
-          type: object
-          properties:
-            errorCode:
-              type: number
-            error:
-              type: string
-              minLength: 1
-          required:
-            - errorCode
-            - error
-      required:
-        - isError
-        - error
-      x-examples: {}
-    Generic200:
-      description: ''
-      type: object
-      properties:
-        value:
-          type: boolean
-        isError:
-          type: boolean
-      required:
-        - value
-        - isError
-      x-examples:
-        Generic200Response:
-          value:
-            value: true
-            isError: false
-          isError: false
-    ContainerImportSuccess:
-      description: ''
-      type: object
-      properties:
-        value:
+        id:
           type: string
           minLength: 1
-        isError:
-          type: boolean
+        app_name:
+          type: string
+          minLength: 1
+        app_url:
+          type: string
+          minLength: 1
+        container_id:
+          type: string
+          minLength: 1
+        event_type:
+          type: string
+          minLength: 1
       required:
-        - value
-        - isError
+        - id
+        - app_name
+        - app_url
+        - container_id
+        - event_type
       x-examples:
         example-1:
-          value: 35bfbf46-5b50-49f5-a325-e5f03f43c3aa
-          isError: false
+          id: UUID
+          app_name: test app
+          app_url: 'http://localhost:8099/test'
+          container_id: 6d1a2895-a689-4760-a515-a3a3b49ae882
+          event_type: data_source_created
     ContainerImportRequest:
+      title: ContainerImportRequest
       description: ''
       type: object
       x-examples:
@@ -4401,7 +4906,23 @@ components:
         - name
         - description
         - data_versioning_enabled
-    NodeResponse:
+    TokenExchangeRequest:
+      title: TokenExchangeRequest
+      type: object
+      properties:
+        client_id:
+          type: string
+        code:
+          type: string
+        grant_type:
+          type: string
+        redirect_uri:
+          type: string
+        client_secret:
+          type: string
+        code_verifier:
+          type: string
+    Node:
       description: ''
       type: object
       x-examples:
@@ -4459,19 +4980,7 @@ components:
           type: string
           minLength: 1
         metatype:
-          type: object
-          required:
-            - name
-            - description
-            - id
-          properties:
-            name:
-              type: string
-            description:
-              type: string
-            id:
-              type: string
-              minLength: 1
+          $ref: '#/components/schemas/NodeMetatypeBody'
         metatype_name:
           type: string
           minLength: 1
@@ -4516,7 +5025,6 @@ components:
         - properties
         - id
         - container_id
-        - metatype
         - metatype_name
         - graph_id
         - archived
@@ -4529,7 +5037,22 @@ components:
         - composite_original_id
         - created_by
         - modified_by
-    EdgeResponse:
+    NodeMetatypeBody:
+      title: NodeMetatypeBody
+      type: object
+      required:
+        - name
+        - description
+        - id
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        id:
+          type: string
+          minLength: 1
+    Edge:
       description: ''
       type: object
       x-examples: {}
@@ -4618,7 +5141,7 @@ components:
         - destination_node_composite_original_id
         - created_by
         - modified_by
-    MetatypeResponse:
+    Metatype:
       description: ''
       type: object
       x-examples:
@@ -4663,7 +5186,7 @@ components:
         keys:
           type: array
           items:
-            $ref: '#/components/schemas/KeyResponse'
+            $ref: '#/components/schemas/MetatypeKey'
       required:
         - name
         - description
@@ -4674,7 +5197,7 @@ components:
         - modified_at
         - created_by
         - modified_by
-    KeyResponse:
+    MetatypeKey:
       description: ''
       type: object
       x-examples:
@@ -4765,7 +5288,7 @@ components:
         - created_by
         - modified_by
         - validation
-    MetatypeRelationshipResponse:
+    MetatypeRelationship:
       description: ''
       type: object
       x-examples:
@@ -4810,7 +5333,7 @@ components:
         keys:
           type: array
           items:
-            type: object
+            $ref: '#/components/schemas/RelationshipKey'
       required:
         - name
         - description
@@ -4821,7 +5344,7 @@ components:
         - modified_at
         - created_by
         - modified_by
-    RelationshipKeyResponse:
+    RelationshipKey:
       description: ''
       type: object
       x-examples:
@@ -4886,14 +5409,13 @@ components:
             type: object
         defaultValue:
           type: string
-          minLength: 1
+          nullable: true
         metatype_relationship_id:
           type: string
           minLength: 1
         id:
           type: string
           minLength: 1
-        default_value: {}
         archived:
           type: boolean
         created_at:
@@ -4917,7 +5439,6 @@ components:
         - cardinality
         - validation
         - unique
-        - defaultValue
         - metatype_relationship_id
         - id
         - archived
@@ -4925,7 +5446,7 @@ components:
         - modified_at
         - created_by
         - modified_by
-    RelationshipPairResponse:
+    RelationshipPair:
       description: ''
       type: object
       properties:
@@ -5068,7 +5589,7 @@ components:
             name: ''
             description: ''
             id: 3f84e557-accd-4e19-8722-9bc054184baa
-    DataSourceResponse:
+    DataSource:
       description: ''
       type: object
       x-examples:
@@ -5100,21 +5621,7 @@ components:
         active:
           type: boolean
         config:
-          type: object
-          required:
-            - kind
-            - data_type
-            - data_format
-          properties:
-            kind:
-              type: string
-              minLength: 1
-            data_type:
-              type: string
-              minLength: 1
-            data_format:
-              type: string
-              minLength: 1
+          $ref: '#/components/schemas/DataSourceConfig'
         id:
           type: string
           minLength: 1
@@ -5157,7 +5664,24 @@ components:
         - created_by
         - modified_by
         - archived
-    FileResponse:
+    DataSourceConfig:
+      title: DataSourceConfig
+      type: object
+      properties:
+        kind:
+          type: string
+          minLength: 1
+        data_type:
+          type: string
+          minLength: 1
+        data_format:
+          type: string
+          minLength: 1
+      required:
+        - kind
+        - data_type
+        - data_format
+    FileModel:
       description: ''
       type: object
       x-examples:
@@ -5208,7 +5732,7 @@ components:
         - created_by
         - modified_by
         - reference
-    FileInfoResponse:
+    FileInfo:
       description: ''
       type: object
       x-examples:
@@ -5277,7 +5801,7 @@ components:
         - modified_by
         - container_id
         - md5hash
-    DataSourceImportResponse:
+    DataSourceImport:
       description: ''
       type: object
       x-examples:
@@ -5338,7 +5862,8 @@ components:
         - reference
         - records_inserted
         - total_records
-    CreateManualImportResponse:
+    CreateManualImport:
+      title: CreateManualImport
       description: ''
       type: object
       x-examples:
@@ -5389,7 +5914,7 @@ components:
         - modified_at
         - created_by
         - modified_by
-    GetExportResponse:
+    Exporter:
       description: ''
       type: object
       x-examples:
@@ -5422,41 +5947,7 @@ components:
           type: string
           minLength: 1
         config:
-          type: object
-          required:
-            - kind
-            - key
-            - path
-            - port
-            - user
-            - endpoint
-            - graphson_v1
-            - traversal_source
-            - writes_per_second
-          properties:
-            kind:
-              type: string
-              minLength: 1
-            key:
-              type: string
-            path:
-              type: string
-              minLength: 1
-            port:
-              type: string
-              minLength: 1
-            user:
-              type: string
-            endpoint:
-              type: string
-              minLength: 1
-            graphson_v1:
-              type: boolean
-            traversal_source:
-              type: string
-              minLength: 1
-            writes_per_second:
-              type: number
+          $ref: '#/components/schemas/ExporterConfig'
         id:
           type: string
           minLength: 1
@@ -5491,7 +5982,44 @@ components:
         - modified_at
         - created_by
         - modified_by
-    UserResponse:
+    ExporterConfig:
+      description: ''
+      type: object
+      properties:
+        kind:
+          type: string
+          minLength: 1
+        key:
+          type: string
+        path:
+          type: string
+          minLength: 1
+        port:
+          type: string
+          minLength: 1
+        user:
+          type: string
+        endpoint:
+          type: string
+          minLength: 1
+        graphson_v1:
+          type: boolean
+        traversal_source:
+          type: string
+          minLength: 1
+        writes_per_second:
+          type: number
+      required:
+        - kind
+        - key
+        - path
+        - port
+        - user
+        - endpoint
+        - graphson_v1
+        - traversal_source
+        - writes_per_second
+    User:
       description: ''
       type: object
       x-examples:
@@ -5563,7 +6091,7 @@ components:
         keys:
           type: array
           items:
-            $ref: '#/components/schemas/UserKeyResponse'
+            $ref: '#/components/schemas/UserKey'
       required:
         - identity_provider
         - display_name
@@ -5575,7 +6103,7 @@ components:
         - permissions
         - roles
         - id
-    UserKeyResponse:
+    UserKey:
       description: ''
       type: object
       properties:
@@ -5597,33 +6125,7 @@ components:
           key: MzUyOWQ3ODEtYmRkYS00M2E4LThjYzItZTExOTYxMDIzZTg4
           secret_raw: NThhYTFmZmMtM2RlZS00OTAxLWI3MDgtMDM3ZWJhNTJhZDYz
           user_id: dc286640-05c2-4c62-8468-8131c01e3473
-    404NotFound:
-      description: ''
-      type: object
-      properties:
-        isError:
-          type: boolean
-        error:
-          type: object
-          properties:
-            errorCode:
-              type: number
-            error:
-              type: string
-              minLength: 1
-          required:
-            - errorCode
-            - error
-      required:
-        - isError
-        - error
-      x-examples:
-        example-1:
-          isError: true
-          error:
-            errorCode: 404
-            error: unable to find user
-    TypeMappingResponse:
+    TypeMapping:
       description: ''
       type: object
       x-examples:
@@ -5670,7 +6172,7 @@ components:
         transformations:
           type: array
           items:
-            $ref: '#/components/schemas/TransformationResponse'
+            $ref: '#/components/schemas/Transformation'
         resulting_metatype_name:
           type: string
           nullable: true
@@ -5681,7 +6183,7 @@ components:
         - active
         - shape_hash
         - sample_payload
-    TransformationResponse:
+    Transformation:
       description: ''
       type: object
       x-examples:
@@ -5714,7 +6216,7 @@ components:
         keys:
           type: array
           items:
-            $ref: '#/components/schemas/TransformationKeyResponse'
+            $ref: '#/components/schemas/TransformationKey'
         id:
           type: string
           minLength: 1
@@ -5774,7 +6276,7 @@ components:
         - conditions
         - keys
         - archived
-    TransformationKeyResponse:
+    TransformationKey:
       description: ''
       type: object
       properties:
@@ -5791,7 +6293,7 @@ components:
         example-1:
           key: file name
           metatype_key_id: a1cdc78f-01be-4d06-a7e7-6981e67d6678
-    ImportResponse:
+    ImportModel:
       description: ''
       type: object
       x-examples:
@@ -5857,7 +6359,7 @@ components:
         - inserted_at
         - created_at
         - shape_hash
-    EventResponse:
+    Event:
       description: ''
       type: object
       x-examples:
@@ -5917,38 +6419,6 @@ components:
         - modified_at
         - created_by
         - modified_by
-    UpdateRegisteredEventRequest:
-      description: ''
-      type: object
-      properties:
-        id:
-          type: string
-          minLength: 1
-        app_name:
-          type: string
-          minLength: 1
-        app_url:
-          type: string
-          minLength: 1
-        container_id:
-          type: string
-          minLength: 1
-        event_type:
-          type: string
-          minLength: 1
-      required:
-        - id
-        - app_name
-        - app_url
-        - container_id
-        - event_type
-      x-examples:
-        example-1:
-          id: UUID
-          app_name: test app
-          app_url: 'http://localhost:8099/test'
-          container_id: 6d1a2895-a689-4760-a515-a3a3b49ae882
-          event_type: data_source_created
     DataStaging:
       description: ''
       type: object
@@ -5986,8 +6456,8 @@ components:
           type: string
       required:
         - mapping_ids
-    ContainerInviteResponse:
-      title: ContainerInviteResponse
+    ContainerInvite:
+      title: ContainerInvite
       type: object
       properties:
         id:
@@ -6001,10 +6471,22 @@ components:
         issued:
           type: string
         container:
-          $ref: '#/components/schemas/ContainerModel'
-    ContainerModel:
+          $ref: '#/components/schemas/Container'
+    Container:
       description: ''
       type: object
+      x-examples:
+        example-1:
+          name: Test Container 4
+          description: Test Container Description
+          id: 07b1e35e-0a7c-476d-ada8-5906b16da1b8
+          archived: false
+          created_at: '2021-08-06T21:17:49.545Z'
+          modified_at: '2021-08-06T21:17:49.545Z'
+          created_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+          modified_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
+          config: null
+          active_graph_id: 0cc62f41-ceaa-4a68-8f1c-7856525c2668
       properties:
         name:
           type: string
@@ -6029,7 +6511,8 @@ components:
         modified_by:
           type: string
           minLength: 1
-        config: {}
+        config:
+          $ref: '#/components/schemas/ContainerConfig'
         active_graph_id:
           type: string
           minLength: 1
@@ -6043,32 +6526,197 @@ components:
         - created_by
         - modified_by
         - active_graph_id
-      x-examples:
-        example-1:
-          name: Test Container 4
-          description: Test Container Description
-          id: 07b1e35e-0a7c-476d-ada8-5906b16da1b8
-          archived: false
-          created_at: '2021-08-06T21:17:49.545Z'
-          modified_at: '2021-08-06T21:17:49.545Z'
-          created_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
-          modified_by: fa3c2cc0-2c4e-441c-aa78-cf77f8af8cd1
-          config: null
-          active_graph_id: 0cc62f41-ceaa-4a68-8f1c-7856525c2668
-    TokenExchangeRequest:
-      title: TokenExchangeRequest
+    ContainerConfig:
+      description: ''
       type: object
       properties:
-        client_id:
+        data_versioning_enabled:
+          type: boolean
+    NotFound404:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          isError: true
+          error:
+            errorCode: 404
+            error: unable to find user
+      properties:
+        isError:
+          type: boolean
+        error:
+          $ref: '#/components/schemas/ErrorModel'
+      required:
+        - isError
+        - error
+    ErrorModel:
+      title: ErrorModel
+      type: object
+      properties:
+        error:
           type: string
-        code:
+        errorCode:
+          type: number
+    RSAInitRequest:
+      title: RSAInitRequest
+      type: object
+      properties:
+        subjectName:
           type: string
-        grant_type:
+        securID:
           type: string
-        redirect_uri:
+      required:
+        - subjectName
+    RSAVerifyRequest:
+      title: RSAVerifyRequest
+      type: object
+      properties:
+        subjectName:
           type: string
-        client_secret:
+        securID:
           type: string
-        code_verifier:
+        authnAttemptId:
+          type: string
+        inResponseTo:
+          type: string
+      required:
+        - securID
+        - authnAttemptId
+        - inResponseTo
+    RSAStatusRequest:
+      title: RSAStatusRequest
+      type: object
+      properties:
+        authnAttemptId:
+          type: string
+        removeAttemptId:
+          type: boolean
+      required:
+        - authnAttemptId
+    RSACancelRequest:
+      title: RSACancelRequest
+      type: object
+      properties:
+        authnAttemptId:
+          type: string
+        removeAttemptId:
+          type: boolean
+      required:
+        - authnAttemptId
+    RSAResponse:
+      title: RSAResponse
+      type: object
+      properties:
+        value:
+          type: object
+          properties:
+            attemptResponseCode:
+              type: string
+            attemptReasonCode:
+              type: string
+            challengeMethods:
+              type: object
+              properties:
+                challenges:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      methodSetId:
+                        type: string
+                      requiredMethods:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            methodId:
+                              type: string
+                            priority:
+                              type: string
+                            versions:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  versionId:
+                                    type: string
+                                  methodAttributes:
+                                    type: array
+                                    items:
+                                      type: string
+                                  valueRequired:
+                                    type: boolean
+                                  referenceId:
+                                    type: string
+                                  prompt:
+                                    type: object
+                                    properties:
+                                      promptResourceId:
+                                        type: string
+                                      defaultText:
+                                        type: string
+                                      formatRegex:
+                                        type: string
+                                      defaultValue:
+                                        type: string
+                                      valueBeingDefined:
+                                        type: boolean
+                                      sensitive:
+                                        type: boolean
+                                      minLength:
+                                        type: string
+                                      maxLength:
+                                        type: string
+                                      promptArgs:
+                                        type: array
+                                        items:
+                                          type: string
+            credentialValidationResults:
+              type: array
+              items:
+                type: object
+                properties:
+                  methodId:
+                    type: string
+                  methodResponseCode:
+                    type: string
+                  methodReasonCode:
+                    type: string
+                  authnAttributes:
+                    type: array
+                    items:
+                      type: string
+            context:
+              type: object
+              properties:
+                authnAttemptId:
+                  type: string
+                messageId:
+                  type: string
+                inResponseTo:
+                  type: string
+        isError:
+          type: boolean
+    RSAStatusResponse:
+      title: RSAStatusResponse
+      type: object
+      properties:
+        attemptResponseCode:
+          type: string
+        attemptReasonCode:
+          type: string
+        subjectName:
+          type: string
+        authnPolicyId:
+          type: string
+        sessionAttributes:
+          type: array
+          items:
+            type: string
+        successfulMethods:
+          type: array
+          items:
+            type: string
+        attemptExpires:
           type: string
   responses: {}

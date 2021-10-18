@@ -13,7 +13,7 @@ export default class QueryRoutes {
     // very simple route that passes the raw body directly to the the graphql query
     // for the complex portions of this endpoint visit the data_query folder and functions
     private static query(req: Request, res: Response, next: NextFunction) {
-        if (req.header('content-type')!.includes('application/json') && req.header('content-type')!.includes('application/graphql')) {
+        if (!req.headers['content-type']?.includes('application/json') && !req.headers['content-type']?.includes('application/graphql')) {
             graphql(schema, req.body, resolversRoot(req.params.containerID))
                 .then((response) => {
                     res.status(200).json(response);
