@@ -2,7 +2,6 @@ import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
-import uuid from 'uuid';
 import {QueueProcessor} from '../../../../domain_objects/event_system/processor';
 import Event from '../../../../domain_objects/event_system/event';
 
@@ -121,7 +120,6 @@ export default class DataSourceMapper extends Mapper {
     // queries more easily.
     private createStatement(userID: string, ...sources: DataSourceRecord[]): string {
         const text = `INSERT INTO data_sources(
-            id,
             container_id ,
             adapter_type,
             config,
@@ -131,7 +129,6 @@ export default class DataSourceMapper extends Mapper {
             created_by,
             modified_by) VALUES %L RETURNING *`;
         const values = sources.map((source) => [
-            uuid.v4(),
             source.container_id,
             source.adapter_type,
             source.config,
@@ -147,7 +144,7 @@ export default class DataSourceMapper extends Mapper {
 
     private fullUpdateStatement(userID: string, ...sources: DataSourceRecord[]): string {
         const text = `UPDATE data_sources AS d SET
-                         container_id = u.container_id::uuid,
+                         container_id = u.container_id::bigint,
                          adapter_type = u.adapter_type,
                          config = u.config::jsonb,
                          active = u.active::boolean,
@@ -164,7 +161,7 @@ export default class DataSourceMapper extends Mapper {
                           name,
                           data_format,
                           modified_by)
-                      WHERE u.id::uuid = d.id RETURNING d.*`;
+                      WHERE u.id::bigint = d.id RETURNING d.*`;
         const values = sources.map((source) => [
             source.id,
             source.container_id,

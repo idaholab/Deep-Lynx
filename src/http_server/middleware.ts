@@ -646,7 +646,7 @@ export function dataStagingContext(): any {
 
         const repo = new DataStagingRepository();
 
-        repo.findByID(+req.params.dataID)
+        repo.findByID(req.params.dataID)
             .then((result) => {
                 if (result.isError) {
                     resp.status(result.error?.errorCode!).json(result);

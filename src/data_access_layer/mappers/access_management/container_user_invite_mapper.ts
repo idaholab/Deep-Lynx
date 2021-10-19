@@ -55,7 +55,7 @@ export default class ContainerUserInviteMapper extends Mapper {
         return super.runAsTransaction(this.markAcceptedStatement(token, email));
     }
 
-    public Delete(id: number): Promise<Result<boolean>> {
+    public Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id));
     }
 
@@ -70,7 +70,7 @@ export default class ContainerUserInviteMapper extends Mapper {
         };
     }
 
-    private deleteStatement(id: number): QueryConfig {
+    private deleteStatement(id: string): QueryConfig {
         return {
             text: `DELETE FROM user_container_invites WHERE id = $1`,
             values: [id],

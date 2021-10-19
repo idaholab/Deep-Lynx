@@ -13,16 +13,16 @@ const flatten = require('flat');
  */
 export default class TypeMapping extends BaseDomainClass {
     @IsOptional()
-    @IsUUID()
+    @IsString()
     id?: string;
 
-    @IsUUID()
+    @IsString()
     container_id?: string;
 
     @IsDefined()
     sample_payload?: any;
 
-    @IsUUID()
+    @IsString()
     data_source_id?: string;
 
     @IsBoolean()

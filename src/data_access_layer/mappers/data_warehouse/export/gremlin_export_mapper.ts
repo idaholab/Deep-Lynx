@@ -93,15 +93,15 @@ export default class GremlinExportMapper extends Mapper {
                 text: `INSERT INTO gremlin_export_nodes(id, export_id, container_id, metatype_id,  properties)
                        SELECT id, '${exportID}' as export_id, container_id, metatype_id, properties
                        FROM nodes
-                       WHERE nodes.archived = FALSE
+                       WHERE nodes.deleted_at IS NULL
                        AND nodes.container_id = $1`,
                 values: [containerID],
             },
             {
-                text: `INSERT INTO gremlin_export_edges(id, export_id, container_id, relationship_pair_id, origin_node_id, destination_node_id, properties)
-                       SELECT id, '${exportID}' as export_id, container_id, relationship_pair_id, origin_node_id, destination_node_id, properties
+                text: `INSERT INTO gremlin_export_edges(id, export_id, container_id, relationship_pair_id, origin_id, destination_id, properties)
+                       SELECT id, '${exportID}' as export_id, container_id, relationship_pair_id, origin_id, destination_id, properties
                        FROM edges
-                       WHERE edges.archived = FALSE
+                       WHERE edges.deleted_at IS NULL
                        AND edges.container_id = $1`,
                 values: [containerID],
             },
@@ -172,7 +172,7 @@ export default class GremlinExportMapper extends Mapper {
 
     private listAssociatedNodesStatement(exportID: string, offset: number, limit: number): QueryConfig {
         return {
-            text: `SELECT * FROM gremlin_export_nodes WHERE export_id = $1 AND gremlin_node_id NOT NULL OFFSET $2 LIMIT $3`,
+            text: `SELECT * FROM gremlin_export_nodes WHERE export_id = $1 AND gremlin_node_id IS NOT NULL OFFSET $2 LIMIT $3`,
             values: [exportID, offset, limit],
         };
     }
@@ -192,7 +192,7 @@ export default class GremlinExportMapper extends Mapper {
 
     private listAssociatedEdgesStatement(exportID: string, offset: number, limit: number): QueryConfig {
         return {
-            text: `SELECT * FROM gremlin_export_edges WHERE export_id = $1 AND gremlin_edge_id NOT NULL OFFSET $2 LIMIT $3`,
+            text: `SELECT * FROM gremlin_export_edges WHERE export_id = $1 AND gremlin_edge_id IS NOT NULL OFFSET $2 LIMIT $3`,
             values: [exportID, offset, limit],
         };
     }

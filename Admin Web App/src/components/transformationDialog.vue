@@ -340,30 +340,78 @@
                   </v-autocomplete>
 
                   <v-row v-if="this.selectedRelationshipPair">
-                    <v-col>
-                      <v-select
-                          :items="payloadKeys"
-                          v-model="origin_key"
-                          :rules="[v => !!v || 'Item is required']"
-                          required
-                      >
+                    <v-row>
+                      <v-col>
+                        <h3>{{$t('dataMapping.parentInformation')}}</h3>
+                      </v-col>
+                      <v-col>
+                        <h3>{{$t('dataMapping.childInformation')}}</h3>
+                      </v-col>
+                    </v-row>
 
-                        <template v-slot:label>{{$t('dataMapping.originKey')}} <small style="color:red">{{$t('dataMapping.required')}}</small></template>
-                        <template slot="append-outer">{{$t('dataMapping.and')}}</template>
-                      </v-select>
-                    </v-col>
-                    <v-col>
-                      <v-select
-                          :items="payloadKeys"
-                          v-model="destination_key"
-                          :rules="[v => !!v || 'Item is required']"
-                          required
-                      >
+                    <!-- ID Keys -->
+                    <v-row>
+                      <v-col>
+                        <v-select
+                            :items="payloadKeys"
+                            v-model="origin_key"
+                            :rules="[v => !!v || 'Item is required']"
+                            required
+                        >
 
-                        <template v-slot:label>{{$t('dataMapping.destinationKey')}} <small style="color:red">{{$t('dataMapping.required')}}</small></template>
-                        <template slot="append-outer"><info-tooltip :message="$t('dataMapping.originDestinationKeyHelp')"></info-tooltip> </template>
-                      </v-select>
-                    </v-col>
+                          <template v-slot:label>{{$t('dataMapping.originKey')}} <small style="color:red">{{$t('dataMapping.required')}}</small></template>
+                        </v-select>
+                      </v-col>
+                      <v-col>
+                        <v-select
+                            :items="payloadKeys"
+                            v-model="destination_key"
+                            :rules="[v => !!v || 'Item is required']"
+                            required
+                        >
+
+                          <template v-slot:label>{{$t('dataMapping.destinationKey')}} <small style="color:red">{{$t('dataMapping.required')}}</small></template>
+                          <template slot="append-outer"><info-tooltip :message="$t('dataMapping.originDestinationKeyHelp')"></info-tooltip> </template>
+                        </v-select>
+                      </v-col>
+                    </v-row>
+
+                    <!-- Data Sources -->
+                    <v-row>
+                      <v-col style="padding: 0px">
+                        <select-data-source
+                            @selected="setParentDataSource"
+                            :containerID="containerID">
+                        </select-data-source>
+                      </v-col>
+                      <v-col style="padding: 0px">
+                        <select-data-source
+                            :tooltip="true"
+                            @selected="setChildDataSource"
+                            :tooltipHelp="$t('dataMapping.dataSourceRelationshipHelp')"
+                            :containerID="containerID">
+                        </select-data-source>
+                      </v-col>
+                    </v-row>
+
+
+                    <!-- Metatypes -->
+                    <v-row>
+                      <v-col>
+                        <search-metatypes
+                            @selected="setParentMetatype"
+                            :containerID="containerID">
+                        </search-metatypes>
+                      </v-col>
+                      <v-col>
+                        <search-metatypes
+                            :tooltip="true"
+                            @selected="setChildMetatype"
+                            :tooltipHelp="$t('dataMapping.metatypeRelationshipHelp')"
+                            :containerID="containerID">
+                        </search-metatypes>
+                      </v-col>
+                    </v-row>
                   </v-row>
 
                   <br>
@@ -495,6 +543,7 @@
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import {
+  DataSourceT,
   MetatypeKeyT,
   MetatypeRelationshipKeyT,
   MetatypeRelationshipPairT,
@@ -505,8 +554,11 @@ import {
   TypeMappingTransformationT
 } from "@/api/types";
 import {getNestedValue} from "@/utilities";
+import SelectDataSource from "@/components/selectDataSource.vue";
+import SearchMetatypes from "@/components/searchMetatypes.vue";
 
 @Component({
+  components: {SelectDataSource, SearchMetatypes},
   filters: {
     pretty: function(value: any) {
       return JSON.stringify(value, null, 2)
@@ -586,7 +638,13 @@ export default class TransformationDialog extends Vue {
   selectedMetatypeKeys: MetatypeKeyT[] = []
 
   origin_key: any = null
+  origin_data_source_id: any = null
+  origin_metatype_id: any = null
+
   destination_key: any = null
+  destination_data_source_id: any = null
+  destination_metatype_id: any = null
+
   uniqueIdentifierKey: any = null
   propertyMapping: {[key: string]: any}[] = []
 
@@ -951,7 +1009,11 @@ export default class TransformationDialog extends Vue {
     } else if(this.selectedRelationshipPair) {
       payload.metatype_relationship_pair_id = this.selectedRelationshipPair.id
       payload.origin_id_key = this.origin_key
+      payload.origin_data_source_id = this.origin_data_source_id
+      payload.origin_metatype_id = this.origin_metatype_id
       payload.destination_id_key = this.destination_key
+      payload.destination_metatype_id = this.destination_metatype_id
+      payload.destination_data_source_id = this.destination_data_source_id
     }
 
     payload.conditions = this.conditions
@@ -977,7 +1039,11 @@ export default class TransformationDialog extends Vue {
     payload.metatype_id = (this.selectedMetatype?.id) ? this.selectedMetatype.id : ""
     payload.metatype_relationship_pair_id = (this.selectedRelationshipPair?.id) ? this.selectedRelationshipPair.id : ""
     payload.origin_id_key = this.origin_key
+    payload.origin_data_source_id = this.origin_data_source_id
+    payload.origin_metatype_id = this.origin_metatype_id
     payload.destination_id_key = this.destination_key
+    payload.destination_metatype_id = this.destination_metatype_id
+    payload.destination_data_source_id = this.destination_data_source_id
 
     payload.conditions = this.conditions
     payload.keys = this.propertyMapping
@@ -1207,6 +1273,30 @@ export default class TransformationDialog extends Vue {
 
   deleteSubexpression(condition: TypeMappingTransformationCondition, subexpression: TypeMappingTransformationSubexpression){
     condition.subexpressions = condition.subexpressions.filter(s => s !== subexpression)
+  }
+
+  setParentDataSource(ds: DataSourceT) {
+    if(ds) {
+      this.origin_data_source_id = ds.id as string
+    }
+  }
+
+  setChildDataSource(ds: DataSourceT) {
+    if(ds) {
+      this.destination_data_source_id = ds.id as string
+    }
+  }
+
+  setParentMetatype(m: MetatypeT) {
+    if(m) {
+      this.origin_metatype_id = m.id
+    }
+  }
+
+  setChildMetatype(m: MetatypeT) {
+    if(m) {
+      this.destination_metatype_id = m.id
+    }
   }
 
   get isMainFormValid() {

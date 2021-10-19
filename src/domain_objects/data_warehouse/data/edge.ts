@@ -30,15 +30,11 @@ export class EdgeMetadata {
  */
 export default class Edge extends BaseDomainClass {
     @IsOptional()
-    @IsUUID()
+    @IsString()
     id?: string;
 
-    @IsUUID()
+    @IsString()
     container_id?: string;
-
-    @IsOptional()
-    @IsBoolean()
-    archived?: boolean;
 
     // we often need the metatype relationship's name, it's keys, or access to other properties
     // when we deal with nodes, so for ease of use we're going to use the whole
@@ -63,63 +59,60 @@ export default class Edge extends BaseDomainClass {
         return this.metatypeRelationshipPair ? this.metatypeRelationshipPair.id! : '';
     }
 
+    @IsString()
+    @IsOptional()
+    metatype_relationship_name?: string;
+
     @IsObject()
     properties: object = {};
 
     @IsString()
     @IsOptional()
-    original_data_id?: string;
+    import_data_id?: string;
 
     @IsString()
     @IsOptional()
-    composite_original_id?: string;
+    data_staging_id?: string;
 
-    @IsUUID()
+    @IsString()
     @IsOptional()
-    import_data_id?: string;
-
-    @IsNumber()
-    @IsOptional()
-    data_staging_id?: number;
-
-    // if we have an composite id, we must provide a data source as we can only
-    // guarantee uniqueness based on that combination of values
-    @ValidateIf((o) => typeof o.composite_original_id !== 'undefined' && o.composite_original_id !== null)
-    @IsUUID()
     data_source_id?: string;
 
-    @IsUUID()
+    @IsString()
     @IsOptional()
     type_mapping_transformation_id?: string;
 
-    @IsUUID()
-    graph_id?: string;
-
-    @ValidateIf((o) => o.origin_node_composite_original_id === null && typeof o.origin_node_composite_original_id === 'undefined')
-    @IsUUID()
-    origin_node_id?: string;
-
-    @ValidateIf((o) => o.destination_node_composite_original_id === null && typeof o.destination_node_composite_original_id === 'undefined')
-    @IsUUID()
-    destination_node_id?: string;
-
-    @ValidateIf((o) => o.origin_node_id === null && typeof o.origin_node_id === 'undefined')
+    @ValidateIf((o) => o.origin_original_id === null && typeof o.origin_original_id === 'undefined')
     @IsString()
-    @IsNotEmpty()
-    origin_node_composite_original_id?: string;
+    origin_id?: string;
 
-    @ValidateIf((o) => o.destination_node_id === null && typeof o.destination_node_id === 'undefined')
+    @ValidateIf((o) => o.destination_original_id === null && typeof o.destination_original_id === 'undefined')
     @IsString()
-    @IsNotEmpty()
-    destination_node_composite_original_id?: string;
+    destination_id?: string;
 
     @IsString()
     @IsOptional()
-    origin_node_original_id?: string;
+    origin_original_id?: string;
+
+    @ValidateIf((o) => o.origin_original_id !== null && typeof o.origin_original_id !== 'undefined')
+    @IsString()
+    origin_data_source_id?: string;
+
+    @ValidateIf((o) => o.origin_original_id !== null && typeof o.origin_original_id !== 'undefined')
+    @IsString()
+    origin_metatype_id?: string;
 
     @IsString()
     @IsOptional()
-    destination_node_original_id?: string;
+    destination_original_id?: string;
+
+    @ValidateIf((o) => o.destination_original_id !== null && typeof o.destination_original_id !== 'undefined')
+    @IsString()
+    destination_data_source_id?: string;
+
+    @ValidateIf((o) => o.destination_original_id !== null && typeof o.destination_original_id !== 'undefined')
+    @IsString()
+    destination_metatype_id?: string;
 
     @IsOptional()
     @ValidateNested()
@@ -131,20 +124,18 @@ export default class Edge extends BaseDomainClass {
         metatype_relationship_pair: MetatypeRelationshipPair | string;
         metatype_name?: string;
         properties: object;
-        original_data_id?: string;
-        composite_original_id?: string;
-        archived?: boolean;
         import_data_id?: string;
-        data_staging_id?: number;
+        data_staging_id?: string;
         data_source_id?: string;
         type_mapping_transformation_id?: string;
-        graph_id?: string;
-        origin_node_id?: string;
-        destination_node_id?: string;
-        origin_node_composite_original_id?: string;
-        destination_node_composite_original_id?: string;
-        origin_node_original_id?: string;
-        destination_node_original_id?: string;
+        origin_id?: string;
+        origin_data_source_id?: string;
+        origin_metatype_id?: string;
+        destination_id?: string;
+        destination_data_source_id?: string;
+        destination_metatype_id?: string;
+        origin_original_id?: string;
+        destination_original_id?: string;
         metadata?: EdgeMetadata;
     }) {
         super();
@@ -155,20 +146,18 @@ export default class Edge extends BaseDomainClass {
                 this.metatypeRelationshipPair = input.metatype_relationship_pair;
             } else this.metatypeRelationshipPair = plainToClass(MetatypeRelationshipPair, {id: input.metatype_relationship_pair});
             this.properties = input.properties;
-            if (input.original_data_id) this.original_data_id = input.original_data_id;
-            if (input.composite_original_id) this.composite_original_id = input.composite_original_id;
-            if (input.archived) this.archived = input.archived;
             if (input.import_data_id) this.import_data_id = input.import_data_id;
             if (input.data_staging_id) this.data_staging_id = input.data_staging_id;
             if (input.data_source_id) this.data_source_id = input.data_source_id;
             if (input.type_mapping_transformation_id) this.type_mapping_transformation_id = input.type_mapping_transformation_id;
-            if (input.graph_id) this.graph_id = input.graph_id;
-            if (input.origin_node_id) this.origin_node_id = input.origin_node_id;
-            if (input.destination_node_id) this.destination_node_id = input.destination_node_id;
-            if (input.origin_node_composite_original_id) this.origin_node_composite_original_id = input.origin_node_composite_original_id;
-            if (input.origin_node_original_id) this.origin_node_original_id = input.origin_node_original_id;
-            if (input.destination_node_composite_original_id) this.destination_node_composite_original_id = input.destination_node_composite_original_id;
-            if (input.destination_node_original_id) this.destination_node_original_id = input.destination_node_original_id;
+            if (input.origin_id) this.origin_id = input.origin_id;
+            if (input.origin_original_id) this.origin_original_id = input.origin_original_id;
+            if (input.origin_data_source_id) this.origin_data_source_id = input.origin_data_source_id;
+            if (input.origin_metatype_id) this.origin_metatype_id = input.origin_metatype_id;
+            if (input.destination_id) this.destination_id = input.destination_id;
+            if (input.destination_original_id) this.destination_original_id = input.destination_original_id;
+            if (input.destination_data_source_id) this.destination_data_source_id = input.destination_data_source_id;
+            if (input.destination_metatype_id) this.destination_metatype_id = input.destination_metatype_id;
             if (input.metadata) this.metadata = input.metadata;
         }
     }

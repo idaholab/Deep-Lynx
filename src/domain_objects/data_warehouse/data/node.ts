@@ -1,5 +1,5 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {IsArray, IsBoolean, IsNumber, IsObject, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
+import {IsArray, IsObject, IsOptional, IsString, ValidateIf, ValidateNested} from 'class-validator';
 import {Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Metatype, {MetatypeID} from '../ontology/metatype';
 import Container from '../ontology/container';
@@ -31,15 +31,11 @@ export class NodeMetadata {
  */
 export default class Node extends BaseDomainClass {
     @IsOptional()
-    @IsUUID()
+    @IsString()
     id?: string;
 
-    @IsUUID()
+    @IsString()
     container_id?: string;
-
-    @IsOptional()
-    @IsBoolean()
-    archived?: boolean;
 
     // we often need the metatype's name, it's keys, or access to other properties
     // when we deal with nodes, so for ease of use we're going to use the whole
@@ -74,26 +70,19 @@ export default class Node extends BaseDomainClass {
 
     @IsString()
     @IsOptional()
-    composite_original_id?: string;
-
-    @IsUUID()
-    @IsOptional()
     import_data_id?: string;
 
-    @IsNumber()
+    @IsString()
     @IsOptional()
-    data_staging_id?: number;
+    data_staging_id?: string;
 
     @ValidateIf((o) => typeof o.composite_original_id !== 'undefined' && o.composite_original_id !== null)
-    @IsUUID()
+    @IsString()
     data_source_id?: string;
 
-    @IsUUID()
+    @IsString()
     @IsOptional()
     type_mapping_transformation_id?: string;
-
-    @IsUUID()
-    graph_id?: string;
 
     @IsOptional()
     @ValidateNested()
@@ -106,13 +95,10 @@ export default class Node extends BaseDomainClass {
         metatype_name?: string;
         properties: object;
         original_data_id?: string;
-        composite_original_id?: string;
-        archived?: boolean;
         import_data_id?: string;
-        data_staging_id?: number;
+        data_staging_id?: string;
         data_source_id?: string;
         type_mapping_transformation_id?: string;
-        graph_id?: string;
         metadata?: NodeMetadata;
     }) {
         super();
@@ -127,13 +113,10 @@ export default class Node extends BaseDomainClass {
             if (input.metatype_name) this.metatype_name = input.metatype_name;
             this.properties = input.properties;
             if (input.original_data_id) this.original_data_id = input.original_data_id;
-            if (input.composite_original_id) this.composite_original_id = input.composite_original_id;
-            if (input.archived) this.archived = input.archived;
             if (input.import_data_id) this.import_data_id = input.import_data_id;
             if (input.data_staging_id) this.data_staging_id = input.data_staging_id;
             if (input.data_source_id) this.data_source_id = input.data_source_id;
             if (input.type_mapping_transformation_id) this.type_mapping_transformation_id = input.type_mapping_transformation_id;
-            if (input.graph_id) this.graph_id = input.graph_id;
             if (input.metadata) this.metadata = input.metadata;
         }
     }

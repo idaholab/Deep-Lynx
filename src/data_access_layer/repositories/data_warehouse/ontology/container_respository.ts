@@ -4,7 +4,6 @@ import Result from '../../../../common_classes/result';
 import ContainerMapper from '../../../mappers/data_warehouse/ontology/container_mapper';
 import Authorization from '../../../../domain_objects/access_management/authorization/authorization';
 import Logger from '../../../../services/logger';
-import GraphMapper from '../../../mappers/data_warehouse/data/graph_mapper';
 import Cache from '../../../../services/cache/cache';
 import {plainToClass, serialize} from 'class-transformer';
 import Config from '../../../../services/config';
@@ -18,7 +17,6 @@ import {User} from '../../../../domain_objects/access_management/user';
  */
 export default class ContainerRepository implements RepositoryInterface<Container> {
     #mapper: ContainerMapper = ContainerMapper.Instance;
-    #graphMapper: GraphMapper = GraphMapper.Instance;
 
     async save(c: Container, user: User): Promise<Result<boolean>> {
         const errors = await c.validationErrors();
@@ -48,18 +46,6 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         // assign admin role to the user who created the container
         const role = await Authorization.AssignRole(user.id!, 'admin', result.value.id);
         if (!role) Logger.error(`error while assigning admin role to user`);
-
-        const graph = await this.#graphMapper.Create(result.value.id!, user.id!);
-        if (graph.isError) {
-            Logger.error(result.error?.error!);
-        } else {
-            const activeGraph = await this.#graphMapper.SetActiveForContainer(result.value.id!, graph.value.id!);
-            if (activeGraph.isError || !activeGraph.value) {
-                Logger.error(activeGraph.error?.error!);
-            } else {
-                result.value.active_graph_id = graph.value.id;
-            }
-        }
 
         // set the original object to the returned one
         Object.assign(c, result.value);
@@ -118,19 +104,6 @@ export default class ContainerRepository implements RepositoryInterface<Containe
                 // assign admin role to the user who created the container
                 const role = await Authorization.AssignRole(user.id!, 'admin', container.id);
                 if (!role) Logger.error(`error while assigning admin role to user`);
-
-                const graph = await this.#graphMapper.Create(container.id!, user.id!, transaction.value);
-                // set active graph from graph ID
-                if (graph.isError) {
-                    Logger.error(graph.error?.error!);
-                } else {
-                    const activeGraph = await this.#graphMapper.SetActiveForContainer(container.id!, graph.value.id!, transaction.value);
-                    if (activeGraph.isError || !activeGraph.value) {
-                        Logger.error(activeGraph.error?.error!);
-                    } else {
-                        container.active_graph_id = graph.value.id;
-                    }
-                }
 
                 void this.setCache(container);
             }

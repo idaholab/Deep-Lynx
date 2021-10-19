@@ -7,14 +7,13 @@ import {IsBoolean, IsIn, IsOptional, IsString, IsUUID} from 'class-validator';
  */
 export default class EventRegistration extends BaseDomainClass {
     @IsOptional()
-    @IsUUID()
     id?: string;
 
-    @IsUUID()
+    @IsString()
     @IsOptional()
     data_source_id?: string;
 
-    @IsUUID()
+    @IsString()
     @IsOptional()
     container_id?: string;
 

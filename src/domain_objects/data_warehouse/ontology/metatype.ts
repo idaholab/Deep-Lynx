@@ -1,12 +1,11 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
+import {IsBoolean, IsNotEmpty, IsOptional, IsString, MinLength, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
 import MetatypeKey from './metatype_key';
 import * as t from 'io-ts';
 import Result from '../../../common_classes/result';
 import {pipe} from 'fp-ts/lib/function';
 import {fold} from 'fp-ts/Either';
 import {Type} from 'class-transformer';
-import validator from 'validator';
 
 /*
     Metatype represents a metatype record in the Deep Lynx database and the various
@@ -16,10 +15,10 @@ import validator from 'validator';
  */
 export default class Metatype extends BaseDomainClass {
     @IsOptional()
-    @IsUUID()
+    @IsString()
     id?: string;
 
-    @IsUUID()
+    @IsString()
     container_id?: string;
 
     @IsOptional()
@@ -209,7 +208,6 @@ export default class Metatype extends BaseDomainClass {
                         if (key.validation === null || key.validation === undefined) continue;
 
                         if (key.validation.min || key.validation.max) {
-
                             // count the number of matching properties passed
                             let count = 0;
                             if (input.hasOwnProperty(key.property_name)) {
@@ -261,7 +259,7 @@ export function MetatypeID(validationOptions?: ValidationOptions) {
             options: validationOptions,
             validator: {
                 validate(value: any, args: ValidationArguments) {
-                    return value instanceof Metatype && validator.isUUID(value.id!);
+                    return value instanceof Metatype && typeof value.id! === 'string';
                 },
             },
         });

@@ -335,11 +335,6 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return this;
     }
 
-    archived(operator: string, value: any) {
-        super.query('metatype_relationship_pairs.archived', operator, value);
-        return this;
-    }
-
     async count(): Promise<Result<number>> {
         const results = await super.count();
 

@@ -453,6 +453,10 @@ export default {
                 'Data may have already been generated using this Transformation. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Transformation. If you would like to keep this data and orphan it, please uncheck the box below.',
         },
         dataMapping: {
+            parentInformation: 'Parent Information',
+            childInformation: 'Child Information',
+            dataSourceRelationshipHelp: 'Choose the Data Source the parent and child record belong to.',
+            metatypeRelationshipHelp: 'Choose the Metatype that the parent and child records belong to.',
             mapping: 'Mapping',
             configuration: 'Configuration',
             onConversionError: 'On Conversion Errors',
@@ -582,6 +586,7 @@ export default {
             confirmPassword: 'Confirm New Password',
         },
         containers: {
+            or: 'Or',
             title: 'Manage Containers',
             name: 'Name',
             description: 'Description',

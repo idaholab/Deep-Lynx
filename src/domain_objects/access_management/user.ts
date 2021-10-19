@@ -5,10 +5,8 @@ import {
     IsBoolean,
     IsEmail,
     IsIn,
-    IsNumber,
     IsOptional,
     IsString,
-    IsUUID,
     MinLength,
     registerDecorator,
     ValidateIf,
@@ -29,7 +27,7 @@ const validator = require('validator');
 */
 export class User extends BaseDomainClass {
     @IsOptional()
-    @IsUUID()
+    @IsString()
     id?: string;
 
     @IsString()
@@ -221,9 +219,9 @@ export class ResetUserPasswordPayload extends BaseDomainClass {
 
 // request for assigning roles to a user within the context of a container
 export class AssignUserRolePayload extends BaseDomainClass {
-    @IsUUID()
+    @IsString()
     user_id?: string;
-    @IsUUID()
+    @IsString()
     container_id?: string;
     @IsString()
     @IsIn(['editor', 'user', 'admin'])
@@ -241,9 +239,9 @@ export class AssignUserRolePayload extends BaseDomainClass {
 
 // this serves as both payload and data structure for the container invite table
 export class ContainerUserInvite extends BaseDomainClass {
-    @IsNumber()
+    @IsString()
     @IsOptional()
-    id?: number;
+    id?: string;
 
     @IsEmail()
     email = '';
@@ -295,7 +293,7 @@ export class ContainerUserInvite extends BaseDomainClass {
 // in testing and if, for whatever reason, you're running Deep Lynx with only
 // basic authentication or no authentication on the http_server
 export const SuperUser = new User({
-    id: uuid.v4(),
+    id: '0',
     identity_provider: 'username_password',
     display_name: 'Super User',
     email: Config.superuser_email,
@@ -317,7 +315,7 @@ export function UserID(validationOptions?: ValidationOptions) {
             options: validationOptions,
             validator: {
                 validate(value: any, args: ValidationArguments) {
-                    return value instanceof User && validator.isUUID(value.id);
+                    return value instanceof User && typeof value.id === 'string';
                 },
             },
         });
@@ -335,7 +333,7 @@ export function ContainerID(validationOptions?: ValidationOptions) {
             options: validationOptions,
             validator: {
                 validate(value: any, args: ValidationArguments) {
-                    return value instanceof Container && validator.isUUID(value.id!);
+                    return value instanceof Container && typeof value.id === 'string';
                 },
             },
         });

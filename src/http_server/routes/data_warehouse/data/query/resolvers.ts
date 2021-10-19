@@ -17,7 +17,6 @@ import {
     NodeFilterQL,
     NodeQL,
     NodeWhereQL,
-    PropertyFilterQL,
     PropertyQL,
 } from './types';
 import MetatypeRelationshipPairMapper from '../../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
@@ -232,7 +231,6 @@ async function NodeResolverByID(nodeID: string, containerID: string): Promise<No
         container_id: result.value.container_id,
         original_data_id: result.value.original_data_id,
         data_source_id: result.value.data_source_id,
-        archived: result.value.archived,
         created_at: createdAt,
         modified_at: modifiedAt,
         metatype: MetatypeResolver(result.value.metatype_id),
@@ -254,7 +252,6 @@ async function NodeResolver(node: Node, containerID: string): Promise<NodeQL> {
         container_id: node.container_id,
         original_data_id: node.original_data_id,
         data_source_id: node.data_source_id,
-        archived: node.archived,
         created_at: createdAt,
         modified_at: modifiedAt,
         metatype: MetatypeResolver(node.metatype_id),
@@ -367,14 +364,12 @@ async function EdgeResolver(nodeID: string, direction: 'incoming' | 'outgoing'):
             output.push({
                 id: edge.id!,
                 container_id: edge.container_id!,
-                original_data_id: edge.original_data_id!,
                 data_source_id: edge.data_source_id!,
-                archived: edge.archived!,
                 properties: PropertyResolver(edge.properties),
                 raw_properties: JSON.stringify(edge.properties),
                 relationship: MetatypeRelationshipByPairResolver(edge.relationship_pair_id),
-                destination_node: NodeResolverByID(edge.destination_node_id!, edge.container_id!),
-                origin_node: NodeResolverByID(edge.origin_node_id!, edge.container_id!),
+                destination_node: NodeResolverByID(edge.destination_id!, edge.container_id!),
+                origin_node: NodeResolverByID(edge.origin_id!, edge.container_id!),
                 created_at: createdAt,
                 modified_at: modifiedAt,
             });
@@ -472,22 +467,6 @@ function buildNodeFilter(f: NodeRepository, fql: NodeFilterQL): NodeRepository {
                 break;
             }
 
-            case 'archived': {
-                let values: string[];
-                // @ts-ignore
-                values = (fql[k] as string).split(' ');
-                if (values.length < 2) {
-                    throw Error('malformed query for archived');
-                }
-
-                if (values[1] !== 't' && values[1] !== 'true' && values[1] !== 'f' && values[1] !== 'false') {
-                    throw new Error('malformed query for archived query value must be true, t, false, f');
-                }
-
-                f.archived(values[0], values[1]);
-                break;
-            }
-
             case 'data_source_id': {
                 let values: string[];
                 values = fql[k].split(' ');
@@ -565,33 +544,6 @@ function buildEdgeFilter(f: EdgeRepository, eql: EdgeFilterQL): EdgeRepository {
                 break;
             }
 
-            case 'original_data_id': {
-                let values: string[];
-                values = eql[k].split(' ');
-                if (values.length < 2) {
-                    throw Error('malformed query for original_data_id');
-                }
-
-                f.originalDataID(values[0], values[1]);
-                break;
-            }
-
-            case 'archived': {
-                let values: string[];
-                // @ts-ignore
-                values = (eql[k] as string).split(' ');
-                if (values.length < 2) {
-                    throw Error('malformed query for archived');
-                }
-
-                if (values[1] !== 't' && values[1] !== 'true' && values[1] !== 'f' && values[1] !== 'false') {
-                    throw new Error('malformed query for archived query value must be true, t, false, f');
-                }
-
-                f.archived(values[0], values[1]);
-                break;
-            }
-
             case 'data_source_id': {
                 let values: string[];
                 values = eql[k].split(' ');
@@ -603,7 +555,7 @@ function buildEdgeFilter(f: EdgeRepository, eql: EdgeFilterQL): EdgeRepository {
                 break;
             }
 
-            case 'origin_node_id': {
+            case 'origin_id': {
                 let values: string[];
                 values = eql[k].split(' ');
                 if (values.length < 2) {
@@ -617,18 +569,18 @@ function buildEdgeFilter(f: EdgeRepository, eql: EdgeFilterQL): EdgeRepository {
                 break;
             }
 
-            case 'origin_node_original_id': {
+            case 'origin_original_id': {
                 let values: string[];
                 values = eql[k].split(' ');
                 if (values.length < 2) {
                     throw Error('malformed query for origin_node_original_id');
                 }
 
-                f.origin_node_original_id(values[0], values[1]);
+                f.origin_original_id(values[0], values[1]);
                 break;
             }
 
-            case 'destination_node_id': {
+            case 'destination_id': {
                 let values: string[];
                 values = eql[k].split(' ');
                 if (values.length < 2) {
@@ -639,14 +591,14 @@ function buildEdgeFilter(f: EdgeRepository, eql: EdgeFilterQL): EdgeRepository {
                 break;
             }
 
-            case 'destination_node_original_id': {
+            case 'destination_original_id': {
                 let values: string[];
                 values = eql[k].split(' ');
                 if (values.length < 2) {
                     throw Error('malformed query for destination_node_original_id');
                 }
 
-                f.destination_node_original_id(values[0], values[1]);
+                f.destination_original_id(values[0], values[1]);
                 break;
             }
 

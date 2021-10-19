@@ -85,10 +85,6 @@ export default class MetatypeRelationshipRoutes {
             repository = repository.and().description('like', `%${req.query.description}%`);
         }
 
-        if ((req.query.archived as string) !== 'true') {
-            repository = repository.and().archived('eq', false);
-        }
-
         if (req.query.count !== undefined && req.query.count === 'true') {
             repository
                 .count()

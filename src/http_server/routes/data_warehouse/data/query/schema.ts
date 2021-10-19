@@ -1,4 +1,4 @@
-import { buildSchema } from 'graphql';
+import {buildSchema} from 'graphql';
 
 export const schema = buildSchema(generateSchema());
 
@@ -23,10 +23,8 @@ function generateSchema(): string {
     container_id: String
     original_data_id: String
     data_source_id: String
-    archived: Boolean
     created_at: String
     modified_at: String
-    graph: String
     import_data_id: String
     incoming_edges(where: EdgeWhere): [Edge]
     outgoing_edges(where: EdgeWhere): [Edge]
@@ -42,7 +40,6 @@ input NodeFilter {
     container_id: String
     original_data_id: String
     data_source_id: String
-    archived: String
     metatype_name: String
     metatype_id: String
     properties: [PropertyFilter]
@@ -74,10 +71,10 @@ input EdgeFilter {
     archived: String
     relationship_pair_id: String
     relationship_name: String
-    origin_node_id: String
-    origin_node_original_id: String
-    destination_node_id: String
-    destination_node_original_id: String
+    origin_id: String
+    origin_original_id: String
+    destination_id: String
+    destination_original_id: String
     properties: [PropertyFilter]
 }
 

@@ -1,13 +1,12 @@
-import { AssignUserRolePayload, ContainerUserInvite, KeyPair, ResetUserPasswordPayload, User } from '../../domain_objects/access_management/user';
+import {AssignUserRolePayload, ContainerUserInvite, KeyPair, ResetUserPasswordPayload, User} from '../../domain_objects/access_management/user';
 import Logger from '../../services/logger';
 import PostgresAdapter from '../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerMapper from '../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import Container from '../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import UserRepository from '../../data_access_layer/repositories/access_management/user_repository';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
-import Config from '../../services/config';
 import KeyPairMapper from '../../data_access_layer/mappers/access_management/keypair_mapper';
 
 describe('A User Repository', async () => {
@@ -21,7 +20,7 @@ describe('A User Repository', async () => {
             display_name: faker.name.findName(),
             email: faker.internet.email(),
             password: faker.random.alphaNumeric(12),
-            roles: ['superuser']
+            roles: ['superuser'],
         });
     };
 
@@ -37,8 +36,8 @@ describe('A User Repository', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         const userResult = await UserMapper.Instance.Create(
@@ -50,8 +49,8 @@ describe('A User Repository', async () => {
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 password: faker.random.alphaNumeric(12),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(userResult.isError).false;
@@ -141,8 +140,8 @@ describe('A User Repository', async () => {
             new ResetUserPasswordPayload({
                 email: check.value.email,
                 token: check.value.reset_token,
-                newPassword: faker.random.alphaNumeric()
-            })
+                newPassword: faker.random.alphaNumeric(),
+            }),
         );
     });
 
@@ -154,8 +153,8 @@ describe('A User Repository', async () => {
             new AssignUserRolePayload({
                 userID: user.id!,
                 containerID: container.id!,
-                roleName: 'editor'
-            })
+                roleName: 'editor',
+            }),
         );
 
         expect(results.isError).false;
@@ -187,7 +186,7 @@ describe('A User Repository', async () => {
         const invite = new ContainerUserInvite({
             email: u.email,
             originUser: user,
-            container
+            container,
         });
 
         results = await repository.inviteUserToContainer(user, invite);

@@ -1,8 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import {PoolClient, Query, QueryConfig} from 'pg';
+import {PoolClient, QueryConfig} from 'pg';
 import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
-import uuid from 'uuid';
 
 const format = require('pg-format');
 const resultClass = TypeTransformation;
@@ -17,7 +16,7 @@ const resultClass = TypeTransformation;
     class/interface as well.
 */
 export default class TypeTransformationMapper extends Mapper {
-    public static tableName = 'data_type_mapping_transformations';
+    public static tableName = 'type_mapping_transformations';
 
     private static instance: TypeTransformationMapper;
 
@@ -103,15 +102,18 @@ export default class TypeTransformationMapper extends Mapper {
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
     private createStatement(userID: string, ...t: TypeTransformation[]): string {
-        const text = `WITH ins as(INSERT INTO data_type_mapping_transformations(
-            id,
+        const text = `WITH ins as(INSERT INTO type_mapping_transformations(
             keys,
             type_mapping_id,
             conditions,
             metatype_id,
             metatype_relationship_pair_id,
             origin_id_key,
+            origin_metatype_id,
+            origin_data_source_id, 
             destination_id_key,
+            destination_metatype_id,
+            destination_data_source_id,
             unique_identifier_key,
             root_array,
             config,
@@ -125,19 +127,22 @@ export default class TypeTransformationMapper extends Mapper {
                metatypes.name as metatype_name,
                metatype_relationship_pairs.name as metatype_relationship_pair_name
         FROM ins
-            LEFT JOIN data_type_mappings as mapping ON ins.type_mapping_id = mapping.id
+            LEFT JOIN type_mappings as mapping ON ins.type_mapping_id = mapping.id
                  LEFT JOIN metatypes ON ins.metatype_id = metatypes.id
                  LEFT JOIN metatype_relationship_pairs ON ins.metatype_relationship_pair_id = metatype_relationship_pairs.id
         `;
         const values = t.map((tt) => [
-            uuid.v4(),
             JSON.stringify(tt.keys),
             tt.type_mapping_id,
             JSON.stringify(tt.conditions),
             tt.metatype_id === '' ? undefined : tt.metatype_id,
             tt.metatype_relationship_pair_id === '' ? undefined : tt.metatype_relationship_pair_id,
             tt.origin_id_key,
+            tt.origin_metatype_id,
+            tt.origin_data_source_id,
             tt.destination_id_key,
+            tt.destination_metatype_id,
+            tt.destination_data_source_id,
             tt.unique_identifier_key,
             tt.root_array,
             JSON.stringify(tt.config),
@@ -149,12 +154,12 @@ export default class TypeTransformationMapper extends Mapper {
     }
 
     private fullUpdateStatement(userID: string, ...t: TypeTransformation[]): string {
-        const text = `WITH ins as(UPDATE data_type_mapping_transformations as t SET
+        const text = `WITH ins as(UPDATE type_mapping_transformations as t SET
             keys = u.keys::jsonb,
-            type_mapping_id = u.type_mapping_id::uuid,
+            type_mapping_id = u.type_mapping_id::bigint,
             conditions = u.conditions::jsonb,
-            metatype_id = u.metatype_id::uuid,
-            metatype_relationship_pair_id = u.metatype_relationship_pair_id::uuid,
+            metatype_id = u.metatype_id::bigint,
+            metatype_relationship_pair_id = u.metatype_relationship_pair_id::bigint,
             origin_id_key = u.origin_id_key,
             destination_id_key = u.destination_id_key,
             unique_identifier_key = u.unique_identifier_key,
@@ -175,7 +180,7 @@ export default class TypeTransformationMapper extends Mapper {
                             root_array,
                             config,
                             modified_by
-                          ) WHERE u.id::uuid = t.id RETURNING t.*)
+                          ) WHERE u.id::bigint= t.id RETURNING t.*)
 
         SELECT ins.*,
                mapping.container_id AS container_id,
@@ -184,7 +189,7 @@ export default class TypeTransformationMapper extends Mapper {
                metatypes.name as metatype_name,
                metatype_relationship_pairs.name as metatype_relationship_pair_name
         FROM ins
-                 LEFT JOIN data_type_mappings as mapping ON ins.type_mapping_id = mapping.id
+                 LEFT JOIN type_mappings as mapping ON ins.type_mapping_id = mapping.id
                  LEFT JOIN metatypes ON ins.metatype_id = metatypes.id
                  LEFT JOIN metatype_relationship_pairs ON ins.metatype_relationship_pair_id = metatype_relationship_pairs.id`;
         const values = t.map((tt) => [
@@ -207,25 +212,25 @@ export default class TypeTransformationMapper extends Mapper {
     }
     private retrieveStatement(transformationID: string): QueryConfig {
         return {
-            text: `SELECT data_type_mapping_transformations.*,
+            text: `SELECT type_mapping_transformations.*,
                          metatypes.name as metatype_name,
                          metatype_relationship_pairs.name as metatype_relationship_pair_name,
                          mapping.container_id AS container_id,
                          mapping.shape_hash as shape_hash,
                          mapping.data_source_id as data_source_id
-                  FROM data_type_mapping_transformations
-                           LEFT JOIN data_type_mappings as mapping ON data_type_mapping_transformations.type_mapping_id = mapping.id
-                           LEFT JOIN metatypes ON data_type_mapping_transformations.metatype_id = metatypes.id
+                  FROM type_mapping_transformations
+                           LEFT JOIN type_mappings as mapping ON type_mapping_transformations.type_mapping_id = mapping.id
+                           LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id
                            LEFT JOIN metatype_relationship_pairs 
-                               ON data_type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id
-                  WHERE data_type_mapping_transformations.id = $1`,
+                               ON type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id
+                  WHERE type_mapping_transformations.id = $1`,
             values: [transformationID],
         };
     }
 
     private deleteStatement(exportID: string): QueryConfig {
         return {
-            text: `DELETE FROM data_type_mapping_transformations WHERE id = $1`,
+            text: `DELETE FROM type_mapping_transformations WHERE id = $1`,
             values: [exportID],
         };
     }
@@ -241,14 +246,14 @@ export default class TypeTransformationMapper extends Mapper {
                 values: [transformationID],
             },
             {
-                text: `DELETE FROM data_type_mapping_transformations WHERE id = $1`,
+                text: `DELETE FROM type_mapping_transformations WHERE id = $1`,
                 values: [transformationID],
             },
         ];
     }
 
     private bulkDeleteStatement(transformations: TypeTransformation[]): string {
-        const text = `DELETE FROM data_type_mapping_transformations WHERE id IN(%L)`;
+        const text = `DELETE FROM type_mapping_transformations WHERE id IN(%L)`;
         const values = transformations.filter((t) => t.id).map((t) => t.id as string);
 
         return format(text, values);
@@ -256,17 +261,17 @@ export default class TypeTransformationMapper extends Mapper {
 
     private listByMapping(typeMappingID: string): QueryConfig {
         return {
-            text: `SELECT data_type_mapping_transformations.*,
+            text: `SELECT type_mapping_transformations.*,
                           metatypes.name as metatype_name,
                           metatype_relationship_pairs.name as metatype_relationship_pair_name,
                           mapping.container_id AS container_id,
                           mapping.shape_hash as shape_hash,
                           mapping.data_source_id as data_source_id
-                   FROM data_type_mapping_transformations
-                            LEFT JOIN data_type_mappings as mapping ON data_type_mapping_transformations.type_mapping_id = mapping.id
-                            LEFT JOIN metatypes ON data_type_mapping_transformations.metatype_id = metatypes.id
+                   FROM type_mapping_transformations
+                            LEFT JOIN type_mappings as mapping ON type_mapping_transformations.type_mapping_id = mapping.id
+                            LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id
                             LEFT JOIN metatype_relationship_pairs 
-                                ON data_type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id
+                                ON type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id
                    WHERE type_mapping_id = $1`,
             values: [typeMappingID],
         };
@@ -274,7 +279,7 @@ export default class TypeTransformationMapper extends Mapper {
 
     private archiveStatement(transformationID: string, userID: string): QueryConfig {
         return {
-            text: `UPDATE data_type_mapping_transformations 
+            text: `UPDATE type_mapping_transformations 
                     SET archived = true, modified_by = $2, modified_at = NOW()
                     WHERE id = $1`,
             values: [transformationID, userID],

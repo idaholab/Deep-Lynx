@@ -2,7 +2,6 @@ import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
-import uuid from 'uuid';
 
 const format = require('pg-format');
 const resultClass = MetatypeRelationshipKey;
@@ -96,7 +95,6 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
     private createStatement(userID: string, ...keys: MetatypeRelationshipKey[]): string {
         const text = `INSERT INTO
                         metatype_relationship_keys(metatype_relationship_id,
-                                                   id,
                                                    name,
                                                    description,
                                                    property_name,
@@ -110,7 +108,6 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
                         VALUES %L RETURNING *`;
         const values = keys.map((key) => [
             key.metatype_relationship_id,
-            uuid.v4(),
             key.name,
             key.description,
             key.property_name,
@@ -128,7 +125,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
 
     private retrieveStatement(metatypeKeyID: string): QueryConfig {
         return {
-            text: `SELECT * FROM metatype_relationship_keys WHERE id = $1 AND NOT ARCHIVED`,
+            text: `SELECT * FROM metatype_relationship_keys WHERE id = $1 AND deleted_at IS NULL`,
             values: [metatypeKeyID],
         };
     }
@@ -142,7 +139,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
 
     private archiveStatement(metatypeKeyID: string, userID: string): QueryConfig {
         return {
-            text: `UPDATE metatype_relationship_keys SET archived = true, modified_by = $2  WHERE id = $1`,
+            text: `UPDATE metatype_relationship_keys SET deleted_at = NOW(), modified_by = $2  WHERE id = $1`,
             values: [metatypeKeyID, userID],
         };
     }
@@ -163,7 +160,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
 
     private listStatement(relationshipID: string): QueryConfig {
         return {
-            text: `SELECT * FROM metatype_relationship_keys WHERE metatype_relationship_id = $1 AND NOT archived `,
+            text: `SELECT * FROM get_metatype_relationship_keys($1) WHERE deleted_at IS NULL `,
             values: [relationshipID],
         };
     }
@@ -171,7 +168,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
     private fullUpdateStatement(userID: string, ...keys: MetatypeRelationshipKey[]): string {
         const text = `UPDATE metatype_relationship_keys AS m SET
                      name = k.name,
-                     metatype_relationship_id = k.metatype_relationship_id::uuid,
+                     metatype_relationship_id = k.metatype_relationship_id::bigint,
                      description = k.description,
                      property_name = k.property_name,
                      required = k.required::boolean,
@@ -183,7 +180,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
                      modified_at = NOW()
                  FROM(VALUES %L) AS 
                  k(id, name, metatype_relationship_id, description, property_name, required, data_type, options, default_value, validation, modified_by)
-                 WHERE k.id::uuid = m.id RETURNING m.*`;
+                 WHERE k.id::bigint = m.id RETURNING m.*`;
         const values = keys.map((key) => [
             key.id,
             key.name,

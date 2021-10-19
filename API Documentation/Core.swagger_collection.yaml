@@ -830,11 +830,6 @@ paths:
         - schema:
             type: string
           in: query
-          name: archived
-          description: Set to true to include archived metatypes
-        - schema:
-            type: string
-          in: query
           name: count
           description: Set to true to return an integer count of the number of metatypes
         - schema:
@@ -1233,11 +1228,6 @@ paths:
           in: query
           name: description
           description: Filter metatype relationships with descriptions that match this pattern
-        - schema:
-            type: string
-          in: query
-          name: archived
-          description: Set to true to include archived metatype relationships
         - schema:
             type: string
           in: query
@@ -4281,20 +4271,26 @@ components:
         metatype_id: required
         modified_at: optional - set to update node along with the id to update if it exists
         properties: {}
+      x-examples:
+        example-1:
+          container_id: required
+          id: optional - including this field will attempt to update a node with this id
+          original_data_id: 'optional - including this field will attempt to update a node with the same composite id (data source id + metatype id + original data id) if it exists, if not it will create it'
+          data_source_id: required
+          metatype_id: required
+          properties: {}
       properties:
         id:
           type: string
+          description: ''
         container_id:
           type: string
         original_data_id:
           type: string
+          description: 'Passing in just the original data id will attempt to update a node with the same composite id (data source id, metatype id, and original data id).'
         data_source_id:
           type: string
-        data_type_mapping_id:
-          type: string
         metatype_id:
-          type: string
-        modified_at:
           type: string
         properties:
           type: object
@@ -4305,40 +4301,7 @@ components:
         - properties
     CreateOrUpdateEdgesRequest:
       title: CreateOrUpdateEdgesRequest
-      required:
-        - container_id
-        - data_source_id
-        - destination_node_id
-        - destination_node_original_id
-        - modified_at
-        - origin_node_id
-        - origin_node_original_id
-        - original_data_id
-        - properties
-        - relationship_pair_id
       type: object
-      properties:
-        container_id:
-          type: string
-        original_data_id:
-          type: string
-        data_source_id:
-          type: string
-        origin_node_id:
-          type: string
-        destination_node_id:
-          type: string
-        origin_node_original_id:
-          type: string
-        destination_node_original_id:
-          type: string
-        relationship_pair_id:
-          type: string
-        modified_at:
-          type: string
-        properties:
-          type: object
-          properties: {}
       example:
         container_id: required
         original_data_id: required
@@ -4350,6 +4313,55 @@ components:
         relationship_pair_id: required
         modified_at: will attempt to update edge if exists
         properties: {}
+      properties:
+        container_id:
+          type: string
+        data_source_id:
+          type: string
+        origin_id:
+          type: string
+        destination_id:
+          type: string
+        origin_original_id:
+          type: string
+        destination_original_id:
+          type: string
+        relationship_pair_id:
+          type: string
+        origin_data_source_id:
+          type: string
+        destination_data_source_id:
+          type: string
+        destination_metatype_id:
+          type: string
+        origin_metatype_id:
+          type: string
+        properties:
+          type: object
+      required:
+        - container_id
+        - data_source_id
+        - origin_id
+        - destination_id
+        - origin_original_id
+        - destination_original_id
+        - relationship_pair_id
+        - properties
+      x-examples:
+        example-1:
+          container_id: required
+          data_source_id: required
+          origin_id: required (if origin_original_id not set)
+          destination_id: required (if destination_original_id not set)
+          origin_original_id: create edge based on composite id of node ( data source id + metatype id + original id of node)
+          origin_metatype_id: required if using original id for edge creation
+          origin_data_source_id: required if using original id for edge creation
+          destination_original_id: create edge based on composite id of node (data source id + metatype id +  original id of node)D
+          destination_metatype_id: required if using original id for edge creation
+          destination_data_source_id: required if using original id for edge creation
+          relationship_pair_id: required
+          modified_at: will attempt to update edge if exists
+          properties: {}
     NewMetatypeRequest:
       title: NewMetatypeRequest
       required:

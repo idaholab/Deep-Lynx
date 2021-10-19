@@ -1,12 +1,11 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
+import {IsBoolean, IsNotEmpty, IsOptional, IsString, MinLength, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
 import MetatypeRelationshipKey from './metatype_relationship_key';
 import * as t from 'io-ts';
 import Result from '../../../common_classes/result';
 import {pipe} from 'fp-ts/pipeable';
 import {fold} from 'fp-ts/Either';
 import {Type} from 'class-transformer';
-import validator from 'validator';
 
 /*
     MetatypeRelationship represents a metatype relationship record in the Deep Lynx database and the various
@@ -16,10 +15,10 @@ import validator from 'validator';
  */
 export default class MetatypeRelationship extends BaseDomainClass {
     @IsOptional()
-    @IsUUID()
+    @IsString()
     id?: string;
 
-    @IsUUID()
+    @IsString()
     container_id?: string;
 
     @IsOptional()
@@ -207,7 +206,6 @@ export default class MetatypeRelationship extends BaseDomainClass {
                         if (key.validation === null || key.validation === undefined) continue;
 
                         if (key.validation.min || key.validation.max) {
-
                             // count the number of matching properties passed
                             let count = 0;
                             if (input.hasOwnProperty(key.property_name)) {
@@ -253,7 +251,7 @@ export function MetatypeRelationshipID(validationOptions?: ValidationOptions) {
             options: validationOptions,
             validator: {
                 validate(value: any, args: ValidationArguments) {
-                    return value instanceof MetatypeRelationship && validator.isUUID(value.id!);
+                    return value instanceof MetatypeRelationship && typeof value.id! === 'string';
                 },
             },
         });

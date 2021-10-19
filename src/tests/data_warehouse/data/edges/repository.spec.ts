@@ -1,16 +1,15 @@
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
-import { User } from '../../../../domain_objects/access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import Logger from '../../../../services/logger';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import MetatypeMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import MetatypeKeyMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
-import GraphMapper from '../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
 import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
 import MetatypeRelationshipMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
 import MetatypeRelationshipPairMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
@@ -27,7 +26,6 @@ import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/d
 describe('An Edge Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
-    let graphID: string = '';
     let pair: MetatypeRelationshipPair;
     let nodes: Node[] = [];
     let dataSourceID: string = '';
@@ -43,7 +41,6 @@ describe('An Edge Repository', async () => {
         const nMapper = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const rkStorage = MetatypeRelationshipKeyMapper.Instance;
-        const gMapper = GraphMapper.Instance;
         const rMapper = MetatypeRelationshipMapper.Instance;
         const pairMapper = MetatypeRelationshipPairMapper.Instance;
 
@@ -51,8 +48,8 @@ describe('An Edge Repository', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -67,8 +64,8 @@ describe('An Edge Repository', async () => {
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(userResult.isError).false;
@@ -82,31 +79,25 @@ describe('An Edge Repository', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
         expect(exp.value).not.empty;
         dataSourceID = exp.value.id!;
 
-        const graph = await gMapper.Create(containerID, 'test suite');
-
-        expect(graph.isError, graph.error?.error).false;
-        expect(graph.value).not.empty;
-        graphID = graph.value.id!;
-
         const metatype = await mMapper.BulkCreate('test suite', [
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
+                description: faker.random.alphaNumeric(),
             }),
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         ]);
 
         expect(metatype.isError).false;
@@ -125,20 +116,18 @@ describe('An Edge Repository', async () => {
         const mixed = [
             new Node({
                 container_id: containerID,
-                graph_id: graph.value.id!,
                 metatype: metatype.value[0].id!,
                 properties: payload,
                 data_source_id: dataSourceID,
-                composite_original_id: faker.name.findName()
+                original_data_id: faker.name.findName(),
             }),
             new Node({
                 container_id: containerID,
-                graph_id: graph.value.id!,
                 metatype: metatype.value[1].id!,
                 properties: payload,
                 data_source_id: dataSourceID,
-                composite_original_id: faker.name.findName()
-            })
+                original_data_id: faker.name.findName(),
+            }),
         ];
 
         const node = await nMapper.BulkCreateOrUpdateByCompositeID('test suite', mixed);
@@ -151,8 +140,8 @@ describe('An Edge Repository', async () => {
             new MetatypeRelationship({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(relationship.isError).false;
@@ -173,8 +162,8 @@ describe('An Edge Repository', async () => {
                 destination_metatype: metatype.value[1].id!,
                 relationship: relationship.value.id!,
                 relationship_type: 'many:many',
-                container_id: containerID
-            })
+                container_id: containerID,
+            }),
         );
 
         expect(rpair.isError);
@@ -193,11 +182,10 @@ describe('An Edge Repository', async () => {
 
         let edge = new Edge({
             container_id: containerID,
-            graph_id: graphID,
             metatype_relationship_pair: pair.id!,
             properties: payload,
-            origin_node_id: nodes[0].id,
-            destination_node_id: nodes[1].id
+            origin_id: nodes[0].id,
+            destination_id: nodes[1].id,
         });
 
         // normal save first
@@ -208,26 +196,19 @@ describe('An Edge Repository', async () => {
         // nodes by original composite id's
         edge = new Edge({
             container_id: containerID,
-            graph_id: graphID,
             metatype_relationship_pair: pair.id!,
             properties: payload,
-            composite_original_id: faker.name.findName(),
-            origin_node_composite_original_id: nodes[0].composite_original_id,
-            destination_node_composite_original_id: nodes[0].composite_original_id,
-            data_source_id: dataSourceID
+            origin_original_id: nodes[0].original_data_id,
+            origin_data_source_id: dataSourceID,
+            origin_metatype_id: nodes[0].metatype_id,
+            destination_original_id: nodes[1].original_data_id,
+            destination_data_source_id: dataSourceID,
+            destination_metatype_id: nodes[1].metatype_id,
+            data_source_id: dataSourceID,
         });
 
         saved = await edgeRepo.save(edge, user);
         expect(saved.isError).false;
-
-        // check that save works with a composite original id
-        const originalID = edge.id!;
-        edge.id = undefined;
-
-        saved = await edgeRepo.save(edge, user);
-        expect(saved.isError).false;
-        expect(edge.id).eq(originalID);
-        expect(edge.properties).to.have.deep.property('flower_name', 'Daisy');
 
         // update the properties
         edge.properties = updatePayload;
@@ -250,20 +231,18 @@ describe('An Edge Repository', async () => {
         const edges = [
             new Edge({
                 container_id: containerID,
-                graph_id: graphID,
                 metatype_relationship_pair: pair.id!,
                 properties: payload,
-                origin_node_id: nodes[0].id,
-                destination_node_id: nodes[1].id
+                origin_id: nodes[0].id,
+                destination_id: nodes[1].id,
             }),
             new Edge({
                 container_id: containerID,
-                graph_id: graphID,
                 metatype_relationship_pair: pair.id!,
                 properties: payload,
-                origin_node_id: nodes[0].id,
-                destination_node_id: nodes[1].id
-            })
+                origin_id: nodes[0].id,
+                destination_id: nodes[1].id,
+            }),
         ];
 
         // normal save first
@@ -293,21 +272,21 @@ describe('An Edge Repository', async () => {
     });
 });
 
-const payload: { [key: string]: any } = {
+const payload: {[key: string]: any} = {
     flower_name: 'Daisy',
     color: 'yellow',
-    notRequired: 1
+    notRequired: 1,
 };
 
-const updatePayload: { [key: string]: any } = {
+const updatePayload: {[key: string]: any} = {
     flower_name: 'Violet',
     color: 'blue',
-    notRequired: 1
+    notRequired: 1,
 };
 
-const malformed_payload: { [key: string]: any } = {
+const malformed_payload: {[key: string]: any} = {
     flower: 'Daisy',
-    notRequired: 1
+    notRequired: 1,
 };
 
 export const test_keys: MetatypeKey[] = [
@@ -316,7 +295,7 @@ export const test_keys: MetatypeKey[] = [
         description: 'flower name',
         required: true,
         property_name: 'flower_name',
-        data_type: 'string'
+        data_type: 'string',
     }),
     new MetatypeKey({
         name: 'Test2',
@@ -324,15 +303,15 @@ export const test_keys: MetatypeKey[] = [
         required: true,
         property_name: 'color',
         data_type: 'enumeration',
-        options: ['yellow', 'blue']
+        options: ['yellow', 'blue'],
     }),
     new MetatypeKey({
         name: 'Test Not Required',
         description: 'not required',
         required: false,
         property_name: 'notRequired',
-        data_type: 'number'
-    })
+        data_type: 'number',
+    }),
 ];
 
 export const test_relationship_keys: MetatypeRelationshipKey[] = [
@@ -341,7 +320,7 @@ export const test_relationship_keys: MetatypeRelationshipKey[] = [
         description: 'flower name',
         required: true,
         property_name: 'flower_name',
-        data_type: 'string'
+        data_type: 'string',
     }),
     new MetatypeRelationshipKey({
         name: 'Test2',
@@ -349,13 +328,13 @@ export const test_relationship_keys: MetatypeRelationshipKey[] = [
         required: true,
         property_name: 'color',
         data_type: 'enumeration',
-        options: ['yellow', 'blue']
+        options: ['yellow', 'blue'],
     }),
     new MetatypeRelationshipKey({
         name: 'Test Not Required',
         description: 'not required',
         required: false,
         property_name: 'notRequired',
-        data_type: 'number'
-    })
+        data_type: 'number',
+    }),
 ];

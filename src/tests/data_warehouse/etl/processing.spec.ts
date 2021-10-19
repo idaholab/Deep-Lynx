@@ -6,7 +6,6 @@ import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import TypeMappingMapper from '../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
-import GraphMapper from '../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
 import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
 import DataStagingMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
 import MetatypeRelationshipMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
@@ -31,7 +30,6 @@ import {DataSourceFactory} from '../../../data_access_layer/repositories/data_wa
 
 describe('A Data Processor', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
-    let graphID: string = '';
     let typeMappingID: string = '';
     let typeMapping: TypeMapping | undefined;
     let dataSource: DataSource | undefined;
@@ -300,10 +298,6 @@ describe('A Data Processor', async () => {
         expect(userResult.value).not.empty;
         user = userResult.value;
 
-        const graph = await GraphMapper.Instance.Create(containerID, 'test suite');
-        expect(graph.isError).false;
-        graphID = graph.value.id!;
-
         const dStorage = DataSourceMapper.Instance;
         const relationshipMapper = MetatypeRelationshipMapper.Instance;
         const metatypeRepo = new MetatypeRepository();
@@ -479,7 +473,11 @@ describe('A Data Processor', async () => {
             type_mapping_id: typeMappingID,
             metatype_relationship_pair_id: maintenancePair!.id,
             origin_id_key: 'car_maintenance.id',
+            origin_data_source_id: dataSource!.DataSourceRecord!.id!,
+            origin_metatype_id: test_metatypes.find((m) => m.name === 'Maintenance')!.id,
             destination_id_key: 'car_maintenance.maintenance_entries.[].id',
+            destination_data_source_id: dataSource!.DataSourceRecord!.id!,
+            destination_metatype_id: test_metatypes.find((m) => m.name === 'Maintenance Entry')!.id,
             root_array: 'car_maintenance.maintenance_entries',
             keys: [],
         });
@@ -502,8 +500,8 @@ describe('A Data Processor', async () => {
         // I know it's a a double test since we already have tests for the transformations
         // but I wanted to make sure they work in the larger scope of the process loop
         for (const node of nodes.value) {
-            switch (node.composite_original_id) {
-                case `${containerID}+${dataSource!.DataSourceRecord!.id}+car_maintenance.id+UUID`: {
+            switch (node.original_data_id) {
+                case `UUID`: {
                     expect(node.properties).to.have.property('name', "test car's maintenance");
                     expect(node.properties).to.have.property('start_date', '1/1/2020 12:00:00');
                     expect(node.properties).to.have.property('average_visits', 4);
@@ -515,7 +513,7 @@ describe('A Data Processor', async () => {
                     break;
                 }
 
-                case `${containerID}+${dataSource!.DataSourceRecord!.id}+car_maintenance.maintenance_entries.[].id+1`: {
+                case `1`: {
                     expect(node.properties).to.have.property('id', 1);
                     expect(node.properties).to.have.property('type', 'oil change');
                     expect(node.properties).to.have.property('check_engine_light_flag', true);
@@ -524,7 +522,7 @@ describe('A Data Processor', async () => {
                     break;
                 }
 
-                case `${containerID}+${dataSource!.DataSourceRecord!.id}+car_maintenance.maintenance_entries.[].id+2`: {
+                case `2`: {
                     expect(node.properties).to.have.property('id', 2);
                     expect(node.properties).to.have.property('type', 'tire rotation');
                     expect(node.properties).to.have.property('check_engine_light_flag', false);
@@ -540,20 +538,6 @@ describe('A Data Processor', async () => {
 
         expect(edges.isError).false;
         expect(edges.value.length).eq(2);
-
-        for (const edge of edges.value) {
-            switch (edge.destination_node_composite_original_id) {
-                case `${containerID}+${dataSource!.DataSourceRecord!.id}+car_maintenance.maintenance_entries.[].id+1`: {
-                    expect(edge.origin_node_composite_original_id).eq(`${containerID}+${dataSource!.DataSourceRecord!.id}+car_maintenance.id+UUID`);
-                    break;
-                }
-
-                case `${containerID}+${dataSource!.DataSourceRecord!.id}+car_maintenance.maintenance_entries.[].id+2`: {
-                    expect(edge.origin_node_composite_original_id).eq(`${containerID}+${dataSource!.DataSourceRecord!.id}+car_maintenance.id+UUID`);
-                    break;
-                }
-            }
-        }
 
         return Promise.resolve();
     });

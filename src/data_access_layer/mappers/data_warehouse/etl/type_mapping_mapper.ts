@@ -2,7 +2,6 @@ import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import TypeMapping from '../../../../domain_objects/data_warehouse/etl/type_mapping';
-import uuid from 'uuid';
 
 const format = require('pg-format');
 const resultClass = TypeMapping;
@@ -17,7 +16,7 @@ const resultClass = TypeMapping;
     class/interface as well.
 */
 export default class TypeMappingMapper extends Mapper {
-    public static tableName = 'data_type_mappings';
+    public static tableName = 'type_mappings';
 
     private static instance: TypeMappingMapper;
 
@@ -75,14 +74,7 @@ export default class TypeMappingMapper extends Mapper {
         return super.retrieve<TypeMapping>(this.retrieveByShapeHashStatement(dataSourceID, shapeHash), {resultClass});
     }
 
-    public List(
-        containerID: string,
-        dataSourceID: string,
-        offset: number,
-        limit: number,
-        sortBy?: string,
-        sortDesc?: boolean,
-    ): Promise<Result<TypeMapping[]>> {
+    public List(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?: string, sortDesc?: boolean): Promise<Result<TypeMapping[]>> {
         if (limit === -1) {
             return super.rows<TypeMapping>(this.listAllStatement(containerID, dataSourceID), {resultClass});
         }
@@ -141,8 +133,7 @@ export default class TypeMappingMapper extends Mapper {
     // be assured we're getting the right ID back without changes. We do set the modified_at
     // time however so that the system knows the last time the mapping was used
     private createOrUpdateStatement(userID: string, ...mappings: TypeMapping[]): string {
-        const text = `INSERT INTO data_type_mappings(
-            id,
+        const text = `INSERT INTO type_mappings(
             container_id,
             data_source_id,
             shape_hash,
@@ -156,7 +147,6 @@ export default class TypeMappingMapper extends Mapper {
             modified_at = NOW()
         RETURNING *`;
         const values = mappings.map((imp) => [
-            uuid.v4(),
             imp.container_id,
             imp.data_source_id,
             imp.shape_hash,
@@ -170,9 +160,9 @@ export default class TypeMappingMapper extends Mapper {
     }
 
     private fullUpdateStatement(userID: string, ...mappings: TypeMapping[]): string {
-        const text = `UPDATE data_type_mappings as t SET
-            container_id = u.container_id::uuid,
-                               data_source_id = u.data_source_id::uuid,
+        const text = `UPDATE type_mappings as t SET
+            container_id = u.container_id::bigint,
+                               data_source_id = u.data_source_id::bigint,
                                shape_hash = u.shape_hash,
                                active = u.active::boolean,
                                sample_payload = u.sample_payload::jsonb,
@@ -185,7 +175,7 @@ export default class TypeMappingMapper extends Mapper {
                           active,
                           sample_payload,
                           modified_by)
-                           WHERE u.id::uuid = t.id RETURNING t.*`;
+                           WHERE u.id::bigint = t.id RETURNING t.*`;
         const values = mappings.map((imp) => [
             imp.id,
             imp.container_id,
@@ -201,46 +191,39 @@ export default class TypeMappingMapper extends Mapper {
 
     private retrieveStatement(exportID: string): QueryConfig {
         return {
-            text: `SELECT * FROM data_type_mappings WHERE id = $1`,
+            text: `SELECT * FROM type_mappings WHERE id = $1`,
             values: [exportID],
         };
     }
 
     private retrieveByShapeHashStatement(dataSourceID: string, shapeHash: string): QueryConfig {
         return {
-            text: `SELECT * FROM data_type_mappings WHERE data_source_id = $1 AND shape_hash = $2`,
+            text: `SELECT * FROM type_mappings WHERE data_source_id = $1 AND shape_hash = $2`,
             values: [dataSourceID, shapeHash],
         };
     }
 
     private deleteStatement(exportID: string): QueryConfig {
         return {
-            text: `DELETE FROM data_type_mappings WHERE id = $1`,
+            text: `DELETE FROM type_mappings WHERE id = $1`,
             values: [exportID],
         };
     }
 
-    private listStatement(
-        containerID: string,
-        dataSourceID: string,
-        offset: number,
-        limit: number,
-        sortBy?: string,
-        sortDesc?: boolean,
-    ): QueryConfig {
+    private listStatement(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?: string, sortDesc?: boolean): QueryConfig {
         if (sortDesc && sortBy) {
             return {
-                text: `SELECT * FROM data_type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
+                text: `SELECT * FROM type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
                 values: [containerID, offset, limit, dataSourceID],
             };
         } else if (sortBy) {
             return {
-                text: `SELECT * FROM data_type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
+                text: `SELECT * FROM type_mappings WHERE container_id = $1 AND data_source_id = $4 ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
                 values: [containerID, offset, limit, dataSourceID],
             };
         } else {
             return {
-                text: `SELECT * FROM data_type_mappings WHERE container_id = $1 AND data_source_id = $4 OFFSET $2 LIMIT $3`,
+                text: `SELECT * FROM type_mappings WHERE container_id = $1 AND data_source_id = $4 OFFSET $2 LIMIT $3`,
                 values: [containerID, offset, limit, dataSourceID],
             };
         }
@@ -256,28 +239,28 @@ export default class TypeMappingMapper extends Mapper {
     ): QueryConfig {
         if (sortDesc && sortBy) {
             return {
-                text: `SELECT * FROM data_type_mappings
+                text: `SELECT * FROM type_mappings
                        WHERE container_id = $1 AND data_source_id = $4
-                       AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations 
-                       WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
+                       AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
+                       WHERE type_mapping_transformations.type_mapping_id = type_mappings.id)
                        ORDER BY "${sortBy}" DESC OFFSET $2 LIMIT $3`,
                 values: [containerID, offset, limit, dataSourceID],
             };
         } else if (sortBy) {
             return {
-                text: `SELECT * FROM data_type_mappings
+                text: `SELECT * FROM type_mappings
                        WHERE container_id = $1 AND data_source_id = $4
-                       AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations 
-                       WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
+                       AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
+                       WHERE type_mapping_transformations.type_mapping_id = type_mappings.id)
                        ORDER BY "${sortBy}" ASC OFFSET $2 LIMIT $3`,
                 values: [containerID, offset, limit, dataSourceID],
             };
         } else {
             return {
-                text: `SELECT * FROM data_type_mappings
+                text: `SELECT * FROM type_mappings
                        WHERE container_id = $1 AND data_source_id = $4
-                         AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations 
-                         WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
+                         AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
+                         WHERE type_mapping_transformations.type_mapping_id = type_mappings.id)
                        OFFSET $2 LIMIT $3`,
                 values: [containerID, offset, limit, dataSourceID],
             };
@@ -286,55 +269,55 @@ export default class TypeMappingMapper extends Mapper {
 
     private listAllStatement(containerID: string, dataSourceID: string): QueryConfig {
         return {
-            text: `SELECT * FROM data_type_mappings WHERE container_id = $1 AND data_source_id = $2`,
+            text: `SELECT * FROM type_mappings WHERE container_id = $1 AND data_source_id = $2`,
             values: [containerID, dataSourceID],
         };
     }
 
     private listAllNoTransformationsStatement(containerID: string, dataSourceID: string): QueryConfig {
         return {
-            text: `SELECT * FROM data_type_mappings
+            text: `SELECT * FROM type_mappings
                    WHERE container_id = $1 AND data_source_id = $2
-                     AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations 
-                     WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)`,
+                     AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
+                     WHERE type_mapping_transformations.type_mapping_id = type_mappings.id)`,
             values: [containerID, dataSourceID],
         };
     }
 
     private listByDataSourceStatement(dataSourceID: string, offset: number, limit: number): QueryConfig {
         return {
-            text: `SELECT * FROM data_type_mappings WHERE data_source_id = $1 OFFSET $2 LIMIT $3`,
+            text: `SELECT * FROM type_mappings WHERE data_source_id = $1 OFFSET $2 LIMIT $3`,
             values: [dataSourceID, offset, limit],
         };
     }
 
     private setActiveStatement(typeMappingID: string): QueryConfig {
         return {
-            text: `UPDATE data_type_mappings SET active = true, modified_at = NOW() WHERE id = $1`,
+            text: `UPDATE type_mappings SET active = true, modified_at = NOW() WHERE id = $1`,
             values: [typeMappingID],
         };
     }
 
     private setInactiveStatement(typeMappingID: string): QueryConfig {
         return {
-            text: `UPDATE data_type_mappings SET active = false, modified_at = NOW() WHERE id = $1`,
+            text: `UPDATE type_mappings SET active = false, modified_at = NOW() WHERE id = $1`,
             values: [typeMappingID],
         };
     }
 
     private countStatement(dataSourceID: string): QueryConfig {
         return {
-            text: `SELECT COUNT(*) FROM data_type_mappings WHERE data_source_id = $1`,
+            text: `SELECT COUNT(*) FROM type_mappings WHERE data_source_id = $1`,
             values: [dataSourceID],
         };
     }
 
     private countNoTransformationStatement(dataSourceID: string): QueryConfig {
         return {
-            text: `SELECT COUNT(*) FROM data_type_mappings
+            text: `SELECT COUNT(*) FROM type_mappings
                    WHERE data_source_id = $1
-                     AND NOT EXISTS (SELECT 1 FROM data_type_mapping_transformations 
-                     WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id )`,
+                     AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
+                     WHERE type_mapping_transformations.type_mapping_id = type_mappings.id )`,
             values: [dataSourceID],
         };
     }

@@ -1,10 +1,10 @@
-import { Application, NextFunction, Request, Response } from 'express';
-import { authInContainer } from '../../../middleware';
+import {Application, NextFunction, Request, Response} from 'express';
+import {authInContainer} from '../../../middleware';
 import MetatypeRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
-import { plainToClass } from 'class-transformer';
+import {plainToClass} from 'class-transformer';
 import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import Result from '../../../../common_classes/result';
-import { QueryOptions } from '../../../../data_access_layer/repositories/repository';
+import {QueryOptions} from '../../../../data_access_layer/repositories/repository';
 
 const repo = new MetatypeRepository();
 
@@ -72,10 +72,6 @@ export default class MetatypeRoutes {
             repository = repository.and().description('like', `%${req.query.description}%`);
         }
 
-        if ((req.query.archived as string) !== 'true') {
-            repository = repository.and().archived('eq', false);
-        }
-
         if (req.query.count !== undefined && req.query.count === 'true') {
             repository
                 .count()
@@ -92,7 +88,7 @@ export default class MetatypeRoutes {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                     sortBy: req.query.sortBy,
-                    sortDesc: req.query.sortDesc ? req.query.sortDesc === 'true' : undefined
+                    sortDesc: req.query.sortDesc ? req.query.sortDesc === 'true' : undefined,
                 } as QueryOptions)
                 .then((result) => {
                     result.asResponse(res);

@@ -13,7 +13,6 @@ import NodeRepository from '../../../data_access_layer/repositories/data_warehou
 import EdgeRepository from '../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import Node, {IsNodes} from '../../../domain_objects/data_warehouse/data/node';
 import Edge, {IsEdges} from '../../../domain_objects/data_warehouse/data/edge';
-import GraphMapper from '../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
 import ContainerRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 import {User} from '../../../domain_objects/access_management/user';
 import {PassThrough, Readable} from 'stream';
@@ -30,7 +29,6 @@ export default class StandardDataSourceImpl implements DataSource {
     // we're dealing with mappers directly because we don't need any validation
     // or the additional processing overhead the repository could cause
     #mapper = DataSourceMapper.Instance;
-    #graphMapper = GraphMapper.Instance;
     #containerRepo = new ContainerRepository();
     #importRepo = new ImportRepository();
     #stagingRepo = new DataStagingRepository();
@@ -196,24 +194,6 @@ export default class StandardDataSourceImpl implements DataSource {
                 return Promise.resolve(Result.Failure(`unable to fetch container for data source record ${container.error?.error}`));
             }
 
-            // verify that the active graph for the container is set, if not, set it.
-            if (container.value.active_graph_id) {
-                graphID = container.value.active_graph_id;
-            } else {
-                const graph = await this.#graphMapper.Create(container.value.id!, this.DataSourceRecord.created_by!);
-                if (graph.isError) {
-                    return Promise.resolve(Result.Failure(`error creating graph ${graph.error?.error}`));
-                } else {
-                    const activeGraph = await this.#graphMapper.SetActiveForContainer(container.value.id!, graph.value.id!);
-
-                    if (activeGraph.isError || !activeGraph.value) {
-                        return Promise.resolve(Result.Failure(`error setting graph as active ${activeGraph.error?.error}`));
-                    } else {
-                        graphID = graph.value.id!;
-                    }
-                }
-            }
-
             // we limit the imports we process to ten, as this is now a job vs. never-ending loop we don't want to overwhelm
             // the worker in case of a data source being slammed with imports (e.g the Aveva adapters initial import)
             const incompleteImports = await this.#importRepo.listIncompleteWithUninsertedData(this.DataSourceRecord.id!, 10);
@@ -237,7 +217,7 @@ export default class StandardDataSourceImpl implements DataSource {
                         continue;
                     }
 
-                    const processed = await this.process(incompleteImport, graphID, importTransaction.value);
+                    const processed = await this.process(incompleteImport, importTransaction.value);
                     if (processed.isError) {
                         const set = await this.#importRepo.setStatus(
                             incompleteImport.id!,
@@ -284,7 +264,7 @@ export default class StandardDataSourceImpl implements DataSource {
         return Promise.resolve(Result.Success(true));
     }
 
-    private async process(dataImport: Import, graphID: string, transactionClient: PoolClient): Promise<Result<boolean>> {
+    private async process(dataImport: Import, transactionClient: PoolClient): Promise<Result<boolean>> {
         const stagingRepo = new DataStagingRepository();
         const mappingRepo = new TypeMappingRepository();
         const nodeRepository = new NodeRepository();
@@ -364,7 +344,7 @@ export default class StandardDataSourceImpl implements DataSource {
                 if (nodesToInsert.length > 0) {
                     nodesToInsert.forEach((node) => {
                         node.container_id = this.DataSourceRecord!.container_id!;
-                        (node.graph_id = graphID), (node.data_source_id = this.DataSourceRecord!.id!);
+                        node.data_source_id = this.DataSourceRecord!.id!;
                     });
 
                     const inserted = await nodeRepository.bulkSave(this.DataSourceRecord!.modified_by!, nodesToInsert, transactionClient);
@@ -376,7 +356,7 @@ export default class StandardDataSourceImpl implements DataSource {
                 if (edgesToInsert.length > 0) {
                     edgesToInsert.forEach((edge) => {
                         edge.container_id = this.DataSourceRecord!.container_id!;
-                        (edge.graph_id = graphID), (edge.data_source_id = this.DataSourceRecord!.id!);
+                        edge.data_source_id = this.DataSourceRecord!.id!;
                     });
 
                     const inserted = await edgeRepository.bulkSave(this.DataSourceRecord!.modified_by!, edgesToInsert, transactionClient);

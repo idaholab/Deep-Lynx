@@ -15,7 +15,7 @@
         :clearable="multiple"
         :disabled="disabled"
     >
-      <template slot="append-outer"><info-tooltip :message="$t('dataMapping.metatypeSearchHelp')"></info-tooltip> </template>
+      <template v-if="tooltip" slot="append-outer"><info-tooltip :message="tooltipHelp"></info-tooltip> </template>
     </v-combobox>
   </div>
 </template>
@@ -34,6 +34,12 @@ export default class SearchMetatypes extends Vue {
 
   @Prop({required: false, default: false})
   disabled?: boolean
+
+  @Prop({required: false, default: false})
+  tooltip!: boolean
+
+  @Prop({required: false, default: ''})
+  tooltipHelp!: string
 
   @Prop({required: false})
   metatypeID?: string | string[]

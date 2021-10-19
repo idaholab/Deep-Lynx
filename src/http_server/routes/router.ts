@@ -170,14 +170,12 @@ export class Router {
             }),
         );
 
-        // basic session storage to postgres - keep in mind that this is currently
-        // not used. It's here to facilitate future extension of the application and
-        // as an example.
         this.app.use(
             session({
                 store: new pgSession({
                     pool: PostgresAdapter.Instance.Pool, // Connection pool
-                    tableName: 'session', // Use another table-name than the default "session" one
+                    tableName: 'session',
+                    createTableIfMissing: true,
                 }),
                 secret: Config.session_secret,
                 resave: false,

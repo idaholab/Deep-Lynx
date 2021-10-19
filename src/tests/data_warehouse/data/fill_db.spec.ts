@@ -5,7 +5,6 @@ import Logger from '../../../services/logger';
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import TypeMappingMapper from '../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
-import GraphMapper from '../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
 import MetatypeRelationshipMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
 import MetatypeRelationshipPairMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
 import TypeTransformationMapper from '../../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper';
@@ -32,7 +31,6 @@ import {Readable} from 'stream';
 // someone needs some basic data
 describe('We can generate test data', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
-    let graphID: string = '';
     let typeMappingID: string = '';
     let typeMapping: TypeMapping | undefined;
     let dataSource: DataSource | undefined;
@@ -306,10 +304,6 @@ describe('We can generate test data', async () => {
         expect(userResult.isError).false;
         expect(userResult.value).not.empty;
         user = userResult.value;
-
-        const graph = await GraphMapper.Instance.Create(containerID, 'test suite');
-        expect(graph.isError).false;
-        graphID = graph.value.id!;
 
         const dStorage = DataSourceMapper.Instance;
         const relationshipMapper = MetatypeRelationshipMapper.Instance;
@@ -605,106 +599,3 @@ describe('We can generate test data', async () => {
         return Promise.resolve();
     }).timeout(120000);
 });
-
-const test_payload: {[key: string]: any}[] = [
-    {
-        car: {
-            id: 'UUID',
-            name: 'test car',
-            manufacturer: {
-                id: 'UUID',
-                name: 'Test Cars Inc',
-                location: 'Seattle, WA',
-            },
-            tire_pressures: [
-                {
-                    id: 'tire0',
-                    measurement_unit: 'PSI',
-                    measurement: 35.08,
-                    measurement_name: 'tire pressure',
-                },
-                {
-                    id: 'tire1',
-                    measurement_unit: 'PSI',
-                    measurement: 35.45,
-                    measurement_name: 'tire pressure',
-                },
-                {
-                    id: 'tire2',
-                    measurement_unit: 'PSI',
-                    measurement: 34.87,
-                    measurement_name: 'tire pressure',
-                },
-                {
-                    id: 'tire3',
-                    measurement_unit: 'PSI',
-                    measurement: 37.22,
-                    measurement_name: 'tire pressure',
-                },
-            ],
-        },
-        car_maintenance: {
-            id: 'UUID',
-            name: "test car's maintenance",
-            start_date: '1/1/2020 12:00:00',
-            average_visits_per_year: 4,
-            visit_dates: ['1/5/2020', '2/20/2020', '3/30/2020'],
-            maintenance_entries: [
-                {
-                    id: 1,
-                    check_engine_light_flag: true,
-                    type: 'oil change',
-                    parts_list: [
-                        {
-                            id: 'oil',
-                            name: 'synthetic oil',
-                            price: 45.66,
-                            quantity: 1,
-                            components: [
-                                {
-                                    id: 1,
-                                    name: 'oil',
-                                },
-                            ],
-                        },
-                        {
-                            id: 'pan',
-                            name: 'oil pan',
-                            price: 15.5,
-                            quantity: 1,
-                            components: [],
-                        },
-                    ],
-                },
-                {
-                    id: 2,
-                    check_engine_light_flag: false,
-                    type: 'tire rotation',
-                    parts_list: [
-                        {
-                            id: 'tire',
-                            name: 'all terrain tire',
-                            price: 150.99,
-                            quantity: 4,
-                            components: [],
-                        },
-                        {
-                            id: 'wrench',
-                            name: 'wrench',
-                            price: 4.99,
-                            quantity: 1,
-                            components: [],
-                        },
-                        {
-                            id: 'bolts',
-                            name: 'bolts',
-                            price: 1.99,
-                            quantity: 5,
-                            components: [],
-                        },
-                    ],
-                },
-            ],
-        },
-    },
-];

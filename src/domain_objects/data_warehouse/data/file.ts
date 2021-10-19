@@ -1,5 +1,5 @@
-import { BaseDomainClass } from '../../../common_classes/base_domain_class';
-import { IsIn, IsNumber, IsObject, IsOptional, IsString, IsUUID } from 'class-validator';
+import {BaseDomainClass} from '../../../common_classes/base_domain_class';
+import {IsIn, IsNumber, IsObject, IsOptional, IsString} from 'class-validator';
 
 /*
     File represents a file record in the Deep Lynx database and the various
@@ -7,13 +7,12 @@ import { IsIn, IsNumber, IsObject, IsOptional, IsString, IsUUID } from 'class-va
  */
 export default class File extends BaseDomainClass {
     @IsOptional()
-    @IsUUID()
     id?: string;
 
-    @IsUUID()
+    @IsString()
     container_id?: string;
 
-    @IsUUID()
+    @IsString()
     @IsOptional()
     data_source_id?: string;
 

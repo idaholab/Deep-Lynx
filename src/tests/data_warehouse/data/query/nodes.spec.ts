@@ -4,7 +4,6 @@ import MetatypeKeyMapper from '../../../../data_access_layer/mappers/data_wareho
 import MetatypeMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import faker from 'faker';
 import {expect} from 'chai';
-import GraphMapper from '../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
 import NodeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import {graphql} from 'graphql';
@@ -45,13 +44,6 @@ describe('Using a GraphQL Query on nodes we', async () => {
         const nodeStorage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphMapper.Instance;
-
-        // SETUP
-        const graph = await gStorage.Create(containerID, 'test suite');
-
-        expect(graph.isError, graph.error?.error).false;
-        expect(graph.value).not.empty;
 
         const metatypeResult = await mMapper.Create(
             'test suite',
@@ -72,7 +64,6 @@ describe('Using a GraphQL Query on nodes we', async () => {
         expect(keys.isError).false;
 
         const mixed = new Node({
-            graph_id: graph.value.id!,
             container_id: containerID,
             metatype: metatypeResult.value.id!,
             properties: payload,
@@ -102,10 +93,8 @@ describe('Using a GraphQL Query on nodes we', async () => {
                 container_id
                 original_data_id
                 data_source_id
-                archived
                 created_at
                 modified_at
-                graph
                 import_data_id
                 incoming_edges {id}
                 outgoing_edges {id}
@@ -133,10 +122,8 @@ describe('Using a GraphQL Query on nodes we', async () => {
             expect(n.container_id).not.undefined;
             expect(n.original_data_id).not.undefined;
             expect(n.data_source_id).not.undefined;
-            expect(n.archived).not.undefined;
             expect(n.created_at).not.undefined;
             expect(n.modified_at).not.undefined;
-            expect(n.graph).not.undefined;
 
             expect(Array.isArray(n.incoming_edges)).true;
             expect(Array.isArray(n.outgoing_edges)).true;

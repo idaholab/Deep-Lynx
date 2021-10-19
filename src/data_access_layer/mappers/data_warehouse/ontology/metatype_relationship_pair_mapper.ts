@@ -1,8 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import { PoolClient, QueryConfig } from 'pg';
+import {PoolClient, QueryConfig} from 'pg';
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
-import uuid from 'uuid';
 
 const format = require('pg-format');
 const resultClass = MetatypeRelationshipPair;
@@ -32,7 +31,7 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
     public async Create(userID: string, input: MetatypeRelationshipPair, transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair>> {
         const r = await super.run(this.createStatement(userID, input), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -42,18 +41,18 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
     public async BulkCreate(userID: string, input: MetatypeRelationshipPair[], transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair[]>> {
         return super.run(this.createStatement(userID, ...input), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
     public async Retrieve(id: string): Promise<Result<MetatypeRelationshipPair>> {
-        return super.retrieve(this.retrieveStatement(id), { resultClass });
+        return super.retrieve(this.retrieveStatement(id), {resultClass});
     }
 
     public async Update(userID: string, p: MetatypeRelationshipPair, transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair>> {
         const r = await super.run(this.fullUpdateStatement(userID, p), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -63,7 +62,7 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
     public async BulkUpdate(userID: string, p: MetatypeRelationshipPair[], transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair[]>> {
         return super.run(this.fullUpdateStatement(userID, ...p), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
@@ -81,7 +80,7 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
     // queries more easily.
     private createStatement(userID: string, ...pairs: MetatypeRelationshipPair[]): string {
         const text = `INSERT INTO
-                            metatype_relationship_pairs(id,
+                            metatype_relationship_pairs(
                                                         name,
                                                         description,
                                                         relationship_id,
@@ -93,7 +92,6 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                     VALUES %L RETURNING *`;
 
         const values = pairs.map((pair) => [
-            uuid.v4(),
             pair.name,
             pair.description,
             pair.relationship!.id,
@@ -102,7 +100,7 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
             pair.relationship_type,
             pair.container_id,
             userID,
-            userID
+            userID,
         ]);
 
         return format(text, values);
@@ -113,10 +111,10 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                             name = u.name,
                             description = u.description,
                             relationship_type = u.relationship_type,
-                            relationship_id = u.relationship_id::uuid,
-                            origin_metatype_id = u.origin_metatype_id::uuid,
-                            destination_metatype_id = u.destination_metatype_id::uuid,
-                            container_id = u.container_id::uuid,
+                            relationship_id = u.relationship_id::bigint,
+                            origin_metatype_id = u.origin_metatype_id::bigint,
+                            destination_metatype_id = u.destination_metatype_id::bigint,
+                            container_id = u.container_id::bigint,
                             modified_by = u.modified_by,
                             modified_at = NOW()
                         FROM(VALUES %L) as u(id,
@@ -128,7 +126,7 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                                             destination_metatype_id,
                                             container_id,
                                             modified_by)
-                        WHERE u.id::uuid = p.id RETURNING p.*`;
+                        WHERE u.id::bigint= p.id RETURNING p.*`;
         const values = pairs.map((p) => [
             p.id,
             p.name,
@@ -138,7 +136,7 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
             p.originMetatype!.id,
             p.destinationMetatype!.id,
             p.container_id,
-            userID
+            userID,
         ]);
 
         return format(text, values);
@@ -146,22 +144,22 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
 
     private archiveStatement(pairID: string, userID: string): QueryConfig {
         return {
-            text: `UPDATE metatype_relationship_pairs SET archived = true, modified_by = $2  WHERE id = $1`,
-            values: [pairID, userID]
+            text: `UPDATE metatype_relationship_pairs SET deleted_at = NOW(), modified_by = $2  WHERE id = $1`,
+            values: [pairID, userID],
         };
     }
 
     private deleteStatement(pairID: string): QueryConfig {
         return {
             text: `DELETE FROM metatype_relationship_pairs WHERE id = $1`,
-            values: [pairID]
+            values: [pairID],
         };
     }
 
     private retrieveStatement(pairID: string): QueryConfig {
         return {
-            text: `SELECT * FROM metatype_relationship_pairs WHERE id = $1 AND NOT ARCHIVED `,
-            values: [pairID]
+            text: `SELECT * FROM metatype_relationship_pairs WHERE id = $1 AND deleted_at IS NULL`,
+            values: [pairID],
         };
     }
 }

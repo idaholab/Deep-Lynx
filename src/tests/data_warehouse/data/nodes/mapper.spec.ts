@@ -3,8 +3,7 @@ import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/p
 import MetatypeKeyMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
 import MetatypeMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import faker from 'faker';
-import { expect } from 'chai';
-import GraphMapper from '../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
+import {expect} from 'chai';
 import NodeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
@@ -31,8 +30,8 @@ describe('A Node Mapper', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -50,21 +49,15 @@ describe('A Node Mapper', async () => {
         const storage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphMapper.Instance;
 
         // SETUP
-        const graph = await gStorage.Create(containerID, 'test suite');
-
-        expect(graph.isError, graph.error?.error).false;
-        expect(graph.value).not.empty;
-
         const metatype = await mMapper.Create(
             'test suite',
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -78,37 +71,29 @@ describe('A Node Mapper', async () => {
 
         const mixed = new Node({
             container_id: containerID,
-            graph_id: graph.value.id,
             metatype: metatype.value.id!,
-            properties: payload
+            properties: payload,
         });
 
         const node = await storage.CreateOrUpdateByCompositeID('test suite', mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        await mMapper.Delete(metatype.value.id!);
-        return gStorage.Delete(graph.value.id!);
+        return mMapper.Delete(metatype.value.id!);
     });
 
     it('can update mixed node types', async () => {
         const storage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphMapper.Instance;
 
         // SETUP
-        const graph = await gStorage.Create(containerID, 'test suite');
-
-        expect(graph.isError, graph.error?.error).false;
-        expect(graph.value).not.empty;
-
         const metatype = await mMapper.Create(
             'test suite',
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -122,9 +107,8 @@ describe('A Node Mapper', async () => {
 
         const mixed = new Node({
             container_id: containerID,
-            graph_id: graph.value.id,
             metatype: metatype.value.id!,
-            properties: payload
+            properties: payload,
         });
 
         const node = await storage.CreateOrUpdateByCompositeID('test suite', mixed);
@@ -136,15 +120,13 @@ describe('A Node Mapper', async () => {
         const updatedNode = await storage.Update('test suite', node.value);
         expect(updatedNode.isError, updatedNode.error?.error).false;
 
-        await mMapper.Delete(metatype.value.id!);
-        await gStorage.Delete(graph.value.id!);
+        return mMapper.Delete(metatype.value.id!);
     });
 
     it('can retrieve by original ID', async () => {
         const storage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphMapper.Instance;
         const dStorage = DataSourceMapper.Instance;
 
         const dataSource = await dStorage.Create(
@@ -154,23 +136,18 @@ describe('A Node Mapper', async () => {
                 name: 'Test Data Source',
                 active: true,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         // SETUP
-        const graph = await gStorage.Create(containerID, 'test suite');
-
-        expect(graph.isError, graph.error?.error).false;
-        expect(graph.value).not.empty;
-
         const metatype = await mMapper.Create(
             'test suite',
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -184,29 +161,26 @@ describe('A Node Mapper', async () => {
 
         const mixed = new Node({
             data_source_id: dataSource.value.id!,
-            composite_original_id: 'test',
             container_id: containerID,
-            graph_id: graph.value.id,
             metatype: metatype.value.id!,
-            properties: payload
+            original_data_id: 'test',
+            properties: payload,
         });
 
         const node = await storage.CreateOrUpdateByCompositeID('test suite', mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        const fetchedNode = await storage.RetrieveByCompositeOriginalID('test', dataSource.value.id!);
+        const fetchedNode = await storage.RetrieveByCompositeOriginalID('test', dataSource.value.id!, metatype.value.id!);
         expect(fetchedNode.isError).false;
         expect(fetchedNode.value.data_source_id).equals(dataSource.value.id!);
 
-        await mMapper.Delete(metatype.value.id!);
-        return gStorage.Delete(graph.value.id!);
+        return mMapper.Delete(metatype.value.id!);
     });
 
     it('can update by original ID', async () => {
         const storage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphMapper.Instance;
         const dStorage = DataSourceMapper.Instance;
 
         const dataSource = await dStorage.Create(
@@ -216,23 +190,18 @@ describe('A Node Mapper', async () => {
                 name: 'Test Data Source',
                 active: true,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         // SETUP
-        const graph = await gStorage.Create(containerID, 'test suite');
-
-        expect(graph.isError, graph.error?.error).false;
-        expect(graph.value).not.empty;
-
         const metatype = await mMapper.Create(
             'test suite',
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -248,9 +217,8 @@ describe('A Node Mapper', async () => {
             data_source_id: dataSource.value.id!,
             original_data_id: 'test',
             container_id: containerID,
-            graph_id: graph.value.id,
             metatype: metatype.value.id!,
-            properties: payload
+            properties: payload,
         });
 
         const node = await storage.CreateOrUpdateByCompositeID('test suite', mixed);
@@ -262,29 +230,22 @@ describe('A Node Mapper', async () => {
         const updatedNode = await storage.CreateOrUpdateByCompositeID('test suite', node.value);
         expect(updatedNode.isError).false;
 
-        await mMapper.Delete(metatype.value.id!);
-        return gStorage.Delete(graph.value.id!);
+        return mMapper.Delete(metatype.value.id!);
     });
 
     it('can save with default values', async () => {
         const storage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphMapper.Instance;
 
         // SETUP
-        const graph = await gStorage.Create(containerID, 'test suite');
-
-        expect(graph.isError, graph.error?.error).false;
-        expect(graph.value).not.empty;
-
         const metatype = await mMapper.Create(
             'test suite',
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -298,34 +259,32 @@ describe('A Node Mapper', async () => {
 
         const mixed = new Node({
             container_id: containerID,
-            graph_id: graph.value.id,
             metatype: metatype.value.id!,
-            properties: payload
+            properties: payload,
         });
 
         const node = await storage.CreateOrUpdateByCompositeID('test suite', mixed);
         expect(node.isError, metatype.error?.error).false;
 
-        await mMapper.Delete(metatype.value.id!);
-        return gStorage.Delete(graph.value.id!);
+        return mMapper.Delete(metatype.value.id!);
     });
 });
 
-const payload: { [key: string]: any } = {
+const payload: {[key: string]: any} = {
     flower_name: 'Daisy',
     color: 'yellow',
-    notRequired: 1
+    notRequired: 1,
 };
 
-const updatedPayload: { [key: string]: any } = {
+const updatedPayload: {[key: string]: any} = {
     flower_name: 'Violet',
     color: 'blue',
-    notRequired: 1
+    notRequired: 1,
 };
 
-const malformed_payload: { [key: string]: any } = {
+const malformed_payload: {[key: string]: any} = {
     flower: 'Daisy',
-    notRequired: 1
+    notRequired: 1,
 };
 
 export const test_keys: MetatypeKey[] = [
@@ -334,7 +293,7 @@ export const test_keys: MetatypeKey[] = [
         description: 'flower name',
         required: true,
         property_name: 'flower_name',
-        data_type: 'string'
+        data_type: 'string',
     }),
     new MetatypeKey({
         name: 'Test2',
@@ -342,15 +301,15 @@ export const test_keys: MetatypeKey[] = [
         required: true,
         property_name: 'color',
         data_type: 'enumeration',
-        options: ['yellow', 'blue']
+        options: ['yellow', 'blue'],
     }),
     new MetatypeKey({
         name: 'Test Not Required',
         description: 'not required',
         required: false,
         property_name: 'notRequired',
-        data_type: 'number'
-    })
+        data_type: 'number',
+    }),
 ];
 
 const test_key_defaultValue: MetatypeKey[] = [
@@ -359,7 +318,7 @@ const test_key_defaultValue: MetatypeKey[] = [
         property_name: 'flower_name',
         required: true,
         description: 'flower name',
-        data_type: 'string'
+        data_type: 'string',
     }),
     new MetatypeKey({
         name: 'Test 2',
@@ -367,7 +326,7 @@ const test_key_defaultValue: MetatypeKey[] = [
         required: true,
         description: 'color of flower allowed',
         data_type: 'enumeration',
-        options: ['yellow', 'blue']
+        options: ['yellow', 'blue'],
     }),
     new MetatypeKey({
         name: 'Test Default Value Number',
@@ -375,7 +334,7 @@ const test_key_defaultValue: MetatypeKey[] = [
         required: true,
         description: 'not required',
         data_type: 'number',
-        default_value: 1
+        default_value: 1,
     }),
     new MetatypeKey({
         name: 'Test Default Value String',
@@ -383,7 +342,7 @@ const test_key_defaultValue: MetatypeKey[] = [
         required: true,
         description: 'not required',
         data_type: 'string',
-        default_value: 'test'
+        default_value: 'test',
     }),
     new MetatypeKey({
         name: 'Test Default Value Enum',
@@ -392,7 +351,7 @@ const test_key_defaultValue: MetatypeKey[] = [
         description: 'not required',
         data_type: 'enumeration',
         default_value: 'yellow',
-        options: ['yellow', 'blue']
+        options: ['yellow', 'blue'],
     }),
     new MetatypeKey({
         name: 'Test Default Value Boolean',
@@ -400,8 +359,8 @@ const test_key_defaultValue: MetatypeKey[] = [
         required: true,
         description: 'not required',
         data_type: 'boolean',
-        default_value: true
-    })
+        default_value: true,
+    }),
 ];
 
 export const single_test_key: MetatypeKey = new MetatypeKey({
@@ -409,5 +368,5 @@ export const single_test_key: MetatypeKey = new MetatypeKey({
     description: 'not required',
     required: false,
     property_name: 'notRequired',
-    data_type: 'number'
+    data_type: 'number',
 });

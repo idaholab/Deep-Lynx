@@ -16,6 +16,9 @@
         <span v-if="data.item.archived" class="text--disabled">{{data.item.name}} - <i class="text-caption">{{$t('dataSources.archived')}}</i></span>
         <span v-else>{{data.item.name}}</span>
       </template>
+
+
+      <template v-if="tooltip" slot="append-outer"><info-tooltip :message="tooltipHelp"></info-tooltip> </template>
     </v-combobox>
   </div>
 </template>
@@ -31,6 +34,12 @@ export default class SelectDataSource extends Vue {
 
   @Prop({required: false, default: false})
   showArchived!: boolean
+
+  @Prop({required: false, default: false})
+  tooltip!: boolean
+
+  @Prop({required: false, default: ''})
+  tooltipHelp!: string
 
   @Prop({required: false, default: false})
   multiple!: boolean

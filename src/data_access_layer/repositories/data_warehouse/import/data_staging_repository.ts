@@ -4,8 +4,6 @@ import DataStagingMapper from '../../../mappers/data_warehouse/import/data_stagi
 import Result from '../../../../common_classes/result';
 import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
-import Edge from '../../../../domain_objects/data_warehouse/data/edge';
-import Node from '../../../../domain_objects/data_warehouse/data/node';
 import File from '../../../../domain_objects/data_warehouse/data/file';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 
@@ -29,7 +27,7 @@ export default class DataStagingRepository extends Repository implements Reposit
         return Promise.resolve(Result.Failure(`data record has no id`));
     }
 
-    findByID(id: number, transaction?: PoolClient): Promise<Result<DataStaging>> {
+    findByID(id: string, transaction?: PoolClient): Promise<Result<DataStaging>> {
         return this.#mapper.Retrieve(id, transaction);
     }
 
@@ -156,12 +154,12 @@ export default class DataStagingRepository extends Repository implements Reposit
     }
 
     // completely override the error set
-    setErrors(id: number, errors: string[], transaction?: PoolClient): Promise<Result<boolean>> {
+    setErrors(id: string, errors: string[], transaction?: PoolClient): Promise<Result<boolean>> {
         return this.#mapper.SetErrors(id, errors, transaction);
     }
 
     // add an error to an existing error set
-    addError(id: number, errors: string, transaction?: PoolClient): Promise<Result<boolean>> {
+    addError(id: string, errors: string, transaction?: PoolClient): Promise<Result<boolean>> {
         return this.#mapper.AddError(id, errors, transaction);
     }
 

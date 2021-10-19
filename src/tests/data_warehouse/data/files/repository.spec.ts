@@ -1,12 +1,11 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../../../services/logger';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import FileMapper from '../../../../data_access_layer/mappers/data_warehouse/data/file_mapper';
 import Container from '../../../../domain_objects/data_warehouse/ontology/container';
-import { User } from '../../../../domain_objects/access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
 import File from '../../../../domain_objects/data_warehouse/data/file';
 import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
@@ -34,8 +33,8 @@ describe('A File Repository can', async () => {
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(userResult.isError).false;
@@ -46,8 +45,8 @@ describe('A File Repository can', async () => {
             user.id!,
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -61,8 +60,8 @@ describe('A File Repository can', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -89,7 +88,7 @@ describe('A File Repository can', async () => {
             adapter_file_path: faker.name.findName(),
             adapter: 'filesystem',
             data_source_id: dataSourceID,
-            container_id: containerID
+            container_id: containerID,
         });
 
         let saved = await fileRepo.save(file, user);
