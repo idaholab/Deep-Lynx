@@ -1,1 +1,0 @@
-ALTER TABLE nodes ALTER COLUMN metatype_name DROP NOT NULL;

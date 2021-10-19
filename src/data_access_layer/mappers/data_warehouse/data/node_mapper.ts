@@ -2,7 +2,6 @@ import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import Node from '../../../../domain_objects/data_warehouse/data/node';
-import uuid from 'uuid';
 
 const format = require('pg-format');
 const resultClass = Node;
@@ -18,6 +17,7 @@ const resultClass = Node;
 */
 export default class NodeMapper extends Mapper {
     public static tableName = 'nodes';
+    public static viewName = 'current_nodes';
 
     private static instance: NodeMapper;
 
@@ -75,14 +75,11 @@ export default class NodeMapper extends Mapper {
         return super.runStatement(this.removeFile(id, fileID));
     }
 
-    public Delete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
-        return super.runStatement(this.deleteStatement(id), {transaction});
-    }
+    public async Delete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
+        const edgesDeleted = await super.runStatement(this.deleteEdgesStatement(id), {transaction});
+        if (edgesDeleted.isError) return Promise.resolve(Result.Pass(edgesDeleted));
 
-    public Archive(userID: string, id: string, transaction?: PoolClient): Promise<Result<boolean>> {
-        return super.runStatement(this.archiveStatement(userID, id), {
-            transaction,
-        });
+        return super.runStatement(this.deleteStatement(id), {transaction});
     }
 
     public async Retrieve(id: string, transaction?: PoolClient): Promise<Result<Node>> {
@@ -92,8 +89,8 @@ export default class NodeMapper extends Mapper {
         });
     }
 
-    public async RetrieveByCompositeOriginalID(originalID: string, dataSourceID: string, transaction?: PoolClient): Promise<Result<Node>> {
-        return super.retrieve(this.retrieveByCompositeOriginalIDStatement(dataSourceID, originalID), {transaction, resultClass});
+    public async RetrieveByCompositeOriginalID(originalID: string, dataSourceID: string, metatypeID: string, transaction?: PoolClient): Promise<Result<Node>> {
+        return super.retrieve(this.retrieveByCompositeOriginalIDStatement(dataSourceID, metatypeID, originalID), {transaction, resultClass});
     }
 
     public async DomainRetrieve(id: string, containerID: string, transaction?: PoolClient): Promise<Result<Node>> {
@@ -109,50 +106,27 @@ export default class NodeMapper extends Mapper {
     // queries more easily.
     private createOrUpdateStatement(userID: string, ...nodes: Node[]): string {
         const text = `INSERT INTO nodes(
-                  id,
                   container_id,
                   metatype_id,
-                  graph_id,
                   properties,
                   original_data_id,
                   data_source_id,
                   type_mapping_transformation_id,
                   import_data_id,
                   data_staging_id,
-                  composite_original_id,
                   metadata,
                   created_by,
-                  modified_by) VALUES %L
-            ON CONFLICT (composite_original_id, data_source_id)
-            DO
-            UPDATE SET
-                container_id = excluded.container_id,
-                metatype_id = excluded.metatype_id,
-                graph_id = excluded.graph_id,
-                properties = excluded.properties,
-                original_data_id = excluded.original_data_id,
-                data_source_id = excluded.data_source_id,
-                type_mapping_transformation_id = excluded.type_mapping_transformation_id,
-                import_data_id = excluded.import_data_id,
-                data_staging_id = excluded.data_staging_id,
-                composite_original_id = excluded.composite_original_id,
-                modified_by = excluded.modified_by,
-                metadata = excluded.metadata,
-                modified_at = NOW()
-            RETURNING *`;
+                  modified_by) VALUES %L RETURNING *`;
 
         const values = nodes.map((n) => [
-            uuid.v4(),
             n.container_id,
             n.metatype!.id,
-            n.graph_id,
             JSON.stringify(n.properties),
             n.original_data_id,
             n.data_source_id,
             n.type_mapping_transformation_id,
             n.import_data_id,
             n.data_staging_id,
-            n.composite_original_id,
             JSON.stringify(n.metadata),
             userID,
             userID,
@@ -162,48 +136,30 @@ export default class NodeMapper extends Mapper {
     }
 
     private fullUpdateStatement(userID: string, ...nodes: Node[]): string {
-        const text = `UPDATE nodes AS n SET
-                container_id = u.container_id::uuid,
-                metatype_id = u.metatype_id::uuid,
-                graph_id = u.graph_id::uuid,
-                properties = u.properties::jsonb,
-                original_data_id = u.original_data_id,
-                data_source_id = u.data_source_id::uuid,
-                type_mapping_transformation_id = u.type_mapping_transformation_id::uuid,
-                import_data_id = u.import_data_id::uuid,
-                data_staging_id = u.data_staging_id::int4,
-                composite_original_id = u.composite_original_id,
-                metadata = u.metadata::jsonb,
-                modified_by = u.modified_by,
-                modified_at = NOW()
-                FROM(VALUES %L) AS u(
-                        id,
-                        container_id,
-                        metatype_id,
-                        graph_id,
-                        properties,
-                        original_data_id,
-                        data_source_id,
-                        type_mapping_transformation_id,
-                        import_data_id,
-                        data_staging_id,
-                        composite_original_id,
-                        metadata,
-                        modified_by)
-                WHERE u.id::uuid = n.id RETURNING n.*`;
+        const text = `INSERT INTO nodes(
+            id,
+            container_id,
+            metatype_id,
+            properties,
+            original_data_id,
+            data_source_id,
+            type_mapping_transformation_id,
+            import_data_id,
+            data_staging_id,
+            metadata,
+            created_by,
+            modified_by) VALUES %L RETURNING *`;
 
         const values = nodes.map((n) => [
             n.id,
             n.container_id,
             n.metatype!.id,
-            n.graph_id,
             JSON.stringify(n.properties),
             n.original_data_id,
             n.data_source_id,
             n.type_mapping_transformation_id,
             n.import_data_id,
             n.data_staging_id,
-            n.composite_original_id,
             JSON.stringify(n.metadata),
             userID,
             userID,
@@ -214,37 +170,37 @@ export default class NodeMapper extends Mapper {
 
     private retrieveStatement(nodeID: string): QueryConfig {
         return {
-            text: `SELECT * FROM nodes WHERE id = $1 AND NOT archived`,
+            text: `SELECT * FROM current_nodes WHERE id = $1`,
             values: [nodeID],
         };
     }
 
     private domainRetrieveStatement(nodeID: string, containerID: string): QueryConfig {
         return {
-            text: `SELECT * FROM nodes WHERE id = $1 AND container_id = $2 AND NOT archived`,
+            text: `SELECT * FROM current_nodes WHERE id = $1 AND container_id = $2`,
             values: [nodeID, containerID],
         };
     }
 
     // because the data source and data are so tightly intertwined, you must include both in order to pull a single
     // piece of data by original id
-    private retrieveByCompositeOriginalIDStatement(dataSourceID: string, originalID: string): QueryConfig {
+    private retrieveByCompositeOriginalIDStatement(dataSourceID: string, metatypeID: string, originalID: string): QueryConfig {
         return {
-            text: `SELECT * FROM nodes WHERE composite_original_id = $1 AND data_source_id = $2 AND NOT archived`,
-            values: [originalID, dataSourceID],
-        };
-    }
-
-    private archiveStatement(userID: string, nodeID: string): QueryConfig {
-        return {
-            text: `UPDATE nodes SET archived = true, modified_by = $2, modified_at = NOW()  WHERE id = $1`,
-            values: [nodeID, userID],
+            text: `SELECT * FROM current_nodes WHERE original_data_id = $1 AND data_source_id = $2 AND metatype_id = $3`,
+            values: [originalID, dataSourceID, metatypeID],
         };
     }
 
     private deleteStatement(nodeID: string): QueryConfig {
         return {
-            text: `DELETE FROM nodes WHERE id = $1`,
+            text: `UPDATE nodes SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL`,
+            values: [nodeID],
+        };
+    }
+
+    private deleteEdgesStatement(nodeID: string): QueryConfig {
+        return {
+            text: `UPDATE edges SET deleted_at = NOW() WHERE origin_id = $1 OR destination_id = $1 AND deleted_at IS NULL`,
             values: [nodeID],
         };
     }

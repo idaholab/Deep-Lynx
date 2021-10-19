@@ -1,7 +1,6 @@
 import Mapper from '../../mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient, QueryConfig} from 'pg';
-import uuid from 'uuid';
 import {QueueProcessor} from '../../../../domain_objects/event_system/processor';
 import Event from '../../../../domain_objects/event_system/event';
 import Import from '../../../../domain_objects/data_warehouse/import/import';
@@ -123,12 +122,11 @@ export default class ImportMapper extends Mapper {
 
     private createStatement(userID: string, ...imports: Import[]): string {
         const text = `INSERT INTO imports(
-            id,
             data_source_id,
             reference,
             created_by,
             modified_by) VALUES %L RETURNING *`;
-        const values = imports.map((i) => [uuid.v4(), i.data_source_id, i.reference, userID, userID]);
+        const values = imports.map((i) => [i.data_source_id, i.reference, userID, userID]);
 
         return format(text, values);
     }

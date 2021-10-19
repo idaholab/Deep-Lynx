@@ -11,6 +11,9 @@ import {Exclude} from 'class-transformer';
  OAuth2 compliant identity service.
 */
 export class OAuthApplication extends BaseDomainClass {
+    // one of the few places we kept our id field as an uuid, we did it for display reasons
+    // and since we don't anticipate thousands of client applications, we don't care about
+    // performance
     @IsOptional()
     @IsUUID()
     id?: string;
@@ -21,7 +24,7 @@ export class OAuthApplication extends BaseDomainClass {
     @IsString()
     description = '';
 
-    @IsUUID()
+    @IsString()
     owner_id?: string;
 
     @IsString()
@@ -82,7 +85,7 @@ export class OAuthRequest extends BaseDomainClass {
     @IsIn(['all'])
     scope = 'all';
 
-    @IsUUID()
+    @IsString()
     user_id?: string;
 
     @IsOptional()

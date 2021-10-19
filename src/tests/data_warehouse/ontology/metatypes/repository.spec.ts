@@ -1,5 +1,5 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../../../services/logger';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
@@ -8,7 +8,7 @@ import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatyp
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
 import MetatypeRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
-import { User } from '../../../../domain_objects/access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 
 describe('A Metatype Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -26,8 +26,8 @@ describe('A Metatype Repository', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -42,8 +42,8 @@ describe('A Metatype Repository', async () => {
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(userResult.isError).false;
@@ -63,7 +63,7 @@ describe('A Metatype Repository', async () => {
         const metatype = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         let results = await repository.save(metatype, user);
@@ -90,7 +90,7 @@ describe('A Metatype Repository', async () => {
         const metatype = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const keys = [
             new MetatypeKey({
@@ -98,15 +98,15 @@ describe('A Metatype Repository', async () => {
                 description: faker.random.alphaNumeric(),
                 required: true,
                 property_name: 'test_property',
-                data_type: 'string'
+                data_type: 'string',
             }),
             new MetatypeKey({
                 name: faker.name.findName(),
                 description: faker.random.alphaNumeric(),
                 required: true,
-                property_name: 'test_property',
-                data_type: 'string'
-            })
+                property_name: 'test_property_2',
+                data_type: 'string',
+            }),
         ];
         metatype.addKey(...keys);
 
@@ -151,12 +151,12 @@ describe('A Metatype Repository', async () => {
         const metatype1 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const metatype2 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         let results = await repository.bulkSave(user, [metatype1, metatype2]);
@@ -191,12 +191,12 @@ describe('A Metatype Repository', async () => {
         const metatype1 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const metatype2 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         // we'll use the same key for ease of use
@@ -205,7 +205,7 @@ describe('A Metatype Repository', async () => {
             description: faker.random.alphaNumeric(),
             required: true,
             property_name: 'test_property',
-            data_type: 'string'
+            data_type: 'string',
         });
         metatype1.addKey(key);
         metatype2.addKey(key);
@@ -254,7 +254,7 @@ describe('A Metatype Repository', async () => {
         const metatype = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         const results = await repository.save(metatype, user);
@@ -273,7 +273,7 @@ describe('A Metatype Repository', async () => {
         const metatype = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         const results = await repository.save(metatype, user);
@@ -291,19 +291,19 @@ describe('A Metatype Repository', async () => {
         const metatype1 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const metatype2 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         const updated = await repository.bulkSave(user, [metatype1, metatype2]);
         expect(updated.isError).false;
 
         // simple list first
-        let results = await repository.list(false, { limit: 1, offset: 0 });
+        let results = await repository.list(false, {limit: 1, offset: 0});
         expect(results.isError).false;
         expect(results).not.empty;
         expect(results.value.length).eq(1);

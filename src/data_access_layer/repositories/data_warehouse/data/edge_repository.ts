@@ -26,15 +26,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     #pairRepo: MetatypeRelationshipPairRepository = new MetatypeRelationshipPairRepository();
 
     constructor() {
-        super(EdgeMapper.tableName);
-
-        // we must rewrite the initial query to accept LEFT JOINS so that we can
-        // get additional information for edges without having to run additional
-        // queries
-        this._rawQuery = [];
-        this._rawQuery.push(`SELECT edges.* FROM ${EdgeMapper.tableName}`);
-        this._rawQuery.push(`LEFT JOIN metatype_relationship_pairs ON edges.relationship_pair_id = metatype_relationship_pairs.id`);
-        this._rawQuery.push(`LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id`);
+        super(EdgeMapper.viewName);
     }
 
     delete(e: Edge): Promise<Result<boolean>> {
@@ -43,25 +35,6 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         }
 
         return Promise.resolve(Result.Failure('node must have id'));
-    }
-
-    archive(user: User, e: Edge): Promise<Result<boolean>> {
-        if (e.id) {
-            return this.#mapper.Archive(user.id!, e.id);
-        }
-
-        return Promise.resolve(Result.Failure('node must have id'));
-    }
-
-    async findByCompositeID(compositeID: string, dataSourceID: string, transaction?: PoolClient): Promise<Result<Edge>> {
-        const edge = await this.#mapper.RetrieveByCompositeID(compositeID, dataSourceID, transaction);
-        if (!edge.isError) {
-            const pair = await this.#pairRepo.findByID(edge.value.relationship_pair_id);
-            if (pair.isError) Logger.error(`unable to load node's metatype`);
-            else Object.assign(edge.value.metatypeRelationshipPair, pair.value);
-        }
-
-        return Promise.resolve(edge);
     }
 
     async findByID(id: string, transaction?: PoolClient): Promise<Result<Edge>> {
@@ -116,8 +89,13 @@ export default class EdgeRepository extends Repository implements RepositoryInte
 
             Object.assign(e, updated.value);
         } else {
-            // the create statement will catch if the edge already exists with same composite id
-            const created = await this.#mapper.CreateOrUpdateByCompositeID(user.id!, e, transaction);
+            const validRelationship = await this.validateRelationship(e, transaction);
+            if (validRelationship.isError || !validRelationship.value) {
+                if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
+                return Promise.resolve(Result.Failure(`invalid relationship for edge ${validRelationship.error?.error}`));
+            }
+
+            const created = await this.#mapper.Create(user.id!, e, transaction);
             if (created.isError) {
                 if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
                 return Promise.resolve(Result.Failure(`unable to create edge ${created.error?.error}`));
@@ -225,7 +203,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         }
 
         if (toCreate.length > 0) {
-            const saved = await this.#mapper.BulkCreateOrUpdateByCompositeID(user instanceof User ? user.id! : user, edges, transaction);
+            const saved = await this.#mapper.BulkCreate(user instanceof User ? user.id! : user, edges, transaction);
             if (saved.isError) {
                 if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
                 return Promise.resolve(Result.Pass(saved));
@@ -252,47 +230,50 @@ export default class EdgeRepository extends Repository implements RepositoryInte
      would violate a one:many or one:one clause - because this is validation only, we don't
      attempt to rollback a transaction if it exists - but we do have to use it
      as the nodes we're validating against might have been inserted earlier as part
-     of the transaction
+     of the transaction - NOTE: if an edge is created using the original data id, the most this
+     function will do is test to make sure all fields required to make a link exist. If those exist
+     and a matching node is not found, this function WILL NOT FAIL - and an edge-linker job will
+     attempt to make the connection later
      */
     private async validateRelationship(e: Edge, transaction?: PoolClient): Promise<Result<boolean>> {
         let origin: Node;
-        if (e.origin_node_id) {
-            const request = await this.#nodeRepo.findByID(e.origin_node_id, transaction);
+        if (e.origin_id) {
+            const request = await this.#nodeRepo.findByID(e.origin_id, transaction);
             if (request.isError) {
                 return Promise.resolve(Result.Failure('origin node not found'));
             }
 
             origin = request.value;
-        } else if (e.origin_node_composite_original_id && e.data_source_id) {
-            const request = await this.#nodeRepo.findByCompositeID(e.origin_node_composite_original_id, e.data_source_id, transaction);
+        } else if (e.origin_original_id && e.data_source_id && e.origin_metatype_id) {
+            const request = await this.#nodeRepo.findByCompositeID(e.origin_original_id, e.data_source_id, e.origin_metatype_id, transaction);
             if (request.isError) {
                 return Promise.resolve(Result.Failure('origin node not found'));
             }
 
             origin = request.value;
-            e.origin_node_id = request.value.id!;
+            e.origin_id = request.value.id!;
         } else {
-            return Promise.resolve(Result.Failure('no origin node id provided'));
+            return Promise.resolve(Result.Failure('no origin node id or original node id with metatype and data source provided'));
         }
 
         let destination: Node;
-        if (e.destination_node_id) {
-            const request = await this.#nodeRepo.findByID(e.destination_node_id, transaction);
+        if (e.destination_id) {
+            const request = await this.#nodeRepo.findByID(e.destination_id, transaction);
             if (request.isError) {
                 return Promise.resolve(Result.Failure('destination node not found'));
             }
 
             destination = request.value;
-        } else if (e.destination_node_composite_original_id && e.data_source_id) {
-            const request = await this.#nodeRepo.findByCompositeID(e.destination_node_composite_original_id, e.data_source_id, transaction);
+        } else if (e.destination_original_id && e.data_source_id && e.destination_metatype_id) {
+            const request = await this.#nodeRepo.findByCompositeID(e.destination_original_id, e.data_source_id, e.destination_metatype_id, transaction);
             if (request.isError) {
                 return Promise.resolve(Result.Failure('destination node not found'));
             }
 
             destination = request.value;
-            e.destination_node_id = request.value.id!;
+            e.destination_id = request.value.id!;
         } else {
-            return Promise.resolve(Result.Failure('no destination node id provided'));
+            return Promise.resolve(Result.Failure('no destination node id or original node idea with metatype and data source provided'));
         }
 
         if (
@@ -324,11 +305,6 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             .origin_node_id('eq', origin.id!)
             .and()
             .relationshipPairID('eq', e.metatypeRelationshipPair!.id!);
-
-        if (e.composite_original_id) {
-            destinationQuery = destinationQuery.and().composite_original_id('eq', e.composite_original_id);
-            originQuery = originQuery.and().composite_original_id('eq', e.composite_original_id);
-        }
 
         if (e.id) {
             destinationQuery = destinationQuery.and().id('eq', e.id);
@@ -426,82 +402,62 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     }
 
     id(operator: string, value: any) {
-        super.query('edges.id', operator, value);
-        return this;
-    }
-
-    composite_original_id(operator: string, value: any) {
-        super.query('edges.composite_original_id', operator, value);
+        super.query('id', operator, value);
         return this;
     }
 
     containerID(operator: string, value: any) {
-        super.query('edges.container_id', operator, value);
+        super.query('container_id', operator, value);
         return this;
     }
 
     relationshipPairID(operator: string, value: any) {
-        super.query('edges.relationship_pair_id', operator, value);
+        super.query('relationship_pair_id', operator, value);
         return this;
     }
 
     relationshipName(operator: string, value: any) {
-        super.query('metatype_relationships.name', operator, value);
-        return this;
-    }
-
-    originalDataID(operator: string, value: any) {
-        super.query('edges.original_data_id', operator, value);
-        return this;
-    }
-
-    archived(operator: string, value: any) {
-        super.query('edges.archived', operator, value);
+        super.query('metatype_relationship_name', operator, value);
         return this;
     }
 
     dataSourceID(operator: string, value: any) {
-        super.query('edges.data_source_id', operator, value);
+        super.query('data_source_id', operator, value);
         return this;
     }
 
     importDataID(operator: string, value: any) {
-        super.query('edges.import_data_id', operator, value);
+        super.query('import_data_id', operator, value);
         return this;
     }
 
     property(key: string, operator: string, value: any) {
-        super.queryJsonb(key, 'edges.properties', operator, value);
+        super.queryJsonb(key, 'properties', operator, value);
         return this;
     }
 
     origin_node_id(operator: string, value: any) {
-        super.query('edges.origin_node_id', operator, value);
+        super.query('origin_id', operator, value);
         return this;
     }
 
     destination_node_id(operator: string, value: any) {
-        super.query('edges.destination_node_id', operator, value);
+        super.query('destination_id', operator, value);
         return this;
     }
 
-    origin_node_original_id(operator: string, value: any) {
-        super.query('edges.origin_node_original_id', operator, value);
+    origin_original_id(operator: string, value: any) {
+        super.query('origin_original_id', operator, value);
         return this;
     }
 
-    destination_node_original_id(operator: string, value: any) {
-        super.query('edges.destination_node_original_id', operator, value);
+    destination_original_id(operator: string, value: any) {
+        super.query('destination_original_id', operator, value);
         return this;
     }
 
     async count(transaction?: PoolClient, queryOptions?: QueryOptions): Promise<Result<number>> {
         const results = await super.count(transaction, queryOptions);
-        // reset the query
-        this._rawQuery = [];
-        this._rawQuery.push(`SELECT edges.* FROM ${EdgeMapper.tableName}`);
-        this._rawQuery.push(`LEFT JOIN metatype_relationship_pairs ON edges.relationship_pair_id = metatype_relationship_pairs.id`);
-        this._rawQuery.push(`LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id`);
 
         if (results.isError) return Promise.resolve(Result.Pass(results));
         return Promise.resolve(Result.Success(results.value));
@@ -512,11 +468,6 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             transaction,
             resultClass: Edge,
         });
-        // reset the query
-        this._rawQuery = [];
-        this._rawQuery.push(`SELECT edges.* FROM ${EdgeMapper.tableName}`);
-        this._rawQuery.push(`LEFT JOIN metatype_relationship_pairs ON edges.relationship_pair_id = metatype_relationship_pairs.id`);
-        this._rawQuery.push(`LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id`);
 
         if (results.isError) return Promise.resolve(Result.Pass(results));
 

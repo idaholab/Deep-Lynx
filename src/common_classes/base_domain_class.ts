@@ -1,7 +1,7 @@
-import { IsDate, IsOptional, validate } from 'class-validator';
-import { Type } from 'class-transformer';
+import {IsDate, IsOptional, validate} from 'class-validator';
+import {Type} from 'class-transformer';
 import 'reflect-metadata';
-import { Errors, ValidationError } from 'io-ts';
+import {Errors, ValidationError} from 'io-ts';
 import Result from './result';
 
 /*
@@ -78,4 +78,9 @@ export class BaseDomainClass extends NakedDomainClass {
     @IsDate()
     @Type(() => Date)
     modified_at?: Date;
+
+    @IsOptional()
+    @IsDate()
+    @Type(() => Date)
+    deleted_at?: Date;
 }

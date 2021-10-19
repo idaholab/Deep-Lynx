@@ -2,7 +2,6 @@ import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
-import uuid from 'uuid';
 
 const format = require('pg-format');
 const resultClass = Metatype;
@@ -18,6 +17,7 @@ const resultClass = Metatype;
 */
 export default class MetatypeMapper extends Mapper {
     public static tableName = 'metatypes';
+    public static viewName = 'metatypes_view';
 
     private static instance: MetatypeMapper;
 
@@ -87,22 +87,24 @@ export default class MetatypeMapper extends Mapper {
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
     private createStatement(userID: string, ...metatypes: Metatype[]): string {
-        const text = `INSERT INTO metatypes(container_id, id,name,description, created_by, modified_by) VALUES %L RETURNING *`;
-        const values = metatypes.map((metatype) => [metatype.container_id, uuid.v4(), metatype.name, metatype.description, userID, userID]);
+        const text = `INSERT INTO metatypes(container_id,name,description, created_by, modified_by) VALUES %L RETURNING *`;
+        const values = metatypes.map((metatype) => [metatype.container_id, metatype.name, metatype.description, userID, userID]);
 
         return format(text, values);
     }
 
+    // we must point all listing functions to the metatypes_view so that we can get the parent_id if it exists
+    // without having to do a join each time
     private retrieveStatement(metatypeID: string): QueryConfig {
         return {
-            text: `SELECT * FROM metatypes WHERE id = $1 AND NOT archived`,
+            text: `SELECT * FROM metatypes_view WHERE id = $1 AND deleted_at IS NULL`,
             values: [metatypeID],
         };
     }
 
     private archiveStatement(metatypeID: string, userID: string): QueryConfig {
         return {
-            text: `UPDATE metatypes SET archived = true, modified_by = $2  WHERE id = $1`,
+            text: `UPDATE metatypes SET deleted_at = NOW(), modified_at = NOW(), modified_by = $2  WHERE id = $1`,
             values: [metatypeID, userID],
         };
     }
@@ -121,7 +123,7 @@ export default class MetatypeMapper extends Mapper {
                         modified_by = u.modified_by,
                         modified_at = NOW()
                       FROM(VALUES %L) AS u(id, name, description, modified_by)
-                      WHERE u.id::uuid = m.id RETURNING m.*`;
+                      WHERE u.id::bigint = m.id RETURNING m.*`;
         const values = metatypes.map((metatype) => [metatype.id, metatype.name, metatype.description, userID]);
 
         return format(text, values);

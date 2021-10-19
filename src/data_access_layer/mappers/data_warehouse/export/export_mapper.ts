@@ -99,7 +99,6 @@ export default class ExportMapper extends Mapper {
     // queries more easily.
     private createStatement(userID: string, ...exports: ExportRecord[]): string {
         const text = `INSERT INTO exports(
-            id,
             container_id,
             adapter,
             status,
@@ -109,7 +108,6 @@ export default class ExportMapper extends Mapper {
             created_by,
             modified_by) VALUES %L RETURNING *`;
         const values = exports.map((exp) => [
-            uuid.v4(),
             exp.container_id,
             exp.adapter,
             exp.status,
@@ -125,7 +123,7 @@ export default class ExportMapper extends Mapper {
 
     private fullUpdateStatement(userID: string, ...exports: ExportRecord[]): string {
         const text = `UPDATE exports AS e SET
-                    container_id = u.container_id::uuid,
+                    container_id = u.container_id::bigint,
                     adapter = u.adapter,
                     status = u.status,
                     config = u.config::jsonb,
@@ -142,7 +140,7 @@ export default class ExportMapper extends Mapper {
                           status_message,
                           destination_type,
                           modified_by)
-                      WHERE u.id::uuid = e.id RETURNING e.*`;
+                      WHERE u.id::bigint= e.id RETURNING e.*`;
         const values = exports.map((exp) => [
             exp.id,
             exp.container_id,

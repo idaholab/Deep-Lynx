@@ -68,7 +68,6 @@ export default class EventRegistrationMapper extends Mapper {
 
     private createStatement(userID: string, ...registrations: EventRegistration[]): string {
         const text = `INSERT INTO registered_events(
-                              id,
                               app_name,
                               app_url,
                               data_source_id,
@@ -76,7 +75,7 @@ export default class EventRegistrationMapper extends Mapper {
                               event_type,
                               created_by,
                               modified_by) VALUES %L RETURNING *`;
-        const values = registrations.map((reg) => [uuid.v4(), reg.app_name, reg.app_url, reg.data_source_id, reg.container_id, reg.event_type, userID, userID]);
+        const values = registrations.map((reg) => [reg.app_name, reg.app_url, reg.data_source_id, reg.container_id, reg.event_type, userID, userID]);
 
         return format(text, values);
     }
@@ -85,13 +84,13 @@ export default class EventRegistrationMapper extends Mapper {
         const text = `UPDATE registered_events as r SET
                               app_name = u.app_name,
                               app_url = u.app_url,
-                              data_source_id = u.data_source_id::uuid,
-                              container_id = u.container_id::uuid,
+                              data_source_id = u.data_source_id::bigint,
+                              container_id = u.container_id::bigint,
                               event_type = u.event_type,
                               modified_by = u.modified_by,
                               modified_at = NOW()
                           FROM (VALUES %L) AS u(id, app_name, app_url,data_source_id, container_id, event_type, modified_by)
-                          WHERE u.id::uuid = r.id RETURNING r.*`;
+                          WHERE u.id::bigint = r.id RETURNING r.*`;
         const values = registrations.map((reg) => [reg.id, reg.app_name, reg.app_url, reg.data_source_id, reg.container_id, reg.event_type, userID]);
 
         return format(text, values);

@@ -80,7 +80,7 @@ export default class DataStagingMapper extends Mapper {
         return super.count(this.countImportUninsertedActiveMappingStatement(importID), transaction);
     }
 
-    public async Retrieve(id: number, transaction?: PoolClient): Promise<Result<DataStaging>> {
+    public async Retrieve(id: string, transaction?: PoolClient): Promise<Result<DataStaging>> {
         return super.retrieve(this.retrieveStatement(id), {
             transaction,
             resultClass,
@@ -92,33 +92,33 @@ export default class DataStagingMapper extends Mapper {
         return super.rows<DataStaging>(this.listUninsertedActiveMappingStatement(importID, offset, limit), {resultClass, transaction});
     }
 
-    public async SetInserted(id: number, transaction?: PoolClient): Promise<Result<boolean>> {
+    public async SetInserted(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
         return super.runStatement(this.setInsertedStatement(id), {
             transaction,
         });
     }
 
-    public AddFile(id: number, fileID: string): Promise<Result<boolean>> {
+    public AddFile(id: string, fileID: string): Promise<Result<boolean>> {
         return super.runStatement(this.addFile(id, fileID));
     }
 
-    public RemoveFile(id: number, fileID: string): Promise<Result<boolean>> {
+    public RemoveFile(id: string, fileID: string): Promise<Result<boolean>> {
         return super.runStatement(this.removeFile(id, fileID));
     }
 
-    public async Delete(id: number): Promise<Result<boolean>> {
+    public async Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id));
     }
 
     // completely overwrite the existing error set
-    public SetErrors(id: number, errors: string[], transaction?: PoolClient): Promise<Result<boolean>> {
+    public SetErrors(id: string, errors: string[], transaction?: PoolClient): Promise<Result<boolean>> {
         return super.runStatement(this.setErrorsStatement(id, errors), {
             transaction,
         });
     }
 
     // add an error to an existing error set
-    public AddError(id: number, errors: string, transaction?: PoolClient): Promise<Result<boolean>> {
+    public AddError(id: string, errors: string, transaction?: PoolClient): Promise<Result<boolean>> {
         return super.runStatement(this.addErrorsStatement(id, errors), {
             transaction,
         });
@@ -137,18 +137,18 @@ export default class DataStagingMapper extends Mapper {
 
     private fullUpdateStatement(...data: DataStaging[]): string {
         const text = `UPDATE data_staging AS s SET
-                         data_source_id = u.data_source_id::uuid,
-                         import_id = u.import_id::uuid,
+                         data_source_id = u.data_source_id::bigint,
+                         import_id = u.import_id::bigint,
                          data = u.data::jsonb,
                          shape_hash = u.shape_hash::text
                         FROM(VALUES %L) AS u(id,data_source_id, import_id, data, shape_hash)
-                        WHERE u.id::int4 = s.id RETURNING s.*`;
+                        WHERE u.id::bigint = s.id RETURNING s.*`;
         const values = data.map((d) => [d.id, d.data_source_id, d.import_id, JSON.stringify(d.data), d.shape_hash]);
 
         return format(text, values);
     }
 
-    private retrieveStatement(id: number): QueryConfig {
+    private retrieveStatement(id: string): QueryConfig {
         return {
             text: `SELECT data_staging.*, data_sources.container_id, data_sources.config AS data_source_config 
                     FROM data_staging 
@@ -162,14 +162,14 @@ export default class DataStagingMapper extends Mapper {
         return {
             text: `SELECT data_staging.*
                    FROM data_staging
-                   LEFT JOIN data_type_mappings ON data_type_mappings.shape_hash = data_staging.shape_hash
-                                                AND data_type_mappings.data_source_id = data_staging.data_source_id    
+                   LEFT JOIN type_mappings ON type_mappings.shape_hash = data_staging.shape_hash
+                                                AND type_mappings.data_source_id = data_staging.data_source_id    
                    WHERE import_id = $1
                    AND inserted_at IS NULL
-                   AND data_type_mappings.active IS TRUE
+                   AND type_mappings.active IS TRUE
                    AND EXISTS 
-                       (SELECT * from data_type_mapping_transformations 
-                        WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
+                       (SELECT * from type_mapping_transformations 
+                        WHERE type_mapping_transformations.type_mapping_id = type_mappings.id)
                    OFFSET $2 LIMIT $3`,
             values: [importID, offset, limit],
         };
@@ -193,55 +193,55 @@ export default class DataStagingMapper extends Mapper {
         return {
             text: `SELECT COUNT(*)
                    FROM data_staging
-                            LEFT JOIN data_type_mappings ON data_type_mappings.shape_hash = data_staging.shape_hash
-                                                         AND data_type_mappings.data_source_id = data_staging.data_source_id
+                            LEFT JOIN type_mappings ON type_mappings.shape_hash = data_staging.shape_hash
+                                                         AND type_mappings.data_source_id = data_staging.data_source_id
                    WHERE data_staging.import_id = $1
                    AND data_staging.inserted_at IS NULL
-                   AND data_type_mappings.active IS TRUE
+                   AND type_mappings.active IS TRUE
                    AND EXISTS 
-                        (SELECT * from data_type_mapping_transformations 
-                            WHERE data_type_mapping_transformations.type_mapping_id = data_type_mappings.id)
+                        (SELECT * from type_mapping_transformations 
+                            WHERE type_mapping_transformations.type_mapping_id = type_mappings.id)
             `,
             values: [importID],
         };
     }
 
-    private setInsertedStatement(id: number): QueryConfig {
+    private setInsertedStatement(id: string): QueryConfig {
         return {
             text: `UPDATE data_staging SET inserted_at = NOW() WHERE id = $1`,
             values: [id],
         };
     }
 
-    private deleteStatement(id: number): QueryConfig {
+    private deleteStatement(id: string): QueryConfig {
         return {
             text: `DELETE FROM data_staging WHERE id = $1`,
             values: [id],
         };
     }
 
-    private setErrorsStatement(id: number, errors: string[]): QueryConfig {
+    private setErrorsStatement(id: string, errors: string[]): QueryConfig {
         return {
             text: `UPDATE data_staging SET errors = $1 WHERE id = $2`,
             values: [errors, id],
         };
     }
 
-    private addErrorsStatement(id: number, error: string): QueryConfig {
+    private addErrorsStatement(id: string, error: string): QueryConfig {
         return {
             text: `UPDATE data_staging SET errors = array_append(errors, $1) WHERE id = $2`,
             values: [error, id],
         };
     }
 
-    private addFile(id: number, fileID: string): QueryConfig {
+    private addFile(id: string, fileID: string): QueryConfig {
         return {
             text: `INSERT INTO data_staging_files(data_staging_id, file_id) VALUES ($1, $2)`,
             values: [id, fileID],
         };
     }
 
-    private removeFile(id: number, fileID: string): QueryConfig {
+    private removeFile(id: string, fileID: string): QueryConfig {
         return {
             text: `DELETE FROM data_staging_files WHERE data_staging_id = $1 AND file_id = $2`,
             values: [id, fileID],

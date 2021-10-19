@@ -1,9 +1,8 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {IsBoolean, IsIn, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
+import {IsBoolean, IsIn, IsNotEmpty, IsOptional, IsString, MinLength, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
 import {Expose, plainToClass, Transform} from 'class-transformer';
 import Metatype, {MetatypeID} from './metatype';
 import MetatypeRelationship, {MetatypeRelationshipID} from './metatype_relationship';
-import validator from 'validator';
 
 /*
     MetatypeRelationshipPair  represents a metatype relationship pair  record in
@@ -13,10 +12,10 @@ import validator from 'validator';
  */
 export default class MetatypeRelationshipPair extends BaseDomainClass {
     @IsOptional()
-    @IsUUID()
+    @IsString()
     id?: string;
 
-    @IsUUID()
+    @IsString()
     container_id?: string;
 
     @IsOptional()
@@ -132,18 +131,18 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
             input.origin_metatype instanceof Metatype
                 ? (this.originMetatype = input.origin_metatype)
                 : (this.originMetatype = plainToClass(Metatype, {
-                    id: input.origin_metatype,
-                }));
+                      id: input.origin_metatype,
+                  }));
             input.destination_metatype instanceof Metatype
                 ? (this.destinationMetatype = input.destination_metatype)
                 : (this.destinationMetatype = plainToClass(Metatype, {
-                    id: input.destination_metatype,
-                }));
+                      id: input.destination_metatype,
+                  }));
             input.relationship instanceof MetatypeRelationship
                 ? (this.relationship = input.relationship)
                 : (this.relationship = plainToClass(MetatypeRelationship, {
-                    id: input.relationship,
-                }));
+                      id: input.relationship,
+                  }));
 
             if (input.container_id) this.container_id = input.container_id;
         }
@@ -161,7 +160,7 @@ export function MetatypeRelationshipPairID(validationOptions?: ValidationOptions
             options: validationOptions,
             validator: {
                 validate(value: any, args: ValidationArguments) {
-                    return value instanceof MetatypeRelationshipPair && validator.isUUID(value.id!);
+                    return value instanceof MetatypeRelationshipPair && typeof value.id! === 'string';
                 },
             },
         });

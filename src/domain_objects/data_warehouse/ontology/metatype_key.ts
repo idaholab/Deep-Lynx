@@ -1,5 +1,5 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {IsArray, IsBoolean, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, IsUUID, MinLength} from 'class-validator';
+import {IsArray, IsBoolean, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, MinLength} from 'class-validator';
 
 /*
     MetatypeKey represents a metatype key record in the Deep Lynx database and the various
@@ -7,10 +7,10 @@ import {IsArray, IsBoolean, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, Is
  */
 export default class MetatypeKey extends BaseDomainClass {
     @IsOptional()
-    @IsUUID()
+    @IsString()
     id?: string;
 
-    @IsUUID()
+    @IsString()
     metatype_id?: string;
 
     @IsOptional()

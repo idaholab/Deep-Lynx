@@ -4,7 +4,6 @@ import MetatypeKeyMapper from '../../../../data_access_layer/mappers/data_wareho
 import MetatypeMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import faker from 'faker';
 import {expect} from 'chai';
-import GraphMapper from '../../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
 import NodeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import {graphql} from 'graphql';
@@ -55,17 +54,11 @@ describe('Using a GraphQL Query for a nodes edges', async () => {
         const nodeStorage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphMapper.Instance;
         const rMapper = MetatypeRelationshipMapper.Instance;
         const rkStorage = MetatypeRelationshipKeyMapper.Instance;
         const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // SETUP
-        const graph = await gStorage.Create(containerID, 'test suite');
-
-        expect(graph.isError, graph.error?.error).false;
-        expect(graph.value).not.empty;
-
         const metatypeResult = await mMapper.Create(
             'test suite',
             new Metatype({
@@ -90,7 +83,6 @@ describe('Using a GraphQL Query for a nodes edges', async () => {
             metatype: metatypeResult.value.id!,
             properties: payload,
             container_id: containerID,
-            graph_id: graph.value.id!,
         });
 
         const nodes = await nodeStorage.CreateOrUpdateByCompositeID('test suite', mixed);
@@ -131,15 +123,14 @@ describe('Using a GraphQL Query for a nodes edges', async () => {
         );
 
         // EDGE SETUP
-        const edges = await edgeStorage.CreateOrUpdateByCompositeID(
+        const edges = await edgeStorage.Create(
             'test suite',
             new Edge({
                 container_id: containerID,
-                graph_id: graph.value.id!,
                 metatype_relationship_pair: pair.value.id!,
                 properties: payload,
-                origin_node_id: node.id,
-                destination_node_id: node.id,
+                origin_id: node.id,
+                destination_id: node.id,
             }),
         );
 

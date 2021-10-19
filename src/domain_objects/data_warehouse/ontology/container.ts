@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
-import {IsBoolean, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength, ValidateNested} from 'class-validator';
+import {IsBoolean, IsNotEmpty, IsOptional, IsString, MinLength, ValidateNested} from 'class-validator';
 import Result from '../../../common_classes/result';
 import Authorization from '../../access_management/authorization/authorization';
 import Logger from '../../../services/logger';
@@ -30,7 +30,7 @@ export class ContainerConfig extends NakedDomainClass {
  */
 export default class Container extends BaseDomainClass {
     @IsOptional()
-    @IsUUID()
+    @IsString()
     id?: string;
 
     @IsOptional()
@@ -45,12 +45,6 @@ export default class Container extends BaseDomainClass {
     @IsNotEmpty()
     @IsString()
     description = '';
-
-    // this is a piece of information we often fetch in lockstep with containers
-    // therefore I'm including it on the main class for convenience
-    @IsOptional()
-    @IsUUID()
-    active_graph_id?: string;
 
     @ValidateNested()
     @Type(() => ContainerConfig)

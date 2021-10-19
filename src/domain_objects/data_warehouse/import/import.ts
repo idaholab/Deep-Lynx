@@ -9,10 +9,9 @@ import {AvevaDataSourceConfig, BaseDataSourceConfig, HttpDataSourceConfig, JazzD
  */
 export default class Import extends BaseDomainClass {
     @IsOptional()
-    @IsUUID()
     id?: string;
 
-    @IsUUID()
+    @IsString()
     data_source_id?: string;
 
     @IsOptional()
@@ -52,13 +51,13 @@ export default class Import extends BaseDomainClass {
 */
 export class DataStaging extends NakedDomainClass {
     @IsOptional()
-    @IsNumber()
-    id?: number;
+    @IsString()
+    id?: string;
 
-    @IsUUID()
+    @IsString()
     data_source_id?: string;
 
-    @IsUUID()
+    @IsString()
     import_id?: string;
 
     @IsOptional()

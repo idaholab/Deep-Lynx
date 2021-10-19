@@ -1,7 +1,7 @@
 import Result from '../../../common_classes/result';
 import Mapper from '../mapper';
-import { PoolClient, QueryConfig } from 'pg';
-import { User } from '../../../domain_objects/access_management/user';
+import {PoolClient, QueryConfig} from 'pg';
+import {User} from '../../../domain_objects/access_management/user';
 import uuid from 'uuid';
 
 const UIDGenerator = require('uid-generator');
@@ -35,7 +35,7 @@ export default class UserMapper extends Mapper {
     public async Create(userID: string, u: User, transaction?: PoolClient): Promise<Result<User>> {
         const r = await super.run(this.createStatement(userID, u), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -47,18 +47,18 @@ export default class UserMapper extends Mapper {
 
         return super.run(this.createStatement(userID, ...u), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
     public async Retrieve(id: string): Promise<Result<User>> {
-        return super.retrieve(this.retrieveStatement(id), { resultClass });
+        return super.retrieve(this.retrieveStatement(id), {resultClass});
     }
 
     public async Update(userID: string, c: User, transaction?: PoolClient): Promise<Result<User>> {
         const r = await super.run(this.fullUpdateStatement(userID, c), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -68,7 +68,7 @@ export default class UserMapper extends Mapper {
     public async BulkUpdate(userID: string, c: User[], transaction?: PoolClient): Promise<Result<User[]>> {
         return super.run(this.fullUpdateStatement(userID, ...c), {
             transaction,
-            resultClass
+            resultClass,
         });
     }
 
@@ -82,25 +82,25 @@ export default class UserMapper extends Mapper {
 
     public async RetrieveByEmail(email: string): Promise<Result<User>> {
         return super.retrieve(this.retrieveByEmailStatement(email), {
-            resultClass
+            resultClass,
         });
     }
 
     public async RetrieveByIdentityProviderID(id: string): Promise<Result<User>> {
         return super.retrieve(this.retrieveByIdentityProviderStatement(id), {
-            resultClass
+            resultClass,
         });
     }
 
     public async List(): Promise<Result<User[]>> {
-        return super.rows(this.listStatement(), { resultClass });
+        return super.rows(this.listStatement(), {resultClass});
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<User[]>> {
         if (ids.length === 0) {
-            return super.rows(this.listStatement(), { resultClass });
+            return super.rows(this.listStatement(), {resultClass});
         } else {
-            return super.rows(this.listFromIDsStatement(ids), { resultClass });
+            return super.rows(this.listFromIDsStatement(ids), {resultClass});
         }
     }
 
@@ -122,7 +122,6 @@ export default class UserMapper extends Mapper {
     // queries more easily.
     private createStatement(userID: string, ...users: User[]): QueryConfig {
         const text = `INSERT INTO users(
-            id,
             identity_provider_id,
             identity_provider,
             display_name,
@@ -134,7 +133,6 @@ export default class UserMapper extends Mapper {
             modified_by,
             email_validation_token) VALUES %L RETURNING *`;
         const values = users.map((user) => [
-            uuid.v4(),
             user.identity_provider_id,
             user.identity_provider,
             user.display_name,
@@ -144,7 +142,7 @@ export default class UserMapper extends Mapper {
             user.password,
             userID,
             userID,
-            user.email_validation_token
+            user.email_validation_token,
         ]);
 
         return format(text, values);
@@ -175,7 +173,7 @@ export default class UserMapper extends Mapper {
                                         email_valid,
                                         email_validation_token,
                                         modified_by)
-                    WHERE u.id::uuid = t.id RETURNING t.*`;
+                    WHERE u.id::bigint = t.id RETURNING t.*`;
         const values = users.map((user) => [
             user.id,
             user.identity_provider_id,
@@ -186,7 +184,7 @@ export default class UserMapper extends Mapper {
             user.admin,
             user.email_valid,
             user.email_validation_token,
-            userID
+            userID,
         ]);
 
         return format(text, values);
@@ -195,42 +193,42 @@ export default class UserMapper extends Mapper {
     private retrieveStatement(userID: string): QueryConfig {
         return {
             text: `SELECT * FROM users WHERE id = $1`,
-            values: [userID]
+            values: [userID],
         };
     }
 
     private retrieveByEmailStatement(email: string): QueryConfig {
         return {
             text: `SELECT * FROM users WHERE email = $1 LIMIT 1`,
-            values: [email]
+            values: [email],
         };
     }
 
     private retrieveByIdentityProviderStatement(identityProviderID: string): QueryConfig {
         return {
             text: `SELECT * FROM users WHERE identity_provider_id = $1`,
-            values: [identityProviderID]
+            values: [identityProviderID],
         };
     }
 
     private archiveStatement(userID: string, id: string): QueryConfig {
         return {
             text: `UPDATE users SET active = false, modified_by $2, modified_at = NOW() WHERE id = $1`,
-            values: [id, userID]
+            values: [id, userID],
         };
     }
 
     private deleteStatement(userID: string): QueryConfig {
         return {
             text: `DELETE FROM users WHERE id = $1`,
-            values: [userID]
+            values: [userID],
         };
     }
 
     private resetTokenStatement(userID: string, token: string): QueryConfig {
         return {
             text: 'UPDATE users SET reset_token = $2, reset_token_issued = NOW() WHERE id = $1',
-            values: [userID, token]
+            values: [userID, token],
         };
     }
 
@@ -238,20 +236,20 @@ export default class UserMapper extends Mapper {
     private resetPasswordStatement(resetToken: string, email: string, newPassword: string): QueryConfig {
         return {
             text: `UPDATE users SET password = $2, reset_token = '' WHERE reset_token = $1 AND email = $3 AND reset_token_issued > NOW() - INTERVAL '4 hours'`,
-            values: [resetToken, newPassword, email]
+            values: [resetToken, newPassword, email],
         };
     }
 
     private listStatement(): QueryConfig {
         return {
-            text: `SELECT * FROM users`
+            text: `SELECT * FROM users`,
         };
     }
 
     private validateEmailStatement(id: string, token: string): QueryConfig {
         return {
             text: `UPDATE users SET email_valid = true WHERE email_validation_token = $1 AND id = $2`,
-            values: [token, id]
+            values: [token, id],
         };
     }
 

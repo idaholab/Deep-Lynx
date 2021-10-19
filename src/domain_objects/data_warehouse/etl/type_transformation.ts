@@ -120,10 +120,10 @@ export class TransformationConfiguration {
  */
 export default class TypeTransformation extends BaseDomainClass {
     @IsOptional()
-    @IsUUID()
+    @IsString()
     id?: string;
 
-    @IsUUID()
+    @IsString()
     type_mapping_id?: string;
 
     @ValidateNested()
@@ -135,11 +135,11 @@ export default class TypeTransformation extends BaseDomainClass {
     keys: KeyMapping[] = [];
 
     @ValidateIf((o) => o.metatype_relationship_pair_id === null && typeof o.metatype_relationship_pair_id === 'undefined')
-    @IsUUID()
+    @IsString()
     metatype_id?: string;
 
     @ValidateIf((o) => o.metatype_id === null && typeof o.metatype_id === 'undefined')
-    @IsUUID()
+    @IsString()
     metatype_relationship_pair_id?: string;
 
     @ValidateIf((o) => o.metatype_relationship_pair_id === null && typeof o.metatype_relationship_pair_id === 'undefined')
@@ -148,7 +148,23 @@ export default class TypeTransformation extends BaseDomainClass {
 
     @ValidateIf((o) => o.metatype_relationship_pair_id === null && typeof o.metatype_relationship_pair_id === 'undefined')
     @IsString()
+    origin_metatype_id?: string;
+
+    @ValidateIf((o) => o.metatype_relationship_pair_id === null && typeof o.metatype_relationship_pair_id === 'undefined')
+    @IsString()
+    origin_data_source_id?: string;
+
+    @ValidateIf((o) => o.metatype_relationship_pair_id === null && typeof o.metatype_relationship_pair_id === 'undefined')
+    @IsString()
     destination_id_key?: string;
+
+    @ValidateIf((o) => o.metatype_relationship_pair_id === null && typeof o.metatype_relationship_pair_id === 'undefined')
+    @IsString()
+    destination_metatype_id?: string;
+
+    @ValidateIf((o) => o.metatype_relationship_pair_id === null && typeof o.metatype_relationship_pair_id === 'undefined')
+    @IsString()
+    destination_data_source_id?: string;
 
     @IsOptional()
     @IsString()
@@ -164,7 +180,7 @@ export default class TypeTransformation extends BaseDomainClass {
     // or to fetch unrelated data. I'd love to make these readonly, but the class-transformer
     // package currently cannot set readonly properties on transform
     @IsOptional()
-    @IsUUID()
+    @IsString()
     container_id?: string;
 
     @IsOptional()
@@ -193,7 +209,11 @@ export default class TypeTransformation extends BaseDomainClass {
         metatype_id?: string;
         metatype_relationship_pair_id?: string;
         origin_id_key?: string;
+        origin_metatype_id?: string;
+        origin_data_source_id?: string;
         destination_id_key?: string;
+        destination_metatype_id?: string;
+        destination_data_source_id?: string;
         root_array?: string;
         unique_identifier_key?: string;
         container_id?: string;
@@ -209,7 +229,11 @@ export default class TypeTransformation extends BaseDomainClass {
             if (input.metatype_id) this.metatype_id = input.metatype_id;
             if (input.metatype_relationship_pair_id) this.metatype_relationship_pair_id = input.metatype_relationship_pair_id;
             if (input.origin_id_key) this.origin_id_key = input.origin_id_key;
+            if (input.origin_metatype_id) this.origin_metatype_id = input.origin_metatype_id;
+            if (input.origin_data_source_id) this.origin_data_source_id = input.origin_data_source_id;
             if (input.destination_id_key) this.destination_id_key = input.destination_id_key;
+            if (input.destination_metatype_id) this.destination_metatype_id = input.destination_metatype_id;
+            if (input.destination_data_source_id) this.destination_data_source_id = input.destination_data_source_id;
             if (input.root_array) this.root_array = input.root_array;
             if (input.unique_identifier_key) this.unique_identifier_key = input.unique_identifier_key;
             if (input.container_id) this.container_id = input.container_id;
@@ -490,11 +514,6 @@ export default class TypeTransformation extends BaseDomainClass {
 
             if (this.unique_identifier_key) {
                 node.original_data_id = `${TypeTransformation.getNestedValue(this.unique_identifier_key, data.data, index)}`;
-                node.composite_original_id = `${this.container_id}+${this.data_source_id}+${this.unique_identifier_key}+${TypeTransformation.getNestedValue(
-                    this.unique_identifier_key,
-                    data.data,
-                    index,
-                )}`;
             }
 
             return new Promise((resolve) => resolve(Result.Success([node])));
@@ -510,30 +529,17 @@ export default class TypeTransformation extends BaseDomainClass {
                 container_id: this.container_id!,
                 data_staging_id: data.id,
                 import_data_id: data.import_id,
-                origin_node_original_id: `${TypeTransformation.getNestedValue(this.origin_id_key!, data.data, index)}`,
-                destination_node_original_id: `${TypeTransformation.getNestedValue(this.destination_id_key!, data.data, index)}`,
-                origin_node_composite_original_id: `${this.container_id}+${this.data_source_id}+${this.origin_id_key}+${TypeTransformation.getNestedValue(
-                    this.origin_id_key!,
-                    data.data,
-                    index,
-                )}`,
-                destination_node_composite_original_id: `${this.container_id}+${this.data_source_id}+${
-                    this.destination_id_key
-                }+${TypeTransformation.getNestedValue(this.destination_id_key!, data.data, index)}`,
+                origin_original_id: `${TypeTransformation.getNestedValue(this.origin_id_key!, data.data, index)}`,
+                origin_metatype_id: this.origin_metatype_id,
+                origin_data_source_id: this.origin_data_source_id,
+                destination_original_id: `${TypeTransformation.getNestedValue(this.destination_id_key!, data.data, index)}`,
+                destination_metatype_id: this.destination_metatype_id,
+                destination_data_source_id: this.destination_data_source_id,
                 metadata: new EdgeMetadata({
                     conversions,
                     failed_conversions: failedConversions,
                 }),
             });
-
-            if (this.unique_identifier_key) {
-                edge.original_data_id = `${TypeTransformation.getNestedValue(this.unique_identifier_key, data.data, index)}`;
-                edge.composite_original_id = `${this.container_id}+${this.data_source_id}+${this.unique_identifier_key}+${TypeTransformation.getNestedValue(
-                    this.unique_identifier_key,
-                    data.data,
-                    index,
-                )}`;
-            }
 
             return new Promise((resolve) => resolve(Result.Success([edge])));
         }

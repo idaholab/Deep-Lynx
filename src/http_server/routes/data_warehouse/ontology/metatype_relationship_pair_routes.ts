@@ -103,10 +103,6 @@ export default class MetatypeRelationshipPairRoutes {
             repository = repository.and().metatypeID('eq', req.query.metatypeID);
         }
 
-        if ((req.query.archived as string) !== 'true') {
-            repository = repository.and().archived('eq', false);
-        }
-
         if (req.query.count !== undefined && req.query.count === 'true') {
             repository
                 .count()

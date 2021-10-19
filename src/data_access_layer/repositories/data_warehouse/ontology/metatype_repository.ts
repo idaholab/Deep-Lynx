@@ -301,7 +301,7 @@ export default class MetatypeRepository extends Repository implements Repository
     }
 
     constructor() {
-        super(MetatypeMapper.tableName);
+        super(MetatypeMapper.viewName);
     }
 
     // filter specific functions
@@ -322,11 +322,6 @@ export default class MetatypeRepository extends Repository implements Repository
 
     description(operator: string, value: any) {
         super.query('description', operator, value);
-        return this;
-    }
-
-    archived(operator: string, value: any) {
-        super.query('archived', operator, value);
         return this;
     }
 

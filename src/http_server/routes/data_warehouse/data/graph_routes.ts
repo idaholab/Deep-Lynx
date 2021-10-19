@@ -29,7 +29,7 @@ export default class GraphRoutes {
         app.put('/containers/:containerID/graphs/edges/:edgeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.attachFileToEdge);
         app.delete('/containers/:containerID/graphs/edges/:edgeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.detachFileFromEdge);
 
-        app.delete('/containers/:containerID/graphs/nodes/:nodeID', ...middleware, authInContainer('write', 'data'), this.archiveNode);
+        app.delete('/containers/:containerID/graphs/nodes/:nodeID', ...middleware, authInContainer('write', 'data'), this.deleteNode);
         app.delete('/containers/:containerID/graphs/edges/:edgeID', ...middleware, authInContainer('write', 'data'), this.archiveEdge);
     }
     private static listNodes(req: Request, res: Response, next: NextFunction) {
@@ -60,7 +60,6 @@ export default class GraphRoutes {
                     .finally(() => next());
             } else {
                 repo.and()
-                    .archived('eq', false)
                     .list(req.query.loadMetatypes === 'true', {
                         limit: req.query.limit ? +req.query.limit : undefined,
                         offset: req.query.offset ? +req.query.offset : undefined,
@@ -110,7 +109,6 @@ export default class GraphRoutes {
                 .and()
                 .metatypeID('eq', req.metatype.id)
                 .and()
-                .archived('eq', false)
                 .list(req.query.loadMetatypes === 'true', {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
@@ -197,7 +195,6 @@ export default class GraphRoutes {
         if (req.container) {
             toSave.forEach((node) => {
                 node.container_id = req.container!.id!;
-                if (!node.graph_id) node.graph_id = req.container!.active_graph_id;
             });
         }
 
@@ -225,7 +222,6 @@ export default class GraphRoutes {
         if (req.container) {
             toSave.forEach((edge) => {
                 edge.container_id = req.container!.id!;
-                if (!edge.graph_id) edge.graph_id = req.container!.active_graph_id;
             });
         }
 
@@ -243,7 +239,7 @@ export default class GraphRoutes {
     private static archiveEdge(req: Request, res: Response, next: NextFunction) {
         if (req.edge) {
             edgeRepo
-                .archive(req.currentUser!, req.edge)
+                .delete(req.edge)
                 .then((result) => {
                     result.asResponse(res);
                 })
@@ -255,10 +251,10 @@ export default class GraphRoutes {
         }
     }
 
-    private static archiveNode(req: Request, res: Response, next: NextFunction) {
+    private static deleteNode(req: Request, res: Response, next: NextFunction) {
         if (req.node) {
             nodeRepo
-                .archive(req.currentUser!, req.node)
+                .delete(req.node)
                 .then((result) => {
                     result.asResponse(res);
                 })

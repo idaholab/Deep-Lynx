@@ -1,8 +1,8 @@
 import Result from '../../../common_classes/result';
-import { User } from '../../access_management/user';
-import { BaseDomainClass, NakedDomainClass } from '../../../common_classes/base_domain_class';
-import { IsBoolean, IsIn, IsNumber, IsOptional, IsString, IsUrl, IsUUID, ValidateNested } from 'class-validator';
-import { Exclude, Type } from 'class-transformer';
+import {User} from '../../access_management/user';
+import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
+import {IsBoolean, IsIn, IsNumber, IsOptional, IsString, IsUrl, IsUUID, ValidateNested} from 'class-validator';
+import {Exclude, Type} from 'class-transformer';
 
 /*
  The Exporter interface allows the user to create a standard implementation
@@ -50,11 +50,11 @@ export class GremlinExportConfig extends BaseExporterConfig {
     traversal_source = 'g';
 
     @IsString()
-    @Exclude({ toPlainOnly: true })
+    @Exclude({toPlainOnly: true})
     user = '';
 
     @IsString()
-    @Exclude({ toPlainOnly: true })
+    @Exclude({toPlainOnly: true})
     key = '';
 
     @IsUrl()
@@ -122,14 +122,14 @@ export default class ExportRecord extends BaseDomainClass {
         discriminator: {
             property: 'kind',
             subTypes: [
-                { value: GremlinExportConfig, name: 'gremlin' },
-                { value: StandardExporterConfig, name: 'standard' }
-            ]
-        }
+                {value: GremlinExportConfig, name: 'gremlin'},
+                {value: StandardExporterConfig, name: 'standard'},
+            ],
+        },
     })
     config?: StandardExporterConfig | GremlinExportConfig;
 
-    @IsUUID()
+    @IsString()
     container_id?: string;
 
     @IsOptional()
@@ -143,7 +143,7 @@ export default class ExportRecord extends BaseDomainClass {
     @IsOptional()
     status_message?: string;
 
-    constructor(input: { container_id: string; adapter: string; config?: StandardExporterConfig | GremlinExportConfig; destination_type?: string }) {
+    constructor(input: {container_id: string; adapter: string; config?: StandardExporterConfig | GremlinExportConfig; destination_type?: string}) {
         super();
 
         this.config = new StandardExporterConfig();

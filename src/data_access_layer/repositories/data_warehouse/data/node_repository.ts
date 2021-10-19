@@ -22,28 +22,12 @@ export default class NodeRepository extends Repository implements RepositoryInte
     #metatypeRepo: MetatypeRepository = new MetatypeRepository();
 
     constructor() {
-        super(NodeMapper.tableName);
-
-        // we must rewrite the initial query in order to accept LEFT JOINS so that
-        // can avoid making more database queries for often required additional
-        // information
-        this._rawQuery = [
-            `SELECT nodes.*, metatypes.name as metatype_name FROM ${NodeMapper.tableName}`,
-            `LEFT JOIN metatypes ON metatypes.id = nodes.metatype_id`,
-        ];
+        super(NodeMapper.viewName);
     }
 
     delete(n: Node): Promise<Result<boolean>> {
         if (n.id) {
             return this.#mapper.Delete(n.id);
-        }
-
-        return Promise.resolve(Result.Failure('node must have id'));
-    }
-
-    archive(user: User, n: Node): Promise<Result<boolean>> {
-        if (n.id) {
-            return this.#mapper.Archive(user.id!, n.id);
         }
 
         return Promise.resolve(Result.Failure('node must have id'));
@@ -61,8 +45,8 @@ export default class NodeRepository extends Repository implements RepositoryInte
     }
 
     // composite id's are only unique when paired with a data source as well
-    async findByCompositeID(id: string, dataSourceID: string, transaction?: PoolClient): Promise<Result<Node>> {
-        const node = await this.#mapper.RetrieveByCompositeOriginalID(id, dataSourceID, transaction);
+    async findByCompositeID(id: string, dataSourceID: string, metatypeID: string, transaction?: PoolClient): Promise<Result<Node>> {
+        const node = await this.#mapper.RetrieveByCompositeOriginalID(id, dataSourceID, metatypeID, transaction);
         if (!node.isError) {
             const metatype = await this.#metatypeRepo.findByID(node.value.metatype!.id!);
             if (metatype.isError) Logger.error(`unable to load node's metatype`);
@@ -263,62 +247,52 @@ export default class NodeRepository extends Repository implements RepositoryInte
     }
 
     id(operator: string, value: any) {
-        super.query('nodes.id', operator, value);
+        super.query('id', operator, value);
         return this;
     }
 
     containerID(operator: string, value: any) {
-        super.query('nodes.container_id', operator, value);
+        super.query('container_id', operator, value);
         return this;
     }
 
     metatypeID(operator: string, value: any) {
-        super.query('nodes.metatype_id', operator, value);
+        super.query('metatype_id', operator, value);
         return this;
     }
 
     metatypeName(operator: string, value: any) {
-        super.query('metatypes.name', operator, value);
+        super.query('metatype_name', operator, value);
         return this;
     }
 
     originalDataID(operator: string, value: any) {
-        super.query('nodes.original_data_id', operator, value);
-        return this;
-    }
-
-    archived(operator: string, value: any) {
-        super.query('nodes.archived', operator, value);
+        super.query('original_data_id', operator, value);
         return this;
     }
 
     dataSourceID(operator: string, value: any) {
-        super.query('nodes.data_source_id', operator, value);
+        super.query('data_source_id', operator, value);
         return this;
     }
 
     transformationID(operator: string, value: any) {
-        super.query('nodes.type_mapping_transformation_id', operator, value);
+        super.query('type_mapping_transformation_id', operator, value);
         return this;
     }
 
     importDataID(operator: string, value: any) {
-        super.query('nodes.import_data_id', operator, value);
+        super.query('import_data_id', operator, value);
         return this;
     }
 
     property(key: string, operator: string, value: any) {
-        super.queryJsonb(key, 'nodes.properties', operator, value);
+        super.queryJsonb(key, 'properties', operator, value);
         return this;
     }
 
     async count(transaction?: PoolClient, queryOptions?: QueryOptions): Promise<Result<number>> {
         const results = await super.count(transaction, queryOptions);
-        // reset the query
-        this._rawQuery = [
-            `SELECT nodes.*, metatypes.name as metatype_name FROM ${NodeMapper.tableName}`,
-            `LEFT JOIN metatypes ON metatypes.id = nodes.metatype_id`,
-        ];
 
         if (results.isError) return Promise.resolve(Result.Pass(results));
         return Promise.resolve(Result.Success(results.value));
@@ -329,11 +303,6 @@ export default class NodeRepository extends Repository implements RepositoryInte
             transaction,
             resultClass: Node,
         });
-        // reset the query
-        this._rawQuery = [
-            `SELECT nodes.*, metatypes.name as metatype_name FROM ${NodeMapper.tableName}`,
-            `LEFT JOIN metatypes ON metatypes.id = nodes.metatype_id`,
-        ];
 
         if (results.isError) return Promise.resolve(Result.Pass(results));
 

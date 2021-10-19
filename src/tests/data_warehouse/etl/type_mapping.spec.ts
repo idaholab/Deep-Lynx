@@ -7,7 +7,6 @@ import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/o
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import TypeMappingMapper from '../../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
 import NodeMapper from '../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
-import GraphMapper from '../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
 import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
 import DataStagingMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
 import MetatypeRelationshipMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
@@ -32,7 +31,6 @@ import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data
 
 describe('A Data Type Mapping can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
-    let graphID: string = '';
     let typeMappingID: string = '';
     let typeMapping: TypeMapping | undefined;
     let dataSourceID: string = '';
@@ -293,10 +291,6 @@ describe('A Data Type Mapping can', async () => {
         expect(userResult.value).not.empty;
         user = userResult.value;
 
-        const graph = await GraphMapper.Instance.Create(containerID, 'test suite');
-        expect(graph.isError).false;
-        graphID = graph.value.id!;
-
         const dstorage = DataSourceMapper.Instance;
         const relationshipMapper = MetatypeRelationshipMapper.Instance;
         const mappingStorage = TypeMappingMapper.Instance;
@@ -431,12 +425,10 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].properties).to.have.property('id', 'UUID');
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[0].original_data_id).eq('UUID');
-        expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car.id+UUID`);
 
         // run through and set the right metatype and container
         results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
-            (node as Node).graph_id = graphID;
             (node as Node).metatype = car;
         });
 
@@ -475,12 +467,10 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].properties).to.have.property('id', 'TEST UUID');
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[0].original_data_id).eq('UUID');
-        expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car.id+UUID`);
 
         // run through and set the right metatype and container
         results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
-            (node as Node).graph_id = graphID;
             (node as Node).metatype = car;
         });
 
@@ -526,19 +516,16 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].properties).to.have.property('check_engine_light_flag', true);
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[0].original_data_id).eq('1'); // original IDs are strings
-        expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+1`);
 
         expect((results.value as Node[])[1].properties).to.have.property('id', 2);
         expect((results.value as Node[])[1].properties).to.have.property('type', 'tire rotation');
         expect((results.value as Node[])[1].properties).to.have.property('check_engine_light_flag', false);
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[1].original_data_id).eq('2'); // original IDs are strings
-        expect((results.value as Node[])[1].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+2`);
 
         // run through and set the right metatype and container
         results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
-            (node as Node).graph_id = graphID;
             (node as Node).metatype = entry;
         });
 
@@ -589,9 +576,6 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].properties).to.have.property('quantity', 1);
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[0].original_data_id).eq('oil');
-        expect((results.value as Node[])[0].composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+oil`,
-        );
 
         expect((results.value as Node[])[1].properties).to.have.property('id', 'pan');
         expect((results.value as Node[])[1].properties).to.have.property('name', 'oil pan');
@@ -599,9 +583,6 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[1].properties).to.have.property('quantity', 1);
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[1].original_data_id).eq('pan');
-        expect((results.value as Node[])[1].composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+pan`,
-        );
 
         expect((results.value as Node[])[2].properties).to.have.property('id', 'tire');
         expect((results.value as Node[])[2].properties).to.have.property('name', 'all terrain tire');
@@ -609,9 +590,6 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[2].properties).to.have.property('quantity', 4);
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[2].original_data_id).eq('tire');
-        expect((results.value as Node[])[2].composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+tire`,
-        );
 
         expect((results.value as Node[])[3].properties).to.have.property('id', 'wrench');
         expect((results.value as Node[])[3].properties).to.have.property('name', 'wrench');
@@ -619,9 +597,6 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[3].properties).to.have.property('quantity', 1);
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[3].original_data_id).eq('wrench');
-        expect((results.value as Node[])[3].composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+wrench`,
-        );
 
         expect((results.value as Node[])[4].properties).to.have.property('id', 'bolts');
         expect((results.value as Node[])[4].properties).to.have.property('name', 'bolts');
@@ -629,14 +604,10 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[4].properties).to.have.property('quantity', 5);
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[4].original_data_id).eq('bolts');
-        expect((results.value as Node[])[4].composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+bolts`,
-        );
 
         // run through and set the right metatype and container
         results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
-            (node as Node).graph_id = graphID;
             (node as Node).metatype = part;
         });
 
@@ -705,14 +676,10 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].properties).to.have.property('quantity', 1);
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[0].original_data_id).eq('oil');
-        expect((results.value as Node[])[0].composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].id+oil`,
-        );
 
         // run through and set the right metatype and container
         results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
-            (node as Node).graph_id = graphID;
             (node as Node).metatype = part;
         });
 
@@ -753,14 +720,10 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].properties).to.have.property('name', 'oil');
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[0].original_data_id).eq('1');
-        expect((results.value as Node[])[0].composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].parts_list.[].components.[].id+1`,
-        );
 
         // run through and set the right metatype and container
         results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
-            (node as Node).graph_id = graphID;
             (node as Node).metatype = component;
         });
 
@@ -810,12 +773,10 @@ describe('A Data Type Mapping can', async () => {
         expect((maintenanceResult.value as Node[])[0].properties).to.have.property('average_visits', 4);
         // validate the original and composite ID fields worked correctly
         expect((maintenanceResult.value as Node[])[0].original_data_id).eq('UUID'); // original IDs are strings
-        expect((maintenanceResult.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.id+UUID`);
 
         // run through and set the right metatype and container
         maintenanceResult.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
-            (node as Node).graph_id = graphID;
             (node as Node).metatype = maintenance;
         });
 
@@ -856,20 +817,17 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].properties).to.have.property('check_engine_light_flag', true);
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[0].original_data_id).eq('1'); // original IDs are strings
-        expect((results.value as Node[])[0].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+1`);
 
         expect((results.value as Node[])[1].properties).to.have.property('id', 2);
         expect((results.value as Node[])[1].properties).to.have.property('type', 'tire rotation');
         expect((results.value as Node[])[1].properties).to.have.property('check_engine_light_flag', false);
         // validate the original and composite ID fields worked correctly
         expect((results.value as Node[])[1].original_data_id).eq('2'); // original IDs are strings
-        expect((results.value as Node[])[1].composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+2`);
 
         // run through and set the right metatype and container
         results.value.forEach((node: Node | Edge) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = entry;
-            (node as Node).graph_id = graphID;
         });
 
         const inserted = await NodeMapper.Instance.BulkCreateOrUpdateByCompositeID(user.id!, results.value as Node[]);
@@ -894,20 +852,9 @@ describe('A Data Type Mapping can', async () => {
         maintenanceEdgeResult.value.forEach((edge: Node | Edge) => {
             (edge as Edge).container_id = containerID;
             (edge as Edge).metatypeRelationshipPair = maintenancePair;
-            (edge as Edge).graph_id = graphID;
         });
 
-        // validate the original and composite ID fields worked correctly
-        expect((maintenanceEdgeResult.value as Edge[])[0].origin_node_composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.id+UUID`);
-        expect((maintenanceEdgeResult.value as Edge[])[0].destination_node_composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+1`,
-        );
-        expect((maintenanceEdgeResult.value as Edge[])[1].origin_node_composite_original_id).eq(`${containerID}+${dataSourceID}+car_maintenance.id+UUID`);
-        expect((maintenanceEdgeResult.value as Edge[])[1].destination_node_composite_original_id).eq(
-            `${containerID}+${dataSourceID}+car_maintenance.maintenance_entries.[].id+2`,
-        );
-
-        const maintenanceEdgeInserted = await EdgeMapper.Instance.BulkCreateOrUpdateByCompositeID('test suite', maintenanceEdgeResult.value as Edge[]);
+        const maintenanceEdgeInserted = await EdgeMapper.Instance.BulkCreate('test suite', maintenanceEdgeResult.value as Edge[]);
         expect(maintenanceEdgeInserted.isError).false;
 
         await NodeMapper.Instance.Delete(maintenanceInserted.value[0].id!);

@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import {QueueProcessor} from '../../../../domain_objects/event_system/processor';
 import Event from '../../../../domain_objects/event_system/event';
 import File from '../../../../domain_objects/data_warehouse/data/file';
-import uuid from 'uuid';
 
 const format = require('pg-format');
 const resultClass = File;
@@ -139,7 +138,7 @@ export default class FileMapper extends Mapper {
         });
     }
 
-    public async ListForDataStaging(stagingID: number): Promise<Result<File[]>> {
+    public async ListForDataStaging(stagingID: string): Promise<Result<File[]>> {
         return super.rows<File>(this.filesForDataStagingStatement(stagingID), {
             resultClass,
         });
@@ -155,7 +154,6 @@ export default class FileMapper extends Mapper {
     // queries more easily.
     private createStatement(userID: string, ...files: File[]): string {
         const text = `INSERT INTO files(
-                  id,
                   container_id,
                   file_name,
                   file_size,
@@ -167,7 +165,6 @@ export default class FileMapper extends Mapper {
                   created_by,
                   modified_by) VALUES %L RETURNING *`;
         const values = files.map((file) => [
-            uuid.v4(),
             file.container_id,
             file.file_name,
             file.file_size,
@@ -185,13 +182,13 @@ export default class FileMapper extends Mapper {
 
     private fullUpdateStatement(userID: string, ...files: File[]): string {
         const text = `UPDATE files as f set
-                  container_id = u.container_id::uuid,
+                  container_id = u.container_id::bigint,
                   file_name = u.file_name,
                   file_size = u.file_size::float8,
                   adapter_file_path = u.adapter_file_path,
-                  adapter = u.adapter::file_upload_adapters,
+                  adapter = u.adapter,
                   metadata = u.metadata::jsonb,
-                  data_source_id = u.data_source_id::uuid,
+                  data_source_id = u.data_source_id::bigint,
                   md5hash = u.md5hash,
                   modified_by = u.modified_by,
                   modified_at = NOW()
@@ -206,7 +203,7 @@ export default class FileMapper extends Mapper {
                   data_source_id,
                   md5hash,
                   modified_by)
-                  WHERE u.id::uuid = f.id RETURNING f.*`;
+                  WHERE u.id::bigint = f.id RETURNING f.*`;
         const values = files.map((file) => [
             file.id,
             file.container_id,
@@ -269,7 +266,7 @@ export default class FileMapper extends Mapper {
         };
     }
 
-    private filesForDataStagingStatement(dataStagingID: number): QueryConfig {
+    private filesForDataStagingStatement(dataStagingID: string): QueryConfig {
         return {
             text: `SELECT files.* FROM data_staging_files LEFT JOIN files ON files.id = data_staging_files.file_id WHERE data_staging_id = $1`,
             values: [dataStagingID],

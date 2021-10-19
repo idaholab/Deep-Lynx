@@ -3,8 +3,7 @@ import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/post
 import MetatypeKeyMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
 import MetatypeMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import faker from 'faker';
-import { expect } from 'chai';
-import GraphMapper from '../../../data_access_layer/mappers/data_warehouse/data/graph_mapper';
+import {expect} from 'chai';
 import NodeMapper from '../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import ContainerStorage from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import EdgeMapper from '../../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
@@ -20,7 +19,7 @@ import MetatypeRelationshipPair from '../../../domain_objects/data_warehouse/ont
 import MetatypeKey from '../../../domain_objects/data_warehouse/ontology/metatype_key';
 import Node from '../../../domain_objects/data_warehouse/data/node';
 import Edge from '../../../domain_objects/data_warehouse/data/edge';
-import ExportRecord, { StandardExporterConfig } from '../../../domain_objects/data_warehouse/export/export';
+import ExportRecord, {StandardExporterConfig} from '../../../domain_objects/data_warehouse/export/export';
 
 describe('Gremlin Exporter', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -42,8 +41,8 @@ describe('Gremlin Exporter', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -53,36 +52,30 @@ describe('Gremlin Exporter', async () => {
         return Promise.resolve();
     });
 
-    after(async () => {
+    after(() => {
         return ContainerMapper.Instance.Delete(containerID);
     });
 
-    it('can initiate export by copying nodes and edges', async (done) => {
+    it('can initiate export by copying nodes and edges', async () => {
         const storage = EdgeMapper.Instance;
         const nStorage = NodeMapper.Instance;
         const kStorage = MetatypeKeyMapper.Instance;
         const mMapper = MetatypeMapper.Instance;
-        const gStorage = GraphMapper.Instance;
         const rMapper = MetatypeRelationshipMapper.Instance;
         const rpStorage = MetatypeRelationshipPairMapper.Instance;
 
         // SETUP CREATE NODES AND EDGE
-        const graph = await gStorage.Create(containerID, 'test suite');
-
-        expect(graph.isError, graph.error?.error).false;
-        expect(graph.value).not.empty;
-
         const metatype = await mMapper.BulkCreate('test suite', [
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
+                description: faker.random.alphaNumeric(),
             }),
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         ]);
 
         expect(metatype.isError).false;
@@ -101,16 +94,14 @@ describe('Gremlin Exporter', async () => {
         const mixed = [
             new Node({
                 container_id: containerID,
-                graph_id: graph.value.id!,
                 metatype: metatype.value[0].id!,
-                properties: payload
+                properties: payload,
             }),
             new Node({
                 container_id: containerID,
-                graph_id: graph.value.id!,
                 metatype: metatype.value[1].id!,
-                properties: payload
-            })
+                properties: payload,
+            }),
         ];
 
         const node = await nStorage.BulkCreateOrUpdateByCompositeID('test suite', mixed);
@@ -121,8 +112,8 @@ describe('Gremlin Exporter', async () => {
             new MetatypeRelationship({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(relationship.isError).false;
@@ -137,21 +128,20 @@ describe('Gremlin Exporter', async () => {
                 destination_metatype: metatype.value[1].id!,
                 relationship: relationship.value.id!,
                 relationship_type: 'one:one',
-                container_id: containerID
-            })
+                container_id: containerID,
+            }),
         );
 
         // EDGE SETUP
-        const edge = await storage.CreateOrUpdateByCompositeID(
+        const edge = await storage.Create(
             'test suite',
             new Edge({
                 container_id: containerID,
-                graph_id: graph.value.id!,
                 metatype_relationship_pair: pair.value.id!,
                 properties: payload,
-                origin_node_id: node.value[0].id,
-                destination_node_id: node.value[1].id
-            })
+                origin_id: node.value[0].id,
+                destination_id: node.value[1].id,
+            }),
         );
 
         expect(edge.isError).false;
@@ -164,8 +154,8 @@ describe('Gremlin Exporter', async () => {
             new ExportRecord({
                 container_id: containerID,
                 adapter: 'gremlin',
-                config: new StandardExporterConfig()
-            })
+                config: new StandardExporterConfig(),
+            }),
         );
 
         expect(exp.isError).false;
@@ -201,16 +191,16 @@ describe('Gremlin Exporter', async () => {
 
         const associatedNodes = await gremlinExportStorage.ListAssociatedNodes(exp.value.id!, 0, 100);
         expect(associatedNodes.isError).false;
-        expect(associatedNodes).empty;
+        expect(associatedNodes.value).empty;
 
-        done();
-    });
+        return Promise.resolve();
+    }).timeout(300000);
 });
 
-const payload: { [key: string]: any } = {
+const payload: {[key: string]: any} = {
     flower: 'Daisy',
     color: 'yellow',
-    notRequired: 1
+    notRequired: 1,
 };
 
 export const test_keys: MetatypeKey[] = [
@@ -219,7 +209,7 @@ export const test_keys: MetatypeKey[] = [
         description: 'flower name',
         required: true,
         property_name: 'flower_name',
-        data_type: 'string'
+        data_type: 'string',
     }),
     new MetatypeKey({
         name: 'Test2',
@@ -227,15 +217,15 @@ export const test_keys: MetatypeKey[] = [
         required: true,
         property_name: 'color',
         data_type: 'enumeration',
-        options: ['yellow', 'blue']
+        options: ['yellow', 'blue'],
     }),
     new MetatypeKey({
         name: 'Test Not Required',
         description: 'not required',
         required: false,
         property_name: 'notRequired',
-        data_type: 'number'
-    })
+        data_type: 'number',
+    }),
 ];
 
 export const single_test_key: MetatypeKey = new MetatypeKey({
@@ -243,5 +233,5 @@ export const single_test_key: MetatypeKey = new MetatypeKey({
     description: 'not required',
     required: false,
     property_name: 'notRequired',
-    data_type: 'number'
+    data_type: 'number',
 });

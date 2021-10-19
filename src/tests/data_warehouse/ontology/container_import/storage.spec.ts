@@ -139,7 +139,6 @@ describe('A Container Import', async () => {
             'test suite',
             new Node({
                 container_id: containerID,
-                graph_id: retrievedContainer.value.active_graph_id,
                 metatype: metatypeID!,
                 properties: {name: 'test document'},
             }),
@@ -190,7 +189,6 @@ describe('A Container Import', async () => {
         const nodeCreate = await nodeStorage.CreateOrUpdateByCompositeID(
             'test suite',
             new Node({
-                graph_id: retrievedContainer.value.active_graph_id!,
                 container_id: containerID,
                 metatype: metatypeID!,
                 properties: {name: 'test document'},
@@ -245,13 +243,11 @@ describe('A Container Import', async () => {
         const nodeCreate = await nodeStorage.BulkCreateOrUpdateByCompositeID('test suite', [
             new Node({
                 container_id: containerID,
-                graph_id: retrievedContainer.value.active_graph_id!,
                 metatype: metatypeID!,
                 properties: {name: 'test action 1'},
             }),
             new Node({
                 container_id: containerID,
-                graph_id: retrievedContainer.value.active_graph_id!,
                 metatype: metatypeID!,
                 properties: {name: 'test action 2'},
             }),
@@ -280,15 +276,14 @@ describe('A Container Import', async () => {
         const originID = nodeCreate.value[0].id;
         const destinationID = nodeCreate.value[1].id;
 
-        const edgeCreate = await edgeStorage.CreateOrUpdateByCompositeID(
+        const edgeCreate = await edgeStorage.Create(
             containerID,
             new Edge({
                 container_id: containerID,
                 metatype_relationship_pair: relationshipPairID!,
-                graph_id: retrievedContainer.value.active_graph_id,
                 properties: {},
-                origin_node_id: originID,
-                destination_node_id: destinationID,
+                origin_id: originID,
+                destination_id: destinationID,
             }),
         );
 

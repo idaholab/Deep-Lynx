@@ -2,7 +2,6 @@ import Container from '../../../../domain_objects/data_warehouse/ontology/contai
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import uuid from 'uuid';
 
 const format = require('pg-format');
 const resultClass = Container;
@@ -97,13 +96,12 @@ export default class ContainerMapper extends Mapper {
     // queries more easily.
     private createStatement(userID: string, ...containers: Container[]): string {
         const text = `INSERT INTO containers(
-                       id,
                        name,
                        description,
                        config, 
                        created_by, 
                        modified_by) VALUES %L RETURNING *`;
-        const values = containers.map((container) => [uuid.v4(), container.name, container.description, container.config, userID, userID]);
+        const values = containers.map((container) => [container.name, container.description, container.config, userID, userID]);
 
         return format(text, values);
     }
@@ -116,7 +114,7 @@ export default class ContainerMapper extends Mapper {
                         modified_by = u.modified_by,
                         modified_at = NOW()
                       FROM(VALUES %L) AS u(id, name, description, config, modified_by)
-                      WHERE u.id::uuid = c.id RETURNING c.*`;
+                      WHERE u.id::bigint = c.id RETURNING c.*`;
         const values = containers.map((container) => [container.id, container.name, container.description, container.config, userID]);
 
         return format(text, values);
@@ -124,14 +122,14 @@ export default class ContainerMapper extends Mapper {
 
     private archiveStatement(containerID: string, userID: string): QueryConfig {
         return {
-            text: `UPDATE containers SET archived = true, modified_by = $2  WHERE id = $1`,
+            text: `UPDATE containers SET deleted_at = NOW(), modified_by = $2  WHERE id = $1`,
             values: [containerID, userID],
         };
     }
 
     private setActiveStatement(containerID: string, userID: string): QueryConfig {
         return {
-            text: `UPDATE containers SET archived = false, modified_at = NOW(), modified_by = $2 WHERE id = $1`,
+            text: `UPDATE containers SET deleted_at = NULL, modified_at = NOW(), modified_by = $2 WHERE id = $1`,
             values: [containerID, userID],
         };
     }
@@ -145,9 +143,8 @@ export default class ContainerMapper extends Mapper {
 
     private retrieveStatement(id: string): QueryConfig {
         return {
-            text: `SELECT c.*, active_graphs.graph_id as active_graph_id
+            text: `SELECT c.*
                     FROM containers c
-                    LEFT JOIN active_graphs ON active_graphs.container_id = c.id
                     WHERE c.id = $1`,
             values: [id],
         };
@@ -155,17 +152,15 @@ export default class ContainerMapper extends Mapper {
 
     private listStatement(): QueryConfig {
         return {
-            text: `SELECT c.*, active_graphs.graph_id as active_graph_id
+            text: `SELECT c.*
                     FROM containers c
-                    LEFT JOIN active_graphs ON active_graphs.container_id = c.id
-                    WHERE NOT c.archived`,
+                    WHERE deleted_at IS NULL`,
         };
     }
 
     private listFromIDsStatement(ids: string[]): string {
-        const text = `SELECT c.*, active_graphs.graph_id as active_graph_id
+        const text = `SELECT c.*
                     FROM containers c
-                    LEFT JOIN active_graphs ON active_graphs.container_id = c.id
                     WHERE c.id IN(%L)`;
         const values = ids;
 

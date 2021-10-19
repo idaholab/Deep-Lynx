@@ -295,7 +295,7 @@ export default class DataSourceRecord extends BaseDomainClass {
     @IsOptional()
     id?: string;
 
-    @IsUUID()
+    @IsString()
     container_id?: string;
 
     @IsString()

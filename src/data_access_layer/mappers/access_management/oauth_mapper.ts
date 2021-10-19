@@ -1,8 +1,8 @@
 import Result from '../../../common_classes/result';
 import Mapper from '../mapper';
-import { PoolClient, QueryConfig } from 'pg';
+import {PoolClient, QueryConfig} from 'pg';
 import uuid from 'uuid';
-import { OAuthApplication } from '../../../domain_objects/access_management/oauth/oauth';
+import {OAuthApplication} from '../../../domain_objects/access_management/oauth/oauth';
 
 const format = require('pg-format');
 const resultClass = OAuthApplication;
@@ -32,7 +32,7 @@ export default class OAuthMapper extends Mapper {
     public async Create(userID: string, app: OAuthApplication, transaction?: PoolClient): Promise<Result<OAuthApplication>> {
         const r = await super.run(this.createStatement(userID, app), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -44,7 +44,7 @@ export default class OAuthMapper extends Mapper {
     public async Update(userID: string, app: OAuthApplication, transaction?: PoolClient): Promise<Result<OAuthApplication>> {
         const r = await super.run(this.fullUpdateStatement(userID, app), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -55,18 +55,18 @@ export default class OAuthMapper extends Mapper {
 
     public async Retrieve(id: string): Promise<Result<OAuthApplication>> {
         return super.retrieve(this.retrieveStatement(id), {
-            resultClass: OAuthApplication
+            resultClass: OAuthApplication,
         });
     }
 
     public async RetrieveByClientID(clientID: string): Promise<Result<OAuthApplication>> {
         return super.retrieve(this.retrieveByClientIDStatement(clientID), {
-            resultClass
+            resultClass,
         });
     }
 
     public async ListForUser(userID: string): Promise<Result<OAuthApplication[]>> {
-        return super.rows(this.listForUserStatement(userID), { resultClass });
+        return super.rows(this.listForUserStatement(userID), {resultClass});
     }
 
     // marks an application approved for user
@@ -111,7 +111,7 @@ export default class OAuthMapper extends Mapper {
             oauth.client_id,
             oauth.client_secret ? oauth.client_secret : oauth.client_secret_raw,
             userID,
-            userID
+            userID,
         ]);
 
         return format(text, values);
@@ -122,7 +122,7 @@ export default class OAuthMapper extends Mapper {
         const text = `UPDATE oauth_applications AS o SET
                                name = u.name,
                                description = u.description,
-                               owner_id = u.owner_id::uuid,
+                               owner_id = u.owner_id::bigint,
                                modified_by = u.modified_by,
                                modified_at = NOW()
                                FROM(VALUES %L) as u(
@@ -140,28 +140,28 @@ export default class OAuthMapper extends Mapper {
     private retrieveStatement(applicationID: string): QueryConfig {
         return {
             text: `SELECT * FROM oauth_applications WHERE id = $1`,
-            values: [applicationID]
+            values: [applicationID],
         };
     }
 
     private retrieveByClientIDStatement(clientID: string): QueryConfig {
         return {
             text: `SELECT * FROM oauth_applications WHERE client_id = $1`,
-            values: [clientID]
+            values: [clientID],
         };
     }
 
     private deleteStatement(userID: string): QueryConfig {
         return {
             text: `DELETE FROM oauth_applications WHERE id = $1`,
-            values: [userID]
+            values: [userID],
         };
     }
 
     private listForUserStatement(ownerID: string): QueryConfig {
         return {
             text: `SELECT * FROM oauth_applications WHERE owner_id = $1`,
-            values: [ownerID]
+            values: [ownerID],
         };
     }
 
@@ -169,14 +169,14 @@ export default class OAuthMapper extends Mapper {
     private markApplicationApprovedStatement(applicationID: string, userID: string): QueryConfig {
         return {
             text: `INSERT INTO oauth_application_approvals(oauth_application_id, user_id) VALUES($1, $2)`,
-            values: [applicationID, userID]
+            values: [applicationID, userID],
         };
     }
 
     private countApplicationApprovalsStatement(applicationID: string, userID: string): QueryConfig {
         return {
             text: `SELECT COUNT(*) FROM oauth_application_approvals WHERE oauth_application_id = $1 AND user_id =$2`,
-            values: [applicationID, userID]
+            values: [applicationID, userID],
         };
     }
 }
