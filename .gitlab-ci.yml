@@ -1,4 +1,8 @@
-build:
+stages:
+    - build
+    - deploy
+
+build_dl:
     stage: build
     image:
         name: gcr.io/kaniko-project/executor:debug
@@ -8,11 +12,41 @@ build:
         - cp -f $CI_PROJECT_DIR/Dockerfiles/Application/* $CI_PROJECT_DIR
         - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
         - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY/$CI_REGISTRY_PATH/deep-lynx:$CI_PIPELINE_IID
+    only:
+        - master
+
+build_dl_admin:
+    stage: build
+    image:
+        name: gcr.io/kaniko-project/executor:debug
+        entrypoint: ['']
+    script:
+        - mkdir -p /kaniko/.docker
+        - cp -f $CI_PROJECT_DIR/Dockerfiles/Application/* $CI_PROJECT_DIR
+        - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
         - cd "$CI_PROJECT_DIR/Admin Web App"
         - cp -f $DEEPLYNX_ADMIN_UI_CONFIG "$CI_PROJECT_DIR/Admin Web App/.env"
         - /kaniko/executor --context "$CI_PROJECT_DIR/Admin Web App" --dockerfile "$CI_PROJECT_DIR/Admin Web App/Dockerfile" --destination $CI_REGISTRY/$CI_REGISTRY_PATH/deep-lynx-admin:$CI_PIPELINE_IID
     only:
         - master
+
+build_swagger:
+    stage: build
+    image:
+        name: openjdk:8
+        entrypoint: ['']
+    script:
+        - mkdir /opt/swagger && cd /opt/swagger
+        - wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.29/swagger-codegen-cli-3.0.29.jar -O swagger-codegen-cli.jar
+        - git clone $DL_JS_SDK
+        - java -jar swagger-codegen-cli.jar generate -i $CI_PROJECT_DIR/API\ Documentation/Core.swagger_collection.yaml -l typescript-axios -o deep-lynx-js-sdk
+        - cd deep-lynx-js-sdk
+        - git config --global user.email "noreply@cicd.com" && git config --global user.name "CICD"
+        - git add * && git commit -m $CI_COMMIT_SHA
+        - git push $DL_JS_SDK master
+    only:
+        - master
+
 deploy_development:
     stage: deploy
     image: mcr.microsoft.com/azure-cli:latest
@@ -26,6 +60,7 @@ deploy_development:
         name: development
     only:
         - master
+
 deploy_production:
     stage: deploy
     image: mcr.microsoft.com/azure-cli:latest
