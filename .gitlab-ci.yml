@@ -44,8 +44,12 @@ build_swagger:
         - git config --global user.email "noreply@cicd.com" && git config --global user.name "CICD"
         - git add * && git commit -m $CI_COMMIT_SHA
         - git push $DL_JS_SDK master
+    allow_failure: true
     only:
-        - master
+        refs:
+            - master
+        changes:
+            - API\ Documentation/Core.swagger_collection.yaml
 
 deploy_development:
     stage: deploy
