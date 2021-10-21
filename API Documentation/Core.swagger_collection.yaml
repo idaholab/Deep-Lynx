@@ -4304,15 +4304,18 @@ components:
       type: object
       example:
         container_id: required
-        original_data_id: required
         data_source_id: required
-        origin_node_id: required (if origin_node_original_id not set)
-        destination_node_id: required (if destination_node_original_id not set)
-        origin_node_original_id: 'create edge based on original ID of node, not Deep Lynx ID'
-        destination_node_original_id: 'create edge based on original ID of node, not Deep Lynx ID'
+        origin_id: required (if origin_original_id not set)
+        destination_id: required (if destination_original_id not set)
+        origin_original_id: create edge based on composite id of node ( data source id + metatype id + original id of node)
+        origin_metatype_id: required if using original id for edge creation
+        origin_data_source_id: required if using original id for edge creation
+        destination_original_id: create edge based on composite id of node (data source id + metatype id +  original id of node)D
+        destination_metatype_id: required if using original id for edge creation
+        destination_data_source_id: required if using original id for edge creation
         relationship_pair_id: required
         modified_at: will attempt to update edge if exists
-        properties: {}
+        properties: { }
       properties:
         container_id:
           type: string
@@ -4360,7 +4363,6 @@ components:
           destination_metatype_id: required if using original id for edge creation
           destination_data_source_id: required if using original id for edge creation
           relationship_pair_id: required
-          modified_at: will attempt to update edge if exists
           properties: {}
     NewMetatypeRequest:
       title: NewMetatypeRequest
@@ -4567,8 +4569,12 @@ components:
         description:
           type: string
       example:
-        name: Relationhip Test
-        description: string
+        name: Relationship Name
+        description: Relationship Description
+      x-examples:
+        example-1:
+          name: Relationship Name
+          description: Relationship Description
     UpdateMetatypeRelationshipRequest:
       title: UpdateMetatypeRelationshipRequest
       required:
@@ -4583,6 +4589,10 @@ components:
       example:
         name: Update Test
         description: Final Test Description
+      x-examples:
+        example-1:
+          name: Update Test
+          description: Final Test Description
     NewMetatypeRelationshipKeyRequest:
       title: NewMetatypeRelationshipKeyRequest
       required:

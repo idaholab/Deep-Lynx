@@ -91,21 +91,21 @@ export default class ContainerUserInviteMapper extends Mapper {
                         containers.name as container_name 
                         FROM user_container_invites 
                             LEFT JOIN containers ON containers.id = user_container_invites.container_id  
-                        WHERE email = $1 AND NOT accepted`,
+                        WHERE email ILIKE $1 AND NOT accepted`,
             values: [email],
         };
     }
 
     private retrieveByTokenAndEmailStatement(token: string, email: string): QueryConfig {
         return {
-            text: `SELECT * FROM user_container_invites WHERE token = $1 AND email = $2`,
+            text: `SELECT * FROM user_container_invites WHERE token = $1 AND email ILIKE $2`,
             values: [token, email],
         };
     }
 
     private markAcceptedStatement(token: string, email: string): QueryConfig {
         return {
-            text: `UPDATE user_container_invites SET accepted = true WHERE token = $1 and email = $2`,
+            text: `UPDATE user_container_invites SET accepted = true WHERE token = $1 and email ILIKE $2`,
             values: [token, email],
         };
     }

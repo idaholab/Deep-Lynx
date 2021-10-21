@@ -11,7 +11,7 @@ import Result from '../../common_classes/result';
  */
 export class Emailer {
     private static instance: Emailer;
-    private _mail: Mail;
+    private _mail?: Mail;
 
     public static get Instance(): Emailer {
         if (!Emailer.instance) {
@@ -22,7 +22,11 @@ export class Emailer {
     }
 
     constructor() {
-        const auth: { [key: string]: any } = {};
+        if (!Config.email_enabled) {
+            return;
+        }
+
+        const auth: {[key: string]: any} = {};
 
         // authentication could be LOGIN or OAUTH2
         if (Config.smtp_username !== '') auth.user = Config.smtp_username;
@@ -43,9 +47,9 @@ export class Emailer {
             port: Config.smtp_port,
             secure: Config.smtp_tls,
             tls: {
-                rejectUnauthorized: false
+                rejectUnauthorized: false,
             },
-            auth
+            auth,
         });
 
         this._mail.verify((error: any, success) => {
@@ -62,22 +66,24 @@ export class Emailer {
         }
 
         return new Promise((resolve) => {
-            this._mail.sendMail(
-                {
-                    from: Config.email_address,
-                    to,
-                    subject,
-                    html: template
-                },
-                (err) => {
-                    if (err) {
-                        Logger.error(`error sending email ${err}`);
-                        resolve(Result.Failure(err.message));
-                    } else {
-                        resolve(Result.Success(true));
-                    }
-                }
-            );
+            if (this._mail) {
+                this._mail.sendMail(
+                    {
+                        from: Config.email_address,
+                        to,
+                        subject,
+                        html: template,
+                    },
+                    (err) => {
+                        if (err) {
+                            Logger.error(`error sending email ${err}`);
+                            resolve(Result.Failure(err.message));
+                        } else {
+                            resolve(Result.Success(true));
+                        }
+                    },
+                );
+            }
         });
     }
 }

@@ -59,11 +59,10 @@ export default class GraphRoutes {
                     })
                     .finally(() => next());
             } else {
-                repo.and()
-                    .list(req.query.loadMetatypes === 'true', {
-                        limit: req.query.limit ? +req.query.limit : undefined,
-                        offset: req.query.offset ? +req.query.offset : undefined,
-                    })
+                repo.list(req.query.loadMetatypes === 'true', {
+                    limit: req.query.limit ? +req.query.limit : undefined,
+                    offset: req.query.offset ? +req.query.offset : undefined,
+                })
                     .then((result) => {
                         if (result.isError && result.error) {
                             res.status(result.error.errorCode).json(result);

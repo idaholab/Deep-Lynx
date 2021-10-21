@@ -76,7 +76,7 @@ export class Repository {
             }
             case 'like': {
                 this._values.push(value);
-                this._rawQuery.push(`->> '${finalKey}' LIKE $${this._values.length}`);
+                this._rawQuery.push(`->> '${finalKey}' ILIKE $${this._values.length}`);
                 break;
             }
             case 'in': {
@@ -115,7 +115,7 @@ export class Repository {
             }
             case 'like': {
                 this._values.push(value);
-                this._rawQuery.push(`${fieldName} LIKE $${this._values.length}`);
+                this._rawQuery.push(`${fieldName} ILIKE $${this._values.length}`);
                 break;
             }
             case 'in': {

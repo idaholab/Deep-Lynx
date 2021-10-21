@@ -20,6 +20,7 @@ export class Config {
 
     private readonly _template_dir: string;
     private readonly _asset_dir: string;
+    private readonly _web_gui_dir: string;
 
     private readonly _is_windows: boolean;
 
@@ -35,6 +36,8 @@ export class Config {
     private readonly _filesystem_storage_directory: string;
     private readonly _azure_blob_connection_string: string;
     private readonly _azure_blob_container_name: string;
+
+    private readonly _vue_app_name: string;
 
     private readonly _server_port: string;
     private readonly _log_level: string;
@@ -112,6 +115,7 @@ export class Config {
 
         this._template_dir = process.env.TEMPLATE_DIR || './dist/http_server/views';
         this._asset_dir = process.env.ASSET_DIR || './dist/http_server/assets';
+        this._web_gui_dir = process.env.WEB_GUI_DIR || './dist/http_server/web_gui';
 
         this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
 
@@ -119,6 +123,8 @@ export class Config {
         this._filesystem_storage_directory = process.env.FILESYSTEM_STORAGE_DIRECTORY || '';
         this._azure_blob_connection_string = process.env.AZURE_BLOB_CONNECTION_STRING || '';
         this._azure_blob_container_name = process.env.AZURE_BLOB_CONTAINER_NAME || 'deep-lynx';
+
+        this._vue_app_name = process.env.VUE_APP_NAME || 'Admin Web Interface';
 
         this._server_port = process.env.SERVER_PORT || '8090';
         this._log_level = process.env.LOG_LEVEL || 'debug';
@@ -192,6 +198,10 @@ export class Config {
 
     get asset_dir(): string {
         return this._asset_dir;
+    }
+
+    get web_gui_dir(): string {
+        return this._web_gui_dir;
     }
 
     get email_address(): string {
@@ -276,6 +286,10 @@ export class Config {
 
     get data_source_batch_size(): number {
         return this._data_source_processing_batch_size;
+    }
+
+    get admin_web_app_name(): string {
+        return this._vue_app_name;
     }
 
     get export_data_interval(): string {
@@ -403,11 +417,11 @@ export class Config {
     }
 
     get rsa_client_key(): string {
-        return this._rsa_client_key
+        return this._rsa_client_key;
     }
 
     get rsa_client_id(): string {
-        return this._rsa_client_id
+        return this._rsa_client_id;
     }
 
     public static Instance(): Config {
