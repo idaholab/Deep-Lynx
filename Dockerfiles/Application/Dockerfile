@@ -7,6 +7,7 @@ WORKDIR /srv/core_api
 COPY --chown=node:node package*.json ./
 
 RUN npm install
+RUN npm install --global --unsafe-perm @vue/cli
 
 # If you are building your code for production
 # RUN npm ci --only=production
