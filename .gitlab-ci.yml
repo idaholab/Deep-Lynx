@@ -73,7 +73,7 @@ deploy_production:
         - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
         - mkdir -p $HOME/.kube
         - echo -n $KUBE_CONFIG | base64 -d > $HOME/.kube/config
-        - kubectl apply -f $DEEPLYNX_DEV_KUBERNETES
+        - kubectl apply -f $DEEPLYNX_PRD_KUBERNETES
     environment:
         name: production
     when: manual
