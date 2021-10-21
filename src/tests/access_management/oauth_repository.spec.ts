@@ -1,13 +1,13 @@
-import { User } from '../../domain_objects/access_management/user';
+import {User} from '../../domain_objects/access_management/user';
 import Logger from '../../services/logger';
 import PostgresAdapter from '../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerMapper from '../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import Container from '../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
 import OAuthRepository from '../../data_access_layer/repositories/access_management/oauth_repository';
-import { OAuthApplication } from '../../domain_objects/access_management/oauth/oauth';
+import {OAuthApplication} from '../../domain_objects/access_management/oauth/oauth';
 
 describe('An OAuth Repository', async () => {
     let container: Container;
@@ -25,8 +25,8 @@ describe('An OAuth Repository', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         const userResult = await UserMapper.Instance.Create(
@@ -38,8 +38,8 @@ describe('An OAuth Repository', async () => {
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 password: faker.random.alphaNumeric(12),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(userResult.isError).false;
@@ -63,7 +63,7 @@ describe('An OAuth Repository', async () => {
         const app = new OAuthApplication({
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
-            owner: user
+            owner: user,
         });
 
         let saved = await repo.save(app, user);
@@ -80,6 +80,61 @@ describe('An OAuth Repository', async () => {
         expect(saved.isError).false;
         expect(app.name).eq(updatedName);
         expect(app.description).eq(updatedDescription);
+
+        return repo.delete(app);
+    });
+
+    it('can save a new OAuthApplication with no user', async () => {
+        const repo = new OAuthRepository();
+        const app = new OAuthApplication({
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric(),
+        });
+
+        let saved = await repo.save(app, user);
+        expect(saved.isError).false;
+        expect(app.id).not.undefined;
+
+        // now update with new name
+        const updatedName = faker.name.findName();
+        const updatedDescription = faker.random.alphaNumeric();
+        app.name = updatedName;
+        app.description = updatedDescription;
+
+        saved = await repo.save(app, user);
+        expect(saved.isError).false;
+        expect(app.name).eq(updatedName);
+        expect(app.description).eq(updatedDescription);
+
+        return repo.delete(app);
+    });
+
+    // we need this ability for the initial oauth application script
+    it('can save find an OAuthApplication with no user', async () => {
+        const repo = new OAuthRepository();
+        const app = new OAuthApplication({
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric(),
+        });
+
+        let saved = await repo.save(app, user);
+        expect(saved.isError).false;
+        expect(app.id).not.undefined;
+
+        // now update with new name
+        const updatedName = faker.name.findName();
+        const updatedDescription = faker.random.alphaNumeric();
+        app.name = updatedName;
+        app.description = updatedDescription;
+
+        saved = await repo.save(app, user);
+        expect(saved.isError).false;
+        expect(app.name).eq(updatedName);
+        expect(app.description).eq(updatedDescription);
+
+        const results = await repo.where().ownerID('is null').and().name('eq', app.name).list();
+        expect(results.isError).false;
+        expect(results.value.length).eq(1);
 
         return repo.delete(app);
     });

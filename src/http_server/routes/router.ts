@@ -153,6 +153,9 @@ export class Router {
         // assets
         this.app.use(express.static(Config.asset_dir));
 
+        // web gui
+        this.app.use('/gui', express.static(Config.web_gui_dir));
+
         this.app.use([this.perfMiddleware.Pre()]); // performance middleware
         this.app.use(
             helmet({

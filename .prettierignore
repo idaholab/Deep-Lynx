@@ -2,7 +2,7 @@ dist
 node_modules
 .idea
 .nyc_output
-Admin Web App
+AdminWebApp
 API Documentation
 src/data_access_layer/mappers/data_warehouse/ontology/container_import.ts
 src/data_warehouse/ontology/metatype_relationship_pair.ts

@@ -63,16 +63,18 @@ If you decide to test graph functionality (Gremlin functionality in particular) 
 
 Below is a list of all `npm run` commands as listed in the `package.json` file.
 
--   `docker:api:build` Creates a docker image of Deep Lynx, injecting the `.env` file into it.
--   `docker:api:run` Runs previously created Deep Lynx image.
--   `docker:api:clean` Stops the Deep Lynx docker container run by the command above and deletes the container and image.
--   `docker:postgres:build` Creates a docker image containing a Postgres 12 data source, along with all needed extensions.
--   `docker:postgres:run` Runs previously created Postgres.
--   `docker:postgres:clean` Stops the Postgres docker container run by the command above and deletes the container and image.
--   `watch` Runs `nodemon` using the `nodemon.json` configuration file. This runs the application and automatically rebuilds it when file changes are detected.
--   `start` Compiles and runs the application.
--   `build:dev` Compiles the application in development mode.
--   `test`: Runs all tests using the `.env` file to configure application and tests.
--   `migrate`: Runs the database migration tool.
+- `docker:api:build` Creates a docker image of Deep Lynx, injecting the `.env` file into it.
+- `docker:api:run` Runs previously created Deep Lynx image.
+- `docker:api:clean` Stops the Deep Lynx docker container run by the command above and deletes the container and image.
+- `docker:postgres:build` Creates a docker image containing a Postgres 12 data source, along with all needed extensions.
+- `docker:postgres:run` Runs previously created Postgres.
+- `docker:postgres:clean` Stops the Postgres docker container run by the command above and deletes the container and image.
+- `watch` Runs `nodemon` using the `nodemon.json` configuration file. This runs the application and automatically rebuilds it when file changes are detected.
+- `start-with-web` Compiles and runs the application - this includes the bundled Admin Web App. This command might take a few minutes to run.
+- `start` Compiles and runs the application without rebuilding the Admin Web App. 
+- `build:dev-with-web` Compiles the application in development mode - this includes the bundled Admin Web App. This command might take a few minutes to run.
+- `build:dev` Compiles the application in development mode without rebuilding the Admin Web App.
+- `test`: Runs all tests using the `.env` file to configure application and tests.
+- `migrate`: Runs the database migration tool.
 
 **There is a lot more information about Deep Lynx, and it's capabilities in it's [Wiki](https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Home). We highly recommend you start there if you have questions or need to figure out how best to utilize Deep Lynx in your project.**

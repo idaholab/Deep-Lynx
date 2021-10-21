@@ -22,4 +22,4 @@ RUN chmod +x /wait
 USER node
 
 EXPOSE 8080
-CMD ["npm", "start"]
+CMD ["npm", "start-with-web"]

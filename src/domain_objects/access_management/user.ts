@@ -14,7 +14,7 @@ import {
     ValidationOptions,
 } from 'class-validator';
 import Config from '../../services/config';
-import uuid from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 import {Exclude, Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Container from '../data_warehouse/ontology/container';
 import bcrypt from 'bcrypt';
@@ -164,12 +164,12 @@ export class User extends BaseDomainClass {
 */
 export class KeyPair extends BaseDomainClass {
     @IsString()
-    key: string = Buffer.from(uuid.v4()).toString('base64');
+    key: string = Buffer.from(uuidv4()).toString('base64');
 
     // we set the raw secret, the saving will handle encryption - and checking
     // for the encrypted, saved secret will allow use to verify it's saved
     @IsString()
-    secret_raw: string = Buffer.from(uuid.v4()).toString('base64');
+    secret_raw: string = Buffer.from(uuidv4()).toString('base64');
 
     @IsString()
     user_id?: string;

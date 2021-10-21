@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import RepositoryInterface, {Repository} from '../repository';
+import RepositoryInterface, {QueryOptions, Repository} from '../repository';
 import OAuthMapper from '../../mappers/access_management/oauth_mapper';
 import Result from '../../../common_classes/result';
-import uuid from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 import Cache from '../../../services/cache/cache';
 import UserRepository from './user_repository';
 import bcrypt from 'bcrypt';
@@ -88,7 +88,7 @@ export default class OAuthRepository extends Repository implements RepositoryInt
     // makAuthorizationRequest will make and store a request in cache for 10 minutes. It will
     // return a token which then must be used to exchange for the final access token
     async makeAuthorizationRequest(userID: string, request: OAuthRequest): Promise<Result<string>> {
-        const token = Buffer.from(uuid.v4()).toString('base64');
+        const token = Buffer.from(uuidv4()).toString('base64');
         request.user_id = userID;
 
         const errors = await request.validationErrors();
@@ -188,5 +188,24 @@ export default class OAuthRepository extends Repository implements RepositoryInt
         if (!cached) return Promise.resolve(undefined);
 
         return Promise.resolve(plainToClass(OAuthRequest, cached));
+    }
+
+    name(operator: string, value: any) {
+        super.query('name', operator, value);
+        return this;
+    }
+
+    ownerID(operator: string, value?: any) {
+        super.query('owner_id', operator, value);
+        return this;
+    }
+
+    async list(options?: QueryOptions): Promise<Result<OAuthApplication[]>> {
+        const results = await super.findAll<object>(options);
+        if (results.isError) return Promise.resolve(Result.Pass(results));
+
+        const applications = plainToClass(OAuthApplication, results.value);
+
+        return Promise.resolve(Result.Success(applications));
     }
 }

@@ -2,7 +2,6 @@ import Result from '../../../common_classes/result';
 import Mapper from '../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import {User} from '../../../domain_objects/access_management/user';
-import uuid from 'uuid';
 
 const UIDGenerator = require('uid-generator');
 const uidgen = new UIDGenerator();
@@ -199,7 +198,7 @@ export default class UserMapper extends Mapper {
 
     private retrieveByEmailStatement(email: string): QueryConfig {
         return {
-            text: `SELECT * FROM users WHERE email = $1 LIMIT 1`,
+            text: `SELECT * FROM users WHERE email ILIKE $1 LIMIT 1`,
             values: [email],
         };
     }

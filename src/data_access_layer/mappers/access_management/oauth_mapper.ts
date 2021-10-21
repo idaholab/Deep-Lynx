@@ -1,8 +1,8 @@
 import Result from '../../../common_classes/result';
 import Mapper from '../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import uuid from 'uuid';
 import {OAuthApplication} from '../../../domain_objects/access_management/oauth/oauth';
+import {v4 as uuidv4} from 'uuid';
 
 const format = require('pg-format');
 const resultClass = OAuthApplication;
@@ -104,7 +104,7 @@ export default class OAuthMapper extends Mapper {
                                created_by,
                                modified_by) VALUES %L RETURNING *`;
         const values = applications.map((oauth) => [
-            uuid.v4(),
+            uuidv4(),
             oauth.name,
             oauth.description,
             oauth.owner_id,

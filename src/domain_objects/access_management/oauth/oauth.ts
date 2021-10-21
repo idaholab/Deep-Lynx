@@ -1,6 +1,6 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
 import {IsIn, IsOptional, IsString, IsUrl, IsUUID} from 'class-validator';
-import uuid from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 import Result from '../../../common_classes/result';
 import bcrypt from 'bcrypt';
 import {User} from '../user';
@@ -25,16 +25,17 @@ export class OAuthApplication extends BaseDomainClass {
     description = '';
 
     @IsString()
+    @IsOptional()
     owner_id?: string;
 
     @IsString()
-    client_id: string = Buffer.from(uuid.v4()).toString('base64');
+    client_id: string = Buffer.from(uuidv4()).toString('base64');
 
     @IsString()
     client_secret?: string;
 
     @IsString()
-    client_secret_raw: string = Buffer.from(uuid.v4()).toString('base64');
+    client_secret_raw: string = Buffer.from(uuidv4()).toString('base64');
 
     constructor(input: {name: string; description: string; owner?: string | User; secret?: string}) {
         super();
