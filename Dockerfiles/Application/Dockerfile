@@ -19,11 +19,12 @@ USER root
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait /wait
 RUN chmod +x /wait
 
-# install vue-cli as root
-RUN npm install --global --unsafe-perm @vue/cli @vue/cli-service-global @vue/cli-plugin-typescript vue-cli-plugin-vuetify @vue/cli-plugin-vuex @vue/cli-plugin-router @vue/cli-plugin-eslint
-
 USER node
+
+RUN npm install --global --unsafe-perm @vue/cli @vue/cli-service-global
 ENV PATH="${PATH}:/usr/local/lib/node_modules/@vue/cli-service-global/node_modules/.bin"
 
+RUN npm run build:admin-web-app
+
 EXPOSE 8080
-CMD ["npm", "start-with-web"]
+CMD ["npm", "start"]
