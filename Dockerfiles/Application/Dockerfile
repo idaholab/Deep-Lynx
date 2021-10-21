@@ -23,6 +23,7 @@ RUN chmod +x /wait
 RUN npm install --global --unsafe-perm @vue/cli
 
 USER node
+ENV PATH="${PATH}:/usr/local/lib/node_modules/@vue/cli-service-global/node_modules/.bin"
 
 EXPOSE 8080
 CMD ["npm", "start-with-web"]
