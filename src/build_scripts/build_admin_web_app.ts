@@ -60,7 +60,7 @@ void postgresAdapter.init().then(() => {
 
 function buildAdminWebApp() {
     exec(
-        'cd ./AdminWebApp && npm install && npm install --global --unsafe-perm @vue/cli && npm run build -- --dest ./../dist/http_server/web_gui',
+        'cd ./AdminWebApp && npm install && npm run build -- --dest ./../dist/http_server/web_gui',
         function (error: ErrnoException, stdout: string, stderr: string) {
             console.log(stdout);
             console.log(stderr);
