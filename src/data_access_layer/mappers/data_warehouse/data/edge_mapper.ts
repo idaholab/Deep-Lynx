@@ -75,15 +75,19 @@ export default class EdgeMapper extends Mapper {
     }
 
     public AddFile(id: string, fileID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.addFile(id, fileID));
+        return super.runStatement(this.addFileStatement(id, fileID));
     }
 
     public RemoveFile(id: string, fileID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.removeFile(id, fileID));
+        return super.runStatement(this.removeFileStatement(id, fileID));
     }
 
     public Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id));
+    }
+
+    public RunEdgeLinker(): Promise<Result<boolean>> {
+        return super.runStatement(this.linkEdgesStatement());
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -196,17 +200,26 @@ export default class EdgeMapper extends Mapper {
         };
     }
 
-    private addFile(edgeID: string, fileID: string): QueryConfig {
+    private addFileStatement(edgeID: string, fileID: string): QueryConfig {
         return {
             text: `INSERT INTO edge_files(edge_id, file_id) VALUES ($1, $2)`,
             values: [edgeID, fileID],
         };
     }
 
-    private removeFile(edgeID: string, fileID: string): QueryConfig {
+    private removeFileStatement(edgeID: string, fileID: string): QueryConfig {
         return {
             text: `DELETE FROM edge_files WHERE edge_id = $1 AND file_id = $2`,
             values: [edgeID, fileID],
+        };
+    }
+
+    // linkEdgesStatement runs a stored procedure on every row in the edges table that matches the WHERE statement
+    // the stored procedure handles "orphaned" edges and attempts to connect them to their correct nodes based on
+    // the composite id of the node's original id, data source id, and metatype id
+    private linkEdgesStatement(): QueryConfig {
+        return {
+            text: `SELECT link_edge(edges.*) FROM edges WHERE origin_id IS NULL OR destination_id IS NULL`,
         };
     }
 }
