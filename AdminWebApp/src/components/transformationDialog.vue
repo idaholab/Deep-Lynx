@@ -381,6 +381,7 @@
                       <v-col style="padding: 0px">
                         <select-data-source
                             @selected="setParentDataSource"
+                            :dataSourceID="transformation.origin_data_source_id"
                             :containerID="containerID">
                         </select-data-source>
                       </v-col>
@@ -389,6 +390,7 @@
                             :tooltip="true"
                             @selected="setChildDataSource"
                             :tooltipHelp="$t('dataMapping.dataSourceRelationshipHelp')"
+                            :dataSourceID="transformation.destination_data_source_id"
                             :containerID="containerID">
                         </select-data-source>
                       </v-col>
@@ -400,6 +402,7 @@
                       <v-col>
                         <search-metatypes
                             @selected="setParentMetatype"
+                            :metatypeID="transformation.origin_metatype_id"
                             :containerID="containerID">
                         </search-metatypes>
                       </v-col>
@@ -408,6 +411,7 @@
                             :tooltip="true"
                             @selected="setChildMetatype"
                             :tooltipHelp="$t('dataMapping.metatypeRelationshipHelp')"
+                            :metatypeID="transformation.destination_metatype_id"
                             :containerID="containerID">
                         </search-metatypes>
                       </v-col>

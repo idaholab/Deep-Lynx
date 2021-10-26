@@ -247,14 +247,24 @@ export default class StandardDataSourceImpl implements DataSource {
                     }
 
                     if (count.value === 0) {
-                        const set = await this.#importRepo.setStatus(incompleteImport.id!, 'completed', undefined, importTransaction.value);
+                        const set = await this.#importRepo.setStatus(
+                            incompleteImport.id!,
+                            'completed',
+                            'import has been successfully processed',
+                            importTransaction.value,
+                        );
                         if (set.isError) Logger.debug(`error attempting to update import status ${set.error}`);
 
                         await ImportMapper.Instance.completeTransaction(importTransaction.value);
                         continue;
                     }
 
-                    const set = await this.#importRepo.setStatus(incompleteImport.id!, 'processing', undefined, importTransaction.value);
+                    const set = await this.#importRepo.setStatus(
+                        incompleteImport.id!,
+                        'processing',
+                        'import is still open for processing',
+                        importTransaction.value,
+                    );
                     if (set.isError) Logger.debug(`error attempting to update import status ${set.error}`);
                     await ImportMapper.Instance.completeTransaction(importTransaction.value);
                 }

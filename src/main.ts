@@ -48,6 +48,10 @@ void postgresAdapter.init().then(() => {
                 name: 'data_staging_mapping', // will run data_staging_mapping.js
                 interval: Config.data_source_interval, // exports take longer to process, more time in-between instances is needed
             },
+            {
+                name: 'orphan_edge_linker', // will run orphan_edge_linker.js
+                interval: Config.edge_linker_interval,
+            },
         ],
     });
 
