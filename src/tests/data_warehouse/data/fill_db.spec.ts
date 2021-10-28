@@ -23,7 +23,7 @@ import TypeTransformation, {KeyMapping} from '../../../domain_objects/data_wareh
 import TypeMappingRepository from '../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
 import DataSourceRecord, {DataSource} from '../../../domain_objects/data_warehouse/import/data_source';
 import {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
-import uuid from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 import {Readable} from 'stream';
 
 // This test will generate a basic ontology and test data, process it, and persist to the database. You must delete
@@ -368,10 +368,10 @@ describe('We can generate test data', async () => {
         for (let i = 0; i < amountToGenerate; i++) {
             generatedPayload.push({
                 car: {
-                    id: uuid.v4(),
+                    id: uuidv4(),
                     name: faker.name.firstName(),
                     manufacturer: {
-                        id: uuid.v4(),
+                        id: uuidv4(),
                         name: faker.name.jobArea(),
                         location: faker.address.city(),
                     },
@@ -403,7 +403,7 @@ describe('We can generate test data', async () => {
                     ],
                 },
                 car_maintenance: {
-                    id: uuid.v4(),
+                    id: uuidv4(),
                     name: faker.name.firstName(),
                     start_date: new Date(new Date().getTime() * (Math.random() * 1000)).toDateString(),
                     average_visits_per_year: Math.random() * 10,

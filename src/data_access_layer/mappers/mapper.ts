@@ -5,7 +5,7 @@ import Result, {ErrorNotFound} from '../../common_classes/result';
 import {pipe} from 'fp-ts/lib/pipeable';
 import {fold} from 'fp-ts/lib/Either';
 import {PoolClient, QueryConfig} from 'pg';
-import uuid from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 import PostgresAdapter from './db_adapters/postgres/postgres';
 import Logger from '../../services/logger';
 import 'reflect-metadata';
@@ -271,7 +271,7 @@ export default class Mapper {
 
     // chose to wrap this vs. call the library in a child class
     generateUUID(): string {
-        return uuid.v4();
+        return uuidv4();
     }
 }
 
