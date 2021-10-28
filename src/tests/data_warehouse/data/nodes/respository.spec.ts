@@ -174,6 +174,8 @@ describe('A Node Repository', async () => {
     it('can bulk save Nodes', async () => {
         const nodeRepo = new NodeRepository();
 
+        let originalID = faker.name.findName();
+
         const mixed = [
             new Node({
                 container_id: containerID,
@@ -186,7 +188,16 @@ describe('A Node Repository', async () => {
                 container_id: containerID,
                 metatype,
                 properties: payload,
-                original_data_id: faker.name.findName(),
+                original_data_id: originalID,
+                data_source_id: dataSourceID,
+            }),
+            // we're adding a second node with the same origianl id to test both update feature in the same batch
+            // and verify that we've nipped the timestamp bug in the bud
+            new Node({
+                container_id: containerID,
+                metatype,
+                properties: payload,
+                original_data_id: originalID,
                 data_source_id: dataSourceID,
             }),
         ];
@@ -201,6 +212,7 @@ describe('A Node Repository', async () => {
         // update the node's payload
         mixed[0].properties = updatedPayload;
         mixed[1].properties = updatedPayload;
+        mixed[2].properties = updatedPayload;
 
         saved = await nodeRepo.bulkSave(user, mixed);
         expect(saved.isError).false;

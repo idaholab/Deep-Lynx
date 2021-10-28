@@ -191,7 +191,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         }
 
         if (toUpdate.length > 0) {
-            const saved = await this.#mapper.BulkUpdate(user instanceof User ? user.id! : user, nodes, transaction);
+            const saved = await this.#mapper.BulkUpdate(user instanceof User ? user.id! : user, toUpdate, transaction);
             if (saved.isError) {
                 if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
                 return Promise.resolve(Result.Pass(saved));
@@ -201,7 +201,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         }
 
         if (toCreate.length > 0) {
-            const saved = await this.#mapper.BulkCreateOrUpdateByCompositeID(user instanceof User ? user.id! : user, nodes, transaction);
+            const saved = await this.#mapper.BulkCreateOrUpdateByCompositeID(user instanceof User ? user.id! : user, toCreate, transaction);
             if (saved.isError) {
                 if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
                 return Promise.resolve(Result.Pass(saved));
