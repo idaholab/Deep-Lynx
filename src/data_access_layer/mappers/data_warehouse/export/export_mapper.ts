@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import {QueueProcessor} from '../../../../domain_objects/event_system/processor';
 import Event from '../../../../domain_objects/event_system/event';
 import ExportRecord from '../../../../domain_objects/data_warehouse/export/export';
-import uuid from 'uuid';
 
 const format = require('pg-format');
 const resultClass = ExportRecord;

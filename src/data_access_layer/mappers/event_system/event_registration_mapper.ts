@@ -2,7 +2,6 @@ import Result from '../../../common_classes/result';
 import EventRegistration from '../../../domain_objects/event_system/event_registration';
 import Mapper from '../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import uuid from 'uuid';
 
 const format = require('pg-format');
 

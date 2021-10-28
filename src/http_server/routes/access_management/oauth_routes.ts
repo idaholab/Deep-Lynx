@@ -9,7 +9,7 @@ import Cache from '../../../services/cache/cache';
 
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
-import uuid from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 import UserRepository from '../../../data_access_layer/repositories/access_management/user_repository';
 import {KeyPair, ResetUserPasswordPayload, User} from '../../../domain_objects/access_management/user';
 import {classToPlain, plainToClass, serialize} from 'class-transformer';
@@ -347,7 +347,7 @@ export default class OAuthRoutes {
         // if this login is part of an OAuth request flow, we must save it in cache
         // so that we can restore it as part of the redirect
         if (oauthRequest) {
-            const token = Buffer.from(uuid.v4()).toString('base64');
+            const token = Buffer.from(uuidv4()).toString('base64');
             Cache.set(token, classToPlain(oauthRequest), 60 * 10).then((set) => {
                 if (!set) {
                     res.redirect(buildUrl('/', {queryParams: {error: `unable to set RelayState in cache`}}));

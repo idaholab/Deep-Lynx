@@ -1,7 +1,7 @@
 import {NakedDomainClass} from '../../common_classes/base_domain_class';
 import {IsArray, IsBoolean, IsObject, IsOptional, IsString, ValidateNested} from 'class-validator';
-import { Type } from 'class-transformer';
-import uuid from 'uuid';
+import {Type} from 'class-transformer';
+import {v4 as uuidv4} from 'uuid';
 
 export class SubjectCredentials extends NakedDomainClass {
     @IsString()
@@ -53,36 +53,29 @@ export class RSARequest extends NakedDomainClass {
     @Type(() => RSAContext)
     context?: RSAContext;
 
-    constructor(input: {
-        clientID?: string;
-        subjectName?: string;
-        securID?: string;
-        authnAttemptId?: string;
-        inResponseTo?: string;
-        methodId?: string;
-    }) {
+    constructor(input: {clientID?: string; subjectName?: string; securID?: string; authnAttemptId?: string; inResponseTo?: string; methodId?: string}) {
         super();
 
         if (input) {
             if (input.clientID) this.clientID = input.clientID;
             if (input.subjectName) this.subjectName = input.subjectName;
             if (input.securID) {
-                this.subjectCredentials = [new SubjectCredentials()]
-                this.subjectCredentials[0].methodId = input.methodId
-                this.subjectCredentials[0].collectedInputs = [new CollectedInput()]
-                this.subjectCredentials[0].collectedInputs[0].name = input.methodId
-                this.subjectCredentials[0].collectedInputs[0].value = input.securID
+                this.subjectCredentials = [new SubjectCredentials()];
+                this.subjectCredentials[0].methodId = input.methodId;
+                this.subjectCredentials[0].collectedInputs = [new CollectedInput()];
+                this.subjectCredentials[0].collectedInputs[0].name = input.methodId;
+                this.subjectCredentials[0].collectedInputs[0].value = input.securID;
             }
             if (input.authnAttemptId && input.inResponseTo) {
-                this.context = new RSAContext()
+                this.context = new RSAContext();
                 this.context.authnAttemptId = input.authnAttemptId;
                 this.context.inResponseTo = input.inResponseTo;
             }
         }
 
         // generate context if necessary and then create a unique messageId
-        if (!this.context) this.context = new RSAContext()
-        this.context.messageId = uuid.v4()
+        if (!this.context) this.context = new RSAContext();
+        this.context.messageId = uuidv4();
     }
 }
 
@@ -97,19 +90,19 @@ export class RSAResponse extends NakedDomainClass {
 
     @IsObject()
     challengeMethods: {
-        challenges: Challenge[]
+        challenges: Challenge[];
     } = {
-        challenges: [new Challenge()]
-    }
+        challenges: [new Challenge()],
+    };
 
     @IsArray()
     @ValidateNested()
     @Type(() => CredentialValidationResult)
-    credentialValidationResults?: CredentialValidationResult[]
+    credentialValidationResults?: CredentialValidationResult[];
 
     @ValidateNested()
     @Type(() => RSAContext)
-    context?: RSAContext
+    context?: RSAContext;
 }
 
 export class CredentialValidationResult extends NakedDomainClass {
