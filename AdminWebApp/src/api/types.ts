@@ -309,7 +309,11 @@ export type TypeMappingTransformationPayloadT = {
     metatype_id?: string;
     metatype_relationship_pair_id?: string;
     origin_id_key?: string;
+    origin_metatype_id?: string;
+    origin_data_source_id?: string;
     destination_id_key?: string;
+    destination_metatype_id?: string;
+    destination_data_source_id?: string;
     unique_identifier_key?: string;
     on_conflict?: 'create' | 'update' | 'ignore';
     keys: TypeMappingTransformationKeyMapping[];

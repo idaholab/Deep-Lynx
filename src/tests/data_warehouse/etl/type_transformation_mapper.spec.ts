@@ -15,6 +15,10 @@ import TypeTransformation, {Condition, KeyMapping} from '../../../domain_objects
 import MetatypeKey from '../../../domain_objects/data_warehouse/ontology/metatype_key';
 import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
+import MetatypeRelationship from '../../../domain_objects/data_warehouse/ontology/metatype_relationship';
+import MetatypeRelationshipMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
+import MetatypeRelationshipPairMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
+import MetatypeRelationshipPair from '../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 
 describe('A Data Type Mapping Transformation', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -268,7 +272,157 @@ describe('A Data Type Mapping Transformation', async () => {
         return storage.Delete(exp.value.id!);
     });
 
-    it('fetch keys from payload using dot notation', async () => {
+    it('can upate a transformation', async () => {
+        const storage = DataSourceMapper.Instance;
+        const mMapper = MetatypeMapper.Instance;
+        const rMapper = MetatypeRelationshipMapper.Instance;
+        const pairMapper = MetatypeRelationshipPairMapper.Instance;
+        const keyStorage = MetatypeKeyMapper.Instance;
+        const mappingStorage = TypeMappingMapper.Instance;
+
+        const metatype = await mMapper.Create(
+            'test suite',
+            new Metatype({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+        );
+
+        expect(metatype.isError).false;
+        expect(metatype.value).not.empty;
+
+        const relationship = await rMapper.Create(
+            'test suite',
+            new MetatypeRelationship({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            })
+        )
+
+        expect(relationship.isError).false;
+        expect(relationship.value).not.empty;
+
+        const relationshipPair = await pairMapper.Create(
+            'test suite',
+            new MetatypeRelationshipPair({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+                origin_metatype: metatype.value.id!,
+                destination_metatype: metatype.value.id!,
+                relationship: relationship.value.id!,
+                relationship_type: 'many:many'
+            })
+        )
+
+        expect(relationshipPair.isError).false;
+        expect(relationshipPair.value).not.empty;
+
+        const testKeys = [...test_keys];
+        testKeys.forEach((key) => (key.metatype_id = metatype.value.id!));
+
+        const keys = await keyStorage.BulkCreate('test suite', testKeys);
+        expect(keys.isError).false;
+
+        const exp = await DataSourceMapper.Instance.Create(
+            'test suite',
+            new DataSourceRecord({
+                container_id: containerID,
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'standard',
+                data_format: 'json',
+            }),
+        );
+
+        expect(exp.isError).false;
+        expect(exp.value).not.empty;
+
+        const mapping = await mappingStorage.CreateOrUpdate(
+            'test suite',
+            new TypeMapping({
+                container_id: containerID,
+                data_source_id: exp.value.id!,
+                sample_payload: test_raw_payload,
+            }),
+        );
+
+        const metatypeTransformation = await TypeTransformationMapper.Instance.Create(
+            'test suite',
+            new TypeTransformation({
+                type_mapping_id: mapping.value.id!,
+                metatype_id: metatype.value.id,
+                keys: [
+                    new KeyMapping({
+                        key: 'RADIUS',
+                        metatype_key_id: keys.value[0].id,
+                    }),
+                ],
+            }),
+        );
+
+        expect(metatypeTransformation.isError).false;
+
+        const updatedMetatypeTransformation = await TypeTransformationMapper.Instance.Update(
+            'test suite',
+            new TypeTransformation({
+                type_mapping_id: mapping.value.id!,
+                metatype_id: metatype.value.id,
+                keys: [
+                    new KeyMapping({
+                        key: 'RADIUS',
+                        metatype_key_id: keys.value[0].id,
+                    }),
+                ],
+            }),
+        );
+
+        expect(updatedMetatypeTransformation.isError).false;
+
+        const relationshipTransformation = await TypeTransformationMapper.Instance.Create(
+            'test suite',
+            new TypeTransformation({
+                type_mapping_id: mapping.value.id!,
+                origin_metatype_id: metatype.value.id,
+                origin_data_source_id: exp.value.id!,
+                destination_metatype_id: metatype.value.id,
+                destination_data_source_id: exp.value.id!,
+                metatype_relationship_pair_id: relationshipPair.value.id!,
+                keys: [
+                    new KeyMapping({
+                        key: 'RADIUS',
+                        metatype_key_id: keys.value[0].id,
+                    }),
+                ],
+            }),
+        );
+
+        expect(relationshipTransformation.isError).false;
+
+        const updatedRelationshipTransformation = await TypeTransformationMapper.Instance.Update(
+            'test suite',
+            new TypeTransformation({
+                type_mapping_id: mapping.value.id!,
+                origin_metatype_id: metatype.value.id,
+                origin_data_source_id: exp.value.id!,
+                destination_metatype_id: metatype.value.id,
+                destination_data_source_id: exp.value.id!,
+                metatype_relationship_pair_id: relationshipPair.value.id!,
+                keys: [
+                    new KeyMapping({
+                        key: 'RADIUS',
+                        metatype_key_id: keys.value[0].id,
+                    }),
+                ],
+            }),
+        );
+
+        expect(updatedRelationshipTransformation.isError).false;
+    })
+
+    it('can fetch keys from payload using dot notation', async () => {
         let value = TypeTransformation.getNestedValue('car.id', test_payload[0]);
         expect(value).eq('UUID');
 

@@ -506,7 +506,7 @@ export default class DataMapping extends Vue {
 
   setDataSource(dataSource: any) {
     this.selectedDataSource = dataSource
-    this.$router.replace(`/containers/${this.containerID}/data-imports/${this.selectedDataSource?.id}`)
+    this.$router.replace(`/containers/${this.containerID}/data-mapping/${this.selectedDataSource?.id}`)
   }
 
   loadTypeMappings() {
