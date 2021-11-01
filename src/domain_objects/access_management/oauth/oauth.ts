@@ -37,7 +37,7 @@ export class OAuthApplication extends BaseDomainClass {
     @IsString()
     client_secret_raw: string = Buffer.from(uuidv4()).toString('base64');
 
-    constructor(input: {name: string; description: string; owner?: string | User; secret?: string}) {
+    constructor(input: {name: string; description: string; owner?: string | User; secret?: string; clientID?: string}) {
         super();
 
         if (input) {
@@ -47,6 +47,7 @@ export class OAuthApplication extends BaseDomainClass {
             // while we generally create the secret to be stored ourselves, we do
             // give the programmer the ability to set manually if needed for some reason
             if (input.secret) this.client_secret_raw = input.secret;
+            if (input.clientID) this.client_id = input.clientID;
         }
     }
 

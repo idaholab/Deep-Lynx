@@ -11,6 +11,7 @@ const Graceful = require('@ladjs/graceful');
 import 'reflect-metadata';
 import UserRepository from './data_access_layer/repositories/access_management/user_repository';
 import PostgresAdapter from './data_access_layer/mappers/db_adapters/postgres/postgres';
+import OAuthRepository from './data_access_layer/repositories/access_management/oauth_repository';
 
 const postgresAdapter = PostgresAdapter.Instance;
 
@@ -66,6 +67,11 @@ void postgresAdapter.init().then(() => {
     if (Config.initial_super_user) {
         const userRepo = new UserRepository();
         void userRepo.createDefaultSuperUser();
+    }
+
+    if (Config.vue_app_id !== '') {
+        const oauthRepo = new OAuthRepository();
+        void oauthRepo.createDefaultApplication(Config.vue_app_id);
     }
 
     Server.Instance.startServer(BackedLogger);

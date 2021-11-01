@@ -10,7 +10,7 @@
         "url": "git://github.com/idaholab/Deep-Lynx.git"
     },
     "scripts": {
-        "docker:api:build": "cd Dockerfiles/Application && docker build . -t core-api:latest",
+        "docker:api:build": "docker build . -t core-api:latest",
         "docker:api:run": "docker run -it core-api:latest",
         "docker:api:clean": "docker stop $(docker ps -q --filter ancestor=core-api:latest) && docker rmi core-api:latest -f",
         "docker:postgres:build": "cd Dockerfiles/PostgreSQL && docker build . -t deep-lynx-postgres:latest",

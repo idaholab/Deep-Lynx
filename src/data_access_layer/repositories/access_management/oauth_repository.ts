@@ -11,8 +11,9 @@ import {classToPlain, plainToClass} from 'class-transformer';
 import Config from '../../../services/config';
 import {Request} from 'express';
 import {OAuthApplication, OAuthRequest, OAuthTokenExchangeRequest} from '../../../domain_objects/access_management/oauth/oauth';
-import {User} from '../../../domain_objects/access_management/user';
+import {SuperUser, User} from '../../../domain_objects/access_management/user';
 import base64url from 'base64url';
+import Logger from '../../../services/logger';
 
 const crypto = require('crypto');
 
@@ -65,6 +66,39 @@ export default class OAuthRepository extends Repository implements RepositoryInt
         Object.assign(t, created.value);
 
         return Promise.resolve(Result.Success(true));
+    }
+
+    // createDefaultApplication is used primarily at startup to create a default
+    // oauth app for the bundled admin web gui. This allows us to override the auto
+    // generated id and instead set our own, configured id instead
+    async createDefaultApplication(appID: string): Promise<void> {
+        Logger.debug('creating default oauth application');
+
+        const results = await this.where().ownerID('is null').and().name('eq', Config.admin_web_app_name).list();
+        if (results.isError) {
+            Logger.error(`unable to list potential matches for default oauth application`);
+            return Promise.resolve();
+        }
+
+        if (results.value.length >= 1) {
+            Logger.debug('initial oauth application already created, skipping');
+            return Promise.resolve();
+        }
+
+        const app = new OAuthApplication({
+            name: Config.admin_web_app_name,
+            description: 'This is the web interface packaged with DeepLynx.',
+            clientID: appID,
+        });
+
+        const saved = await this.save(app, SuperUser);
+        if (saved.isError) {
+            Logger.error(`unable to save default oauth application ${saved.error?.error}`);
+        } else {
+            Logger.debug('initial oauth application created successfully');
+        }
+
+        return Promise.resolve();
     }
 
     constructor() {

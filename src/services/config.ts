@@ -22,6 +22,8 @@ export class Config {
     private readonly _asset_dir: string;
     private readonly _web_gui_dir: string;
 
+    private readonly _vue_app_id: string;
+
     private readonly _is_windows: boolean;
 
     private readonly _cache_provider: string;
@@ -117,6 +119,8 @@ export class Config {
         this._template_dir = process.env.TEMPLATE_DIR || './dist/http_server/views';
         this._asset_dir = process.env.ASSET_DIR || './dist/http_server/assets';
         this._web_gui_dir = process.env.WEB_GUI_DIR || './dist/http_server/web_gui';
+
+        this._vue_app_id = process.env.VUE_APP_DEEP_LYNX_APP_ID || '';
 
         this._encryption_key_path = process.env.ENCRYPTION_KEY_PATH;
 
@@ -428,6 +432,10 @@ export class Config {
 
     get rsa_client_id(): string {
         return this._rsa_client_id;
+    }
+
+    get vue_app_id(): string {
+        return this._vue_app_id;
     }
 
     public static Instance(): Config {

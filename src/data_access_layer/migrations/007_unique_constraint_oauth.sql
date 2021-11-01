@@ -1,0 +1,1 @@
+ALTER TABLE oauth_applications ADD CONSTRAINT client_id_un_oauth UNIQUE (client_id);
