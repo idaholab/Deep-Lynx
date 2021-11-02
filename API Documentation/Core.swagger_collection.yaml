@@ -1727,6 +1727,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListDataSourcesResponse'
+        '201':
+          description: Created
       deprecated: false
       description: List the datasources for the container.
     post:
@@ -6337,19 +6339,7 @@ components:
           type: string
           nullable: true
         data_source_config:
-          type: object
-          required:
-            - kind
-            - data_type
-          properties:
-            kind:
-              type: string
-              minLength: 1
-            data_type:
-              type: string
-              minLength: 1
-            data_format:
-              type: string
+          $ref: '#/components/schemas/DataSourceConfig'
         id:
           type: number
         data_source_id:
