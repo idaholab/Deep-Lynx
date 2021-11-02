@@ -9,11 +9,10 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 
 **Requirements**
 
--   node.js 12.x, 14.x, or 15.x
--   Typescript ^3.5.x
+-   node.js 12.x, 14.x, 15.x, 16.x
+-   Typescript ^4.x.x
 -   npm ^6.x
 -   Docker ^18.x - _optional_ - for ease of use in development
--   Docker Compose ^1.x.x - _optional_ - for ease of use in development
 -   Private RSA key. This is used for encryption of sensitive data. If you need help on generating a private key, we recommend using `openssl` to do so. Here is a [tutorial](https://www.scottbrady91.com/OpenSSL/Creating-RSA-Keys-using-OpenSSL)
 
 **_Data Source Requirements_**
@@ -63,7 +62,7 @@ If you decide to test graph functionality (Gremlin functionality in particular) 
 
 Below is a list of all `npm run` commands as listed in the `package.json` file.
 
-- `docker:api:build` Creates a docker image of Deep Lynx, injecting the `.env` file into it.
+- `docker:api:build` Creates a docker image of Deep Lynx, injecting the `.env` file into it. **Note**: You must updated the environment variables in the Dockerfile prior to building. They explain what they do in the comments above them - they are needed for the bundled admin gui vue application to work correctly.
 - `docker:api:run` Runs previously created Deep Lynx image.
 - `docker:api:clean` Stops the Deep Lynx docker container run by the command above and deletes the container and image.
 - `docker:postgres:build` Creates a docker image containing a Postgres 12 data source, along with all needed extensions.

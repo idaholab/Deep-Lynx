@@ -11,7 +11,6 @@ const methodOverride = require('method-override');
 
 import {Server} from '../server';
 import {
-    PerformanceMiddleware,
     authenticateRoute,
     offsetLimitReplacer,
     containerContext,
@@ -59,6 +58,9 @@ import {serialize} from 'class-transformer';
 import {SuperUser} from '../../domain_objects/access_management/user';
 import ImportRoutes from './data_warehouse/import/import_routes';
 
+const winston = require('winston');
+const expressWinston = require('express-winston');
+
 /*
  Router is a self contained set of routes and middleware that the main express.js
  application should call. It should be called only once.
@@ -70,13 +72,8 @@ export class Router {
     // with the underlying express.js application
     private app: express.Application;
 
-    // Middleware classes if needed, try to maintain single functions for middleware
-    // when possible and export directly from middleware.ts
-    private perfMiddleware: PerformanceMiddleware;
-
     public constructor(app: Server) {
         this.app = app.UnderlyingExpressApplication;
-        this.perfMiddleware = new PerformanceMiddleware();
     }
 
     public mount() {
@@ -156,7 +153,6 @@ export class Router {
         // web gui
         this.app.use('/gui', express.static(Config.web_gui_dir));
 
-        this.app.use([this.perfMiddleware.Pre()]); // performance middleware
         this.app.use(
             helmet({
                 // set the max age of the strict transport security header
@@ -189,6 +185,24 @@ export class Router {
         );
 
         this.app.use(offsetLimitReplacer());
+
+        this.app.use(
+            expressWinston.logger({
+                transports: [new winston.transports.Console()],
+                format: winston.format.combine(
+                    winston.format.colorize(),
+                    winston.format.timestamp(),
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
+                    winston.format.printf(({level, message, label, timestamp}) => {
+                        return `${timestamp} ${level}: ${message}`;
+                    }),
+                ),
+                meta: false,
+                expressFormat: true,
+                colorize: true,
+            }),
+        );
 
         // we call mount auth here because we depend on the session functionality
         this.mountAuthMiddleware();
@@ -239,7 +253,6 @@ export class Router {
         this.app.use(currentUser()); // current user can be pulled after passport runs
     }
 
-    private mountPostMiddleware() {
-        this.app.use([this.perfMiddleware.Post()]);
-    }
+    // eslint-disable-next-line @typescript-eslint/no-empty-function,no-empty-function
+    private mountPostMiddleware() {}
 }

@@ -40,6 +40,7 @@ void postgresAdapter.init().then(() => {
             const app = new OAuthApplication({
                 name: Config.admin_web_app_name,
                 description: 'This is a web interfaced packaged with DeepLynx',
+                clientID: Config.vue_app_id === '' ? undefined : Config.vue_app_id,
             });
 
             repo.save(app, SuperUser)

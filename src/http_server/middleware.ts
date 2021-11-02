@@ -27,46 +27,6 @@ import DataStagingRepository from '../data_access_layer/repositories/data_wareho
 import DataSourceRepository from '../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import FileRepository from '../data_access_layer/repositories/data_warehouse/data/file_repository';
 
-/*
- PerformanceMiddleware uses the provided logger to display the time each route
- took to process and send a response to the requester. This leverages node.js's
- performance API. At time of writing this middleware is only compatible with express.js.
-*/
-export class PerformanceMiddleware {
-    public constructor() {
-        this.performanceObserver.observe({entryTypes: ['measure']});
-    }
-
-    public performanceObserver = new PerformanceObserver((items) => {
-        Logger.info(`${items.getEntries()[0].name} ${items.getEntries()[0].duration.toFixed(2)} MS`);
-        performance.clearMarks();
-    });
-
-    public Pre() {
-        return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-            const id = uuid();
-
-            res.setHeader('benchmarking', id);
-            performance.mark(id);
-
-            next();
-        };
-    }
-
-    public Post() {
-        return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-            const id = uuid();
-            performance.mark(id);
-            const firstMark = res.get('benchmarking');
-            if (firstMark) {
-                performance.measure(`${req.method} ${req.path}`, firstMark, id);
-            }
-
-            next();
-        };
-    }
-}
-
 // authRequest is used to manage user authorization against resources, optional param for declaring domain
 export function authRequest(action: 'read' | 'write', resource: string, domainParam?: string) {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
