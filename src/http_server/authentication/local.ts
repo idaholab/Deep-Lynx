@@ -48,14 +48,14 @@ export function LocalAuthMiddleware(req: express.Request, resp: express.Response
 
     passport.authenticate('local', (err, user, info) => {
         if (err) {
-            return resp.redirect(buildUrl('/', {queryParams: {error: `${err}`}}));
+            return resp.redirect(buildUrl('/oauth', {queryParams: {error: `${err}`}}));
         }
         if (!user) {
-            return resp.redirect(buildUrl('/', {queryParams: req.query}));
+            return resp.redirect(buildUrl('/oauth', {queryParams: req.query}));
         }
         req.logIn(user, (err) => {
             if (err) {
-                return resp.redirect(buildUrl('/', {queryParams: {error: err.toString()}}));
+                return resp.redirect(buildUrl('/oauth', {queryParams: {error: err.toString()}}));
             }
 
             if (oauthRequest) {

@@ -41,9 +41,9 @@ export default class OAuthRoutes {
         app.delete('/oauth/applications/:oauthAppID', ...middleware, csurf(), LocalAuthMiddleware, this.deleteOAuthApplication);
 
         // login, register and authorize
-        app.get('/', csurf(), this.loginPage);
+        app.get('/oauth', csurf(), this.loginPage);
         app.get('/logout', this.logout);
-        app.post('/', csurf(), LocalAuthMiddleware, this.login);
+        app.post('/oauth', csurf(), LocalAuthMiddleware, this.login);
 
         // saml specific
         app.get('/login-saml', this.loginSaml);
@@ -141,8 +141,7 @@ export default class OAuthRoutes {
                     return;
                 }
 
-                // @ts-ignore due to strictNullCheck being on
-                delete result.value.secret; // we don't want to show the hashed value on return
+                delete keyPair.secret; // we don't want to show the hashed value on return
 
                 res.redirect(
                     buildUrl('/oauth/profile', {
@@ -188,7 +187,7 @@ export default class OAuthRoutes {
 
         if (!request) {
             res.redirect(
-                buildUrl('/', {
+                buildUrl('/oauth/', {
                     queryParams: {
                         error: 'Missing authorization request parameters',
                     },
@@ -202,7 +201,7 @@ export default class OAuthRoutes {
             OAuthMapper.Instance.RetrieveByClientID(request.client_id!).then((application) => {
                 if (application.isError) {
                     res.redirect(
-                        buildUrl('/', {
+                        buildUrl('/oauth/', {
                             queryParams: {
                                 error: 'Unable to retrieve OAuth application',
                             },
@@ -350,7 +349,7 @@ export default class OAuthRoutes {
             const token = Buffer.from(uuidv4()).toString('base64');
             Cache.set(token, classToPlain(oauthRequest), 60 * 10).then((set) => {
                 if (!set) {
-                    res.redirect(buildUrl('/', {queryParams: {error: `unable to set RelayState in cache`}}));
+                    res.redirect(buildUrl('/oauth', {queryParams: {error: `unable to set RelayState in cache`}}));
                     return;
                 }
 
@@ -372,12 +371,12 @@ export default class OAuthRoutes {
     private static saml(req: Request, res: Response, next: NextFunction) {
         passport.authenticate('saml', (err, user, info) => {
             if (err) {
-                res.redirect(buildUrl('/', {queryParams: {error: `${err}`}}));
+                res.redirect(buildUrl('/oauth', {queryParams: {error: `${err}`}}));
                 return;
             }
 
             if (!user) {
-                return res.redirect('/');
+                return res.redirect('/oauth');
             }
 
             req.logIn(user, () => {
@@ -407,7 +406,7 @@ export default class OAuthRoutes {
             return res.redirect(req.query.redirect_uri as string);
         }
 
-        return res.redirect('/');
+        return res.redirect('/oauth');
     }
 
     private static login(req: Request, res: Response, next: NextFunction) {
@@ -690,7 +689,7 @@ export default class OAuthRoutes {
                 }
 
                 res.redirect(
-                    buildUrl('/', {
+                    buildUrl('/oauth', {
                         queryParams: {
                             success: 'Password reset initiated successfully.',
                             // @ts-ignore
@@ -709,17 +708,17 @@ export default class OAuthRoutes {
             .resetPassword(plainToClass(ResetUserPasswordPayload, req.body as object))
             .then((result) => {
                 if (result.isError && result.error) {
-                    res.redirect(buildUrl('/', {queryParams: {error: result.error}}));
+                    res.redirect(buildUrl('/oauth', {queryParams: {error: result.error}}));
                     return;
                 }
 
                 res.redirect(
-                    buildUrl('/', {
+                    buildUrl('/oauth', {
                         queryParams: {success: 'Password reset successfully'},
                     }),
                 );
                 return;
             })
-            .catch((err) => res.redirect(buildUrl('/', {queryParams: {error: err}})));
+            .catch((err) => res.redirect(buildUrl('/oauth', {queryParams: {error: err}})));
     }
 }

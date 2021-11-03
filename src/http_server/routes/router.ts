@@ -151,7 +151,7 @@ export class Router {
         this.app.use(express.static(Config.asset_dir));
 
         // web gui
-        this.app.use('/gui', express.static(Config.web_gui_dir));
+        this.app.use('/', express.static(Config.web_gui_dir));
 
         this.app.use(
             helmet({

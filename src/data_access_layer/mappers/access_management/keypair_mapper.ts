@@ -1,7 +1,7 @@
 import Result from '../../../common_classes/result';
 import Mapper from '../mapper';
-import { PoolClient, QueryConfig } from 'pg';
-import { KeyPair, User } from '../../../domain_objects/access_management/user';
+import {PoolClient, QueryConfig} from 'pg';
+import {KeyPair, User} from '../../../domain_objects/access_management/user';
 
 const format = require('pg-format');
 const resultClass = KeyPair;
@@ -34,7 +34,7 @@ export default class KeyPairMapper extends Mapper {
     public async Create(key: KeyPair, transaction?: PoolClient): Promise<Result<KeyPair>> {
         const r = await super.run(this.createStatement(key), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
         r.value[0].secret_raw = key.secret_raw;
@@ -45,7 +45,7 @@ export default class KeyPairMapper extends Mapper {
     public async BulkCreate(keys: KeyPair[], transaction?: PoolClient): Promise<Result<KeyPair[]>> {
         const r = await super.run(this.createStatement(...keys), {
             transaction,
-            resultClass
+            resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -56,22 +56,26 @@ export default class KeyPairMapper extends Mapper {
 
     public async BulkDelete(keys: KeyPair[], transaction?: PoolClient): Promise<Result<boolean>> {
         return super.runStatement(this.bulkDeleteStatement(keys), {
-            transaction
+            transaction,
         });
     }
 
     public async Retrieve(id: string): Promise<Result<KeyPair>> {
-        return super.retrieve(this.retrieveStatement(id), { resultClass });
+        return super.retrieve(this.retrieveStatement(id), {resultClass});
     }
 
     public async UserForKeyPair(key: string): Promise<Result<User>> {
         return super.retrieve(this.userForKeyStatement(key), {
-            resultClass: User
+            resultClass: User,
         });
     }
 
     public async KeysForUser(userID: string): Promise<Result<KeyPair[]>> {
-        return super.rows(this.keysForUserStatement(userID), { resultClass });
+        return super.rows(this.keysForUserStatement(userID), {resultClass});
+    }
+
+    public DeleteForUser(key: string, userID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.deleteForUserStatement(key, userID));
     }
 
     public Delete(key: string): Promise<Result<boolean>> {
@@ -99,28 +103,35 @@ export default class KeyPairMapper extends Mapper {
     private retrieveStatement(key: string): QueryConfig {
         return {
             text: `SELECT * FROM keypairs WHERE key = $1`,
-            values: [key]
+            values: [key],
         };
     }
 
     private userForKeyStatement(key: string): QueryConfig {
         return {
             text: `SELECT * FROM keypairs LEFT JOIN users on users.id = keypairs.user_id  WHERE key = $1`,
-            values: [key]
+            values: [key],
         };
     }
 
     private keysForUserStatement(userID: string): QueryConfig {
         return {
             text: `SELECT key, user_id FROM keypairs WHERE user_id = $1`,
-            values: [userID]
+            values: [userID],
         };
     }
 
     private deleteStatement(key: string): QueryConfig {
         return {
             text: `DELETE FROM keypairs WHERE key = $1`,
-            values: [key]
+            values: [key],
+        };
+    }
+
+    private deleteForUserStatement(key: string, userID: string): QueryConfig {
+        return {
+            text: `DELETE FROM keypairs WHERE key = $1 AND user_id = $2`,
+            values: [key, userID],
         };
     }
 }

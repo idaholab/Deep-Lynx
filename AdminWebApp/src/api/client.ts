@@ -18,6 +18,7 @@ import {
     ExportT,
     ResultT,
     FileT,
+    KeyPairT,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -245,6 +246,18 @@ export class Client {
 
     updateMetatypeKey(containerID: string, metatypeID: string, keyID: string, key: MetatypeKeyT): Promise<boolean> {
         return this.put<boolean>(`/containers/${containerID}/metatypes/${metatypeID}/keys/${keyID}`, key);
+    }
+
+    listKeyPairsForUser(): Promise<KeyPairT[]> {
+        return this.get<KeyPairT[]>('/users/keys');
+    }
+
+    generateKeyPairForUser(): Promise<KeyPairT> {
+        return this.post<KeyPairT>('/users/keys', undefined);
+    }
+
+    deleteKeyPairForUser(keyID: string): Promise<boolean> {
+        return this.delete(`/users/keys/${keyID}`);
     }
 
     listMetatypeRelationships(

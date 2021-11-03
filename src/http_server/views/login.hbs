@@ -21,7 +21,7 @@
                     </div>
                 {{/if}}
                 <h2 class='text-center my-4'>Login</h2>
-                <form class='mb-5' action='/' method='post'>
+                <form class='mb-5' action='/oauth' method='post'>
                     <input type='hidden' name='_csrf' value='{{{_csrfToken}}}' />
                     {{#if oauthRequest}}
                         {{#each oauthRequest}}

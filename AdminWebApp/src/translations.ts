@@ -1,6 +1,10 @@
 export default {
     en: {
         home: {
+            id: 'ID',
+            accessManagement: 'Access Management',
+            apiKeys: 'API Keys',
+            apiKeysDescription: 'Generate and Manage API Keys',
             domainSelect: 'Select Domain',
             selectContainer: 'Select Container',
             taxonomy: 'Taxonomy',
@@ -44,6 +48,18 @@ export default {
             save: 'Save',
             create: 'Create',
             changeContainer: 'Change Container',
+        },
+        apiKeys: {
+            title: 'Current API Keys',
+            key: 'Key',
+            actions: 'Actions',
+        },
+        deleteApiKey: {
+            deleteTitle: 'Permanently Delete API Key/Secret Pair',
+            deleteWarning:
+                'Deleting this key will cause any integration which uses it to no longer be able to authenticate with Deep Lynx. Only delete a key that you know is not in use or has been compromised. Deleting a key/pair cannot be undone.',
+            cancel: 'Cancel',
+            delete: 'Delete',
         },
         dataQuery: {
             dataQuery: 'Data Query',
@@ -89,6 +105,17 @@ export default {
             exportToDataSource: 'Export to Data Source',
             selectContainer: 'Select Container',
             selectDataSource: 'Select Data Source',
+        },
+        createApiKey: {
+            formTitle: 'Generate New API Key/Secret',
+            description:
+                'The API Key/Secret pair you generate here will have all the same permissions as your user. It is NOT tied to this current container and users of this key/secret pair will have access to all containers and data you have permission for. Please use these keys cautiously.',
+            successfullyCreated: 'WRITE DOWN YOUR SECRET - this is the only time you will be able to see it.',
+            key: 'Key',
+            secret: 'Secret',
+            create: 'Generate',
+            cancel: 'Cancel',
+            createApiKey: 'Generate API Key',
         },
         importMapping: {
             importMappings: 'Import Type Mappings',
