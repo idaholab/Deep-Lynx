@@ -15,7 +15,8 @@
       <div class="mx-3">
         <v-divider class="my-4"></v-divider>
         <h2 class="text-h5 pb-0" style="line-height: 1rem">Current Container</h2>
-        <span>{{container.name}}</span>
+        <p>{{container.name}}</p>
+        <p>{{$t('home.id')}}# {{container.id}}</p>
         <v-divider class="my-4"></v-divider>
         <span class="d-block">{{user.display_name}}</span>
         <span class="d-block text-h6" style="line-height: .875rem">{{user.email}}</span>
@@ -161,6 +162,19 @@
           </v-list-item>
         </v-list-group>
 
+        <v-list-group :value="false" >
+          <template v-slot:activator>
+            <v-list-item-title >{{$t("home.accessManagement")}}</v-list-item-title>
+          </template>
+
+          <v-list-item  two-line link @click="setActiveComponent('api-keys')" :input-value="currentMainComponent === 'ApiKeys'">
+            <v-list-item-content>
+              <v-list-item-title>{{$t("home.apiKeys")}}</v-list-item-title>
+              <v-list-item-subtitle >{{$t("home.apiKeysDescription")}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list-group>
+
         <v-list-item link @click="containerSelect">
           <v-list-item-content>
             <v-list-item-title>{{$t("home.changeContainer")}}</v-list-item-title>
@@ -224,6 +238,7 @@ import Settings from "@/views/Settings.vue"
 import Users from "@/views/Users.vue"
 import ContainerUsers from "@/views/ContainerUsers.vue"
 import Containers from "@/views/Containers.vue"
+import ApiKeys from "@/views/ApiKeys.vue";
 import LanguageSelect from "@/components/languageSelect.vue";
 import ContainerSelect from "@/components/containerSelect.vue"
 import {TranslateResult} from "vue-i18n";
@@ -233,6 +248,7 @@ import Config from "@/config";
 
 @Component({components: {
     ContainerSelect,
+    ApiKeys,
     LanguageSelect,
     DataImports,
     Metatypes,
@@ -388,6 +404,13 @@ export default class Home extends Vue {
         this.currentMainComponent = "AccessKeys"
         this.componentName = this.$t('home.accessKeys')
         this.$router.replace(`/containers/${this.containerID}/access-keys`)
+        break;
+      }
+
+      case "api-keys": {
+        this.currentMainComponent = "ApiKeys"
+        this.componentName = this.$t('home.apiKeys')
+        this.$router.replace(`/containers/${this.containerID}/api-keys`)
         break;
       }
 

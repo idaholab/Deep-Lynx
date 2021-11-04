@@ -58,6 +58,9 @@
     export default class Login extends Vue {
         errorMessage = ""
 
+      created() {
+          window.location.href = this.loginURL
+      }
 
       get loginURL(): string {
         let state = localStorage.getItem('state')

@@ -22,20 +22,27 @@ The construction of megaprojects has consistently demonstrated challenges for pr
 **Installation**
 
 **Steps**
+1. NodeJS must be installed. You can find the download for your platform here: https://nodejs.org/en/download/ **note** - Newer versions of Node may be incompatible with some of the following commands. The most recent version tested that works fully is 16.13.0 - the latest LTS version.
 
-1. NodeJS must be installed. You can find the download for your platform here: https://nodejs.org/en/download/ **note** - Newer versions of Node may be incompatible with some of the following commands.
-2. Clone the Deep Lynx [repository](https://github.com/idaholab/Deep-Lynx)
-3. Run `npm upgrade && npm install` in your local Deep Lynx directory
-4. Copy and rename `.env-sample` to `.env`
-5. Update `.env` file. See the `readme` or comments in the file itself for details.If you are not using Docker, ensure that you update the ENCRYPTION_KEY_PATH environment variable in `.env` to reflect the absolute path of a RSA private key.
-6. Run `npm run build:dev` to build the internal modules.
+2. Clone the DeepLynx [repository](https://gitlab.software.inl.gov/b650/Deep-Lynx/-/tree/master).
+3. Run `npm upgrade && npm install` in your local DeepLynx directory.
+4. Copy and rename `.env-sample` to `.env`.
+5. Update `.env` file. See the `readme` or comments in the file itself for details. If you are not using Docker, ensure that you update the ENCRYPTION_KEY_PATH environment variable in `.env` to reflect the absolute path of a RSA private key.
+6. Run `npm run build:dev` to build the internal modules and bundled administration GUI.
 7. **optional** - If you would like to use Docker rather than a dedicated PostgreSQL database, please follow these steps:
-    - Ensure Docker is installed. You can find the download here: https://www.docker.com/products/docker-desktop
-    - Run `npm run docker:postgres:build` to create a docker image containing a Postgres data source
-    - Mac users may need to create the directory to mount to the docker container at `/private/var/lib/docker/basedata`. If this directory does not exist, please create it (you may need to use `sudo` as in `sudo mkdir /private/var/lib/docker/basedata`)
-    - Run `npm run docker:postgres:run` to run the created docker image (For Mac users, there is an alternative command `npm run mac:docker:postgres:run`)
-8. Run `npm run migrate` to create the database and schema within a PostgreSQL database configured in the `.env` file.
-9. Run `npm run watch` or `npm run start` to start the application. See the `readme` for additional details and available commands.
+   - Ensure Docker is installed. You can find the download here: https://www.docker.com/products/docker-desktop.
+   - Run `npm run docker:postgres:build` to create a docker image containing a Postgres data source.
+   - Mac users may need to create the directory to mount to the docker container at `/private/var/lib/docker/basedata`. If this directory does not exist, please create it (you may need to use `sudo` as in `sudo mkdir /private/var/lib/docker/basedata`).
+   - Verify that image is properly created. See below.
+   - Run `npm run docker:postgres:run` to run the created docker image (For Mac users, there is an alternative command `npm run mac:docker:postgres:run`).
+8. Run `npm run migrate` to create the database and schema within a PostgreSQL database configured in the `.env` file.  
+9. A private key file is required to start Deep Lynx. This file is used for various processes related to user management, data export, etc. A key file can be created by simply using the [OpenSSL](https://www.openssl.org/) library. A command such as `openssl genrsa -out private-key.key 2048` will create a private key that will be safely ignored by the `.gitignore`. After the private key file is created, please provide the path to it with the `ENCRYPTION_KEY_PATH` environment variable.
+10. Run `npm run watch` or `npm run start` to start the application. See the `readme` for additional details and available commands.  
+
+
+**Note:** DeepLynx ships with a Vue single page application which serves as the primary UI for the DeepLynx system. While you can run this [separately](https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Administration-Web-App-Installation) (and it's recommended to do so if you're developing it) we suggest you use the `npm run start-with-web` command or `npm run build:dev` and `npm run start` to build and deploy the included Vue app alongside DeepLynx. This process may take a few minutes each time.
+
+**The bundled admin web GUI can be accessed at `{{your base URL}}` - default is `localhost:8090`**
  
 
 **Configuration**
@@ -65,7 +72,7 @@ Below is a list of all `npm run` commands as listed in the `package.json` file.
 - `docker:api:build` Creates a docker image of Deep Lynx, injecting the `.env` file into it. **Note**: You must updated the environment variables in the Dockerfile prior to building. They explain what they do in the comments above them - they are needed for the bundled admin gui vue application to work correctly.
 - `docker:api:run` Runs previously created Deep Lynx image.
 - `docker:api:clean` Stops the Deep Lynx docker container run by the command above and deletes the container and image.
-- `docker:postgres:build` Creates a docker image containing a Postgres 12 data source, along with all needed extensions.
+- `docker:postgres:build` Creates a docker image containing a Postgres 12 data source, along with all needed extensions and bundled web app - this might take a few minutes to run.
 - `docker:postgres:run` Runs previously created Postgres.
 - `docker:postgres:clean` Stops the Postgres docker container run by the command above and deletes the container and image.
 - `watch` Runs `nodemon` using the `nodemon.json` configuration file. This runs the application and automatically rebuilds it when file changes are detected.

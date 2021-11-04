@@ -5,8 +5,10 @@ import ContainerUserInviteMapper from '../../../data_access_layer/mappers/access
 import UserRepository from '../../../data_access_layer/repositories/access_management/user_repository';
 import Result from '../../../common_classes/result';
 import {plainToClass} from 'class-transformer';
-import {AssignUserRolePayload, ContainerUserInvite, User} from '../../../domain_objects/access_management/user';
+import {AssignUserRolePayload, ContainerUserInvite, KeyPair, User} from '../../../domain_objects/access_management/user';
 import {QueryOptions} from '../../../data_access_layer/repositories/repository';
+import KeyPairMapper from '../../../data_access_layer/mappers/access_management/keypair_mapper';
+import KeyPairRepository from '../../../data_access_layer/repositories/access_management/keypair_repository';
 
 const userRepo = new UserRepository();
 
@@ -20,6 +22,11 @@ export default class UserRoutes {
         app.get('/users/permissions', ...middleware, this.listUserPermissions);
         app.delete('/users/:userID', middleware, authRequest('write', 'users'), this.deleteUser);
         app.put('/users/:userID', ...middleware, authRequest('write', 'users'), this.updateUser);
+
+        // current user key/pair management
+        app.get('/users/keys', ...middleware, this.listKeyPairs);
+        app.post('/users/keys', ...middleware, this.generateKeyPair);
+        app.delete('/users/keys/:keyID', ...middleware, this.deleteKeyPair);
 
         app.get('/users/invite', ...middleware, this.acceptContainerInvite);
         app.get('/users/invites', ...middleware, this.listOutstandingInvites);
@@ -149,6 +156,61 @@ export default class UserRoutes {
                 .finally(() => next());
         } else {
             Result.Failure('user not found', 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static generateKeyPair(req: Request, res: Response, next: NextFunction) {
+        const keyRepo = new KeyPairRepository();
+        if (req.currentUser) {
+            const keyPair = new KeyPair(req.currentUser.id);
+
+            keyRepo
+                .save(keyPair, req.currentUser)
+                .then((result) => {
+                    if (result.isError) {
+                        res.status(500);
+                        return;
+                    }
+
+                    delete keyPair.secret;
+                    Result.Success(keyPair).asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err));
+        } else {
+            Result.Failure('unauthorized', 401).asResponse(res);
+            next();
+        }
+    }
+
+    private static listKeyPairs(req: Request, res: Response, next: NextFunction) {
+        if (req.currentUser) {
+            KeyPairMapper.Instance.KeysForUser(req.currentUser.id!)
+                .then((results) => {
+                    results.asResponse(res);
+                })
+                .catch((err) => {
+                    res.status(404).send(err);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure('unauthorized', 401).asResponse(res);
+            next();
+        }
+    }
+
+    private static deleteKeyPair(req: Request, res: Response, next: NextFunction) {
+        if (req.currentUser) {
+            KeyPairMapper.Instance.DeleteForUser(req.params.keyID, req.currentUser.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    res.status(404).send(err);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure('unauthorized', 401).asResponse(res);
             next();
         }
     }

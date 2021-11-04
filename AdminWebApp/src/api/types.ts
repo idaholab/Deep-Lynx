@@ -97,6 +97,12 @@ export type MetatypeRelationshipKeyT = {
     modified_by: string;
 };
 
+export type KeyPairT = {
+    key: string;
+    secret_raw: string;
+    user_id: string;
+};
+
 export type FileT = {
     id: string;
     container_id: string;
