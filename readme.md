@@ -34,8 +34,8 @@ The construction of megaprojects has consistently demonstrated challenges for pr
    - Mac users may need to create the directory to mount to the docker container at `/private/var/lib/docker/basedata`. If this directory does not exist, please create it (you may need to use `sudo` as in `sudo mkdir /private/var/lib/docker/basedata`).
    - Verify that image is properly created. See below.
    - Run `npm run docker:postgres:run` to run the created docker image (For Mac users, there is an alternative command `npm run mac:docker:postgres:run`).
-7. Run `npm run build:dev` to build the internal modules and bundled administration GUI.
-8. Run `npm run migrate` to create the database and schema within a PostgreSQL database configured in the `.env` file.  
+7. Run `npm run migrate` to create the database and schema within a PostgreSQL database configured in the `.env` file.  
+8. Run `npm run build:dev` to build the internal modules and bundled administration GUI.
 9. A private key file is required to start Deep Lynx. This file is used for various processes related to user management, data export, etc. A key file can be created by simply using the [OpenSSL](https://www.openssl.org/) library. A command such as `openssl genrsa -out private-key.key 2048` will create a private key that will be safely ignored by the `.gitignore`. After the private key file is created, please provide the path to it with the `ENCRYPTION_KEY_PATH` environment variable.
 10. Run `npm run watch` or `npm run start` to start the application. See the `readme` for additional details and available commands.  
 
