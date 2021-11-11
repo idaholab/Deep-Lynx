@@ -73,7 +73,7 @@ export default class ExportRoutes {
         repository = repository.where().containerID('eq', req.params.containerID);
 
         if (req.query.count !== undefined) {
-            if (req.query.count === 'true') {
+            if (req.query.count?.toString().toLowerCase() === 'true') {
                 repository
                     .count()
                     .then((result) => {
@@ -91,7 +91,7 @@ export default class ExportRoutes {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                     sortBy: req.query.sortBy,
-                    sortDesc: req.query.sortDesc ? req.query.sortDesc === 'true' : undefined
+                    sortDesc: req.query.sortDesc ? req.query.sortDesc?.toString().toLowerCase() === 'true' : undefined
                 } as QueryOptions)
                 .then((result) => {
                     if (result.isError) {

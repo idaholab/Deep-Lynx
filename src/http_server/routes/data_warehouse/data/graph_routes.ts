@@ -46,7 +46,7 @@ export default class GraphRoutes {
                 repo = repo.and().metatypeID('eq', req.query.metatypeID);
             }
 
-            if (req.query.count !== undefined && req.query.count === 'true') {
+            if (req.query.count !== undefined && req.query.count?.toString().toLowerCase() === 'true') {
                 repo.count(undefined, {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
@@ -59,7 +59,7 @@ export default class GraphRoutes {
                     })
                     .finally(() => next());
             } else {
-                repo.list(req.query.loadMetatypes === 'true', {
+                repo.list(req.query.loadMetatypes?.toString().toLowerCase() === 'true', {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                 })
@@ -108,7 +108,7 @@ export default class GraphRoutes {
                 .and()
                 .metatypeID('eq', req.metatype.id)
                 .and()
-                .list(req.query.loadMetatypes === 'true', {
+                .list(req.query.loadMetatypes?.toString().toLowerCase() === 'true', {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                 })
@@ -148,7 +148,7 @@ export default class GraphRoutes {
             repository = repository.and().relationshipName('eq', req.query.relationshipPairName);
         }
 
-        if (req.query.count !== undefined && req.query.count === 'true') {
+        if (req.query.count !== undefined && req.query.count?.toString().toLowerCase() === 'true') {
             repository
                 .count(undefined, {
                     limit: req.query.limit ? +req.query.limit : undefined,

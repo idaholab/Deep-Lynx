@@ -147,7 +147,7 @@ export default class ImportRoutes {
         let repository = new ImportRepository();
         repository = repository.where().dataSourceID('eq', req.params.sourceID);
 
-        if (req.query.count !== 'undefined' && req.query.count === 'true') {
+        if (req.query.count !== 'undefined' && req.query.count?.toString().toLowerCase() === 'true') {
             repository
                 .count()
                 .then((result) => {
@@ -161,7 +161,7 @@ export default class ImportRoutes {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                     sortBy: req.query.sortBy,
-                    sortDesc: req.query.sortDesc ? req.query.sortDesc === 'true' : undefined,
+                    sortDesc: req.query.sortDesc ? req.query.sortDesc?.toString().toLowerCase() === 'true' : undefined,
                 } as QueryOptions)
                 .then((result) => {
                     result.asResponse(res);
@@ -178,7 +178,7 @@ export default class ImportRoutes {
         let repository = new DataStagingRepository();
         repository = repository.where().importID('eq', req.params.importID);
 
-        if (req.query.count !== 'undefined' && req.query.count === 'true') {
+        if (req.query.count !== 'undefined' && req.query.count?.toString().toLowerCase() === 'true') {
             repository
                 .count()
                 .then((result) => {
@@ -192,7 +192,7 @@ export default class ImportRoutes {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                     sortBy: req.query.sortBy,
-                    sortDesc: req.query.sortDesc ? req.query.sortDesc === 'true' : undefined,
+                    sortDesc: req.query.sortDesc ? req.query.sortDesc?.toString().toLowerCase() === 'true' : undefined,
                 } as QueryOptions)
                 .then((result) => {
                     result.asResponse(res);

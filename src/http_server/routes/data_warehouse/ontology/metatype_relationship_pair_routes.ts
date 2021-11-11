@@ -103,7 +103,7 @@ export default class MetatypeRelationshipPairRoutes {
             repository = repository.and().metatypeID('eq', req.query.metatypeID);
         }
 
-        if (req.query.count !== undefined && req.query.count === 'true') {
+        if (req.query.count !== undefined && req.query.count?.toString().toLowerCase() === 'true') {
             repository
                 .count()
                 .then((result) => {
@@ -119,7 +119,7 @@ export default class MetatypeRelationshipPairRoutes {
                 .finally(() => next());
         } else {
             repository
-                .list(req.query.loadRelationships !== undefined && req.query.loadRelationships === 'true', {
+                .list(req.query.loadRelationships !== undefined && req.query.loadRelationships?.toString().toLowerCase() === 'true', {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                 })
