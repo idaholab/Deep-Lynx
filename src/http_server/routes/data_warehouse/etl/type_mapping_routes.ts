@@ -231,7 +231,7 @@ export default class TypeMappingRoutes {
         // while we could run a count on the nodes/edges via the graph routes - those calls can be expensive if all we
         // need is to be able to check whether or not this transformation is in use. Including the inUse query param therefore
         // will short-circuit and return true/false depending on use
-        if (req.typeTransformation && req.query.inUse?.toString().toLowerCase() === 'true') {
+        if (req.typeTransformation && String(req.query.inUse).toLowerCase() === 'true') {
             transformationRepo
                 .inUse(req.typeTransformation)
                 .then((result) => {
@@ -239,7 +239,7 @@ export default class TypeMappingRoutes {
                 })
                 .catch((err) => res.status(500).send(err))
                 .finally(() => next());
-        } else if (req.typeTransformation && req.query.archive?.toString().toLowerCase() === 'true') {
+        } else if (req.typeTransformation && String(req.query.archive).toLowerCase() === 'true') {
             transformationRepo
                 .archive(req.currentUser!, req.typeTransformation)
                 .then((result) => {
@@ -250,8 +250,8 @@ export default class TypeMappingRoutes {
         } else if (req.typeTransformation) {
             transformationRepo
                 .delete(req.typeTransformation, {
-                    force: req.query.forceDelete?.toString().toLowerCase() === 'true',
-                    removeData: req.query.removeData?.toString().toLowerCase() === 'true',
+                    force: String(req.query.forceDelete).toLowerCase() === 'true',
+                    removeData: String(req.query.removeData).toLowerCase() === 'true',
                 })
                 .then((result) => {
                     result.asResponse(res);
@@ -347,7 +347,7 @@ export default class TypeMappingRoutes {
                 +req.query.limit,
                 // @ts-ignore
                 req.query.sortBy,
-                req.query.sortDesc?.toString().toLowerCase() === 'true',
+                String(req.query.sortDesc).toLowerCase() === 'true',
             )
                 .then((result) => {
                     if (result.isError && result.error) {
@@ -370,7 +370,7 @@ export default class TypeMappingRoutes {
                 +req.query.limit,
                 // @ts-ignore
                 req.query.sortBy,
-                req.query.sortDesc?.toString().toLowerCase() === 'true',
+                String(req.query.sortDesc).toLowerCase() === 'true',
             )
                 .then((result) => {
                     if (result.isError && result.error) {

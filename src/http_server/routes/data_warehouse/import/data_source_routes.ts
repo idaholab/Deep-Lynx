@@ -127,7 +127,7 @@ export default class DataSourceRoutes {
         repository = repository.where().containerID('eq', req.container!.id!);
 
         if (req.query.count !== undefined) {
-            if (req.query.count?.toString().toLowerCase() === 'true') {
+            if (String(req.query.count).toLowerCase() === 'true') {
                 repository
                     .count()
                     .then((result) => {
@@ -141,7 +141,7 @@ export default class DataSourceRoutes {
         } else {
             repository
                 .and()
-                .archived(req.query.archived?.toString().toLowerCase() === 'true')
+                .archived(String(req.query.archived).toLowerCase() === 'true')
                 .or()
                 .containerID('eq', req.container!.id) // we have to specify the container again in an OR statement
                 .and()
@@ -150,7 +150,7 @@ export default class DataSourceRoutes {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                     sortBy: req.query.sortBy,
-                    sortDesc: req.query.sortDesc ? req.query.sortDesc?.toString().toLowerCase() === 'true' : undefined,
+                    sortDesc: req.query.sortDesc ? String(req.query.sortDesc).toLowerCase() === 'true' : undefined,
                 } as QueryOptions)
                 .then((result) => {
                     if (result.isError) {
@@ -168,7 +168,7 @@ export default class DataSourceRoutes {
     }
 
     private static deleteDataSource(req: Request, res: Response, next: NextFunction) {
-        if (req.dataSource && req.query.archive?.toString().toLowerCase() === 'true') {
+        if (req.dataSource && String(req.query.archive).toLowerCase() === 'true') {
             dataSourceRepo
                 .archive(req.currentUser!, req.dataSource)
                 .then((result) => {
@@ -179,8 +179,8 @@ export default class DataSourceRoutes {
         } else if (req.dataSource) {
             dataSourceRepo
                 .delete(req.dataSource, {
-                    force: req.query.forceDelete?.toString().toLowerCase() === 'true',
-                    removeData: req.query.removeData?.toString().toLowerCase() === 'true',
+                    force: String(req.query.forceDelete).toLowerCase() === 'true',
+                    removeData: String(req.query.removeData).toLowerCase() === 'true',
                 })
                 .then((result) => {
                     result.asResponse(res);
