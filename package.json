@@ -152,6 +152,7 @@
         "validator": "^13.5.2",
         "xml-crypto": "^2.1.1",
         "xml-js": "^1.6.11",
+        "xml-to-json-stream": "^1.1.0",
         "xml2js": "^0.4.23",
         "yargs-parser": "^20.2.7"
     },

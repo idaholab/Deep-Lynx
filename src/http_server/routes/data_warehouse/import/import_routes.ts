@@ -22,6 +22,8 @@ const Busboy = require('busboy');
 const fileRepo = new FileRepository();
 const stagingRepo = new DataStagingRepository();
 const importRepo = new ImportRepository();
+const xmlToJson = require('xml-to-json-stream');
+const xmlParser = xmlToJson();
 
 // This contains all routes pertaining to DataSources.
 export default class ImportRoutes {
@@ -234,6 +236,13 @@ export default class ImportRoutes {
                                         downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
                                     }),
                                 ],
+                            }),
+                        );
+                    } else if (mimetype === 'text/xml' || mimetype === 'application/xml') {
+                        const xmlStream = xmlParser.createStream();
+                        importPromises.push(
+                            req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
+                                transformStreams: [xmlStream],
                             }),
                         );
                     }
@@ -475,6 +484,14 @@ export default class ImportRoutes {
                                         downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
                                     }),
                                 ],
+                            }),
+                        );
+                    } else if (mimetype === 'text/xml' || mimetype === 'application/xml') {
+                        const xmlStream = xmlParser.createStream();
+                        importPromises.push(
+                            req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
+                                importID: req.dataImport!.id,
+                                transformStreams: [xmlStream],
                             }),
                         );
                     }
