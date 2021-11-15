@@ -63,7 +63,7 @@ export default class EventRoutes {
         const user = req.currentUser!;
         const active = req.query.active;
         if (req.eventRegistration) {
-            if (active && active === 'true') {
+            if (active && String(active).toLowerCase() === 'true') {
                 repo.setActive(user, req.eventRegistration)
                     .then((updated) => {
                         updated.asResponse(res);

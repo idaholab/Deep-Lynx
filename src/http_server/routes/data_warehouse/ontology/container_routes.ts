@@ -123,7 +123,7 @@ export default class ContainerRoutes {
             res.status(500).json(Result.Failure(`must provide a container to archive or delete`));
         }
 
-        if (req.query.permanent === 'true') {
+        if (String(req.query.permanent).toLowerCase() === 'true') {
             repository
                 .delete(req.container!)
                 .then((result) => {
@@ -187,10 +187,10 @@ export default class ContainerRoutes {
 
         busboy.on('finish', () => {
             // we have to force the data_versioning to boolean here - TODO: correct this entire setup to be more friendly to future config options
-            if (input.data_versioning_enabled) input.data_versioning_enabled = input.data_versioning_enabled === 'true';
+            if (input.data_versioning_enabled) input.data_versioning_enabled = String(input.data_versioning_enabled).toLowerCase() === 'true';
 
             containerImport
-                .ImportOntology(user, input as ContainerImportT, fileBuffer, req.query.dryrun === 'true', false, '')
+                .ImportOntology(user, input as ContainerImportT, fileBuffer, String(req.query.dryrun).toLowerCase() === 'true', false, '')
                 .then((result) => {
                     result.asResponse(res);
                 })

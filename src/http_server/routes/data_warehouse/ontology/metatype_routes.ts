@@ -72,7 +72,7 @@ export default class MetatypeRoutes {
             repository = repository.and().description('like', `%${req.query.description}%`);
         }
 
-        if (req.query.count !== undefined && req.query.count === 'true') {
+        if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
             repository
                 .count()
                 .then((result) => {
@@ -84,11 +84,11 @@ export default class MetatypeRoutes {
                 .finally(() => next());
         } else {
             repository
-                .list(req.query.loadKeys === undefined || req.query.loadKeys === 'true', {
+                .list(req.query.loadKeys === undefined || String(req.query.loadKeys).toLowerCase() === 'true', {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                     sortBy: req.query.sortBy,
-                    sortDesc: req.query.sortDesc ? req.query.sortDesc === 'true' : undefined,
+                    sortDesc: req.query.sortDesc ? String(req.query.sortDesc).toLowerCase() === 'true' : undefined,
                 } as QueryOptions)
                 .then((result) => {
                     result.asResponse(res);

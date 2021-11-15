@@ -4205,6 +4205,10 @@ components:
           type: string
         description:
           type: string
+        archived:
+          type: boolean
+        config:
+          $ref: '#/components/schemas/ContainerConfig'
       required:
         - name
     UpdateContainerRequest:
@@ -4317,7 +4321,7 @@ components:
         destination_data_source_id: required if using original id for edge creation
         relationship_pair_id: required
         modified_at: will attempt to update edge if exists
-        properties: { }
+        properties: {}
       properties:
         container_id:
           type: string
@@ -4701,7 +4705,6 @@ components:
           $ref: '#/components/schemas/CreateDataSourceConfig'
       required:
         - name
-        - adapter_type
     CreateDataSourceConfig:
       title: CreateDataSourceConfig
       type: object
@@ -4719,9 +4722,6 @@ components:
           type: string
         password:
           type: string
-      required:
-        - endpoint
-        - auth_method
     NewDataExportRequest:
       title: NewDataExportRequest
       required:
@@ -5679,15 +5679,8 @@ components:
         - adapter_type
         - status
         - active
-        - config
-        - id
         - container_id
         - name
-        - created_at
-        - modified_at
-        - created_by
-        - modified_by
-        - archived
     DataSourceConfig:
       title: DataSourceConfig
       type: object
@@ -5701,10 +5694,6 @@ components:
         data_format:
           type: string
           minLength: 1
-      required:
-        - kind
-        - data_type
-        - data_format
     FileModel:
       description: ''
       type: object
@@ -6525,9 +6514,6 @@ components:
           minLength: 1
         config:
           $ref: '#/components/schemas/ContainerConfig'
-        active_graph_id:
-          type: string
-          minLength: 1
       required:
         - name
         - description
@@ -6537,7 +6523,6 @@ components:
         - modified_at
         - created_by
         - modified_by
-        - active_graph_id
     ContainerConfig:
       description: ''
       type: object
