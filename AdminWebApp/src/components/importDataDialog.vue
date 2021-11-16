@@ -5,7 +5,7 @@
         </template>
         <v-card>
             <v-card-title>
-                <span class="headline">Import JSON Data</span>
+                <span class="headline">Import Data (csv, json, and xml accepted)</span>
             </v-card-title>
 
             <v-card-text>
@@ -19,7 +19,7 @@
                                     lazy-validation
                             >
 
-                                <v-file-input label=".json File" @change="addFiles"></v-file-input>
+                                <v-file-input label=".json, .xml, .csv" @change="addFiles"></v-file-input>
 
                             </v-form>
                         </v-col>
