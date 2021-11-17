@@ -47,7 +47,7 @@
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.1.2",
     "prismjs": "^1.23.0",
-    "sass": "^1.30.0",
+    "sass": "~1.30.0",
     "sass-loader": "^8.0.0",
     "tslib": "^2.0.3",
     "typescript": "~3.7.5",
