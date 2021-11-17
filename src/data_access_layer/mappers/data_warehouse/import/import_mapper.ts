@@ -36,6 +36,17 @@ export default class ImportMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
+        QueueProcessor.Instance.emit(
+            new Event({
+                sourceID: importRecord.data_source_id!,
+                sourceType: 'data_source',
+                type: 'data_imported',
+                data: {
+                    imports: r.value,
+                },
+            }),
+        );
+
         return Promise.resolve(Result.Success(r.value[0]));
     }
 

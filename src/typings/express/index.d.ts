@@ -15,6 +15,7 @@ import TypeTransformation from '../../domain_objects/data_warehouse/etl/type_tra
 import {Exporter} from '../../domain_objects/data_warehouse/export/export';
 import Import, {DataStaging} from '../../domain_objects/data_warehouse/import/import';
 import {DataSource} from '../../domain_objects/data_warehouse/import/data_source';
+import TaskRecord from '../../domain_objects/data_warehouse/task';
 
 declare global {
     namespace Express {
@@ -41,6 +42,7 @@ declare global {
             dataStagingRecord?: DataStaging;
             dataSource?: DataSource;
             file?: File;
+            task?: TaskRecord;
         }
     }
 }

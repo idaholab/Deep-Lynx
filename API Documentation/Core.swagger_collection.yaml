@@ -497,9 +497,9 @@ paths:
     get:
       tags:
         - Graph
-      summary: List Nodes by Metatype ID
+      summary: List Nodes By Metatype ID
       description: 'List Nodes, filter by MetatypeID'
-      operationId: ListNodesbyMetatypeID
+      operationId: ListNodesByMetatypeID
       parameters:
         - name: limit
           in: query
@@ -871,7 +871,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewMetatypeRequest'
+              $ref: '#/components/schemas/CreateMetatypeRequest'
         required: true
       responses:
         '200':
@@ -1057,7 +1057,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewMetatypeKeyRequest'
+              $ref: '#/components/schemas/CreateMetatypeKeyRequest'
         required: true
       responses:
         '200':
@@ -1136,7 +1136,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateMetatypeKeyRequest'
+              $ref: '#/components/schemas/MetatypeKey'
         required: true
       responses:
         '200':
@@ -1275,7 +1275,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewMetatypeRelationshipRequest'
+              $ref: '#/components/schemas/CreateMetatypeRelationshipRequest'
         required: true
       responses:
         '200':
@@ -1421,7 +1421,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewMetatypeRelationshipKeyRequest'
+              $ref: '#/components/schemas/CreateMetatypeRelationshipKeyRequest'
         required: true
       responses:
         '200':
@@ -1617,7 +1617,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewMetatypeRelationshipPairRequest'
+              $ref: '#/components/schemas/CreateMetatypeRelationshipPairRequest'
         required: true
       responses:
         '200':
@@ -1706,7 +1706,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewMetatypeRelationshipPairRequest'
+              $ref: '#/components/schemas/RelationshipPair'
       description: Updates the specified metatype relationship pair.
   '/containers/{container_id}/import/datasources':
     get:
@@ -2067,7 +2067,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewDataExportRequest'
+              $ref: '#/components/schemas/CreateDataExportRequest'
         required: true
       responses:
         '200':
@@ -4370,8 +4370,8 @@ components:
           destination_data_source_id: required if using original id for edge creation
           relationship_pair_id: required
           properties: {}
-    NewMetatypeRequest:
-      title: NewMetatypeRequest
+    CreateMetatypeRequest:
+      title: CreateMetatypeRequest
       required:
         - description
         - name
@@ -4398,19 +4398,8 @@ components:
       example:
         name: Updated Metatype Name
         description: Final Description
-    NewMetatypeKeyRequest:
-      title: NewMetatypeKeyRequest
-      required:
-        - cardinality
-        - data_type
-        - defaultValue
-        - description
-        - name
-        - options
-        - property_name
-        - required
-        - unique
-        - validation
+    CreateMetatypeKeyRequest:
+      title: CreateMetatypeKeyRequest
       type: object
       properties:
         name:
@@ -4436,28 +4425,19 @@ components:
             type: string
         defaultValue:
           type: string
-      example:
-        name: File Name
-        required: true
-        property_name: fileName
-        description: File Upload Name
-        data_type: string
-        cardinality: 1
-        validation:
-          regex: ''
-          min: 0
-          max: 0
-        unique: true
-        options:
-          - ''
-        defaultValue: can be any type
+        metatype_id:
+          type: string
+      required:
+        - name
+        - description
+        - metatype_id
     KeyValidation:
       title: KeyValidation
-      required:
-        - max
-        - min
-        - regex
       type: object
+      example:
+        regex: ''
+        min: 0
+        max: 0
       properties:
         regex:
           type: string
@@ -4467,104 +4447,8 @@ components:
         max:
           type: integer
           format: int32
-      example:
-        regex: ''
-        min: 0
-        max: 0
-    UpdateMetatypeKeyRequest:
-      title: UpdateMetatypeKeyRequest
-      description: ''
-      type: object
-      x-examples:
-        example-1:
-          name: File Name
-          description: File
-          property_name: fileName
-          data_type: string
-          required: true
-          metatype_id: aaa5baa4-59ef-4e48-a111-b96ca2a4d2bc
-          id: 9728430b-c46e-4ad8-8568-60e719e04c7e
-          options:
-            - ''
-          default_value: null
-          archived: false
-          created_at: '2021-08-13T15:49:04.264Z'
-          modified_at: '2021-08-13T15:49:04.264Z'
-          created_by: fc320d67-9ab0-45b1-ac51-febb1960a97b
-          modified_by: fc320d67-9ab0-45b1-ac51-febb1960a97b
-          validation:
-            max: 0
-            min: 0
-            regex: ''
-      properties:
-        name:
-          type: string
-          minLength: 1
-        description:
-          type: string
-          minLength: 1
-        property_name:
-          type: string
-          minLength: 1
-        data_type:
-          type: string
-          minLength: 1
-        required:
-          type: boolean
-        metatype_id:
-          type: string
-          minLength: 1
-        id:
-          type: string
-          minLength: 1
-        options:
-          type: array
-          items:
-            type: object
-        default_value: {}
-        archived:
-          type: boolean
-        created_at:
-          type: string
-          minLength: 1
-        modified_at:
-          type: string
-          minLength: 1
-        created_by:
-          type: string
-          minLength: 1
-        modified_by:
-          type: string
-          minLength: 1
-        validation:
-          type: object
-          required:
-            - max
-            - min
-            - regex
-          properties:
-            max:
-              type: number
-            min:
-              type: number
-            regex:
-              type: string
-      required:
-        - name
-        - description
-        - property_name
-        - data_type
-        - required
-        - metatype_id
-        - id
-        - archived
-        - created_at
-        - modified_at
-        - created_by
-        - modified_by
-        - validation
-    NewMetatypeRelationshipRequest:
-      title: NewMetatypeRelationshipRequest
+    CreateMetatypeRelationshipRequest:
+      title: CreateMetatypeRelationshipRequest
       required:
         - description
         - name
@@ -4599,20 +4483,24 @@ components:
         example-1:
           name: Update Test
           description: Final Test Description
-    NewMetatypeRelationshipKeyRequest:
-      title: NewMetatypeRelationshipKeyRequest
-      required:
-        - cardinality
-        - data_type
-        - defaultValue
-        - description
-        - name
-        - options
-        - property_name
-        - required
-        - unique
-        - validation
+    CreateMetatypeRelationshipKeyRequest:
+      title: CreateMetatypeRelationshipKeyRequest
       type: object
+      example:
+        name: File Name
+        required: true
+        property_name: fileName
+        description: File Upload Name
+        data_type: string
+        cardinality: 1
+        validation:
+          regex: ''
+          min: 0
+          max: 0
+        unique: true
+        options:
+          - ''
+        defaultValue: can be any type
       properties:
         name:
           type: string
@@ -4637,23 +4525,17 @@ components:
             type: string
         defaultValue:
           type: string
-      example:
-        name: File Name
-        required: true
-        property_name: fileName
-        description: File Upload Name
-        data_type: string
-        cardinality: 1
-        validation:
-          regex: ''
-          min: 0
-          max: 0
-        unique: true
-        options:
-          - ''
-        defaultValue: can be any type
-    NewMetatypeRelationshipPairRequest:
-      title: NewMetatypeRelationshipPairRequest
+      required:
+        - name
+        - property_name
+        - description
+        - data_type
+        - cardinality
+        - validation
+        - unique
+        - options
+    CreateMetatypeRelationshipPairRequest:
+      title: CreateMetatypeRelationshipPairRequest
       required:
         - description
         - destination_metatype_id
@@ -4722,8 +4604,8 @@ components:
           type: string
         password:
           type: string
-    NewDataExportRequest:
-      title: NewDataExportRequest
+    CreateDataExportRequest:
+      title: CreateDataExportRequest
       required:
         - adapter
         - config
@@ -5267,7 +5149,8 @@ components:
         options:
           type: array
           nullable: true
-          items: {}
+          items:
+            type: object
         default_value:
           type: string
           nullable: true
@@ -5286,32 +5169,12 @@ components:
           type: string
           minLength: 1
         validation:
-          type: object
-          required:
-            - max
-            - min
-            - regex
-          properties:
-            max:
-              type: number
-            min:
-              type: number
-            regex:
-              type: string
+          $ref: '#/components/schemas/KeyValidation'
       required:
         - name
         - description
-        - property_name
         - data_type
-        - required
         - metatype_id
-        - id
-        - archived
-        - created_at
-        - modified_at
-        - created_by
-        - modified_by
-        - validation
     MetatypeRelationship:
       description: ''
       type: object
@@ -5413,18 +5276,7 @@ components:
         cardinality:
           type: number
         validation:
-          type: object
-          required:
-            - max
-            - min
-            - regex
-          properties:
-            max:
-              type: number
-            min:
-              type: number
-            regex:
-              type: string
+          $ref: '#/components/schemas/KeyValidation'
         unique:
           type: boolean
         options:
@@ -5455,24 +5307,12 @@ components:
           type: string
           minLength: 1
       required:
-        - name
-        - description
-        - property_name
-        - data_type
-        - required
-        - cardinality
-        - validation
-        - unique
         - metatype_relationship_id
         - id
-        - archived
-        - created_at
-        - modified_at
-        - created_by
-        - modified_by
     RelationshipPair:
       description: ''
       type: object
+      x-examples: null
       properties:
         name:
           type: string
@@ -5531,10 +5371,6 @@ components:
             id:
               type: string
               minLength: 1
-          required:
-            - name
-            - description
-            - id
         origin_metatype:
           type: object
           properties:
@@ -5545,10 +5381,6 @@ components:
             id:
               type: string
               minLength: 1
-          required:
-            - name
-            - description
-            - id
         relationship:
           type: object
           properties:
@@ -5559,60 +5391,9 @@ components:
             id:
               type: string
               minLength: 1
-          required:
-            - name
-            - description
-            - id
       required:
         - name
-        - description
-        - relationship_type
-        - relationship_id
-        - origin_metatype_id
-        - destination_metatype_id
         - id
-        - archived
-        - container_id
-        - created_at
-        - modified_at
-        - created_by
-        - modified_by
-        - origin_metatype_name
-        - destination_metatype_name
-        - relationship_pair_name
-        - destination_metatype
-        - origin_metatype
-        - relationship
-      x-examples:
-        example-1:
-          name: 'RequestForQuote : decomposedBy : Section'
-          description: Identifies the children of some entity.
-          relationship_type: 'many:many'
-          relationship_id: 3f84e557-accd-4e19-8722-9bc054184baa
-          origin_metatype_id: 7806ca62-a38d-4b3d-a53a-281d81667ecc
-          destination_metatype_id: 0b3f345f-54c3-4512-852c-bb6f802f3ff9
-          id: 6cb279bc-f4f0-41f9-936f-f17474df0c5f
-          archived: false
-          container_id: d3cd0199-6511-4c0d-b634-efeff989a8f6
-          created_at: '2021-08-09T18:39:30.249Z'
-          modified_at: '2021-08-12T22:03:04.532Z'
-          created_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
-          modified_by: 6a005d8f-1026-4497-9ba9-2db413bf3119
-          origin_metatype_name: RequestForQuote
-          destination_metatype_name: Section
-          relationship_pair_name: decomposedBy
-          destination_metatype:
-            name: ''
-            description: ''
-            id: 0b3f345f-54c3-4512-852c-bb6f802f3ff9
-          origin_metatype:
-            name: ''
-            description: ''
-            id: 0b3f345f-54c3-4512-852c-bb6f802f3ff9
-          relationship:
-            name: ''
-            description: ''
-            id: 3f84e557-accd-4e19-8722-9bc054184baa
     DataSource:
       description: ''
       type: object

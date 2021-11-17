@@ -26,6 +26,7 @@ import ImportRepository from '../data_access_layer/repositories/data_warehouse/i
 import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import DataSourceRepository from '../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import FileRepository from '../data_access_layer/repositories/data_warehouse/data/file_repository';
+import TaskRepository from '../data_access_layer/repositories/task_repository';
 
 // authRequest is used to manage user authorization against resources, optional param for declaring domain
 export function authRequest(action: 'read' | 'write', resource: string, domainParam?: string) {
@@ -674,6 +675,36 @@ export function fileContext(): any {
                 }
 
                 req.file = result.value;
+                next();
+            })
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
+}
+
+// taskContext will attempt to fetch a task by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "taskID"
+export function taskContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have an id, don't fail, just pass without action
+        if (!req.params.taskID) {
+            next();
+            return;
+        }
+
+        const repo = new TaskRepository();
+
+        repo.findByID(req.params.taskID)
+            .then((result) => {
+                if (result.isError) {
+                    result.asResponse(resp);
+                    return;
+                }
+
+                req.task = result.value;
                 next();
             })
             .catch((error) => {

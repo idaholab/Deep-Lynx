@@ -91,6 +91,8 @@ export class Config {
     private readonly _rsa_client_key: string;
     private readonly _rsa_client_id: string;
 
+    private readonly _hpc_email: string;
+
     private constructor() {
         // Either assign a sane default of the env var is missing, or create your
         // own checks on process.env. There is most likely a more elegant way but
@@ -184,6 +186,8 @@ export class Config {
         this._rsa_url = process.env.RSA_URL || '';
         this._rsa_client_key = process.env.RSA_CLIENT_KEY || '';
         this._rsa_client_id = process.env.RSA_CLIENT_ID || 'DeepLynx';
+
+        this._hpc_email = process.env.HPC_EMAIL || '';
     }
 
     get ssl_enabled(): boolean {
@@ -436,6 +440,10 @@ export class Config {
 
     get vue_app_id(): string {
         return this._vue_app_id;
+    }
+
+    get hpc_email(): string {
+        return this._hpc_email;
     }
 
     public static Instance(): Config {

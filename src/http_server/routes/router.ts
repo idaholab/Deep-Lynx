@@ -32,6 +32,7 @@ import {
     dataSourceContext,
     eventRegistrationContext,
     fileContext,
+    taskContext,
 } from '../middleware';
 import ContainerRoutes from './data_warehouse/ontology/container_routes';
 import MetatypeRoutes from './data_warehouse/ontology/metatype_routes';
@@ -57,6 +58,7 @@ import TypeMappingRoutes from './data_warehouse/etl/type_mapping_routes';
 import {serialize} from 'class-transformer';
 import {SuperUser} from '../../domain_objects/access_management/user';
 import ImportRoutes from './data_warehouse/import/import_routes';
+import TaskRoutes from './task_routes';
 
 const winston = require('winston');
 const expressWinston = require('express-winston');
@@ -129,6 +131,7 @@ export class Router {
         QueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         GraphRoutes.mount(this.app, [authenticateRoute(), containerContext(), nodeContext(), edgeContext(), fileContext(), metatypeContext(), currentUser()]);
         EventRoutes.mount(this.app, [authenticateRoute(), containerContext(), eventRegistrationContext(), currentUser()]);
+        TaskRoutes.mount(this.app, [authenticateRoute(), containerContext(), taskContext(), currentUser()]);
 
         // OAuth and Identity Provider routes - these are the only routes that serve up
         // webpages. WE ALSO MOUNT THE '/' ENDPOINT HERE
