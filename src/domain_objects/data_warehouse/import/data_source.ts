@@ -9,8 +9,7 @@ import {Readable, Transform} from 'stream';
 
 /*
     The DataSource interface represents basic functionality of a data source. All
-    data sources must be able to receive and process received information. Currently
-    there are two implementations - the Http data source and Standard data source.
+    data sources must be able to receive and process received information.
  */
 export interface DataSource {
     DataSourceRecord?: DataSourceRecord;
