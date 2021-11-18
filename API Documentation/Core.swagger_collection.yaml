@@ -3361,7 +3361,7 @@ paths:
       tags:
         - Authentication
       summary: RSA Initialize
-      operationId: post-rsa-initialize
+      operationId: RsaInitialize
       responses:
         '200':
           description: ''
@@ -3383,7 +3383,7 @@ paths:
       tags:
         - Authentication
       summary: RSA Verify
-      operationId: post-rsa-verify
+      operationId: RsaVerify
       responses:
         '200':
           description: ''
@@ -3402,7 +3402,7 @@ paths:
       tags:
         - Authentication
       summary: RSA Status
-      operationId: post-rsa-status
+      operationId: RsaStatus
       responses:
         '200':
           description: ''
@@ -3421,7 +3421,7 @@ paths:
       tags:
         - Authentication
       summary: RSA Cancel
-      operationId: post-rsa-cancel
+      operationId: RsaCancel
       responses:
         '200':
           description: ''
@@ -3453,13 +3453,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListTasksResponse'
-      operationId: get-containers-container_id-task
+      operationId: ListTasks
       description: Lists all tasks with a "ready" status
     post:
       summary: Create Task
       tags:
         - Tasks
-      operationId: post-containers-container_id-task
+      operationId: CreateTask
       responses:
         '200':
           description: ''
@@ -3496,13 +3496,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetTaskResponse'
-      operationId: get-containers-container_id-task-task_id
+      operationId: GetTask
       description: Retrieves a specific task by ID
     put:
       summary: Update Task
       tags:
         - Tasks
-      operationId: put-containers-container_id-task-task_id
+      operationId: UpdateTask
       responses:
         '200':
           description: ''
@@ -3548,9 +3548,6 @@ components:
             $ref: '#/components/schemas/Container'
         isError:
           type: boolean
-      required:
-        - value
-        - isError
     CreateContainerResponse:
       description: ''
       type: object
@@ -3577,9 +3574,6 @@ components:
             $ref: '#/components/schemas/Container'
         isError:
           type: boolean
-      required:
-        - value
-        - isError
     BatchUpdateContainerResponse:
       description: ''
       type: object
@@ -3606,9 +3600,6 @@ components:
             $ref: '#/components/schemas/Container'
         isError:
           type: boolean
-      required:
-        - value
-        - isError
     GetContainerResponse:
       description: ''
       type: object
@@ -3635,9 +3626,6 @@ components:
             $ref: '#/components/schemas/Container'
         isError:
           type: boolean
-      required:
-        - value
-        - isError
     UpdateContainerResponse:
       description: ''
       type: object
@@ -3664,41 +3652,32 @@ components:
             $ref: '#/components/schemas/Container'
         isError:
           type: boolean
-      required:
-        - value
-        - isError
     ContainerImportResponse:
       description: ''
       type: object
+      x-examples:
+        example-1:
+          value: 35bfbf46-5b50-49f5-a325-e5f03f43c3aa
+          isError: false
       properties:
         value:
           type: string
           minLength: 1
         isError:
           type: boolean
-      required:
-        - value
-        - isError
-      x-examples:
-        example-1:
-          value: 35bfbf46-5b50-49f5-a325-e5f03f43c3aa
-          isError: false
     ContainerImportUpdateResponse:
       description: ''
       type: object
+      x-examples:
+        example-1:
+          value: 35bfbf46-5b50-49f5-a325-e5f03f43c3aa
+          isError: false
       properties:
         value:
           type: string
           minLength: 1
         isError:
           type: boolean
-      required:
-        - value
-        - isError
-      x-examples:
-        example-1:
-          value: 35bfbf46-5b50-49f5-a325-e5f03f43c3aa
-          isError: false
     ListNodesResponse:
       title: ListNodesResponse
       type: object
@@ -3809,9 +3788,6 @@ components:
           type: object
         isError:
           type: boolean
-      required:
-        - value
-        - isError
     ListMetatypeKeysResponse:
       title: ListMetatypeKeysResponse
       type: object
@@ -4387,7 +4363,6 @@ components:
         - container_id
         - data_source_id
         - metatype_id
-        - properties
     CreateOrUpdateEdgesRequest:
       title: CreateOrUpdateEdgesRequest
       type: object
@@ -4405,6 +4380,20 @@ components:
         relationship_pair_id: required
         modified_at: will attempt to update edge if exists
         properties: {}
+      x-examples:
+        example-1:
+          container_id: required
+          data_source_id: required
+          origin_id: required (if origin_original_id not set)
+          destination_id: required (if destination_original_id not set)
+          origin_original_id: create edge based on composite id of node ( data source id + metatype id + original id of node)
+          origin_metatype_id: required if using original id for edge creation
+          origin_data_source_id: required if using original id for edge creation
+          destination_original_id: create edge based on composite id of node (data source id + metatype id +  original id of node)D
+          destination_metatype_id: required if using original id for edge creation
+          destination_data_source_id: required if using original id for edge creation
+          relationship_pair_id: required
+          properties: {}
       properties:
         container_id:
           type: string
@@ -4435,24 +4424,7 @@ components:
         - data_source_id
         - origin_id
         - destination_id
-        - origin_original_id
-        - destination_original_id
         - relationship_pair_id
-        - properties
-      x-examples:
-        example-1:
-          container_id: required
-          data_source_id: required
-          origin_id: required (if origin_original_id not set)
-          destination_id: required (if destination_original_id not set)
-          origin_original_id: create edge based on composite id of node ( data source id + metatype id + original id of node)
-          origin_metatype_id: required if using original id for edge creation
-          origin_data_source_id: required if using original id for edge creation
-          destination_original_id: create edge based on composite id of node (data source id + metatype id +  original id of node)D
-          destination_metatype_id: required if using original id for edge creation
-          destination_data_source_id: required if using original id for edge creation
-          relationship_pair_id: required
-          properties: {}
     CreateMetatypeRequest:
       title: CreateMetatypeRequest
       required:
@@ -4610,13 +4582,8 @@ components:
           type: string
       required:
         - name
-        - property_name
         - description
         - data_type
-        - cardinality
-        - validation
-        - unique
-        - options
     CreateMetatypeRelationshipPairRequest:
       title: CreateMetatypeRelationshipPairRequest
       required:
@@ -4960,50 +4927,46 @@ components:
             created_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
             modified_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
       properties:
-        properties:
-          type: object
         id:
           type: string
           minLength: 1
         container_id:
           type: string
           minLength: 1
+        metatype_id:
+          type: string
         metatype:
           $ref: '#/components/schemas/NodeMetatypeBody'
         metatype_name:
           type: string
           minLength: 1
-        graph_id:
+        data_source_id:
           type: string
           minLength: 1
-        archived:
-          type: boolean
+        import_data_id:
+          type: string
+          minLength: 1
+        data_staging_id:
+          type: number
+        type_mapping_transformation_id:
+          type: string
+          minLength: 1
+        original_data_id:
+          type: string
+          minLength: 1
+        properties:
+          type: object
+        metadata:
+          type: object
         created_at:
           type: string
           minLength: 1
         modified_at:
           type: string
           nullable: true
-        original_data_id:
-          type: string
-          minLength: 1
-        data_source_id:
-          type: string
-          minLength: 1
         deleted_at:
           type: string
           nullable: true
-        data_staging_id:
-          type: number
-        import_data_id:
-          type: string
-          minLength: 1
-        type_mapping_transformation_id:
-          type: string
-          minLength: 1
-        composite_original_id:
-          type: string
-          minLength: 1
         created_by:
           type: string
           minLength: 1
@@ -5011,21 +4974,7 @@ components:
           type: string
           minLength: 1
       required:
-        - properties
-        - id
         - container_id
-        - metatype_name
-        - graph_id
-        - archived
-        - created_at
-        - original_data_id
-        - data_source_id
-        - data_staging_id
-        - import_data_id
-        - type_mapping_transformation_id
-        - composite_original_id
-        - created_by
-        - modified_by
     NodeMetatypeBody:
       title: NodeMetatypeBody
       type: object
@@ -5045,9 +4994,8 @@ components:
       description: ''
       type: object
       x-examples: {}
+      title: ''
       properties:
-        properties:
-          type: object
         id:
           type: string
           minLength: 1
@@ -5057,53 +5005,53 @@ components:
         relationship_pair_id:
           type: string
           minLength: 1
-        graph_id:
+        data_source_id:
           type: string
           minLength: 1
-        origin_node_id:
+        import_data_id:
           type: string
           minLength: 1
+        data_staging_id:
+          type: string
+        type_mapping_transformation_id:
+          type: string
+          minLength: 1
+        origin_id:
+          type: string
+        destination_id:
+          type: string
+        origin_original_id:
+          type: string
+          minLength: 1
+        origin_data_source_id:
+          type: string
+          minLength: 1
+        origin_metatype_id:
+          type: string
+        destination_original_id:
+          type: string
+          minLength: 1
+        destination_data_source_id:
+          type: string
+          minLength: 1
+        destination_metatype_id:
+          type: string
         destination_node_id:
           type: string
           minLength: 1
-        archived:
-          type: boolean
+        properties:
+          type: object
+        metadata:
+          type: object
         created_at:
           type: string
           minLength: 1
         modified_at:
           type: string
           nullable: true
-        original_data_id:
-          type: string
-          nullable: true
-        data_source_id:
-          type: string
-          minLength: 1
-        origin_node_original_id:
-          type: string
-          minLength: 1
-        destination_node_original_id:
-          type: string
-          minLength: 1
         deleted_at:
           type: string
           nullable: true
-        data_staging_id:
-          type: number
-        import_data_id:
-          type: string
-          minLength: 1
-        type_mapping_transformation_id:
-          type: string
-          minLength: 1
-        composite_original_id: {}
-        origin_node_composite_original_id:
-          type: string
-          minLength: 1
-        destination_node_composite_original_id:
-          type: string
-          minLength: 1
         created_by:
           type: string
           minLength: 1
@@ -5111,25 +5059,8 @@ components:
           type: string
           minLength: 1
       required:
-        - properties
-        - id
         - container_id
         - relationship_pair_id
-        - graph_id
-        - origin_node_id
-        - destination_node_id
-        - archived
-        - created_at
-        - data_source_id
-        - origin_node_original_id
-        - destination_node_original_id
-        - data_staging_id
-        - import_data_id
-        - type_mapping_transformation_id
-        - origin_node_composite_original_id
-        - destination_node_composite_original_id
-        - created_by
-        - modified_by
     Metatype:
       description: ''
       type: object
@@ -5179,13 +5110,6 @@ components:
       required:
         - name
         - description
-        - container_id
-        - id
-        - archived
-        - created_at
-        - modified_at
-        - created_by
-        - modified_by
     MetatypeKey:
       description: ''
       type: object
@@ -5307,13 +5231,6 @@ components:
       required:
         - name
         - description
-        - container_id
-        - id
-        - archived
-        - created_at
-        - modified_at
-        - created_by
-        - modified_by
     RelationshipKey:
       description: ''
       type: object
@@ -5541,7 +5458,6 @@ components:
           nullable: true
       required:
         - adapter_type
-        - status
         - active
         - container_id
         - name
@@ -5783,14 +5699,6 @@ components:
         status_message:
           type: string
           nullable: true
-      required:
-        - status
-        - id
-        - data_source_id
-        - created_at
-        - modified_at
-        - created_by
-        - modified_by
     Exporter:
       description: ''
       type: object
@@ -5977,8 +5885,6 @@ components:
         - active
         - reset_required
         - email_valid
-        - permissions
-        - roles
         - id
     UserKey:
       description: ''
@@ -6216,14 +6122,8 @@ components:
           type: string
           minLength: 1
       required:
-        - data_source_config
-        - id
         - data_source_id
         - import_id
-        - data
-        - inserted_at
-        - created_at
-        - shape_hash
     Event:
       description: ''
       type: object
@@ -6275,15 +6175,9 @@ components:
           type: string
           minLength: 1
       required:
-        - active
-        - id
         - app_name
         - app_url
         - event_type
-        - created_at
-        - modified_at
-        - created_by
-        - modified_by
     DataStaging:
       description: ''
       type: object
@@ -6305,10 +6199,16 @@ components:
         shape_hash:
           type: string
           minLength: 1
+        id:
+          type: string
+        errors:
+          type: string
+        inserted_at:
+          type: string
+        created_at:
+          type: string
       required:
-        - data_source_id
         - import_id
-        - data
     TypeMappingExportPayload:
       title: TypeMappingExportPayload
       type: object
@@ -6362,8 +6262,6 @@ components:
         id:
           type: string
           minLength: 1
-        archived:
-          type: boolean
         created_at:
           type: string
           minLength: 1
@@ -6378,15 +6276,11 @@ components:
           minLength: 1
         config:
           $ref: '#/components/schemas/ContainerConfig'
+        deleted_at:
+          type: string
       required:
         - name
         - description
-        - id
-        - archived
-        - created_at
-        - modified_at
-        - created_by
-        - modified_by
     ContainerConfig:
       description: ''
       type: object
