@@ -48,6 +48,8 @@ tags:
     description: 'An application may create a Registered Event with Deep Lynx in order to  receive messages from Deep Lynx concerning the event type registered. This  system may be used to receive alerts when other Data Sources have ingested data, a new data source is created, etc.'
   - name: Authentication
     description: These endpoints provide users and applications the ability to authenticate with Deep Lynx.
+  - name: Tasks
+    description: 'These endpoints provide functionality for the creation, retrieval, and updating of tasks.'
   - name: Misc
     description: ''
 security:
@@ -3433,6 +3435,87 @@ paths:
             schema:
               $ref: '#/components/schemas/RSACancelRequest'
       description: Cancels an RSA authentication attempt
+  '/containers/{container_id}/task':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+    get:
+      summary: List Tasks
+      tags:
+        - Tasks
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListTasksResponse'
+      operationId: get-containers-container_id-task
+      description: Lists all tasks with a "ready" status
+    post:
+      summary: Create Task
+      tags:
+        - Tasks
+      operationId: post-containers-container_id-task
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTaskResponse'
+      description: Creates a new task
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+  '/containers/{container_id}/task/{task_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: task_id
+        in: path
+        required: true
+    get:
+      summary: Get Task
+      tags:
+        - Tasks
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTaskResponse'
+      operationId: get-containers-container_id-task-task_id
+      description: Retrieves a specific task by ID
+    put:
+      summary: Update Task
+      tags:
+        - Tasks
+      operationId: put-containers-container_id-task-task_id
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateTaskResponse'
+      description: Updates a task
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
 components:
   securitySchemes:
     BearerAuth:
@@ -6497,4 +6580,66 @@ components:
             type: string
         attemptExpires:
           type: string
+    ListTasksResponse:
+      title: ListTasksResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        isError:
+          type: boolean
+    Task:
+      title: Task
+      type: object
+      properties:
+        id:
+          type: string
+        container_id:
+          type: string
+        task_type:
+          type: string
+        status:
+          type: string
+        query:
+          type: string
+        data:
+          type: object
+        config:
+          $ref: '#/components/schemas/TaskConfig'
+    TaskConfig:
+      title: TaskConfig
+      type: object
+      properties:
+        kind:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+        - kind
+    CreateTaskResponse:
+      title: CreateTaskResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/Task'
+        isError:
+          type: boolean
+    UpdateTaskResponse:
+      title: UpdateTaskResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/Task'
+        isError:
+          type: boolean
+    GetTaskResponse:
+      title: GetTaskResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/Task'
+        isError:
+          type: boolean
   responses: {}
