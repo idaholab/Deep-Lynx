@@ -459,8 +459,8 @@ export class Client {
         return this.get<number>(`/containers/${containerID}/import/imports/${importID}/data`, query);
     }
 
-    deleteImport(containerID: string, importID: string): Promise<boolean> {
-        return this.delete(`/containers/${containerID}/import/imports/${importID}`);
+    deleteImport(containerID: string, importID: string, withData = false): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/import/imports/${importID}`, {withData});
     }
 
     deleteImportData(containerID: string, importID: string, dataID: number): Promise<boolean> {

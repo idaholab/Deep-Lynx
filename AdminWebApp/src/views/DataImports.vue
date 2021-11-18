@@ -30,7 +30,7 @@
                 :dataSourceID="selectedDataSource.id"
                 :containerID="containerID"
                 :disabled="!selectedDataSource.active || selectedDataSource.archived"
-                @importUploaded="listImports()">
+                @importUploaded="listImports">
             </import-data-dialog>
           </v-col>
 
@@ -49,12 +49,7 @@
           >
             mdi-eye
           </v-icon>
-          <v-icon
-              small
-              @click="deleteItem(item)"
-          >
-            mdi-delete
-          </v-icon>
+          <delete-data-import-dialog :containerID="containerID" :dataImport="item" :icon="true" @dataImportDeleted="listImports"></delete-data-import-dialog>
         </template>
       </v-data-table>
     </v-card>
@@ -144,6 +139,7 @@ import {DataSourceT, ImportDataT, ImportT} from "@/api/types";
 import ImportDataDialog from "@/components/importDataDialog.vue";
 import DataTypeMapping from "@/components/dataTypeMapping.vue"
 import SelectDataSource from "@/components/selectDataSource.vue";
+import DeleteDataImportDialog from "@/components/deleteDataImportDialog.vue";
 
 
 @Component({filters: {
@@ -154,7 +150,8 @@ import SelectDataSource from "@/components/selectDataSource.vue";
   components: {
     ImportDataDialog,
     DataTypeMapping,
-    SelectDataSource
+    SelectDataSource,
+    DeleteDataImportDialog
   }
 })
 export default class DataImports extends Vue {

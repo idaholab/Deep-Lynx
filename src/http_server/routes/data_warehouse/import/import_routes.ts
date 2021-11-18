@@ -129,7 +129,7 @@ export default class ImportRoutes {
     }
 
     private static deleteImport(req: Request, res: Response, next: NextFunction) {
-        ImportMapper.Instance.Delete(req.params.importID)
+        ImportMapper.Instance.Delete(req.params.importID, String(req.query.withData).toLowerCase() === 'true')
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);

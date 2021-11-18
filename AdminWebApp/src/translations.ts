@@ -460,6 +460,15 @@ export default {
             withDataWarning:
                 'Data may have already been ingested for this Data Source. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Data Source. If you would like to keep this data and orphan it, please uncheck the box below.',
         },
+        deleteDataImport: {
+            deleteTitle: 'Delete Import',
+            deleteWarning:
+                'Deleting an Import might have unintended consequences, especially if you are deleting data generated from that import. This action cannot be undone, even by an admin',
+            cancel: 'Cancel',
+            delete: 'Delete',
+            in: 'in',
+            withData: 'Delete All Data Generated From Import',
+        },
         deleteTransformation: {
             deleteTransformation: 'Delete Transformation',
             deleteTitle: 'Delete Transformation Permanently',
