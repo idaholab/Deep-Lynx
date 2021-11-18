@@ -40,7 +40,7 @@
     import {Component, Prop, Vue} from 'vue-property-decorator'
 
     @Component
-    export default class NewDataSourceDialog extends Vue {
+    export default class ImportDataDialog extends Vue {
         @Prop({required: true})
         readonly dataSourceID!: string
 

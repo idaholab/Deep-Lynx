@@ -119,16 +119,37 @@ export default class ImportMapper extends Mapper {
         return Promise.resolve(Result.Success(result.value > 0));
     }
 
-    public async Delete(importID: string): Promise<Result<boolean>> {
+    public async Delete(importID: string, withData?: boolean): Promise<Result<boolean>> {
+        if (withData) {
+            return super.runAsTransaction(...this.deleteStatementWithData(importID));
+        }
         return super.runStatement(this.deleteStatement(importID));
     }
 
     // can only allow deletes on unprocessed imports
     private deleteStatement(importID: string): QueryConfig {
         return {
-            text: `DELETE FROM imports WHERE id = $1 AND status <> 'processed'`,
+            text: `DELETE FROM imports WHERE id = $1`,
             values: [importID],
         };
+    }
+
+    private deleteStatementWithData(importID: string): QueryConfig[] {
+        // reminder that we don't actually delete nodes or edges, we just set the deleted_at fields accordingly
+        return [
+            {
+                text: `UPDATE nodes SET deleted_at = NOW() WHERE deleted_at IS NULL AND import_data_id = $1`,
+                values: [importID],
+            },
+            {
+                text: `UPDATE edges SET deleted_at = NOW() WHERE deleted_at IS NULL AND import_data_id = $1`,
+                values: [importID],
+            },
+            {
+                text: `DELETE FROM imports WHERE id = $1`,
+                values: [importID],
+            },
+        ];
     }
 
     private createStatement(userID: string, ...imports: Import[]): string {
