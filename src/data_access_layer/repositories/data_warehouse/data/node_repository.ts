@@ -92,7 +92,13 @@ export default class NodeRepository extends Repository implements RepositoryInte
         n.properties = validPayload.value;
 
         if (n.id) {
-            const results = await this.#mapper.Update(user.id!, n);
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(n.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            Object.assign(original.value, n);
+
+            const results = await this.#mapper.Update(user.id!, original.value);
             if (results.isError) {
                 if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
                 return Promise.resolve(Result.Pass(results));

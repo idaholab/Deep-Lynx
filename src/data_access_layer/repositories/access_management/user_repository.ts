@@ -95,7 +95,13 @@ export default class UserRepository extends Repository implements RepositoryInte
         }
 
         if (u.id) {
-            const result = await this.#mapper.Update(userID, u, transaction.value);
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(u.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            Object.assign(original.value, u);
+
+            const result = await this.#mapper.Update(userID, original.value, transaction.value);
             if (result.isError) {
                 await this.#mapper.rollbackTransaction(transaction.value);
                 return Promise.resolve(Result.Pass(result));

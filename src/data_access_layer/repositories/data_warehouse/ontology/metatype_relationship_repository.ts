@@ -34,9 +34,15 @@ export default class MetatypeRelationshipRepository extends Repository implement
 
         // if we have a set id, attempt to update the metatype and then clear its cache
         if (m.id) {
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(m.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            Object.assign(original.value, m);
+
             void this.deleteCached(m.id);
 
-            const result = await this.#mapper.Update(user.id!, m, transaction.value);
+            const result = await this.#mapper.Update(user.id!, original.value, transaction.value);
             if (result.isError) {
                 await this.#mapper.rollbackTransaction(transaction.value);
                 return Promise.resolve(Result.Pass(result));

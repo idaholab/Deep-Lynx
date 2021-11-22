@@ -19,7 +19,7 @@
           <create-data-source-dialog :containerID="containerID" @dataSourceCreated="refreshDataSources"></create-data-source-dialog>
         </v-toolbar>
       </template>
-      <template v-slot:[`item.id`]="{ item }">
+      <template v-slot:[`item.copy`]="{ item }">
         <v-tooltip top>
           <template v-slot:activator="{on, attrs}">
             <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
@@ -80,6 +80,7 @@ export default class DataSources extends Vue {
 
   headers() {
     return [
+      { text: '', value: 'copy'},
       { text: this.$t('dataSources.id'), value: 'id'},
       { text: this.$t('dataSources.name'), value: 'name' },
       { text: this.$t('dataSources.adapterType'), value: 'adapter_type'},

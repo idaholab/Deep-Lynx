@@ -57,7 +57,15 @@ export default class ExporterRepository extends Repository implements Repository
         let savedRecord: ExportRecord;
 
         if (toSave.id) {
-            const updated = await this.#mapper.Update(user.id!, toSave);
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(toSave.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            const originalToSave = await original.value.ToSave();
+
+            Object.assign(originalToSave, toSave);
+
+            const updated = await this.#mapper.Update(user.id!, originalToSave);
             if (updated.isError) return Promise.resolve(Result.Pass(updated));
 
             savedRecord = updated.value;

@@ -1,10 +1,10 @@
-import RepositoryInterface, { QueryOptions, Repository } from '../../repository';
+import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
-import { User } from '../../../../domain_objects/access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 import Result from '../../../../common_classes/result';
 import File from '../../../../domain_objects/data_warehouse/data/file';
-import { PoolClient } from 'pg';
-import { Readable } from 'stream';
+import {PoolClient} from 'pg';
+import {Readable} from 'stream';
 import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';
 
 /*
@@ -39,7 +39,13 @@ export default class FileRepository extends Repository implements RepositoryInte
         }
 
         if (f.id) {
-            const updated = await this.#mapper.Update(user.id!, f);
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(f.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            Object.assign(original.value, f);
+
+            const updated = await this.#mapper.Update(user.id!, original.value);
             if (updated.isError) return Promise.resolve(Result.Pass(updated));
 
             Object.assign(f, updated.value);
@@ -73,7 +79,7 @@ export default class FileRepository extends Repository implements RepositoryInte
         filename: string,
         encoding: string,
         mimetype: string,
-        stream: Readable
+        stream: Readable,
     ): Promise<Result<File>> {
         const provider = BlobStorageProvider();
 
@@ -91,7 +97,7 @@ export default class FileRepository extends Repository implements RepositoryInte
             adapter: provider.name(),
             metadata: result.value.metadata,
             container_id: containerID,
-            data_source_id: dataSourceID
+            data_source_id: dataSourceID,
         });
 
         const saved = await this.save(file, user);
@@ -134,6 +140,6 @@ export default class FileRepository extends Repository implements RepositoryInte
     }
 
     async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<File[]>> {
-        return super.findAll<File>(options, { transaction, resultClass: File });
+        return super.findAll<File>(options, {transaction, resultClass: File});
     }
 }

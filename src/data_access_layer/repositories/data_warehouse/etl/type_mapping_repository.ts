@@ -95,9 +95,15 @@ export default class TypeMappingRepository extends Repository implements Reposit
         }
 
         if (t.id) {
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(t.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            Object.assign(original.value, t);
+
             void this.deleteCached(t);
 
-            const result = await this.#mapper.Update(user.id!, t, transaction);
+            const result = await this.#mapper.Update(user.id!, original.value, transaction);
             if (result.isError) {
                 await this.#mapper.rollbackTransaction(transaction);
                 return Promise.resolve(Result.Pass(result));

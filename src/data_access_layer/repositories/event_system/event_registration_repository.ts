@@ -34,7 +34,13 @@ export default class EventRegistrationRepository extends Repository implements R
         }
 
         if (e.id) {
-            const updated = await this.#mapper.Update(user.id!, e);
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(e.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            Object.assign(original.value, e);
+
+            const updated = await this.#mapper.Update(user.id!, original.value);
             if (updated.isError) return Promise.resolve(Result.Pass(updated));
 
             Object.assign(e, updated.value);

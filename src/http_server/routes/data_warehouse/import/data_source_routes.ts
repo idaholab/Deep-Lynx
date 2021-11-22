@@ -5,6 +5,7 @@ import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/d
 import Result from '../../../../common_classes/result';
 import DataSourceRepository, {DataSourceFactory} from '../../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {QueryOptions} from '../../../../data_access_layer/repositories/repository';
+import DataStagingRepository from '../../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 
 const dataSourceRepo = new DataSourceRepository();
 const dataSourceFactory = new DataSourceFactory();
@@ -17,6 +18,8 @@ export default class DataSourceRoutes {
         app.get('/containers/:containerID/import/datasources/:sourceID', ...middleware, authInContainer('read', 'data'), this.retrieveDataSource);
         app.put('/containers/:containerID/import/datasources/:sourceID', ...middleware, authInContainer('write', 'data'), this.updateDataSource);
         app.delete('/containers/:containerID/import/datasources/:sourceID', ...middleware, authInContainer('write', 'data'), this.deleteDataSource);
+
+        app.get('/containers/:containerID/import/datasources/:sourceID/data', ...middleware, authInContainer('read', 'data'), this.dataCount);
 
         app.post('/containers/:containerID/import/datasources/:sourceID/active', ...middleware, authInContainer('write', 'data'), this.setActive);
         app.delete('/containers/:containerID/import/datasources/:sourceID/active', ...middleware, authInContainer('write', 'data'), this.setInactive);
@@ -78,6 +81,25 @@ export default class DataSourceRoutes {
                 .finally(() => next());
         } else {
             Result.Failure(`unable to find container or data source `).asResponse(res);
+            next();
+        }
+    }
+
+    private static dataCount(req: Request, res: Response, next: NextFunction) {
+        if (req.dataSource) {
+            const stagingRepo = new DataStagingRepository();
+
+            stagingRepo
+                .where()
+                .dataSourceID('eq', req.dataSource.DataSourceRecord?.id)
+                .count()
+                .then((count) => {
+                    count.asResponse(res);
+                    next();
+                })
+                .catch((err) => res.status(500).send(err));
+        } else {
+            Result.Failure(`unable to find data source`, 404).asResponse(res);
             next();
         }
     }

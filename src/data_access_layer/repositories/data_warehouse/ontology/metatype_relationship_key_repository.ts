@@ -46,7 +46,13 @@ export default class MetatypeRelationshipKeyRepository extends Repository implem
         void this.#relationshipRepo.deleteCached(relationshipKey.metatype_relationship_id!);
 
         if (relationshipKey.id) {
-            const updated = await this.#mapper.Update(user.id!, relationshipKey);
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(relationshipKey.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            Object.assign(original.value, relationshipKey);
+
+            const updated = await this.#mapper.Update(user.id!, original.value);
             if (updated.isError) return Promise.resolve(Result.Pass(updated));
 
             Object.assign(relationshipKey, updated.value);

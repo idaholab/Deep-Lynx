@@ -26,9 +26,15 @@ export default class ContainerRepository implements RepositoryInterface<Containe
 
         // if we have a set ID, attempt to update the Container
         if (c.id) {
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(c.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            Object.assign(original.value, c);
+
             void this.deleteCached(c.id);
 
-            const updated = await this.#mapper.Update(user.id!, c);
+            const updated = await this.#mapper.Update(user.id!, original.value);
             if (updated.isError) return Promise.resolve(Result.Pass(updated));
 
             Object.assign(c, updated.value);
