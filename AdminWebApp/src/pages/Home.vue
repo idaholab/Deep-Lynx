@@ -22,7 +22,7 @@
         <span class="d-block text-h6" style="line-height: .875rem">{{user.email}}</span>
       </div>
       <v-list dense class="nav-drawer-accordion mt-2">
-        <v-list-item link>
+        <v-list-item link @click="setActiveComponent('dashboard')">
           <v-list-item-content>
             <v-list-item-title>{{$t("Dashboard")}}</v-list-item-title>
           </v-list-item-content>
@@ -181,11 +181,13 @@
           </v-list-item-content>
         </v-list-item>
 
+        <!--
         <v-list-item link @click="setActiveComponent('settings')" :input-value="currentMainComponent === 'Settings'">
           <v-list-item-content>
             <v-list-item-title>{{$t("home.settings")}}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        -->
 
         <v-list-item link @click="logout">
           <v-list-item-content>
@@ -195,7 +197,7 @@
       </v-list>
       <template v-slot:append>
         <v-container class="justify-end">
-          <span class="d-block text-h6">&copy; 2020</span>
+          <span class="d-block text-h6">&copy; 2021 Idaho National Laboratory</span>
         </v-container>
       </template>
     </v-navigation-drawer>
@@ -213,9 +215,79 @@
     </v-app-bar>
 
     <v-main style="padding: 64px 0px 36px 36px">
-      <v-container>
+      <v-container v-if="currentMainComponent && currentMainComponent !== ''">
         <!-- we provide both containerID and container as some of the components require either/or or both -->
         <component v-bind:is="currentMainComponent" :containerID="containerID" :container="container" :argument="argument"></component>
+      </v-container>
+      <v-container v-else>
+        <v-row>
+          <v-col :lg="6" :md="6">
+            <v-card>
+              <v-card-title>{{$t('home.welcomeCardTitle')}}</v-card-title>
+              <v-card-text>{{$t('home.welcomeCardText')}}</v-card-text>
+              <v-card-actions><p><a :href="welcomeLink">{{$t('home.welcomeCardLinkText')}}</a></p></v-card-actions>
+            </v-card>
+          </v-col>
+          <v-col :lg="6" :md="6">
+            <v-card>
+              <v-card-title>{{$t('home.ontologyCardTitle')}}</v-card-title>
+              <v-card-text v-if="!ontologyPopulated">{{$t('home.ontologyCardText')}}</v-card-text>
+              <v-card-actions v-if="!ontologyPopulated">
+                <p><a :href="ontologyLinkOne">{{$t('home.ontologyCardLinkText1')}}</a></p>
+              </v-card-actions>
+
+              <v-card-text v-if="ontologyPopulated">
+                <v-row>
+                  <v-col :cols="12">
+                    <h3>{{$t('home.metatypes')}}</h3>
+                    <p>{{metatypesCount}}</p>
+                  </v-col>
+                  <v-col :cols="12">
+                    <h3>{{$t('home.relationships')}}</h3>
+                    <p>{{relationshipCount}}</p>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+              <v-card-actions>
+
+                <p><a @click="currentMainComponent = 'Metatypes'">{{$t('home.ontologyCardLinkText2')}}</a></p>
+              </v-card-actions>
+            </v-card>
+          </v-col>
+          <v-col :lg="6" :md="6">
+            <v-card>
+              <v-card-title>{{$t('home.setupDataSourceCardTitle')}}</v-card-title>
+              <v-card-text v-if="dataSources.length <= 0">{{$t('home.setupDataSourceCardText')}}</v-card-text>
+              <v-card-text v-else>
+                <v-carousel
+                    :cycle="true"
+                    :continuous="true"
+                    :hide-delimiters="true"
+                    :next-icon="false"
+                    :prev-icon="false"
+                    :height="100"
+                >
+                  <v-carousel-item
+                      v-for="(dataSource, i) in dataSources"
+                      :key="i"
+                  >
+                    <h2>{{dataSource.name}}</h2>
+                    <h3>{{$t('home.imported')}}</h3>
+                    <p>{{dataSource.data_imported}}</p>
+                  </v-carousel-item>
+                </v-carousel>
+              </v-card-text>
+              <v-card-actions><p><a @click="currentMainComponent='DataSources'">{{$t('home.setupDataSourceCardLinkText')}}</a></p></v-card-actions>
+            </v-card>
+          </v-col>
+          <v-col :lg="6" :md="6">
+            <v-card>
+              <v-card-title>{{$t('home.inviteUserCardTitle')}}</v-card-title>
+              <v-card-text>{{$t('home.inviteUserCardText')}}</v-card-text>
+              <v-card-actions><p><a @click="currentMainComponent='ContainerUsers'">{{$t('home.inviteUserCardLinkText')}}</a></p></v-card-actions>
+            </v-card>
+          </v-col>
+        </v-row>
       </v-container>
     </v-main>
   </div>
@@ -243,7 +315,7 @@ import LanguageSelect from "@/components/languageSelect.vue";
 import ContainerSelect from "@/components/containerSelect.vue"
 import {TranslateResult} from "vue-i18n";
 import {UserT} from "@/auth/types";
-import {ContainerT} from "@/api/types";
+import {ContainerT, DataSourceT} from "@/api/types";
 import Config from "@/config";
 
 @Component({components: {
@@ -279,6 +351,10 @@ export default class Home extends Vue {
   componentName: string | TranslateResult = 'Home'
   argument: string = this.arguments
 
+  metatypesCount = 0
+  relationshipCount = 0
+  dataSources: DataSourceT[] = []
+
   mounted() {
     this.user = this.$auth.CurrentUser();
 
@@ -291,10 +367,43 @@ export default class Home extends Vue {
           }
         })
         .catch(e => this.errorMessage = e)
+
+    this.$client.listMetatypes(this.containerID as string, {
+      count: true,
+    })
+        .then(metatypesCount => {
+          this.metatypesCount = metatypesCount as number
+        })
+
+    this.$client.listMetatypeRelationshipPairs(this.containerID as string, {
+      count: true,
+    })
+        .then(relationshipCount => {
+          this.relationshipCount = relationshipCount as number
+        })
+
+    this.$client.listDataSources(this.containerID as string)
+        .then(dataSources => {
+          this.dataSources = dataSources
+
+          this.dataSources.forEach((source, i) => {
+            this.$client.countDataForSource(this.containerID as string, source.id as string)
+            .then(count => {
+              this.dataSources[i].data_imported = count
+            })
+          })
+        })
   }
 
   setActiveComponent(menuIndex: string) {
     switch(menuIndex) {
+      case "dashboard": {
+        this.currentMainComponent = null
+        this.componentName = this.$t('home.dashboard')
+        this.$router.replace(`/containers/${this.containerID}`)
+        break;
+      }
+
       case "metatypes": {
         this.currentMainComponent = "Metatypes";
         this.componentName = this.$t('home.metatypes')
@@ -428,6 +537,18 @@ export default class Home extends Vue {
 
   containerSelect() {
     this.$router.push({name: "ContainerSelect"})
+  }
+
+  get welcomeLink() {
+    return this.$t('home.welcomeCardLink')
+  }
+
+  get ontologyLinkOne() {
+    return this.$t('home.ontologyCardLink1')
+  }
+
+  get ontologyPopulated(): boolean {
+    return this.metatypesCount > 0 && this.relationshipCount > 0
   }
 }
 </script>

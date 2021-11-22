@@ -47,7 +47,13 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         void this.#metatypeRepo.deleteCached(m.metatype_id!);
 
         if (m.id) {
-            const updated = await this.#mapper.Update(user.id!, m);
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(m.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            Object.assign(original.value, m);
+
+            const updated = await this.#mapper.Update(user.id!, original.value);
             if (updated.isError) return Promise.resolve(Result.Pass(updated));
 
             Object.assign(m, updated.value);

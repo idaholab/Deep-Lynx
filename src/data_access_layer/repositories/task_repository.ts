@@ -1,9 +1,9 @@
-import { PoolClient } from "pg";
-import Result from "../../common_classes/result";
-import { User } from "../../domain_objects/access_management/user";
-import TaskRecord from "../../domain_objects/data_warehouse/task";
-import TaskMapper from "../mappers/task_mapper";
-import RepositoryInterface, { DeleteOptions, QueryOptions, Repository } from "./repository";
+import {PoolClient} from 'pg';
+import Result from '../../common_classes/result';
+import {User} from '../../domain_objects/access_management/user';
+import TaskRecord from '../../domain_objects/data_warehouse/task';
+import TaskMapper from '../mappers/task_mapper';
+import RepositoryInterface, {DeleteOptions, QueryOptions, Repository} from './repository';
 
 export default class TaskRepository extends Repository implements RepositoryInterface<TaskRecord> {
     #mapper = TaskMapper.Instance;
@@ -16,12 +16,17 @@ export default class TaskRepository extends Repository implements RepositoryInte
     }
 
     async save(t: TaskRecord, user: User): Promise<Result<boolean>> {
-
         const errors = await t.validationErrors();
         if (errors) return Promise.resolve(Result.Failure(`task record does not pass validation ${errors.join(',')}`));
 
         if (t.id) {
-            const updated = await this.#mapper.Update(user.id!, t);
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(t.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            Object.assign(original.value, t);
+
+            const updated = await this.#mapper.Update(user.id!, original.value);
             if (updated.isError) return Promise.resolve(Result.Pass(updated));
 
             t = updated.value;

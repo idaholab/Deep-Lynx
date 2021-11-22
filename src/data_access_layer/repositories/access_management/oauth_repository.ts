@@ -53,7 +53,13 @@ export default class OAuthRepository extends Repository implements RepositoryInt
         if (errors) return Promise.resolve(Result.Failure(`oauth application fails validation ${errors.join(',')}`));
 
         if (t.id) {
-            const updated = await this.#mapper.Update(user.id!, t);
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(t.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            Object.assign(original.value, t);
+
+            const updated = await this.#mapper.Update(user.id!, original.value);
             if (updated.isError) return Promise.resolve(Result.Pass(updated));
 
             Object.assign(t, updated.value);

@@ -156,6 +156,9 @@ export type DataSourceT = {
     modified_at?: string;
     created_by?: string;
     modified_by?: string;
+
+    // composite fields, not on original return
+    data_imported?: number;
 };
 
 export type StandardDataSourceConfig = {

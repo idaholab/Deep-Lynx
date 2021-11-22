@@ -45,7 +45,13 @@ export default class DataStagingRepository extends Repository implements Reposit
         }
 
         if (record.id) {
-            const updated = await this.#mapper.Update(record, transaction);
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(record.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            Object.assign(original.value, record);
+
+            const updated = await this.#mapper.Update(original.value, transaction);
             if (updated.isError) {
                 if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
                 return Promise.resolve(Result.Pass(updated));

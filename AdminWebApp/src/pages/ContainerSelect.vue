@@ -15,18 +15,18 @@
             <v-col cols="7">
               <v-container class="py-9 pl-6 pr-9 d-flex">
                 <div class="align-self-center ma-auto">
-                  <h2 class="text-h2 text-center mb-4">Container</h2>
+                  <h2 class="text-h2 text-center mb-4">{{$t('containerSelect.container')}}</h2>
                   <error-banner :message="errorMessage"></error-banner>
-                  <p>Please choose an initial container to get started.</p>
+                  <p>{{$t('containerSelect.choose')}}</p>
                   <v-form>
                     <container-select @containerSelected="containerSelected"></container-select>
                   </v-form>
                   <v-row v-if="outstandingInvites.length > 0" class="my-8 mx-0" align="center">
                     <v-divider></v-divider>
-                    <span class="px-2">or</span>
+                    <span class="px-2">{{$t('containerSelect.or')}}</span>
                     <v-divider></v-divider>
                   </v-row>
-                  <p v-if="outstandingInvites.length > 0 ">Accept Invitation to a Container</p>
+                  <p v-if="outstandingInvites.length > 0 ">{{$t('containerSelect.acceptInviteLong')}}</p>
                   <v-row class="px-11 mt-4">
                     <div v-for="invite in outstandingInvites" v-bind:key="invite.id">
                       <v-row>
@@ -46,6 +46,9 @@
                   </v-row>
 
                   <logout></logout>
+
+                  <br>
+                    <p>{{$t('containerSelect.needHelp')}} <a :href="helpLink()">{{$t('containerSelect.wiki')}}</a> </p>
                 </div>
               </v-container>
             </v-col>
@@ -59,7 +62,7 @@
         app
     >
       <v-col :cols="2" class="pa-0">
-        <span class="text-h6">&copy; 2019</span>
+        <span class="text-h6">&copy; 2021 Idaho National Laboratory</span>
       </v-col>
       <v-col :cols="2" :offset="8" class="pa-0">
         <language-select class="mb-1"></language-select>
@@ -124,6 +127,10 @@ export default class ContainerSelection extends Vue {
           this.$router.push({name: 'ContainerInvite', query: {token, containerName}})
         })
         .catch(e => this.errorMessage = e)
+  }
+
+  helpLink() {
+    return this.$t('containerSelect.wikiLink')
   }
 }
 </script>

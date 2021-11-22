@@ -104,8 +104,14 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
 
         // update if ID has already been set
         if (p.id) {
+            // to allow partial updates we must first fetch the original object
+            const original = await this.findByID(p.id);
+            if (original.isError) return Promise.resolve(Result.Failure(`unable to fetch original for update ${original.error}`));
+
+            Object.assign(original.value, p);
+
             void this.deleteCached(p.id);
-            const updated = await this.#mapper.Update(user.id!, p);
+            const updated = await this.#mapper.Update(user.id!, original.value);
             if (updated.isError) return Promise.resolve(Result.Failure(`failed to update metatype relationship pair ${updated.error?.error}`));
 
             Object.assign(p, updated.value);

@@ -418,7 +418,7 @@ export class Client {
     listImports(
         containerID: string,
         dataSourceID: string,
-        {limit, offset, sortBy, sortDesc}: {limit: number; offset: number; sortBy?: string; sortDesc?: boolean},
+        {limit, offset, sortBy, sortDesc, count}: {limit: number; offset: number; sortBy?: string; sortDesc?: boolean; count?: boolean},
     ): Promise<ImportT[]> {
         const query: {[key: string]: any} = {};
 
@@ -426,6 +426,7 @@ export class Client {
         query.offset = offset;
         if (sortBy) query.sortBy = sortBy;
         if (sortDesc) query.sortDesc = sortDesc;
+        if (count) query.count = count;
 
         return this.get<ImportT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`, query);
     }
@@ -435,6 +436,10 @@ export class Client {
 
         query.count = true;
         return this.get<number>(`/containers/${containerID}/import/datasources/${dataSourceID}/imports`, query);
+    }
+
+    countDataForSource(containerID: string, dataSourceID: string): Promise<number> {
+        return this.get<number>(`/containers/${containerID}/import/datasources/${dataSourceID}/data`);
     }
 
     listImportData(

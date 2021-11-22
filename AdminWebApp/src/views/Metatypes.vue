@@ -42,7 +42,7 @@
         </v-row>
       </template>
 
-      <template v-slot:[`item.id`]="{ item }">
+      <template v-slot:[`item.copy`]="{ item }">
         <v-tooltip top>
           <template v-slot:activator="{on, attrs}">
             <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
@@ -119,6 +119,7 @@ export default class Metatypes extends Vue {
 
   headers() {
     return  [
+      { text: '', value: 'copy' },
       { text: this.$t('metatypes.id'), value: 'id' },
       { text: this.$t('metatypes.name'), value: 'name' },
       { text: this.$t('metatypes.description'), value: 'description'},
