@@ -1,3 +1,4 @@
+/* DEPRECATED */
 import {Application, NextFunction, Request, Response} from 'express';
 import {graphql} from 'graphql';
 import {authInContainer} from '../../../../middleware';

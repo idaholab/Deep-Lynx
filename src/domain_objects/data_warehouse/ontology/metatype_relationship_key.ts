@@ -1,5 +1,5 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {IsArray, IsBoolean, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, MinLength} from 'class-validator';
+import {IsArray, IsBoolean, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, Matches, MinLength} from 'class-validator';
 
 /*
     MetatypeRelationshipKey represents a metatype relationship key record in the
@@ -28,6 +28,7 @@ export default class MetatypeRelationshipKey extends BaseDomainClass {
 
     @IsNotEmpty()
     @IsString()
+    @Matches(/^[_a-zA-Z][_a-zA-Z0-9]*$/)
     property_name = '';
 
     @IsNotEmpty()

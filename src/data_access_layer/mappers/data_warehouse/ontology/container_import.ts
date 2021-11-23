@@ -16,6 +16,7 @@ import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/meta
 import {User} from '../../../../domain_objects/access_management/user';
 import NodeRepository from '../../../repositories/data_warehouse/data/node_repository';
 import EdgeRepository from '../../../repositories/data_warehouse/data/edge_repository';
+import {stringToValidPropertyName} from "../../../../services/utilities";
 const convert = require('xml-js');
 
 const containerRepo = new ContainerRepository();
@@ -748,7 +749,7 @@ export default class ContainerImport {
                                 metatype_id: thisClass.db_id,
                                 name: dataProp.name,
                                 required: false,
-                                property_name: propName,
+                                property_name: stringToValidPropertyName(propName),
                                 description: dataProp.description,
                                 data_type: property.target,
                                 validation: {

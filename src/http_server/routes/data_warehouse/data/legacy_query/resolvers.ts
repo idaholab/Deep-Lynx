@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-for-in-array,prefer-const,@typescript-eslint/no-for-in-array,@typescript-eslint/ban-ts-comment */
+
+/* DEPRECATED */
+
 /*
 Resolvers contains the functions used by a GraphQL query to resolve a field
 to its known value. This file is a mix of the static resolvers and functionality

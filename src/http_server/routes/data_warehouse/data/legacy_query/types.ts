@@ -1,3 +1,5 @@
+/* DEPRECATED */
+
 /*
 We have a separate set of types that correspond to the general portions of the
 GraphQL schema. We're doing this because the types we're sending in the query

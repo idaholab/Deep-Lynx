@@ -47,7 +47,7 @@ import UserRoutes from './access_management/user_routes';
 import DataSourceRoutes from './data_warehouse/import/data_source_routes';
 import {SetJWTAuthMethod} from '../authentication/jwt';
 import {SetLocalAuthMethod} from '../authentication/local';
-import QueryRoutes from './data_warehouse/data/query/query_routes';
+import QueryRoutes from './data_warehouse/data/legacy_query/query_routes';
 import RSARoutes from './access_management/rsa_routes';
 import GraphRoutes from './data_warehouse/data/graph_routes';
 import OAuthRoutes from './access_management/oauth_routes';
@@ -58,6 +58,7 @@ import TypeMappingRoutes from './data_warehouse/etl/type_mapping_routes';
 import {serialize} from 'class-transformer';
 import {SuperUser} from '../../domain_objects/access_management/user';
 import ImportRoutes from './data_warehouse/import/import_routes';
+import DataQueryRoutes from './data_warehouse/data/data_query_routes';
 import TaskRoutes from './task_routes';
 
 const winston = require('winston');
@@ -128,9 +129,11 @@ export class Router {
             currentUser(),
         ]);
         MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipPairContext(), currentUser()]);
+        /* This query route is considered deprecated */
         QueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         GraphRoutes.mount(this.app, [authenticateRoute(), containerContext(), nodeContext(), edgeContext(), fileContext(), metatypeContext(), currentUser()]);
         EventRoutes.mount(this.app, [authenticateRoute(), containerContext(), eventRegistrationContext(), currentUser()]);
+        DataQueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         TaskRoutes.mount(this.app, [authenticateRoute(), containerContext(), taskContext(), currentUser()]);
 
         // OAuth and Identity Provider routes - these are the only routes that serve up

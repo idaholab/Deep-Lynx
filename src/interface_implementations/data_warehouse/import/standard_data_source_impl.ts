@@ -146,11 +146,12 @@ export default class StandardDataSourceImpl implements DataSource {
                 pipeline = pipeline.pipe(pipe);
             }
 
-            pipeline.pipe(fromJSON).pipe(pass);
+            // for the pipe process to work correctly you must wait for the pipe to finish reading all data
+            await new Promise((fulfill) => pipeline.pipe(fromJSON).pipe(pass).on('finish', fulfill));
         } else if (options && options.overrideJsonStream) {
-            payloadStream.pipe(pass);
+            await new Promise((fulfill) => payloadStream.pipe(pass).on('finish', fulfill));
         } else {
-            payloadStream.pipe(fromJSON).pipe(pass);
+            await new Promise((fulfill) => payloadStream.pipe(fromJSON).pipe(pass).on('finish', fulfill));
         }
 
         // we have to wait until any save operations are complete before we can act on the pipe's results
