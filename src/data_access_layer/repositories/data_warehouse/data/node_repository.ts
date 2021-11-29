@@ -251,6 +251,9 @@ export default class NodeRepository extends Repository implements RepositoryInte
 
         return this.#fileMapper.ListForNode(node.id);
     }
+    /*
+        SELECT * from nodes WHERE bob = 2 OR (bob = 3  AND bill = 2)
+     */
 
     id(operator: string, value: any) {
         super.query('id', operator, value);

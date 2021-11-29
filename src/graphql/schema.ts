@@ -12,15 +12,16 @@ import {
     GraphQLList,
     GraphQLEnumType,
     GraphQLEnumValueConfig,
-    GraphQLInputType,
     GraphQLInputObjectType,
+    GraphQLInt,
 } from 'graphql';
 import MetatypeRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 import Result from '../common_classes/result';
 import GraphQLJSON from 'graphql-type-json';
 import Metatype from '../domain_objects/data_warehouse/ontology/metatype';
 import {stringToValidPropertyName} from '../services/utilities';
-import {v4 as uuidv4} from 'uuid';
+import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
+import Logger from '../services/logger';
 
 // GraphQLSchemaGenerator takes a container and generates a valid GraphQL schema for all contained metatypes. This will
 // allow users to query and filter data based on node type, the various properties that type might have, and other bits
@@ -43,62 +44,82 @@ export default class GraphQLSchemaGenerator {
 
         // we must declare the metadata input object beforehand so we can include it in the final schema entry for each
         // metatype
-        const metadataType = new GraphQLInputObjectType({
-            name: 'metadata',
+        const recordInputType = new GraphQLInputObjectType({
+            name: 'record_input',
             fields: {
                 data_source_id: {type: GraphQLString},
-                metatype_id: {type: GraphQLString},
-                metatype_name: {type: GraphQLString},
                 original_id: {type: GraphQLJSON}, // since the original ID might be a number, treat it as valid JSON
                 import_id: {type: GraphQLString},
+                limit: {type: GraphQLInt, defaultValue: 10000},
+                page: {type: GraphQLInt, defaultValue: 1},
+            },
+        });
+
+        const recordInfo = new GraphQLObjectType({
+            name: 'recordInfo',
+            fields: {
+                id: {type: GraphQLString},
+                data_source_id: {type: GraphQLString},
+                original_id: {type: GraphQLJSON}, // since the original ID might be a number, treat it as valid JSON
+                import_id: {type: GraphQLString},
+                metatype_id: {type: GraphQLString},
+                metatype_name: {type: GraphQLString},
+                created_at: {type: GraphQLString},
+                created_by: {type: GraphQLString},
+                modified_at: {type: GraphQLString},
+                modified_by: {type: GraphQLString},
+                metadata: {type: GraphQLJSON},
+                count: {type: GraphQLInt},
+                page: {type: GraphQLInt},
             },
         });
 
         metatypeResults.value.forEach((metatype) => {
-            metatypeGraphQLObjects[metatype.name] = {
-                args: {...this.inputFieldsForMetatype(metatype), metadata: {type: metadataType}},
+            metatypeGraphQLObjects[stringToValidPropertyName(metatype.name)] = {
+                args: {...this.inputFieldsForMetatype(metatype), _record: {type: recordInputType}},
                 description: metatype.description,
                 type: new GraphQLList(
                     new GraphQLObjectType({
-                        name: metatype.name,
+                        name: stringToValidPropertyName(metatype.name),
                         // needed because the return type accepts an object, but throws a fit about it
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                         // @ts-ignore
                         fields: () => {
                             const output: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
+                            output._record = {type: recordInfo};
 
                             metatype.keys?.forEach((metatypeKey) => {
                                 // keys must match the regex format of /^[_a-zA-Z][_a-zA-Z0-9]*$/ in order to be considered
                                 // valid graphql property names. While we force the user to meet these requirements at key
                                 // creation, we can't guarantee that legacy data will conform to these standards
-                                metatypeKey.property_name = stringToValidPropertyName(metatypeKey.property_name);
+                                const propertyName = stringToValidPropertyName(metatypeKey.property_name);
 
                                 switch (metatypeKey.data_type) {
                                     // because we have no specification on our internal number type, we
                                     // must set this as a float for now
                                     case 'number': {
-                                        output[metatypeKey.property_name] = {
+                                        output[propertyName] = {
                                             type: GraphQLFloat,
                                         };
                                         break;
                                     }
 
                                     case 'boolean': {
-                                        output[metatypeKey.property_name] = {
+                                        output[propertyName] = {
                                             type: GraphQLBoolean,
                                         };
                                         break;
                                     }
 
                                     case 'string' || 'date' || 'file': {
-                                        output[metatypeKey.property_name] = {
+                                        output[propertyName] = {
                                             type: GraphQLString,
                                         };
                                         break;
                                     }
 
                                     case 'list': {
-                                        output[metatypeKey.property_name] = {
+                                        output[propertyName] = {
                                             type: new GraphQLList(GraphQLJSON),
                                         };
                                         break;
@@ -115,9 +136,9 @@ export default class GraphQLSchemaGenerator {
                                             });
                                         }
 
-                                        output[metatypeKey.property_name] = {
+                                        output[propertyName] = {
                                             type: new GraphQLEnumType({
-                                                name: `${metatype.name}-${metatypeKey.name}_Enum_Type_${uuidv4().replace('-', '')}`,
+                                                name: stringToValidPropertyName(`${metatype.name}_${metatypeKey.name}_Enum_TypeA`),
                                                 values: enumMap,
                                             }),
                                         };
@@ -125,7 +146,7 @@ export default class GraphQLSchemaGenerator {
                                     }
 
                                     default: {
-                                        output[metatypeKey.property_name] = {
+                                        output[propertyName] = {
                                             type: GraphQLString,
                                         };
                                     }
@@ -136,7 +157,7 @@ export default class GraphQLSchemaGenerator {
                         },
                     }),
                 ),
-                resolve: this.resolverForMetatype(metatype),
+                resolve: this.resolverForMetatype(containerID, metatype),
             };
         });
 
@@ -152,9 +173,104 @@ export default class GraphQLSchemaGenerator {
         );
     }
 
-    resolverForMetatype(metatype: Metatype): (_: any, {input}: {input: any}) => any {
-        return (_, input) => {
-            return [input];
+    resolverForMetatype(containerID: string, metatype: Metatype): (_: any, {input}: {input: any}) => any {
+        return async (_, input: {[key: string]: any}) => {
+            console.log(input);
+
+            let repo = new NodeRepository();
+            repo = repo.where().containerID('eq', containerID).and().metatypeID('eq', metatype.id);
+
+            if (input._record) {
+                if (input._record.data_source_id) {
+                    const query = this.breakQuery(input._record.data_source_id);
+                    repo = repo.and().dataSourceID(query[0], query[1]);
+                }
+
+                if (input._record.metatype_id) {
+                    const query = this.breakQuery(input._record.metatype_id);
+                    repo = repo.and().metatypeID(query[0], query[1]);
+                }
+
+                if (input._record.metatype_name) {
+                    const query = this.breakQuery(input._record.metatype_name);
+                    repo = repo.and().metatypeName(query[0], query[1]);
+                }
+
+                if (input._record.original_id) {
+                    const query = this.breakQuery(input._record.original_id);
+                    repo = repo.and().originalDataID(query[0], query[1]);
+                }
+
+                if (input._record.import_id) {
+                    const query = this.breakQuery(input._record.import_id);
+                    repo = repo.and().importDataID(query[0], query[1]);
+                }
+            }
+
+            // we must map out what the graphql refers to a metatype's keys are vs. what they actually are so
+            // that we can map the query properly
+            const propertyMap: {[key: string]: any} = {};
+            metatype.keys?.forEach((key) => {
+                propertyMap[stringToValidPropertyName(key.property_name)] = key.property_name;
+            });
+
+            // iterate through the input object, ignoring reserved properties and adding all others to
+            // the query as property queries
+            Object.keys(input).forEach((key) => {
+                if (key === 'AND' || key === 'OR' || key === '_record') return;
+
+                const query = this.breakQuery(input[key]);
+                repo = repo.and().property(propertyMap[key], query[0], query[1]);
+            });
+
+            // wrapping the end resolver in a promise insures that we don't return prior to all results being
+            // fetched
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            return new Promise((resolve) =>
+                repo
+                    .list(true, {limit: 10000})
+                    .then((results) => {
+                        if (results.isError) {
+                            Logger.error(`unable to list nodes ${results.error?.error}`);
+                            resolve([]);
+                        }
+
+                        const nodeOutput: {[key: string]: any}[] = [];
+
+                        results.value.forEach((node) => {
+                            const properties: {[key: string]: any} = {};
+                            if (node.properties) {
+                                Object.keys(node.properties).forEach((key) => {
+                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                    // @ts-ignore
+                                    properties[stringToValidPropertyName(key)] = node.properties[key];
+                                });
+                            }
+
+                            nodeOutput.push({
+                                ...properties,
+                                _record: {
+                                    id: node.id,
+                                    data_source_id: node.data_source_id,
+                                    original_id: node.original_data_id,
+                                    import_id: node.import_data_id,
+                                    metatype_id: node.metatype_id,
+                                    metatype_name: node.metatype_name,
+                                    metadata: node.metadata,
+                                    created_at: node.created_at?.toISOString(),
+                                    created_by: node.created_by,
+                                    modified_at: node.modified_at?.toISOString(),
+                                    modified_by: node.modified_by,
+                                },
+                            });
+                        });
+
+                        resolve(nodeOutput);
+                    })
+                    .catch((e) => {
+                        resolve(e);
+                    }),
+            );
         };
     }
 
@@ -163,34 +279,34 @@ export default class GraphQLSchemaGenerator {
         const fields: {[key: string]: any} = {};
 
         metatype.keys?.forEach((metatypeKey) => {
-            metatypeKey.property_name = stringToValidPropertyName(metatypeKey.property_name);
+            const propertyName = stringToValidPropertyName(metatypeKey.property_name);
 
             switch (metatypeKey.data_type) {
                 // because we have no specification on our internal number type, we
                 // must set this as a float for now
                 case 'number': {
-                    fields[metatypeKey.property_name] = {
+                    fields[propertyName] = {
                         type: GraphQLFloat,
                     };
                     break;
                 }
 
                 case 'boolean': {
-                    fields[metatypeKey.property_name] = {
+                    fields[propertyName] = {
                         type: GraphQLBoolean,
                     };
                     break;
                 }
 
                 case 'string' || 'date' || 'file': {
-                    fields[metatypeKey.property_name] = {
+                    fields[propertyName] = {
                         type: GraphQLString,
                     };
                     break;
                 }
 
                 case 'list': {
-                    fields[metatypeKey.property_name] = {
+                    fields[propertyName] = {
                         type: new GraphQLList(GraphQLJSON),
                     };
                     break;
@@ -208,9 +324,9 @@ export default class GraphQLSchemaGenerator {
                     }
 
                     // we have to include a UUID here so that we can insure a uniquely named type
-                    fields[metatypeKey.property_name] = {
+                    fields[propertyName] = {
                         type: new GraphQLEnumType({
-                            name: `${metatype.name}-${metatypeKey.name}_Enum_Type_${uuidv4().replace('-', '')}`,
+                            name: stringToValidPropertyName(`${metatype.name}_${metatypeKey.name}_Enum_Type_B`),
                             values: enumMap,
                         }),
                     };
@@ -218,7 +334,7 @@ export default class GraphQLSchemaGenerator {
                 }
 
                 default: {
-                    fields[metatypeKey.property_name] = {
+                    fields[propertyName] = {
                         type: GraphQLString,
                     };
                 }
@@ -229,28 +345,28 @@ export default class GraphQLSchemaGenerator {
         // and we really really really want the structure we're defining here. As such
         // the code is ugly because we're building an ugly structure
         const conditionalType = new GraphQLInputObjectType({
-            name: metatype.name + '_Conditional',
+            name: stringToValidPropertyName(metatype.name + '_Conditional'),
             fields: {
                 ...fields,
                 AND: {
                     type: new GraphQLInputObjectType({
-                        name: metatype.name + '_AND_A',
+                        name: stringToValidPropertyName(metatype.name + '_AND_A'),
                         fields: {
                             ...fields,
                             AND: {
                                 type: new GraphQLInputObjectType({
-                                    name: metatype.name + '_AND_B',
+                                    name: stringToValidPropertyName(metatype.name) + '_AND_B',
                                     fields: {
                                         ...fields,
                                         AND: {
                                             type: new GraphQLInputObjectType({
-                                                name: metatype.name + '_AND_C',
+                                                name: stringToValidPropertyName(metatype.name) + '_AND_C',
                                                 fields,
                                             }),
                                         },
                                         OR: {
                                             type: new GraphQLInputObjectType({
-                                                name: metatype.name + '_OR_D',
+                                                name: stringToValidPropertyName(metatype.name) + '_OR_D',
                                                 fields,
                                             }),
                                         },
@@ -259,23 +375,23 @@ export default class GraphQLSchemaGenerator {
                             },
                             OR: {
                                 type: new GraphQLInputObjectType({
-                                    name: metatype.name + '_OR_E',
+                                    name: stringToValidPropertyName(metatype.name) + '_OR_E',
                                     fields: {
                                         ...fields,
                                         AND: {
                                             type: new GraphQLInputObjectType({
-                                                name: metatype.name + '_AND_F',
+                                                name: stringToValidPropertyName(metatype.name) + '_AND_F',
                                                 fields: {
                                                     ...fields,
                                                     AND: {
                                                         type: new GraphQLInputObjectType({
-                                                            name: metatype.name + '_AND_O',
+                                                            name: stringToValidPropertyName(metatype.name) + '_AND_O',
                                                             fields,
                                                         }),
                                                     },
                                                     OR: {
                                                         type: new GraphQLInputObjectType({
-                                                            name: metatype.name + '_OR_P',
+                                                            name: stringToValidPropertyName(metatype.name) + '_OR_P',
                                                             fields,
                                                         }),
                                                     },
@@ -284,18 +400,18 @@ export default class GraphQLSchemaGenerator {
                                         },
                                         OR: {
                                             type: new GraphQLInputObjectType({
-                                                name: metatype.name + '_OR_G',
+                                                name: stringToValidPropertyName(metatype.name) + '_OR_G',
                                                 fields: {
                                                     ...fields,
                                                     AND: {
                                                         type: new GraphQLInputObjectType({
-                                                            name: metatype.name + '_AND_Q',
+                                                            name: stringToValidPropertyName(metatype.name) + '_AND_Q',
                                                             fields,
                                                         }),
                                                     },
                                                     OR: {
                                                         type: new GraphQLInputObjectType({
-                                                            name: metatype.name + '_OR_R',
+                                                            name: stringToValidPropertyName(metatype.name) + '_OR_R',
                                                             fields,
                                                         }),
                                                     },
@@ -310,28 +426,28 @@ export default class GraphQLSchemaGenerator {
                 },
                 OR: {
                     type: new GraphQLInputObjectType({
-                        name: metatype.name + '_OR_H',
+                        name: stringToValidPropertyName(metatype.name) + '_OR_H',
                         fields: {
                             ...fields,
                             AND: {
                                 type: new GraphQLInputObjectType({
-                                    name: metatype.name + '_AND_I',
+                                    name: stringToValidPropertyName(metatype.name) + '_AND_I',
                                     fields: {
                                         ...fields,
                                         AND: {
                                             type: new GraphQLInputObjectType({
-                                                name: metatype.name + '_AND_J',
+                                                name: stringToValidPropertyName(metatype.name) + '_AND_J',
                                                 fields: {
                                                     ...fields,
                                                     AND: {
                                                         type: new GraphQLInputObjectType({
-                                                            name: metatype.name + '_AND_S',
+                                                            name: stringToValidPropertyName(metatype.name) + '_AND_S',
                                                             fields,
                                                         }),
                                                     },
                                                     OR: {
                                                         type: new GraphQLInputObjectType({
-                                                            name: metatype.name + '_OR_T',
+                                                            name: stringToValidPropertyName(metatype.name) + '_OR_T',
                                                             fields,
                                                         }),
                                                     },
@@ -340,18 +456,18 @@ export default class GraphQLSchemaGenerator {
                                         },
                                         OR: {
                                             type: new GraphQLInputObjectType({
-                                                name: metatype.name + '_OR_K',
+                                                name: stringToValidPropertyName(metatype.name) + '_OR_K',
                                                 fields: {
                                                     ...fields,
                                                     AND: {
                                                         type: new GraphQLInputObjectType({
-                                                            name: metatype.name + '_AND_U',
+                                                            name: stringToValidPropertyName(metatype.name) + '_AND_U',
                                                             fields,
                                                         }),
                                                     },
                                                     OR: {
                                                         type: new GraphQLInputObjectType({
-                                                            name: metatype.name + '_OR_V',
+                                                            name: stringToValidPropertyName(metatype.name) + '_OR_V',
                                                             fields,
                                                         }),
                                                     },
@@ -363,23 +479,23 @@ export default class GraphQLSchemaGenerator {
                             },
                             OR: {
                                 type: new GraphQLInputObjectType({
-                                    name: metatype.name + '_OR_L',
+                                    name: stringToValidPropertyName(metatype.name) + '_OR_L',
                                     fields: {
                                         ...fields,
                                         AND: {
                                             type: new GraphQLInputObjectType({
-                                                name: metatype.name + '_AND_M',
+                                                name: stringToValidPropertyName(metatype.name) + '_AND_M',
                                                 fields: {
                                                     ...fields,
                                                     AND: {
                                                         type: new GraphQLInputObjectType({
-                                                            name: metatype.name + '_AND_W',
+                                                            name: stringToValidPropertyName(metatype.name) + '_AND_W',
                                                             fields,
                                                         }),
                                                     },
                                                     OR: {
                                                         type: new GraphQLInputObjectType({
-                                                            name: metatype.name + '_OR_X',
+                                                            name: stringToValidPropertyName(metatype.name) + '_OR_X',
                                                             fields,
                                                         }),
                                                     },
@@ -388,18 +504,18 @@ export default class GraphQLSchemaGenerator {
                                         },
                                         OR: {
                                             type: new GraphQLInputObjectType({
-                                                name: metatype.name + '_OR_N',
+                                                name: stringToValidPropertyName(metatype.name) + '_OR_N',
                                                 fields: {
                                                     ...fields,
                                                     AND: {
                                                         type: new GraphQLInputObjectType({
-                                                            name: metatype.name + '_AND_Y',
+                                                            name: stringToValidPropertyName(metatype.name) + '_AND_Y',
                                                             fields,
                                                         }),
                                                     },
                                                     OR: {
                                                         type: new GraphQLInputObjectType({
-                                                            name: metatype.name + '_OR_Z',
+                                                            name: stringToValidPropertyName(metatype.name) + '_OR_Z',
                                                             fields,
                                                         }),
                                                     },
@@ -420,5 +536,20 @@ export default class GraphQLSchemaGenerator {
         fields.OR = {type: conditionalType};
 
         return fields;
+    }
+
+    // breakQuery takes a string query and breaks off the operator from the rest of the query if present, if not present
+    // defaults to the 'eq' operator
+    private breakQuery(query: string): string[] {
+        const parts = query.split(' ');
+
+        // check to see if we have an operator, if not, return the 'eq' operator and the value
+        if (!['eq', 'neq', 'like', 'in'].includes(parts[0])) {
+            return ['eq', query];
+        }
+
+        const operator = parts.shift();
+
+        return [operator as string, parts.join(' ')];
     }
 }

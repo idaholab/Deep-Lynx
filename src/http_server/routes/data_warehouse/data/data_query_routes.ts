@@ -21,7 +21,11 @@ export default class DataQueryRoutes {
                     return;
                 }
 
-                graphql(schemaResult.value, req.body.query)
+                graphql({
+                    schema: schemaResult.value,
+                    source: req.body.query,
+                    variableValues: req.body.variables,
+                })
                     .then((response) => {
                         res.status(200).json(response);
                     })
@@ -31,7 +35,6 @@ export default class DataQueryRoutes {
             })
             .catch((e) => {
                 res.status(500).json(e.toString());
-            })
-            .finally(() => next());
+            });
     }
 }
