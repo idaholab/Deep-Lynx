@@ -6502,6 +6502,16 @@ components:
           type: object
         config:
           $ref: '#/components/schemas/TaskConfig'
+        status_message:
+          type: string
+        created_at:
+          type: string
+        modified_at:
+          type: string
+        created_by:
+          type: string
+        modified_by:
+          type: string
     TaskConfig:
       title: TaskConfig
       type: object

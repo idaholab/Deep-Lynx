@@ -155,7 +155,7 @@ export default class CreateMetatypeRelationshipKeyDialog extends Vue {
   dialog = false
   formValid = false
   metatypeRelationshipKey: MetatypeRelationshipKeyT = {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeRelationshipKeyT
-  dataTypes = ["number", "date", "string", "boolean", "enumeration", "file"]
+  dataTypes = ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file"]
   booleanOptions = [true, false]
 
   @Watch('dialog', {immediate: true})

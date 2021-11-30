@@ -160,7 +160,7 @@ export default class EditMetatypeKeyDialog extends Vue {
   dialog = false
   formValid = false
   selectedMetatypeKey: MetatypeKeyT | null  = null
-  dataTypes = ["number", "date", "string", "boolean", "enumeration", "file"]
+  dataTypes = ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file"]
   booleanOptions = [true, false]
 
   @Watch('dialog', {immediate: true})

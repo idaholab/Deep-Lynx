@@ -428,7 +428,6 @@ describe('The GraphQL Schema Generator', async () => {
         expect((typeMap['Car'] as GraphQLObjectType).getFields()['id'].type).eq(GraphQLString);
         expect((typeMap['Car'] as GraphQLObjectType).getFields()['name'].type).eq(GraphQLString);
         expect((typeMap['Car'] as GraphQLObjectType).getFields()['drivers'].type.toString).eq(GraphQLList(GraphQLJSON).toString);
-        expect((typeMap['Car'] as GraphQLObjectType).getFields()['trim'].type.toString()).eq('Car-trim Enum Type');
         // check the enum values
         const values = ((typeMap['Car'] as GraphQLObjectType).getFields()['trim'].type as GraphQLEnumType).getValues();
         expect(values.length).eq(2);
