@@ -297,9 +297,9 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
                                 if (artifact.content?.text?.richTextBody) {
                                     artifact.content.text.richTextBody = artifact.content.text.richTextBody.replace(/<\/?[^>]+(>|$)/g, '').trim();
                                 }
-
-                                this.push(artifact);
+                        
                             }
+                            this.push(artifact);
                         }
                     },
                     objectMode: true,
