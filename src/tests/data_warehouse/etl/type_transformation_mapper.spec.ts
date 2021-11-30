@@ -298,8 +298,8 @@ describe('A Data Type Mapping Transformation', async () => {
                 container_id: containerID,
                 name: faker.name.findName(),
                 description: faker.random.alphaNumeric(),
-            })
-        )
+            }),
+        );
 
         expect(relationship.isError).false;
         expect(relationship.value).not.empty;
@@ -313,9 +313,9 @@ describe('A Data Type Mapping Transformation', async () => {
                 origin_metatype: metatype.value.id!,
                 destination_metatype: metatype.value.id!,
                 relationship: relationship.value.id!,
-                relationship_type: 'many:many'
-            })
-        )
+                relationship_type: 'many:many',
+            }),
+        );
 
         expect(relationshipPair.isError).false;
         expect(relationshipPair.value).not.empty;
@@ -420,7 +420,7 @@ describe('A Data Type Mapping Transformation', async () => {
         );
 
         expect(updatedRelationshipTransformation.isError).false;
-    })
+    });
 
     it('can fetch keys from payload using dot notation', async () => {
         let value = TypeTransformation.getNestedValue('car.id', test_payload[0]);
@@ -461,11 +461,11 @@ describe('A Data Type Mapping Transformation', async () => {
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).eq(1);
 
-        conversion = TypeTransformation.convertValue({data_type: 'number'} as MetatypeKey, '.02');
+        conversion = TypeTransformation.convertValue({data_type: 'float'} as MetatypeKey, '.02');
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).eq(0.02);
 
-        conversion = TypeTransformation.convertValue({data_type: 'number'} as MetatypeKey, '5.600e-3');
+        conversion = TypeTransformation.convertValue({data_type: 'float'} as MetatypeKey, '5.600e-3');
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).eq(0.0056);
 
