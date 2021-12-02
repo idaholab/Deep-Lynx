@@ -980,9 +980,9 @@ paths:
         required: true
     post:
       tags:
-        - Authentication
+        - Metatypes
       summary: Validate Metatype Properties
-      operationId: post-containers-container_id-metatypes-metatype_id
+      operationId: ValidateMetatypeProperties
       responses:
         '200':
           description: ''
