@@ -420,7 +420,7 @@ paths:
       tags:
         - Graph
       summary: Create Or Update Nodes
-      description: This endpoint will either create new nodes or update nodes if a `modified_at` property with a valid DateTime is passed.
+      description: This endpoint will either create new nodes or update nodes if one with the same original_id is passed.
       operationId: CreateOrUpdateNodes
       parameters:
         - name: container_id
@@ -600,7 +600,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Generic200Response'
-      description: This endpoint will either create new edges or update edges if a `modified_at` property with a valid DateTime is passed.
+      description: 'This endpoint will attempt to create a connection between two nodes. You can either pass in the node''s Deep Lynx IDs, or the node''s original id, metatype id, and data source id to create these edges.'
       requestBody:
         content:
           application/json:
@@ -1974,7 +1974,12 @@ paths:
       tags:
         - Data Sources
       summary: Upload File
-      description: 'Uploads a file and metadata to Deep Lynx. This endpoint will accept multiple files and multiple metadata properties as form values. If metadata (additional key value pairs) are provided, an import is created for the data source in addition to the file upload. Transformations can be applied to this import to create nodes and edges in the graph with metadata for the uploaded file(s).'
+      description: |-
+        Uploads a file and it's metadata to Deep Lynx. All additional fields on the multipart form will be processed and added as metadata to the file upload itself. 
+
+        If you include a file field and call that "metadata" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once Deep Lynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.
+
+        NOTE: The metadata file you upload, if json, must be wrapped in an array. If you do not pass in an array of objects, even if it's a single object, then Deep Lynx will attempt to split up your metadata into its parts instead of treating it like a whole object.
       operationId: UploadFile
       parameters:
         - name: container_id
@@ -1987,6 +1992,11 @@ paths:
           required: true
           schema:
             type: string
+        - schema:
+            type: string
+          in: query
+          name: importID
+          description: You can attach the metadata to an existing import if desired.
       responses:
         '200':
           description: ''
@@ -2003,6 +2013,10 @@ paths:
               properties:
                 file:
                   type: string
+        description: |-
+          This should be a collection of files and normal fields. If you include a file field and call that "metadata" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once Deep Lynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.
+
+          NOTE: The metadata file you upload, if json, must be wrapped in an array. If you do not pass in an array of objects, even if it's a single object, then Deep Lynx will attempt to split up your metadata into its parts instead of treating it like a whole object.
   '/containers/{container_id}/files/{file_id}/download':
     get:
       tags:

@@ -9,7 +9,7 @@ import EdgeMapper from '../../../mappers/data_warehouse/data/edge_mapper';
 import Node from '../../../../domain_objects/data_warehouse/data/node';
 import MetatypeRelationshipPairRepository from '../ontology/metatype_relationship_pair_repository';
 import NodeRepository from './node_repository';
-import File from '../../../../domain_objects/data_warehouse/data/file';
+import File, {EdgeFile} from '../../../../domain_objects/data_warehouse/data/file';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 
 /*
@@ -34,7 +34,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             return this.#mapper.Delete(e.id);
         }
 
-        return Promise.resolve(Result.Failure('node must have id'));
+        return Promise.resolve(Result.Failure('edge must have id'));
     }
 
     async findByID(id: string, transaction?: PoolClient): Promise<Result<Edge>> {
@@ -389,6 +389,18 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         }
 
         return this.#mapper.AddFile(edge.id, fileID);
+    }
+
+    bulkAddFiles(edge: Edge, fileIDs: string[], transaction?: PoolClient): Promise<Result<EdgeFile[]>> {
+        if (!edge.id) {
+            return Promise.resolve(Result.Failure('edge must have id'));
+        }
+
+        const edgeFiles: EdgeFile[] = [];
+
+        fileIDs.forEach((id) => edgeFiles.push(new EdgeFile({edge_id: edge.id!, file_id: id})));
+
+        return this.#mapper.BulkAddFile(edgeFiles, transaction);
     }
 
     removeFile(edge: Edge, fileID: string): Promise<Result<boolean>> {

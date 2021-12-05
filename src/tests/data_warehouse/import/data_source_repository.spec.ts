@@ -13,6 +13,7 @@ import DataSourceRepository, {DataSourceFactory} from '../../../data_access_laye
 import StandardDataSourceImpl from '../../../interface_implementations/data_warehouse/import/standard_data_source_impl';
 import HttpDataSourceImpl from '../../../interface_implementations/data_warehouse/import/http_data_source_impl';
 import {toStream} from '../../../services/utilities';
+import Import from '../../../domain_objects/data_warehouse/import/import';
 
 // some general tests on data sources that aren't specific to the implementation
 describe('A Datasource Repository can', async () => {
@@ -103,7 +104,7 @@ describe('A Datasource Repository can', async () => {
         // now we create an import through the datasource
         const newImport = await source!.ReceiveData(toStream([test_payload]), user, {overrideJsonStream: true});
         expect(newImport.isError).false;
-        expect(newImport.value.id).not.undefined;
+        expect((newImport.value as Import).id).not.undefined;
 
         // first delete attempt should fail as there is an import
         results = await sourceRepo.delete(source!);
@@ -137,7 +138,7 @@ describe('A Datasource Repository can', async () => {
         // now we create an import through the datasource
         const newImport = await source!.ReceiveData(toStream([test_payload]), user, {overrideJsonStream: true});
         expect(newImport.isError).false;
-        expect(newImport.value.id).not.undefined;
+        expect((newImport.value as Import).id).not.undefined;
 
         // first delete attempt should fail as there is an import
         results = await sourceRepo.delete(source!);

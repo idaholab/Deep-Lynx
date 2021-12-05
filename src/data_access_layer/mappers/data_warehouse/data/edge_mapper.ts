@@ -2,6 +2,7 @@ import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import Result from '../../../../common_classes/result';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
+import {EdgeFile} from '../../../../domain_objects/data_warehouse/data/file';
 
 const format = require('pg-format');
 const resultClass = Edge;
@@ -76,6 +77,13 @@ export default class EdgeMapper extends Mapper {
 
     public AddFile(id: string, fileID: string): Promise<Result<boolean>> {
         return super.runStatement(this.addFileStatement(id, fileID));
+    }
+
+    public BulkAddFile(edgeFiles: EdgeFile[], transaction?: PoolClient): Promise<Result<EdgeFile[]>> {
+        return super.run(this.bulkAddFileStatement(edgeFiles), {
+            transaction,
+            resultClass: EdgeFile,
+        });
     }
 
     public RemoveFile(id: string, fileID: string): Promise<Result<boolean>> {
@@ -205,6 +213,16 @@ export default class EdgeMapper extends Mapper {
             text: `INSERT INTO edge_files(edge_id, file_id) VALUES ($1, $2)`,
             values: [edgeID, fileID],
         };
+    }
+
+    private bulkAddFileStatement(edgeFiles: EdgeFile[]): string {
+        const text = `INSERT INTO edge_files(
+                       edge_id,
+                       file_id) VALUES %L RETURNING *`;
+
+        const values = edgeFiles.map((ef) => [ef.edge_id, ef.file_id]);
+
+        return format(text, values);
     }
 
     private removeFileStatement(edgeID: string, fileID: string): QueryConfig {

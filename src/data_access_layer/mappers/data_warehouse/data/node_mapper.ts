@@ -2,6 +2,7 @@ import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import Node from '../../../../domain_objects/data_warehouse/data/node';
+import {NodeFile} from '../../../../domain_objects/data_warehouse/data/file';
 
 const format = require('pg-format');
 const resultClass = Node;
@@ -69,6 +70,13 @@ export default class NodeMapper extends Mapper {
 
     public AddFile(id: string, fileID: string): Promise<Result<boolean>> {
         return super.runStatement(this.addFile(id, fileID));
+    }
+
+    public BulkAddFile(nodeFiles: NodeFile[], transaction?: PoolClient): Promise<Result<NodeFile[]>> {
+        return super.run(this.bulkAddFileStatement(nodeFiles), {
+            transaction,
+            resultClass: NodeFile,
+        });
     }
 
     public RemoveFile(id: string, fileID: string): Promise<Result<boolean>> {
@@ -210,6 +218,16 @@ export default class NodeMapper extends Mapper {
             text: `INSERT INTO node_files(node_id, file_id) VALUES ($1, $2)`,
             values: [nodeID, fileID],
         };
+    }
+
+    private bulkAddFileStatement(nodeFiles: NodeFile[]): string {
+        const text = `INSERT INTO node_files(
+                       node_id,
+                       file_id) VALUES %L RETURNING *`;
+
+        const values = nodeFiles.map((nf) => [nf.node_id, nf.file_id]);
+
+        return format(text, values);
     }
 
     private removeFile(nodeID: string, fileID: string): QueryConfig {

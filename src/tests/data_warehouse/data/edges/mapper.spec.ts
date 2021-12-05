@@ -20,9 +20,12 @@ import NodeMapper from '../../../../data_access_layer/mappers/data_warehouse/dat
 import Node from '../../../../domain_objects/data_warehouse/data/node';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
+import FileMapper from '../../../../data_access_layer/mappers/data_warehouse/data/file_mapper';
+import File, {EdgeFile} from '../../../../domain_objects/data_warehouse/data/file';
 
 describe('An Edge Mapper', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
+    let dataSourceID: string = '';
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
@@ -45,6 +48,21 @@ describe('An Edge Mapper', async () => {
         expect(container.value.id).not.null;
         containerID = container.value.id!;
 
+        const exp = await DataSourceMapper.Instance.Create(
+            'test suite',
+            new DataSourceRecord({
+                container_id: containerID,
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'standard',
+                data_format: 'json',
+            }),
+        );
+
+        expect(exp.isError).false;
+        expect(exp.value).not.empty;
+
+        dataSourceID = exp.value.id!;
         return Promise.resolve();
     });
 
@@ -612,6 +630,151 @@ describe('An Edge Mapper', async () => {
         expect(unlinkedEdge.isError).false;
         expect(unlinkedEdge.value.origin_id).null;
         expect(unlinkedEdge.value.destination_id).null;
+
+        return Promise.resolve();
+    });
+
+    it('can have files attached to it in bulk', async () => {
+        const storage = EdgeMapper.Instance;
+        const nStorage = NodeMapper.Instance;
+        const kStorage = MetatypeKeyMapper.Instance;
+        const mMapper = MetatypeMapper.Instance;
+        const rMapper = MetatypeRelationshipMapper.Instance;
+        const rkStorage = MetatypeRelationshipKeyMapper.Instance;
+        const rpStorage = MetatypeRelationshipPairMapper.Instance;
+        const fMapper = FileMapper.Instance;
+
+        // SETUP
+        const file = await fMapper.Create(
+            'test suite',
+            new File({
+                file_name: faker.name.findName(),
+                file_size: 200,
+                md5hash: '',
+                adapter_file_path: faker.name.findName(),
+                adapter: 'filesystem',
+                data_source_id: dataSourceID,
+                container_id: containerID,
+            }),
+        );
+
+        expect(file.isError).false;
+        expect(file.value).not.empty;
+
+        const file2 = await fMapper.Create(
+            'test suite',
+            new File({
+                file_name: faker.name.findName(),
+                file_size: 200,
+                md5hash: '',
+                adapter_file_path: faker.name.findName(),
+                adapter: 'filesystem',
+                data_source_id: dataSourceID,
+                container_id: containerID,
+            }),
+        );
+
+        expect(file2.isError).false;
+        expect(file2.value).not.empty;
+
+        const metatypes = await mMapper.BulkCreate('test suite', [
+            new Metatype({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+            new Metatype({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+        ]);
+
+        expect(metatypes.isError).false;
+        expect(metatypes.value).not.empty;
+
+        const testKeys1 = [...test_keys];
+        testKeys1.forEach((key) => (key.metatype_id = metatypes.value[0].id!));
+        const keys = await kStorage.BulkCreate('test suite', testKeys1);
+        expect(keys.isError).false;
+
+        const testKeys2 = [...test_keys];
+        testKeys2.forEach((key) => (key.metatype_id = metatypes.value[1].id!));
+        const keys2 = await kStorage.BulkCreate('test suite', testKeys2);
+        expect(keys2.isError).false;
+
+        const mixed = [
+            new Node({
+                container_id: containerID,
+                metatype: metatypes.value[0].id!,
+                properties: payload,
+            }),
+            new Node({
+                container_id: containerID,
+                metatype: metatypes.value[1].id!,
+                properties: payload,
+            }),
+        ];
+
+        const nodes = await nStorage.BulkCreateOrUpdateByCompositeID('test suite', mixed);
+        expect(nodes.isError, metatypes.error?.error).false;
+
+        const relationship = await rMapper.Create(
+            'test suite',
+            new MetatypeRelationship({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+        );
+
+        expect(relationship.isError).false;
+        expect(relationship.value).not.empty;
+
+        const relationshipTestKeys = [...test_relationship_keys];
+        relationshipTestKeys.forEach((key) => (key.metatype_relationship_id = relationship.value.id!));
+
+        const rkeys = await rkStorage.BulkCreate('test suite', relationshipTestKeys);
+        expect(rkeys.isError).false;
+
+        const pair = await rpStorage.Create(
+            'test suite',
+            new MetatypeRelationshipPair({
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+                origin_metatype: metatypes.value[0].id!,
+                destination_metatype: metatypes.value[1].id!,
+                relationship: relationship.value.id!,
+                relationship_type: 'one:one',
+                container_id: containerID,
+            }),
+        );
+
+        // EDGE SETUP
+        const edge = await storage.Create(
+            'test suite',
+            new Edge({
+                container_id: containerID,
+                metatype_relationship_pair: pair.value.id!,
+                properties: payload,
+                origin_id: nodes.value[0].id,
+                destination_id: nodes.value[1].id,
+            }),
+        );
+
+        expect(edge.isError).false;
+
+        // now we bulk attach the files
+        const attachedFiles = await storage.BulkAddFile([
+            new EdgeFile({edge_id: edge.value.id!, file_id: file.value.id!}),
+            new EdgeFile({edge_id: edge.value.id!, file_id: file2.value.id!}),
+        ]);
+
+        expect(attachedFiles.isError).false;
+        expect(attachedFiles.value[0].edge_id).not.undefined;
+        expect(attachedFiles.value[0].file_id).not.undefined;
+        expect(attachedFiles.value[1].edge_id).not.undefined;
+        expect(attachedFiles.value[1].file_id).not.undefined;
 
         return Promise.resolve();
     });

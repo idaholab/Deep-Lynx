@@ -17,6 +17,11 @@ import ContainerRepository from '../../../data_access_layer/repositories/data_wa
 import {User} from '../../../domain_objects/access_management/user';
 import {PassThrough, Readable} from 'stream';
 import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
+import DataStagingMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
+import FileMapper from '../../../data_access_layer/mappers/data_warehouse/data/file_mapper';
+import {EdgeFile, NodeFile} from '../../../domain_objects/data_warehouse/data/file';
+import NodeMapper from '../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
+import EdgeMapper from '../../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 const JSONStream = require('JSONStream');
 
 /*
@@ -41,7 +46,7 @@ export default class StandardDataSourceImpl implements DataSource {
     }
 
     // see the interface declaration's explanation of ReceiveData
-    async ReceiveData(payloadStream: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import>> {
+    async ReceiveData(payloadStream: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | DataStaging[]>> {
         if (!this.DataSourceRecord || !this.DataSourceRecord.id) {
             return Promise.resolve(Result.Failure('cannot receive data, no underlying or saved data source record'));
         }
@@ -121,12 +126,16 @@ export default class StandardDataSourceImpl implements DataSource {
 
             // if we've reached the process record limit, insert into the database and wipe the records array
             // make sure to COPY the array into bulkSave function so that we can push it into the array of promises
-            // and not modify the underlying array on save, allowing us to move asynchronously
+            // and not modify the underlying array on save, allowing us to move asynchronously,
             if (recordBuffer.length >= Config.data_source_receive_buffer) {
-                const toSave = [...recordBuffer];
-                recordBuffer = [];
+                // if we are returning
+                // the staging records, don't wipe the buffer just keep adding
+                if (!options || !options.returnStagingRecords) {
+                    const toSave = [...recordBuffer];
+                    recordBuffer = [];
 
-                saveOperations.push(this.#stagingRepo.bulkSave(toSave, transaction));
+                    saveOperations.push(this.#stagingRepo.bulkSave(toSave, transaction));
+                }
             }
         });
 
@@ -174,6 +183,11 @@ export default class StandardDataSourceImpl implements DataSource {
             if (commit.isError) return Promise.resolve(Result.Pass(commit));
         }
 
+        // return the saved buffer as we haven't wiped it, should contain all records with their updated IDs
+        if (options && options.returnStagingRecords) {
+            return new Promise((resolve) => resolve(Result.Success(recordBuffer)));
+        }
+
         return new Promise((resolve) => resolve(Result.Success(retrievedImport.value)));
     }
 
@@ -184,8 +198,6 @@ export default class StandardDataSourceImpl implements DataSource {
      */
     async Process(): Promise<Result<boolean>> {
         if (this.DataSourceRecord) {
-            let graphID: string;
-
             // we run this check constantly to catch data sources disabled by the user since this class was created
             const active = await DataSourceMapper.Instance.IsActive(this.DataSourceRecord.id!);
             if (active.isError || !active.value) return Promise.resolve(Result.Success(true));
@@ -313,6 +325,13 @@ export default class StandardDataSourceImpl implements DataSource {
 
             if (toProcess.value.length === 0) break;
 
+            // we must fetch the file records for these data staging records, so that once they're processed we can attach
+            // the files to the resulting nodes/edges - this is not a failure state if we can't fetch them - log and move on
+            const stagingFiles = await FileMapper.Instance.ListForDataStagingRaw(...toProcess.value.map((staging) => staging.id!));
+            if (stagingFiles.isError) {
+                Logger.error(`unable to fetch files for data staging records ${stagingFiles.error?.error}`);
+            }
+
             // we run all the transformations for an individual row, then insert into the database. We've chosen to
             // do this instead of batching so that we can pinpoint errors to an individual data row. Hopefully the caching
             // layer implementation on the fetching of metatype/keys/relationships is robust enough to insure this doesn't
@@ -362,6 +381,31 @@ export default class StandardDataSourceImpl implements DataSource {
                     if (inserted.isError) {
                         return new Promise((resolve) => resolve(Result.SilentFailure(`error attempting to insert nodes ${inserted.error?.error}`)));
                     }
+
+                    // now that the nodes are inserted, attempt to attach any files from their original staging records
+                    // to them
+                    if (!stagingFiles.isError && stagingFiles.value.length > 0) {
+                        const nodeFiles: NodeFile[] = [];
+
+                        nodesToInsert.forEach((node) => {
+                            const toAttach = stagingFiles.value.filter((stagingFile) => stagingFile.data_staging_id === node.data_staging_id);
+                            if (toAttach) {
+                                toAttach.forEach((stagingFile) => {
+                                    nodeFiles.push(
+                                        new NodeFile({
+                                            node_id: node.id!,
+                                            file_id: stagingFile.file_id!,
+                                        }),
+                                    );
+                                });
+                            }
+                        });
+
+                        const attached = await NodeMapper.Instance.BulkAddFile(nodeFiles, transactionClient);
+                        if (attached.isError) {
+                            Logger.error(`unable to attach files to nodes during data staging process ${attached.error?.error}`);
+                        }
+                    }
                 }
 
                 if (edgesToInsert.length > 0) {
@@ -373,6 +417,31 @@ export default class StandardDataSourceImpl implements DataSource {
                     const inserted = await edgeRepository.bulkSave(this.DataSourceRecord!.modified_by!, edgesToInsert, transactionClient);
                     if (inserted.isError) {
                         return new Promise((resolve) => resolve(Result.SilentFailure(`error attempting to insert nodes ${inserted.error?.error}`)));
+                    }
+
+                    // now that the edges are inserted, attempt to attach any files from their original staging records
+                    // to them
+                    if (!stagingFiles.isError && stagingFiles.value.length > 0) {
+                        const edgeFiles: EdgeFile[] = [];
+
+                        edgesToInsert.forEach((edge) => {
+                            const toAttach = stagingFiles.value.filter((stagingFile) => stagingFile.data_staging_id === edge.data_staging_id);
+                            if (toAttach) {
+                                toAttach.forEach((stagingFile) => {
+                                    edgeFiles.push(
+                                        new EdgeFile({
+                                            edge_id: edge.id!,
+                                            file_id: stagingFile.file_id!,
+                                        }),
+                                    );
+                                });
+                            }
+                        });
+
+                        const attached = await EdgeMapper.Instance.BulkAddFile(edgeFiles, transactionClient);
+                        if (attached.isError) {
+                            Logger.error(`unable to attach files to edges during data staging process ${attached.error?.error}`);
+                        }
                     }
                 }
 

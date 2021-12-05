@@ -1,4 +1,4 @@
-import {BaseDomainClass} from '../../../common_classes/base_domain_class';
+import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
 import {IsIn, IsNumber, IsObject, IsOptional, IsString} from 'class-validator';
 
 /*
@@ -58,6 +58,58 @@ export default class File extends BaseDomainClass {
             this.adapter_file_path = input.adapter_file_path;
             this.adapter = input.adapter;
             if (input.metadata) this.metadata = input.metadata;
+        }
+    }
+}
+
+// Utility classes needed when attaching/detaching files to data staging, node, and edge records
+export class DataStagingFile extends NakedDomainClass {
+    @IsString()
+    data_staging_id?: string;
+
+    @IsString()
+    file_id?: string;
+
+    constructor(input: {data_staging_id: string; file_id: string}) {
+        super();
+
+        if (input) {
+            this.data_staging_id = input.data_staging_id;
+            this.file_id = input.file_id;
+        }
+    }
+}
+
+export class NodeFile extends NakedDomainClass {
+    @IsString()
+    node_id?: string;
+
+    @IsString()
+    file_id?: string;
+
+    constructor(input: {node_id: string; file_id: string}) {
+        super();
+
+        if (input) {
+            this.node_id = input.node_id;
+            this.file_id = input.file_id;
+        }
+    }
+}
+
+export class EdgeFile extends NakedDomainClass {
+    @IsString()
+    edge_id?: string;
+
+    @IsString()
+    file_id?: string;
+
+    constructor(input: {edge_id: string; file_id: string}) {
+        super();
+
+        if (input) {
+            this.edge_id = input.edge_id;
+            this.file_id = input.file_id;
         }
     }
 }
