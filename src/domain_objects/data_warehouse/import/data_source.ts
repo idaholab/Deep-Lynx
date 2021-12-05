@@ -2,7 +2,7 @@ import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_do
 import {ArrayMinSize, IsArray, IsBoolean, IsDefined, IsIn, IsObject, IsOptional, IsString, IsUrl, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
 import {Exclude, Type} from 'class-transformer';
 import {User} from '../../access_management/user';
-import Import from './import';
+import Import, {DataStaging} from './import';
 import Result from '../../../common_classes/result';
 import {PoolClient} from 'pg';
 import {Readable, Transform} from 'stream';
@@ -22,7 +22,7 @@ export interface DataSource {
     // import that already exists in case you are adding data to it. This is not best practice
     // because you might be adding records to an import which isn't the latest, potentially overwriting
     // newer data when the data source attempts to process it
-    ReceiveData(payload: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import>>;
+    ReceiveData(payload: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | DataStaging[]>>;
 
     // process single fire function that both processes the data from the
     // source as well as running any polling efforts like with the http implementation
@@ -39,6 +39,7 @@ export interface DataSource {
 export class ReceiveDataOptions {
     transaction?: PoolClient;
     importID?: string;
+    returnStagingRecords? = false; // needed if you'd rather return the individual staging records over the import, useful if needing to attach files
     overrideJsonStream? = false; // needed if you're passing raw json objects or an object stream
     transformStreams?: Transform[]; // streams to pipe to, prior to piping to the JSONStream
     generateShapeHash? = false; // whether or not to generate shape hash on ingestion, this is cpu heavy so try to let the job handle it

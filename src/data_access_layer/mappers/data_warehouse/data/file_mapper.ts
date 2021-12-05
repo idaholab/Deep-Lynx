@@ -3,7 +3,7 @@ import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import {QueueProcessor} from '../../../../domain_objects/event_system/processor';
 import Event from '../../../../domain_objects/event_system/event';
-import File from '../../../../domain_objects/data_warehouse/data/file';
+import File, {DataStagingFile} from '../../../../domain_objects/data_warehouse/data/file';
 
 const format = require('pg-format');
 const resultClass = File;
@@ -138,9 +138,15 @@ export default class FileMapper extends Mapper {
         });
     }
 
-    public async ListForDataStaging(stagingID: string): Promise<Result<File[]>> {
+    public async ListForDataStaging(...stagingID: string[]): Promise<Result<File[]>> {
         return super.rows<File>(this.filesForDataStagingStatement(stagingID), {
             resultClass,
+        });
+    }
+
+    public async ListForDataStagingRaw(...stagingID: string[]): Promise<Result<DataStagingFile[]>> {
+        return super.rows<DataStagingFile>(this.filesForDataStagingStatementRaw(stagingID), {
+            resultClass: DataStagingFile,
         });
     }
 
@@ -266,10 +272,22 @@ export default class FileMapper extends Mapper {
         };
     }
 
-    private filesForDataStagingStatement(dataStagingID: string): QueryConfig {
-        return {
-            text: `SELECT files.* FROM data_staging_files LEFT JOIN files ON files.id = data_staging_files.file_id WHERE data_staging_id = $1`,
-            values: [dataStagingID],
-        };
+    private filesForDataStagingStatement(dataStagingID: string[]): QueryConfig {
+        const text = `SELECT files.* 
+                        FROM data_staging_files 
+                        LEFT JOIN files ON files.id = data_staging_files.file_id 
+                        WHERE data_staging_id IN (%L)`;
+        const values = dataStagingID;
+
+        return format(text, values);
+    }
+
+    private filesForDataStagingStatementRaw(dataStagingID: string[]): QueryConfig {
+        const text = `SELECT * 
+                        FROM data_staging_files 
+                        WHERE data_staging_id IN (%L)`;
+        const values = dataStagingID;
+
+        return format(text, values);
     }
 }

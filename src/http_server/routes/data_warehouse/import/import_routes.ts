@@ -24,6 +24,7 @@ const stagingRepo = new DataStagingRepository();
 const importRepo = new ImportRepository();
 const xmlToJson = require('xml-to-json-stream');
 const xmlParser = xmlToJson();
+const JSONStream = require('JSONStream');
 
 // This contains all routes pertaining to DataSources.
 export default class ImportRoutes {
@@ -220,7 +221,7 @@ export default class ImportRoutes {
                 // @ts-ignore
             } else {
                 const busboy = new Busboy({headers: req.headers});
-                const importPromises: Promise<Result<Import>>[] = [];
+                const importPromises: Promise<Result<Import | DataStaging[]>>[] = [];
 
                 busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimetype: string) => {
                     Logger.debug(`file found at ${fieldname} - ${filename}, attempting upload`);
@@ -371,6 +372,8 @@ export default class ImportRoutes {
     private static uploadFile(req: Request, res: Response, next: NextFunction) {
         const fileNames: string[] = [];
         const files: Promise<Result<File>>[] = [];
+        const dataStagingRecords: Promise<Result<Import | DataStaging[]>>[] = [];
+        const dataStagingRepo = new DataStagingRepository();
         const busboy = new Busboy({headers: req.headers});
         const metadata: {[key: string]: any} = {};
         let metadataFieldCount = 0;
@@ -386,11 +389,51 @@ export default class ImportRoutes {
         // can take information about the upload and pass it later on in the busboy parsing
         // because of this we're treating the file upload as fairly standalone
         busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
-            const user = req.currentUser!;
-            files.push(
-                new FileRepository().uploadFile(req.params.containerID, req.params.sourceID, req.currentUser!, filename, encoding, mimeType, file as Readable),
-            );
-            fileNames.push(filename);
+            // check if this is the metadata file - if it is, attempt to process it
+            if (fieldname === 'metadata') {
+                if (mimeType === 'application/json') {
+                    dataStagingRecords.push(
+                        req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
+                            importID: req.query.importID as string | undefined,
+                            returnStagingRecords: true,
+                        }),
+                    );
+                } else if (mimeType === 'text/csv') {
+                    dataStagingRecords.push(
+                        req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
+                            importID: req.query.importID as string | undefined,
+                            returnStagingRecords: true,
+                            transformStreams: [
+                                csv({
+                                    downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
+                                }),
+                            ],
+                        }),
+                    );
+                } else if (mimeType === 'text/xml' || mimeType === 'application/xml') {
+                    const xmlStream = xmlParser.createStream();
+                    dataStagingRecords.push(
+                        req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
+                            importID: req.query.importID as string | undefined,
+                            returnStagingRecords: true,
+                            transformStreams: [xmlStream],
+                        }),
+                    );
+                }
+            } else {
+                files.push(
+                    new FileRepository().uploadFile(
+                        req.params.containerID,
+                        req.params.sourceID,
+                        req.currentUser!,
+                        filename,
+                        encoding,
+                        mimeType,
+                        file as Readable,
+                    ),
+                );
+                fileNames.push(filename);
+            }
         });
 
         // hold on to the field data, we consider this metadata and will create
@@ -404,24 +447,35 @@ export default class ImportRoutes {
             // if there is no additional metadata we do not not create information
             // to be processed by Deep Lynx, simply store the file and make it available
             // via the normal file querying channels
-            if (metadataFieldCount === 0) {
-                void Promise.all(files).then((results) => {
-                    res.status(200).json(results);
-                    next();
-                    return;
-                });
-            } else {
-                // update the passed meta information with the file name deep lynx
-                // has stored it under
-                const user = req.currentUser!;
-
-                if (files.length <= 0) {
-                    Result.Failure('unable to upload files, none attached or none uploaded correctly').asResponse(res);
-                    next();
-                    return;
+            void Promise.all(files).then((results) => {
+                if (dataStagingRecords.length > 0) {
+                    void Promise.all(dataStagingRecords).then((stagingResults) => {
+                        stagingResults.forEach((stagingResult) => {
+                            (stagingResult.value as DataStaging[]).forEach((stagingResult) => {
+                                results.forEach((fileResult) => {
+                                    void stagingRepo
+                                        .addFile(stagingResult, fileResult.value.id!)
+                                        .then((addFileResult) => {
+                                            if (addFileResult.isError) {
+                                                Logger.error(`error adding file to staging record ${addFileResult.error?.error}`);
+                                            } else {
+                                                Logger.debug(`file added to staging record successfully`);
+                                            }
+                                        })
+                                        .catch((e) => {
+                                            Logger.error(`error adding file to staging record ${e}`);
+                                        });
+                                });
+                            });
+                        });
+                    });
                 }
 
-                void Promise.all(files).then((results) => {
+                if (metadataFieldCount === 0) {
+                    Result.Success(results).asResponse(res);
+                    next();
+                    return;
+                } else {
                     const updatePromises: Promise<Result<boolean>>[] = [];
                     // eslint-disable-next-line @typescript-eslint/no-for-in-array
                     for (const i in results) {
@@ -430,7 +484,7 @@ export default class ImportRoutes {
                         }
 
                         results[i].value.metadata = metadata;
-                        updatePromises.push(new FileRepository().save(results[i].value, user));
+                        updatePromises.push(new FileRepository().save(results[i].value, req.currentUser!));
                     }
 
                     void Promise.all(updatePromises)
@@ -446,8 +500,8 @@ export default class ImportRoutes {
                             return;
                         })
                         .catch((err) => res.status(500).send(err));
-                });
-            }
+                }
+            });
         });
 
         return req.pipe(busboy);
@@ -467,7 +521,7 @@ export default class ImportRoutes {
                 // @ts-ignore
             } else {
                 const busboy = new Busboy({headers: req.headers});
-                const importPromises: Promise<Result<Import>>[] = [];
+                const importPromises: Promise<Result<Import | DataStaging[]>>[] = [];
 
                 busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimetype: string) => {
                     Logger.debug(`file found at ${fieldname} - ${filename}, attempting upload`);
