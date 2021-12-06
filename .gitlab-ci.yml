@@ -13,6 +13,7 @@ build_dl:
         - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY/$CI_REGISTRY_PATH/deep-lynx:$CI_PIPELINE_IID
     only:
         - master
+        - development
 
 build_swagger:
     stage: build
@@ -53,7 +54,7 @@ deploy_development:
     environment:
         name: development
     only:
-        - master
+        - development
 
 deploy_acceptance:
     stage: deploy
