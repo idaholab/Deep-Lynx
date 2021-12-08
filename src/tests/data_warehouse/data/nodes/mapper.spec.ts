@@ -13,9 +13,12 @@ import ContainerMapper from '../../../../data_access_layer/mappers/data_warehous
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 import Node from '../../../../domain_objects/data_warehouse/data/node';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
+import FileMapper from '../../../../data_access_layer/mappers/data_warehouse/data/file_mapper';
+import File, {NodeFile} from '../../../../domain_objects/data_warehouse/data/file';
 
 describe('A Node Mapper', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
+    let dataSourceID: string = '';
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
@@ -38,6 +41,21 @@ describe('A Node Mapper', async () => {
         expect(container.value.id).not.null;
         containerID = container.value.id!;
 
+        const exp = await DataSourceMapper.Instance.Create(
+            'test suite',
+            new DataSourceRecord({
+                container_id: containerID,
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'standard',
+                data_format: 'json',
+            }),
+        );
+
+        expect(exp.isError).false;
+        expect(exp.value).not.empty;
+
+        dataSourceID = exp.value.id!;
         return Promise.resolve();
     });
 
@@ -265,6 +283,85 @@ describe('A Node Mapper', async () => {
 
         const node = await storage.CreateOrUpdateByCompositeID('test suite', mixed);
         expect(node.isError, metatype.error?.error).false;
+
+        return mMapper.Delete(metatype.value.id!);
+    });
+
+    it('can attach files in bulk', async () => {
+        const storage = NodeMapper.Instance;
+        const kStorage = MetatypeKeyMapper.Instance;
+        const mMapper = MetatypeMapper.Instance;
+        const fMapper = FileMapper.Instance;
+
+        // SETUP
+        const file = await fMapper.Create(
+            'test suite',
+            new File({
+                file_name: faker.name.findName(),
+                file_size: 200,
+                md5hash: '',
+                adapter_file_path: faker.name.findName(),
+                adapter: 'filesystem',
+                data_source_id: dataSourceID,
+                container_id: containerID,
+            }),
+        );
+
+        expect(file.isError).false;
+        expect(file.value).not.empty;
+
+        const file2 = await fMapper.Create(
+            'test suite',
+            new File({
+                file_name: faker.name.findName(),
+                file_size: 200,
+                md5hash: '',
+                adapter_file_path: faker.name.findName(),
+                adapter: 'filesystem',
+                data_source_id: dataSourceID,
+                container_id: containerID,
+            }),
+        );
+
+        expect(file2.isError).false;
+        expect(file2.value).not.empty;
+        const metatype = await mMapper.Create(
+            'test suite',
+            new Metatype({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+        );
+
+        expect(metatype.isError).false;
+        expect(metatype.value).not.empty;
+
+        const testKeys = [...test_keys];
+        testKeys.forEach((key) => (key.metatype_id = metatype.value.id!));
+
+        const keys = await kStorage.BulkCreate('test suite', testKeys);
+        expect(keys.isError).false;
+
+        const mixed = new Node({
+            container_id: containerID,
+            metatype: metatype.value.id!,
+            properties: payload,
+        });
+
+        const node = await storage.CreateOrUpdateByCompositeID('test suite', mixed);
+        expect(node.isError, metatype.error?.error).false;
+
+        const attachedFiles = await storage.BulkAddFile([
+            new NodeFile({node_id: node.value.id!, file_id: file.value.id!}),
+            new NodeFile({node_id: node.value.id!, file_id: file2.value.id!}),
+        ]);
+
+        expect(attachedFiles.isError).false;
+        expect(attachedFiles.value[0].node_id).not.undefined;
+        expect(attachedFiles.value[0].file_id).not.undefined;
+        expect(attachedFiles.value[1].node_id).not.undefined;
+        expect(attachedFiles.value[1].file_id).not.undefined;
 
         return mMapper.Delete(metatype.value.id!);
     });

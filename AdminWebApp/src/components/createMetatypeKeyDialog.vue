@@ -159,7 +159,7 @@ export default class CreateMetatypeKeyDialog extends Vue {
   dialog = false
   formValid = false
   metatypeKey: MetatypeKeyT = {validation: {regex: "", min: 0, max: 0}, required: false} as MetatypeKeyT
-  dataTypes = ["number", "date", "string", "boolean", "enumeration", "file"]
+  dataTypes = ["number", "number64", "float", "float64", "date", "string", "boolean", "enumeration", "file"]
   booleanOptions =  [true, false]
 
   @Watch('dialog', {immediate: true})

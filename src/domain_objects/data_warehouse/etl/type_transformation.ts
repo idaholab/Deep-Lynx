@@ -653,7 +653,7 @@ export default class TypeTransformation extends BaseDomainClass {
                     return null;
                 }
 
-                const convertedValue = parseFloat(value);
+                const convertedValue = parseInt(value, 10);
                 if (isNaN(convertedValue)) {
                     return new Conversion({original_value: value, errors: 'unable to convert value to number'});
                 }
@@ -661,6 +661,29 @@ export default class TypeTransformation extends BaseDomainClass {
                 return convertedValue % 1 === 0
                     ? new Conversion({original_value: value, converted_value: Math.floor(convertedValue)})
                     : new Conversion({original_value: value, converted_value: convertedValue});
+            }
+
+            case 'float': {
+                if (typeof value === 'number') {
+                    return null;
+                }
+
+                const convertedValue = parseFloat(value);
+                if (isNaN(convertedValue)) {
+                    return new Conversion({original_value: value, errors: 'unable to convert value to float'});
+                }
+
+                return convertedValue % 1 === 0
+                    ? new Conversion({original_value: value, converted_value: Math.floor(convertedValue)})
+                    : new Conversion({original_value: value, converted_value: convertedValue});
+            }
+
+            case 'number64' || 'float64': {
+                if (typeof value === 'string') {
+                    return null;
+                }
+
+                return new Conversion({original_value: value, converted_value: String(value)});
             }
 
             // because dates can be formatted in various ways, all we can really do for conversion is to

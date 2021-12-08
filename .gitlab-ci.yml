@@ -13,6 +13,7 @@ build_dl:
         - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY/$CI_REGISTRY_PATH/deep-lynx:$CI_PIPELINE_IID
     only:
         - master
+        - development
 
 build_swagger:
     stage: build
@@ -52,6 +53,20 @@ deploy_development:
         - kubectl apply -f $DEEPLYNX_DEV_KUBERNETES
     environment:
         name: development
+    only:
+        - development
+
+deploy_acceptance:
+    stage: deploy
+    image: mcr.microsoft.com/azure-cli:latest
+    script:
+        - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+        - mkdir -p $HOME/.kube
+        - echo -n $KUBE_CONFIG | base64 -d > $HOME/.kube/config
+        - kubectl apply -f $DEEPLYNX_ACC_KUBERNETES
+    environment:
+        name: acceptance
     only:
         - master
 

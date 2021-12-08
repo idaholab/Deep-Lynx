@@ -17,6 +17,7 @@ import JazzDataSourceImpl from '../../../interface_implementations/data_warehous
 import fs from 'fs';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import {toStream} from '../../../services/utilities';
+import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
 
 const csv = require('csvtojson');
 
@@ -88,7 +89,7 @@ describe('A Standard DataSource Implementation can', async () => {
         return ContainerMapper.Instance.Delete(containerID);
     });
 
-    it('can receive data an array of objects', async () => {
+    it('can receive data from an array of objects', async () => {
         // build the data source first
         const sourceRepo = new DataSourceRepository();
 
@@ -109,13 +110,51 @@ describe('A Standard DataSource Implementation can', async () => {
         // now we create an import through the datasource
         const newImport = await source!.ReceiveData(toStream([sampleObject]), user, {overrideJsonStream: true});
         expect(newImport.isError).false;
-        expect(newImport.value.id).not.undefined;
+        expect((newImport.value as Import).id).not.undefined;
 
         // verify the data actually wrote - should be a total of 1 record
         const stagingRepo = new DataStagingRepository();
-        const result = await stagingRepo.where().importID('eq', newImport.value.id).count();
+        const result = await stagingRepo
+            .where()
+            .importID('eq', (newImport.value as Import).id)
+            .count();
         expect(result.isError).false;
         expect(result.value).eq(1);
+
+        return Promise.resolve();
+    });
+
+    it('can receive data from an array of objects, and return data staging records', async () => {
+        // build the data source first
+        const sourceRepo = new DataSourceRepository();
+
+        const source = new DataSourceFactory().fromDataSourceRecord(
+            new DataSourceRecord({
+                container_id: containerID,
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'standard',
+                data_format: 'json',
+            }),
+        );
+
+        let results = await sourceRepo.save(source!, user);
+        expect(results.isError).false;
+        expect(source!.DataSourceRecord?.id).not.undefined;
+
+        // now we create an import through the datasource
+        const newImport = await source!.ReceiveData(toStream([sampleObject]), user, {overrideJsonStream: true, returnStagingRecords: true});
+        expect(newImport.isError).false;
+        expect((newImport.value as DataStaging[]).length === 1).true;
+
+        // verify the data actually wrote - should be a total of 1 record
+        const stagingRepo = new DataStagingRepository();
+        const result = await stagingRepo.where().dataSourceID('eq', source?.DataSourceRecord?.id).list();
+
+        expect(result.isError).false;
+        expect(result.value.length).eq(1);
+
+        expect((newImport.value as DataStaging[])[0].id).eq(result.value[0].id);
 
         return Promise.resolve();
     });
@@ -144,11 +183,14 @@ describe('A Standard DataSource Implementation can', async () => {
         // now we create an import through the datasource
         const newImport = await source!.ReceiveData(fs.createReadStream('./test-data.json'), user);
         expect(newImport.isError).false;
-        expect(newImport.value.id).not.undefined;
+        expect((newImport.value as Import).id).not.undefined;
 
         // verify the data actually wrote - should be a total of 1 record
         const stagingRepo = new DataStagingRepository();
-        const result = await stagingRepo.where().importID('eq', newImport.value.id).count();
+        const result = await stagingRepo
+            .where()
+            .importID('eq', (newImport.value as Import).id)
+            .count();
         expect(result.isError).false;
         expect(result.value).eq(1);
 
@@ -187,11 +229,14 @@ describe('A Standard DataSource Implementation can', async () => {
             ],
         });
         expect(newImport.isError).false;
-        expect(newImport.value.id).not.undefined;
+        expect((newImport.value as Import).id).not.undefined;
 
         // verify the data actually wrote - should be a total of 2 records
         const stagingRepo = new DataStagingRepository();
-        const result = await stagingRepo.where().importID('eq', newImport.value.id).count();
+        const result = await stagingRepo
+            .where()
+            .importID('eq', (newImport.value as Import).id)
+            .count();
         expect(result.isError).false;
         expect(result.value).eq(2);
 

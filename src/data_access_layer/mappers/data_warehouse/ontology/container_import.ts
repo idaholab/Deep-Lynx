@@ -56,22 +56,22 @@ export default class ContainerImport {
         if (!['string', 'number', 'boolean', 'date', 'enumeration', 'file'].includes(target) && !regex.test(target)) {
             switch (target) {
                 case 'integer':
-                    target = 'number';
+                    target = 'number64';
                     break;
                 case 'int':
-                    target = 'number';
+                    target = 'number64';
                     break;
                 case 'decimal':
-                    target = 'number';
+                    target = 'float64';
                     break;
                 case 'float':
-                    target = 'number';
+                    target = 'float';
                     break;
                 case 'double':
-                    target = 'number';
+                    target = 'float64';
                     break;
                 case 'rational':
-                    target = 'number';
+                    target = 'float64';
                     break;
                 case 'dateTimeStamp':
                     target = 'date';
@@ -288,8 +288,9 @@ export default class ContainerImport {
                             target = dataRange; // This contains the class or datatype with a cardinality
                             target = this.ValidateTarget(target);
 
-                            // Determine if primitive or relationship property
-                            const regex = new RegExp('[1-9:-]');
+                            // Determine if primitive or relationship property by looking for :
+                            // This will indicate that the target is another class (e.g. ontologyName:0001)
+                            const regex = new RegExp('[:-]');
                             if (regex.test(target)) {
                                 // The target is an identifier for another class
                                 propertyType = 'relationship';

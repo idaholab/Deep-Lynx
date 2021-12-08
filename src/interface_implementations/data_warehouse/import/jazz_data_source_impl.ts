@@ -14,6 +14,7 @@ import {plainToClass} from 'class-transformer';
 import * as https from 'https';
 import {PoolClient} from 'pg';
 import {Readable} from 'stream';
+import Import from '../../../domain_objects/data_warehouse/import/import';
 
 const parser = require('fast-xml-parser');
 const buildUrl = require('build-url');
@@ -297,9 +298,9 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
                                 if (artifact.content?.text?.richTextBody) {
                                     artifact.content.text.richTextBody = artifact.content.text.richTextBody.replace(/<\/?[^>]+(>|$)/g, '').trim();
                                 }
-
-                                this.push(artifact);
                             }
+
+                            this.push(artifact);
                         }
                     },
                     objectMode: true,
@@ -328,7 +329,7 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
                     // set the pagination url and clean up from the fact xml screwed up the URL encoding somehow
                     const paginationURL = results.dataSource.attr['@_href'].replace(/&amp;/g, '&');
 
-                    const result = await this.requestData(config, pollTransaction, paginationURL, received.value.id);
+                    const result = await this.requestData(config, pollTransaction, paginationURL, (received.value as Import).id);
                     if (result.isError) {
                         return Promise.resolve(Result.Pass(result));
                     }

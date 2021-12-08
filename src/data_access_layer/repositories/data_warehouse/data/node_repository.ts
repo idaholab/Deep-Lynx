@@ -7,7 +7,7 @@ import {User} from '../../../../domain_objects/access_management/user';
 import MetatypeRepository from '../ontology/metatype_repository';
 import Logger from '../../../../services/logger';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
-import File from '../../../../domain_objects/data_warehouse/data/file';
+import File, {NodeFile} from '../../../../domain_objects/data_warehouse/data/file';
 
 /*
     NodeRepository contains methods for persisting and retrieving nodes
@@ -234,6 +234,18 @@ export default class NodeRepository extends Repository implements RepositoryInte
         }
 
         return this.#mapper.AddFile(node.id, fileID);
+    }
+
+    bulkAddFiles(node: Node, fileIDs: string[], transaction?: PoolClient): Promise<Result<NodeFile[]>> {
+        if (!node.id) {
+            return Promise.resolve(Result.Failure('node must have id'));
+        }
+
+        const nodeFiles: NodeFile[] = [];
+
+        fileIDs.forEach((id) => nodeFiles.push(new NodeFile({node_id: node.id!, file_id: id})));
+
+        return this.#mapper.BulkAddFile(nodeFiles, transaction);
     }
 
     removeFile(node: Node, fileID: string): Promise<Result<boolean>> {
