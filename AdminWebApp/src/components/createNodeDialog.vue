@@ -1,0 +1,132 @@
+<template>
+  <v-dialog v-model="dialog" max-width="60%">
+    <template v-slot:activator="{ on }">
+      <v-icon
+          v-if="icon"
+          small
+          class="mr-2"
+          v-on="on"
+      >mdi-card-plus</v-icon>
+      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("createNode.createNode")}}</v-btn>
+    </template>
+    <v-card>
+      <v-card-title>
+        <span class="headline">{{$t("createNode.formTitle")}}</span>
+        <error-banner :message="errorMessage"></error-banner>
+      </v-card-title>
+
+      <v-card-text>
+        <v-container>
+          <v-row>
+            <v-col :cols="12">
+
+              <v-form
+                  ref="form"
+                  v-model="valid"
+              >
+                <v-autocomplete
+                    v-model="metatype"
+                    :rules="[v => !!v || $t('createNode.metatypeRequired')]"
+                    :single-line="false"
+                    :items="originMetatypes"
+                    :search-input.sync="originSearch"
+                    item-text="name"
+                    return-object
+                    persistent-hint
+                    required
+                >
+                  <template v-slot:label>{{$t('createNode.metatype')}} <small style="color:red" >*</small></template>
+                </v-autocomplete>
+              </v-form>
+              <p><span style="color:red">*</span> = {{$t('createNode.requiredField')}}</p>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("createNode.cancel")}}</v-btn>
+        <v-btn color="blue darken-1" text :disabled="!valid" @click="newNode()">{{$t("createNode.save")}}</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+</template>
+
+<script lang="ts">
+import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
+import {MetatypeT, PropertyT} from "@/api/types";
+
+@Component
+export default class CreateNodeDialog extends Vue {
+  @Prop({required: true})
+  containerID!: string;
+
+  @Prop({required: true})
+  dataSourceID!: string;
+
+  @Prop({required: false})
+  readonly icon!: boolean
+
+  errorMessage = ""
+  dialog = false
+  valid = false
+  originSearch = ""
+  metatype = {} as MetatypeT
+  propertyValue = ""
+  
+  property = {} as PropertyT
+  
+  properties: PropertyT[] = []
+  originMetatypes: MetatypeT[] = []
+
+  @Watch('dialog', {immediate: true})
+  onDialogChange() {
+    if(!this.dialog) this.reset()
+  }
+
+  @Watch('originSearch', {immediate: true})
+  onOriginSearchChange(newVal: string) {
+    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: 'true'})
+        .then((metatypes) => {
+          this.originMetatypes = metatypes as MetatypeT[]
+        })
+        .catch((e: any) => this.errorMessage = e)
+  }
+
+
+  newNode() {
+    this.setProperties()
+    this.$client.createNode(this.containerID,
+      {
+        "container_id": this.containerID,
+        "data_source_id": this.dataSourceID,
+        "metatype_id": this.metatype.id,
+        "properties": this.properties,
+        // TODO bugfix:this original_data_id needs to be set to create edge but shouldn't need to be included
+        "original_data_id": this.metatype.id
+      }
+    )
+        .then(results => {
+          this.dialog = false
+          this.reset()
+          this.$emit('nodeCreated', results[0])
+        })
+        .catch(e => this.errorMessage = this.$t('createNode.errorCreatingAPI') as string + e)
+  }
+
+  setProperties() {
+    this.metatype.properties.forEach( (key) => {
+      this.property.key = key.id
+      this.property.value = key.name
+      this.property.type = key.data_type
+      this.properties.push(this.property)
+      this.property = {} as PropertyT
+    }) 
+  }
+
+  reset() {
+    this.metatype = {} as MetatypeT
+  }
+}
+
+</script>

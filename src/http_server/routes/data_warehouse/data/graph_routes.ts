@@ -46,7 +46,11 @@ export default class GraphRoutes {
                 repo = repo.and().metatypeID('eq', req.query.metatypeID);
             }
 
-            if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
+            if (typeof req.query.dataSourceID !== 'undefined' && (req.query.dataSourceID as string) !== '') {
+                repo = repo.and().dataSourceID('eq', req.query.dataSourceID);
+            }
+
+            if (req.query.count !== undefined && req.query.count === 'true') {
                 repo.count(undefined, {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
@@ -59,7 +63,7 @@ export default class GraphRoutes {
                     })
                     .finally(() => next());
             } else {
-                repo.list(String(req.query.loadMetatypes).toLowerCase() === 'true', {
+                repo.list(req.query.loadMetatypes !== undefined && req.query.loadMetatypes === 'true', {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                 })
@@ -108,7 +112,7 @@ export default class GraphRoutes {
                 .and()
                 .metatypeID('eq', req.metatype.id)
                 .and()
-                .list(String(req.query.loadMetatypes).toLowerCase() === 'true', {
+                .list(req.query.loadMetatypes !== undefined && req.query.loadMetatypes === 'true', {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                 })
@@ -148,7 +152,11 @@ export default class GraphRoutes {
             repository = repository.and().relationshipName('eq', req.query.relationshipPairName);
         }
 
-        if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
+        if (typeof req.query.dataSourceID !== 'undefined' && (req.query.dataSourceID as string) !== '') {
+            repository = repository.and().dataSourceID('eq', req.query.dataSourceID);
+        }
+
+        if (req.query.count !== undefined && req.query.count === 'true') {
             repository
                 .count(undefined, {
                     limit: req.query.limit ? +req.query.limit : undefined,
