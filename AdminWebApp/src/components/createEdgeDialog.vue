@@ -82,7 +82,7 @@
 
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeRelationshipPairT, NodeT, MetatypeT} from "@/api/types";
+import {MetatypeRelationshipPairT, NodeT} from "@/api/types";
 
 @Component
 export default class CreateRelationshipPairDialog extends Vue {
@@ -141,7 +141,7 @@ export default class CreateRelationshipPairDialog extends Vue {
   // Sort the metatypeRelationshipPairs by the origin and desination selections
   @Watch('relationshipSearch', {immediate: true})
   onRelationshipSearchChange() {
-    this.$client.listMetatypeRelationshipPairs(this.containerID,  {
+      this.$client.listMetatypeRelationshipPairs(this.containerID,  {
         //TODO check if Select.metatype.id is undefined.... but in a slick way.
         destinationID: this.destinationSelect.metatype.id,
         originID: this.originSelect.metatype.id
@@ -149,7 +149,7 @@ export default class CreateRelationshipPairDialog extends Vue {
         .then((metatypeRelationshipPairs) => {
           this.metatypeRelationshipPairs = metatypeRelationshipPairs as MetatypeRelationshipPairT[]
         })
-        .catch(e => this.errorMessage = e)
+        .catch(e => this.errorMessage = e)    
   }
 
   newEdge() {

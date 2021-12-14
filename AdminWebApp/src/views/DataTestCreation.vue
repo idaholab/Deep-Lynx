@@ -39,7 +39,7 @@
             <h2>{{$t('dataTestCreation.nodeTableTitle')}}</h2>
           </v-col>
         </template>
-        <template v-slot:item.actions="{ item }">
+        <template v-slot:item[actions]="{ item }">
           <v-icon
               small
               class="mr-2"
@@ -107,83 +107,6 @@
         </template>
       </v-data-table>
     </v-card>
-
-    <!-- <v-dialog
-        v-model="dialog"
-        fullscreen
-        hide-overlay
-        transition="dialog-bottom-transition"
-    >
-
-      <v-card>
-        <v-toolbar
-            dark
-            color="warning"
-        >
-          <v-btn
-              icon
-              dark
-              @click="dialog = false"
-          >
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-          <v-toolbar-title>{{$t("dataTestCreation.dataView")}}</v-toolbar-title>
-          <v-spacer></v-spacer>
-        </v-toolbar>
-        <v-divider></v-divider>
-        <error-banner :message="dataErrorMessage"></error-banner>
-        <success-banner :message="dataSuccessMessage"></success-banner>
-        <v-data-table
-            :headers="importDataHeaders()"
-            :items="importData"
-            class="elevation-1"
-            :server-items-length="importDataCount"
-            :options.sync="options"
-            :loading="importLoading"
-            :items-per-page="100"
-            :footer-props="{
-                'items-per-page-options':[25,50,100]
-              }"
-        >
-          <template v-slot:top>
-          </template>
-          <template v-slot:item.actions="{ item }">
-            <v-icon
-                small
-                class="mr-2"
-                @click="viewImportData(item)"
-            >
-              mdi-eye
-            </v-icon>
-            <v-icon
-                small
-                @click="deleteImportData(item)"
-            >
-              mdi-delete
-            </v-icon>
-          </template>
-        </v-data-table>
-      </v-card>
-    </v-dialog> -->
-    <v-dialog
-        v-model="dataDialog"
-        width="500"
-    >
-      <!-- <v-card style="overflow-y: scroll">
-        <v-card-title class="headline grey lighten-2">
-          {{$t('dataTestCreation.viewData')}}
-        </v-card-title>
-        <json-view
-            :data="selectedData"
-            :maxDepth=4
-        />
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          TODO: Fill with actions like edit and delete
-        </v-card-actions>
-      </v-card> -->
-    </v-dialog>
   </v-card>
 </template>
 
@@ -210,9 +133,6 @@ export default class DataTestCreation extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
 
-  @Prop({required: false, default: ""})
-  readonly argument!: string;
-
   errorMessage = ""
   dataErrorMessage = ""
   dialog = false
@@ -230,13 +150,13 @@ export default class DataTestCreation extends Vue {
     sortBy: string[];
     page: number;
     itemsPerPage: number;
-  } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 100}
+  } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 25}
   options: {
     sortDesc: boolean[];
     sortBy: string[];
     page: number;
     itemsPerPage: number;
-  } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 100}
+  } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 25}
 
   edgeExtendedInfo: {
     nodes: NodeT;
@@ -259,7 +179,7 @@ export default class DataTestCreation extends Vue {
       },
       {
         text: this.$t('dataTestCreation.properties'),
-        value: "properties.value"
+        value: "metatype.keys[1].name"
       },
       { text: this.$t('dataTestCreation.viewDeleteData'),  value: 'actions', sortable: false }]
   }
@@ -271,7 +191,7 @@ export default class DataTestCreation extends Vue {
       },
       {
         text: this.$t('dataTestCreation.originNode'),
-        value: "origin_node.metatype_name"
+        value: "metatypeRelationshipPair.originMetatype.name"
       },
        {
         text: this.$t('dataTestCreation.relationship'),
@@ -279,16 +199,15 @@ export default class DataTestCreation extends Vue {
       },
        {
         text: this.$t('dataTestCreation.destinationNode'),
-        value: "destination_original_id.name"
+        value: "metatypeRelationshipPair.destinationMetatype.name"
       },
        {
         text: this.$t('dataTestCreation.relationshipType'),
-        value: "relationship_type"
+        value: "metatypeRelationshipPair.relationship_type"
       },
       { text: this.$t('dataTestCreation.viewDeleteData'),  value: 'actions', sortable: false }]
   }
 
-// TODO needed?
   @Watch('options')
   onOptionChange() {
     this.listNodes()
@@ -330,7 +249,8 @@ export default class DataTestCreation extends Vue {
       this.$client.listNodes(this.containerID, {
         limit: itemsPerPage,
         offset: itemsPerPage * pageNumber,
-        dataSourceID: this.selectedDataSource.id!
+        dataSourceID: this.selectedDataSource.id!,
+        loadMetatypes: 'true'
       })
           .then(nodes => {
             this.nodesLoading = false
@@ -357,7 +277,8 @@ export default class DataTestCreation extends Vue {
       this.$client.listEdges(this.containerID, {
         limit: itemsPerPage,
         offset: itemsPerPage * pageNumber,
-        dataSourceID: this.selectedDataSource.id!
+        dataSourceID: this.selectedDataSource.id!,
+        loadRelationshipPairs: 'true'
       })
           .then(edges => {
             this.edgesLoading = false
@@ -436,11 +357,6 @@ export default class DataTestCreation extends Vue {
   viewImportData(importData: ImportDataT) {
     this.selectedData = importData.data
     this.dataDialog = true
-  }
-
-  editTypeMapping(importData: ImportDataT) {
-    this.importDataMapping = importData
-    this.mappingDialog = true
   }
 
   deleteImportData(importData: ImportDataT) {

@@ -464,8 +464,8 @@ export class Client {
     listEdges(
         containerID: string,
 
-        {relationshipPairName, relationshipPairID, limit, offset, originID, destinationID, dataSourceID, loadMetatypes}: {relationshipPairName?: string; relationshipPairID?: string;
-            limit?: number; offset?: number; originID?: string; destinationID?: string; dataSourceID?: string; loadMetatypes?: string;},
+        {relationshipPairName, relationshipPairID, limit, offset, originID, destinationID, dataSourceID, loadRelationshipPairs}: {relationshipPairName?: string; relationshipPairID?: string;
+            limit?: number; offset?: number; originID?: string; destinationID?: string; dataSourceID?: string; loadRelationshipPairs?: string;},
     ): Promise<EdgeT[]> {
         const query: {[key: string]: any} = {};
 
@@ -476,7 +476,7 @@ export class Client {
         query.offset = offset;
         query.originID = originID;
         query.destinationID = destinationID;
-        query.loadMetatypes = loadMetatypes;
+        query.loadRelationshipPairs = loadRelationshipPairs;
 
         return this.get<EdgeT[]>(`/containers/${containerID}/graphs/edges`, query);
     }

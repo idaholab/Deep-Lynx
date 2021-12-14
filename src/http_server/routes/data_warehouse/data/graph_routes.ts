@@ -175,16 +175,18 @@ export default class GraphRoutes {
                 .finally(() => next());
         } else {
             repository
-                .list(false, {
+                .list(req.query.loadRelationshipPairs !== undefined && req.query.loadRelationshipPairs === 'true', {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                 })
                 .then((result) => {
-                    result.asResponse(res);
+                    if (result.isError && result.error) {
+                        res.status(result.error.errorCode).json(result);
+                        return;
+                    }
+                    res.status(200).json(result);
                 })
-                .catch((err) => {
-                    res.status(404).send(err);
-                })
+                .catch((err) => res.status(404).send(err))
                 .finally(() => next());
         }
     }

@@ -95,13 +95,13 @@ export default class CreateNodeDialog extends Vue {
 
 
   newNode() {
-    this.setProperties()
+    // this.setProperties()
     this.$client.createNode(this.containerID,
       {
         "container_id": this.containerID,
         "data_source_id": this.dataSourceID,
         "metatype_id": this.metatype.id,
-        "properties": this.properties,
+        // "properties": this.properties,
         // TODO bugfix:this original_data_id needs to be set to create edge but shouldn't need to be included
         "original_data_id": this.metatype.id
       }
@@ -116,11 +116,8 @@ export default class CreateNodeDialog extends Vue {
 
   setProperties() {
     this.metatype.properties.forEach( (key) => {
-      this.property.key = key.id
-      this.property.value = key.name
-      this.property.type = key.data_type
-      this.properties.push(this.property)
-      this.property = {} as PropertyT
+      const property = {key: key.id, value: key.name, type: key.data_type}
+      this.properties.push(property)
     }) 
   }
 
