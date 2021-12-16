@@ -101,12 +101,11 @@ export default class CreateRelationshipPairDialog extends Vue {
   destinationSearch: NodeT[] = []
   originSearch: NodeT[] = []
   relationshipSearch = ""
- 
   originID = ""
   destinationID =  ""
   relationshipPairID = ""
-  originSelect = {} as NodeT
-  destinationSelect = {} as NodeT
+  originSelect = {} as NodeT;
+  destinationSelect = {} as NodeT;
   relationshipPairSelect = ""
   relationshipType = ""
   originNodes: NodeT[] = []
@@ -123,7 +122,6 @@ export default class CreateRelationshipPairDialog extends Vue {
     this.$client.listNodes(this.containerID, {dataSourceID: this.dataSourceID})
         .then((nodes) => {
           this.destinationNodes = nodes as NodeT[]
-          this.onRelationshipSearchChange()
         })
         .catch((e: any) => this.errorMessage = e)
   }
@@ -133,23 +131,26 @@ export default class CreateRelationshipPairDialog extends Vue {
     this.$client.listNodes(this.containerID, {dataSourceID: this.dataSourceID})
         .then((nodes) => {
           this.originNodes = nodes as NodeT[]
-          this.onRelationshipSearchChange()
         })
         .catch((e: any) => this.errorMessage = e)
   }
 
   // Sort the metatypeRelationshipPairs by the origin and desination selections
-  @Watch('relationshipSearch', {immediate: true})
+  //TODO check if Select.metatype.id is undefined.... but in a slick way.
+  //BUGS: current implementation shows errors in web console about passing in array and can't read undefined
+  @Watch('destinationSelect' || 'originSelect')
   onRelationshipSearchChange() {
-      this.$client.listMetatypeRelationshipPairs(this.containerID,  {
-        //TODO check if Select.metatype.id is undefined.... but in a slick way.
+       console.log(typeof this.destinationSelect.metatype.id)
+       this.$client.listMetatypeRelationshipPairs(this.containerID,  {
         destinationID: this.destinationSelect.metatype.id,
         originID: this.originSelect.metatype.id
       })
         .then((metatypeRelationshipPairs) => {
           this.metatypeRelationshipPairs = metatypeRelationshipPairs as MetatypeRelationshipPairT[]
         })
-        .catch(e => this.errorMessage = e)    
+        .catch(e => this.errorMessage = e) 
+    
+        
   }
 
   newEdge() {

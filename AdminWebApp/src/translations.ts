@@ -624,7 +624,7 @@ export default {
             relationshipType: 'Relationship Type',
             createdAt: 'Created At',
             id: 'ID',
-            viewDeleteData: 'View/Delete',
+            viewDeleteData: 'Actions',
             successfullyDeleted: 'Data Successfully Deleted',
 
         },

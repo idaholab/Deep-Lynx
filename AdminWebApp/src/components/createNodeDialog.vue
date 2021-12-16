@@ -71,10 +71,10 @@ export default class CreateNodeDialog extends Vue {
   dialog = false
   valid = false
   originSearch = ""
-  metatype = {} as MetatypeT
+  metatype: any = {}
   propertyValue = ""
   
-  property = {} as PropertyT
+  property = {}
   
   properties: PropertyT[] = []
   originMetatypes: MetatypeT[] = []
@@ -93,15 +93,14 @@ export default class CreateNodeDialog extends Vue {
         .catch((e: any) => this.errorMessage = e)
   }
 
-
   newNode() {
-    // this.setProperties()
+    this.setProperties()
     this.$client.createNode(this.containerID,
       {
         "container_id": this.containerID,
         "data_source_id": this.dataSourceID,
         "metatype_id": this.metatype.id,
-        // "properties": this.properties,
+        "properties": this.property,
         // TODO bugfix:this original_data_id needs to be set to create edge but shouldn't need to be included
         "original_data_id": this.metatype.id
       }
@@ -114,11 +113,14 @@ export default class CreateNodeDialog extends Vue {
         .catch(e => this.errorMessage = this.$t('createNode.errorCreatingAPI') as string + e)
   }
 
+  // Fill the property object with values from the metatype keys before sending the createNode query
   setProperties() {
-    this.metatype.properties.forEach( (key) => {
-      const property = {key: key.id, value: key.name, type: key.data_type}
-      this.properties.push(property)
+    const property: { [key: string]: any } = {}
+    this.metatype.keys.forEach( (key: any) => {
+      console.log(`${key.id}`)
+      property[key.property_name] = key.default_value
     }) 
+    this.property = property
   }
 
   reset() {

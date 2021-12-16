@@ -6,7 +6,7 @@
     <select-data-source
         :containerID="containerID"
         :showArchived="true"
-        :dataSourceID="argument"
+        :dataSourceID="selectedDataSource"
         @selected="setDataSource">
     </select-data-source>
 
@@ -15,10 +15,9 @@
       <v-data-table
           :headers="headersNode()"
           :items="nodes"
-          :server-items-length="nodeCount"
           :options.sync="listOptions"
           :loading="nodesLoading"
-          :items-per-page="100"
+          :items-per-page="25"
           :footer-props="{
                   'items-per-page-options': [25, 50, 100]
                 }"
@@ -39,14 +38,7 @@
             <h2>{{$t('dataTestCreation.nodeTableTitle')}}</h2>
           </v-col>
         </template>
-        <template v-slot:item[actions]="{ item }">
-          <v-icon
-              small
-              class="mr-2"
-              @click="viewItem(item)"
-          >
-            mdi-eye
-          </v-icon>
+        <template v-slot:[`item.actions`]="{ item }">
           <v-icon
               small
               @click="deleteNode(item)"
@@ -62,10 +54,9 @@
       <v-data-table
           :headers="headersEdge()"
           :items="edges"
-          :server-items-length="edgeCount"
           :options.sync="listOptions"
           :loading="edgesLoading"
-          :items-per-page="100"
+          :items-per-page="25"
           :footer-props="{
                   'items-per-page-options': [25, 50, 100]
                 }"
@@ -86,18 +77,7 @@
             <h2>{{$t('dataTestCreation.edgeTableTitle')}}</h2>
           </v-col>
         </template>
-
-        <template v-slot:[`item.id`]="{ item }">
-          <v-span @click="copyID(item)"> {{ item.id }} </v-span>
-        </template>
         <template v-slot:[`item.actions`]="{ item }">
-          <v-icon
-              small
-              class="mr-2"
-              @click="viewItem(item)"
-          >
-            mdi-eye
-          </v-icon>
           <v-icon
               small
               @click="deleteEdge(item)"
@@ -146,27 +126,16 @@ export default class DataTestCreation extends Vue {
   successMessage = ""
   dataSuccessMessage = ""
   listOptions: {
-    sortDesc: boolean[];
-    sortBy: string[];
     page: number;
     itemsPerPage: number;
-  } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 25}
+  } = {page: 1, itemsPerPage: 25}
   options: {
-    sortDesc: boolean[];
-    sortBy: string[];
     page: number;
     itemsPerPage: number;
-  } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 25}
-
-  edgeExtendedInfo: {
-    nodes: NodeT;
-  } = {nodes: {name}}
-  importCount = 0
+  } = {page: 1, itemsPerPage: 25}
   nodesLoading = false
   edgesLoading = false
-  selectedNode: NodeT[] = [] 
-  importDataCount = 0
-  importLoading = false
+  selectedNode = {} as NodeT
 
   headersNode() {
     return  [{
@@ -177,11 +146,9 @@ export default class DataTestCreation extends Vue {
         text: this.$t('dataTestCreation.metatype'),
         value: "metatype_name"
       },
-      {
-        text: this.$t('dataTestCreation.properties'),
-        value: "metatype.keys[1].name"
-      },
-      { text: this.$t('dataTestCreation.viewDeleteData'),  value: 'actions', sortable: false }]
+      { text: this.$t('dataTestCreation.viewDeleteData'),  
+        value: 'actions', sortable: false 
+      }]
   }
 
     headersEdge() {
@@ -205,7 +172,9 @@ export default class DataTestCreation extends Vue {
         text: this.$t('dataTestCreation.relationshipType'),
         value: "metatypeRelationshipPair.relationship_type"
       },
-      { text: this.$t('dataTestCreation.viewDeleteData'),  value: 'actions', sortable: false }]
+      { text: this.$t('dataTestCreation.viewDeleteData'),  
+        value: 'actions', sortable: false 
+      }]
   }
 
   @Watch('options')
@@ -225,12 +194,6 @@ export default class DataTestCreation extends Vue {
     this.$router.replace(`/containers/${this.containerID}/test-data/${this.selectedDataSource?.id}`)
     this.listNodes()
     this.listEdges()
-
-    this.$client.countImports(this.containerID, dataSource.id)
-        .then(importCount => {
-          this.importCount = importCount
-        })
-        .catch(e => this.errorMessage = e)
   }
 
   listNodes() {
@@ -238,13 +201,8 @@ export default class DataTestCreation extends Vue {
       this.nodesLoading = true
       this.nodes = []
 
-      const {page, itemsPerPage, sortBy, sortDesc } = this.listOptions;
-      let sortParam: string | undefined
-      let sortDescParam: boolean | undefined
-
+      const {page, itemsPerPage} = this.listOptions;
       const pageNumber = page - 1;
-      if(sortBy && sortBy.length >= 1) sortParam = sortBy[0]
-      if(sortDesc) sortDescParam = sortDesc[0]
 
       this.$client.listNodes(this.containerID, {
         limit: itemsPerPage,
@@ -266,13 +224,8 @@ export default class DataTestCreation extends Vue {
       this.edgesLoading = true
       this.edges = []
 
-      const {page, itemsPerPage, sortBy, sortDesc } = this.listOptions;
-      let sortParam: string | undefined
-      let sortDescParam: boolean | undefined
-
+      const {page, itemsPerPage} = this.listOptions;
       const pageNumber = page - 1;
-      if(sortBy && sortBy.length >= 1) sortParam = sortBy[0]
-      if(sortDesc) sortDescParam = sortDesc[0]
 
       this.$client.listEdges(this.containerID, {
         limit: itemsPerPage,
@@ -287,14 +240,6 @@ export default class DataTestCreation extends Vue {
           })
           .catch(e => this.errorMessage = e)
     }
-  }
-
-  mounted() {
-    this.$client.listDataSources(this.containerID)
-        .then(dataSources => {
-          this.dataSources = dataSources
-        })
-        .catch(e => this.errorMessage = e)
   }
 
   deleteNode(nodeT: NodeT) {
@@ -313,67 +258,6 @@ export default class DataTestCreation extends Vue {
           this.successMessage = this.$t('dataTestCreation.successfullyDeleted') as string
         })
         .catch((e: any) => this.errorMessage = e)
-  }
-
-  viewItem(nodeT: NodeT) {
-    this.selectedNode = nodeT
-    this.loadImportData()
-
-    this.$client.countImportData(this.containerID, nodeT.id)
-        .then((count) => {
-          this.importDataCount = count
-          this.dialog = true
-        })
-        .catch((e: any) => this.errorMessage = e)
-  }
-
-  loadImportData() {
-    this.importLoading = true
-    this.importData = []
-
-    const {page, itemsPerPage, sortBy, sortDesc } = this.options;
-    let sortParam: string | undefined
-    let sortDescParam: boolean | undefined
-
-    const pageNumber = page - 1;
-    if(sortBy && sortBy.length >= 1) sortParam = sortBy[0]
-    if(sortDesc) sortDescParam = sortDesc[0]
-
-    this.$client.listImportData(this.containerID, this.selectedImport!.id,{
-      limit: itemsPerPage,
-      offset: itemsPerPage * pageNumber,
-      sortBy: sortParam,
-      sortDesc: sortDescParam
-    })
-        .then((results) => {
-          this.importData = results
-          this.importLoading = false
-
-        })
-        .catch((e: any) => this.errorMessage = e)
-
-  }
-
-  viewImportData(importData: ImportDataT) {
-    this.selectedData = importData.data
-    this.dataDialog = true
-  }
-
-  deleteImportData(importData: ImportDataT) {
-    if(importData.inserted_at) {
-      this.dataErrorMessage= "Unable to delete data that has already been inserted"
-      return
-    }
-
-    this.$client.deleteImportData(this.containerID, importData.import_id, importData.id)
-        .then(() => {
-          this.loadImportData()
-        })
-        .catch((e: any) => this.dataErrorMessage= e)
-  }
-
-    copyID(id: string) {
-    navigator.clipboard.writeText(id)
   }
 }
 </script>
