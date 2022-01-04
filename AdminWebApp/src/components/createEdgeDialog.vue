@@ -54,7 +54,7 @@
                     v-model="relationshipPairSelect"
                     :rules="[v => !!v || $t('createEdge.relationshipRequired')]"
                     :single-line="false"
-                    :items= "metatypeRelationshipPairs"
+                    :items="metatypeRelationshipPairs"
                     :search-input.sync="relationshipSearch"
                     item-text="name"
                     item-value="id"
@@ -98,8 +98,8 @@ export default class CreateRelationshipPairDialog extends Vue {
   errorMessage = ""
   dialog = false
   valid = false
-  destinationSearch: NodeT[] = []
-  originSearch: NodeT[] = []
+  destinationSearch = ""
+  originSearch = ""
   relationshipSearch = ""
   originID = ""
   destinationID =  ""
@@ -140,7 +140,6 @@ export default class CreateRelationshipPairDialog extends Vue {
   //BUGS: current implementation shows errors in web console about passing in array and can't read undefined
   @Watch('destinationSelect' || 'originSelect')
   onRelationshipSearchChange() {
-       console.log(typeof this.destinationSelect.metatype.id)
        this.$client.listMetatypeRelationshipPairs(this.containerID,  {
         destinationID: this.destinationSelect.metatype.id,
         originID: this.originSelect.metatype.id
