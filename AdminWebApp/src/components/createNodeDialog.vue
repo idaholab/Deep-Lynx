@@ -117,7 +117,6 @@ export default class CreateNodeDialog extends Vue {
   setProperties() {
     const property: { [key: string]: any } = {}
     this.metatype.keys.forEach( (key: any) => {
-      console.log(`${key.id}`)
       property[key.property_name] = key.default_value
     }) 
     this.property = property
