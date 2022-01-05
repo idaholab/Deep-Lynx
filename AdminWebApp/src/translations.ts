@@ -625,8 +625,7 @@ export default {
             createdAt: 'Created At',
             id: 'ID',
             viewDeleteData: 'Actions',
-            successfullyDeleted: 'Data Successfully Deleted',
-
+            successfullyDeleted: 'Data Successfully Deleted'
         },
         createNode: {
             createNode: 'Create Node',
@@ -637,8 +636,7 @@ export default {
             save: 'Save',
             cancel: 'Cancel',
             errorCreatingAPI: 'Error communicating with Deep Lynx:',
-            requiredField: 'Required Field',
-
+            requiredField: 'Required Field'
         },
         createEdge: {
             createEdge: 'Create Edge',
@@ -652,8 +650,7 @@ export default {
             save: 'Save',
             cancel: 'Cancel',
             errorCreatingAPI: 'Error communicating with Deep Lynx:',
-            requiredField: 'Required Field',
-
+            requiredField: 'Required Field'
         },
         login: {
             username: 'Email',

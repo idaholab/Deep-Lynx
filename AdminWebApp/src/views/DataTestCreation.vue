@@ -1,6 +1,5 @@
 <template>
-  <v-card
-  >
+  <v-card>
     <error-banner :message="errorMessage"></error-banner>
     <success-banner :message="successMessage"></success-banner>
     <select-data-source

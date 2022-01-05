@@ -173,7 +173,7 @@ export class Client {
         if (sortBy) query.sortBy = sortBy;
         if (sortDesc) query.sortDesc = sortDesc;
         if (count) query.count = 'true';
-        if (loadKeys) query.loadMetatypes = loadKeys;
+        if (loadKeys) query.loadKeys = loadKeys;
 
         return this.get<MetatypeT[] | number>(`/containers/${containerID}/metatypes`, query);
     }
@@ -434,12 +434,12 @@ export class Client {
     ): Promise<NodeT[]> {
         const query: {[key: string]: any} = {};
 
-        query.dataSourceID = dataSourceID;
-        query.limit = limit;
-        query.offset = offset;
-        query.transformationID = transformationID;
-        query.metatypeID = metatypeID;
-        query.loadMetatypes = loadMetatypes;
+        if (dataSourceID) query.dataSourceID = dataSourceID;
+        if (limit) query.limit = limit;
+        if (offset) query.offset = offset;
+        if (transformationID) query.transformationID = transformationID;
+        if (metatypeID) query.metatypeID = metatypeID;
+        if (loadMetatypes) query.loadMetatypes = loadMetatypes;
 
 
         return this.get<NodeT[]>(`/containers/${containerID}/graphs/nodes`, query);
@@ -469,14 +469,14 @@ export class Client {
     ): Promise<EdgeT[]> {
         const query: {[key: string]: any} = {};
 
-        query.dataSourceID = dataSourceID;
-        query.relationshipPairName = relationshipPairName;
-        query.relationshipPairID = relationshipPairID;
-        query.limit = limit;
-        query.offset = offset;
-        query.originID = originID;
-        query.destinationID = destinationID;
-        query.loadRelationshipPairs = loadRelationshipPairs;
+        if (dataSourceID) query.dataSourceID = dataSourceID;
+        if (relationshipPairName) query.relationshipPairName = relationshipPairName;
+        if (relationshipPairID) query.relationshipPairID = relationshipPairID;
+        if (limit) query.limit = limit;
+        if (offset) query.offset = offset;
+        if (originID) query.originID = originID;
+        if (destinationID) query.destinationID = destinationID;
+        if (loadRelationshipPairs) query.loadRelationshipPairs = loadRelationshipPairs;
 
         return this.get<EdgeT[]>(`/containers/${containerID}/graphs/edges`, query);
     }

@@ -98,7 +98,7 @@
             </v-list-item-content>
           </v-list-item>
           <v-list-item two-line link
-                       v-if="$auth.Auth('data', 'write', containerID)"
+                       v-if="$auth.IsAdmin()"
                        @click="setActiveComponent('data-test-creation')"
                        :input-value="currentMainComponent === 'DataTestCreation'">
             <v-list-item-content>
@@ -467,7 +467,6 @@ export default class Home extends Vue {
        case "data-test-creation": {
         this.currentMainComponent = "DataTestCreation";
         this.componentName = "Test Data"
-        // this.componentName = this.$t('home.dataTestCreation')
         this.$router.replace(`/containers/${this.containerID}/data-test-creation`)
         break;
       }

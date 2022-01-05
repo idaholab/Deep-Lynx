@@ -74,7 +74,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("createEdge.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text :disabled="!valid" @click="newEdge()">{{$t("createEdge.save")}}</v-btn>
+        <v-btn color="blue darken-1" text :disabled="!valid" @click="createEdge()">{{$t("createEdge.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -91,9 +91,6 @@ export default class CreateRelationshipPairDialog extends Vue {
 
   @Prop({required: true})
   dataSourceID!: string;
-
-  @Prop({required: false})
-  readonly icon!: boolean
 
   errorMessage = ""
   dialog = false
@@ -152,7 +149,7 @@ export default class CreateRelationshipPairDialog extends Vue {
         
   }
 
-  newEdge() {
+  createEdge() {
     this.$client.createEdge(this.containerID,
         {
           "container_id": this.containerID,
