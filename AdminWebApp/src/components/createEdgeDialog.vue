@@ -92,6 +92,7 @@ export default class CreateRelationshipPairDialog extends Vue {
   @Prop({required: true})
   dataSourceID!: string;
 
+  icon = false
   errorMessage = ""
   dialog = false
   valid = false
