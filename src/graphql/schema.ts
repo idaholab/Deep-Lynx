@@ -180,20 +180,12 @@ export default class GraphQLSchemaGenerator {
             let repo = new NodeRepository();
             repo = repo.where().containerID('eq', containerID).and().metatypeID('eq', metatype.id);
 
+            // you might notice that metatype_id and metatype_name are missing as filters - these are not
+            // needed as we've already dictated what metatype to look for based on the query itself
             if (input._record) {
                 if (input._record.data_source_id) {
                     const query = this.breakQuery(input._record.data_source_id);
                     repo = repo.and().dataSourceID(query[0], query[1]);
-                }
-
-                if (input._record.metatype_id) {
-                    const query = this.breakQuery(input._record.metatype_id);
-                    repo = repo.and().metatypeID(query[0], query[1]);
-                }
-
-                if (input._record.metatype_name) {
-                    const query = this.breakQuery(input._record.metatype_name);
-                    repo = repo.and().metatypeName(query[0], query[1]);
                 }
 
                 if (input._record.original_id) {
@@ -217,9 +209,9 @@ export default class GraphQLSchemaGenerator {
             // iterate through the input object, ignoring reserved properties and adding all others to
             // the query as property queries
             Object.keys(input).forEach((key) => {
-                if (key === 'OR' || key === '_record') return;
+                if (key === '_record') return;
 
-                const query = this.breakQuery(input[key]);
+                const query = this.breakQuery(String(input[key]));
                 repo = repo.and().property(propertyMap[key], query[0], query[1]);
             });
 

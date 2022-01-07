@@ -5,7 +5,7 @@ import GraphQLSchemaGenerator from '../../../../graphql/schema';
 
 export default class DataQueryRoutes {
     public static mount(app: Application, middleware: any[]) {
-        app.get('/containers/:containerID/data', ...middleware, authInContainer('read', 'data'), this.query);
+        app.post('/containers/:containerID/data', ...middleware, authInContainer('read', 'data'), this.query);
     }
 
     // very simple route that passes the raw body directly to the the graphql query
