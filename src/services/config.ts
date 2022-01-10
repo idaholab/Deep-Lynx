@@ -93,6 +93,10 @@ export class Config {
 
     private readonly _hpc_email: string;
 
+    private readonly _process_queue_name: string;
+    private readonly _data_sources_queue_name: string;
+    private readonly _events_queue_name: string;
+
     private constructor() {
         // Either assign a sane default of the env var is missing, or create your
         // own checks on process.env. There is most likely a more elegant way but
@@ -188,6 +192,9 @@ export class Config {
         this._rsa_client_id = process.env.RSA_CLIENT_ID || 'DeepLynx';
 
         this._hpc_email = process.env.HPC_EMAIL || '';
+        this._process_queue_name = process.env.PROCESS_QUEUE_NAME || 'process';
+        this._data_sources_queue_name = process.env.DATA_SOURCES_QUEUE_NAME || 'data_sources';
+        this._events_queue_name = process.env.EVENTS_QUEUE_NAME || 'events';
     }
 
     get ssl_enabled(): boolean {
@@ -444,6 +451,18 @@ export class Config {
 
     get hpc_email(): string {
         return this._hpc_email;
+    }
+
+    get process_queue(): string {
+        return this._process_queue_name;
+    }
+
+    get events_queue(): string {
+        return this._events_queue_name;
+    }
+
+    get data_sources_queue(): string {
+        return this._data_sources_queue_name;
     }
 
     public static Instance(): Config {
