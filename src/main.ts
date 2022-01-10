@@ -1,6 +1,4 @@
-// Boot is where systems like the API server, data service layer etc. should be
-// initialized and any required interfaces be implemented. This is also the
-// entry-point for the application.
+// This is the entry-point for the application.
 import {Server} from './http_server/server';
 import BackedLogger from './services/logger';
 import Config from './services/config';
@@ -47,11 +45,17 @@ void postgresAdapter.init().then(() => {
             },
             {
                 name: 'data_staging_mapping', // will run data_staging_mapping.js
-                interval: Config.data_source_interval, // exports take longer to process, more time in-between instances is needed
+                interval: Config.data_source_interval,
             },
             {
                 name: 'orphan_edge_linker', // will run orphan_edge_linker.js
                 interval: Config.edge_linker_interval,
+            },
+            // the below is commented out because there isn't anything actually using
+            // that queue yet - this is to demonstrate how one would go about consuming
+            // a given queue
+            {
+                //  name: 'processing_queue', // will run processing_queue.js exactly one time
             },
         ],
     });
