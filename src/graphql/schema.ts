@@ -175,8 +175,6 @@ export default class GraphQLSchemaGenerator {
 
     resolverForMetatype(containerID: string, metatype: Metatype): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
-            console.log(input);
-
             let repo = new NodeRepository();
             repo = repo.where().containerID('eq', containerID).and().metatypeID('eq', metatype.id);
 
