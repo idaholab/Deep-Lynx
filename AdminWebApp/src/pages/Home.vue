@@ -98,7 +98,7 @@
             </v-list-item-content>
           </v-list-item>
           <v-list-item two-line link
-                       v-if="$auth.IsAdmin()"
+                       v-if="$auth.Auth('data', 'write', containerID)"
                        @click="setActiveComponent('data-test-creation')"
                        :input-value="currentMainComponent === 'DataTestCreation'">
             <v-list-item-content>
