@@ -24,6 +24,8 @@ export function toStream(data: any[]): Readable {
 export function stringToValidPropertyName(input: string): string {
     let output = input.replace(/[^_a-zA-Z0-9]/, '_');
 
+    output = output.split(' ').join('_');
+
     const matches = /^[_a-zA-Z]/.exec(output);
     if (!matches || matches.length === 0) {
         output = `_${output}`;
