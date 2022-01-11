@@ -97,6 +97,8 @@ export class Config {
     private readonly _data_sources_queue_name: string;
     private readonly _events_queue_name: string;
 
+    private readonly _rabbitmq_url: string;
+
     private constructor() {
         // Either assign a sane default of the env var is missing, or create your
         // own checks on process.env. There is most likely a more elegant way but
@@ -195,6 +197,8 @@ export class Config {
         this._process_queue_name = process.env.PROCESS_QUEUE_NAME || 'process';
         this._data_sources_queue_name = process.env.DATA_SOURCES_QUEUE_NAME || 'data_sources';
         this._events_queue_name = process.env.EVENTS_QUEUE_NAME || 'events';
+
+        this._rabbitmq_url = process.env.RABBITMQ_URL || 'amqp://localhost';
     }
 
     get ssl_enabled(): boolean {
@@ -463,6 +467,10 @@ export class Config {
 
     get data_sources_queue(): string {
         return this._data_sources_queue_name;
+    }
+
+    get rabbitmq_url(): string {
+        return this._rabbitmq_url;
     }
 
     public static Instance(): Config {

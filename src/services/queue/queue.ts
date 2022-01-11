@@ -1,6 +1,7 @@
 import Config from '../config';
 import DatabaseQueue from './database_queue_impl';
 import {Writable} from 'stream';
+import RabbitMQQueue from './rabbitmq_queue_impl';
 
 /*
     QueueInterface defines a very simple interface for a queue processor to
@@ -30,6 +31,10 @@ export const QueueFactory = (): QueueInterface => {
     switch (Config.queue_system) {
         case 'database': {
             return new DatabaseQueue();
+        }
+
+        case 'rabbitmq': {
+            return new RabbitMQQueue();
         }
 
         default: {

@@ -93,9 +93,11 @@
     },
     "dependencies": {
         "@ladjs/graceful": "^1.0.5",
+        "@types/amqplib": "^0.8.2",
         "@types/bree": "^6.2.1",
         "@types/dompurify": "^2.3.1",
         "@types/graphql-type-json": "^0.3.2",
+        "amqplib": "^0.8.0",
         "axios": "^0.21.1",
         "base64url": "^3.0.1",
         "bcrypt": "^5.0.1",

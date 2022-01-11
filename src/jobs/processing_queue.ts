@@ -10,6 +10,7 @@ void queue.Init().then(() => {
         highWaterMark: 1000,
         write(chunk: any, encoding: string, callback: (error?: Error | null) => void) {
             // PROCESS MESSAGE HERE FOR STREAM
+            console.log(chunk);
             callback();
         },
     });
