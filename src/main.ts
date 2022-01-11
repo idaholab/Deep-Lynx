@@ -54,9 +54,11 @@ void postgresAdapter.init().then(() => {
             // the below is commented out because there isn't anything actually using
             // that queue yet - this is to demonstrate how one would go about consuming
             // a given queue
+            /*
             {
-                //  name: 'processing_queue', // will run processing_queue.js exactly one time
+                name: 'processing_queue', // will run processing_queue.js exactly one time
             },
+           */
         ],
     });
 
