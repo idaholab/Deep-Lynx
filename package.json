@@ -137,7 +137,7 @@
         "method-override": "^3.0.0",
         "minimist": "^1.2.5",
         "node-cache": "^5.1.2",
-        "node-forge": "^0.10.0",
+        "node-forge": "^1.0.0",
         "nodemailer": "^6.6.5",
         "p-queue": "^6.6.2",
         "passport-jwt": "^4.0.0",
