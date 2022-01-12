@@ -1,11 +1,24 @@
-import {BaseDomainClass, NakedDomainClass} from '../../common_classes/base_domain_class';
-import {IsIn, IsObject, IsString} from 'class-validator';
+import {BaseDomainClass} from '../../common_classes/base_domain_class';
+import {IsIn, IsObject, IsOptional, IsString} from 'class-validator';
+import DataSourceRepository from '../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
+import logger from '../../services/logger';
 
 /*
     Event represents an event record in the Deep Lynx database and the various
     validations required for said record to be considered valid.
  */
-export default class Event extends NakedDomainClass {
+export default class Event extends BaseDomainClass {
+    @IsOptional()
+    id?: string;
+
+    @IsString()
+    @IsOptional()
+    container_id?: string;
+
+    @IsString()
+    @IsOptional()
+    data_source_id?: string;
+
     @IsString()
     @IsIn([
         'data_imported',
@@ -17,27 +30,38 @@ export default class Event extends NakedDomainClass {
         'data_source_created',
         'data_source_modified',
         'data_exported',
+        'manual'
     ])
-    type?: string;
+    event_type?: string;
 
-    @IsString()
-    source_id?: string;
-
-    @IsString()
-    @IsIn(['data_source', 'container'])
-    source_type?: string;
+    event_config?: any;
 
     @IsObject()
-    data?: any;
+    event?: object;
 
-    constructor(input: {sourceID: string; sourceType: string; type?: string; data?: any}) {
+    constructor(input: {containerID?: string; dataSourceID?: string; eventType: string; eventConfig?: any, event: object}) {
         super();
 
         if (input) {
-            if (input.type) this.type = input.type;
-            if (input.data) this.data = input.data;
-            this.source_id = input.sourceID;
-            this.source_type = input.sourceType;
+            if (input.containerID) this.container_id = input.containerID;
+            if (input.dataSourceID) {
+                this.data_source_id = input.dataSourceID;
+
+                // populate the containerID if not provided
+                if (!input.containerID) {
+
+                    new DataSourceRepository().findByID(input.dataSourceID).then((dataSource) => {
+                        this.container_id = dataSource.value.DataSourceRecord?.container_id;
+                    }).catch((e) => {
+                        logger.debug(e)
+                    })
+
+                }
+            }
+            this.event_type = input.eventType;
+
+            if (input.eventConfig) this.event_config = input.eventConfig;
+            this.event = input.event;
         }
     }
 }

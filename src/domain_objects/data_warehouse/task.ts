@@ -61,7 +61,7 @@ export default class TaskRecord extends BaseDomainClass {
             ],
         },
     })
-    config?: HpcTaskConfig;
+    config?: BaseTaskConfig | HpcTaskConfig;
 
     constructor(input: {
         container_id: string;
