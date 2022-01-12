@@ -6,16 +6,16 @@ import Container from '../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
 import {expect} from 'chai';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
-import EventRegistrationRepository from '../../data_access_layer/repositories/event_system/event_registration_repository';
-import EventRegistration from '../../domain_objects/event_system/event_registration';
+import EventActionRepository from '../../data_access_layer/repositories/event_system/event_action_repository';
+import EventAction from '../../domain_objects/event_system/event_action';
 
-describe('An Event Registration Repository', async () => {
+describe('An Event Action Repository', async () => {
     let container: Container;
     let user: User;
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
-            Logger.debug('skipping metatype tests, no mapper layer');
+            Logger.debug('skipping event action tests, no mapper layer');
             this.skip();
         }
         await PostgresAdapter.Instance.init();
@@ -58,29 +58,27 @@ describe('An Event Registration Repository', async () => {
         return ContainerMapper.Instance.Delete(container.id!);
     });
 
-    it('can save an Event Registration', async () => {
-        const repo = new EventRegistrationRepository();
-        const reg = new EventRegistration({
-            appName: 'Daisy',
-            appUrl: 'yellow',
-            eventType: 'data_ingested',
+    it('can save an Event Action', async () => {
+        const repo = new EventActionRepository();
+        const action = new EventAction({
+            containerID: container.id,
+            eventType: 'data_source_created',
+            actionType: 'send_query',
+            destination: 'url_here',
         });
 
-        let saved = await repo.save(reg, user);
+        let saved = await repo.save(action, user);
         expect(saved.isError).false;
-        expect(reg.id).not.undefined;
+        expect(action.id).not.undefined;
 
         // now update
-        const updatedName = faker.name.findName();
-        const updatedURL = faker.internet.url();
-        reg.app_name = updatedName;
-        reg.app_url = updatedURL;
+        const config = {'test': 'config'};
+        action.action_config = config;
 
-        saved = await repo.save(reg, user);
+        saved = await repo.save(action, user);
         expect(saved.isError).false;
-        expect(reg.app_name).eq(updatedName);
-        expect(reg.app_url).eq(updatedURL);
+        expect(action.action_config).eql(config);
 
-        return repo.delete(reg);
+        return repo.delete(action);
     });
 });

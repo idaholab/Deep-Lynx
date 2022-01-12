@@ -7,7 +7,6 @@ import MetatypeKey from '../../domain_objects/data_warehouse/ontology/metatype_k
 import MetatypeRelationshipKey from '../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 import {User as DLUser} from '../../domain_objects/access_management/user';
 import {OAuthApplication} from '../../domain_objects/access_management/oauth/oauth';
-import EventRegistration from '../../domain_objects/event_system/event_registration';
 import Node from '../../domain_objects/data_warehouse/data/node';
 import Edge from '../../domain_objects/data_warehouse/data/edge';
 import TypeMapping from '../../domain_objects/data_warehouse/etl/type_mapping';
@@ -16,6 +15,9 @@ import {Exporter} from '../../domain_objects/data_warehouse/export/export';
 import Import, {DataStaging} from '../../domain_objects/data_warehouse/import/import';
 import {DataSource} from '../../domain_objects/data_warehouse/import/data_source';
 import TaskRecord from '../../domain_objects/data_warehouse/task';
+import Event from '../../domain_objects/event_system/event';
+import EventAction from '../../domain_objects/event_system/event_action';
+import EventActionStatus from '../../domain_objects/event_system/event_action_status';
 
 declare global {
     namespace Express {
@@ -32,7 +34,9 @@ declare global {
             currentUser?: DLUser;
             routeUser?: DLUser;
             oauthApp?: OAuthApplication;
-            eventRegistration?: EventRegistration;
+            event?: Event;
+            eventAction?: EventAction;
+            eventActionStatus?: EventActionStatus;
             node?: Node;
             edge?: Edge;
             typeMapping?: TypeMapping;

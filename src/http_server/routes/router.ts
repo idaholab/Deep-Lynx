@@ -30,9 +30,11 @@ import {
     importContext,
     dataStagingContext,
     dataSourceContext,
-    eventRegistrationContext,
     fileContext,
     taskContext,
+    eventContext,
+    eventActionContext,
+    eventActionStatusContext
 } from '../middleware';
 import ContainerRoutes from './data_warehouse/ontology/container_routes';
 import MetatypeRoutes from './data_warehouse/ontology/metatype_routes';
@@ -132,7 +134,7 @@ export class Router {
         /* This query route is considered deprecated */
         QueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         GraphRoutes.mount(this.app, [authenticateRoute(), containerContext(), nodeContext(), edgeContext(), fileContext(), metatypeContext(), currentUser()]);
-        EventRoutes.mount(this.app, [authenticateRoute(), containerContext(), eventRegistrationContext(), currentUser()]);
+        EventRoutes.mount(this.app, [authenticateRoute(), containerContext(), eventContext(), eventActionContext(), eventActionStatusContext(), currentUser()]);
         DataQueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         TaskRoutes.mount(this.app, [authenticateRoute(), containerContext(), taskContext(), currentUser()]);
 

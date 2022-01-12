@@ -21,9 +21,13 @@ import ImportMapper from '../../data_access_layer/mappers/data_warehouse/import/
 import DataStagingMapper from '../../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
 import DataStagingRepository from '../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import Container from '../../domain_objects/data_warehouse/ontology/container';
-import SchemaGenerator from '../../graphql/schema';
+import GraphQLSchemaGenerator from '../../graphql/schema';
 import {GraphQLObjectType, GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLList, GraphQLEnumType} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
+import {DataSourceFactory} from '../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
+import TypeTransformation, {KeyMapping} from '../../domain_objects/data_warehouse/etl/type_transformation';
+import TypeTransformationMapper from '../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper';
+import TypeMappingMapper from '../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
 
 describe('The GraphQL Schema Generator', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -347,7 +351,7 @@ describe('The GraphQL Schema Generator', async () => {
             new DataSourceRecord({
                 container_id: containerID,
                 name: 'Test Data Source',
-                active: false,
+                active: true,
                 adapter_type: 'standard',
                 data_format: 'json',
             }),
@@ -386,6 +390,7 @@ describe('The GraphQL Schema Generator', async () => {
                 data_source_id: dataSourceID,
                 import_id: newImport.value.id!,
                 data: test_payload[0],
+                shape_hash: typeMapping.shape_hash,
             }),
         );
         expect(inserted.isError).false;
@@ -399,6 +404,95 @@ describe('The GraphQL Schema Generator', async () => {
 
         data = insertedData.value[0];
 
+        const dataSource = new DataSourceFactory().fromDataSourceRecord(exp.value);
+
+        // create the transformations and process
+        const carMaintenanceKeys = test_metatypes.find((m) => m.name === 'Maintenance')!.keys;
+        // first generate all transformations for the type mapping, and set active
+        const maintenanceTransformation = new TypeTransformation({
+            container_id: containerID,
+            data_source_id: dataSource!.DataSourceRecord!.id!,
+            type_mapping_id: typeMappingID,
+            keys: [
+                new KeyMapping({
+                    key: 'car_maintenance.id',
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'id')?.id,
+                }),
+                new KeyMapping({
+                    key: 'car_maintenance.name',
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'name')?.id,
+                }),
+                new KeyMapping({
+                    key: 'car_maintenance.start_date',
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'start date')?.id,
+                }),
+                new KeyMapping({
+                    key: 'car_maintenance.average_visits_per_year',
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'average visits per year')?.id,
+                }),
+                new KeyMapping({
+                    key: 'car_maintenance.visit_dates',
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'visit dates')?.id,
+                }),
+            ],
+            metatype_id: test_metatypes.find((m) => m.name === 'Maintenance')!.id,
+            unique_identifier_key: 'car_maintenance.id',
+        });
+
+        let result = await TypeTransformationMapper.Instance.Create('test suite', maintenanceTransformation);
+        expect(result.isError).false;
+
+        const entryKeys = test_metatypes.find((m) => m.name === 'Maintenance Entry')!.keys;
+
+        const maintenanceEntryTransformation = new TypeTransformation({
+            container_id: containerID,
+            data_source_id: dataSource!.DataSourceRecord!.id!,
+            type_mapping_id: typeMappingID,
+            keys: [
+                new KeyMapping({
+                    key: 'car_maintenance.maintenance_entries.[].id',
+                    metatype_key_id: entryKeys!.find((key) => key.name === 'id')?.id,
+                }),
+                new KeyMapping({
+                    key: 'car_maintenance.maintenance_entries.[].type',
+                    metatype_key_id: entryKeys!.find((key) => key.name === 'type')?.id,
+                }),
+                new KeyMapping({
+                    key: 'car_maintenance.maintenance_entries.[].check_engine_light_flag',
+                    metatype_key_id: entryKeys!.find((key) => key.name === 'check engine light flag')?.id,
+                }),
+            ],
+            metatype_id: test_metatypes.find((m) => m.name === 'Maintenance Entry')?.id,
+            unique_identifier_key: 'car_maintenance.maintenance_entries.[].id',
+            root_array: 'car_maintenance.maintenance_entries',
+        });
+
+        result = await TypeTransformationMapper.Instance.Create('test suite', maintenanceEntryTransformation);
+        expect(result.isError).false;
+
+        const maintenanceEdgeTransformation = new TypeTransformation({
+            container_id: containerID,
+            data_source_id: dataSource!.DataSourceRecord!.id!,
+            type_mapping_id: typeMappingID,
+            metatype_relationship_pair_id: maintenancePair!.id,
+            origin_id_key: 'car_maintenance.id',
+            origin_data_source_id: dataSource!.DataSourceRecord!.id!,
+            origin_metatype_id: test_metatypes.find((m) => m.name === 'Maintenance')!.id,
+            destination_id_key: 'car_maintenance.maintenance_entries.[].id',
+            destination_data_source_id: dataSource!.DataSourceRecord!.id!,
+            destination_metatype_id: test_metatypes.find((m) => m.name === 'Maintenance Entry')!.id,
+            root_array: 'car_maintenance.maintenance_entries',
+            keys: [],
+        });
+
+        result = await TypeTransformationMapper.Instance.Create('test suite', maintenanceEdgeTransformation);
+        expect(result.isError).false;
+
+        const active = await TypeMappingMapper.Instance.SetActive(typeMappingID);
+        expect(active.isError).false;
+
+        await dataSource?.Process();
+
         return Promise.resolve();
     });
 
@@ -408,7 +502,7 @@ describe('The GraphQL Schema Generator', async () => {
     });
 
     it('can generate a valid schema', async () => {
-        const schemaGenerator = new SchemaGenerator();
+        const schemaGenerator = new GraphQLSchemaGenerator();
 
         const containerSchema = await schemaGenerator.ForContainer(containerID);
         expect(containerSchema.isError).false;
@@ -418,9 +512,9 @@ describe('The GraphQL Schema Generator', async () => {
         expect(typeMap['Garbage']).undefined;
         expect(typeMap['Car']).not.undefined;
         expect(typeMap['Manufacturer']).not.undefined;
-        expect(typeMap['Tire Pressure']).not.undefined;
+        expect(typeMap['Tire_Pressure']).not.undefined;
         expect(typeMap['Maintenance']).not.undefined;
-        expect(typeMap['Maintenance Entry']).not.undefined;
+        expect(typeMap['Maintenance_Entry']).not.undefined;
         expect(typeMap['Part']).not.undefined;
         expect(typeMap['Component']).not.undefined;
 
@@ -428,6 +522,7 @@ describe('The GraphQL Schema Generator', async () => {
         expect((typeMap['Car'] as GraphQLObjectType).getFields()['id'].type).eq(GraphQLString);
         expect((typeMap['Car'] as GraphQLObjectType).getFields()['name'].type).eq(GraphQLString);
         expect((typeMap['Car'] as GraphQLObjectType).getFields()['drivers'].type.toString).eq(GraphQLList(GraphQLJSON).toString);
+        expect((typeMap['Car'] as GraphQLObjectType).getFields()['trim'].type.toString()).eq('Car_trim_Enum_TypeA');
         // check the enum values
         const values = ((typeMap['Car'] as GraphQLObjectType).getFields()['trim'].type as GraphQLEnumType).getValues();
         expect(values.length).eq(2);
@@ -438,24 +533,32 @@ describe('The GraphQL Schema Generator', async () => {
         expect((typeMap['Manufacturer'] as GraphQLObjectType).getFields()['name'].type).eq(GraphQLString);
         expect((typeMap['Manufacturer'] as GraphQLObjectType).getFields()['location'].type).eq(GraphQLString);
 
-        expect((typeMap['Tire Pressure'] as GraphQLObjectType).getFields()['id'].type).eq(GraphQLString);
-        expect((typeMap['Tire Pressure'] as GraphQLObjectType).getFields()['measurement'].type).eq(GraphQLFloat);
-        expect((typeMap['Tire Pressure'] as GraphQLObjectType).getFields()['measurement_unit'].type).eq(GraphQLString);
-        expect((typeMap['Tire Pressure'] as GraphQLObjectType).getFields()['measurement_name'].type).eq(GraphQLString);
+        expect((typeMap['Tire_Pressure'] as GraphQLObjectType).getFields()['id'].type).eq(GraphQLString);
+        expect((typeMap['Tire_Pressure'] as GraphQLObjectType).getFields()['measurement'].type).eq(GraphQLFloat);
+        expect((typeMap['Tire_Pressure'] as GraphQLObjectType).getFields()['measurement_unit'].type).eq(GraphQLString);
+        expect((typeMap['Tire_Pressure'] as GraphQLObjectType).getFields()['measurement_name'].type).eq(GraphQLString);
 
         expect((typeMap['Maintenance'] as GraphQLObjectType).getFields()['id'].type).eq(GraphQLString);
         expect((typeMap['Maintenance'] as GraphQLObjectType).getFields()['name'].type).eq(GraphQLString);
         expect((typeMap['Maintenance'] as GraphQLObjectType).getFields()['start_date'].type).eq(GraphQLString);
         expect((typeMap['Maintenance'] as GraphQLObjectType).getFields()['average_visits'].type).eq(GraphQLFloat);
 
-        expect((typeMap['Maintenance Entry'] as GraphQLObjectType).getFields()['id'].type).eq(GraphQLFloat);
-        expect((typeMap['Maintenance Entry'] as GraphQLObjectType).getFields()['check_engine_light_flag'].type).eq(GraphQLBoolean);
-        expect((typeMap['Maintenance Entry'] as GraphQLObjectType).getFields()['type'].type).eq(GraphQLString);
+        expect((typeMap['Maintenance_Entry'] as GraphQLObjectType).getFields()['id'].type).eq(GraphQLFloat);
+        expect((typeMap['Maintenance_Entry'] as GraphQLObjectType).getFields()['check_engine_light_flag'].type).eq(GraphQLBoolean);
+        expect((typeMap['Maintenance_Entry'] as GraphQLObjectType).getFields()['type'].type).eq(GraphQLString);
 
         expect((typeMap['Part'] as GraphQLObjectType).getFields()['id'].type).eq(GraphQLString);
         expect((typeMap['Part'] as GraphQLObjectType).getFields()['name'].type).eq(GraphQLString);
         expect((typeMap['Part'] as GraphQLObjectType).getFields()['price'].type).eq(GraphQLFloat);
         expect((typeMap['Part'] as GraphQLObjectType).getFields()['quantity'].type).eq(GraphQLFloat);
+    });
+
+    // the processed data should generate 1 Maintenance record and 2 Maintenance Entry records by this point
+    it('can return nodes based on metadata', async () => {
+        const schemaGenerator = new GraphQLSchemaGenerator();
+
+        const containerSchema = await schemaGenerator.ForContainer(containerID);
+        expect(containerSchema.isError).false;
     });
 });
 
