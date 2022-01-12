@@ -2,7 +2,6 @@
 import {Server} from './http_server/server';
 import BackedLogger from './services/logger';
 import Config from './services/config';
-const {spawn} = require('child_process');
 const path = require('path');
 import Bree from 'bree';
 const Graceful = require('@ladjs/graceful');
@@ -14,25 +13,12 @@ import OAuthRepository from './data_access_layer/repositories/access_management/
 const postgresAdapter = PostgresAdapter.Instance;
 
 void postgresAdapter.init().then(() => {
-    // Start Event System - we could convert this to a Bree job, but there is no point in doing so as we want this
-    // constantly running, not on an interval. This is still the easiest way to make sure it doesn't pollute the main
-    // thread.
-    const eventSystem = spawn('node', [`${Config.project_dir}/domain_objects/event_system/event_system_boot.js`]);
-
-    // we want the stdout and stderr output of the function to combine logging
-    eventSystem.stdout.on('data', (data: any) => {
-        console.log(data.toString().trim());
-    });
-
-    eventSystem.stderr.on('data', (data: any) => {
-        console.log(data.toString().trim());
-    });
 
     // Bree is a job runner that allows us to start and schedule independent processes across threads
     // We use it primarily for data processing and mapping, as those cpu heavy tasks tend to block the
     // main execution thread frequently
     const bree = new Bree({
-        logger: BackedLogger.logger,
+        logger: Config.log_level.toLowerCase() === 'debug' ? BackedLogger.logger : false,
         root: path.resolve('dist/jobs'),
         jobs: [
             {
@@ -50,6 +36,10 @@ void postgresAdapter.init().then(() => {
             {
                 name: 'orphan_edge_linker', // will run orphan_edge_linker.js
                 interval: Config.edge_linker_interval,
+            },
+            {
+                name: 'event', // will run event.js
+                interval: Config.event_processing_interval
             },
             // the below is commented out because there isn't anything actually using
             // that queue yet - this is to demonstrate how one would go about consuming

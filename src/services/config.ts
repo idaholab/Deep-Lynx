@@ -75,7 +75,7 @@ export class Config {
     private readonly _data_source_processing_batch_size: number;
 
     private readonly _queue_system: string;
-    private readonly _queue_poll_interval: number;
+    private readonly _event_processing_interval: string;
 
     private readonly _smtp_username: string;
     private readonly _smtp_password: string;
@@ -177,7 +177,7 @@ export class Config {
         this._export_data_concurrency = process.env.EXPORT_DATA_CONCURRENCY ? parseInt(process.env.EXPORT_DATA_CONCURRENCY, 10) : 4;
 
         this._queue_system = process.env.QUEUE_SYSTEM || 'database';
-        this._queue_poll_interval = process.env.QUEUE_POLL_INTERVAL ? parseInt(process.env.QUEUE_POLL_INTERVAL!, 10) : 1000;
+        this._event_processing_interval = process.env.EVENT_PROCESSING_INTERVAL || '10s';
 
         this._smtp_username = process.env.SMTP_USERNAME || '';
         this._smtp_password = process.env.SMTP_PASSWORD || '';
@@ -329,8 +329,8 @@ export class Config {
         return this._queue_system;
     }
 
-    get queue_poll_interval(): number {
-        return this._queue_poll_interval;
+    get event_processing_interval(): string {
+        return this._event_processing_interval;
     }
 
     get session_secret(): string {
