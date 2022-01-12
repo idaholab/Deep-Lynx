@@ -5,7 +5,7 @@ import GraphQLSchemaGenerator from '../../../../graphql/schema';
 
 export default class DataQueryRoutes {
     public static mount(app: Application, middleware: any[]) {
-        app.get('/containers/:containerID/data', ...middleware, authInContainer('read', 'data'), this.query);
+        app.post('/containers/:containerID/data', ...middleware, authInContainer('read', 'data'), this.query);
     }
 
     // very simple route that passes the raw body directly to the the graphql query
@@ -21,7 +21,11 @@ export default class DataQueryRoutes {
                     return;
                 }
 
-                graphql(schemaResult.value, req.body.query)
+                graphql({
+                    schema: schemaResult.value,
+                    source: req.body.query,
+                    variableValues: req.body.variables,
+                })
                     .then((response) => {
                         res.status(200).json(response);
                     })
@@ -31,7 +35,6 @@ export default class DataQueryRoutes {
             })
             .catch((e) => {
                 res.status(500).json(e.toString());
-            })
-            .finally(() => next());
+            });
     }
 }
