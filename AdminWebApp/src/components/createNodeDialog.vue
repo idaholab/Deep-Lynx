@@ -101,8 +101,6 @@ export default class CreateNodeDialog extends Vue {
         "data_source_id": this.dataSourceID,
         "metatype_id": this.metatype.id,
         "properties": this.property,
-        // TODO bugfix:this original_data_id needs to be set to create edge but shouldn't need to be included
-        "original_data_id": this.metatype.id
       }
     )
         .then(results => {
