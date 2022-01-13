@@ -267,6 +267,7 @@ export type TypeMappingTransformationKeyMapping = {
     key: string;
     metatype_key_id?: string;
     metatype_relationship_key_id?: string;
+    data_conversion_format_string?: string;
 };
 
 export type TypeMappingTransformationSubexpression = {

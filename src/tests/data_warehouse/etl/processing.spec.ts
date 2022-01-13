@@ -503,7 +503,7 @@ describe('A Data Processor', async () => {
             switch (node.original_data_id) {
                 case `UUID`: {
                     expect(node.properties).to.have.property('name', "test car's maintenance");
-                    expect(node.properties).to.have.property('start_date', '1/1/2020 12:00:00');
+                    expect(node.properties).to.have.property('start_date', '2020-01-01T19:00:00.000Z');
                     expect(node.properties).to.have.property('average_visits', 4);
                     // because the order of the array may have changed, we must check existence and length only
                     expect(node.properties).to.have.property('visit_dates');

@@ -304,8 +304,8 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return this;
     }
 
-    property(key: string, operator: string, value: any) {
-        super.queryJsonb(key, 'properties', operator, value);
+    property(key: string, operator: string, value: any, dataType?: string) {
+        super.queryJsonb(key, 'properties', operator, value, dataType);
         return this;
     }
 

@@ -594,6 +594,8 @@ export default {
             createdAt: 'Created At',
             resultingTypes: 'Resulting Metatype/Metatype Relationship',
             requiredField: 'Required Field',
+            dateFormatString: 'Date Format String(blank for ISO)',
+            dateFormatStringHelp: 'Formatting your date/time',
         },
         deleteTypeMapping: {
             deleteTypeMapping: 'Delete Type Mapping',

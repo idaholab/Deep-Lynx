@@ -311,6 +311,16 @@
                               :value="propertyKeyValue(key)"
                           />
                         </v-col>
+                        <v-col :cols="12">
+                          <v-text-field
+                              v-if="key.data_type === 'date'"
+                              :label="$t('dataMapping.dateFormatString')"
+                              @input="setDateConversionFormatStringRecord($event, key)"
+                          >
+
+                            <template slot="append-outer"><a href="https://date-fns.org/v2.28.0/docs/parse" target="_blank">{{$t('dataMapping.dateFormatStringHelp')}}</a></template>
+                          </v-text-field>
+                        </v-col>
                       </v-row>
                     </div>
                   </div>
@@ -440,6 +450,7 @@
                           <template v-slot:append-outer>{{$t('dataMapping.or')}}</template>
                           <template v-slot:label>{{$t("dataMapping.mapPayloadKey")}} <small style="color:red" v-if="key.required">{{$t('dataMapping.required')}}</small></template>
                         </v-combobox>
+
                       </v-col>
                       <v-col :cols="6">
                         <h4 style="color:white">{{key.name}} x</h4>
@@ -462,6 +473,16 @@
                         />
                       </v-col>
                     </v-row>
+                    <v-col :cols="12">
+                      <v-text-field
+                          v-if="key.data_type === 'date'"
+                          :label="$t('dataMapping.dateFormatString')"
+                          @input="setDateConversionFormatStringRelationship($event, key)"
+                      >
+
+                        <template slot="append-outer"><a href="https://date-fns.org/v2.28.0/docs/parse" target="_blank">{{$t('dataMapping.dateFormatStringHelp')}}</a></template>
+                      </v-text-field>
+                    </v-col>
                   </div>
 
 
@@ -1193,6 +1214,22 @@ export default class TransformationDialog extends Vue {
       key:key,
       metatype_key_id: metatypeKey.id
     })
+  }
+
+  setDateConversionFormatStringRecord(formatString: string, metatypeKey: MetatypeKeyT) {
+    const index = this.propertyMapping.findIndex(prop => prop.metatype_key_id === metatypeKey.id)
+
+    if(index != -1) {
+      this.propertyMapping[index].date_conversion_format_string = formatString
+    }
+  }
+
+  setDateConversionFormatStringRelationship(formatString: string, metatypeRelationshipKey: MetatypeRelationshipKeyT) {
+    const index = this.propertyMapping.findIndex(prop => prop.metatype_relationship_key_id === metatypeRelationshipKey.id)
+
+    if(index != -1) {
+      this.propertyMapping[index].date_conversion_format_string = formatString
+    }
   }
 
   selectRelationshipPropertyKey(key: string, metatypeRelationshipKey: MetatypeRelationshipKeyT, value?: boolean) {
