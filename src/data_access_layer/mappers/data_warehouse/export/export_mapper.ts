@@ -1,9 +1,9 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import {QueueProcessor} from '../../../../domain_objects/event_system/processor';
 import Event from '../../../../domain_objects/event_system/event';
 import ExportRecord from '../../../../domain_objects/data_warehouse/export/export';
+import EventRepository from '../../../repositories/event_system/event_repository';
 
 const format = require('pg-format');
 const resultClass = ExportRecord;
@@ -21,6 +21,8 @@ export default class ExportMapper extends Mapper {
     public static tableName = 'exports';
 
     private static instance: ExportMapper;
+
+    private eventRepo = new EventRepository();
 
     public static get Instance(): ExportMapper {
         if (!ExportMapper.instance) {
@@ -80,13 +82,11 @@ export default class ExportMapper extends Mapper {
     ): Promise<Result<boolean>> {
         if (status === 'completed') {
             const completeExport = await this.Retrieve(id);
-            QueueProcessor.Instance.emit(
-                new Event({
-                    sourceID: completeExport.value.container_id!,
-                    sourceType: 'container',
-                    type: 'data_exported',
-                }),
-            );
+            this.eventRepo.emitEvent(new Event({
+                containerID: completeExport.value.container_id,
+                eventType: 'data_exported',
+                event: completeExport.value,
+            }));
         }
 
         return super.runStatement(this.setStatusStatement(userID, id, status, message));

@@ -2,8 +2,8 @@ import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
-import {QueueProcessor} from '../../../../domain_objects/event_system/processor';
 import Event from '../../../../domain_objects/event_system/event';
+import EventRepository from '../../../repositories/event_system/event_repository';
 
 const format = require('pg-format');
 const resultClass = DataSourceRecord;
@@ -22,6 +22,8 @@ export default class DataSourceMapper extends Mapper {
 
     private static instance: DataSourceMapper;
 
+    private eventRepo = new EventRepository();
+
     public static get Instance(): DataSourceMapper {
         if (!DataSourceMapper.instance) {
             DataSourceMapper.instance = new DataSourceMapper();
@@ -37,14 +39,11 @@ export default class DataSourceMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        QueueProcessor.Instance.emit(
-            new Event({
-                sourceID: r.value[0].container_id!,
-                sourceType: 'container',
-                type: 'data_source_created',
-                data: r.value[0].id!,
-            }),
-        );
+        this.eventRepo.emitEvent(new Event({
+            containerID: r.value[0].container_id,
+            eventType: 'data_source_created',
+            event: {'id': r.value[0].id},
+        }));
 
         return Promise.resolve(Result.Success(r.value[0]));
     }
@@ -56,14 +55,11 @@ export default class DataSourceMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        QueueProcessor.Instance.emit(
-            new Event({
-                sourceID: r.value[0].container_id!,
-                sourceType: 'container',
-                type: 'data_source_modified',
-                data: r.value[0].id!,
-            }),
-        );
+        this.eventRepo.emitEvent(new Event({
+            containerID: r.value[0].container_id,
+            eventType: 'data_source_modified',
+            event: {'id': r.value[0].id},
+        }));
 
         return Promise.resolve(Result.Success(r.value[0]));
     }

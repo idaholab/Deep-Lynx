@@ -1,9 +1,9 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import {QueueProcessor} from '../../../../domain_objects/event_system/processor';
 import Event from '../../../../domain_objects/event_system/event';
 import File, {DataStagingFile} from '../../../../domain_objects/data_warehouse/data/file';
+import EventRepository from '../../../repositories/event_system/event_repository';
 
 const format = require('pg-format');
 const resultClass = File;
@@ -22,6 +22,8 @@ export default class FileMapper extends Mapper {
 
     private static instance: FileMapper;
 
+    private eventRepo = new EventRepository();
+
     public static get Instance(): FileMapper {
         if (!FileMapper.instance) {
             FileMapper.instance = new FileMapper();
@@ -37,14 +39,12 @@ export default class FileMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        QueueProcessor.Instance.emit(
-            new Event({
-                sourceID: f.data_source_id!,
-                sourceType: 'data_source',
-                type: 'file_created',
-                data: r.value[0].id,
-            }),
-        );
+        this.eventRepo.emitEvent(new Event({
+            containerID: f.container_id,
+            dataSourceID: f.data_source_id,
+            eventType: 'file_created',
+            event: {'id': r.value[0].id},
+        }));
 
         return Promise.resolve(Result.Success(r.value[0]));
     }
@@ -57,14 +57,12 @@ export default class FileMapper extends Mapper {
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
         r.value.forEach((file) => {
-            QueueProcessor.Instance.emit(
-                new Event({
-                    sourceID: file.data_source_id!,
-                    sourceType: 'data_source',
-                    type: 'file_created',
-                    data: file.id,
-                }),
-            );
+            this.eventRepo.emitEvent(new Event({
+                containerID: file.container_id,
+                dataSourceID: file.data_source_id,
+                eventType: 'file_created',
+                event: {'id': file.id},
+            }));
         });
 
         return Promise.resolve(Result.Success(r.value));
@@ -78,14 +76,12 @@ export default class FileMapper extends Mapper {
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
         r.value.forEach((file) => {
-            QueueProcessor.Instance.emit(
-                new Event({
-                    sourceID: file.data_source_id!,
-                    sourceType: 'data_source',
-                    type: 'file_modified',
-                    data: file.id,
-                }),
-            );
+            this.eventRepo.emitEvent(new Event({
+                containerID: file.container_id,
+                dataSourceID: file.data_source_id,
+                eventType: 'file_modified',
+                event: {'id': file.id},
+            }));
         });
 
         return Promise.resolve(Result.Success(r.value[0]));
@@ -98,14 +94,12 @@ export default class FileMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        QueueProcessor.Instance.emit(
-            new Event({
-                sourceID: f.data_source_id!,
-                sourceType: 'data_source',
-                type: 'file_modified',
-                data: f.id,
-            }),
-        );
+        this.eventRepo.emitEvent(new Event({
+            containerID: f.container_id,
+            dataSourceID: f.data_source_id,
+            eventType: 'file_modified',
+            event: {'id': f.id},
+        }));
 
         return Promise.resolve(Result.Success(r.value[0]));
     }

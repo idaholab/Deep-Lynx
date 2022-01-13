@@ -1,36 +1,36 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../repository';
-import EventRegistration from '../../../domain_objects/event_system/event_registration';
-import EventRegistrationMapper from '../../mappers/event_system/event_registration_mapper';
+import EventAction from '../../../domain_objects/event_system/event_action';
+import EventActionMapper from '../../mappers/event_system/event_action_mapper';
 import Result from '../../../common_classes/result';
 import {plainToClass} from 'class-transformer';
 import {User} from '../../../domain_objects/access_management/user';
 
 /*
-    EventRegistrationRepository contains methods for persisting and retrieving an event registration
+    EventActionRepository contains methods for persisting and retrieving an event registration
     to storage. Users should interact with repositories when possible and not
     the mappers as the repositories contain additional logic such as validation
     or transformation prior to storage or returning. This is not used to actually
     emit events, only manage registrations.
  */
-export default class EventRegistrationRepository extends Repository implements RepositoryInterface<EventRegistration> {
-    #mapper: EventRegistrationMapper = EventRegistrationMapper.Instance;
+export default class EventActionRepository extends Repository implements RepositoryInterface<EventAction> {
+    #mapper: EventActionMapper = EventActionMapper.Instance;
 
-    delete(e: EventRegistration): Promise<Result<boolean>> {
+    delete(e: EventAction): Promise<Result<boolean>> {
         if (e.id) {
             return this.#mapper.Delete(e.id);
         }
 
-        return Promise.resolve(Result.Failure(`event registration has no ide`));
+        return Promise.resolve(Result.Failure(`event action has no id`));
     }
 
-    findByID(id: string): Promise<Result<EventRegistration>> {
+    findByID(id: string): Promise<Result<EventAction>> {
         return this.#mapper.Retrieve(id);
     }
 
-    async save(e: EventRegistration, user: User): Promise<Result<boolean>> {
+    async save(e: EventAction, user: User): Promise<Result<boolean>> {
         const errors = await e.validationErrors();
         if (errors) {
-            return Promise.resolve(Result.Failure(`event registration does not pass validation ${errors.join(',')}`));
+            return Promise.resolve(Result.Failure(`event action does not pass validation ${errors.join(',')}`));
         }
 
         if (e.id) {
@@ -53,16 +53,16 @@ export default class EventRegistrationRepository extends Repository implements R
         return Promise.resolve(Result.Success(true));
     }
 
-    setActive(user: User, e: EventRegistration): Promise<Result<boolean>> {
+    setActive(user: User, e: EventAction): Promise<Result<boolean>> {
         return this.#mapper.SetActive(e.id!, user.id!);
     }
 
-    setInactive(user: User, e: EventRegistration): Promise<Result<boolean>> {
+    setInactive(user: User, e: EventAction): Promise<Result<boolean>> {
         return this.#mapper.SetInActive(e.id!, user.id!);
     }
 
     constructor() {
-        super(EventRegistrationMapper.tableName);
+        super(EventActionMapper.tableName);
     }
 
     containerID(operator: string, value: any) {
@@ -80,14 +80,24 @@ export default class EventRegistrationRepository extends Repository implements R
         return this;
     }
 
+    active(operator: string, value: any) {
+        super.query('active', operator, value);
+        return this;
+    }
+
+    destinationDataSourceID(operator: string, value: any) {
+        super.query('destination_data_source_id', operator, value);
+        return this;
+    }
+
     count(): Promise<Result<number>> {
         return super.count();
     }
 
-    async list(options?: QueryOptions): Promise<Result<EventRegistration[]>> {
+    async list(options?: QueryOptions): Promise<Result<EventAction[]>> {
         const results = await super.findAll<object>(options);
         if (results.isError) return Promise.resolve(Result.Pass(results));
 
-        return Promise.resolve(Result.Success(plainToClass(EventRegistration, results.value)));
+        return Promise.resolve(Result.Success(plainToClass(EventAction, results.value)));
     }
 }

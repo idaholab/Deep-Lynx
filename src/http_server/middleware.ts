@@ -1,8 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import express from 'express';
-import uuid from 'uuid-random';
-import {performance, PerformanceObserver} from 'perf_hooks';
-import Logger from '../services/logger';
 import Authorization from '../domain_objects/access_management/authorization/authorization';
 import Config from '../services/config';
 import passport from 'passport';
@@ -16,7 +13,6 @@ import {plainToClass} from 'class-transformer';
 import {SuperUser, User} from '../domain_objects/access_management/user';
 import UserRepository from '../data_access_layer/repositories/access_management/user_repository';
 import OAuthRepository from '../data_access_layer/repositories/access_management/oauth_repository';
-import EventRegistrationRepository from '../data_access_layer/repositories/event_system/event_registration_repository';
 import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
 import EdgeRepository from '../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import TypeMappingRepository from '../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
@@ -27,6 +23,9 @@ import DataStagingRepository from '../data_access_layer/repositories/data_wareho
 import DataSourceRepository from '../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import FileRepository from '../data_access_layer/repositories/data_warehouse/data/file_repository';
 import TaskRepository from '../data_access_layer/repositories/task_repository';
+import EventRepository from '../data_access_layer/repositories/event_system/event_repository';
+import EventActionRepository from '../data_access_layer/repositories/event_system/event_action_repository';
+import EventActionStatusRepository from '../data_access_layer/repositories/event_system/event_action_status_repository';
 
 // authRequest is used to manage user authorization against resources, optional param for declaring domain
 export function authRequest(action: 'read' | 'write', resource: string, domainParam?: string) {
@@ -384,27 +383,87 @@ export function oauthAppContext(): any {
     };
 }
 
-// eventRegistrationContext will attempt to fetch an event registration by id specified by the
+// eventContext will attempt to fetch an event by id specified by the
 // id query parameter. If one is fetched it will pass it on in request context.
-// route must contain the param labeled "eventRegistrationID"
-export function eventRegistrationContext(): any {
+// route must contain the param labeled "eventID"
+export function eventContext(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // if we don't have an id , don't fail, just pass without action
-        if (!req.params.eventRegistrationID) {
+        if (!req.params.eventID) {
             next();
             return;
         }
 
-        const repo = new EventRegistrationRepository();
+        const repo = new EventRepository();
 
-        repo.findByID(req.params.eventRegistrationID)
+        repo.findByID(req.params.eventID)
             .then((result) => {
                 if (result.isError) {
                     resp.status(result.error?.errorCode!).json(result);
                     return;
                 }
 
-                req.eventRegistration = result.value;
+                req.event = result.value;
+                next();
+            })
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
+}
+
+// eventActionContext will attempt to fetch an event action by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "actionID"
+export function eventActionContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have an id , don't fail, just pass without action
+        if (!req.params.actionID) {
+            next();
+            return;
+        }
+
+        const repo = new EventActionRepository();
+
+        repo.findByID(req.params.actionID)
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
+                }
+
+                req.eventAction = result.value;
+                next();
+            })
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
+}
+
+// eventActionStatusContext will attempt to fetch an event action status by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "statusID"
+export function eventActionStatusContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have an id , don't fail, just pass without action
+        if (!req.params.statusID) {
+            next();
+            return;
+        }
+
+        const repo = new EventActionStatusRepository();
+
+        repo.findByID(req.params.statusID)
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
+                }
+
+                req.eventActionStatus = result.value;
                 next();
             })
             .catch((error) => {

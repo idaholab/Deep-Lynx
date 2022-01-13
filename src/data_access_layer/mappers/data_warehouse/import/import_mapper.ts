@@ -1,9 +1,9 @@
 import Mapper from '../../mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient, QueryConfig} from 'pg';
-import {QueueProcessor} from '../../../../domain_objects/event_system/processor';
 import Event from '../../../../domain_objects/event_system/event';
 import Import from '../../../../domain_objects/data_warehouse/import/import';
+import EventRepository from '../../../repositories/event_system/event_repository';
 
 const format = require('pg-format');
 const resultClass = Import;
@@ -21,6 +21,8 @@ export default class ImportMapper extends Mapper {
     public static tableName = 'imports';
     private static instance: ImportMapper;
 
+    private eventRepo = new EventRepository();
+
     public static get Instance(): ImportMapper {
         if (!ImportMapper.instance) {
             ImportMapper.instance = new ImportMapper();
@@ -36,16 +38,13 @@ export default class ImportMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        QueueProcessor.Instance.emit(
-            new Event({
-                sourceID: importRecord.data_source_id!,
-                sourceType: 'data_source',
-                type: 'data_imported',
-                data: {
-                    imports: r.value,
-                },
-            }),
-        );
+        this.eventRepo.emitEvent(new Event({
+            dataSourceID: importRecord.data_source_id,
+            eventType: 'data_imported',
+            event: {
+                imports: r.value,
+            },
+        }));
 
         return Promise.resolve(Result.Success(r.value[0]));
     }
@@ -86,17 +85,15 @@ export default class ImportMapper extends Mapper {
     ): Promise<Result<boolean>> {
         if (status === 'completed' || status === 'stopped') {
             const completeImport = await this.Retrieve(importID);
-            QueueProcessor.Instance.emit(
-                new Event({
-                    sourceID: completeImport.value.data_source_id!,
-                    sourceType: 'data_source',
-                    type: 'data_ingested',
-                    data: {
-                        import_id: importID,
-                        status,
-                    },
-                }),
-            );
+
+            this.eventRepo.emitEvent(new Event({
+                dataSourceID: completeImport.value.data_source_id,
+                eventType: 'data_ingested',
+                event: {
+                    import_id: importID,
+                    status,
+                },
+            }));
         }
         return super.runStatement(this.setStatusStatement(importID, status, message), {transaction});
     }

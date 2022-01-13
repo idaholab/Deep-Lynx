@@ -3203,9 +3203,9 @@ paths:
     get:
       tags:
         - Events
-      summary: List Registered Events
-      description: Lists all registered events
-      operationId: ListRegisteredEvents
+      summary: List Events
+      description: Lists all events
+      operationId: ListEvents
       responses:
         '200':
           description: ''
@@ -3217,14 +3217,14 @@ paths:
     post:
       tags:
         - Events
-      summary: Create Registered Event
-      description: 'Create new registered event. An `app_name`, `app_url`, and `event_type` must be provided. Either a `container_id` or `data_source_id` must also be provided.'
-      operationId: CreateRegisteredEvent
+      summary: Create Event
+      description: Create new event
+      operationId: CreateEvent
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateRegisteredEventRequest'
+              $ref: '#/components/schemas/CreateEventRequest'
         required: true
       responses:
         '200':
@@ -3239,9 +3239,9 @@ paths:
     get:
       tags:
         - Events
-      summary: Retrieve Registered Event
-      description: Retrieve a registered event
-      operationId: RetrieveRegisteredEvent
+      summary: Retrieve Event
+      description: Retrieve an event
+      operationId: RetrieveEvent
       parameters:
         - name: event_id
           in: path
@@ -3256,47 +3256,87 @@ paths:
               schema:
                 $ref: '#/components/schemas/GetEventResponse'
       deprecated: false
-    put:
+  /event_actions:
+    get:
+      summary: List Event Actions
       tags:
         - Events
-      summary: Update Registered Event
-      description: 'Update a registered event. If the `active` query paramter is provided with a value of true or false, the event will be activated/deactivated.'
-      operationId: UpdateRegisteredEvent
-      parameters:
-        - name: active
-          in: query
-          schema:
-            type: boolean
-        - name: event_id
-          in: path
-          required: true
-          schema:
-            type: string
       responses:
         '200':
           description: ''
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200Response'
-      deprecated: false
+                $ref: '#/components/schemas/ListEventActionResponse'
+      operationId: ListEventActions
+      description: Lists all event actions
+    post:
+      summary: Create Event Action
+      tags:
+        - Events
+      operationId: CreateEventAction
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateEventActionResponse'
+      description: Create an event action
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateRegisteredEventRequest'
-        description: ''
-    delete:
+              $ref: '#/components/schemas/CreateEventActionRequest'
+  '/event_actions/{action_id}':
+    parameters:
+      - schema:
+          type: string
+        name: action_id
+        in: path
+        required: true
+    get:
+      summary: Retrieve Event Action
       tags:
         - Events
-      summary: Delete Registered Event
-      operationId: DeleteRegisteredEvent
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEventActionResponse'
+      operationId: RetrieveEventAction
+      description: Retrieve an event action
+    put:
+      summary: Update Event Action
+      tags:
+        - Events
+      operationId: UpdateEventAction
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateEventActionResponse'
+      description: Update an event action
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventActionRequest'
       parameters:
-        - name: event_id
-          in: path
-          required: true
-          schema:
-            type: string
+        - schema:
+            type: boolean
+          in: query
+          name: active
+          description: Sets the event action active or inactive
+    delete:
+      summary: Delete Event Action
+      tags:
+        - Events
+      operationId: DeleteEventAction
       responses:
         '200':
           description: ''
@@ -3304,8 +3344,59 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Generic200Response'
-      deprecated: false
-      description: Delete a registered event.
+      description: Delete an event action
+  /event_action_status:
+    get:
+      summary: List Event Action Statuses
+      tags:
+        - Events
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEventActionStatusResponse'
+      operationId: ListEventActionStatuses
+      description: List all event action statuses
+  '/event_action_status/{status_id}':
+    parameters:
+      - schema:
+          type: string
+        name: status_id
+        in: path
+        required: true
+    get:
+      summary: Retrieve Event Action Status
+      tags:
+        - Events
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEventActionStatusResponse'
+      operationId: RetrieveEventActionStatus
+      description: Retrieve an event action status
+    put:
+      summary: Update Event Action Status
+      tags:
+        - Events
+      operationId: UpdateEventActionStatus
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateEventActionStatusResponse'
+      description: Update an event action status
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventActionStatusRequest'
   /oauth/token:
     get:
       tags:
@@ -4326,31 +4417,25 @@ components:
             config:
               data_versioning_enabled: false
     BatchContainerUpdateRequest:
-      title: BatchContainerUpdateRequest
       type: array
+      title: BatchContainerUpdateRequest
       description: ''
       minItems: 1
-      uniqueItems: true
-      items:
-        type: object
-        required:
-          - name
-          - description
-          - id
-        properties:
-          name:
-            type: string
-            minLength: 1
-          description:
-            type: string
-            minLength: 1
-          id:
-            type: string
+      uniqueItems: false
       x-examples:
         example-1:
           - name: Test Container
             description: Test Container New Description
             id: ''
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+          description:
+            type: string
+          id:
+            type: string
     CreateOrUpdateNodesRequest:
       title: CreateOrUpdateNodesRequest
       type: object
@@ -4805,60 +4890,6 @@ components:
         key: RADIUS
         operator: eq
         value: CIRCLE
-    CreateRegisteredEventRequest:
-      title: CreateRegisteredEventRequest
-      required:
-        - app_name
-        - app_url
-        - container_id
-        - event_type
-      type: object
-      properties:
-        app_name:
-          type: string
-        app_url:
-          type: string
-        container_id:
-          type: string
-        event_type:
-          type: string
-      example:
-        app_name: test app
-        app_url: 'http://localhost:8099/test'
-        container_id: 6d1a2895-a689-4760-a515-a3a3b49ae882
-        event_type: data_source_created
-    UpdateRegisteredEventRequest:
-      description: ''
-      type: object
-      properties:
-        id:
-          type: string
-          minLength: 1
-        app_name:
-          type: string
-          minLength: 1
-        app_url:
-          type: string
-          minLength: 1
-        container_id:
-          type: string
-          minLength: 1
-        event_type:
-          type: string
-          minLength: 1
-      required:
-        - id
-        - app_name
-        - app_url
-        - container_id
-        - event_type
-      x-examples:
-        example-1:
-          id: UUID
-          app_name: test app
-          app_url: 'http://localhost:8099/test'
-          container_id: 6d1a2895-a689-4760-a515-a3a3b49ae882
-          event_type: data_source_created
     ContainerImportRequest:
       title: ContainerImportRequest
       description: ''
@@ -6168,43 +6199,29 @@ components:
           created_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
           modified_by: 16fa1d29-a13f-4783-b56d-cdf9c4946cb4
       properties:
-        active:
-          type: boolean
         id:
           type: string
-          minLength: 1
-        app_name:
-          type: string
-          minLength: 1
-        app_url:
-          type: string
-          minLength: 1
-        data_source_id:
-          type: string
-          minLength: 1
-          nullable: true
         container_id:
+          type: string
+          nullable: true
+        data_source_id:
           type: string
           nullable: true
         event_type:
           type: string
-          minLength: 1
+        event_config:
+          type: object
+        event:
+          type: object
+        processed:
+          type: boolean
         created_at:
           type: string
-          minLength: 1
-        modified_at:
-          type: string
-          minLength: 1
         created_by:
           type: string
-          minLength: 1
-        modified_by:
-          type: string
-          minLength: 1
       required:
-        - app_name
-        - app_url
         - event_type
+        - event
     DataStaging:
       description: ''
       type: object
@@ -6571,6 +6588,176 @@ components:
       properties:
         value:
           $ref: '#/components/schemas/Task'
+        isError:
+          type: boolean
+    EventAction:
+      title: EventAction
+      type: object
+      properties:
+        id:
+          type: string
+        container_id:
+          type: string
+        data_source_id:
+          type: string
+        event_type:
+          type: string
+        action_type:
+          type: string
+        action_config:
+          type: object
+        destination:
+          type: string
+        destination_data_source_id:
+          type: string
+        active:
+          type: boolean
+        created_at:
+          type: string
+        modified_at:
+          type: string
+        deleted_at:
+          type: string
+        created_by:
+          type: string
+        modified_by:
+          type: string
+      required:
+        - event_type
+        - action_type
+    EventActionStatus:
+      title: EventActionStatus
+      type: object
+      properties:
+        id:
+          type: string
+        event_id:
+          type: string
+        event_action_id:
+          type: string
+        status:
+          type: string
+        status_message:
+          type: string
+        created_at:
+          type: string
+        modified_at:
+          type: string
+        modified_by:
+          type: string
+      required:
+        - event_id
+        - event_action_id
+    CreateEventRequest:
+      title: CreateEventRequest
+      type: object
+      properties:
+        container_id:
+          type: string
+        data_source_id:
+          type: string
+        event_type:
+          type: string
+        event_config:
+          type: object
+        event:
+          type: object
+      required:
+        - event_type
+        - event
+    ListEventActionResponse:
+      title: ListEventActionResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventAction'
+        isError:
+          type: boolean
+    CreateEventActionRequest:
+      title: CreateEventActionRequest
+      type: object
+      properties:
+        container_id:
+          type: string
+        data_source_id:
+          type: string
+        event_type:
+          type: string
+        action_type:
+          type: string
+        action_config:
+          type: object
+        destination:
+          type: string
+        destination_data_source_id:
+          type: string
+        active:
+          type: boolean
+      required:
+        - event_type
+        - action_type
+    CreateEventActionResponse:
+      title: CreateEventActionResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/EventAction'
+        isError:
+          type: boolean
+    GetEventActionResponse:
+      title: GetEventActionResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/EventAction'
+        isError:
+          type: boolean
+    UpdateEventActionResponse:
+      title: UpdateEventActionResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/EventAction'
+        isError:
+          type: boolean
+    ListEventActionStatusResponse:
+      title: ListEventActionStatusResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventActionStatus'
+        isError:
+          type: boolean
+    GetEventActionStatusResponse:
+      title: GetEventActionStatusResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/EventActionStatus'
+        isError:
+          type: boolean
+    UpdateEventActionStatusRequest:
+      title: UpdateEventActionStatusRequest
+      type: object
+      properties:
+        event_id:
+          type: string
+        event_action_id:
+          type: string
+        status:
+          type: string
+        status_message:
+          type: string
+    UpdateEventActionStatusResponse:
+      title: UpdateEventActionStatusResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/EventActionStatus'
         isError:
           type: boolean
   responses: {}
