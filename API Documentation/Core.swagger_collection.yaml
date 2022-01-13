@@ -583,7 +583,7 @@ paths:
             type: string
           in: query
           name: dataSourceID
-          - schema:
+        - schema:
             type: string
           in: query
           name: loadRelationshipPairs
