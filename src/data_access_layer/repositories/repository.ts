@@ -48,8 +48,8 @@ export class Repository {
         return this;
     }
 
-    queryJsonb(key: string, fieldName: string, operator: string, value: any) {
-        this._rawQuery.push(`${fieldName}`);
+    queryJsonb(key: string, fieldName: string, operator: string, value: any, dataType?: string) {
+        this._rawQuery.push(`(${fieldName}`);
 
         // the key can be a dot.notation nested set of keys
         const keys = key.split('.');
@@ -63,20 +63,66 @@ export class Repository {
             this._rawQuery.push(`-> ${keys.join('->')}`);
         }
 
+        // this determines how we cast the value extracted from the jsonb payload - normally they come out as text so
+        // default to it in all cases - string is obviously not a part of the switch statement below as it's the default
+        let typeCast = 'text';
+
+        switch (dataType) {
+            case undefined: {
+                typeCast = 'text';
+                break;
+            }
+
+            case 'number': {
+                typeCast = 'integer';
+                break;
+            }
+
+            case 'number64': {
+                typeCast = 'bigint';
+                break;
+            }
+
+            case 'float': {
+                typeCast = 'numeric';
+                break;
+            }
+            case 'float64': {
+                typeCast = 'numeric';
+                break;
+            }
+
+            case 'date': {
+                typeCast = 'timestamp';
+                break;
+            }
+        }
+
+        // note we only type cast the eq, neq, <. and > operators. in and like rely on the data being strings
         switch (operator) {
             case 'eq': {
                 this._values.push(value);
-                this._rawQuery.push(`->> '${finalKey}' = $${this._values.length}`);
+                this._rawQuery.push(`->> '${finalKey}')::${typeCast} = $${this._values.length}::${typeCast}`);
                 break;
             }
             case 'neq': {
                 this._values.push(value);
-                this._rawQuery.push(`->> '${finalKey}' <> $${this._values.length}`);
+                this._rawQuery.push(`->> '${finalKey}')::${typeCast} <> $${this._values.length}::${typeCast}`);
+                break;
+            }
+            case '<': {
+                this._values.push(value);
+                this._rawQuery.push(`->> '${finalKey}')::${typeCast} < $${this._values.length}::${typeCast}`);
+                break;
+            }
+            case '>': {
+                this._values.push(value);
+                this._rawQuery.push(`->> '${finalKey}')::${typeCast} > $${this._values.length}::${typeCast}`);
                 break;
             }
             case 'like': {
                 this._values.push(value);
-                this._rawQuery.push(`->> '${finalKey}' ILIKE $${this._values.length}`);
+                this._rawQuery.push(`->> '${finalKey}') ILIKE $${this._values.length}`);
                 break;
             }
             case 'in': {
@@ -93,7 +139,7 @@ export class Repository {
                     output.push(`'${v}'`);
                 });
 
-                this._rawQuery.push(`->> ${finalKey} IN (${output.join(',')})`);
+                this._rawQuery.push(`->> ${finalKey}) IN (${output.join(',')})`);
                 break;
             }
         }
@@ -135,10 +181,15 @@ export class Repository {
                 this._rawQuery.push(`${fieldName} IN (${output.join(',')})`);
                 break;
             }
-            // is null completely ignores the value because for some reason the formatting library will
+            // is null/is not null completely ignores the value because for some reason the formatting library will
             // does not like us including null on queries
             case 'is null': {
                 this._rawQuery.push(`${fieldName} IS NULL`);
+                break;
+            }
+
+            case 'is not null': {
+                this._rawQuery.push(`${fieldName} IS NOT NULL`);
                 break;
             }
         }

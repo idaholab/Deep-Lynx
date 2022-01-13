@@ -199,9 +199,18 @@ export default class GraphQLSchemaGenerator {
 
             // we must map out what the graphql refers to a metatype's keys are vs. what they actually are so
             // that we can map the query properly
-            const propertyMap: {[key: string]: any} = {};
+            const propertyMap: {
+                [key: string]: {
+                    name: string;
+                    data_type: string;
+                };
+            } = {};
+
             metatype.keys?.forEach((key) => {
-                propertyMap[stringToValidPropertyName(key.property_name)] = key.property_name;
+                propertyMap[stringToValidPropertyName(key.property_name)] = {
+                    name: key.property_name,
+                    data_type: key.data_type,
+                };
             });
 
             // iterate through the input object, ignoring reserved properties and adding all others to
@@ -210,7 +219,7 @@ export default class GraphQLSchemaGenerator {
                 if (key === '_record') return;
 
                 const query = this.breakQuery(String(input[key]));
-                repo = repo.and().property(propertyMap[key], query[0], query[1]);
+                repo = repo.and().property(propertyMap[key].name, query[0], query[1], propertyMap[key].data_type);
             });
 
             // wrapping the end resolver in a promise insures that we don't return prior to all results being
@@ -340,7 +349,7 @@ export default class GraphQLSchemaGenerator {
         const parts = query.split(' ');
 
         // check to see if we have an operator, if not, return the 'eq' operator and the value
-        if (!['eq', 'neq', 'like', 'in'].includes(parts[0])) {
+        if (!['eq', 'neq', 'like', 'in', '<', '>'].includes(parts[0])) {
             return ['eq', query];
         }
 

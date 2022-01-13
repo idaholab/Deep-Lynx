@@ -12,6 +12,8 @@ import {DataStaging} from '../import/import';
 import MetatypeRelationshipKey from '../ontology/metatype_relationship_key';
 import MetatypeKey from '../ontology/metatype_key';
 
+import {toDate, parse} from 'date-fns';
+
 /*
    Condition represents a logical operation which can determine whether or not
    Deep Lynx should apply this transformation to a given payload.
@@ -82,7 +84,18 @@ export class KeyMapping extends NakedDomainClass {
     @IsIn(['number', 'date', 'string', 'boolean', 'enumeration', 'file'])
     value_type?: string;
 
-    constructor(input: {key?: string; metatype_key_id?: string; metatype_relationship_key_id?: string; value?: string; value_type?: string}) {
+    @IsOptional()
+    @IsString()
+    date_conversion_format_string?: string;
+
+    constructor(input: {
+        key?: string;
+        metatype_key_id?: string;
+        metatype_relationship_key_id?: string;
+        value?: string;
+        value_type?: string;
+        date_conversion_format_string?: string;
+    }) {
         super();
 
         if (input) {
@@ -91,6 +104,7 @@ export class KeyMapping extends NakedDomainClass {
             if (input.metatype_relationship_key_id) this.metatype_relationship_key_id = input.metatype_relationship_key_id;
             if (input.value) this.value = input.value;
             if (input.value_type) this.value_type = input.value_type;
+            if (input.date_conversion_format_string) this.date_conversion_format_string = input.date_conversion_format_string;
         }
     }
 }
@@ -642,7 +656,7 @@ export default class TypeTransformation extends BaseDomainClass {
 
     // convertValue will return a Conversion on successful or unsuccessful conversion, and null
     // on values that need no conversion
-    static convertValue(key: MetatypeKey | MetatypeRelationshipKey, value: any): Conversion | null {
+    static convertValue(key: MetatypeKey | MetatypeRelationshipKey, value: any, date_conversion_format?: string): Conversion | null {
         if (typeof value === 'undefined' || value === null || value === 'null') {
             return new Conversion({original_value: value, errors: 'unable to convert value, value is null or undefined'});
         }
@@ -689,11 +703,25 @@ export default class TypeTransformation extends BaseDomainClass {
             // because dates can be formatted in various ways, all we can really do for conversion is to
             // set it to string - Deep Lynx only checks to see if dates are strings currently
             case 'date': {
-                if (typeof value === 'string') {
-                    return null;
+                if (value instanceof Date) {
+                    return new Conversion({original_value: value, converted_value: value.toISOString()});
                 }
 
-                return new Conversion({original_value: value, converted_value: String(value)});
+                // if it's a number we assume we're dealing with unix time
+                if (typeof value === 'number') {
+                    return new Conversion({original_value: value, converted_value: toDate(value).toISOString()});
+                }
+
+                if (typeof value === 'string') {
+                    try {
+                        const convertedDate = date_conversion_format ? parse(value, date_conversion_format, new Date()) : new Date(value);
+                        return new Conversion({original_value: value, converted_value: convertedDate.toISOString()});
+                    } catch (e) {
+                        return new Conversion({original_value: value, errors: `unable to convert value to date using format string: ${e}`});
+                    }
+                }
+
+                return new Conversion({original_value: value, errors: 'unable to convert value to date, value is not string or number'});
             }
 
             case 'string': {
