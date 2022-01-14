@@ -2,6 +2,7 @@ import Config from '../config';
 import DatabaseQueue from './database_queue_impl';
 import {Writable} from 'stream';
 import RabbitMQQueue from './rabbitmq_queue_impl';
+import AzureServiceBusQueue from './azure_service_bus_queue_impl';
 
 /*
     QueueInterface defines a very simple interface for a queue processor to
@@ -35,6 +36,10 @@ export const QueueFactory = (): QueueInterface => {
 
         case 'rabbitmq': {
             return new RabbitMQQueue();
+        }
+
+        case 'azure_service_bus': {
+            return new AzureServiceBusQueue();
         }
 
         default: {
