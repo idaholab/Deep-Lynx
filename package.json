@@ -89,6 +89,7 @@
         "winston": "^3.3.3"
     },
     "dependencies": {
+        "@azure/service-bus": "^7.4.0",
         "@ladjs/graceful": "^1.0.5",
         "@types/amqplib": "^0.8.2",
         "@types/bree": "^6.2.1",

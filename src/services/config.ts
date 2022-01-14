@@ -98,6 +98,7 @@ export class Config {
     private readonly _events_queue_name: string;
 
     private readonly _rabbitmq_url: string;
+    private readonly _azure_service_bus_connection_string: string;
 
     private constructor() {
         // Either assign a sane default of the env var is missing, or create your
@@ -199,6 +200,7 @@ export class Config {
         this._events_queue_name = process.env.EVENTS_QUEUE_NAME || 'events';
 
         this._rabbitmq_url = process.env.RABBITMQ_URL || 'amqp://localhost';
+        this._azure_service_bus_connection_string = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING || '';
     }
 
     get ssl_enabled(): boolean {
@@ -471,6 +473,10 @@ export class Config {
 
     get rabbitmq_url(): string {
         return this._rabbitmq_url;
+    }
+
+    get azure_service_bus_connection(): string {
+        return this._azure_service_bus_connection_string;
     }
 
     public static Instance(): Config {

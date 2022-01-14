@@ -13,7 +13,6 @@ import OAuthRepository from './data_access_layer/repositories/access_management/
 const postgresAdapter = PostgresAdapter.Instance;
 
 void postgresAdapter.init().then(() => {
-
     // Bree is a job runner that allows us to start and schedule independent processes across threads
     // We use it primarily for data processing and mapping, as those cpu heavy tasks tend to block the
     // main execution thread frequently
@@ -39,7 +38,7 @@ void postgresAdapter.init().then(() => {
             },
             {
                 name: 'event', // will run event.js
-                interval: Config.event_processing_interval
+                interval: Config.event_processing_interval,
             },
             // the below is commented out because there isn't anything actually using
             // that queue yet - this is to demonstrate how one would go about consuming
@@ -48,7 +47,7 @@ void postgresAdapter.init().then(() => {
             {
                 name: 'processing_queue', // will run processing_queue.js exactly one time
             },
-           */
+            */
         ],
     });
 
