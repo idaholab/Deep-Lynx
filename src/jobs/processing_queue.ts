@@ -2,9 +2,7 @@ import {QueueFactory} from '../services/queue/queue';
 import Config from '../services/config';
 import {Writable} from 'stream';
 
-const queue = QueueFactory();
-
-void queue.Init().then(() => {
+void QueueFactory().then((queue) => {
     const destination = new Writable({
         objectMode: true,
         highWaterMark: 1000,
