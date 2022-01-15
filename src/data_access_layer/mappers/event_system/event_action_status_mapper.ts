@@ -55,36 +55,26 @@ export default class EventActionStatusMapper extends Mapper {
 
     private createStatement(userID: string, ...statuses: EventActionStatus[]): string {
         const text = `INSERT INTO event_action_statuses(
-                              event_id,
+                              event,
                               event_action_id,
                               status,
                               status_message) VALUES %L RETURNING *`;
-        const values = statuses.map((s) => [
-            s.event_id,
-            s.event_action_id,
-            s.status,
-            s.status_message]);
+        const values = statuses.map((s) => [s.event, s.event_action_id, s.status, s.status_message]);
 
         return format(text, values);
     }
 
     private fullUpdateStatement(userID: string, ...statuses: EventActionStatus[]): string {
         const text = `UPDATE event_action_statuses as e SET
-                              event_id = u.event_id::uuid,
+                              event = u.event::jsonb,
                               event_action_id = u.event_action_id::bigint,
                               status = u.status,
                               status_message = u.status_message,
                               modified_by = u.modified_by,
                               modified_at = NOW()
-                          FROM (VALUES %L) AS u(id, event_id, event_action_id, status, status_message, modified_by)
+                          FROM (VALUES %L) AS u(id, event, event_action_id, status, status_message, modified_by)
                           WHERE u.id::bigint = e.id RETURNING e.*`;
-        const values = statuses.map((s) => [
-            s.id,
-            s.event_id,
-            s.event_action_id,
-            s.status,
-            s.status_message,
-            userID]);
+        const values = statuses.map((s) => [s.id, s.event, s.event_action_id, s.status, s.status_message, userID]);
 
         return format(text, values);
     }
@@ -95,5 +85,4 @@ export default class EventActionStatusMapper extends Mapper {
             values: [id],
         };
     }
-
 }

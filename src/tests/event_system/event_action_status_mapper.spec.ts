@@ -5,7 +5,6 @@ import {expect} from 'chai';
 import ContainerStorage from '../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import Container from '../../domain_objects/data_warehouse/ontology/container';
 import ContainerMapper from '../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import EventMapper from '../../data_access_layer/mappers/event_system/event_mapper';
 import Event from '../../domain_objects/event_system/event';
 import EventActionStatusMapper from '../../data_access_layer/mappers/event_system/event_action_status_mapper';
 import EventActionStatus from '../../domain_objects/event_system/event_action_status';
@@ -45,17 +44,7 @@ describe('An Event Action Status Mapper Can', async () => {
 
     it('can update an event action status', async () => {
         const storage = EventActionStatusMapper.Instance;
-        const eventStorage = EventMapper.Instance;
         const actionStorage = EventActionMapper.Instance;
-
-        const event = await eventStorage.Create(
-            'test suite',
-            new Event({
-                containerID: containerID,
-                eventType: 'data_source_created',
-                event: {'id': 'testID'},
-            }),
-        );
 
         const action = await actionStorage.Create(
             'test suite',
@@ -70,8 +59,12 @@ describe('An Event Action Status Mapper Can', async () => {
         const status = await storage.Create(
             'test suite',
             new EventActionStatus({
-                eventID: event.value.id!,
-                eventActionID: action.value.id!
+                event: new Event({
+                    containerID: containerID,
+                    eventType: 'data_source_created',
+                    event: {id: 'testID'},
+                }),
+                eventActionID: action.value.id!,
             }),
         );
         expect(status.isError).false;
@@ -89,5 +82,4 @@ describe('An Event Action Status Mapper Can', async () => {
 
         return Promise.resolve();
     });
-
 });

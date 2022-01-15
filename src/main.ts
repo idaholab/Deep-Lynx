@@ -37,8 +37,7 @@ void postgresAdapter.init().then(() => {
                 interval: Config.edge_linker_interval,
             },
             {
-                name: 'event', // will run event.js
-                interval: Config.event_processing_interval,
+                name: 'events_queue', // will run events_queue.js - a never ending processing of the events queue
             },
             // the below is commented out because there isn't anything actually using
             // that queue yet - this is to demonstrate how one would go about consuming

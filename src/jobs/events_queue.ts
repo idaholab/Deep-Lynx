@@ -1,56 +1,39 @@
-/*
-    Standalone loop for processing events. This loop retrieves all events matching the filters below
-    and then finds event actions that match those events (on container id, data source id, and event type).
-    For any matching event actions, the proper action is taken to send the event to the specified destination.
- */
-
+import {QueueFactory} from '../services/queue/queue';
+import Config from '../services/config';
 import Logger from '../services/logger';
-import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
+import {Writable} from 'stream';
+import {plainToClass} from 'class-transformer';
+import Event from '../domain_objects/event_system/event';
 import EventRepository from '../data_access_layer/repositories/event_system/event_repository';
 import EventActionRepository from '../data_access_layer/repositories/event_system/event_action_repository';
 import EventAction from '../domain_objects/event_system/event_action';
-import {graphql} from 'graphql';
-import Event from '../domain_objects/event_system/event';
 import GraphQLSchemaGenerator from '../graphql/schema';
+import {graphql} from 'graphql';
 import {Emailer} from '../services/email/email';
 import {BasicEmailTemplate} from '../services/email/templates/basic';
-import {parentPort} from 'worker_threads';
+import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 
-const postgresAdapter = PostgresAdapter.Instance;
+void PostgresAdapter.Instance.init().then(() => {
+    void QueueFactory().then((queue) => {
+        const destination = new Writable({
+            objectMode: true,
+            write(chunk: any, encoding: string, callback: (error?: Error | null) => void) {
+                const event = plainToClass(Event, chunk as object);
+                processFunction(event)
+                    .then(() => {
+                        callback();
+                    })
+                    .catch((e) => {
+                        Logger.error(`unable to process event from queue ${e}`);
+                        callback();
+                    });
 
-void postgresAdapter.init().then(() => {
-    const repo = new EventRepository();
-
-    repo.where()
-        .processed('is not null')
-        .list({
-            limit: 1000,
-        })
-        .then((results) => {
-            if (results.isError) {
-                Logger.error(`unable to list records for event loop ${results.error?.error}`);
-                process.exit(1);
-                return;
-            }
-
-            if (results.value.length === 0) {
-                if (parentPort) parentPort.postMessage('done');
-                else {
-                    process.exit(0);
-                }
-            }
-
-            // loop through each event and notify according to event actions
-            const processPromises = [];
-
-            for (const event of results.value) {
-                processPromises.push(processFunction(event));
-            }
-        })
-        .catch((e) => {
-            Logger.error(`unable to process records for event loop ${e}`);
-            process.exit(1);
+                return true;
+            },
         });
+
+        queue.Consume(Config.events_queue, destination);
+    });
 });
 
 async function processFunction(event: Event) {
@@ -85,7 +68,7 @@ async function processFunction(event: Event) {
             .where()
             .containerID('eq', event.container_id)
             .and()
-            .dataSourceID('eq', 'NULL')
+            .dataSourceID('is null', undefined)
             .and()
             .eventType('eq', event.event_type)
             .and()
@@ -159,8 +142,5 @@ async function processFunction(event: Event) {
         }
     }
 
-    // update event as processed
-    repo.markProcessed(event.id!).catch((e) => {
-        Logger.error(`Unable to mark event ${event.id} as processed. ${e}`);
-    });
+    return Promise.resolve();
 }

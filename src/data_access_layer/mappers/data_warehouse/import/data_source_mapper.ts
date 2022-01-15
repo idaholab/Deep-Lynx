@@ -39,11 +39,13 @@ export default class DataSourceMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        this.eventRepo.emitEvent(new Event({
-            containerID: r.value[0].container_id,
-            eventType: 'data_source_created',
-            event: {'id': r.value[0].id},
-        }));
+        this.eventRepo.emit(
+            new Event({
+                containerID: r.value[0].container_id,
+                eventType: 'data_source_created',
+                event: {id: r.value[0].id},
+            }),
+        );
 
         return Promise.resolve(Result.Success(r.value[0]));
     }
@@ -55,11 +57,13 @@ export default class DataSourceMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        this.eventRepo.emitEvent(new Event({
-            containerID: r.value[0].container_id,
-            eventType: 'data_source_modified',
-            event: {'id': r.value[0].id},
-        }));
+        this.eventRepo.emit(
+            new Event({
+                containerID: r.value[0].container_id,
+                eventType: 'data_source_modified',
+                event: {id: r.value[0].id},
+            }),
+        );
 
         return Promise.resolve(Result.Success(r.value[0]));
     }
