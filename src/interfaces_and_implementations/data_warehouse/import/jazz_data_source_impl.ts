@@ -1,4 +1,4 @@
-import DataSourceRecord, {DataSource, JazzDataSourceConfig} from '../../../domain_objects/data_warehouse/import/data_source';
+import DataSourceRecord, {JazzDataSourceConfig} from '../../../domain_objects/data_warehouse/import/data_source';
 import Result, {ErrorNotFound} from '../../../common_classes/result';
 import Logger from '../../../services/logger';
 import Config from '../../../services/config';
@@ -15,6 +15,7 @@ import * as https from 'https';
 import {PoolClient} from 'pg';
 import {Readable} from 'stream';
 import Import from '../../../domain_objects/data_warehouse/import/import';
+import {DataSource} from './data_source';
 
 const parser = require('fast-xml-parser');
 const buildUrl = require('build-url');

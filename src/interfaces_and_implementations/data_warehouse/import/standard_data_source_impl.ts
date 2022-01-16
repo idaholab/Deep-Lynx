@@ -1,4 +1,4 @@
-import DataSourceRecord, {DataSource, ReceiveDataOptions} from '../../../domain_objects/data_warehouse/import/data_source';
+import DataSourceRecord, {ReceiveDataOptions} from '../../../domain_objects/data_warehouse/import/data_source';
 import ImportRepository from '../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
@@ -22,6 +22,7 @@ import FileMapper from '../../../data_access_layer/mappers/data_warehouse/data/f
 import {EdgeFile, NodeFile} from '../../../domain_objects/data_warehouse/data/file';
 import NodeMapper from '../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import EdgeMapper from '../../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
+import {DataSource} from './data_source';
 const JSONStream = require('JSONStream');
 
 /*
