@@ -1,4 +1,4 @@
-import ExportRecord, {Exporter, GremlinExportConfig} from '../../../domain_objects/data_warehouse/export/export';
+import ExportRecord, {GremlinExportConfig} from '../../../domain_objects/data_warehouse/export/export';
 import GremlinAdapter from '../../../services/gremlin/gremlin';
 import Config from '../../../services/config';
 import ExportMapper from '../../../data_access_layer/mappers/data_warehouse/export/export_mapper';
@@ -12,6 +12,7 @@ import {NakedDomainClass} from '../../../common_classes/base_domain_class';
 import {IsObject, IsOptional, IsUUID} from 'class-validator';
 import {plainToClass} from 'class-transformer';
 import {User} from '../../../domain_objects/access_management/user';
+import {Exporter} from './exporter';
 
 // first the classes required by the Gremlin implementation
 export class GremlinEdge extends NakedDomainClass {

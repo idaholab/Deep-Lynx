@@ -25,8 +25,9 @@ import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping
 import TypeTransformation, {KeyMapping} from '../../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeMappingRepository from '../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
 import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
-import DataSourceRecord, {DataSource} from '../../../domain_objects/data_warehouse/import/data_source';
+import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 import {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
+import {DataSource} from '../../../interfaces_and_implementations/data_warehouse/import/data_source';
 
 describe('A Data Processor', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

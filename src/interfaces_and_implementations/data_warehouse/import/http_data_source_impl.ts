@@ -1,4 +1,4 @@
-import DataSourceRecord, {DataSource, HttpDataSourceConfig} from '../../../domain_objects/data_warehouse/import/data_source';
+import DataSourceRecord, {HttpDataSourceConfig} from '../../../domain_objects/data_warehouse/import/data_source';
 import Result, {ErrorNotFound} from '../../../common_classes/result';
 import Logger from '../../../services/logger';
 import Config from '../../../services/config';
@@ -12,6 +12,7 @@ import ImportRepository from '../../../data_access_layer/repositories/data_wareh
 import StandardDataSourceImpl from './standard_data_source_impl';
 import {plainToClass} from 'class-transformer';
 import {toStream} from '../../../services/utilities';
+import {DataSource} from './data_source';
 
 const buildUrl = require('build-url');
 
