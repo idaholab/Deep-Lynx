@@ -27,7 +27,7 @@ import TypeMappingRepository from '../../../data_access_layer/repositories/data_
 import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
 import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 import {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
-import {DataSource} from '../../../interfaces_and_implementations/data_warehouse/import/data_source';
+import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
 
 describe('A Data Processor', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';

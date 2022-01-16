@@ -16,8 +16,8 @@ import TaskRecord from '../../domain_objects/task_runner/task';
 import Event from '../../domain_objects/event_system/event';
 import EventAction from '../../domain_objects/event_system/event_action';
 import EventActionStatus from '../../domain_objects/event_system/event_action_status';
-import {Exporter} from '../../interfaces_and_implementations/data_warehouse/export/exporter';
-import {DataSource} from '../../interfaces_and_implementations/data_warehouse/import/data_source';
+import {Exporter} from '../../interfaces_and_impl/data_warehouse/export/exporter';
+import {DataSource} from '../../interfaces_and_impl/data_warehouse/import/data_source';
 
 declare global {
     namespace Express {

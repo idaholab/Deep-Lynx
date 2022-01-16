@@ -10,9 +10,9 @@ import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/o
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import DataSourceRecord, {AvevaDataSourceConfig} from '../../../domain_objects/data_warehouse/import/data_source';
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
-import StandardDataSourceImpl from '../../../interfaces_and_implementations/data_warehouse/import/standard_data_source_impl';
-import HttpDataSourceImpl from '../../../interfaces_and_implementations/data_warehouse/import/http_data_source_impl';
-import {DataSource} from '../../../interfaces_and_implementations/data_warehouse/import/data_source';
+import StandardDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/standard_data_source_impl';
+import HttpDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/http_data_source_impl';
+import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
 
 // Aveva is super simple currently - simply make sure we can save it correctly
 describe('A Aveva DataSource Implementation can', async () => {
