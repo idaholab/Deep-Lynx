@@ -137,6 +137,7 @@ export default class Edge extends BaseDomainClass {
         origin_original_id?: string;
         destination_original_id?: string;
         metadata?: EdgeMetadata;
+        created_at?: Date;
     }) {
         super();
 
@@ -159,6 +160,7 @@ export default class Edge extends BaseDomainClass {
             if (input.destination_data_source_id) this.destination_data_source_id = input.destination_data_source_id;
             if (input.destination_metatype_id) this.destination_metatype_id = input.destination_metatype_id;
             if (input.metadata) this.metadata = input.metadata;
+            if (input.created_at) this.created_at = input.created_at;
         }
     }
 }

@@ -56,21 +56,16 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
         }
     }
 
-    // we're overriding this method to run our polling process first then the
-    // actual processing loop that the parent class has. This has allowed use to
-    // easily reuse the process functions that are similar to the standard class
-    async Process(): Promise<Result<boolean>> {
-        // we won't stop on error because we need to get the process loop no matter what
-        // the poll function will handle logging its own errors
-        await this.poll();
-        return super.Process();
-    }
-
-    // Use the HTTP data source and poll for data. Data is stored in the imports table
+    // Poll for data. Data is stored in the imports table
     // processing the data is not the responsibility of this portion of the application
-    private async poll(): Promise<void> {
+    async Run(): Promise<void> {
         if (!this.DataSourceRecord) {
             Logger.error(`unable to start jazz data source process, no record present`);
+            return Promise.resolve();
+        }
+
+        if (this.DataSourceRecord.status === 'polling') {
+            Logger.debug('data source already polling, aborting poll attempt');
             return Promise.resolve();
         }
 
