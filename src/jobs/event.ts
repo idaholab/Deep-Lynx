@@ -22,7 +22,7 @@ void postgresAdapter.init().then(() => {
     const repo = new EventRepository();
 
     repo.where()
-        .processed('is not null')
+        .processed('is null')
         .list({
             limit: 1000,
         })
