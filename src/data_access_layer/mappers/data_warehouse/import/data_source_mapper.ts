@@ -244,4 +244,9 @@ export default class DataSourceMapper extends Mapper {
             values: [id, status, message, userID],
         };
     }
+
+    // should only be used with a streaming query so as not to swamp memory
+    public listAllActiveStatement(): string {
+        return `SELECT * FROM data_sources WHERE active IS TRUE`;
+    }
 }

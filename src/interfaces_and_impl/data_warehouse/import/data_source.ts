@@ -22,10 +22,9 @@ export interface DataSource {
     // newer data when the data source attempts to process it
     ReceiveData(payload: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | DataStaging[]>>;
 
-    // process single fire function that both processes the data from the
-    // source and running any polling efforts like with the http implementation
-    // this is run once per minute by default
-    Process(): Promise<Result<boolean>>;
+    // Run will initiate any data source specific operations such as polling - this
+    // should fire a one time function, not a perpetual function
+    Run(): Promise<void>;
 
     // this final method is so that the data source can run any encryption or source
     // specific functions prior to the data source record being saved into the database
