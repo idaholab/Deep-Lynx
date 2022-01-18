@@ -110,8 +110,7 @@ describe('An Jazz Data Source can', async () => {
         // an inaccurate art so if your tests fails, increase this wait time first
         // prior to stepping through your code to make sure you're getting some
         // kind of result back.
-        let result = await source?.Process();
-        expect(result!.isError).false;
+        await source?.Run();
 
         // first fetch the data source and verify we haven't encountered an error
         // the status should still be set to "ready"

@@ -179,5 +179,6 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
         return new Promise((resolve) => resolve(Result.SilentFailure(`error attempting to mark data inserted ${marked.error}`)));
     }
 
+    await stagingMapper.completeTransaction(transaction.value);
     return Promise.resolve(Result.Success(true));
 }
