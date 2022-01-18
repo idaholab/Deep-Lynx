@@ -3262,6 +3262,12 @@ paths:
       tags:
         - Events
       operationId: CreateEventAction
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventActionRequest'
+        required: true
       responses:
         '200':
           description: ''
@@ -3270,11 +3276,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/CreateEventActionResponse'
       description: Create an event action
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateEventActionRequest'
   '/event_actions/{action_id}':
     parameters:
       - schema:
