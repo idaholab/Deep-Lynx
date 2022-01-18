@@ -247,4 +247,8 @@ export default class DataStagingMapper extends Mapper {
             values: [id, fileID],
         };
     }
+
+    public listUninsertedStatement(): string {
+        return `SELECT * FROM data_staging WHERE inserted_at IS NULL`;
+    }
 }
