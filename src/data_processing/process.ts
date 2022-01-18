@@ -27,13 +27,18 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     const transaction = await stagingMapper.startTransaction();
 
     // pull the transformations, abort if none
-    const shapeHash = TypeMapping.objectToShapeHash(staging.data);
-    const mapping = await mappingRepo.findByShapeHash(shapeHash, staging.data_source_id!, true);
+    if (!staging.shape_hash) {
+        const shapeHash = TypeMapping.objectToShapeHash(staging.data);
+        staging.shape_hash = shapeHash;
+
+        await stagingRepo.save(staging);
+    }
+    const mapping = await mappingRepo.findByShapeHash(staging.shape_hash!, staging.data_source_id!, true);
 
     const errors = await staging.validationErrors();
     if (errors) {
         await stagingRepo.addError(staging.id!, 'data does not pass validation for processing');
-        return Promise.resolve(Result.Failure(`data staging does not pass validation ${errors.join(',')}`));
+        return Promise.resolve(Result.SilentFailure(`data staging does not pass validation ${errors.join(',')}`));
     }
 
     // if we don't have the mapping, create one and abort the processing, as we have no transformations
@@ -45,7 +50,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
                 container_id: staging.container_id!,
                 data_source_id: staging.data_source_id!,
                 sample_payload: staging.data,
-                shape_hash: shapeHash,
+                shape_hash: staging.shape_hash,
             }),
             SuperUser,
         );
@@ -127,7 +132,6 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
 
             const attached = await NodeMapper.Instance.BulkAddFile(nodeFiles, transaction.value);
             if (attached.isError) {
-                Logger.error(`unable to attach files to nodes during data staging process ${attached.error?.error}`);
                 await stagingRepo.addError(staging.id!, `unable to attach files to nodes during data staging process ${attached.error?.error}`);
             }
         }
@@ -164,7 +168,6 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
 
             const attached = await EdgeMapper.Instance.BulkAddFile(edgeFiles, transaction.value);
             if (attached.isError) {
-                Logger.error(`unable to attach files to edges during data staging process ${attached.error?.error}`);
                 await stagingRepo.addError(staging.id!, `unable to attach files to edges during data staging process ${attached.error?.error}`);
             }
         }

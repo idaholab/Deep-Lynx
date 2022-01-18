@@ -33,16 +33,14 @@ void postgresAdapter.init().then(() => {
                 interval: '1m',
             },
             {
+                name: 'data_staging_emitter', // will run data_staging_emitter on an infinite loop
+            },
+            {
                 name: 'events_queue', // will run events_queue.js - a never ending processing of the events queue
             },
-            // the below is commented out because there isn't anything actually using
-            // that queue yet - this is to demonstrate how one would go about consuming
-            // a given queue
-            /*
             {
                 name: 'processing_queue', // will run processing_queue.js exactly one time
             },
-            */
         ],
     });
 

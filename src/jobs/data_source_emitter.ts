@@ -43,7 +43,7 @@ void postgresAdapter.init().then(() => {
                         .catch((e) => Logger.error(`unable to put data sources on queue ${e}`));
                 });
 
-                stream.pipe(devnull);
+                stream.pipe(devnull({objectMode: true}));
             });
         })
         .catch((e) => {
