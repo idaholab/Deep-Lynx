@@ -92,6 +92,10 @@ export default class DataStagingMapper extends Mapper {
         return super.rows<DataStaging>(this.listUninsertedActiveMappingStatement(importID, offset, limit), {resultClass, transaction});
     }
 
+    public async ListIDOnly(importID: string): Promise<Result<DataStaging[]>> {
+        return super.rows<DataStaging>(this.listIDOnly(importID), {resultClass});
+    }
+
     public async SetInserted(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
         return super.runStatement(this.setInsertedStatement(id), {
             transaction,
@@ -175,6 +179,13 @@ export default class DataStagingMapper extends Mapper {
         };
     }
 
+    private listIDOnly(importID: string): QueryConfig {
+        return {
+            text: `SELECT data_staging.id FROM data_staging WHERE import_id = $1`,
+            values: [importID],
+        };
+    }
+
     private countImportStatement(importID: string): QueryConfig {
         return {
             text: `SELECT COUNT(*) FROM data_staging WHERE import_id = $1`,
@@ -248,7 +259,15 @@ export default class DataStagingMapper extends Mapper {
         };
     }
 
-    public listUninsertedStatement(): string {
-        return `SELECT * FROM data_staging WHERE inserted_at IS NULL`;
+    public listImportUninsertedActiveMappingStatement(): string {
+        return `SELECT data_staging.*
+                   FROM data_staging
+                            LEFT JOIN type_mappings ON type_mappings.shape_hash = data_staging.shape_hash
+                                                         AND type_mappings.data_source_id = data_staging.data_source_id
+                   WHERE data_staging.inserted_at IS NULL
+                   AND type_mappings.active IS TRUE
+                   AND EXISTS 
+                        (SELECT * from type_mapping_transformations 
+                            WHERE type_mapping_transformations.type_mapping_id = type_mappings.id)`;
     }
 }
