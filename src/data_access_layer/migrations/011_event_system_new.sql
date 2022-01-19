@@ -40,7 +40,8 @@ CREATE TABLE event_actions (
     deleted_at timestamp without time zone DEFAULT NULL,
     created_by character varying(255) NOT NULL,
     modified_by character varying(255) NOT NULL,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE(container_id, data_source_id, event_type, destination_data_source_id, destination)
 );
 
 DROP TABLE IF EXISTS event_action_statuses;
