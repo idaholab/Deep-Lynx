@@ -22,7 +22,7 @@ void postgresAdapter.init().then(() => {
         .then((queue) => {
             const emitter = () => {
                 void postgresAdapter.Pool.connect((err, client, done) => {
-                    const stream = client.query(new QueryStream(dataStagingMapper.listUninsertedStatement()));
+                    const stream = client.query(new QueryStream(dataStagingMapper.listImportUninsertedActiveMappingStatement()));
                     const putPromises: Promise<boolean>[] = [];
 
                     stream.on('data', (data) => {
