@@ -51,7 +51,7 @@ export default class EventRepository extends Repository {
         const statusRepo = new EventActionStatusRepository();
 
         await axios
-            .post(action.destination!, payload, {timeout: 10})
+            .post(action.destination!, payload, {timeout: 50})
             .then(() => {
                 Logger.debug(`event: ${event.event_type} on ${sourceType} ${sourceID} sent to 
             event action ${action.id} of type ${action.action_type} at ${action.destination}`);

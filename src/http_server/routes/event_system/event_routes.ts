@@ -174,7 +174,11 @@ export default class EventRoutes {
     }
 
     private static listEventActionStatuses(req: Request, res: Response, next: NextFunction) {
-        statusRepo
+        let repo = new EventActionStatusRepository();
+        if (typeof req.query.eventID !== 'undefined' && (req.query.eventID as string) !== '') {
+            repo = repo.where().eventID('eq', req.query.eventID)
+        }
+        repo
             .list()
             .then((result) => {
                 if (result.isError && result.error) {

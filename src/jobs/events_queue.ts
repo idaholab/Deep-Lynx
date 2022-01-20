@@ -88,8 +88,11 @@ async function processFunction(event: Event) {
 
     // send out events and create event action status
     for (const action of actionEvents) {
-        // set default payload to contents of event.event
-        let payload: any = event.event;
+        // set default payload to contents of event.event and id
+        const payload: any = {
+            id: event.id,
+            event: event.event,
+        }
 
         // determine action type and act accordingly
         switch (action.action_type) {
@@ -109,11 +112,13 @@ async function processFunction(event: Event) {
                         } else {
                             await graphql({
                                 schema: schemaResult.value,
-                                source: event.event!.query,
-                                variableValues: event.event!.variables,
+                                source: event.event.query,
+                                variableValues: event.event.variables,
                             })
                                 .then((result) => {
-                                    payload = result.data;
+                                    // provide endpoint with query of event, and set event body as the query result
+                                    payload.query = event.event;
+                                    payload.event = result.data;
                                     void repo.sendEvent(payload, event, action, sourceType, sourceID);
                                 })
                                 .catch((e) => {
@@ -130,7 +135,7 @@ async function processFunction(event: Event) {
                 break;
 
             case 'email_user':
-                void Emailer.Instance.send(action.destination!, 'Event', BasicEmailTemplate(JSON.stringify(event.event!))).then((result) => {
+                void Emailer.Instance.send(action.destination!, 'Event', BasicEmailTemplate(JSON.stringify(event.event))).then((result) => {
                     if (result.isError) Logger.error(`unable to send event email ${result.error}`);
                     else
                         Logger.debug(`event: ${event.event_type} on ${sourceType} ${sourceID} sent to 
