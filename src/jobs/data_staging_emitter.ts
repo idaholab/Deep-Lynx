@@ -1,7 +1,7 @@
 /*
-  Standalone loop for emitting data source run events. These are emitted every
-  minute for each data source, a separate processing thread will take care of
-  the messages from the queue
+  Standalone loop for emitting data staging records for processing. Any data staging
+  record with active mappings and transformations will be emitted in a stream to the
+  queue.
  */
 
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
@@ -39,6 +39,8 @@ void postgresAdapter.init().then(() => {
                             .catch((e) => Logger.error(`unable to initiate data source emitter: ${e}`));
                     });
 
+                    // we pipe to devnull because we need to trigger the stream and don't
+                    // care where the data ultimately ends up
                     stream.pipe(devnull({objectMode: true}));
                 });
             };

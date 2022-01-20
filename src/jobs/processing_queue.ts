@@ -1,3 +1,8 @@
+/*
+    This starts a never-ending loop of consuming data processing messages from the queue.
+    Each of those messages consists of a data staging record id which is then fetched and
+    sent to be be processed.
+ */
 import {QueueFactory} from '../services/queue/queue';
 import Config from '../services/config';
 import Logger from '../services/logger';
