@@ -27,8 +27,6 @@ void PostgresAdapter.Instance.init().then(() => {
                         Logger.error(`unable to process event from queue ${e}`);
                         callback();
                     });
-
-                return true;
             },
         });
 
@@ -109,7 +107,11 @@ async function processFunction(event: Event) {
                             Logger.error(`Unable to process query from event ${event.id}. Error: ${schemaResult.error}`);
                             return;
                         } else {
-                            await graphql(schemaResult.value, JSON.stringify(event.event), event.container_id)
+                            await graphql({
+                                schema: schemaResult.value,
+                                source: event.event!.query,
+                                variableValues: event.event!.variables,
+                            })
                                 .then((result) => {
                                     payload = result.data;
                                     void repo.sendEvent(payload, event, action, sourceType, sourceID);
