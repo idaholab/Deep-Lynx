@@ -12,6 +12,8 @@ import {
     MetatypeRelationshipT,
     MetatypeRelationshipKeyT,
     MetatypeRelationshipPairT,
+    NodeT,
+    EdgeT,
     UserContainerInviteT,
     TypeMappingTransformationPayloadT,
     TypeMappingTransformationT,
@@ -159,7 +161,8 @@ export class Client {
             sortBy,
             sortDesc,
             count,
-        }: {name?: string; description?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; count?: boolean},
+            loadKeys
+        }: {name?: string; description?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; count?: boolean; loadKeys?: string},
     ): Promise<MetatypeT[] | number> {
         const query: {[key: string]: any} = {};
 
@@ -170,6 +173,7 @@ export class Client {
         if (sortBy) query.sortBy = sortBy;
         if (sortDesc) query.sortDesc = sortDesc;
         if (count) query.count = 'true';
+        if (loadKeys) query.loadKeys = loadKeys;
 
         return this.get<MetatypeT[] | number>(`/containers/${containerID}/metatypes`, query);
     }
@@ -413,6 +417,76 @@ export class Client {
 
     deactivateDataSource(containerID: string, dataSourceID: string): Promise<boolean> {
         return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/active`);
+    }
+
+    createNode(containerID: string, node: any): Promise<NodeT[]> {
+        return this.post<NodeT[]>(`/containers/${containerID}/graphs/nodes`, node);
+    }
+
+    deleteNode(containerID: string, nodeID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/graphs/nodes/${nodeID}`);
+    }
+
+    listNodes(
+        containerID: string,
+        {limit, offset, transformationID, metatypeID, dataSourceID, loadMetatypes}: {limit?: number; offset?: number; transformationID?: string; metatypeID?: string;
+            dataSourceID?: string; loadMetatypes?: string;},
+    ): Promise<NodeT[]> {
+        const query: {[key: string]: any} = {};
+
+        if (dataSourceID) query.dataSourceID = dataSourceID;
+        if (limit) query.limit = limit;
+        if (offset) query.offset = offset;
+        if (transformationID) query.transformationID = transformationID;
+        if (metatypeID) query.metatypeID = metatypeID;
+        if (loadMetatypes) query.loadMetatypes = loadMetatypes;
+
+
+        return this.get<NodeT[]>(`/containers/${containerID}/graphs/nodes`, query);
+    }
+
+    countNodes(containerID: string, dataSourceID: string): Promise<number> {
+        const query: {[key: string]: any} = {};
+
+        query.dataSourceID = dataSourceID;
+        query.count = true;
+        return this.get<number>(`/containers/${containerID}/graphs/nodes`, query);
+    }
+
+    createEdge(containerID: string, edge: any): Promise<EdgeT[]> {
+        return this.post<EdgeT[]>(`/containers/${containerID}/graphs/edges`, edge);
+    }
+
+    deleteEdge(containerID: string, edgeID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/graphs/edges/${edgeID}`);
+    }
+
+    listEdges(
+        containerID: string,
+
+        {relationshipPairName, relationshipPairID, limit, offset, originID, destinationID, dataSourceID, loadRelationshipPairs}: {relationshipPairName?: string; relationshipPairID?: string;
+            limit?: number; offset?: number; originID?: string; destinationID?: string; dataSourceID?: string; loadRelationshipPairs?: string;},
+    ): Promise<EdgeT[]> {
+        const query: {[key: string]: any} = {};
+
+        if (dataSourceID) query.dataSourceID = dataSourceID;
+        if (relationshipPairName) query.relationshipPairName = relationshipPairName;
+        if (relationshipPairID) query.relationshipPairID = relationshipPairID;
+        if (limit) query.limit = limit;
+        if (offset) query.offset = offset;
+        if (originID) query.originID = originID;
+        if (destinationID) query.destinationID = destinationID;
+        if (loadRelationshipPairs) query.loadRelationshipPairs = loadRelationshipPairs;
+
+        return this.get<EdgeT[]>(`/containers/${containerID}/graphs/edges`, query);
+    }
+
+    countEdges(containerID: string, dataSourceID: string): Promise<number> {
+        const query: {[key: string]: any} = {};
+
+        query.dataSourceID = dataSourceID;
+        query.count = true;
+        return this.get<number>(`/containers/${containerID}/graphs/edges`, query);
     }
 
     listImports(
