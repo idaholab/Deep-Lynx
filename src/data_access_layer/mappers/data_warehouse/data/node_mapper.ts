@@ -208,7 +208,7 @@ export default class NodeMapper extends Mapper {
 
     private deleteEdgesStatement(nodeID: string): QueryConfig {
         return {
-            text: `UPDATE edges SET deleted_at = NOW() WHERE origin_id = $1 OR destination_id = $1 AND deleted_at IS NULL`,
+            text: `UPDATE edges SET deleted_at = NOW() WHERE (origin_id = $1 OR destination_id = $1) AND deleted_at IS NULL`,
             values: [nodeID],
         };
     }
