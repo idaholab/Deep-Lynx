@@ -1,86 +1,101 @@
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/#customizing-settings
+# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 stages:
-    - build
-    - deploy
-
+- build
+- deploy
+- test
 build_dl:
-    stage: build
-    image:
-        name: gcr.io/kaniko-project/executor:debug
-        entrypoint: ['']
-    script:
-        - mkdir -p /kaniko/.docker
-        - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-        - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY/$CI_REGISTRY_PATH/deep-lynx:$CI_PIPELINE_IID
-    only:
-        - master
-        - development
-
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint:
+    - ''
+  script:
+  - mkdir -p /kaniko/.docker
+  - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}"
+    > /kaniko/.docker/config.json
+  - "/kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile
+    --destination $CI_REGISTRY/$CI_REGISTRY_PATH/deep-lynx:$CI_PIPELINE_IID"
+  only:
+  - master
+  - development
 build_swagger:
-    stage: build
-    image:
-        name: openjdk:8
-        entrypoint: ['']
-    script:
-        - mkdir /opt/swagger && cd /opt/swagger
-        - wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.29/swagger-codegen-cli-3.0.29.jar -O swagger-codegen-cli.jar
-        - git clone $DL_JS_SDK 
-        - git clone $DL_PY_SDK
-        - java -jar swagger-codegen-cli.jar generate -i $CI_PROJECT_DIR/API\ Documentation/Core.swagger_collection.yaml -l typescript-axios -o deep-lynx-js-sdk
-        - java -jar swagger-codegen-cli.jar generate -i $CI_PROJECT_DIR/API\ Documentation/Core.swagger_collection.yaml -l python -o deep-lynx-py-pkg --additional-properties packageName=deep_lynx projectName=deep_lynx
-        - cd deep-lynx-js-sdk
-        - git config --global user.email "noreply@cicd.com" && git config --global user.name "CICD"
-        - git add * && git commit -m $CI_COMMIT_SHA || true
-        - git push $DL_JS_SDK master
-        - cd ../deep-lynx-py-pkg
-        - git config --global user.email "noreply@cicd.com" && git config --global user.name "CICD"
-        - git add * && git commit -m $CI_COMMIT_SHA || true
-        - git push $DL_PY_SDK main
-    allow_failure: true
-    only:
-        refs:
-            - master
-        changes:
-            - API\ Documentation/Core.swagger_collection.yaml
-
+  stage: build
+  image:
+    name: openjdk:8
+    entrypoint:
+    - ''
+  script:
+  - mkdir /opt/swagger && cd /opt/swagger
+  - wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.29/swagger-codegen-cli-3.0.29.jar
+    -O swagger-codegen-cli.jar
+  - git clone $DL_JS_SDK
+  - git clone $DL_PY_SDK
+  - java -jar swagger-codegen-cli.jar generate -i $CI_PROJECT_DIR/API\ Documentation/Core.swagger_collection.yaml
+    -l typescript-axios -o deep-lynx-js-sdk
+  - java -jar swagger-codegen-cli.jar generate -i $CI_PROJECT_DIR/API\ Documentation/Core.swagger_collection.yaml
+    -l python -o deep-lynx-py-pkg --additional-properties packageName=deep_lynx projectName=deep_lynx
+  - cd deep-lynx-js-sdk
+  - git config --global user.email "noreply@cicd.com" && git config --global user.name
+    "CICD"
+  - git add * && git commit -m $CI_COMMIT_SHA || true
+  - git push $DL_JS_SDK master
+  - cd ../deep-lynx-py-pkg
+  - git config --global user.email "noreply@cicd.com" && git config --global user.name
+    "CICD"
+  - git add * && git commit -m $CI_COMMIT_SHA || true
+  - git push $DL_PY_SDK main
+  allow_failure: true
+  only:
+    refs:
+    - master
+    changes:
+    - API\ Documentation/Core.swagger_collection.yaml
 deploy_development:
-    stage: deploy
-    image: mcr.microsoft.com/azure-cli:latest
-    script:
-        - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-        - mkdir -p $HOME/.kube
-        - echo -n $KUBE_CONFIG | base64 -d > $HOME/.kube/config
-        - kubectl apply -f $DEEPLYNX_DEV_KUBERNETES
-    environment:
-        name: development
-    only:
-        - development
-
+  stage: deploy
+  image: mcr.microsoft.com/azure-cli:latest
+  script:
+  - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+  - mkdir -p $HOME/.kube
+  - echo -n $KUBE_CONFIG | base64 -d > $HOME/.kube/config
+  - kubectl apply -f $DEEPLYNX_DEV_KUBERNETES
+  environment:
+    name: development
+  only:
+  - development
 deploy_acceptance:
-    stage: deploy
-    image: mcr.microsoft.com/azure-cli:latest
-    script:
-        - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-        - mkdir -p $HOME/.kube
-        - echo -n $KUBE_CONFIG | base64 -d > $HOME/.kube/config
-        - kubectl apply -f $DEEPLYNX_ACC_KUBERNETES
-    environment:
-        name: acceptance
-    only:
-        - master
-
+  stage: deploy
+  image: mcr.microsoft.com/azure-cli:latest
+  script:
+  - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+  - mkdir -p $HOME/.kube
+  - echo -n $KUBE_CONFIG | base64 -d > $HOME/.kube/config
+  - kubectl apply -f $DEEPLYNX_ACC_KUBERNETES
+  environment:
+    name: acceptance
+  only:
+  - master
 deploy_production:
-    stage: deploy
-    image: mcr.microsoft.com/azure-cli:latest
-    script:
-        - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-        - mkdir -p $HOME/.kube
-        - echo -n $KUBE_CONFIG | base64 -d > $HOME/.kube/config
-        - kubectl apply -f $DEEPLYNX_PRD_KUBERNETES
-    environment:
-        name: production
-    when: manual
-    only:
-        - master
+  stage: deploy
+  image: mcr.microsoft.com/azure-cli:latest
+  script:
+  - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+  - mkdir -p $HOME/.kube
+  - echo -n $KUBE_CONFIG | base64 -d > $HOME/.kube/config
+  - kubectl apply -f $DEEPLYNX_PRD_KUBERNETES
+  environment:
+    name: production
+  when: manual
+  only:
+  - master
+sast:
+  stage: test
+include:
+- template: Security/SAST.gitlab-ci.yml
