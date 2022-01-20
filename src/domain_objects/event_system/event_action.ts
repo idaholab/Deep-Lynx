@@ -34,7 +34,7 @@ export default class EventAction extends BaseDomainClass {
 
     @IsString()
     @IsIn([
-        'send_query',
+        'default',
         'send_data',
         'email_user'
     ])

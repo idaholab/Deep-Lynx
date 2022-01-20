@@ -96,7 +96,7 @@ async function processFunction(event: Event) {
 
         // determine action type and act accordingly
         switch (action.action_type) {
-            case 'send_query':
+            case 'default':
                 void repo.sendEvent(payload, event, action, sourceType, sourceID);
                 break;
 
