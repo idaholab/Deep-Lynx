@@ -408,6 +408,11 @@ paths:
           in: query
           name: metatypeID
           description: Return only nodes for the selected metatype
+        - schema:
+            type: string
+          in: query
+          name: dataSourceID
+          description: Return only nodes for the selected datasource
       responses:
         '200':
           description: ''
@@ -574,6 +579,14 @@ paths:
             type: string
           in: query
           name: relationshipPairName
+        - schema:
+            type: string
+          in: query
+          name: dataSourceID
+        - schema:
+            type: string
+          in: query
+          name: loadRelationshipPairs
       responses:
         '200':
           description: ''
