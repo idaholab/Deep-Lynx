@@ -111,6 +111,7 @@
         "csurf": "^1.11.0",
         "csv": "^5.5.3",
         "csvtojson": "^2.0.10",
+        "date-fns": "^2.28.0",
         "digest-stream": "^2.0.0",
         "dot-prop": "^5.3.0",
         "express": "^4.17.1",

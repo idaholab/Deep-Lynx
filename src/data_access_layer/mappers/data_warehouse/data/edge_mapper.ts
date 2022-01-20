@@ -203,7 +203,7 @@ export default class EdgeMapper extends Mapper {
 
     private deleteStatement(edgeID: string): QueryConfig {
         return {
-            text: `UPDATE edges SET deleted_at = NULL WHERE id = $1 AND deleted_at IS NULL`,
+            text: `UPDATE edges SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL`,
             values: [edgeID],
         };
     }
