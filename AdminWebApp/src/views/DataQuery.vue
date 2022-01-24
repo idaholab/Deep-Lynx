@@ -52,7 +52,7 @@
                       <span>{{item.id}}</span>
                     </v-tooltip>
                   </template>
-                  <template v-slot:item.created_at="{ item }">
+                  <template v-slot:item:[`created_at`]="{ item }">
                     {{prettyPrintDate(item.created_at)}}
                   </template>
 

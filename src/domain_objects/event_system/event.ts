@@ -1,5 +1,5 @@
 import {BaseDomainClass} from '../../common_classes/base_domain_class';
-import {IsIn, IsObject, IsOptional, IsString} from 'class-validator';
+import {IsIn, IsOptional, IsString} from 'class-validator';
 import DataSourceRepository from '../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import logger from '../../services/logger';
 
@@ -36,10 +36,9 @@ export default class Event extends BaseDomainClass {
 
     event_config?: any;
 
-    @IsObject()
-    event?: object;
+    event?: any;
 
-    constructor(input: {containerID?: string; dataSourceID?: string; eventType: string; eventConfig?: any, event: object}) {
+    constructor(input: {containerID?: string; dataSourceID?: string; eventType: string; eventConfig?: any, event: any}) {
         super();
 
         if (input) {

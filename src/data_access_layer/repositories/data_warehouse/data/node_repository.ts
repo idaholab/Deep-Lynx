@@ -304,8 +304,8 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return this;
     }
 
-    property(key: string, operator: string, value: any) {
-        super.queryJsonb(key, 'properties', operator, value);
+    property(key: string, operator: string, value: any, dataType?: string) {
+        super.queryJsonb(key, 'properties', operator, value, dataType);
         return this;
     }
 
@@ -328,7 +328,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
             await Promise.all(
                 results.value.map((node) => {
                     return new Promise((resolve) => {
-                        void this.#metatypeRepo.findByID(node.id!).then((metatype) => {
+                        void this.#metatypeRepo.findByID(node.metatype_id!).then((metatype) => {
                             if (metatype.isError) {
                                 resolve(Result.Failure(`unable to load node's metatypes ${metatype.error?.error}`));
                                 return;
