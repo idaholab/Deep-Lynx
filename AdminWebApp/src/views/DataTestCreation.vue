@@ -23,7 +23,7 @@
           class="elevation-1"
       >
         <template v-slot:top>
-          <v-col v-if="selectedDataSource.adapter_type === 'standard' || selectedDataSource.adapter_type === 'manual'">
+          <v-col>
             <create-node-dialog
                 :dataSourceID="selectedDataSource.id" 
                 :containerID="containerID" 
@@ -62,7 +62,7 @@
           class="elevation-1"
       >
         <template v-slot:top>
-          <v-col v-if="selectedDataSource.adapter_type === 'standard' || selectedDataSource.adapter_type === 'manual'">
+          <v-col>
             <create-edge-dialog
                 :dataSourceID="selectedDataSource.id" 
                 :containerID="containerID" 
