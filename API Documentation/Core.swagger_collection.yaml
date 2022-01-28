@@ -3635,6 +3635,38 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Task'
+  '/containers/{container_id}/alerts':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+    get:
+      summary: List Container Alerts
+      tags: []
+      responses: {}
+      operationId: get-containers-container_id-alerts
+      description: List all active alerts for a container by ID.
+  '/containers/{container_id}/alerts/{alert_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: alert_id
+        in: path
+        required: true
+    post:
+      summary: Acknowledge Container Alert
+      operationId: post-containers-container_id-alerts-alert_id
+      responses:
+        '200':
+          description: OK
+      description: Post with no body to acknowledge an alert an remove it from the active alerts list.
 components:
   securitySchemes:
     BearerAuth:
@@ -4921,6 +4953,29 @@ components:
         - name
         - description
         - data_versioning_enabled
+    ContainerImportRequest - copy:
+      title: CreateContainerAlertRequest
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          name: string
+          description: string
+          data_versioning_enabled: true
+          path: string
+          file: string
+      properties:
+        type:
+          type: string
+          minLength: 1
+          description: |
+            can be error, information, or warning
+        message:
+          type: string
+          minLength: 1
+      required:
+        - type
+        - message
     TokenExchangeRequest:
       title: TokenExchangeRequest
       type: object
