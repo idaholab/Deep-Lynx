@@ -4,7 +4,6 @@ import Result from '../../../../../common_classes/result';
 import ChangelistMapper from '../../../../mappers/data_warehouse/ontology/versioning/changelist_mapper';
 import {User} from '../../../../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
-import Metatype from '../../../../../domain_objects/data_warehouse/ontology/metatype';
 
 export default class ChangelistRepository extends Repository implements RepositoryInterface<Changelist> {
     #mapper: ChangelistMapper = ChangelistMapper.Instance;
