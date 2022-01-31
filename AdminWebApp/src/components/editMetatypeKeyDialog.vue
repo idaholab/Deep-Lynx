@@ -183,6 +183,7 @@ export default class EditMetatypeKeyDialog extends Vue {
 
   editMetatypeKey() {
     if(this.selectedMetatypeKey) {
+      this.selectedMetatypeKey.container_id = this.metatype.container_id;
       this.$client.updateMetatypeKey(this.metatype.container_id,this.metatype.id, this.selectedMetatypeKey?.id!, this.selectedMetatypeKey)
           .then(result => {
             if(!result) {
