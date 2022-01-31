@@ -18,6 +18,7 @@ import TaskRecord from '../../domain_objects/data_warehouse/task';
 import Event from '../../domain_objects/event_system/event';
 import EventAction from '../../domain_objects/event_system/event_action';
 import EventActionStatus from '../../domain_objects/event_system/event_action_status';
+import Changelist from '../../domain_objects/data_warehouse/ontology/versioning/changelist';
 
 declare global {
     namespace Express {
@@ -47,6 +48,7 @@ declare global {
             dataSource?: DataSource;
             file?: File;
             task?: TaskRecord;
+            changelist?: Changelist;
         }
     }
 }

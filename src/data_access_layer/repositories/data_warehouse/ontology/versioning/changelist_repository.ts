@@ -73,6 +73,11 @@ export default class ChangelistRepository extends Repository implements Reposito
         super(ChangelistMapper.tableName);
     }
 
+    containerID(operator: string, value: any) {
+        super.query('container_id', operator, value);
+        return this;
+    }
+
     count(): Promise<Result<number>> {
         return super.count();
     }
