@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS ontology_versions (
     id bigserial,
     name character varying(255) NOT NULL,
     container_id bigint REFERENCES containers(id) ON UPDATE CASCADE ON DELETE CASCADE,
-    changelist_id bigint REFERENCES changelists(id) ON UPDATE CASCADE ON DELETE SET NULL,
+    changelist_id bigint REFERENCES changelists(id) ON UPDATE CASCADE ON DELETE SET NULL DEFAULT NULL,
     created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by character varying(255) not null,
     PRIMARY KEY(id)
@@ -87,3 +87,57 @@ CREATE VIEW metatype_relationships_view AS (
    FROM metatype_relationships_inheritance
             FULL OUTER JOIN metatype_relationships ON metatype_relationships.id = metatype_relationships_inheritance.child_id
 );
+
+/*
+ trigger functions for automatically assigning the ontology version to the latest if it exists as well
+ as one designed to insert a new ontology version record each time a container is created
+ */
+CREATE OR REPLACE FUNCTION ontology_version_insert_trigger() RETURNS TRIGGER AS $$
+DECLARE
+    version bigint;
+BEGIN
+    IF NEW.ontology_version IS NULL THEN
+       BEGIN
+           SELECT ontology_versions.id
+               INTO version
+           FROM ontology_versions WHERE container_id = NEW.container_id ORDER BY created_at DESC LIMIT 1;
+       EXCEPTION
+           WHEN NO_DATA_FOUND THEN
+           version = NULL;
+       END;
+    END IF;
+
+    NEW.ontology_version = version;
+
+   RETURN NEW;
+END;
+$$ language plpgsql;
+
+CREATE TRIGGER ontology_version_metatypes_trigger BEFORE INSERT ON metatypes
+    FOR EACH ROW EXECUTE PROCEDURE ontology_version_insert_trigger();
+
+CREATE TRIGGER ontology_version_metatype_keys_trigger BEFORE INSERT ON metatype_keys
+    FOR EACH ROW EXECUTE PROCEDURE ontology_version_insert_trigger();
+
+CREATE TRIGGER ontology_version_metatype_relationships_trigger BEFORE INSERT ON metatype_relationships
+    FOR EACH ROW EXECUTE PROCEDURE ontology_version_insert_trigger();
+
+CREATE TRIGGER ontology_version_metatype_relationship_keys_trigger BEFORE INSERT ON metatype_relationship_keys
+    FOR EACH ROW EXECUTE PROCEDURE ontology_version_insert_trigger();
+
+CREATE TRIGGER ontology_version_metatype_relationship_pairs_trigger BEFORE INSERT ON metatype_relationship_pairs
+    FOR EACH ROW EXECUTE PROCEDURE ontology_version_insert_trigger();
+
+
+CREATE OR REPLACE FUNCTION new_ontology_version_insert_trigger() RETURNS TRIGGER AS $$
+DECLARE
+BEGIN
+   INSERT INTO ontology_versions(name, container_id, created_at, created_by)
+        VALUES(NEW.name, NEW.id, NOW(), NEW.created_by);
+
+   RETURN NEW;
+END;
+$$ language plpgsql;
+
+CREATE TRIGGER new_ontology_version_trigger AFTER INSERT ON containers
+    FOR EACH ROW EXECUTE PROCEDURE new_ontology_version_insert_trigger();

@@ -55,7 +55,8 @@ describe('A Container Repository', async () => {
     });
 
     after(async () => {
-        return UserMapper.Instance.Delete(user.id!);
+        await UserMapper.Instance.Delete(user.id!);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can be saved', async () => {

@@ -55,7 +55,8 @@ describe('A Metatype Repository', async () => {
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can save a Metatype', async () => {

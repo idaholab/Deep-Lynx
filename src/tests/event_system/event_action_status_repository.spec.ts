@@ -59,7 +59,8 @@ describe('An Event Action Status Repository', async () => {
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(container.id!);
+        await ContainerMapper.Instance.Delete(container.id!);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can save an Event Action Status', async () => {
@@ -72,7 +73,7 @@ describe('An Event Action Status Repository', async () => {
             new Event({
                 containerID: container.id,
                 eventType: 'data_source_created',
-                event: {'id': 'testID'},
+                event: {id: 'testID'},
             }),
         );
 
@@ -88,8 +89,8 @@ describe('An Event Action Status Repository', async () => {
 
         const status = new EventActionStatus({
             eventID: event.value.id!,
-            eventActionID: action.value.id!
-        })
+            eventActionID: action.value.id!,
+        });
 
         let saved = await repo.save(status, user);
         expect(saved.isError).false;
@@ -101,6 +102,5 @@ describe('An Event Action Status Repository', async () => {
         saved = await repo.save(status, user);
         expect(saved.isError).false;
         expect(status.status_message).eq(newMessage);
-
     });
 });

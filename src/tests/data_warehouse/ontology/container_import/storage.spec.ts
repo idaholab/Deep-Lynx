@@ -47,7 +47,8 @@ describe('A Container Import', async () => {
     });
 
     after(async () => {
-        return UserMapper.Instance.Delete(user.id!);
+        await UserMapper.Instance.Delete(user.id!);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can create a container from a valid ontology file', async () => {

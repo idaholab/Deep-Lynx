@@ -36,7 +36,8 @@ describe('An Event Mapper Can', async () => {
     });
 
     after(async () => {
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can create an event', async () => {
@@ -47,7 +48,7 @@ describe('An Event Mapper Can', async () => {
             new Event({
                 containerID: containerID,
                 eventType: 'data_source_created',
-                event: {'id': 'testID'},
+                event: {id: 'testID'},
             }),
         );
         expect(event.isError).false;
@@ -67,7 +68,7 @@ describe('An Event Mapper Can', async () => {
             new Event({
                 containerID: containerID,
                 eventType: 'data_source_created',
-                event: {'id': 'testID'},
+                event: {id: 'testID'},
             }),
         );
         expect(event.isError).false;
@@ -77,7 +78,7 @@ describe('An Event Mapper Can', async () => {
         expect(retrieved.isError).false;
         expect(retrieved.value).not.empty;
 
-        const processed = await storage.SetProcessed(event.value.id!)
+        const processed = await storage.SetProcessed(event.value.id!);
         expect(processed.isError).false;
 
         const deleteEvent = await storage.Delete(event.value.id!);

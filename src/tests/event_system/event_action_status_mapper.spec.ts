@@ -40,7 +40,8 @@ describe('An Event Action Status Mapper Can', async () => {
     });
 
     after(async () => {
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can update an event action status', async () => {
@@ -53,7 +54,7 @@ describe('An Event Action Status Mapper Can', async () => {
             new Event({
                 containerID: containerID,
                 eventType: 'data_source_created',
-                event: {'id': 'testID'},
+                event: {id: 'testID'},
             }),
         );
 
@@ -71,7 +72,7 @@ describe('An Event Action Status Mapper Can', async () => {
             'test suite',
             new EventActionStatus({
                 eventID: event.value.id!,
-                eventActionID: action.value.id!
+                eventActionID: action.value.id!,
             }),
         );
         expect(status.isError).false;
@@ -89,5 +90,4 @@ describe('An Event Action Status Mapper Can', async () => {
 
         return Promise.resolve();
     });
-
 });

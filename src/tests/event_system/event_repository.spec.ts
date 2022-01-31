@@ -55,7 +55,8 @@ describe('An Event Repository', async () => {
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(container.id!);
+        await ContainerMapper.Instance.Delete(container.id!);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can save an Event', async () => {
@@ -63,7 +64,7 @@ describe('An Event Repository', async () => {
         const event = new Event({
             containerID: container.id,
             eventType: 'data_source_created',
-            event: {'id': 'testID'},
+            event: {id: 'testID'},
         });
 
         let saved = await repo.save(event, user);
@@ -71,7 +72,7 @@ describe('An Event Repository', async () => {
         expect(event.id).not.undefined;
 
         // now update
-        const config = {'test': 'config'};
+        const config = {test: 'config'};
         event.event_config = config;
 
         saved = await repo.save(event, user);
