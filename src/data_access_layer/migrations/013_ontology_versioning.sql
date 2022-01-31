@@ -54,8 +54,6 @@ CREATE TABLE IF NOT EXISTS container_alerts (
 /*
  remove the deleted_at fields, then add in the ontology version fields to the proper field
  */
-
-
 ALTER TABLE containers DROP COLUMN deleted_at;
 ALTER TABLE metatypes DROP COLUMN deleted_at CASCADE ;
 ALTER TABLE metatype_keys DROP COLUMN deleted_at;
