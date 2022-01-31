@@ -127,7 +127,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
 
     private retrieveStatement(metatypeKeyID: string): QueryConfig {
         return {
-            text: `SELECT * FROM metatype_relationship_keys WHERE id = $1 AND deleted_at IS NULL`,
+            text: `SELECT * FROM metatype_relationship_keys WHERE id = $1`,
             values: [metatypeKeyID],
         };
     }
@@ -162,7 +162,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
 
     private listStatement(relationshipID: string): QueryConfig {
         return {
-            text: `SELECT * FROM get_metatype_relationship_keys($1) WHERE deleted_at IS NULL `,
+            text: `SELECT * FROM get_metatype_relationship_keys($1)`,
             values: [relationshipID],
         };
     }

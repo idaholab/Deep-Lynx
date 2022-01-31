@@ -15,6 +15,7 @@ export default class MetatypeRelationshipKey extends BaseDomainClass {
     metatype_relationship_id?: string;
 
     @IsString()
+    @IsOptional()
     container_id?: string;
 
     @IsOptional()

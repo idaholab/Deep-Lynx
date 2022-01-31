@@ -128,7 +128,7 @@ export default class MetatypeKeyMapper extends Mapper {
 
     private retrieveStatement(metatypeKeyID: string): QueryConfig {
         return {
-            text: `SELECT * FROM metatype_keys WHERE id = $1 AND deleted_at IS NULL`,
+            text: `SELECT * FROM metatype_keys WHERE id = $1`,
             values: [metatypeKeyID],
         };
     }
@@ -165,7 +165,7 @@ export default class MetatypeKeyMapper extends Mapper {
     // all keys back, both the metatype's own and the inherited keys
     private listStatement(metatypeID: string): QueryConfig {
         return {
-            text: `SELECT * FROM get_metatype_keys($1::bigint) WHERE deleted_at IS NULL`,
+            text: `SELECT * FROM get_metatype_keys($1::bigint)`,
             values: [metatypeID],
         };
     }

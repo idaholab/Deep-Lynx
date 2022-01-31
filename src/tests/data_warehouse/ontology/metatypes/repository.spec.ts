@@ -268,7 +268,7 @@ describe('A Metatype Repository', async () => {
         return repository.delete(metatype);
     });
 
-    it('can archive a Metatype', async () => {
+    it('can delete a Metatype', async () => {
         const repository = new MetatypeRepository();
         const metatype = new Metatype({
             container_id: containerID,
@@ -279,9 +279,6 @@ describe('A Metatype Repository', async () => {
         const results = await repository.save(metatype, user);
         expect(results.isError).false;
         expect(metatype.id).not.undefined;
-
-        const archived = await repository.archive(user, metatype);
-        expect(archived.isError).false;
 
         return repository.delete(metatype);
     });

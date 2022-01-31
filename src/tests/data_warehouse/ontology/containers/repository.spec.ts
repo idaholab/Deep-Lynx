@@ -185,7 +185,7 @@ describe('A Container Repository', async () => {
         return Promise.resolve();
     });
 
-    it('can archive a container', async () => {
+    it('can delete a container', async () => {
         const repository = new ContainerRepository();
         const container = new Container({
             name: faker.name.findName(),
@@ -195,9 +195,6 @@ describe('A Container Repository', async () => {
         const results = await repository.save(container, user);
         expect(results.isError).false;
         expect(container.id).not.undefined;
-
-        const archived = await repository.archive(user, container);
-        expect(archived.isError).false;
 
         return repository.delete(container);
     });
