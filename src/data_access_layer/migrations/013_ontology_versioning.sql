@@ -63,8 +63,10 @@ ALTER TABLE metatype_relationship_pairs DROP COLUMN deleted_at;
 
 ALTER TABLE metatypes ADD COLUMN ontology_version bigint references ontology_versions(id) DEFAULT NULL;
 ALTER TABLE metatype_keys ADD COLUMN ontology_version bigint references ontology_versions(id) DEFAULT NULL;
+ALTER TABLE metatype_keys ADD COLUMN container_id bigint references containers(id) DEFAULT NULL;
 ALTER TABLE metatype_relationships ADD COLUMN ontology_version bigint references ontology_versions(id) DEFAULT NULL;
 ALTER TABLE metatype_relationship_keys ADD COLUMN ontology_version bigint references ontology_versions(id) DEFAULT NULL;
+ALTER TABLE metatype_relationship_keys ADD COLUMN container_id bigint references containers(id) DEFAULT NULL;
 ALTER TABLE metatype_relationship_pairs ADD COLUMN ontology_version bigint references ontology_versions(id) DEFAULT NULL;
 
 /*

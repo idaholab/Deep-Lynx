@@ -39,7 +39,7 @@ export default class Metatype extends BaseDomainClass {
     // for tracking removed keys for update
     #removedKeys: MetatypeKey[] | undefined;
 
-    constructor(input: {container_id: string; name: string; description: string; keys?: MetatypeKey[]}) {
+    constructor(input: {container_id?: string; name: string; description: string; keys?: MetatypeKey[]}) {
         super();
 
         // we have to do this because class-transformer doesn't know to create

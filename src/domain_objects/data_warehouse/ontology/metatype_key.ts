@@ -13,6 +13,9 @@ export default class MetatypeKey extends BaseDomainClass {
     @IsString()
     metatype_id?: string;
 
+    @IsString()
+    container_id?: string;
+
     @IsOptional()
     @IsBoolean()
     archived?: boolean;
@@ -55,6 +58,7 @@ export default class MetatypeKey extends BaseDomainClass {
 
     constructor(input: {
         metatype_id?: string;
+        container_id?: string;
         name: string;
         description: string;
         required: boolean;
@@ -82,6 +86,7 @@ export default class MetatypeKey extends BaseDomainClass {
             if (input.validation) this.validation = input.validation;
             if (input.metatype_id) this.metatype_id = input.metatype_id;
             if (input.default_value) this.default_value = input.default_value;
+            if (input.container_id) this.container_id = input.container_id;
         }
     }
 }

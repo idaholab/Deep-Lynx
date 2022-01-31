@@ -14,6 +14,9 @@ export default class MetatypeRelationshipKey extends BaseDomainClass {
     @IsString()
     metatype_relationship_id?: string;
 
+    @IsString()
+    container_id?: string;
+
     @IsOptional()
     @IsBoolean()
     archived?: boolean;
@@ -56,6 +59,7 @@ export default class MetatypeRelationshipKey extends BaseDomainClass {
 
     constructor(input: {
         metatype_relationship_id?: string;
+        container_id?: string;
         name: string;
         description: string;
         required: boolean;
@@ -81,6 +85,7 @@ export default class MetatypeRelationshipKey extends BaseDomainClass {
             if (input.options) this.options = input.options;
             if (input.validation) this.validation = input.validation;
             if (input.metatype_relationship_id) this.metatype_relationship_id = input.metatype_relationship_id;
+            if (input.container_id) this.container_id = input.container_id;
         }
     }
 }

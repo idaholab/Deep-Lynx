@@ -95,6 +95,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
     private createStatement(userID: string, ...keys: MetatypeRelationshipKey[]): string {
         const text = `INSERT INTO
                         metatype_relationship_keys(metatype_relationship_id,
+                                                   container_id,
                                                    name,
                                                    description,
                                                    property_name,
@@ -108,6 +109,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
                         VALUES %L RETURNING *`;
         const values = keys.map((key) => [
             key.metatype_relationship_id,
+            key.container_id,
             key.name,
             key.description,
             key.property_name,
@@ -169,6 +171,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
         const text = `UPDATE metatype_relationship_keys AS m SET
                      name = k.name,
                      metatype_relationship_id = k.metatype_relationship_id::bigint,
+                     container_id = k.container_id::bigint,
                      description = k.description,
                      property_name = k.property_name,
                      required = k.required::boolean,
@@ -179,12 +182,13 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
                      modified_by = k.modified_by,
                      modified_at = NOW()
                  FROM(VALUES %L) AS 
-                 k(id, name, metatype_relationship_id, description, property_name, required, data_type, options, default_value, validation, modified_by)
+                 k(id, name, metatype_relationship_id, container_id, description, property_name, required, data_type, options, default_value, validation, modified_by)
                  WHERE k.id::bigint = m.id RETURNING m.*`;
         const values = keys.map((key) => [
             key.id,
             key.name,
             key.metatype_relationship_id,
+            key.container_id,
             key.description,
             key.property_name,
             key.required,
