@@ -1,12 +1,14 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../../repository';
-import Changelist from '../../../../../domain_objects/data_warehouse/ontology/versioning/changelist';
+import Changelist, {ChangelistApproval} from '../../../../../domain_objects/data_warehouse/ontology/versioning/changelist';
 import Result from '../../../../../common_classes/result';
 import ChangelistMapper from '../../../../mappers/data_warehouse/ontology/versioning/changelist_mapper';
 import {User} from '../../../../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
+import ChangelistApprovalMapper from '../../../../mappers/data_warehouse/ontology/versioning/changelist_approval_mapper';
 
 export default class ChangelistRepository extends Repository implements RepositoryInterface<Changelist> {
     #mapper: ChangelistMapper = ChangelistMapper.Instance;
+    #approvalMapper: ChangelistApprovalMapper = ChangelistApprovalMapper.Instance;
 
     delete(t: Changelist): Promise<Result<boolean>> {
         if (t.id) return this.#mapper.Delete(t.id);
@@ -47,6 +49,24 @@ export default class ChangelistRepository extends Repository implements Reposito
 
     setStatus(id: string, userID: string, status: 'pending' | 'approved' | 'rejected' | 'applied', transaction?: PoolClient): Promise<Result<boolean>> {
         return this.#mapper.SetStatus(id, userID, status, transaction);
+    }
+
+    approveChangelist(approver: User, changelistID: string): Promise<Result<ChangelistApproval>> {
+        return this.#approvalMapper.Create(
+            approver.id!,
+            new ChangelistApproval({
+                changelist_id: changelistID,
+                approver_id: approver.id!,
+            }),
+        );
+    }
+
+    revokeApproval(changelistID: string): Promise<Result<boolean>> {
+        return this.#approvalMapper.DeleteByChangelist(changelistID);
+    }
+
+    listApprovals(changelistID: string): Promise<Result<ChangelistApproval[]>> {
+        return this.#approvalMapper.ListForChangelist(changelistID);
     }
 
     constructor() {

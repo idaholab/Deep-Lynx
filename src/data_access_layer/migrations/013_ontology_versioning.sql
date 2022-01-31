@@ -20,10 +20,11 @@ CREATE TABLE IF NOT EXISTS changelists (
 
 DROP TABLE IF EXISTS changelist_approvals;
 CREATE TABLE IF NOT EXISTS changelist_approvals (
+    id bigserial,
     changelist_id bigint REFERENCES changelists(id) ON UPDATE CASCADE ON DELETE CASCADE,
-    container_id bigint REFERENCES containers(id) ON UPDATE CASCADE ON DELETE CASCADE,
     approved_by character varying(255) not null,
-    approved_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+    approved_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(id)
 );
 
 DROP TABLE IF EXISTS ontology_versions;

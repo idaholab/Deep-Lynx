@@ -43,27 +43,27 @@ export default class Changelist extends BaseDomainClass {
 }
 
 export class ChangelistApproval extends NakedDomainClass {
+    @IsOptional()
+    @IsString()
+    id?: string;
+
     @IsString()
     changelist_id?: string;
 
     @IsString()
-    container_id?: string;
-
-    @IsString()
-    approver_id?: string;
+    approver_by?: string;
 
     @IsOptional()
     @IsDate()
     @Type(() => Date)
     approved_at?: Date;
 
-    constructor(input: {changelist_id: string; container_id: string; approver_id: string; approved_at?: Date}) {
+    constructor(input: {changelist_id: string; approver_id: string; approved_at?: Date}) {
         super();
 
         if (input) {
             this.changelist_id = input.changelist_id;
-            this.container_id = input.container_id;
-            this.approver_id = input.approver_id;
+            this.approver_by = input.approver_id;
             if (input.approved_at) this.approved_at = input.approved_at;
         }
     }
