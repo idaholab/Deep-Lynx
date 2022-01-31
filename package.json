@@ -145,6 +145,7 @@
         "passport-local": "^1.0.0",
         "pg-connection-string": "^2.5.0",
         "pg-format": "^1.0.4",
+        "pg-large-object": "^2.0.0",
         "pg-query-stream": "^4.2.1",
         "reflect-metadata": "^0.1.13",
         "tslib": "^2.3.0",
