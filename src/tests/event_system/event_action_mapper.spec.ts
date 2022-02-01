@@ -36,7 +36,8 @@ describe('An Event Action Mapper Can', async () => {
     });
 
     after(async () => {
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can update an event action', async () => {
@@ -66,5 +67,4 @@ describe('An Event Action Mapper Can', async () => {
 
         return Promise.resolve();
     });
-
 });

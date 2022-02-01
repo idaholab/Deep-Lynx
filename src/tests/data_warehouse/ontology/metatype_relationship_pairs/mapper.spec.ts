@@ -2,7 +2,7 @@ import Logger from '../../../../services/logger';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import MetatypeMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import MetatypeRelationshipMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
@@ -28,8 +28,8 @@ describe('A Metatype Relationship Pair Mapper can', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -40,7 +40,8 @@ describe('A Metatype Relationship Pair Mapper can', async () => {
     });
 
     after(async () => {
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can be saved to storage', async () => {
@@ -52,13 +53,13 @@ describe('A Metatype Relationship Pair Mapper can', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
+                description: faker.random.alphaNumeric(),
             }),
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         ]);
 
         expect(metatype.isError).false;
@@ -69,8 +70,8 @@ describe('A Metatype Relationship Pair Mapper can', async () => {
             new MetatypeRelationship({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(relationship.isError).false;
@@ -85,15 +86,15 @@ describe('A Metatype Relationship Pair Mapper can', async () => {
                 origin_metatype: metatype.value[0],
                 destination_metatype: metatype.value[1],
                 relationship: relationship.value,
-                container_id: containerID
-            })
+                container_id: containerID,
+            }),
         );
         expect(pair.isError).false;
 
         return mMapper.Delete(metatype.value[0].id!);
     });
 
-    it('can be archived and permanently deleted', async () => {
+    it('can be  deleted', async () => {
         const mMapper = MetatypeMapper.Instance;
         const rMapper = MetatypeRelationshipMapper.Instance;
         const rpMapper = MetatypeRelationshipPairMapper.Instance;
@@ -102,13 +103,13 @@ describe('A Metatype Relationship Pair Mapper can', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
+                description: faker.random.alphaNumeric(),
             }),
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         ]);
 
         expect(metatype.isError).false;
@@ -119,8 +120,8 @@ describe('A Metatype Relationship Pair Mapper can', async () => {
             new MetatypeRelationship({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(relationship.isError).false;
@@ -135,14 +136,11 @@ describe('A Metatype Relationship Pair Mapper can', async () => {
                 origin_metatype: metatype.value[0],
                 destination_metatype: metatype.value[1],
                 relationship: relationship.value,
-                container_id: containerID
-            })
+                container_id: containerID,
+            }),
         );
 
         expect(pair.isError).false;
-
-        const archived = await rpMapper.Archive(pair.value.id!, 'test suite');
-        expect(archived.isError).false;
 
         const deleted = await rpMapper.Delete(pair.value.id!);
         expect(deleted.isError).false;

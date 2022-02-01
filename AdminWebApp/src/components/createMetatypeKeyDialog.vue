@@ -169,6 +169,7 @@ export default class CreateMetatypeKeyDialog extends Vue {
 
   createMetatypeKey() {
     if(this.metatypeKey) {
+      this.metatypeKey.container_id = this.metatype.container_id
       this.$client.createMetatypeKey(this.metatype.container_id, this.metatype.id, this.metatypeKey)
           .then(result => {
             if(!result) {

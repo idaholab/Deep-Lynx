@@ -1,5 +1,5 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import MetatypeRelationshipMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
 import Logger from '../../../../services/logger';
@@ -22,8 +22,8 @@ describe('A Metatype Relationship Mapper', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -34,7 +34,8 @@ describe('A Metatype Relationship Mapper', async () => {
     });
 
     after(async () => {
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can be saved to mapper', async () => {
@@ -45,8 +46,8 @@ describe('A Metatype Relationship Mapper', async () => {
             new MetatypeRelationship({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -63,8 +64,8 @@ describe('A Metatype Relationship Mapper', async () => {
             new MetatypeRelationship({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -84,8 +85,8 @@ describe('A Metatype Relationship Mapper', async () => {
             new MetatypeRelationship({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -102,8 +103,8 @@ describe('A Metatype Relationship Mapper', async () => {
             new MetatypeRelationship({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -124,8 +125,8 @@ describe('A Metatype Relationship Mapper', async () => {
             new MetatypeRelationship({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;

@@ -129,7 +129,7 @@ export default class ContainerMapper extends Mapper {
 
     private setActiveStatement(containerID: string, userID: string): QueryConfig {
         return {
-            text: `UPDATE containers SET deleted_at = NULL, modified_at = NOW(), modified_by = $2 WHERE id = $1`,
+            text: `UPDATE containers SET modified_at = NOW(), modified_by = $2 WHERE id = $1`,
             values: [containerID, userID],
         };
     }
@@ -153,8 +153,7 @@ export default class ContainerMapper extends Mapper {
     private listStatement(): QueryConfig {
         return {
             text: `SELECT c.*
-                    FROM containers c
-                    WHERE deleted_at IS NULL`,
+                    FROM containers c`,
         };
     }
 

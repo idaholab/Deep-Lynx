@@ -1,10 +1,10 @@
-import { expect } from 'chai';
+import {expect} from 'chai';
 import * as faker from 'faker';
 import Logger from '../../../../services/logger';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import Container from '../../../../domain_objects/data_warehouse/ontology/container';
-import { classToPlain, plainToClass } from 'class-transformer';
+import {classToPlain, plainToClass} from 'class-transformer';
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 
 describe('A Metatype Relationship Pair should', async () => {
@@ -22,8 +22,8 @@ describe('A Metatype Relationship Pair should', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -34,14 +34,15 @@ describe('A Metatype Relationship Pair should', async () => {
     });
 
     after(async () => {
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('be able to assign metatype ids on plainToClass transformation', async () => {
         const check = plainToClass(MetatypeRelationshipPair, {
             destination_metatype_id: '1',
             origin_metatype_id: '1',
-            relationship_id: '1'
+            relationship_id: '1',
         });
         expect(check.originMetatype).not.undefined;
         expect(check.destinationMetatype).not.undefined;

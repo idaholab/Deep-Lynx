@@ -31,6 +31,9 @@ export default class ContainerRoutes {
         app.post('/containers/:containerID/active', ...middleware, authInContainer('read', 'data'), this.setActive);
 
         app.post('/containers/:containerID/permissions', ...middleware, authRequest('write', 'containers'), this.repairPermissions);
+
+        app.get('/containers/:containerID/alerts', ...middleware, authRequest('read', 'data'), this.listAlerts);
+        app.post('/containers/:containerID/alerts/:alertID', ...middleware, authRequest('write', 'data'), this.acknowledgeAlert);
     }
 
     private static createContainer(req: Request, res: Response, next: NextFunction) {
@@ -93,6 +96,26 @@ export default class ContainerRoutes {
     private static listContainers(req: Request, res: Response, next: NextFunction) {
         repository
             .listForUser(req.currentUser!)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((err) => res.status(404).send(err))
+            .finally(() => next());
+    }
+
+    private static listAlerts(req: Request, res: Response, next: NextFunction) {
+        repository
+            .activeAlertsForContainer(req.params.containerID)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((err) => res.status(404).send(err))
+            .finally(() => next());
+    }
+
+    private static acknowledgeAlert(req: Request, res: Response, next: NextFunction) {
+        repository
+            .acknowledgeAlert(req.params.alertID, req.currentUser!)
             .then((result) => {
                 result.asResponse(res);
             })

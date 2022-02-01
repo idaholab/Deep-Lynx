@@ -215,13 +215,17 @@ export default class Metatype extends BaseDomainClass {
                             }
 
                             if (key.validation.min !== undefined && key.validation.min > count) {
-                                errorStrings.push(`Validation of ${key.property_name} failed, this key is required. ` +
-                                    `${count} provided, less than min (${key.validation.min}).`);
+                                errorStrings.push(
+                                    `Validation of ${key.property_name} failed, this key is required. ` +
+                                        `${count} provided, less than min (${key.validation.min}).`,
+                                );
                             }
 
                             if (key.validation.max !== undefined && key.validation.max < count) {
-                                errorStrings.push(`Validation of ${key.property_name} failed, too many of this key provided. ` +
-                                    `${count} provided, more than max (${key.validation.max}).`);
+                                errorStrings.push(
+                                    `Validation of ${key.property_name} failed, too many of this key provided. ` +
+                                        `${count} provided, more than max (${key.validation.max}).`,
+                                );
                             }
                         }
 
@@ -239,7 +243,6 @@ export default class Metatype extends BaseDomainClass {
                 } else {
                     resolve(Result.Success(cts));
                 }
-
             };
         };
 

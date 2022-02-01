@@ -54,6 +54,7 @@ export type MetatypeRelationshipPairT = {
 export type MetatypeKeyT = {
     id: string;
     metatype_id: string;
+    container_id: string;
     name: string;
     property_name: string;
     required: boolean;
@@ -78,6 +79,7 @@ export type MetatypeKeyT = {
 export type MetatypeRelationshipKeyT = {
     id: string;
     metatype_relationship_id: string;
+    container_id: string;
     name: string;
     property_name: string;
     required: boolean;

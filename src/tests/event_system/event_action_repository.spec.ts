@@ -55,7 +55,8 @@ describe('An Event Action Repository', async () => {
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(container.id!);
+        await ContainerMapper.Instance.Delete(container.id!);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can save an Event Action', async () => {

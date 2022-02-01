@@ -1,5 +1,5 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import 'reflect-metadata';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
@@ -18,6 +18,10 @@ describe('A Container Mapper', async () => {
         return Promise.resolve();
     });
 
+    after(async () => {
+        await PostgresAdapter.Instance.close();
+    });
+
     it('can save to storage', async () => {
         const mapper = ContainerStorage.Instance;
 
@@ -25,8 +29,8 @@ describe('A Container Mapper', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -40,11 +44,11 @@ describe('A Container Mapper', async () => {
 
         const container1 = new Container({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const container2 = new Container({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         const containers = await mapper.BulkCreate('test suite', [container1, container2]);
@@ -65,8 +69,8 @@ describe('A Container Mapper', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -86,8 +90,8 @@ describe('A Container Mapper', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -107,8 +111,8 @@ describe('A Container Mapper', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -136,11 +140,11 @@ describe('A Container Mapper', async () => {
 
         const container1 = new Container({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const container2 = new Container({
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         const containers = await mapper.BulkCreate('test suite', [container1, container2]);

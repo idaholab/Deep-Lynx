@@ -97,7 +97,7 @@ export default class MetatypeMapper extends Mapper {
     // without having to do a join each time
     private retrieveStatement(metatypeID: string): QueryConfig {
         return {
-            text: `SELECT * FROM metatypes_view WHERE id = $1 AND deleted_at IS NULL`,
+            text: `SELECT * FROM metatypes_view WHERE id = $1`,
             values: [metatypeID],
         };
     }
