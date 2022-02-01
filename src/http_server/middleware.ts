@@ -22,10 +22,11 @@ import ImportRepository from '../data_access_layer/repositories/data_warehouse/i
 import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import DataSourceRepository from '../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import FileRepository from '../data_access_layer/repositories/data_warehouse/data/file_repository';
-import TaskRepository from '../data_access_layer/repositories/task_repository';
+import TaskRepository from '../data_access_layer/repositories/task_runner/task_repository';
 import EventRepository from '../data_access_layer/repositories/event_system/event_repository';
 import EventActionRepository from '../data_access_layer/repositories/event_system/event_action_repository';
 import EventActionStatusRepository from '../data_access_layer/repositories/event_system/event_action_status_repository';
+import ChangelistRepository from '../data_access_layer/repositories/data_warehouse/ontology/versioning/changelist_repository';
 
 // authRequest is used to manage user authorization against resources, optional param for declaring domain
 export function authRequest(action: 'read' | 'write', resource: string, domainParam?: string) {
@@ -374,36 +375,6 @@ export function oauthAppContext(): any {
                 }
 
                 req.oauthApp = result.value;
-                next();
-            })
-            .catch((error) => {
-                resp.status(500).json(error);
-                return;
-            });
-    };
-}
-
-// eventContext will attempt to fetch an event by id specified by the
-// id query parameter. If one is fetched it will pass it on in request context.
-// route must contain the param labeled "eventID"
-export function eventContext(): any {
-    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
-        // if we don't have an id , don't fail, just pass without action
-        if (!req.params.eventID) {
-            next();
-            return;
-        }
-
-        const repo = new EventRepository();
-
-        repo.findByID(req.params.eventID)
-            .then((result) => {
-                if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
-                    return;
-                }
-
-                req.event = result.value;
                 next();
             })
             .catch((error) => {
@@ -764,6 +735,36 @@ export function taskContext(): any {
                 }
 
                 req.task = result.value;
+                next();
+            })
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
+}
+
+// changelistContext will attempt to fetch a changelist by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "changelistID"
+export function changelistContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have an id, don't fail, just pass without action
+        if (!req.params.changelistID) {
+            next();
+            return;
+        }
+
+        const repo = new ChangelistRepository();
+
+        repo.findByID(req.params.changelistID)
+            .then((result) => {
+                if (result.isError) {
+                    result.asResponse(resp);
+                    return;
+                }
+
+                req.changelist = result.value;
                 next();
             })
             .catch((error) => {

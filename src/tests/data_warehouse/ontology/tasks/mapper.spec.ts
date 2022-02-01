@@ -1,12 +1,11 @@
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
-import { expect } from "chai";
-import faker from "faker";
+import {expect} from 'chai';
+import faker from 'faker';
 import Logger from '../../../../services/logger';
-import TaskMapper from '../../../../data_access_layer/mappers/task_mapper';
-import TaskRecord from '../../../../domain_objects/data_warehouse/task';
+import TaskMapper from '../../../../data_access_layer/mappers/task_runner/task_mapper';
+import TaskRecord from '../../../../domain_objects/task_runner/task';
 import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-
 
 describe('A Task Mapper', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -37,7 +36,6 @@ describe('A Task Mapper', async () => {
     });
 
     it('can save to storage', async () => {
-
         const mapper = TaskMapper.Instance;
 
         const task = await mapper.Create(
@@ -45,8 +43,8 @@ describe('A Task Mapper', async () => {
             new TaskRecord({
                 container_id: containerID,
                 task_type: 'hpc',
-                query: 'Sample GraphQL query'
-            })
+                query: 'Sample GraphQL query',
+            }),
         );
 
         expect(task.isError).false;
@@ -56,7 +54,6 @@ describe('A Task Mapper', async () => {
     });
 
     it('can be updated in storage', async () => {
-
         const mapper = TaskMapper.Instance;
 
         const task = await mapper.Create(
@@ -64,19 +61,19 @@ describe('A Task Mapper', async () => {
             new TaskRecord({
                 container_id: containerID,
                 task_type: 'hpc',
-                query: 'Sample GraphQL query'
-            })
+                query: 'Sample GraphQL query',
+            }),
         );
 
         expect(task.isError).false;
         expect(task.value.id).not.null;
 
-        const retrieved = await mapper.Retrieve(task.value.id!)
+        const retrieved = await mapper.Retrieve(task.value.id!);
         expect(retrieved.isError).false;
 
-        const listed = await mapper.List()
-        expect(listed.isError).false
-        expect(listed.value.length).greaterThan(0)
+        const listed = await mapper.List();
+        expect(listed.isError).false;
+        expect(listed.value.length).greaterThan(0);
 
         task.value.status = 'completed';
         task.value.status_message = 'test task complete';
@@ -85,7 +82,6 @@ describe('A Task Mapper', async () => {
         expect(updateResult.isError).false;
         expect(updateResult.value.status).eq('completed');
 
-        return await mapper.Delete(task.value.id!)
-    })
-
-})
+        return await mapper.Delete(task.value.id!);
+    });
+});

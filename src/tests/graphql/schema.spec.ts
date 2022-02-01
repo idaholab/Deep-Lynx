@@ -28,6 +28,7 @@ import {DataSourceFactory} from '../../data_access_layer/repositories/data_wareh
 import TypeTransformation, {KeyMapping} from '../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeTransformationMapper from '../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper';
 import TypeMappingMapper from '../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
+import {ProcessData} from '../../data_processing/process';
 
 describe('The GraphQL Schema Generator', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -491,14 +492,23 @@ describe('The GraphQL Schema Generator', async () => {
         const active = await TypeMappingMapper.Instance.SetActive(typeMappingID);
         expect(active.isError).false;
 
-        await dataSource?.Process();
+        const dataStagingRepo = new DataStagingRepository();
+        const records = await dataStagingRepo.where().dataSourceID('eq', dataSource!.DataSourceRecord!.id).list();
+        expect(records.isError).false;
+        expect(records.value.length).gt(0);
+
+        for (const record of records.value) {
+            const result = await ProcessData(record);
+            expect(result.isError, result.error?.error).false;
+        }
 
         return Promise.resolve();
     });
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can generate a valid schema', async () => {

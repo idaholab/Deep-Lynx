@@ -132,7 +132,12 @@ export default class NodeMapper extends Mapper {
                   data_staging_id,
                   metadata,
                   created_by,
-                  modified_by) VALUES %L RETURNING *`;
+                  modified_by) VALUES %L
+                  ON CONFLICT(created_at, id) DO UPDATE SET
+                      properties = EXCLUDED.properties,
+                      metadata = EXCLUDED.metadata
+                    WHERE EXCLUDED.id = nodes.id 
+                   RETURNING *`;
 
         const values = nodes.map((n) => [
             n.container_id,
@@ -216,7 +221,7 @@ export default class NodeMapper extends Mapper {
 
     private deleteEdgesStatement(nodeID: string): QueryConfig {
         return {
-            text: `UPDATE edges SET deleted_at = NOW() WHERE origin_id = $1 OR destination_id = $1 AND deleted_at IS NULL`,
+            text: `UPDATE edges SET deleted_at = NOW() WHERE (origin_id = $1 OR destination_id = $1) AND deleted_at IS NULL`,
             values: [nodeID],
         };
     }

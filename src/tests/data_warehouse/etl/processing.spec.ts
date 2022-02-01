@@ -25,8 +25,10 @@ import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping
 import TypeTransformation, {KeyMapping} from '../../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeMappingRepository from '../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
 import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
-import DataSourceRecord, {DataSource} from '../../../domain_objects/data_warehouse/import/data_source';
+import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 import {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
+import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
+import {ProcessData} from '../../../data_processing/process';
 
 describe('A Data Processor', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -36,6 +38,7 @@ describe('A Data Processor', async () => {
     let dataImportID: string = '';
     let resultMetatypeRelationships: MetatypeRelationship[] = [];
     let user: User;
+    let inserted: DataStaging;
 
     let maintenancePair: MetatypeRelationshipPair | undefined;
 
@@ -383,7 +386,7 @@ describe('A Data Processor', async () => {
 
         dataImportID = newImport.value.id!;
 
-        const inserted = await DataStagingMapper.Instance.Create(
+        const insertedResult = await DataStagingMapper.Instance.Create(
             new DataStaging({
                 data_source_id: exp.value.id!,
                 import_id: newImport.value.id!,
@@ -391,8 +394,9 @@ describe('A Data Processor', async () => {
                 shape_hash: mapping.shape_hash,
             }),
         );
-        expect(inserted.isError).false;
-        expect(inserted.value.id).not.undefined;
+        expect(insertedResult.isError).false;
+        expect(insertedResult.value.id).not.undefined;
+        inserted = insertedResult.value;
 
         return Promise.resolve();
     });
@@ -488,7 +492,8 @@ describe('A Data Processor', async () => {
         const active = await TypeMappingMapper.Instance.SetActive(typeMappingID);
         expect(active.isError).false;
 
-        await dataSource!.Process();
+        const processResult = await ProcessData(inserted);
+        expect(processResult.isError).false;
 
         const nodeRepo = new NodeRepository();
         const nodes = await nodeRepo.where().importDataID('eq', dataImportID).list();

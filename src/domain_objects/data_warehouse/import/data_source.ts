@@ -1,38 +1,8 @@
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
-import {ArrayMinSize, IsArray, IsBoolean, IsDefined, IsIn, IsObject, IsOptional, IsString, IsUrl, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
+import {ArrayMinSize, IsArray, IsBoolean, IsDefined, IsIn, IsObject, IsOptional, IsString, IsUrl, ValidateIf, ValidateNested} from 'class-validator';
 import {Exclude, Type} from 'class-transformer';
-import {User} from '../../access_management/user';
-import Import, {DataStaging} from './import';
-import Result from '../../../common_classes/result';
 import {PoolClient} from 'pg';
-import {Readable, Transform} from 'stream';
-
-/*
-    The DataSource interface represents basic functionality of a data source. All
-    data sources must be able to receive and process received information.
- */
-export interface DataSource {
-    DataSourceRecord?: DataSourceRecord;
-
-    // ReceiveData accepts a Readable stream who's origin data is an array of JSON objects. JSONStream will handle
-    // parsing this data into valid javascript objects. If your origin data is not valid JSON then you must pass
-    // in one or more valid Transform stream types to convert your origin data into valid JSON prior to parsing.
-    // If your stream is already valid javascript objects, or you don't need parsing - override the JSON stream.
-    // This function should return the import record the data is stored under - optionally you can pass an
-    // import that already exists in case you are adding data to it. This is not best practice
-    // because you might be adding records to an import which isn't the latest, potentially overwriting
-    // newer data when the data source attempts to process it
-    ReceiveData(payload: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | DataStaging[]>>;
-
-    // process single fire function that both processes the data from the
-    // source as well as running any polling efforts like with the http implementation
-    // this is run once per minute by default
-    Process(): Promise<Result<boolean>>;
-
-    // this final method is so that the data source can run any encryption or source
-    // specific functions prior to the data source record being saved into the database
-    ToSave(): Promise<DataSourceRecord>;
-}
+import {Transform} from 'stream';
 
 // ReceiveDataOptions will allow us to grow the potential options needed by the ReceiveData
 // function of various implementations without having to grow the parameter list

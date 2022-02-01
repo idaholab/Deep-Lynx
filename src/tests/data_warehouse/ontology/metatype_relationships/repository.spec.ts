@@ -55,7 +55,8 @@ describe('A Metatype Relationship Repository', async () => {
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can save a Metatype Relationship', async () => {
@@ -255,7 +256,7 @@ describe('A Metatype Relationship Repository', async () => {
         return repository.delete(relationship);
     });
 
-    it('can archive a Metatype Relationship', async () => {
+    it('can deletea Metatype Relationship', async () => {
         const repository = new MetatypeRelationshipRepository();
         const relationship = new MetatypeRelationship({
             container_id: containerID,
@@ -266,9 +267,6 @@ describe('A Metatype Relationship Repository', async () => {
         const results = await repository.save(relationship, user);
         expect(results.isError).false;
         expect(relationship.id).not.undefined;
-
-        const archived = await repository.archive(user, relationship);
-        expect(archived.isError).false;
 
         return repository.delete(relationship);
     });

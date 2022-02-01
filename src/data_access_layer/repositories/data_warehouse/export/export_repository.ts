@@ -1,10 +1,11 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import ExportRecord, {Exporter} from '../../../../domain_objects/data_warehouse/export/export';
-import {GremlinImpl} from '../../../../interface_implementations/data_warehouse/export/gremlin_export_impl';
+import ExportRecord from '../../../../domain_objects/data_warehouse/export/export';
+import {GremlinImpl} from '../../../../interfaces_and_impl/data_warehouse/export/gremlin_export_impl';
 import ExportMapper from '../../../mappers/data_warehouse/export/export_mapper';
 import {SuperUser, User} from '../../../../domain_objects/access_management/user';
 import Result from '../../../../common_classes/result';
 import {PoolClient} from 'pg';
+import {Exporter} from '../../../../interfaces_and_impl/data_warehouse/export/exporter';
 
 /*
     ExportRepository contains methods for persisting and retrieving data exports

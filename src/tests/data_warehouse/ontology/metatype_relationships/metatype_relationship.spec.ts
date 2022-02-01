@@ -1,8 +1,8 @@
 import * as t from 'io-ts';
-import { expect } from 'chai';
-import { fold } from 'fp-ts/lib/Either';
-import { pipe } from 'fp-ts/lib/pipeable';
-import { failure } from 'io-ts/lib/PathReporter';
+import {expect} from 'chai';
+import {fold} from 'fp-ts/lib/Either';
+import {pipe} from 'fp-ts/lib/pipeable';
+import {failure} from 'io-ts/lib/PathReporter';
 import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 import * as faker from 'faker';
 import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
@@ -38,8 +38,8 @@ describe('A Metatype Relationship should', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -50,14 +50,15 @@ describe('A Metatype Relationship should', async () => {
     });
 
     after(async () => {
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('be able to compile keys and pass/fail payloads', (done) => {
         const metatype = new MetatypeRelationship({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         metatype.addKey(...test_keys);
 
@@ -67,15 +68,15 @@ describe('A Metatype Relationship should', async () => {
     });
 });
 
-const payload: { [key: string]: any } = {
+const payload: {[key: string]: any} = {
     flower: 'Daisy',
     color: 'yellow',
-    notRequired: 1
+    notRequired: 1,
 };
 
-const malformed_payload: { [key: string]: any } = {
+const malformed_payload: {[key: string]: any} = {
     flower: 'Daisy',
-    notRequired: 1
+    notRequired: 1,
 };
 
 export const test_keys: MetatypeRelationshipKey[] = [
@@ -84,7 +85,7 @@ export const test_keys: MetatypeRelationshipKey[] = [
         description: 'flower name',
         required: true,
         property_name: 'flower_name',
-        data_type: 'string'
+        data_type: 'string',
     }),
     new MetatypeRelationshipKey({
         name: 'Test2',
@@ -92,15 +93,15 @@ export const test_keys: MetatypeRelationshipKey[] = [
         required: true,
         property_name: 'color',
         data_type: 'enumeration',
-        options: ['yellow', 'blue']
+        options: ['yellow', 'blue'],
     }),
     new MetatypeRelationshipKey({
         name: 'Test Not Required',
         description: 'not required',
         required: false,
         property_name: 'notRequired',
-        data_type: 'number'
-    })
+        data_type: 'number',
+    }),
 ];
 
 export const single_test_key: MetatypeRelationshipKey = new MetatypeRelationshipKey({
@@ -108,5 +109,5 @@ export const single_test_key: MetatypeRelationshipKey = new MetatypeRelationship
     description: 'not required',
     required: false,
     property_name: 'notRequired',
-    data_type: 'number'
+    data_type: 'number',
 });

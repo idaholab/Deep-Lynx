@@ -55,7 +55,8 @@ describe('A Metatype Repository', async () => {
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can save a Metatype', async () => {
@@ -268,7 +269,7 @@ describe('A Metatype Repository', async () => {
         return repository.delete(metatype);
     });
 
-    it('can archive a Metatype', async () => {
+    it('can delete a Metatype', async () => {
         const repository = new MetatypeRepository();
         const metatype = new Metatype({
             container_id: containerID,
@@ -279,9 +280,6 @@ describe('A Metatype Repository', async () => {
         const results = await repository.save(metatype, user);
         expect(results.isError).false;
         expect(metatype.id).not.undefined;
-
-        const archived = await repository.archive(user, metatype);
-        expect(archived.isError).false;
 
         return repository.delete(metatype);
     });

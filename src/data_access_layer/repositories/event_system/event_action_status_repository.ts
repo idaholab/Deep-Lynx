@@ -5,7 +5,6 @@ import Result from '../../../common_classes/result';
 import {plainToClass} from 'class-transformer';
 import {User} from '../../../domain_objects/access_management/user';
 
-
 /*
     EventActionStatusRepository contains methods for persisting and retrieving an event registration
     to storage. Users should interact with repositories when possible and not
@@ -55,7 +54,7 @@ export default class EventActionStatusRepository extends Repository implements R
     }
 
     eventID(operator: string, value: any) {
-        super.query('event_id', operator, value);
+        super.query(`event ->> 'id'`, operator, value);
         return this;
     }
 

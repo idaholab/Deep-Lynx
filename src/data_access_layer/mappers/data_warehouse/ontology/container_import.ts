@@ -748,6 +748,7 @@ export default class ContainerImport {
                             const propName = dataProp.name.split(' ').join('_');
                             const data = new MetatypeKey({
                                 metatype_id: thisClass.db_id,
+                                container_id: containerID,
                                 name: dataProp.name,
                                 required: false,
                                 property_name: stringToValidPropertyName(propName),

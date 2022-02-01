@@ -33,8 +33,9 @@ export default class RabbitMQQueue implements QueueInterface {
             .then((ok) => {
                 this.channel?.consume(queueName, (msg: ConsumeMessage | null) => {
                     if (msg) {
-                        destination.write(JSON.parse(msg.content.toString()));
-                        this.channel?.ack(msg);
+                        destination.write(JSON.parse(msg.content.toString()), () => {
+                            this.channel?.ack(msg);
+                        });
                     }
                 });
             })

@@ -1,24 +1,24 @@
-import { plainToClass } from "class-transformer";
-import { Application, NextFunction, Request, Response } from "express";
-import Result from "../../common_classes/result";
-import { authInContainer } from "../middleware";
-import Config from "../../services/config";
-import { User } from "../../domain_objects/access_management/user";
-import TaskRecord, { HpcTaskConfig } from "../../domain_objects/data_warehouse/task";
-import TaskRepository from "../../data_access_layer/repositories/task_repository";
-import { QueryOptions } from "../../data_access_layer/repositories/repository";
+import {plainToClass} from 'class-transformer';
+import {Application, NextFunction, Request, Response} from 'express';
+import Result from '../../../common_classes/result';
+import {authInContainer} from '../../middleware';
+import Config from '../../../services/config';
+import {User} from '../../../domain_objects/access_management/user';
+import TaskRecord, {HpcTaskConfig} from '../../../domain_objects/task_runner/task';
+import TaskRepository from '../../../data_access_layer/repositories/task_runner/task_repository';
+import {QueryOptions} from '../../../data_access_layer/repositories/repository';
 
 const taskRepo = new TaskRepository();
 
 export default class TaskRoutes {
     public static mount(app: Application, middleware: any[]) {
-        app.post('/containers/:containerID/task', ...middleware, authInContainer('write', 'data'), this.createTask)
+        app.post('/containers/:containerID/task', ...middleware, authInContainer('write', 'data'), this.createTask);
 
-        app.get('/containers/:containerID/task', ...middleware, authInContainer('read', 'data'), this.listTasks)
+        app.get('/containers/:containerID/task', ...middleware, authInContainer('read', 'data'), this.listTasks);
 
-        app.put('/containers/:containerID/task/:taskID', ...middleware, authInContainer('write', 'data'), this.updateTask)
+        app.put('/containers/:containerID/task/:taskID', ...middleware, authInContainer('write', 'data'), this.updateTask);
 
-        app.get('/containers/:containerID/task/:taskID', ...middleware, authInContainer('read', 'data'), this.getTask)
+        app.get('/containers/:containerID/task/:taskID', ...middleware, authInContainer('read', 'data'), this.getTask);
     }
 
     private static createTask(req: Request, res: Response, next: NextFunction) {
@@ -134,9 +134,9 @@ export default class TaskRoutes {
 
     private verifyUser(user: User): boolean {
         if (user.email === Config.hpc_email) {
-            return true
+            return true;
         } else {
-            return false
+            return false;
         }
     }
 }
