@@ -7,7 +7,7 @@ const format = require('pg-format');
 const resultClass = ContainerAlert;
 
 /*
-    ContainerMapper extends the Postgres database Mapper class and allows
+    ContainerAlertMapper extends the Postgres database Mapper class and allows
     the user to map a data structure to and from the attached database. The mappers
     are designed to be as simple as possible and should not contain things like
     validation or transformation of the data prior to storage - those operations
