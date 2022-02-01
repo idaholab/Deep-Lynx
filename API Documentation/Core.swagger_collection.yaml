@@ -408,11 +408,6 @@ paths:
           in: query
           name: metatypeID
           description: Return only nodes for the selected metatype
-        - schema:
-            type: string
-          in: query
-          name: dataSourceID
-          description: Return only nodes for the selected datasource
       responses:
         '200':
           description: ''
@@ -579,14 +574,6 @@ paths:
             type: string
           in: query
           name: relationshipPairName
-        - schema:
-            type: string
-          in: query
-          name: dataSourceID
-        - schema:
-            type: string
-          in: query
-          name: loadRelationshipPairs
       responses:
         '200':
           description: ''
@@ -3200,20 +3187,6 @@ paths:
                 file:
                   type: string
   /events:
-    get:
-      tags:
-        - Events
-      summary: List Events
-      description: Lists all events
-      operationId: ListEvents
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListEventsResponse'
-      deprecated: false
     post:
       tags:
         - Events
@@ -3235,27 +3208,6 @@ paths:
                 $ref: '#/components/schemas/CreateEventResponse'
       deprecated: false
       x-codegen-request-body-name: Body
-  '/events/{event_id}':
-    get:
-      tags:
-        - Events
-      summary: Retrieve Event
-      description: Retrieve an event
-      operationId: RetrieveEvent
-      parameters:
-        - name: event_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetEventResponse'
-      deprecated: false
   /event_actions:
     get:
       summary: List Event Actions
@@ -3360,6 +3312,12 @@ paths:
                 $ref: '#/components/schemas/ListEventActionStatusResponse'
       operationId: ListEventActionStatuses
       description: List all event action statuses
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: eventID
+          description: Filter returned statuses by the event ID
   '/event_action_status/{status_id}':
     parameters:
       - schema:
@@ -3644,9 +3602,12 @@ paths:
         required: true
     get:
       summary: List Container Alerts
-      tags: []
-      responses: {}
-      operationId: get-containers-container_id-alerts
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+      operationId: ListContainerAlerts
       description: List all active alerts for a container by ID.
   '/containers/{container_id}/alerts/{alert_id}':
     parameters:
@@ -3662,7 +3623,9 @@ paths:
         required: true
     post:
       summary: Acknowledge Container Alert
-      operationId: post-containers-container_id-alerts-alert_id
+      operationId: AcknowledgeContainerAlert
+      tags:
+        - Containers
       responses:
         '200':
           description: OK
@@ -3676,13 +3639,18 @@ paths:
         required: true
     get:
       summary: List Changelists
-      tags: []
-      responses: {}
-      operationId: get-containers-container_id-ontology-changelists
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+      operationId: ListChangelists
       description: List all changelists for a container. Will eventually support filters.
     post:
       summary: Create New Changelist
-      operationId: post-containers-container_id-ontology-changelists
+      operationId: CreateNewChangelist
+      tags:
+        - Containers
       responses:
         '200':
           description: OK
@@ -3716,13 +3684,18 @@ paths:
         required: true
     get:
       summary: Retrieve Changelist
-      tags: []
-      responses: {}
-      operationId: get-containers-container_id-ontology-changelists-changelist_id
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+      operationId: RetrieveChangelist
       description: Retrieve a changelist by id.
     put:
       summary: Update Changelist
-      operationId: put-containers-container_id-ontology-changelists-changelist_id
+      operationId: UpdateChangelist
+      tags:
+        - Containers
       responses:
         '200':
           description: OK
@@ -3755,11 +3728,13 @@ paths:
                     changeExample: example
     delete:
       summary: Delete Changelist
-      operationId: delete-containers-container_id-ontology-changelists-changelist_id
+      operationId: DeleteChangelist
+      tags:
+        - Containers
       responses:
         '200':
           description: OK
-      description: ''
+      description: 'Deletes a changelist'
   '/containers/{container_id}/ontology/changelists/{changelistID}/apply':
     parameters:
       - schema:
@@ -3774,9 +3749,12 @@ paths:
         required: true
     get:
       summary: Apply Changelist
-      tags: []
-      responses: {}
-      operationId: get-containers-container_id-ontology-changelists-changelistID-apply
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+      operationId: ApplyChangelist
       description: 'Applies changelist to the ontology, creates a new ontology version.'
   '/containers/{container_id}/ontology/changelists/{changelist_id}/approve':
     parameters:
@@ -3792,13 +3770,18 @@ paths:
         required: true
     get:
       summary: Approve Changelist
-      tags: []
-      responses: {}
-      operationId: get-containers-container_id-ontology-changelists-changelist_id-approve
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+      operationId: ApproveChangelist
       description: 'Approves a changelist for application. Note: you must still apply changelist after approval, this does not apply changelist.'
     delete:
-      summary: Revoke Approval
-      operationId: delete-containers-container_id-ontology-changelists-changelist_id-approve
+      summary: Revoke Changelist Approval
+      operationId: RevokeChangelistApproval
+      tags:
+        - Containers
       responses:
         '200':
           description: OK
@@ -4483,26 +4466,8 @@ components:
           $ref: '#/components/schemas/CreateManualImport'
         isError:
           type: boolean
-    ListEventsResponse:
-      title: ListEventsResponse
-      type: object
-      properties:
-        value:
-          type: array
-          items:
-            $ref: '#/components/schemas/Event'
-        isError:
-          type: boolean
     CreateEventResponse:
       title: CreateEventResponse
-      type: object
-      properties:
-        value:
-          $ref: '#/components/schemas/Event'
-        isError:
-          type: boolean
-    GetEventResponse:
-      title: GetEventResponse
       type: object
       properties:
         value:
@@ -5089,17 +5054,10 @@ components:
         - name
         - description
         - data_versioning_enabled
-    ContainerImportRequest - copy:
+    CreateContainerAlertRequest:
       title: CreateContainerAlertRequest
       description: ''
       type: object
-      x-examples:
-        example-1:
-          name: string
-          description: string
-          data_versioning_enabled: true
-          path: string
-          file: string
       properties:
         type:
           type: string
@@ -6823,22 +6781,24 @@ components:
       properties:
         id:
           type: string
-        event_id:
-          type: string
         event_action_id:
           type: string
         status:
           type: string
         status_message:
           type: string
+          nullable: true
         created_at:
           type: string
         modified_at:
           type: string
+          nullable: true
         modified_by:
           type: string
+          nullable: true
+        event:
+          $ref: '#/components/schemas/Event'
       required:
-        - event_id
         - event_action_id
     CreateEventRequest:
       title: CreateEventRequest
@@ -6936,10 +6896,6 @@ components:
       title: UpdateEventActionStatusRequest
       type: object
       properties:
-        event_id:
-          type: string
-        event_action_id:
-          type: string
         status:
           type: string
         status_message:
