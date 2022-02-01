@@ -32,9 +32,8 @@ import {
     dataSourceContext,
     fileContext,
     taskContext,
-    eventContext,
     eventActionContext,
-    eventActionStatusContext
+    eventActionStatusContext,
 } from '../middleware';
 import ContainerRoutes from './data_warehouse/ontology/container_routes';
 import MetatypeRoutes from './data_warehouse/ontology/metatype_routes';
@@ -61,7 +60,7 @@ import {serialize} from 'class-transformer';
 import {SuperUser} from '../../domain_objects/access_management/user';
 import ImportRoutes from './data_warehouse/import/import_routes';
 import DataQueryRoutes from './data_warehouse/data/data_query_routes';
-import TaskRoutes from './task_routes';
+import TaskRoutes from './task_runner/task_routes';
 
 const winston = require('winston');
 const expressWinston = require('express-winston');
@@ -134,7 +133,7 @@ export class Router {
         /* This query route is considered deprecated */
         QueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         GraphRoutes.mount(this.app, [authenticateRoute(), containerContext(), nodeContext(), edgeContext(), fileContext(), metatypeContext(), currentUser()]);
-        EventRoutes.mount(this.app, [authenticateRoute(), containerContext(), eventContext(), eventActionContext(), eventActionStatusContext(), currentUser()]);
+        EventRoutes.mount(this.app, [authenticateRoute(), containerContext(), eventActionContext(), eventActionStatusContext(), currentUser()]);
         DataQueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         TaskRoutes.mount(this.app, [authenticateRoute(), containerContext(), taskContext(), currentUser()]);
 

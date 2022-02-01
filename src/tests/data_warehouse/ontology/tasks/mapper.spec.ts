@@ -2,8 +2,8 @@ import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/p
 import {expect} from 'chai';
 import faker from 'faker';
 import Logger from '../../../../services/logger';
-import TaskMapper from '../../../../data_access_layer/mappers/task_mapper';
-import TaskRecord from '../../../../domain_objects/data_warehouse/task';
+import TaskMapper from '../../../../data_access_layer/mappers/task_runner/task_mapper';
+import TaskRecord from '../../../../domain_objects/task_runner/task';
 import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 
@@ -33,10 +33,6 @@ describe('A Task Mapper', async () => {
         containerID = container.value.id!;
 
         return Promise.resolve();
-    });
-
-    after(async () => {
-        await PostgresAdapter.Instance.close();
     });
 
     it('can save to storage', async () => {

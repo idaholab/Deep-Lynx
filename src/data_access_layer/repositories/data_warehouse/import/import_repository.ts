@@ -6,7 +6,7 @@ import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
 
 /*
-    Imports contains methods for persisting and retrieving an import
+    Import contains methods for persisting and retrieving an import
     to storage. Users should interact with repositories when possible and not
     the mappers as the repositories contain additional logic such as validation
     or transformation prior to storage or returning.

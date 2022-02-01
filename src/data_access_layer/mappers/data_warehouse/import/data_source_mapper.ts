@@ -39,11 +39,13 @@ export default class DataSourceMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        this.eventRepo.emitEvent(new Event({
-            containerID: r.value[0].container_id,
-            eventType: 'data_source_created',
-            event: {'id': r.value[0].id},
-        }));
+        this.eventRepo.emit(
+            new Event({
+                containerID: r.value[0].container_id,
+                eventType: 'data_source_created',
+                event: {id: r.value[0].id},
+            }),
+        );
 
         return Promise.resolve(Result.Success(r.value[0]));
     }
@@ -55,11 +57,13 @@ export default class DataSourceMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        this.eventRepo.emitEvent(new Event({
-            containerID: r.value[0].container_id,
-            eventType: 'data_source_modified',
-            event: {'id': r.value[0].id},
-        }));
+        this.eventRepo.emit(
+            new Event({
+                containerID: r.value[0].container_id,
+                eventType: 'data_source_modified',
+                event: {id: r.value[0].id},
+            }),
+        );
 
         return Promise.resolve(Result.Success(r.value[0]));
     }
@@ -239,5 +243,10 @@ export default class DataSourceMapper extends Mapper {
             text: `UPDATE data_sources SET status = $2, status_message = $3, modified_at = NOW(), modified_by = $4 WHERE id = $1`,
             values: [id, status, message, userID],
         };
+    }
+
+    // should only be used with a streaming query so as not to swamp memory
+    public listAllActiveStatement(): string {
+        return `SELECT * FROM data_sources WHERE active IS TRUE`;
     }
 }

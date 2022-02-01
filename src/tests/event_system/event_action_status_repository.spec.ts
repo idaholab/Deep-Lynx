@@ -10,7 +10,6 @@ import Event from '../../domain_objects/event_system/event';
 import EventActionStatusRepository from '../../data_access_layer/repositories/event_system/event_action_status_repository';
 import EventAction from '../../domain_objects/event_system/event_action';
 import EventActionStatus from '../../domain_objects/event_system/event_action_status';
-import EventMapper from '../../data_access_layer/mappers/event_system/event_mapper';
 import EventActionMapper from '../../data_access_layer/mappers/event_system/event_action_mapper';
 
 describe('An Event Action Status Repository', async () => {
@@ -59,23 +58,12 @@ describe('An Event Action Status Repository', async () => {
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
-        await ContainerMapper.Instance.Delete(container.id!);
-        return PostgresAdapter.Instance.close();
+        return ContainerMapper.Instance.Delete(container.id!);
     });
 
     it('can save an Event Action Status', async () => {
         const repo = new EventActionStatusRepository();
-        const eventStorage = EventMapper.Instance;
         const actionStorage = EventActionMapper.Instance;
-
-        const event = await eventStorage.Create(
-            'test suite',
-            new Event({
-                containerID: container.id,
-                eventType: 'data_source_created',
-                event: {id: 'testID'},
-            }),
-        );
 
         const action = await actionStorage.Create(
             'test suite',
@@ -88,7 +76,11 @@ describe('An Event Action Status Repository', async () => {
         );
 
         const status = new EventActionStatus({
-            eventID: event.value.id!,
+            event: new Event({
+                containerID: container.id,
+                eventType: 'data_source_created',
+                event: {id: 'testID'},
+            }),
             eventActionID: action.value.id!,
         });
 

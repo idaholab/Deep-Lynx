@@ -75,7 +75,6 @@ export class Config {
     private readonly _data_source_processing_batch_size: number;
 
     private readonly _queue_system: string;
-    private readonly _event_processing_interval: string;
 
     private readonly _smtp_username: string;
     private readonly _smtp_password: string;
@@ -93,11 +92,13 @@ export class Config {
 
     private readonly _hpc_email: string;
 
+    private readonly _emit_events: boolean;
     private readonly _process_queue_name: string;
     private readonly _data_sources_queue_name: string;
     private readonly _events_queue_name: string;
 
     private readonly _rabbitmq_url: string;
+    private readonly _azure_service_bus_connection_string: string;
 
     private constructor() {
         // Either assign a sane default of the env var is missing, or create your
@@ -177,7 +178,6 @@ export class Config {
         this._export_data_concurrency = process.env.EXPORT_DATA_CONCURRENCY ? parseInt(process.env.EXPORT_DATA_CONCURRENCY, 10) : 4;
 
         this._queue_system = process.env.QUEUE_SYSTEM || 'database';
-        this._event_processing_interval = process.env.EVENT_PROCESSING_INTERVAL || '10s';
 
         this._smtp_username = process.env.SMTP_USERNAME || '';
         this._smtp_password = process.env.SMTP_PASSWORD || '';
@@ -194,11 +194,14 @@ export class Config {
         this._rsa_client_id = process.env.RSA_CLIENT_ID || 'DeepLynx';
 
         this._hpc_email = process.env.HPC_EMAIL || '';
+
+        this._emit_events = process.env.EMIT_EVENTS === 'true' || false;
         this._process_queue_name = process.env.PROCESS_QUEUE_NAME || 'process';
         this._data_sources_queue_name = process.env.DATA_SOURCES_QUEUE_NAME || 'data_sources';
         this._events_queue_name = process.env.EVENTS_QUEUE_NAME || 'events';
 
         this._rabbitmq_url = process.env.RABBITMQ_URL || 'amqp://localhost';
+        this._azure_service_bus_connection_string = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING || '';
     }
 
     get ssl_enabled(): boolean {
@@ -327,10 +330,6 @@ export class Config {
 
     get queue_system(): string {
         return this._queue_system;
-    }
-
-    get event_processing_interval(): string {
-        return this._event_processing_interval;
     }
 
     get session_secret(): string {
@@ -471,6 +470,14 @@ export class Config {
 
     get rabbitmq_url(): string {
         return this._rabbitmq_url;
+    }
+
+    get azure_service_bus_connection(): string {
+        return this._azure_service_bus_connection_string;
+    }
+
+    get emit_events(): boolean {
+        return this._emit_events;
     }
 
     public static Instance(): Config {

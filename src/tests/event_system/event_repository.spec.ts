@@ -18,6 +18,12 @@ describe('An Event Repository', async () => {
             Logger.debug('skipping event repository tests, no mapper layer');
             this.skip();
         }
+
+        if (process.env.EMIT_EVENTS !== 'true') {
+            Logger.debug('skipping event repository, emit events turned off');
+            this.skip();
+        }
+
         await PostgresAdapter.Instance.init();
         const mapper = ContainerMapper.Instance;
 
@@ -54,6 +60,10 @@ describe('An Event Repository', async () => {
     });
 
     after(async () => {
+        if (process.env.EMIT_EVENTS !== 'true') {
+            return Promise.resolve();
+        }
+
         await UserMapper.Instance.Delete(user.id!);
         await ContainerMapper.Instance.Delete(container.id!);
         return PostgresAdapter.Instance.close();
@@ -79,6 +89,6 @@ describe('An Event Repository', async () => {
         expect(saved.isError).false;
         expect(event.event_config).eql(config);
 
-        return repo.delete(event);
+        return Promise.resolve();
     });
 });

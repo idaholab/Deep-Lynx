@@ -2,6 +2,7 @@ import Config from '../config';
 import DatabaseQueue from './database_queue_impl';
 import {Writable} from 'stream';
 import RabbitMQQueue from './rabbitmq_queue_impl';
+import AzureServiceBusQueue from './azure_service_bus_queue_impl';
 
 /*
     QueueInterface defines a very simple interface for a queue processor to
@@ -25,20 +26,41 @@ export interface QueueInterface {
     Put(queueName: string, data: any): Promise<boolean>;
 }
 
+let queue: QueueInterface | undefined;
+
 // a helper function for spawning the proper queue implementation based on
 // an environment variable
-export const QueueFactory = (): QueueInterface => {
+export const QueueFactory = (): Promise<QueueInterface> => {
+    if (queue !== undefined) return Promise.resolve(queue);
+
     switch (Config.queue_system) {
         case 'database': {
-            return new DatabaseQueue();
+            queue = new DatabaseQueue();
+            break;
         }
 
         case 'rabbitmq': {
-            return new RabbitMQQueue();
+            queue = new RabbitMQQueue();
+            break;
+        }
+
+        case 'azure_service_bus': {
+            queue = new AzureServiceBusQueue();
+            break;
         }
 
         default: {
-            return new DatabaseQueue();
+            queue = new DatabaseQueue();
         }
     }
+
+    return new Promise((resolve, reject) => {
+        queue
+            ?.Init()
+            .then((ok) => {
+                if (!ok) reject('unable to initialize queue');
+                resolve(queue as QueueInterface);
+            })
+            .catch((e) => reject(e));
+    });
 };

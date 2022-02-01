@@ -1,7 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import {GremlinEdge, GremlinNode} from '../../../../interface_implementations/data_warehouse/export/gremlin_export_impl';
+import {GremlinEdge, GremlinNode} from '../../../../interfaces_and_impl/data_warehouse/export/gremlin_export_impl';
 
 /*
     GremlinExportMapper extends the Postgres database Mapper class and allows

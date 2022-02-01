@@ -2,13 +2,13 @@ import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/p
 import {expect} from 'chai';
 import faker from 'faker';
 import Logger from '../../../../services/logger';
-import TaskMapper from '../../../../data_access_layer/mappers/task_mapper';
-import TaskRecord, {HpcTaskConfig} from '../../../../domain_objects/data_warehouse/task';
+import TaskMapper from '../../../../data_access_layer/mappers/task_runner/task_mapper';
+import TaskRecord, {HpcTaskConfig} from '../../../../domain_objects/task_runner/task';
 import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
 import {User} from '../../../../domain_objects/access_management/user';
-import TaskRepository from '../../../../data_access_layer/repositories/task_repository';
+import TaskRepository from '../../../../data_access_layer/repositories/task_runner/task_repository';
 
 describe('A Task Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -69,10 +69,6 @@ describe('A Task Repository', async () => {
         task = exp.value;
 
         return Promise.resolve();
-    });
-
-    after(() => {
-        return PostgresAdapter.Instance.close();
     });
 
     it('can save, list, and find by ID', async () => {

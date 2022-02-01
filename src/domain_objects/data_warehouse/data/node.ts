@@ -100,6 +100,7 @@ export default class Node extends BaseDomainClass {
         data_source_id?: string;
         type_mapping_transformation_id?: string;
         metadata?: NodeMetadata;
+        created_at?: Date;
     }) {
         super();
 
@@ -118,6 +119,7 @@ export default class Node extends BaseDomainClass {
             if (input.data_source_id) this.data_source_id = input.data_source_id;
             if (input.type_mapping_transformation_id) this.type_mapping_transformation_id = input.type_mapping_transformation_id;
             if (input.metadata) this.metadata = input.metadata;
+            if (input.created_at) this.created_at = input.created_at;
         }
     }
 }

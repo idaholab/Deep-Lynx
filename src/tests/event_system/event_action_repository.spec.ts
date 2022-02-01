@@ -64,7 +64,7 @@ describe('An Event Action Repository', async () => {
         const action = new EventAction({
             containerID: container.id,
             eventType: 'data_source_created',
-            actionType: 'send_query',
+            actionType: 'default',
             destination: 'url_here',
         });
 
