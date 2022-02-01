@@ -131,3 +131,5 @@ export function IsNodes(set: Node[] | Edge[]): set is Node[] {
 
     return set[0] instanceof Node;
 }
+
+// TODO: create NodeLeaf object
