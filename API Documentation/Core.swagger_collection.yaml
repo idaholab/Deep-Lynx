@@ -3629,7 +3629,7 @@ paths:
       responses:
         '200':
           description: OK
-      description: Post with no body to acknowledge an alert an remove it from the active alerts list.
+      description: Post with no body to acknowledge an alert and remove it from the active alerts list.
   '/containers/{container_id}/ontology/changelists':
     parameters:
       - schema:
@@ -3649,49 +3649,7 @@ paths:
           content:
             application/json:
               schema:
-                description: ''
-                type: object
-                properties:
-                  value:
-                    type: array
-                    uniqueItems: true
-                    minItems: 1
-                    items:
-                      required:
-                        - id
-                        - container_id
-                        - name
-                        - status
-                        - applied_at
-                      properties:
-                        id:
-                          type: string
-                        container_id:
-                          type: string
-                        name:
-                          type: string
-                        status:
-                          type: string
-                        changelist:
-                          type: object
-                          properties: {}
-                          required: []
-                        applied_at:
-                          type: string
-                required:
-                  - value
-                x-examples:
-                  example-1:
-                    value:
-                      - id: ''
-                        container_id: ''
-                        name: ''
-                        status: ''
-                        changelist: {}
-                        applied_at: ''
-              examples:
-                example-1:
-                  value: {}
+                $ref: '#/components/schemas/ListChangelistResponse'
     post:
       summary: Create New Changelist
       operationId: CreateNewChangelist
@@ -3720,7 +3678,6 @@ paths:
                       changelist:
                         type: object
                         properties: {}
-                        required: []
                       applied_at:
                         type: string
                     required:
@@ -3779,44 +3736,7 @@ paths:
           content:
             application/json:
               schema:
-                description: ''
-                type: object
-                properties:
-                  value:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                      container_id:
-                        type: string
-                      name:
-                        type: string
-                      status:
-                        type: string
-                      changelist:
-                        type: object
-                        properties: {}
-                        required: []
-                      applied_at:
-                        type: string
-                    required:
-                      - id
-                      - container_id
-                      - name
-                      - status
-                      - changelist
-                      - applied_at
-                required:
-                  - value
-                x-examples:
-                  example-1:
-                    value:
-                      id: ''
-                      container_id: ''
-                      name: ''
-                      status: ''
-                      changelist: {}
-                      applied_at: ''
+                $ref: '#/components/schemas/RetrieveChangelistResponse'
       operationId: RetrieveChangelist
       description: Retrieve a changelist by id.
     put:
@@ -3847,7 +3767,6 @@ paths:
                       changelist:
                         type: object
                         properties: {}
-                        required: []
                       applied_at:
                         type: string
                     required:
@@ -3987,6 +3906,8 @@ paths:
           description: OK
       description: Removes all approvals for changelist.
     post:
+      tags:
+        - Containers
       summary: Approve Changelist
       operationId: ApproveChangelist
       responses:
@@ -5261,22 +5182,6 @@ components:
         - name
         - description
         - data_versioning_enabled
-    CreateContainerAlertRequest:
-      title: CreateContainerAlertRequest
-      description: ''
-      type: object
-      properties:
-        type:
-          type: string
-          minLength: 1
-          description: |
-            can be error, information, or warning
-        message:
-          type: string
-          minLength: 1
-      required:
-        - type
-        - message
     TokenExchangeRequest:
       title: TokenExchangeRequest
       type: object
@@ -7142,7 +7047,6 @@ components:
               changelist:
                 type: object
                 properties: {}
-                required: []
               applied_at:
                 type: string
       required:
@@ -7174,7 +7078,6 @@ components:
             changelist:
               type: object
               properties: {}
-              required: []
             applied_at:
               type: string
           required:
