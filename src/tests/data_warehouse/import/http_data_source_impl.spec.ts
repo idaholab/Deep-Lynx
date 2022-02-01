@@ -7,11 +7,8 @@ import faker from 'faker';
 import {expect} from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import DataSourceRecord, {DataSource, HttpDataSourceConfig} from '../../../domain_objects/data_warehouse/import/data_source';
+import DataSourceRecord, {HttpDataSourceConfig} from '../../../domain_objects/data_warehouse/import/data_source';
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
-import StandardDataSourceImpl from '../../../interface_implementations/data_warehouse/import/standard_data_source_impl';
-import HttpDataSourceImpl from '../../../interface_implementations/data_warehouse/import/http_data_source_impl';
 import ImportRepository from '../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 
 // some general tests on data sources that aren't specific to the implementation
@@ -102,14 +99,7 @@ describe('An HTTP Data Source can', async () => {
         expect(results.isError).false;
         expect(source!.DataSourceRecord?.id).not.undefined;
 
-        // start the poller running and wait for it to finish and process. This is
-        // an inaccurate art so if your tests fails, increase this wait time first
-        // prior to stepping through your code to make sure you're getting some
-        // kind of result back.
-        source?.Process();
-
-        // default wait time 30 seconds
-        await delay(30000);
+        await source?.Run();
 
         // first fetch the data source and verify we haven't encountered an error
         // the status should still be set to "polling"

@@ -408,11 +408,6 @@ paths:
           in: query
           name: metatypeID
           description: Return only nodes for the selected metatype
-        - schema:
-            type: string
-          in: query
-          name: dataSourceID
-          description: Return only nodes for the selected datasource
       responses:
         '200':
           description: ''
@@ -579,14 +574,6 @@ paths:
             type: string
           in: query
           name: relationshipPairName
-        - schema:
-            type: string
-          in: query
-          name: dataSourceID
-        - schema:
-            type: string
-          in: query
-          name: loadRelationshipPairs
       responses:
         '200':
           description: ''
@@ -3200,20 +3187,6 @@ paths:
                 file:
                   type: string
   /events:
-    get:
-      tags:
-        - Events
-      summary: List Events
-      description: Lists all events
-      operationId: ListEvents
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListEventsResponse'
-      deprecated: false
     post:
       tags:
         - Events
@@ -3235,27 +3208,6 @@ paths:
                 $ref: '#/components/schemas/CreateEventResponse'
       deprecated: false
       x-codegen-request-body-name: Body
-  '/events/{event_id}':
-    get:
-      tags:
-        - Events
-      summary: Retrieve Event
-      description: Retrieve an event
-      operationId: RetrieveEvent
-      parameters:
-        - name: event_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetEventResponse'
-      deprecated: false
   /event_actions:
     get:
       summary: List Event Actions
@@ -3360,6 +3312,12 @@ paths:
                 $ref: '#/components/schemas/ListEventActionStatusResponse'
       operationId: ListEventActionStatuses
       description: List all event action statuses
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: eventID
+          description: Filter returned statuses by the event ID
   '/event_action_status/{status_id}':
     parameters:
       - schema:
@@ -4315,26 +4273,8 @@ components:
           $ref: '#/components/schemas/CreateManualImport'
         isError:
           type: boolean
-    ListEventsResponse:
-      title: ListEventsResponse
-      type: object
-      properties:
-        value:
-          type: array
-          items:
-            $ref: '#/components/schemas/Event'
-        isError:
-          type: boolean
     CreateEventResponse:
       title: CreateEventResponse
-      type: object
-      properties:
-        value:
-          $ref: '#/components/schemas/Event'
-        isError:
-          type: boolean
-    GetEventResponse:
-      title: GetEventResponse
       type: object
       properties:
         value:
@@ -6632,22 +6572,24 @@ components:
       properties:
         id:
           type: string
-        event_id:
-          type: string
         event_action_id:
           type: string
         status:
           type: string
         status_message:
           type: string
+          nullable: true
         created_at:
           type: string
         modified_at:
           type: string
+          nullable: true
         modified_by:
           type: string
+          nullable: true
+        event:
+          $ref: '#/components/schemas/Event'
       required:
-        - event_id
         - event_action_id
     CreateEventRequest:
       title: CreateEventRequest
@@ -6745,10 +6687,6 @@ components:
       title: UpdateEventActionStatusRequest
       type: object
       properties:
-        event_id:
-          type: string
-        event_action_id:
-          type: string
         status:
           type: string
         status_message:

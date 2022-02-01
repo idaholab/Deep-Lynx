@@ -40,7 +40,9 @@ export default class DatabaseQueue implements QueueInterface {
 
             // mark the task completed in the database
             stream.on('data', (data: any) => {
-                void client.query(`UPDATE queue SET processed_at = current_timestamp WHERE id = $1`, [data.id]);
+                this.pool.query({text: `UPDATE queue SET processed_at = NOW() WHERE id = $1`, values: [data.id]}).catch((e) => {
+                    Logger.error(`unable to mark queue item as done ${e}`);
+                });
             });
 
             stream.on('end', () => {
@@ -52,13 +54,14 @@ export default class DatabaseQueue implements QueueInterface {
 
             // we need a transform stream to output only the message itself
             const transform = new Transform({
-                transform(data: any) {
+                transform(data: any, en, cb) {
                     this.push(data.data);
+                    cb();
                 },
                 objectMode: true, // must maintain object mode
             });
 
-            // the read stream ending will end the write destination stream unless
+            // the read stream ending will end write destination stream unless
             // we explicitly tell it not to. Since we're doing crazy recursion,
             // tell it to not end when the stream does
             stream.pipe(transform).pipe(destination, {end: false});

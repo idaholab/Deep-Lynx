@@ -1,13 +1,13 @@
-import { PoolClient, QueryConfig } from "pg";
-import Result from "../../common_classes/result";
-import TaskRecord from "../../domain_objects/data_warehouse/task";
-import Mapper from "./mapper";
+import {PoolClient, QueryConfig} from 'pg';
+import Result from '../../../common_classes/result';
+import TaskRecord from '../../../domain_objects/task_runner/task';
+import Mapper from '../mapper';
 
 const format = require('pg-format');
 const resultClass = TaskRecord;
 
 export default class TaskMapper extends Mapper {
-    public static tableName = 'tasks'
+    public static tableName = 'tasks';
 
     private static instance: TaskMapper;
 
@@ -91,13 +91,7 @@ export default class TaskMapper extends Mapper {
                           config,
                           modified_by)
                       WHERE u.id::bigint = t.id RETURNING t.*`;
-        const values = tasks.map((task) => [
-            task.id,
-            task.status,
-            task.status_message,
-            task.config,
-            userID,
-        ]);
+        const values = tasks.map((task) => [task.id, task.status, task.status_message, task.config, userID]);
 
         return format(text, values);
     }

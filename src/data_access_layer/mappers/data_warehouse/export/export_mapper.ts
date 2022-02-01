@@ -82,11 +82,13 @@ export default class ExportMapper extends Mapper {
     ): Promise<Result<boolean>> {
         if (status === 'completed') {
             const completeExport = await this.Retrieve(id);
-            this.eventRepo.emitEvent(new Event({
-                containerID: completeExport.value.container_id,
-                eventType: 'data_exported',
-                event: completeExport.value,
-            }));
+            this.eventRepo.emit(
+                new Event({
+                    containerID: completeExport.value.container_id,
+                    eventType: 'data_exported',
+                    event: completeExport.value,
+                }),
+            );
         }
 
         return super.runStatement(this.setStatusStatement(userID, id, status, message));

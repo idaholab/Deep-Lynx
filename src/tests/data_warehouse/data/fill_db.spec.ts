@@ -21,10 +21,13 @@ import EdgeRepository from '../../../data_access_layer/repositories/data_warehou
 import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
 import TypeTransformation, {KeyMapping} from '../../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeMappingRepository from '../../../data_access_layer/repositories/data_warehouse/etl/type_mapping_repository';
-import DataSourceRecord, {DataSource} from '../../../domain_objects/data_warehouse/import/data_source';
+import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 import {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {v4 as uuidv4} from 'uuid';
 import {Readable} from 'stream';
+import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
+import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
+import {ProcessData} from '../../../data_processing/process';
 
 // This test will generate a basic ontology and test data, process it, and persist to the database. You must delete
 // this data manually - which is why it's disabled by default. This is generally used in a development environment when
@@ -582,7 +585,15 @@ describe('We can generate test data', async () => {
         const active = await TypeMappingMapper.Instance.SetActive(typeMappingID);
         expect(active.isError).false;
 
-        await dataSource!.Process();
+        const dataStagingRepo = new DataStagingRepository();
+        const records = await dataStagingRepo.where().dataSourceID('eq', dataSource!.DataSourceRecord!.id).list();
+        expect(records.isError).false;
+        expect(records.value.length).gt(0);
+
+        for (const record of records.value) {
+            const result = await ProcessData(record);
+            expect(result.isError, result.error?.error).false;
+        }
 
         const nodeRepo = new NodeRepository();
         const nodes = await nodeRepo.where().containerID('eq', containerID).list();
