@@ -108,6 +108,14 @@ export default class NodeMapper extends Mapper {
         });
     }
 
+    // This should return a node and all connected nodes and connecting edges for n layers.
+    public async RetrieveNthNodes(id: string, depth: string, transaction?: PoolClient): Promise<Result<Node[]>> {
+        return super.rows(this.retrieveNthNodesStatement(id, depth), {
+            transaction,
+            resultClass,
+        });
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -234,6 +242,50 @@ export default class NodeMapper extends Mapper {
         return {
             text: `DELETE FROM node_files WHERE node_id = $1 AND file_id = $2`,
             values: [nodeID, fileID],
+        };
+    }
+
+    // This should return a node and all connected nodes and connecting edges for n layers.
+    private retrieveNthNodesStatement(nodeID: string, depth: string): QueryConfig {
+        return {
+            text: `WITH RECURSIVE related (orig_id, orig_container_id, orig_metatype_id, orig_data_source_id, orig_import_data_id,
+                                            orig_data_staging_id, orig_type_mapping_transformation_id, orig_original_data_id, orig_properties,
+                                            orig_metadata, orig_created_at, orig_modified_at, orig_deleted_at, orig_created_by, orig_modified_by,
+                                            orig_metatype_name, edge_id, edge_container_id, edge_relationship_pair_id, edge_data_source_id,
+                                            edge_import_data_id, edge_data_staging_id, edge_type_mapping_transformation_id, edge_metadata,
+                                            edge_created_at, edge_modified_at, edge_deleted_at, edge_properties, edge_modified_by, edge_created_by,
+                                            dest_id, dest_container_id, dest_metatype_id, dest_data_source_id, dest_import_data_id, dest_data_staging_id,
+                                            dest_type_mapping_transformation_id, dest_original_data_id, dest_properties, dest_metadata, dest_created_at,
+                                            dest_modified_at, dest_deleted_at, dest_created_by, dest_modified_by, dest_metatype_name, lvl) AS (
+                    SELECT o.id, o.container_id, o.metatype_id, o.data_source_id, o.import_data_id, o.data_staging_id, o.type_mapping_transformation_id,
+                    o.original_data_id, o.properties, o.metadata, o.created_at, o.modified_at, o.deleted_at, o.created_by, o.modified_by, o.metatype_name,
+                    e.id, e.container_id, e.relationship_pair_id, e.data_source_id, e.import_data_id, e.data_staging_id, e.type_mapping_transformation_id,
+                    e.metadata, e.created_at, e.modified_at, e.deleted_at, e.properties, e.modified_by, e.created_by, d.id, d.container_id, d.metatype_id,
+                    d.data_source_id, d.import_data_id, d.data_staging_id, d.type_mapping_transformation_id, d.original_data_id, d.properties, d.metadata,
+                    d.created_at, d.modified_at, d.deleted_at, d.created_by, d.modified_by, d.metatype_name, 1
+                    FROM current_nodes o
+                        JOIN edges e
+                            ON o.id IN (e.origin_id, e.destination_id)
+                        JOIN current_nodes d
+                            ON d.id IN (e.origin_id, e.destination_id)
+                            AND d.id != o.id
+                    WHERE o.id = $1
+                    UNION ALL
+                    SELECT r.dest_id, r.dest_container_id, r.dest_metatype_id, r.dest_data_source_id, r.dest_import_data_id, r.dest_data_staging_id,
+                    r.dest_type_mapping_transformation_id, r.dest_original_data_id, r.dest_properties, r.dest_metadata, r.dest_created_at, r.dest_modified_at,
+                    r.dest_deleted_at, r.dest_created_by, r.dest_modified_by, r.dest_metatype_name, e.id, e.container_id, e.relationship_pair_id, e.data_source_id,
+                    e.import_data_id, e.data_staging_id, e.type_mapping_transformation_id, e.metadata, e.created_at, e.modified_at, e.deleted_at, e.properties,
+                    e.modified_by, e.created_by, d.id, d.container_id, d.metatype_id, d.data_source_id, d.import_data_id, d.data_staging_id,
+                    d.type_mapping_transformation_id, d.original_data_id, d.properties, d.metadata, d.created_at, d.modified_at, d.deleted_at, d.created_by,
+                    d.modified_by, d.metatype_name, r.lvl+1
+                    FROM related r
+                        JOIN edges e
+                            ON r.dest_id IN (e.origin_id, e.destination_id)
+                        JOIN current_nodes d
+                            ON d.id IN (e.origin_id, e.destination_id)
+                            AND d.id != r.orig_id AND d.id != r.dest_id
+                    ) SELECT * FROM related WHERE lvl <= $2;`,
+            values: [nodeID, depth],
         };
     }
 }

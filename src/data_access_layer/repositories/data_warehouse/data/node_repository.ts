@@ -56,6 +56,13 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return Promise.resolve(node);
     }
 
+    // This should return a node and all connected nodes and connecting edges for n layers.
+    // TODO: should return list of nodes and edges (new result type??)
+    async findNthNodesByID(id: string, depth: string, transaction?: PoolClient): Promise<Result<Node[]>> {
+        // need help here
+        return Promise.resolve(x);
+    }
+
     async save(n: Node, user: User, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction = false;
         const errors = await n.validationErrors();
@@ -306,6 +313,22 @@ export default class NodeRepository extends Repository implements RepositoryInte
 
     property(key: string, operator: string, value: any, dataType?: string) {
         super.queryJsonb(key, 'properties', operator, value, dataType);
+        return this;
+    }
+
+    // properties for n layer node query:
+    depth(operator: string, value: any) {
+        super.query('depth', operator, value);
+        return this;
+    }
+
+    relationshipID(operator: string, value: any) {
+        super.query('relationship_name', operator, value);
+        return this;
+    }
+    
+    relationshipName(operator: string, value: any) {
+        super.query('relationship_id', operator, value);
         return this;
     }
 
