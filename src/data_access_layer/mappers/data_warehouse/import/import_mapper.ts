@@ -38,13 +38,15 @@ export default class ImportMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        this.eventRepo.emitEvent(new Event({
-            dataSourceID: importRecord.data_source_id,
-            eventType: 'data_imported',
-            event: {
-                imports: r.value,
-            },
-        }));
+        this.eventRepo.emit(
+            new Event({
+                dataSourceID: importRecord.data_source_id,
+                eventType: 'data_imported',
+                event: {
+                    imports: r.value,
+                },
+            }),
+        );
 
         return Promise.resolve(Result.Success(r.value[0]));
     }
@@ -86,14 +88,16 @@ export default class ImportMapper extends Mapper {
         if (status === 'completed' || status === 'stopped') {
             const completeImport = await this.Retrieve(importID);
 
-            this.eventRepo.emitEvent(new Event({
-                dataSourceID: completeImport.value.data_source_id,
-                eventType: 'data_ingested',
-                event: {
-                    import_id: importID,
-                    status,
-                },
-            }));
+            this.eventRepo.emit(
+                new Event({
+                    dataSourceID: completeImport.value.data_source_id,
+                    eventType: 'data_ingested',
+                    event: {
+                        import_id: importID,
+                        status,
+                    },
+                }),
+            );
         }
         return super.runStatement(this.setStatusStatement(importID, status, message), {transaction});
     }

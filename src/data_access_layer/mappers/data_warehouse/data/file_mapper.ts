@@ -39,12 +39,14 @@ export default class FileMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        this.eventRepo.emitEvent(new Event({
-            containerID: f.container_id,
-            dataSourceID: f.data_source_id,
-            eventType: 'file_created',
-            event: {'id': r.value[0].id},
-        }));
+        this.eventRepo.emit(
+            new Event({
+                containerID: f.container_id,
+                dataSourceID: f.data_source_id,
+                eventType: 'file_created',
+                event: {id: r.value[0].id},
+            }),
+        );
 
         return Promise.resolve(Result.Success(r.value[0]));
     }
@@ -57,12 +59,14 @@ export default class FileMapper extends Mapper {
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
         r.value.forEach((file) => {
-            this.eventRepo.emitEvent(new Event({
-                containerID: file.container_id,
-                dataSourceID: file.data_source_id,
-                eventType: 'file_created',
-                event: {'id': file.id},
-            }));
+            this.eventRepo.emit(
+                new Event({
+                    containerID: file.container_id,
+                    dataSourceID: file.data_source_id,
+                    eventType: 'file_created',
+                    event: {id: file.id},
+                }),
+            );
         });
 
         return Promise.resolve(Result.Success(r.value));
@@ -76,12 +80,14 @@ export default class FileMapper extends Mapper {
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
         r.value.forEach((file) => {
-            this.eventRepo.emitEvent(new Event({
-                containerID: file.container_id,
-                dataSourceID: file.data_source_id,
-                eventType: 'file_modified',
-                event: {'id': file.id},
-            }));
+            this.eventRepo.emit(
+                new Event({
+                    containerID: file.container_id,
+                    dataSourceID: file.data_source_id,
+                    eventType: 'file_modified',
+                    event: {id: file.id},
+                }),
+            );
         });
 
         return Promise.resolve(Result.Success(r.value[0]));
@@ -94,12 +100,14 @@ export default class FileMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
-        this.eventRepo.emitEvent(new Event({
-            containerID: f.container_id,
-            dataSourceID: f.data_source_id,
-            eventType: 'file_modified',
-            event: {'id': f.id},
-        }));
+        this.eventRepo.emit(
+            new Event({
+                containerID: f.container_id,
+                dataSourceID: f.data_source_id,
+                eventType: 'file_modified',
+                event: {id: f.id},
+            }),
+        );
 
         return Promise.resolve(Result.Success(r.value[0]));
     }

@@ -1,9 +1,9 @@
 import {PoolClient} from 'pg';
-import Result from '../../common_classes/result';
-import {User} from '../../domain_objects/access_management/user';
-import TaskRecord from '../../domain_objects/data_warehouse/task';
-import TaskMapper from '../mappers/task_mapper';
-import RepositoryInterface, {DeleteOptions, QueryOptions, Repository} from './repository';
+import Result from '../../../common_classes/result';
+import {User} from '../../../domain_objects/access_management/user';
+import TaskRecord from '../../../domain_objects/task_runner/task';
+import TaskMapper from '../../mappers/task_runner/task_mapper';
+import RepositoryInterface, {QueryOptions, Repository} from '../repository';
 
 export default class TaskRepository extends Repository implements RepositoryInterface<TaskRecord> {
     #mapper = TaskMapper.Instance;

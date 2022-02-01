@@ -6,6 +6,9 @@ import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
 import File from '../../../../domain_objects/data_warehouse/data/file';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
+import {QueueFactory} from '../../../../services/queue/queue';
+import Logger from '../../../../services/logger';
+import Config from '../../../../services/config';
 
 /*
     DataStaging contains methods for persisting and retrieving an import's data
@@ -191,6 +194,28 @@ export default class DataStagingRepository extends Repository implements Reposit
         }
 
         return this.#fileMapper.ListForDataStaging(t.id);
+    }
+
+    // sendToQueueForImport will queue up all data staging records for a given import
+    // needed for us to reprocess an import individually, and as part of the receieve
+    // data call
+    async sendToQueueForImport(importID: string): Promise<void> {
+        const queue = await QueueFactory();
+
+        const records = await this.#mapper.ListIDOnly(importID);
+        if (records.isError) {
+            Logger.error('unable to list staging records for sending to queue');
+        }
+
+        const queuePromises: Promise<boolean>[] = [];
+
+        records.value.forEach((record) => {
+            queuePromises.push(queue.Put(Config.process_queue, record.id));
+        });
+
+        await Promise.all(queuePromises);
+
+        return Promise.resolve();
     }
 
     constructor() {

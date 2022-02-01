@@ -17,8 +17,6 @@ const statusRepo = new EventActionStatusRepository();
 export default class EventRoutes {
     public static mount(app: Application, middleware: any[]) {
         app.post('/events', ...middleware, authInContainer('write', 'data'), this.createEvent);
-        app.get('/events', ...middleware, authInContainer('read', 'data'), this.listEvents);
-        app.get('/events/:eventID', ...middleware, authInContainer('read', 'data'), this.retrieveEvent);
 
         app.post('/event_actions', ...middleware, authInContainer('write', 'data'), this.createEventAction);
         app.put('/event_actions/:actionID', ...middleware, authInContainer('write', 'data'), this.updateEventAction);
@@ -37,7 +35,8 @@ export default class EventRoutes {
 
         const payload = plainToClass(Event, req.body as object);
 
-        eventRepo.save(payload, user)
+        eventRepo
+            .save(payload, user)
             .then((result) => {
                 if (result.isError) {
                     result.asResponse(res);
@@ -50,38 +49,14 @@ export default class EventRoutes {
             .finally(() => next());
     }
 
-    private static listEvents(req: Request, res: Response, next: NextFunction) {
-        eventRepo.list()
-            // TODO: add filter options for processed
-            .then((result) => {
-                if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
-                    return;
-                }
-                res.status(200).json(result);
-            })
-            .catch((err) => res.status(404).send(err))
-            .finally(() => next());
-    }
-
-    private static retrieveEvent(req: Request, res: Response, next: NextFunction) {
-        if (req.event) {
-            Result.Success(req.event).asResponse(res);
-            next();
-            return;
-        }
-
-        Result.Failure(`event not found`, 404).asResponse(res);
-        next();
-    }
-
     // event actions
     private static createEventAction(req: Request, res: Response, next: NextFunction) {
         const user = req.currentUser!;
 
         const payload = plainToClass(EventAction, req.body as object);
 
-        actionRepo.save(payload, user)
+        actionRepo
+            .save(payload, user)
             .then((result) => {
                 if (result.isError) {
                     result.asResponse(res);
@@ -99,14 +74,16 @@ export default class EventRoutes {
         const active = req.query.active;
         if (req.eventAction) {
             if (active && String(active).toLowerCase() === 'true') {
-                actionRepo.setActive(user, req.eventAction)
+                actionRepo
+                    .setActive(user, req.eventAction)
                     .then((updated) => {
                         updated.asResponse(res);
                     })
                     .catch((updated: any) => res.status(500).send(updated))
                     .finally(() => next());
             } else if (active && active === 'false') {
-                actionRepo.setInactive(user, req.eventAction)
+                actionRepo
+                    .setInactive(user, req.eventAction)
                     .then((updated) => {
                         updated.asResponse(res);
                     })
@@ -116,7 +93,8 @@ export default class EventRoutes {
                 const payload = plainToClass(EventAction, req.body as object);
                 payload.id = req.eventAction.id;
 
-                actionRepo.save(payload, user)
+                actionRepo
+                    .save(payload, user)
                     .then((updated: Result<boolean>) => {
                         if (updated.isError) {
                             updated.asResponse(res);
@@ -133,7 +111,8 @@ export default class EventRoutes {
     }
 
     private static listEventActions(req: Request, res: Response, next: NextFunction) {
-        actionRepo.list()
+        actionRepo
+            .list()
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -158,7 +137,8 @@ export default class EventRoutes {
 
     private static deleteEventAction(req: Request, res: Response, next: NextFunction) {
         if (req.eventAction) {
-            actionRepo.delete(req.eventAction)
+            actionRepo
+                .delete(req.eventAction)
                 .then((result) => {
                     result.asResponse(res);
                 })
@@ -177,7 +157,8 @@ export default class EventRoutes {
             const payload = plainToClass(EventActionStatus, req.body as object);
             payload.id = req.eventActionStatus.id;
 
-            statusRepo.save(payload, user)
+            statusRepo
+                .save(payload, user)
                 .then((updated: Result<boolean>) => {
                     if (updated.isError) {
                         updated.asResponse(res);
@@ -193,7 +174,12 @@ export default class EventRoutes {
     }
 
     private static listEventActionStatuses(req: Request, res: Response, next: NextFunction) {
-        statusRepo.list()
+        let repo = new EventActionStatusRepository();
+        if (typeof req.query.eventID !== 'undefined' && (req.query.eventID as string) !== '') {
+            repo = repo.where().eventID('eq', req.query.eventID)
+        }
+        repo
+            .list()
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);

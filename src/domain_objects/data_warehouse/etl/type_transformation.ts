@@ -516,10 +516,11 @@ export default class TypeTransformation extends BaseDomainClass {
                 metatype: this.metatype_id,
                 properties: newPayload,
                 type_mapping_transformation_id: this.id,
-                data_source_id: this.data_source_id,
+                data_source_id: data.data_source_id,
                 container_id: this.container_id!,
                 data_staging_id: data.id,
                 import_data_id: data.import_id,
+                created_at: data.created_at,
                 metadata: new NodeMetadata({
                     conversions,
                     failed_conversions: failedConversions,
@@ -539,7 +540,7 @@ export default class TypeTransformation extends BaseDomainClass {
                 metatype_relationship_pair: this.metatype_relationship_pair_id,
                 properties: newPayloadRelationship,
                 type_mapping_transformation_id: this.id,
-                data_source_id: this.data_source_id,
+                data_source_id: data.data_source_id,
                 container_id: this.container_id!,
                 data_staging_id: data.id,
                 import_data_id: data.import_id,
@@ -553,6 +554,7 @@ export default class TypeTransformation extends BaseDomainClass {
                     conversions,
                     failed_conversions: failedConversions,
                 }),
+                created_at: data.created_at,
             });
 
             return new Promise((resolve) => resolve(Result.Success([edge])));
