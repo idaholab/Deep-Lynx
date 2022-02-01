@@ -20,6 +20,7 @@ export default class ChangelistRoutes {
             authInContainer('write', 'ontology'),
             this.applyChangelist,
         );
+        app.get('/containers/:containerID/ontology/changelists/:changelistID/approve', ...middleware, authInContainer('read', 'ontology'), this.listApprovals);
         app.post(
             '/containers/:containerID/ontology/changelists/:changelistID/approve',
             ...middleware,
@@ -111,6 +112,20 @@ export default class ChangelistRoutes {
         if (req.changelist) {
             res.status(500).send('unimplemented');
             next();
+        } else {
+            res.status(200);
+            next();
+        }
+    }
+
+    private static listApprovals(req: Request, res: Response, next: NextFunction) {
+        if (req.changelist) {
+            repo.listApprovals(req.changelist.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((e) => res.status(500).send(e))
+                .finally(() => next());
         } else {
             res.status(200);
             next();

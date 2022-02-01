@@ -51,7 +51,7 @@ export class ChangelistApproval extends NakedDomainClass {
     changelist_id?: string;
 
     @IsString()
-    approver_by?: string;
+    approved_by?: string;
 
     @IsOptional()
     @IsDate()
@@ -63,7 +63,7 @@ export class ChangelistApproval extends NakedDomainClass {
 
         if (input) {
             this.changelist_id = input.changelist_id;
-            this.approver_by = input.approver_id;
+            this.approved_by = input.approver_id;
             if (input.approved_at) this.approved_at = input.approved_at;
         }
     }

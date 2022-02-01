@@ -3641,11 +3641,57 @@ paths:
       summary: List Changelists
       tags:
         - Containers
+      operationId: ListChangelists
+      description: List all changelists for a container. Will eventually support filters.
       responses:
         '200':
           description: OK
-      operationId: ListChangelists
-      description: List all changelists for a container. Will eventually support filters.
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  value:
+                    type: array
+                    uniqueItems: true
+                    minItems: 1
+                    items:
+                      required:
+                        - id
+                        - container_id
+                        - name
+                        - status
+                        - applied_at
+                      properties:
+                        id:
+                          type: string
+                        container_id:
+                          type: string
+                        name:
+                          type: string
+                        status:
+                          type: string
+                        changelist:
+                          type: object
+                          properties: {}
+                          required: []
+                        applied_at:
+                          type: string
+                required:
+                  - value
+                x-examples:
+                  example-1:
+                    value:
+                      - id: ''
+                        container_id: ''
+                        name: ''
+                        status: ''
+                        changelist: {}
+                        applied_at: ''
+              examples:
+                example-1:
+                  value: {}
     post:
       summary: Create New Changelist
       operationId: CreateNewChangelist
@@ -3654,6 +3700,47 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  value:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      container_id:
+                        type: string
+                      name:
+                        type: string
+                      status:
+                        type: string
+                      changelist:
+                        type: object
+                        properties: {}
+                        required: []
+                      applied_at:
+                        type: string
+                    required:
+                      - id
+                      - container_id
+                      - name
+                      - status
+                      - changelist
+                      - applied_at
+                required:
+                  - value
+                x-examples:
+                  example-1:
+                    value:
+                      id: ''
+                      container_id: ''
+                      name: ''
+                      status: ''
+                      changelist: {}
+                      applied_at: ''
       description: Create a new changelist.
       requestBody:
         content:
@@ -3689,6 +3776,47 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  value:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      container_id:
+                        type: string
+                      name:
+                        type: string
+                      status:
+                        type: string
+                      changelist:
+                        type: object
+                        properties: {}
+                        required: []
+                      applied_at:
+                        type: string
+                    required:
+                      - id
+                      - container_id
+                      - name
+                      - status
+                      - changelist
+                      - applied_at
+                required:
+                  - value
+                x-examples:
+                  example-1:
+                    value:
+                      id: ''
+                      container_id: ''
+                      name: ''
+                      status: ''
+                      changelist: {}
+                      applied_at: ''
       operationId: RetrieveChangelist
       description: Retrieve a changelist by id.
     put:
@@ -3699,6 +3827,47 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  value:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      container_id:
+                        type: string
+                      name:
+                        type: string
+                      status:
+                        type: string
+                      changelist:
+                        type: object
+                        properties: {}
+                        required: []
+                      applied_at:
+                        type: string
+                    required:
+                      - id
+                      - container_id
+                      - name
+                      - status
+                      - changelist
+                      - applied_at
+                required:
+                  - value
+                x-examples:
+                  example-1:
+                    value:
+                      id: ''
+                      container_id: ''
+                      name: ''
+                      status: ''
+                      changelist: {}
+                      applied_at: ''
       description: Update a changelist.
       requestBody:
         content:
@@ -3734,7 +3903,7 @@ paths:
       responses:
         '200':
           description: OK
-      description: 'Deletes a changelist'
+      description: Deletes a changelist
   '/containers/{container_id}/ontology/changelists/{changelistID}/apply':
     parameters:
       - schema:
@@ -3769,13 +3938,44 @@ paths:
         in: path
         required: true
     get:
-      summary: Approve Changelist
+      summary: List Approvals for Changelist
       tags:
         - Containers
       responses:
         '200':
           description: OK
-      operationId: ApproveChangelist
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  value:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      changelist_id:
+                        type: string
+                      approved_by:
+                        type: string
+                      approved_at:
+                        type: string
+                    required:
+                      - id
+                      - changelist_id
+                      - approved_by
+                      - approved_at
+                required:
+                  - value
+                x-examples:
+                  example-1:
+                    value:
+                      id: ''
+                      changelist_id: ''
+                      approved_by: ''
+                      approved_at: ''
+      operationId: ListChangelistApprovals
       description: 'Approves a changelist for application. Note: you must still apply changelist after approval, this does not apply changelist.'
     delete:
       summary: Revoke Changelist Approval
@@ -3786,6 +3986,13 @@ paths:
         '200':
           description: OK
       description: Removes all approvals for changelist.
+    post:
+      summary: Approve Changelist
+      operationId: ApproveChangelist
+      responses:
+        '200':
+          description: OK
+      description: Approves a changelist
 components:
   securitySchemes:
     BearerAuth:
@@ -6908,4 +7115,85 @@ components:
           $ref: '#/components/schemas/EventActionStatus'
         isError:
           type: boolean
+    ListChangelistResponse:
+      description: ''
+      type: object
+      properties:
+        value:
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            required:
+              - id
+              - container_id
+              - name
+              - status
+              - applied_at
+            properties:
+              id:
+                type: string
+              container_id:
+                type: string
+              name:
+                type: string
+              status:
+                type: string
+              changelist:
+                type: object
+                properties: {}
+                required: []
+              applied_at:
+                type: string
+      required:
+        - value
+      x-examples:
+        example-1:
+          value:
+            - id: ''
+              container_id: ''
+              name: ''
+              status: ''
+              changelist: {}
+              applied_at: ''
+    RetrieveChangelistResponse:
+      description: ''
+      type: object
+      properties:
+        value:
+          type: object
+          properties:
+            id:
+              type: string
+            container_id:
+              type: string
+            name:
+              type: string
+            status:
+              type: string
+            changelist:
+              type: object
+              properties: {}
+              required: []
+            applied_at:
+              type: string
+          required:
+            - id
+            - container_id
+            - name
+            - status
+            - changelist
+            - applied_at
+      required:
+        - value
+      x-examples:
+        example-1:
+          value:
+            id: ''
+            container_id: ''
+            name: ''
+            status: ''
+            changelist: {}
+            applied_at: ''
+      title: RetrieveChangelistResponse
   responses: {}
