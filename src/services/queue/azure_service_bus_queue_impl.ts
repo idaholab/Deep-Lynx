@@ -17,7 +17,9 @@ export default class AzureServiceBusQueue implements QueueInterface {
 
         const handler = (message: ServiceBusReceivedMessage) => {
             destination.write(JSON.parse(message.body), () => {
-                void receiver.completeMessage(message);
+                receiver.completeMessage(message).catch((e: any) => {
+                    `unable to mark message complete ${JSON.stringify(e)}`;
+                });
             });
         };
 
