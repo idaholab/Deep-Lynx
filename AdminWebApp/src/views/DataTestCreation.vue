@@ -28,7 +28,7 @@
                 :dataSourceID="selectedDataSource.id" 
                 :containerID="containerID" 
                 :disabled="!selectedDataSource.active || selectedDataSource.archived"
-                @nodeCreated="listNodes"
+                @nodeCreated="listNodes() && listEdges()"
                 >
             </create-node-dialog>
           </v-col>
@@ -38,6 +38,7 @@
           </v-col>
         </template>
         <template v-slot:[`item.actions`]="{ item }">
+          <edit-node-dialog :node="item" :icon="true" @nodeEdited="listNodes() && listEdges()"></edit-node-dialog>
           <v-icon
               small
               @click="deleteNode(item)"
@@ -67,7 +68,7 @@
                 :dataSourceID="selectedDataSource.id" 
                 :containerID="containerID" 
                 :disabled="!selectedDataSource.active || selectedDataSource.archived"
-                @edgeCreated="listEdges"
+                @edgeCreated="listEdges()"
                 >
             </create-edge-dialog>
           </v-col>
@@ -95,6 +96,7 @@ import {DataSourceT, NodeT, EdgeT} from "@/api/types";
 import SelectDataSource from "@/components/selectDataSource.vue";
 import CreateNodeDialog from "@/components/createNodeDialog.vue";
 import CreateEdgeDialog from "@/components/createEdgeDialog.vue";
+import EditNodeDialog from "@/components/editNodeDialog.vue";
 
 
 @Component({filters: {
@@ -105,7 +107,8 @@ import CreateEdgeDialog from "@/components/createEdgeDialog.vue";
   components: {
     SelectDataSource,
     CreateNodeDialog,
-    CreateEdgeDialog
+    CreateEdgeDialog,
+    EditNodeDialog
   }
 })
 export default class DataTestCreation extends Vue {
