@@ -34,6 +34,8 @@ import {
     taskContext,
     eventActionContext,
     eventActionStatusContext,
+    changelistContext,
+    ontologyVersionContext,
 } from '../middleware';
 import ContainerRoutes from './data_warehouse/ontology/container_routes';
 import MetatypeRoutes from './data_warehouse/ontology/metatype_routes';
@@ -61,6 +63,8 @@ import {SuperUser} from '../../domain_objects/access_management/user';
 import ImportRoutes from './data_warehouse/import/import_routes';
 import DataQueryRoutes from './data_warehouse/data/data_query_routes';
 import TaskRoutes from './task_runner/task_routes';
+import ChangelistRoutes from './data_warehouse/ontology/versioning/changelist_routes';
+import OntologyVersionRoutes from './data_warehouse/ontology/versioning/ontology_version_routes';
 
 const winston = require('winston');
 const expressWinston = require('express-winston');
@@ -136,6 +140,8 @@ export class Router {
         EventRoutes.mount(this.app, [authenticateRoute(), containerContext(), eventActionContext(), eventActionStatusContext(), currentUser()]);
         DataQueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         TaskRoutes.mount(this.app, [authenticateRoute(), containerContext(), taskContext(), currentUser()]);
+        ChangelistRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser(), changelistContext()]);
+        OntologyVersionRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser(), ontologyVersionContext()]);
 
         // OAuth and Identity Provider routes - these are the only routes that serve up
         // webpages. WE ALSO MOUNT THE '/' ENDPOINT HERE

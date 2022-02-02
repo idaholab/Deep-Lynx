@@ -3914,6 +3914,145 @@ paths:
         '200':
           description: OK
       description: Approves a changelist
+  '/containers/{container_id}/ontology/versions':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+    get:
+      summary: List Ontology Versions
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  value:
+                    type: array
+                    uniqueItems: true
+                    minItems: 1
+                    items:
+                      required:
+                        - id
+                        - container_id
+                        - name
+                        - changelist_id
+                        - created_by
+                        - created_at
+                      properties:
+                        id:
+                          type: string
+                        container_id:
+                          type: string
+                        name:
+                          type: string
+                        changelist_id:
+                          type: string
+                        created_by:
+                          type: string
+                        created_at:
+                          type: string
+                required:
+                  - value
+                x-examples:
+                  example-1:
+                    value:
+                      - id: ''
+                        container_id: ''
+                        name: ''
+                        changelist_id: ''
+                        created_by: ''
+                        created_at: ''
+      operationId: ListOntologyVersions
+      description: Lists all versions of the ontology for a container.
+  '/containers/{container_id}/ontology/versions/{version_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: version_id
+        in: path
+        required: true
+    get:
+      summary: Retrieve Ontology Version
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  value:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      container_id:
+                        type: string
+                      name:
+                        type: string
+                      changelist_id:
+                        type: string
+                      created_by:
+                        type: string
+                      created_at:
+                        type: string
+                    required:
+                      - id
+                      - container_id
+                      - name
+                      - changelist_id
+                      - created_by
+                      - created_at
+                required:
+                  - value
+                x-examples:
+                  example-1:
+                    value:
+                      id: ''
+                      container_id: ''
+                      name: ''
+                      changelist_id: ''
+                      created_by: ''
+                      created_at: ''
+      operationId: RetrieveOntologyVersion
+      description: Retreives details on a single ontology version.
+  '/containers/{container_id}/ontology/versions/{version_id}/rollback':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: version_id
+        in: path
+        required: true
+    post:
+      tags:
+        - Containers
+      summary: Rollback Ontology Version
+      operationId: RollbackOntologyVersion
+      responses:
+        '200':
+          description: OK
+      description: Rolls back the ontology to the selected version.
 components:
   securitySchemes:
     BearerAuth:

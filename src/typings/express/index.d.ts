@@ -19,6 +19,7 @@ import EventActionStatus from '../../domain_objects/event_system/event_action_st
 import {Exporter} from '../../interfaces_and_impl/data_warehouse/export/exporter';
 import {DataSource} from '../../interfaces_and_impl/data_warehouse/import/data_source';
 import Changelist from '../../domain_objects/data_warehouse/ontology/versioning/changelist';
+import OntologyVersion from '../../domain_objects/data_warehouse/ontology/versioning/ontology_version';
 
 declare global {
     namespace Express {
@@ -49,6 +50,7 @@ declare global {
             file?: File;
             task?: TaskRecord;
             changelist?: Changelist;
+            ontologyVersion?: OntologyVersion;
         }
     }
 }

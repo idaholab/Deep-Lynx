@@ -5,12 +5,12 @@ import PostgresAdapter from '../../../../../data_access_layer/mappers/db_adapter
 import ContainerMapper from '../../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import Logger from '../../../../../services/logger';
 import Container from '../../../../../domain_objects/data_warehouse/ontology/container';
-import Changelist from '../../../../../domain_objects/data_warehouse/ontology/versioning/changelist';
-import ChangelistRepository from '../../../../../data_access_layer/repositories/data_warehouse/ontology/versioning/changelist_repository';
+import OntologyVersion from '../../../../../domain_objects/data_warehouse/ontology/versioning/ontology_version';
+import OntologyVersionRepository from '../../../../../data_access_layer/repositories/data_warehouse/ontology/versioning/ontology_version_repository';
 import {User} from '../../../../../domain_objects/access_management/user';
 import UserMapper from '../../../../../data_access_layer/mappers/access_management/user_mapper';
 
-describe('A Changelist Repository', async () => {
+describe('An Ontology Version Repo', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
 
@@ -58,46 +58,39 @@ describe('A Changelist Repository', async () => {
         return PostgresAdapter.Instance.close();
     });
 
-    it('can be saved', async () => {
-        const repo = new ChangelistRepository();
+    it('can save a record', async () => {
+        const repo = new OntologyVersionRepository();
 
-        const changelist = new Changelist({
+        const version = new OntologyVersion({
             container_id: containerID,
-            name: 'Test Changelist',
-            changelist: {test: 'test'},
+            name: 'Test Version',
         });
 
-        const result = await repo.save(changelist, user);
-        expect(result.isError).false;
-        expect(changelist.id).not.undefined;
+        const saved = await repo.save(version, user);
 
-        return repo.delete(changelist);
+        expect(saved.isError).false;
+        expect(version.id).not.empty;
+
+        return repo.delete(version);
     });
 
-    it('can be updated', async () => {
-        const repo = new ChangelistRepository();
+    it('can retrieve a record', async () => {
+        const repo = new OntologyVersionRepository();
 
-        const changelist = new Changelist({
+        const version = new OntologyVersion({
             container_id: containerID,
-            name: 'Test Changelist',
-            changelist: {test: 'test'},
+            name: 'Test Version',
         });
 
-        let result = await repo.save(changelist, user);
-        expect(result.isError).false;
-        expect(changelist.id).not.undefined;
+        const saved = await repo.save(version, user);
 
-        changelist.name = 'Test Changelist 2';
-        changelist.changelist = {bob: 'bob'};
+        expect(saved.isError).false;
+        expect(version.id).not.empty;
 
-        result = await repo.save(changelist, user);
-        expect(result.isError).false;
-        expect(changelist.id).not.undefined;
-
-        const retrieved = await repo.findByID(changelist.id!);
+        const retrieved = await repo.findByID(version.id!);
         expect(retrieved.isError).false;
-        expect(retrieved.value.name).eq('Test Changelist 2');
+        expect(retrieved.value.id).eq(version.id);
 
-        return repo.delete(changelist);
+        return repo.delete(version);
     });
 });
