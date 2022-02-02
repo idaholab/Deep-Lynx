@@ -3923,7 +3923,8 @@ paths:
         required: true
     get:
       summary: List Ontology Versions
-      tags: []
+      tags:
+        - Containers
       responses:
         '200':
           description: OK
@@ -3985,7 +3986,8 @@ paths:
         required: true
     get:
       summary: Retrieve Ontology Version
-      tags: []
+      tags:
+        - Containers
       responses:
         '200':
           description: OK
@@ -4043,6 +4045,8 @@ paths:
         in: path
         required: true
     post:
+      tags:
+        - Containers
       summary: Rollback Ontology Version
       operationId: RollbackOntologyVersion
       responses:
