@@ -1,4 +1,3 @@
-import Changelist from '../../../../../domain_objects/data_warehouse/ontology/versioning/changelist';
 import Mapper from '../../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import Result from '../../../../../common_classes/result';
