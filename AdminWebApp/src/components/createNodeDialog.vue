@@ -46,7 +46,7 @@
                   <v-col :cols="12">
                     <v-data-table
                         :items="metatype.keys"
-                        :items-per-page="50"
+                        :items-per-page="100"
                         v-if="optional === true"
                     >
                       <template v-slot:[`item`]="{ item }">
@@ -55,14 +55,6 @@
                     </v-data-table>
                   </v-col>
                 </v-col>
-                
-                <!-- <v-text-field
-                    v-model="selectedMetatype.name"
-                    :rules="[v => !!v || $t('editMetatype.nameRequired')]"
-                    required
-                >
-                  <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
-                </v-text-field> -->
               </v-form>
               <p><span style="color:red">*</span> = {{$t('createNode.requiredField')}}</p>
             </v-col>
@@ -80,7 +72,7 @@
 
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeT, PropertyT} from "@/api/types";
+import {MetatypeKeyT, MetatypeT, PropertyT} from "@/api/types";
 
 @Component
 export default class CreateNodeDialog extends Vue {
@@ -101,7 +93,6 @@ export default class CreateNodeDialog extends Vue {
   originSearch = ""
   metatype: any = {}
   propertyValue = ""
-  propertiesTest = ["jeff", "anne", "buluga"]
   
   property = {}
   
@@ -116,12 +107,20 @@ export default class CreateNodeDialog extends Vue {
   @Watch('originSearch', {immediate: true})
   onOriginSearchChange(newVal: string) {
     this.metatypesLoading = true
-    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: 'true'})
+    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: 'false'})
         .then((metatypes) => {
           this.originMetatypes = metatypes as MetatypeT[]
           this.metatypesLoading = false
         })
         .catch((e: any) => this.errorMessage = e)
+  }
+
+  @Watch('metatype', {immediate: true})
+  onMetatypeSelect(){
+    this.$client.listMetatypeKeys(this.containerID, this.metatype.id)
+        .then((keys) => {
+          this.metatype.keys = keys
+        })
   }
 
   newNode() {

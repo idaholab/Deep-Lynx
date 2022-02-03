@@ -46,7 +46,7 @@
             <v-col :cols="12">
               <v-data-table
                   :headers="headers()"
-                  :items="selectedNode.properties"
+                  :items="nodeProperties"
                   :items-per-page="100"
                   :footer-props="{
                      'items-per-page-options': [25, 50, 100]
@@ -66,7 +66,7 @@
                     <!-- <create-metatype-key-dialog :metatype="metatype" @metatypeKeyCreated="loadKeys()"></create-metatype-key-dialog> -->
                   </v-toolbar>
                 </template>
-                <template v-slot:[`item.actions`]="{ item }">
+                <!-- <template v-slot:[`item.actions`]="{ item }">
                  <edit-node-property-dialog :propertyKey="item" :node="node" :icon="true" @metatypeKeyEdited="loadKeys()"></edit-node-property-dialog>
                   <v-icon
                       small
@@ -74,7 +74,7 @@
                   >
                     mdi-delete
                   </v-icon>
-                </template>
+                </template> -->
               </v-data-table>
             </v-col>
           </v-row>
@@ -92,7 +92,7 @@
 
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeKeyT, NodeT} from "../api/types";
+import {MetatypeKeyT, NodeT, PropertyT} from "../api/types";
 import EditMetatypeKeyDialog from "@/components/editMetatypeKeyDialog.vue";
 import CreateMetatypeKeyDialog from "@/components/createMetatypeKeyDialog.vue";
 
@@ -112,22 +112,24 @@ export default class EditMetatypeDialog extends Vue {
   dialog = false
   selectedNode: NodeT | null  = null
   valid = false
+  nodeProperties: PropertyT[] = []
 
   // this way we only load the keys when the edit dialog is open, so we don't
   // overload someone using this in a list
   @Watch('dialog', {immediate: true})
   isDialogOpen() {
     if(this.dialog) {
-      this.loadKeys()
+      // this.loadKeys()
+      this.propertiesToArray()
     }
   }
 
   headers() {
     return  [
-      { text: this.$t('editMetatype.keyName'), value: 'name' },
-      { text: this.$t('editMetatype.keyDescription'), value: 'description'},
-      { text: this.$t('editMetatype.keyType'), value: 'data_type'},
-      { text: this.$t('editMetatype.actions'), value: 'actions', sortable: false }
+      { text: this.$t('editMetatype.keyName'), value: 'key'},
+      // { text: this.$t('editMetatype.keyDescription')},
+      // { text: this.$t('editMetatype.keyType'), value: 'type'},
+      // { text: this.$t('editMetatype.actions'), value: 'actions', sortable: false }
     ]
   }
 
@@ -136,47 +138,61 @@ export default class EditMetatypeDialog extends Vue {
     this.selectedNode = JSON.parse(JSON.stringify(this.node))
   }
 
-  editMetatype() {
-    this.$client.updateMetatype(this.selectedNode?.container_id!, this.selectedNode?.id!,
-        {"name": this.selectedNode?.metatype.name, "description": this.selectedNode?.metatype.description})
-        .then(result => {
-          if(!result) {
-            this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
-          } else {
-            this.dialog = false
-            this.$emit('metatypeEdited')
-          }
-        })
-        .catch(e => this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string + e)
-  }
-
-  loadKeys() {
-    if(this.selectedNode) {
-      this.keysLoading = true
-      this.$client.listMetatypeKeys(this.selectedNode.container_id, this.selectedNode.id)
-          .then(keys => {
-            if(this.selectedNode) {
-              this.selectedNode.properties = keys
-              this.keysLoading = false
-              this.$forceUpdate()
-            }
-          })
-          .catch(e => {
-            this.errorMessage = e
-            this.keysLoading = false
-          })
+  propertiesToArray() {
+    if (this.selectedNode) {
+      //   Object.entries(this.selectedNode.properties).forEach(([key, text]) => {
+      //     const object = {key: key, value: key, type: key} as PropertyT
+      //     this.nodeProperties.push(object)  
+      // })
+       for ( const key in this.selectedNode.properties) {
+        const object = {key: key, value: key, type: key} as PropertyT
+        this.nodeProperties.push(object)
+      }
     }
+   
   }
 
-  deleteKey(key: MetatypeKeyT) {
-    this.$client.deleteMetatypeKey(this.selectedNode?.container_id!, this.selectedNode?.id!, key.id)
-    .then(result => {
-      if(!result) this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
+  // editMetatype() {
+  //   this.$client.updateMetatype(this.selectedNode?.container_id!, this.selectedNode?.id!,
+  //       {"name": this.selectedNode?.metatype.name, "description": this.selectedNode?.metatype.description})
+  //       .then(result => {
+  //         if(!result) {
+  //           this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
+  //         } else {
+  //           this.dialog = false
+  //           this.$emit('metatypeEdited')
+  //         }
+  //       })
+  //       .catch(e => this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string + e)
+  // }
 
-      this.loadKeys()
-    })
-    .catch(e => this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string + e)
-  }
+  // loadKeys() {
+  //   if(this.selectedNode) {
+  //     this.keysLoading = true
+  //     this.$client.listMetatypeKeys(this.selectedNode.container_id, this.selectedNode.id)
+  //         .then(keys => {
+  //           if(this.selectedNode) {
+  //             this.selectedNode.properties = keys
+  //             this.keysLoading = false
+  //             this.$forceUpdate()
+  //           }
+  //         })
+  //         .catch(e => {
+  //           this.errorMessage = e
+  //           this.keysLoading = false
+  //         })
+  //   }
+  // }
+
+  // deleteKey(key: MetatypeKeyT) {
+  //   this.$client.deleteMetatypeKey(this.selectedNode?.container_id!, this.selectedNode?.id!, key.id)
+  //   .then(result => {
+  //     if(!result) this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
+
+  //     this.loadKeys()
+  //   })
+  //   .catch(e => this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string + e)
+  // }
 }
 
 </script>
