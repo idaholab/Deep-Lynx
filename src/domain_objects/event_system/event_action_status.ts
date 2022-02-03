@@ -9,10 +9,11 @@ export default class EventActionStatus extends BaseDomainClass {
     @IsOptional()
     id?: string;
 
-    @IsString()
-    event_id?: string;
+    @IsOptional()
+    event?: any;
 
     @IsString()
+    @IsOptional()
     event_action_id?: string;
 
     @IsString()
@@ -22,12 +23,12 @@ export default class EventActionStatus extends BaseDomainClass {
     @IsOptional()
     status_message?: string;
 
-    constructor(input: {eventID: string; eventActionID: string; status?: string, statusMessage?: string}) {
+    constructor(input: {eventActionID?: string; event?: any; status?: string; statusMessage?: string}) {
         super();
 
         if (input) {
-            this.event_id = input.eventID;
-            this.event_action_id = input.eventActionID;
+            if (input.eventActionID) this.event_action_id = input.eventActionID;
+            if (input.event) this.event = input.event;
             if (input.status) this.status = input.status;
             if (input.statusMessage) this.status_message = input.statusMessage;
         }

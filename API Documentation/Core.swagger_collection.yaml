@@ -408,11 +408,6 @@ paths:
           in: query
           name: metatypeID
           description: Return only nodes for the selected metatype
-        - schema:
-            type: string
-          in: query
-          name: dataSourceID
-          description: Return only nodes for the selected datasource
       responses:
         '200':
           description: ''
@@ -579,14 +574,6 @@ paths:
             type: string
           in: query
           name: relationshipPairName
-        - schema:
-            type: string
-          in: query
-          name: dataSourceID
-        - schema:
-            type: string
-          in: query
-          name: loadRelationshipPairs
       responses:
         '200':
           description: ''
@@ -3200,20 +3187,6 @@ paths:
                 file:
                   type: string
   /events:
-    get:
-      tags:
-        - Events
-      summary: List Events
-      description: Lists all events
-      operationId: ListEvents
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListEventsResponse'
-      deprecated: false
     post:
       tags:
         - Events
@@ -3235,27 +3208,6 @@ paths:
                 $ref: '#/components/schemas/CreateEventResponse'
       deprecated: false
       x-codegen-request-body-name: Body
-  '/events/{event_id}':
-    get:
-      tags:
-        - Events
-      summary: Retrieve Event
-      description: Retrieve an event
-      operationId: RetrieveEvent
-      parameters:
-        - name: event_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetEventResponse'
-      deprecated: false
   /event_actions:
     get:
       summary: List Event Actions
@@ -3360,6 +3312,12 @@ paths:
                 $ref: '#/components/schemas/ListEventActionStatusResponse'
       operationId: ListEventActionStatuses
       description: List all event action statuses
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: eventID
+          description: Filter returned statuses by the event ID
   '/event_action_status/{status_id}':
     parameters:
       - schema:
@@ -3635,6 +3593,466 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Task'
+  '/containers/{container_id}/alerts':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+    get:
+      summary: List Container Alerts
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+      operationId: ListContainerAlerts
+      description: List all active alerts for a container by ID.
+  '/containers/{container_id}/alerts/{alert_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: alert_id
+        in: path
+        required: true
+    post:
+      summary: Acknowledge Container Alert
+      operationId: AcknowledgeContainerAlert
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+      description: Post with no body to acknowledge an alert and remove it from the active alerts list.
+  '/containers/{container_id}/ontology/changelists':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+    get:
+      summary: List Changelists
+      tags:
+        - Containers
+      operationId: ListChangelists
+      description: List all changelists for a container. Will eventually support filters.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListChangelistResponse'
+    post:
+      summary: Create New Changelist
+      operationId: CreateNewChangelist
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  value:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      container_id:
+                        type: string
+                      name:
+                        type: string
+                      status:
+                        type: string
+                      changelist:
+                        type: object
+                        properties: {}
+                      applied_at:
+                        type: string
+                    required:
+                      - id
+                      - container_id
+                      - name
+                      - status
+                      - changelist
+                      - applied_at
+                required:
+                  - value
+                x-examples:
+                  example-1:
+                    value:
+                      id: ''
+                      container_id: ''
+                      name: ''
+                      status: ''
+                      changelist: {}
+                      applied_at: ''
+      description: Create a new changelist.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: ''
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+              required:
+                - name
+              x-examples:
+                example-1:
+                  name: Changelist Name
+  '/containers/{container_id}/ontology/changelists/{changelist_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: changelist_id
+        in: path
+        required: true
+    get:
+      summary: Retrieve Changelist
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetrieveChangelistResponse'
+      operationId: RetrieveChangelist
+      description: Retrieve a changelist by id.
+    put:
+      summary: Update Changelist
+      operationId: UpdateChangelist
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  value:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      container_id:
+                        type: string
+                      name:
+                        type: string
+                      status:
+                        type: string
+                      changelist:
+                        type: object
+                        properties: {}
+                      applied_at:
+                        type: string
+                    required:
+                      - id
+                      - container_id
+                      - name
+                      - status
+                      - changelist
+                      - applied_at
+                required:
+                  - value
+                x-examples:
+                  example-1:
+                    value:
+                      id: ''
+                      container_id: ''
+                      name: ''
+                      status: ''
+                      changelist: {}
+                      applied_at: ''
+      description: Update a changelist.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: ''
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                changelist:
+                  type: object
+                  properties:
+                    changeExample:
+                      type: string
+                      minLength: 1
+                  required:
+                    - changeExample
+              required:
+                - name
+                - changelist
+              x-examples:
+                example-1:
+                  name: Updated name
+                  changelist:
+                    changeExample: example
+    delete:
+      summary: Delete Changelist
+      operationId: DeleteChangelist
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+      description: Deletes a changelist
+  '/containers/{container_id}/ontology/changelists/{changelistID}/apply':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: changelistID
+        in: path
+        required: true
+    get:
+      summary: Apply Changelist
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+      operationId: ApplyChangelist
+      description: 'Applies changelist to the ontology, creates a new ontology version.'
+  '/containers/{container_id}/ontology/changelists/{changelist_id}/approve':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: changelist_id
+        in: path
+        required: true
+    get:
+      summary: List Approvals for Changelist
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  value:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      changelist_id:
+                        type: string
+                      approved_by:
+                        type: string
+                      approved_at:
+                        type: string
+                    required:
+                      - id
+                      - changelist_id
+                      - approved_by
+                      - approved_at
+                required:
+                  - value
+                x-examples:
+                  example-1:
+                    value:
+                      id: ''
+                      changelist_id: ''
+                      approved_by: ''
+                      approved_at: ''
+      operationId: ListChangelistApprovals
+      description: 'Approves a changelist for application. Note: you must still apply changelist after approval, this does not apply changelist.'
+    delete:
+      summary: Revoke Changelist Approval
+      operationId: RevokeChangelistApproval
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+      description: Removes all approvals for changelist.
+    post:
+      tags:
+        - Containers
+      summary: Approve Changelist
+      operationId: ApproveChangelist
+      responses:
+        '200':
+          description: OK
+      description: Approves a changelist
+  '/containers/{container_id}/ontology/versions':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+    get:
+      summary: List Ontology Versions
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  value:
+                    type: array
+                    uniqueItems: true
+                    minItems: 1
+                    items:
+                      required:
+                        - id
+                        - container_id
+                        - name
+                        - changelist_id
+                        - created_by
+                        - created_at
+                      properties:
+                        id:
+                          type: string
+                        container_id:
+                          type: string
+                        name:
+                          type: string
+                        changelist_id:
+                          type: string
+                        created_by:
+                          type: string
+                        created_at:
+                          type: string
+                required:
+                  - value
+                x-examples:
+                  example-1:
+                    value:
+                      - id: ''
+                        container_id: ''
+                        name: ''
+                        changelist_id: ''
+                        created_by: ''
+                        created_at: ''
+      operationId: ListOntologyVersions
+      description: Lists all versions of the ontology for a container.
+  '/containers/{container_id}/ontology/versions/{version_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: version_id
+        in: path
+        required: true
+    get:
+      summary: Retrieve Ontology Version
+      tags:
+        - Containers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  value:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      container_id:
+                        type: string
+                      name:
+                        type: string
+                      changelist_id:
+                        type: string
+                      created_by:
+                        type: string
+                      created_at:
+                        type: string
+                    required:
+                      - id
+                      - container_id
+                      - name
+                      - changelist_id
+                      - created_by
+                      - created_at
+                required:
+                  - value
+                x-examples:
+                  example-1:
+                    value:
+                      id: ''
+                      container_id: ''
+                      name: ''
+                      changelist_id: ''
+                      created_by: ''
+                      created_at: ''
+      operationId: RetrieveOntologyVersion
+      description: Retreives details on a single ontology version.
+  '/containers/{container_id}/ontology/versions/{version_id}/rollback':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: version_id
+        in: path
+        required: true
+    post:
+      tags:
+        - Containers
+      summary: Rollback Ontology Version
+      operationId: RollbackOntologyVersion
+      responses:
+        '200':
+          description: OK
+      description: Rolls back the ontology to the selected version.
 components:
   securitySchemes:
     BearerAuth:
@@ -4315,26 +4733,8 @@ components:
           $ref: '#/components/schemas/CreateManualImport'
         isError:
           type: boolean
-    ListEventsResponse:
-      title: ListEventsResponse
-      type: object
-      properties:
-        value:
-          type: array
-          items:
-            $ref: '#/components/schemas/Event'
-        isError:
-          type: boolean
     CreateEventResponse:
       title: CreateEventResponse
-      type: object
-      properties:
-        value:
-          $ref: '#/components/schemas/Event'
-        isError:
-          type: boolean
-    GetEventResponse:
-      title: GetEventResponse
       type: object
       properties:
         value:
@@ -6632,22 +7032,24 @@ components:
       properties:
         id:
           type: string
-        event_id:
-          type: string
         event_action_id:
           type: string
         status:
           type: string
         status_message:
           type: string
+          nullable: true
         created_at:
           type: string
         modified_at:
           type: string
+          nullable: true
         modified_by:
           type: string
+          nullable: true
+        event:
+          $ref: '#/components/schemas/Event'
       required:
-        - event_id
         - event_action_id
     CreateEventRequest:
       title: CreateEventRequest
@@ -6745,10 +7147,6 @@ components:
       title: UpdateEventActionStatusRequest
       type: object
       properties:
-        event_id:
-          type: string
-        event_action_id:
-          type: string
         status:
           type: string
         status_message:
@@ -6761,4 +7159,83 @@ components:
           $ref: '#/components/schemas/EventActionStatus'
         isError:
           type: boolean
+    ListChangelistResponse:
+      description: ''
+      type: object
+      properties:
+        value:
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            required:
+              - id
+              - container_id
+              - name
+              - status
+              - applied_at
+            properties:
+              id:
+                type: string
+              container_id:
+                type: string
+              name:
+                type: string
+              status:
+                type: string
+              changelist:
+                type: object
+                properties: {}
+              applied_at:
+                type: string
+      required:
+        - value
+      x-examples:
+        example-1:
+          value:
+            - id: ''
+              container_id: ''
+              name: ''
+              status: ''
+              changelist: {}
+              applied_at: ''
+    RetrieveChangelistResponse:
+      description: ''
+      type: object
+      properties:
+        value:
+          type: object
+          properties:
+            id:
+              type: string
+            container_id:
+              type: string
+            name:
+              type: string
+            status:
+              type: string
+            changelist:
+              type: object
+              properties: {}
+            applied_at:
+              type: string
+          required:
+            - id
+            - container_id
+            - name
+            - status
+            - changelist
+            - applied_at
+      required:
+        - value
+      x-examples:
+        example-1:
+          value:
+            id: ''
+            container_id: ''
+            name: ''
+            status: ''
+            changelist: {}
+            applied_at: ''
+      title: RetrieveChangelistResponse
   responses: {}

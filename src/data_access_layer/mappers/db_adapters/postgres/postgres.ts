@@ -30,6 +30,10 @@ export default class PostgresAdapter {
         });
     }
 
+    public async close() {
+        return this.pool.end();
+    }
+
     get Pool(): Pool {
         return this.pool;
     }

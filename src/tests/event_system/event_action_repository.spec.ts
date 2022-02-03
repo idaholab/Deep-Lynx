@@ -55,7 +55,8 @@ describe('An Event Action Repository', async () => {
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(container.id!);
+        await ContainerMapper.Instance.Delete(container.id!);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can save an Event Action', async () => {
@@ -63,7 +64,7 @@ describe('An Event Action Repository', async () => {
         const action = new EventAction({
             containerID: container.id,
             eventType: 'data_source_created',
-            actionType: 'send_query',
+            actionType: 'default',
             destination: 'url_here',
         });
 
@@ -72,7 +73,7 @@ describe('An Event Action Repository', async () => {
         expect(action.id).not.undefined;
 
         // now update
-        const config = {'test': 'config'};
+        const config = {test: 'config'};
         action.action_config = config;
 
         saved = await repo.save(action, user);

@@ -11,13 +11,15 @@ import Node from '../../domain_objects/data_warehouse/data/node';
 import Edge from '../../domain_objects/data_warehouse/data/edge';
 import TypeMapping from '../../domain_objects/data_warehouse/etl/type_mapping';
 import TypeTransformation from '../../domain_objects/data_warehouse/etl/type_transformation';
-import {Exporter} from '../../domain_objects/data_warehouse/export/export';
 import Import, {DataStaging} from '../../domain_objects/data_warehouse/import/import';
-import {DataSource} from '../../domain_objects/data_warehouse/import/data_source';
-import TaskRecord from '../../domain_objects/data_warehouse/task';
+import TaskRecord from '../../domain_objects/task_runner/task';
 import Event from '../../domain_objects/event_system/event';
 import EventAction from '../../domain_objects/event_system/event_action';
 import EventActionStatus from '../../domain_objects/event_system/event_action_status';
+import {Exporter} from '../../interfaces_and_impl/data_warehouse/export/exporter';
+import {DataSource} from '../../interfaces_and_impl/data_warehouse/import/data_source';
+import Changelist from '../../domain_objects/data_warehouse/ontology/versioning/changelist';
+import OntologyVersion from '../../domain_objects/data_warehouse/ontology/versioning/ontology_version';
 
 declare global {
     namespace Express {
@@ -47,6 +49,8 @@ declare global {
             dataSource?: DataSource;
             file?: File;
             task?: TaskRecord;
+            changelist?: Changelist;
+            ontologyVersion?: OntologyVersion;
         }
     }
 }

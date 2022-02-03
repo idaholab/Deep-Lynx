@@ -96,6 +96,7 @@ export default class MetatypeKeyMapper extends Mapper {
         const text = `INSERT INTO
                         metatype_keys(
                                       metatype_id,
+                                      container_id,
                                       name,
                                       description,
                                       property_name,
@@ -109,6 +110,7 @@ export default class MetatypeKeyMapper extends Mapper {
                         VALUES %L RETURNING *`;
         const values = keys.map((key) => [
             key.metatype_id,
+            key.container_id,
             key.name,
             key.description,
             key.property_name,
@@ -126,7 +128,7 @@ export default class MetatypeKeyMapper extends Mapper {
 
     private retrieveStatement(metatypeKeyID: string): QueryConfig {
         return {
-            text: `SELECT * FROM metatype_keys WHERE id = $1 AND deleted_at IS NULL`,
+            text: `SELECT * FROM metatype_keys WHERE id = $1`,
             values: [metatypeKeyID],
         };
     }
@@ -163,7 +165,7 @@ export default class MetatypeKeyMapper extends Mapper {
     // all keys back, both the metatype's own and the inherited keys
     private listStatement(metatypeID: string): QueryConfig {
         return {
-            text: `SELECT * FROM get_metatype_keys($1::bigint) WHERE deleted_at IS NULL`,
+            text: `SELECT * FROM get_metatype_keys($1::bigint)`,
             values: [metatypeID],
         };
     }
@@ -172,6 +174,7 @@ export default class MetatypeKeyMapper extends Mapper {
         const text = `UPDATE metatype_keys AS m SET
                      name = k.name,
                      metatype_id = k.metatype_id::bigint,
+                     container_id = k.container_id::bigint, 
                      description = k.description,
                      property_name = k.property_name,
                      required = k.required::boolean,
@@ -181,12 +184,14 @@ export default class MetatypeKeyMapper extends Mapper {
                      validation = k.validation::jsonb,
                      modified_by = k.modified_by,
                      modified_at = NOW()
-                 FROM(VALUES %L) AS k(id, name, metatype_id, description, property_name, required, data_type, options, default_value, validation, modified_by)
+                 FROM(VALUES %L) AS 
+                     k(id, name, metatype_id, container_id, description, property_name, required, data_type, options, default_value, validation, modified_by)
                  WHERE k.id::bigint = m.id RETURNING m.*`;
         const values = keys.map((key) => [
             key.id,
             key.name,
             key.metatype_id,
+            key.container_id,
             key.description,
             key.property_name,
             key.required,

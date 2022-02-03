@@ -1,5 +1,5 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import MetatypeKeyMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
 import Logger from '../../../../services/logger';
@@ -26,8 +26,8 @@ describe('A Metatype Key', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -38,7 +38,8 @@ describe('A Metatype Key', async () => {
     });
 
     after(async () => {
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can be saved to storage', async () => {
@@ -50,8 +51,8 @@ describe('A Metatype Key', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -75,8 +76,8 @@ describe('A Metatype Key', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -100,8 +101,8 @@ describe('A Metatype Key', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -113,7 +114,7 @@ describe('A Metatype Key', async () => {
             required: false,
             property_name: 'notRequired',
             data_type: 'number',
-            metatype_id: metatype.value.id!
+            metatype_id: metatype.value.id!,
         });
         const key = await storage.Create('test suite', testKey);
         expect(key.isError).false;
@@ -135,8 +136,8 @@ describe('A Metatype Key', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -165,8 +166,8 @@ describe('A Metatype Key', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(metatype.isError).false;
@@ -191,7 +192,7 @@ export const test_keys: MetatypeKey[] = [
         description: 'flower name',
         required: true,
         property_name: 'flower_name',
-        data_type: 'string'
+        data_type: 'string',
     }),
     new MetatypeKey({
         name: 'Test2',
@@ -199,13 +200,13 @@ export const test_keys: MetatypeKey[] = [
         required: true,
         property_name: 'color',
         data_type: 'enumeration',
-        options: ['yellow', 'blue']
+        options: ['yellow', 'blue'],
     }),
     new MetatypeKey({
         name: 'Test Not Required',
         description: 'not required',
         required: false,
         property_name: 'notRequired',
-        data_type: 'number'
-    })
+        data_type: 'number',
+    }),
 ];

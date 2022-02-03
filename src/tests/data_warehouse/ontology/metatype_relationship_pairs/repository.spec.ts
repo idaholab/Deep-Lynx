@@ -1,5 +1,5 @@
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import Logger from '../../../../services/logger';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
@@ -11,7 +11,7 @@ import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatyp
 import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import MetatypeRelationshipPairRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository';
-import { User } from '../../../../domain_objects/access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 
 describe('A Metatype Relationship Pair Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -29,8 +29,8 @@ describe('A Metatype Relationship Pair Repository', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -45,8 +45,8 @@ describe('A Metatype Relationship Pair Repository', async () => {
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(userResult.isError).false;
@@ -58,7 +58,8 @@ describe('A Metatype Relationship Pair Repository', async () => {
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can save a Metatype Relationship Pair', async () => {
@@ -70,12 +71,12 @@ describe('A Metatype Relationship Pair Repository', async () => {
         const metatype1 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const metatype2 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         const metatypeResult = await metatypeRepo.bulkSave(user, [metatype1, metatype2]);
@@ -84,7 +85,7 @@ describe('A Metatype Relationship Pair Repository', async () => {
         const relationship = new MetatypeRelationship({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         const relationshipResult = await relationshipRepo.save(relationship, user);
@@ -97,7 +98,7 @@ describe('A Metatype Relationship Pair Repository', async () => {
             origin_metatype: metatype1,
             destination_metatype: metatype2,
             relationship,
-            container_id: containerID
+            container_id: containerID,
         });
 
         const saved = await repo.save(pair, user);
@@ -117,17 +118,17 @@ describe('A Metatype Relationship Pair Repository', async () => {
         const metatype1 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const metatype2 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const relationship = new MetatypeRelationship({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         const pair = new MetatypeRelationshipPair({
@@ -137,7 +138,7 @@ describe('A Metatype Relationship Pair Repository', async () => {
             origin_metatype: metatype1,
             destination_metatype: metatype2,
             relationship,
-            container_id: containerID
+            container_id: containerID,
         });
 
         const saved = await repo.save(pair, user, true);
@@ -157,17 +158,17 @@ describe('A Metatype Relationship Pair Repository', async () => {
         const metatype1 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const metatype2 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const relationship = new MetatypeRelationship({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         const pair = new MetatypeRelationshipPair({
@@ -177,23 +178,23 @@ describe('A Metatype Relationship Pair Repository', async () => {
             origin_metatype: metatype1,
             destination_metatype: metatype2,
             relationship,
-            container_id: containerID
+            container_id: containerID,
         });
 
         const metatype3 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const metatype4 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const relationship2 = new MetatypeRelationship({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         const pair2 = new MetatypeRelationshipPair({
@@ -203,7 +204,7 @@ describe('A Metatype Relationship Pair Repository', async () => {
             origin_metatype: metatype3,
             destination_metatype: metatype4,
             relationship: relationship2,
-            container_id: containerID
+            container_id: containerID,
         });
 
         const saved = await repo.bulkSave(user, [pair, pair2], true);
@@ -228,17 +229,17 @@ describe('A Metatype Relationship Pair Repository', async () => {
         const metatype1 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const metatype2 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const relationship = new MetatypeRelationship({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         const pair = new MetatypeRelationshipPair({
@@ -248,7 +249,7 @@ describe('A Metatype Relationship Pair Repository', async () => {
             origin_metatype: metatype1,
             destination_metatype: metatype2,
             relationship,
-            container_id: containerID
+            container_id: containerID,
         });
 
         let saved = await repo.save(pair, user, true);
@@ -261,17 +262,17 @@ describe('A Metatype Relationship Pair Repository', async () => {
         const metatype3 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const metatype4 = new Metatype({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
         const relationship2 = new MetatypeRelationship({
             container_id: containerID,
             name: faker.name.findName(),
-            description: faker.random.alphaNumeric()
+            description: faker.random.alphaNumeric(),
         });
 
         const pair2 = new MetatypeRelationshipPair({
@@ -281,7 +282,7 @@ describe('A Metatype Relationship Pair Repository', async () => {
             origin_metatype: metatype3,
             destination_metatype: metatype4,
             relationship: relationship2,
-            container_id: containerID
+            container_id: containerID,
         });
 
         saved = await repo.save(pair2, user, true);

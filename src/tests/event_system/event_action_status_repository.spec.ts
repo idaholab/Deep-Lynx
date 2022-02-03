@@ -10,7 +10,6 @@ import Event from '../../domain_objects/event_system/event';
 import EventActionStatusRepository from '../../data_access_layer/repositories/event_system/event_action_status_repository';
 import EventAction from '../../domain_objects/event_system/event_action';
 import EventActionStatus from '../../domain_objects/event_system/event_action_status';
-import EventMapper from '../../data_access_layer/mappers/event_system/event_mapper';
 import EventActionMapper from '../../data_access_layer/mappers/event_system/event_action_mapper';
 
 describe('An Event Action Status Repository', async () => {
@@ -64,17 +63,7 @@ describe('An Event Action Status Repository', async () => {
 
     it('can save an Event Action Status', async () => {
         const repo = new EventActionStatusRepository();
-        const eventStorage = EventMapper.Instance;
         const actionStorage = EventActionMapper.Instance;
-
-        const event = await eventStorage.Create(
-            'test suite',
-            new Event({
-                containerID: container.id,
-                eventType: 'data_source_created',
-                event: {'id': 'testID'},
-            }),
-        );
 
         const action = await actionStorage.Create(
             'test suite',
@@ -87,9 +76,13 @@ describe('An Event Action Status Repository', async () => {
         );
 
         const status = new EventActionStatus({
-            eventID: event.value.id!,
-            eventActionID: action.value.id!
-        })
+            event: new Event({
+                containerID: container.id,
+                eventType: 'data_source_created',
+                event: {id: 'testID'},
+            }),
+            eventActionID: action.value.id!,
+        });
 
         let saved = await repo.save(status, user);
         expect(saved.isError).false;
@@ -101,6 +94,5 @@ describe('An Event Action Status Repository', async () => {
         saved = await repo.save(status, user);
         expect(saved.isError).false;
         expect(status.status_message).eq(newMessage);
-
     });
 });
