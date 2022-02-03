@@ -32,7 +32,6 @@
                 >
             </create-node-dialog>
           </v-col>
-
           <v-col>
             <h2>{{$t('dataTestCreation.nodeTableTitle')}}</h2>
           </v-col>
