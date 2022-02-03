@@ -28,6 +28,7 @@
                     v-model="metatype"
                     :rules="[v => !!v || $t('createNode.metatypeRequired')]"
                     :single-line="false"
+                    :loading="metatypesLoading"
                     :items="originMetatypes"
                     :search-input.sync="originSearch"
                     item-text="name"
@@ -37,6 +38,31 @@
                 >
                   <template v-slot:label>{{$t('createNode.metatype')}} <small style="color:red" >*</small></template>
                 </v-autocomplete>
+                <v-col :cols="12" v-if="Object.keys(metatype).length !== 0">
+                  <v-checkbox 
+                    v-model="optional"
+                    :label="'Show Optional Fields'"
+                  ></v-checkbox>
+                  <v-col :cols="12">
+                    <v-data-table
+                        :items="metatype.keys"
+                        :items-per-page="50"
+                        v-if="optional === true"
+                    >
+                      <template v-slot:[`item`]="{ item }">
+                        <v-text-field v-model="item['default_value']"><template v-slot:label>{{item["name"]}}</template></v-text-field>
+                      </template>
+                    </v-data-table>
+                  </v-col>
+                </v-col>
+                
+                <!-- <v-text-field
+                    v-model="selectedMetatype.name"
+                    :rules="[v => !!v || $t('editMetatype.nameRequired')]"
+                    required
+                >
+                  <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
+                </v-text-field> -->
               </v-form>
               <p><span style="color:red">*</span> = {{$t('createNode.requiredField')}}</p>
             </v-col>
@@ -68,11 +94,14 @@ export default class CreateNodeDialog extends Vue {
   readonly icon!: boolean
 
   errorMessage = ""
+  metatypesLoading = false
   dialog = false
   valid = false
+  optional = false
   originSearch = ""
   metatype: any = {}
   propertyValue = ""
+  propertiesTest = ["jeff", "anne", "buluga"]
   
   property = {}
   
@@ -86,9 +115,11 @@ export default class CreateNodeDialog extends Vue {
 
   @Watch('originSearch', {immediate: true})
   onOriginSearchChange(newVal: string) {
+    this.metatypesLoading = true
     this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: 'true'})
         .then((metatypes) => {
           this.originMetatypes = metatypes as MetatypeT[]
+          this.metatypesLoading = false
         })
         .catch((e: any) => this.errorMessage = e)
   }
