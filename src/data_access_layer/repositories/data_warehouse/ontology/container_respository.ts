@@ -1,5 +1,5 @@
 import RepositoryInterface from '../../repository';
-import Container from '../../../../domain_objects/data_warehouse/ontology/container';
+import Container, {ContainerAlert} from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 import ContainerMapper from '../../../mappers/data_warehouse/ontology/container_mapper';
 import Authorization from '../../../../domain_objects/access_management/authorization/authorization';
@@ -7,7 +7,8 @@ import Logger from '../../../../services/logger';
 import Cache from '../../../../services/cache/cache';
 import {plainToClass, serialize} from 'class-transformer';
 import Config from '../../../../services/config';
-import {User} from '../../../../domain_objects/access_management/user';
+import {SuperUser, User} from '../../../../domain_objects/access_management/user';
+import ContainerAlertMapper from '../../../mappers/data_warehouse/ontology/container_alert_mapper';
 
 /*
     ContainerRepository contains methods for persisting and retrieving a container
@@ -17,6 +18,7 @@ import {User} from '../../../../domain_objects/access_management/user';
  */
 export default class ContainerRepository implements RepositoryInterface<Container> {
     #mapper: ContainerMapper = ContainerMapper.Instance;
+    #alertMapper: ContainerAlertMapper = ContainerAlertMapper.Instance;
 
     async save(c: Container, user: User): Promise<Result<boolean>> {
         const errors = await c.validationErrors();
@@ -206,6 +208,32 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         }
 
         return Promise.resolve(retrieved);
+    }
+
+    async createAlert(alert: ContainerAlert, user?: User): Promise<Result<boolean>> {
+        const errors = await alert.validationErrors();
+        if (errors) {
+            return Promise.resolve(Result.Failure(`container alert does not pass validation ${errors.join(',')}`));
+        }
+
+        if (alert.id) {
+            return Promise.resolve(Result.Failure(`alerts cannot be updated, only created, acknowledged, or deleted`));
+        }
+
+        const result = await this.#alertMapper.Create(user ? user.id! : 'system', alert);
+        if (result.isError) return Promise.resolve(Result.Pass(result));
+
+        Object.assign(alert, result.value);
+
+        return Promise.resolve(Result.Success(true));
+    }
+
+    async acknowledgeAlert(id: string, user: User): Promise<Result<boolean>> {
+        return this.#alertMapper.SetAcknowledged(id, user.id!);
+    }
+
+    async activeAlertsForContainer(containerID: string): Promise<Result<ContainerAlert[]>> {
+        return this.#alertMapper.ListUnacknowledgedForContainer(containerID);
     }
 
     private async getCached(id: string): Promise<Container | undefined> {

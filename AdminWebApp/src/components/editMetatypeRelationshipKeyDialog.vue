@@ -185,6 +185,7 @@ export default class EditMetatypeRelationshipKeyDialog extends Vue {
 
   editMetatypeKey() {
     if(this.selectedMetatypeRelationshipKey) {
+      this.selectedMetatypeRelationshipKey.container_id = this.metatypeRelationship.container_id;
       this.$client.updateMetatypeRelationshipKey(this.metatypeRelationship.container_id,this.metatypeRelationship.id, this.selectedMetatypeRelationshipKey?.id!, this.selectedMetatypeRelationshipKey)
           .then(result => {
             if(!result) {

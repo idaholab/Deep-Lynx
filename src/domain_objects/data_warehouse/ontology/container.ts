@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
-import {IsBoolean, IsNotEmpty, IsOptional, IsString, MinLength, ValidateNested} from 'class-validator';
+import {IsBoolean, IsDate, IsIn, IsNotEmpty, IsOptional, IsString, MinLength, ValidateNested} from 'class-validator';
 import Result from '../../../common_classes/result';
 import Authorization from '../../access_management/authorization/authorization';
 import Logger from '../../../services/logger';
@@ -120,5 +120,59 @@ export default class Container extends BaseDomainClass {
         if (!dataAdminWrite) Logger.error(`unable to add editor policy to new container`);
 
         return new Promise((resolve) => resolve(Result.Success(true)));
+    }
+}
+
+export class ContainerAlert extends NakedDomainClass {
+    @IsOptional()
+    @IsString()
+    id?: string;
+
+    @IsString()
+    container_id?: string;
+
+    @IsString()
+    @IsIn(['information', 'warning', 'error'])
+    type?: string;
+
+    @IsString()
+    message?: string;
+
+    @IsOptional()
+    @IsDate()
+    @Type(() => Date)
+    created_at?: Date;
+
+    @IsOptional()
+    @IsString()
+    created_by?: string;
+
+    @IsOptional()
+    @IsDate()
+    @Type(() => Date)
+    acknowledged_at?: Date;
+
+    @IsOptional()
+    @IsString()
+    acknowledged_by?: string;
+
+    constructor(input: {
+        containerID: string;
+        type: 'information' | ' warning' | 'error';
+        message: string;
+        createdBy?: string;
+        acknowledgedAt?: Date;
+        acknowledgedBy?: string;
+    }) {
+        super();
+
+        if (input) {
+            this.container_id = input.containerID;
+            this.type = input.type;
+            this.message = input.message;
+            if (input.acknowledgedAt) this.acknowledged_at = input.acknowledgedAt;
+            if (input.acknowledgedBy) this.acknowledged_by = input.acknowledgedBy;
+            if (input.createdBy) this.created_by = input.createdBy;
+        }
     }
 }

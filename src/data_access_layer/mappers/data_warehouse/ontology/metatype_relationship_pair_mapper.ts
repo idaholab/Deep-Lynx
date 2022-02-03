@@ -158,7 +158,7 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
 
     private retrieveStatement(pairID: string): QueryConfig {
         return {
-            text: `SELECT * FROM metatype_relationship_pairs WHERE id = $1 AND deleted_at IS NULL`,
+            text: `SELECT * FROM metatype_relationship_pairs WHERE id = $1`,
             values: [pairID],
         };
     }

@@ -17,12 +17,14 @@ export default class AzureServiceBusQueue implements QueueInterface {
 
         const handler = (message: ServiceBusReceivedMessage) => {
             destination.write(JSON.parse(message.body), () => {
-                void receiver.completeMessage(message);
+                receiver.completeMessage(message).catch((e: any) => {
+                    `unable to mark message complete ${JSON.stringify(e)}`;
+                });
             });
         };
 
         const errorHandler = (e: any) => {
-            Logger.error(`unable to read messages from azure service bus queue ${e}`);
+            Logger.error(`unable to read messages from azure service bus queue ${JSON.stringify(e)}`);
         };
 
         receiver.subscribe({
@@ -41,7 +43,7 @@ export default class AzureServiceBusQueue implements QueueInterface {
                     resolve(true);
                 })
                 .catch((e: any) => {
-                    Logger.error(`unable to put message on azure service bus queue ${e}`);
+                    Logger.error(`unable to put message on azure service bus queue ${JSON.stringify(e)}`);
                     resolve(false);
                 });
         });
