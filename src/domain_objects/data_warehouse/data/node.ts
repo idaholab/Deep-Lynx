@@ -9,6 +9,7 @@ import MetatypeRelationshipPair, {MetatypeRelationshipPairID} from '../ontology/
 import EdgeMapper from '../../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import { string } from 'io-ts';
 import e from 'express';
+import { EdgeMetadata } from './edge';
 
 export class NodeMetadata {
     @IsOptional()
@@ -136,26 +137,6 @@ export function IsNodes(set: Node[] | Edge[]): set is Node[] {
     return set[0] instanceof Node;
 }
 
-// needed for edge component of NodeLeaf
-export class EdgeMetadata {
-    @IsOptional()
-    @IsArray()
-    @Type(() => Conversion)
-    conversions: Conversion[] = [];
-
-    @IsOptional()
-    @IsArray()
-    @Type(() => Conversion)
-    failed_conversions: Conversion[] = [];
-
-    constructor(input: {conversions?: Conversion[]; failed_conversions?: Conversion[]}) {
-        if (input) {
-            if (input.conversions) this.conversions = input.conversions;
-            if (input.failed_conversions) this.failed_conversions = input.failed_conversions;
-        }
-    }
-}
-
 /*
     The NodeLeaf object represents a tree-like record object which consists of
     information on a node, one connected nodes, and the edge that connect them.
@@ -163,181 +144,139 @@ export class EdgeMetadata {
 */
 export class NodeLeaf extends BaseDomainClass {
     // origin (root node) properties
-    @IsOptional()
-    @IsString()
-    origin_id?: string;
+        origin_id?: string;
 
-    @IsString()
-    origin_container_id?: string;
+        origin_container_id?: string;
 
-    // use metatype id to retrieve information on the origin node's metatype.
-    // Retrieves the whole class, not just the id.
-    @MetatypeID({message: 'Metatype must have valid ID'})
-    @Expose({name: 'metatype_id', toClassOnly: true})
-    @Transform(
-        ({value}) => {
-            const metatype = plainToClass(Metatype, {});
-            metatype.id = value;
-            return metatype;
-        },
-        {toClassOnly: true},
-    )
-    origin_metatype: Metatype | undefined;
+        // use metatype id to retrieve information on the origin node's metatype.
+        // Retrieves the whole class, not just the id.
+        @MetatypeID({message: 'Metatype must have valid ID'})
+        @Expose({name: 'metatype_id', toClassOnly: true})
+        @Transform(
+            ({value}) => {
+                const metatype = plainToClass(Metatype, {});
+                metatype.id = value;
+                return metatype;
+            },
+            {toClassOnly: true},
+        )
+        origin_metatype: Metatype | undefined;
 
-    // get orig metatype id from Metatype class
-    @Expose({toPlainOnly: true})
-    get origin_metatype_id(): string {
-        return this.origin_metatype ? this.origin_metatype.id! : '';
-    }
+        // get orig metatype id from Metatype class
+        @Expose({toPlainOnly: true})
+        get origin_metatype_id(): string {
+            return this.origin_metatype ? this.origin_metatype.id! : '';
+        }
 
-    @IsOptional()
-    origin_metatype_name?: string;
+        origin_metatype_name?: string;
 
-    @IsObject()
-    origin_properties: object = {};
+        origin_properties: object = {};
 
-    @IsString()
-    @IsOptional()
-    origin_original_data_id?: string;
+        origin_original_data_id?: string;
 
-    @IsString()
-    @IsOptional()
-    origin_import_data_id?: string;
+        origin_import_data_id?: string;
 
-    @IsString()
-    @IsOptional()
-    origin_data_staging_id?: string;
+        origin_data_staging_id?: string;
 
-    @ValidateIf((o) => typeof o.composite_original_id !== 'undefined' && o.composite_original_id == null)
-    @IsString()
-    origin_data_source_id?: string;
+        origin_data_source_id?: string;
 
-    @IsString()
-    @IsOptional()
-    origin_type_mapping_transformation_id?: string;
+        origin_type_mapping_transformation_id?: string;
 
-    @IsOptional()
-    @ValidateNested()
-    @Type(() => NodeMetadata)
-    origin_metadata?: NodeMetadata;
+        @Type(() => NodeMetadata)
+        origin_metadata?: NodeMetadata;
 
-    @IsOptional()
-    @IsString()
-    edge_id?: string;
+        origin_created_at?: Date;
 
-    @IsString()
-    edge_container_id?: string;
+    // edge properties
+        edge_id?: string;
 
-    // use metatype relationship pair id to get info on the edge's
-    // relationship type. Gets the whole class, not just the id.
-    @MetatypeRelationshipPairID({
-        message: 'Metatype relationship pair must have valid ID',
-    })
-    @Expose({name: 'relationship_pair_id', toClassOnly: true})
-    @Transform(
-        ({value}) => {
-            const p = plainToClass(MetatypeRelationshipPair, {})
-            p.id = value;
-            return p;
-        },
-        {toClassOnly: true},
-    )
-    metatypeRelationshipPair: MetatypeRelationshipPair | undefined;
+        edge_container_id?: string;
 
-    // get relationship pair id from Metatype Relationship Pair class
-    @Expose({toPlainOnly: true})
-    get relationship_pair_id(): string {
-        return this.metatypeRelationshipPair ? this.metatypeRelationshipPair.id! : '';
-    }
+        // use metatype relationship pair id to get info on the edge's
+        // relationship type. Gets the whole class, not just the id.
+        @MetatypeRelationshipPairID({
+            message: 'Metatype relationship pair must have valid ID',
+        })
+        @Expose({name: 'relationship_pair_id', toClassOnly: true})
+        @Transform(
+            ({value}) => {
+                const p = plainToClass(MetatypeRelationshipPair, {})
+                p.id = value;
+                return p;
+            },
+            {toClassOnly: true},
+        )
+        metatypeRelationshipPair: MetatypeRelationshipPair | undefined;
 
-    @IsString()
-    @IsOptional()
-    metatype_relationship_name?: string;
+        // get relationship pair id from Metatype Relationship Pair class
+        @Expose({toPlainOnly: true})
+        get relationship_pair_id(): string {
+            return this.metatypeRelationshipPair ? this.metatypeRelationshipPair.id! : '';
+        }
 
-    @IsObject()
-    edge_properties: object = {};
+        metatype_relationship_name?: string;
 
-    @IsString()
-    @IsOptional()
-    edge_import_data_id?: string;
+        edge_properties: object = {};
 
-    @IsString()
-    @IsOptional()
-    edge_data_staging_id?: string;
+        edge_import_data_id?: string;
 
-    @IsString()
-    @IsOptional()
-    edge_data_source_id?: string;
+        edge_data_staging_id?: string;
 
-    @IsString()
-    @IsOptional()
-    edge_type_mapping_transformation_id?: string;
+        edge_data_source_id?: string;
 
-    @IsOptional()
-    @ValidateNested()
-    @Type(() => EdgeMetadata)
-    edge_metadata?: EdgeMetadata;
+        edge_type_mapping_transformation_id?: string;
+
+        @Type(() => EdgeMetadata)
+        edge_metadata?: EdgeMetadata;
+
+        edge_created_at?: Date;
 
     // destination (outer node) properties
-    @IsOptional()
-    @IsString()
-    destination_id?: string;
+        destination_id?: string;
 
-    @IsString()
-    destination_container_id?: string;
+        destination_container_id?: string;
 
-    // use metatype id to retrieve information on the origin node's metatype.
-    // Retrieves the whole class, not just the id.
-    @MetatypeID({message: 'Metatype must have valid ID'})
-    @Expose({name: 'metatype_id', toClassOnly: true})
-    @Transform(
-        ({value}) => {
-            const metatype = plainToClass(Metatype, {});
-            metatype.id = value;
-            return metatype;
-        },
-        {toClassOnly: true},
-    )
-    destination_metatype: Metatype | undefined;
+        // use metatype id to retrieve information on the origin node's metatype.
+        // Retrieves the whole class, not just the id.
+        @MetatypeID({message: 'Metatype must have valid ID'})
+        @Expose({name: 'metatype_id', toClassOnly: true})
+        @Transform(
+            ({value}) => {
+                const metatype = plainToClass(Metatype, {});
+                metatype.id = value;
+                return metatype;
+            },
+            {toClassOnly: true},
+        )
+        destination_metatype: Metatype | undefined;
 
-    // get orig metatype id from Metatype class
-    @Expose({toPlainOnly: true})
-    get destination_metatype_id(): string {
-        return this.destination_metatype ? this.destination_metatype.id! : '';
-    }
+        // get orig metatype id from Metatype class
+        @Expose({toPlainOnly: true})
+        get destination_metatype_id(): string {
+            return this.destination_metatype ? this.destination_metatype.id! : '';
+        }
 
-    @IsOptional()
-    destination_metatype_name?: string;
+        destination_metatype_name?: string;
 
-    @IsObject()
-    destination_properties: object = {};
+        destination_properties: object = {};
 
-    @IsString()
-    @IsOptional()
-    destination_original_data_id?: string;
+        destination_original_data_id?: string;
 
-    @IsString()
-    @IsOptional()
-    destination_import_data_id?: string;
+        destination_import_data_id?: string;
 
-    @IsString()
-    @IsOptional()
-    destination_data_staging_id?: string;
+        destination_data_staging_id?: string;
 
-    @ValidateIf((o) => typeof o.composite_original_id !== 'undefined' && o.composite_original_id == null)
-    @IsString()
-    destination_data_source_id?: string;
+        destination_data_source_id?: string;
 
-    @IsString()
-    @IsOptional()
-    destination_type_mapping_transformation_id?: string;
+        destination_type_mapping_transformation_id?: string;
 
-    @IsOptional()
-    @ValidateNested()
-    @Type(() => NodeMetadata)
-    destination_metadata?: NodeMetadata;
+        @Type(() => NodeMetadata)
+        destination_metadata?: NodeMetadata;
 
-    // TODO: implement lvl
+        destination_created_at?: Date;
+
+    // level of depth
+    depth?: string;
 
     constructor(input: {
         origin_container_id: Container | string;
@@ -372,6 +311,7 @@ export class NodeLeaf extends BaseDomainClass {
         origin_created_at?: Date;
         edge_created_at?: Date;
         destination_created_at?: Date;
+        depth?: string;
     }) {
         super();
 
@@ -408,10 +348,10 @@ export class NodeLeaf extends BaseDomainClass {
             if (input.origin_metadata) this.origin_metadata = input.origin_metadata;
             if (input.edge_metadata) this.edge_metadata = input.edge_metadata;
             if (input.destination_metadata) this.destination_metadata = input.destination_metadata;
-            // not working (see below)
-            // if (input.origin_created_at) this.origin_created_at = input.origin_created_at;
-            // if (input.edge_created_at) this.edge_created_at = input.edge_created_at;
-            // if (input.destination_created_at) this.destination_created_at = input.destination_created_at;
+            if (input.origin_created_at) this.origin_created_at = input.origin_created_at;
+            if (input.edge_created_at) this.edge_created_at = input.edge_created_at;
+            if (input.destination_created_at) this.destination_created_at = input.destination_created_at;
+            if (input.depth) this.depth = input.depth;
         }
     }
 }
