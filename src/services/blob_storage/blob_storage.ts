@@ -1,8 +1,9 @@
 import Result from '../../common_classes/result';
-import { Readable } from 'stream';
+import {Readable} from 'stream';
 import Config from '../config';
 import AzureBlobImpl from './azure_blob_impl';
 import Filesystem from './filesystem_impl';
+import LargeObject from './pg_large_file_impl';
 
 /*
     BlobStorage is an interface that Deep Lynx uses to accept and store user uploads.
@@ -21,7 +22,7 @@ export type BlobUploadResponse = {
     filepath: string;
     size: number; // size in KB
     md5hash: string; // hex encoded md5 hash
-    metadata: { [key: string]: any }; // adapter specific metadata if needed
+    metadata: {[key: string]: any}; // adapter specific metadata if needed
     adapter_name: string;
 };
 
@@ -35,6 +36,10 @@ export default function BlobStorageProvider(adapterName?: string): BlobStorage |
 
         case 'filesystem': {
             return new Filesystem(Config.filesystem_storage_directory, Config.is_windows);
+        }
+
+        case 'largeobject': {
+            return new LargeObject();
         }
     }
 
