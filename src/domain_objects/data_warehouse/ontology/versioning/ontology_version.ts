@@ -19,6 +19,10 @@ export default class OntologyVersion extends NakedDomainClass {
 
     @IsString()
     @IsOptional()
+    description?: string;
+
+    @IsString()
+    @IsOptional()
     changelist_id?: string;
 
     @IsString()
@@ -30,12 +34,13 @@ export default class OntologyVersion extends NakedDomainClass {
     @Type(() => Date)
     created_at?: Date;
 
-    constructor(input: {container_id: string; name: string; changelist_id?: string; created_by?: string}) {
+    constructor(input: {container_id: string; name: string; description?: string; changelist_id?: string; created_by?: string}) {
         super();
 
         if (input) {
             this.container_id = input.container_id;
             this.name = input.name;
+            if (input.description) this.description = input.description;
             if (input.changelist_id) this.changelist_id = input.changelist_id;
             if (input.created_by) this.created_by = input.created_by;
         }
