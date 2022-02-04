@@ -172,9 +172,6 @@ export default class StandardDataSourceImpl implements DataSource {
             if (commit.isError) return Promise.resolve(Result.Pass(commit));
         }
 
-        // emit the staging records for process
-        void this.#stagingRepo.sendToQueueForImport(importID);
-
         // return the saved buffer as we haven't wiped it, should contain all records with their updated IDs
         if (options && options.returnStagingRecords) {
             return new Promise((resolve) => resolve(Result.Success(recordBuffer)));
