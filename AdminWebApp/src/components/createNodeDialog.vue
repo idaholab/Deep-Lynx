@@ -5,7 +5,6 @@
           v-if="icon"
           small
           class="mr-2"
-          v-on="on"
       >mdi-card-plus</v-icon>
       <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("createNode.createNode")}}</v-btn>
     </template>
@@ -72,7 +71,7 @@
 
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeKeyT, MetatypeT, PropertyT} from "@/api/types";
+import {MetatypeT, PropertyT} from "@/api/types";
 
 @Component
 export default class CreateNodeDialog extends Vue {
@@ -117,10 +116,10 @@ export default class CreateNodeDialog extends Vue {
 
   @Watch('metatype', {immediate: true})
   onMetatypeSelect(){
-    this.$client.listMetatypeKeys(this.containerID, this.metatype.id)
-        .then((keys) => {
-          this.metatype.keys = keys
-        })
+      this.$client.listMetatypeKeys(this.containerID, this.metatype.id)
+      .then((keys) => {
+        this.metatype.keys = keys
+      })
   }
 
   newNode() {
@@ -135,7 +134,6 @@ export default class CreateNodeDialog extends Vue {
     )
         .then(results => {
           this.dialog = false
-          this.reset()
           this.$emit('nodeCreated', results[0])
         })
         .catch(e => this.errorMessage = this.$t('createNode.errorCreatingAPI') as string + e)
@@ -145,13 +143,20 @@ export default class CreateNodeDialog extends Vue {
   setProperties() {
     const property: { [key: string]: any } = {}
     this.metatype.keys.forEach( (key: any) => {
+      if (String(key.default_value).toLowerCase() === "true") {
+        key.default_value = true
+      } else if (String(key.default_value).toLowerCase() === "false" ) {
+         key.default_value = false
+      } else if (String(key.default_value) === "") {
+        key.default_value = null
+      }
       property[key.property_name] = key.default_value
     }) 
     this.property = property
   }
 
   reset() {
-    this.metatype = {} as MetatypeT
+    this.metatype = {}
   }
 }
 
