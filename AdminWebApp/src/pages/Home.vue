@@ -223,6 +223,7 @@
       <language-select class="pt-2" style="max-width:125px;"></language-select>
     </v-app-bar>
 
+
     <v-main style="padding: 64px 0px 36px 36px">
       <v-container v-if="currentMainComponent && currentMainComponent !== ''">
         <!-- we provide both containerID and container as some of the components require either/or or both -->
@@ -372,6 +373,7 @@ export default class Home extends Vue {
     this.$client.retrieveContainer(this.containerID!)
         .then(container => {
           this.container = container
+          this.$store.commit('setActiveContainer', this.container)
 
           if(this.view) {
             this.setActiveComponent(this.view)

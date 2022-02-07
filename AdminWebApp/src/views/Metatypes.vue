@@ -1,5 +1,10 @@
 <template>
   <div>
+    <ontology-version-toolbar
+        v-if="$store.getters.ontologyVersioningEnabled"
+        :containerID="containerID"
+        @selected="loadMetatypes">
+    </ontology-version-toolbar>
     <v-data-table
         :headers="headers()"
         :items="metatypes"
@@ -71,10 +76,12 @@ import { MetatypeT } from '@/api/types';
 import EditMetatypeDialog from "@/components/editMetatypeDialog.vue";
 import CreateMetatypeDialog from "@/components/createMetatypeDialog.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
+import OntologyVersionToolbar from "@/components/ontology/ontologyVersionToolbar.vue";
 
 @Component({components: {
     EditMetatypeDialog,
-    CreateMetatypeDialog
+    CreateMetatypeDialog,
+    OntologyVersionToolbar
   }})
 export default class Metatypes extends Vue {
   @Prop({required: true})
@@ -154,6 +161,7 @@ export default class Metatypes extends Vue {
     this.$client.listMetatypes(this.containerID, {
       limit: itemsPerPage,
       offset: itemsPerPage * pageNumber,
+      ontologyVersion: this.$store.getters.selectedOntologyVersionID,
       sortBy: sortParam,
       sortDesc: sortDescParam,
       name: (this.name !== "") ? this.name : undefined,

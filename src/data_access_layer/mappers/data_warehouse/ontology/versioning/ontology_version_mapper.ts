@@ -54,10 +54,11 @@ export default class OntologyVersionMapper extends Mapper {
     private createStatement(userID: string, ...versions: OntologyVersion[]): string {
         const text = `INSERT INTO ontology_versions(
                         name,
+                        description,
                         container_id,
                         changelist_id,
                         created_by) VALUES %L RETURNING *`;
-        const values = versions.map((version) => [version.name, version.container_id, version.changelist_id, userID]);
+        const values = versions.map((version) => [version.name, version.description, version.container_id, version.changelist_id, userID]);
 
         return format(text, values);
     }
@@ -65,11 +66,12 @@ export default class OntologyVersionMapper extends Mapper {
     private fullUpdateStatement(userID: string, ...versions: OntologyVersion[]): string {
         const text = `UPDATE ontology_versions AS v SET
                         name = u.name,
+                        description = u.description,
                         container_id = u.container_id::bigint,
                         changelist_id = u.changelist_id::bigint,
-                       FROM(VALUES %L) AS u(id, name, container_id, changelist_id)
+                       FROM(VALUES %L) AS u(id, name, description, container_id, changelist_id)
                        WHERE u.id::bigint = v.id RETURNING v.*`;
-        const values = versions.map((version) => [version.id, version.name, version.container_id, version.changelist_id]);
+        const values = versions.map((version) => [version.id, version.name, version.description, version.container_id, version.changelist_id]);
 
         return format(text, values);
     }
