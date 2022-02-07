@@ -373,6 +373,7 @@ export default class Home extends Vue {
     this.$client.retrieveContainer(this.containerID!)
         .then(container => {
           this.container = container
+          this.$store.commit('setActiveContainer', this.container)
 
           if(this.view) {
             this.setActiveComponent(this.view)

@@ -22,6 +22,7 @@ import {
     FileT,
     KeyPairT,
     OntologyVersionT,
+    ChangelistT,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -765,6 +766,22 @@ export class Client {
 
     deleteExport(containerID: string, exportID: string): Promise<boolean> {
         return this.delete(`/containers/${containerID}/data/export/${exportID}`);
+    }
+
+    listChangelists(containerID: string, {status}: {status?: 'pending' | 'approved' | 'rejected' | 'applied' | 'deprecated'}): Promise<ChangelistT[]> {
+        const query: {[key: string]: any} = {};
+
+        if (status) query.status = status;
+
+        return this.get<ChangelistT[]>(`/containers/${containerID}/ontology/changelists`, query);
+    }
+
+    createChangelist(containerID: string, changelist: ChangelistT): Promise<ChangelistT> {
+        return this.post<ChangelistT>(`/containers/${containerID}/ontology/changelists/`, changelist);
+    }
+
+    updateChangelist(containerID: string, changelistID: string, changelist: object): Promise<boolean> {
+        return this.put<boolean>(`/containers/${containerID}/ontology/changelists/${changelistID}`, {changelist});
     }
 
     private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {

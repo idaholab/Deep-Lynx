@@ -627,7 +627,7 @@ export default {
             createdAt: 'Created At',
             id: 'ID',
             viewDeleteData: 'Actions',
-            successfullyDeleted: 'Data Successfully Deleted'
+            successfullyDeleted: 'Data Successfully Deleted',
         },
         createNode: {
             createNode: 'Create Node',
@@ -638,7 +638,7 @@ export default {
             save: 'Save',
             cancel: 'Cancel',
             errorCreatingAPI: 'Error communicating with Deep Lynx:',
-            requiredField: 'Required Field'
+            requiredField: 'Required Field',
         },
         createEdge: {
             createEdge: 'Create Edge',
@@ -652,7 +652,7 @@ export default {
             save: 'Save',
             cancel: 'Cancel',
             errorCreatingAPI: 'Error communicating with Deep Lynx:',
-            requiredField: 'Required Field'
+            requiredField: 'Required Field',
         },
         login: {
             username: 'Email',
@@ -684,6 +684,20 @@ export default {
             home: 'Return to Login',
             password: 'Enter New Password',
             confirmPassword: 'Confirm New Password',
+        },
+        ontologyToolbar: {
+            viewMode: 'View Mode',
+            editMode: 'Edit Mode',
+            activeChangelist: 'Active Changelist',
+            current: 'current',
+            ontologyVersion: 'Ontology Version',
+        },
+        createChangelist: {
+            formTitle: 'Create New Changelist',
+            name: 'Name',
+            cancel: 'Cancel',
+            save: 'Save',
+            newChangelistButton: 'New Changelist',
         },
         containers: {
             or: 'Or',

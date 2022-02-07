@@ -47,7 +47,12 @@ export default class ChangelistRepository extends Repository implements Reposito
         return Promise.resolve(Result.Success(true));
     }
 
-    setStatus(id: string, userID: string, status: 'pending' | 'approved' | 'rejected' | 'applied', transaction?: PoolClient): Promise<Result<boolean>> {
+    setStatus(
+        id: string,
+        userID: string,
+        status: 'pending' | 'approved' | 'rejected' | 'applied' | 'deprecated' | 'ready',
+        transaction?: PoolClient,
+    ): Promise<Result<boolean>> {
         return this.#mapper.SetStatus(id, userID, status, transaction);
     }
 
@@ -75,6 +80,11 @@ export default class ChangelistRepository extends Repository implements Reposito
 
     containerID(operator: string, value: any) {
         super.query('container_id', operator, value);
+        return this;
+    }
+
+    status(operator: string, value: any) {
+        super.query('status', operator, value);
         return this;
     }
 
