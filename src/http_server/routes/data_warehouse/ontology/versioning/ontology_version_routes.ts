@@ -7,15 +7,15 @@ const repo = new OntologyVersionRepository();
 
 export default class OntologyVersionRoutes {
     public static mount(app: Application, middleware: any[]) {
-        app.get('containers/:containerID/ontology/versions', ...middleware, authInContainer('read', 'ontology'), this.listOntologyVersions);
+        app.get('/containers/:containerID/ontology/versions', ...middleware, authInContainer('read', 'ontology'), this.listOntologyVersions);
         app.get(
-            'containers/:containerID/ontology/versions/:ontologyVersionID',
+            '/containers/:containerID/ontology/versions/:ontologyVersionID',
             ...middleware,
             authInContainer('read', 'ontology'),
             this.retrieveOntologyVersion,
         );
         app.post(
-            'containers/:containerID/ontology/versions/:ontologyVersionID/rollback',
+            '/containers/:containerID/ontology/versions/:ontologyVersionID/rollback',
             ...middleware,
             authInContainer('write', 'ontology'),
             this.rollbackOntology,
@@ -26,7 +26,10 @@ export default class OntologyVersionRoutes {
     private static listOntologyVersions(req: Request, res: Response, next: NextFunction) {
         repo.where()
             .containerID('eq', req.container!.id)
-            .list()
+            .list({
+                sortBy: 'id',
+                sortDesc: true,
+            })
             .then((results) => {
                 results.asResponse(res);
             })

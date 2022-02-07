@@ -83,9 +83,10 @@
         newContainer = {
           name: null,
           description:null, config: {
-          data_versioning_enabled: true
+          data_versioning_enabled: true,
+          ontology_versioning_enabled: false,
           }}
-        owlFilePath = ""
+      owlFilePath = ""
         owlFile: File | null = null
 
         addFile(file: File) {
@@ -96,7 +97,8 @@
             this.newContainer = {
               name: null,
               description:null, config: {
-                data_versioning_enabled: true
+                data_versioning_enabled: true,
+                ontology_versioning_enabled: false,
               }}
             this.dialog = false
         }
@@ -125,6 +127,7 @@
                   this.clearNew()
                   this.$emit("containerCreated", container[0].id)
 
+                  this.$store.commit('setActiveContainer', container[0])
                   this.dialog = false
                   this.errorMessage = ""
                 })
