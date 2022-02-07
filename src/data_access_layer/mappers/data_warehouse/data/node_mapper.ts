@@ -1,7 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import Node from '../../../../domain_objects/data_warehouse/data/node';
+import Node, {NodeLeaf} from '../../../../domain_objects/data_warehouse/data/node';
 import {NodeFile} from '../../../../domain_objects/data_warehouse/data/file';
 
 const format = require('pg-format');
@@ -109,10 +109,10 @@ export default class NodeMapper extends Mapper {
     }
 
     // This should return a node and all connected nodes and connecting edges for n layers.
-    public async RetrieveNthNodes(id: string, depth: string, transaction?: PoolClient): Promise<Result<Node[]>> {
+    public async RetrieveNthNodes(id: string, depth: string, transaction?: PoolClient): Promise<Result<NodeLeaf[]>> {
         return super.rows(this.retrieveNthNodesStatement(id, depth), {
             transaction,
-            resultClass,
+            resultClass: NodeLeaf,
         });
     }
 

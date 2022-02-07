@@ -1,5 +1,5 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import Node from '../../../../domain_objects/data_warehouse/data/node';
+import Node, {NodeLeaf} from '../../../../domain_objects/data_warehouse/data/node';
 import Result from '../../../../common_classes/result';
 import NodeMapper from '../../../mappers/data_warehouse/data/node_mapper';
 import {PoolClient} from 'pg';
@@ -57,10 +57,12 @@ export default class NodeRepository extends Repository implements RepositoryInte
     }
 
     // This should return a node and all connected nodes and connecting edges for n layers.
-    // TODO: should return list of nodes and edges (new result type??)
-    async findNthNodesByID(id: string, depth: string, transaction?: PoolClient): Promise<Result<Node[]>> {
-        // need help here
-        return Promise.resolve(x);
+    findNthNodesByID(id: string, depth: string): Promise<Result<NodeLeaf[]>> {
+        if (!id) {
+            return Promise.resolve(Result.Failure('must supply root node id'));
+        }
+
+        return this.#mapper.RetrieveNthNodes(id, depth);
     }
 
     async save(n: Node, user: User, transaction?: PoolClient): Promise<Result<boolean>> {
@@ -316,7 +318,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return this;
     }
 
-    // properties for n layer node query:
+    // properties for nth layer node query:
     depth(operator: string, value: any) {
         super.query('depth', operator, value);
         return this;
