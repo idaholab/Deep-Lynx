@@ -4,6 +4,7 @@ export type ContainerT = {
     description: string;
     config: {
         data_versioning_enabled: boolean;
+        ontology_versioning_enabled: boolean;
     };
     created_at: string;
     modified_at: string;
@@ -368,6 +369,16 @@ export type GremlinExportConfigT = {
     modified_at?: string;
     created_by?: string;
     modified_by?: string;
+};
+
+export type OntologyVersionT = {
+    id: string;
+    container_id: string;
+    name: string;
+    description?: string;
+    changelist_id?: string;
+    created_by?: string;
+    created_at?: string;
 };
 
 export type ResultT = {

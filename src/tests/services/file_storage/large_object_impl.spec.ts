@@ -1,13 +1,13 @@
 import {expect} from 'chai';
 import * as fs from 'fs';
-import Logger from '../../../services/logger';
-import Filesystem from '../../../services/blob_storage/filesystem_impl';
 import LargeObject from '../../../services/blob_storage/pg_large_file_impl';
+import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 
 describe('Filesystem storage can', async () => {
     let provider: LargeObject;
 
     before(async function () {
+        await PostgresAdapter.Instance.init();
         provider = new LargeObject();
     });
 
