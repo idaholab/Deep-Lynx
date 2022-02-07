@@ -147,6 +147,10 @@ export default class DataTestCreation extends Vue {
         text: this.$t('dataTestCreation.metatype'),
         value: "metatype_name"
       },
+      {
+        text: this.$t('dataTestCreation.name'),
+        value: "properties.name"
+      },
       { text: this.$t('dataTestCreation.viewDeleteData'),  
         value: 'actions', sortable: false 
       }]

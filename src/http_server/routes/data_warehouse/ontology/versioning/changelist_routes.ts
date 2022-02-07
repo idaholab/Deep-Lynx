@@ -37,8 +37,15 @@ export default class ChangelistRoutes {
 
     // just a basic list for the container
     private static listChangelists(req: Request, res: Response, next: NextFunction) {
-        repo.where()
-            .containerID('eq', req.container!.id)
+        let repository = new ChangelistRepository();
+
+        repository = repository.where().containerID('eq', req.container!.id);
+
+        if (typeof req.query.status !== 'undefined' && (req.query.status as string) !== '') {
+            repository = repository.and().status('eq', `${req.query.status}`);
+        }
+
+        repository
             .list()
             .then((results) => {
                 results.asResponse(res);
@@ -76,11 +83,8 @@ export default class ChangelistRoutes {
     private static updateChangelist(req: Request, res: Response, next: NextFunction) {
         if (req.changelist) {
             const toUpdate = plainToClass(Changelist, req.body as object);
-            toUpdate.id = req.changelist.id;
 
-            if (req.container) {
-                toUpdate.container_id = req.container.id;
-            }
+            Object.assign(toUpdate, req.changelist);
 
             repo.save(toUpdate, req.currentUser!)
                 .then((result) => {

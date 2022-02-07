@@ -15,10 +15,14 @@ export class ContainerConfig extends NakedDomainClass {
     @IsBoolean()
     data_versioning_enabled = true;
 
-    constructor(input?: {data_versioning_enabled: boolean}) {
+    @IsBoolean()
+    ontology_versioning_enabled? = false;
+
+    constructor(input?: {data_versioning_enabled: boolean; ontology_versioning_enabled?: boolean}) {
         super();
 
         if (input) {
+            this.ontology_versioning_enabled = input.ontology_versioning_enabled;
             this.data_versioning_enabled = input.data_versioning_enabled;
         }
     }

@@ -48,5 +48,8 @@ new Vue({
     store,
     // @ts-ignore
     vuetify,
+    beforeCreate() {
+        this.$store.commit('initializeStore');
+    },
     render: (h) => h(App),
 }).$mount('#app');

@@ -43,7 +43,7 @@ export default class ChangelistMapper extends Mapper {
     public async SetStatus(
         id: string,
         userID: string,
-        status: 'pending' | 'approved' | 'rejected' | 'applied',
+        status: 'pending' | 'approved' | 'rejected' | 'applied' | 'deprecated' | 'ready',
         transaction?: PoolClient,
     ): Promise<Result<boolean>> {
         return super.runStatement(this.setStatusStatement(id, userID, status), {transaction});
@@ -117,7 +117,7 @@ export default class ChangelistMapper extends Mapper {
         };
     }
 
-    private setStatusStatement(id: string, userID: string, status: 'pending' | 'approved' | 'rejected' | 'applied'): QueryConfig {
+    private setStatusStatement(id: string, userID: string, status: 'pending' | 'approved' | 'rejected' | 'applied' | 'deprecated' | 'ready'): QueryConfig {
         return {
             text: `UPDATE changelists SET status = $2, modified_at = NOW(), modified_by = $3 WHERE id = $1`,
             values: [id, status, userID],
