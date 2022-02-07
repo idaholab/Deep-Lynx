@@ -18,7 +18,7 @@ export default class Changelist extends BaseDomainClass {
     name?: string;
 
     @IsString()
-    @IsIn(['pending', 'approved', 'rejected', 'applied'])
+    @IsIn(['pending', 'approved', 'rejected', 'applied', 'deprecated', 'ready'])
     status = 'pending';
 
     @IsObject()
