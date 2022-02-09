@@ -394,6 +394,13 @@ export type ChangelistT = {
     modified_by?: string;
 };
 
+export type ChangelistApprovalT = {
+    id?: string;
+    changelist_id: string;
+    approved_by: string;
+    approved_at?: string;
+};
+
 export type ResultT = {
     value: any;
     isError: boolean;

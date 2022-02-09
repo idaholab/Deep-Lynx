@@ -56,7 +56,9 @@ export default class ChangelistRepository extends Repository implements Reposito
         return this.#mapper.SetStatus(id, userID, status, transaction);
     }
 
-    approveChangelist(approver: User, changelistID: string): Promise<Result<ChangelistApproval>> {
+    async approveChangelist(approver: User, changelistID: string): Promise<Result<ChangelistApproval>> {
+        await this.#mapper.SetStatus(changelistID, approver.id!, 'approved');
+
         return this.#approvalMapper.Create(
             approver.id!,
             new ChangelistApproval({
@@ -66,7 +68,9 @@ export default class ChangelistRepository extends Repository implements Reposito
         );
     }
 
-    revokeApproval(changelistID: string): Promise<Result<boolean>> {
+    async revokeApproval(changelistID: string, approver: User): Promise<Result<boolean>> {
+        await this.#mapper.SetStatus(changelistID, approver.id!, 'rejected');
+
         return this.#approvalMapper.DeleteByChangelist(changelistID);
     }
 
@@ -85,6 +89,11 @@ export default class ChangelistRepository extends Repository implements Reposito
 
     status(operator: string, value: any) {
         super.query('status', operator, value);
+        return this;
+    }
+
+    createdBy(operator: string, value: any) {
+        super.query('created_by', operator, value);
         return this;
     }
 

@@ -24,7 +24,7 @@ export default class ChangelistRoutes {
         app.post(
             '/containers/:containerID/ontology/changelists/:changelistID/approve',
             ...middleware,
-            authInContainer('write', 'ontology'),
+            authInContainer('write', 'containers'),
             this.approveChangelist,
         );
         app.delete(
@@ -43,6 +43,10 @@ export default class ChangelistRoutes {
 
         if (typeof req.query.status !== 'undefined' && (req.query.status as string) !== '') {
             repository = repository.and().status('eq', `${req.query.status}`);
+        }
+
+        if (typeof req.query.createdBy !== 'undefined' && (req.query.createdBy as string) !== '') {
+            repository = repository.and().createdBy('eq', `${req.query.createdBy}`);
         }
 
         repository
@@ -84,9 +88,9 @@ export default class ChangelistRoutes {
         if (req.changelist) {
             const toUpdate = plainToClass(Changelist, req.body as object);
 
-            Object.assign(toUpdate, req.changelist);
+            Object.assign(req.changelist, toUpdate);
 
-            repo.save(toUpdate, req.currentUser!)
+            repo.save(req.changelist, req.currentUser!)
                 .then((result) => {
                     result.asResponse(res);
                 })
@@ -117,7 +121,7 @@ export default class ChangelistRoutes {
             res.status(500).send('unimplemented');
             next();
         } else {
-            res.status(200);
+            res.status(404).send('changelist not found');
             next();
         }
     }
@@ -152,7 +156,7 @@ export default class ChangelistRoutes {
 
     private static unapproveChangelist(req: Request, res: Response, next: NextFunction) {
         if (req.changelist) {
-            repo.revokeApproval(req.changelist.id!)
+            repo.revokeApproval(req.changelist.id!, req.currentUser!)
                 .then((result) => {
                     result.asResponse(res);
                 })

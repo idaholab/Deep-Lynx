@@ -105,6 +105,8 @@ export default class MetatypeRelationshipPairRoutes {
 
         if (typeof req.query.ontologyVersion !== 'undefined' && (req.query.ontologyVersion as string) !== '') {
             repository = repository.and().ontologyVersion('eq', req.query.ontologyVersion);
+        } else {
+            repository = repository.and().ontologyVersion('is null');
         }
 
         if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
