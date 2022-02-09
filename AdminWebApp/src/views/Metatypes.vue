@@ -136,6 +136,7 @@ export default class Metatypes extends Vue {
 
   countMetatypes() {
     this.$client.listMetatypes(this.containerID, {
+      ontologyVersion: this.$store.getters.selectedOntologyVersionID,
       count: true,
       name: (this.name !== "") ? this.name : undefined,
       description: (this.description !== "") ? this.description : undefined,
