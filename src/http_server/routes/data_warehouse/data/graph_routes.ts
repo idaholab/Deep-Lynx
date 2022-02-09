@@ -99,7 +99,18 @@ export default class GraphRoutes {
 
     // This should return a node and all connected nodes and connecting edges for n layers.
     private static retrieveNthNodes(req: Request, res: Response, next: NextFunction) {
-        // need help here
+        if (req.nodeLeaf) {
+            nodeRepo
+                .findNthNodesByID(req.nodeLeaf.origin_id!, req.nodeLeaf.depth!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
+        } else {
+            Result.Failure(`node not found`, 404).asResponse(res);
+            next();
+        }
     }
 
     private static retrieveEdge(req: Request, res: Response, next: NextFunction) {
