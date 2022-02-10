@@ -23,7 +23,7 @@ export default class OntologyVersion extends NakedDomainClass {
 
     @IsOptional()
     @IsString()
-    @IsIn(['pending', 'approved', 'rejected', 'published', 'deprecated', 'ready'])
+    @IsIn(['pending', 'approved', 'rejected', 'published', 'deprecated', 'ready', 'error'])
     status? = 'pending';
 
     @IsOptional()

@@ -53,7 +53,7 @@ export default class OntologyVersionMapper extends Mapper {
 
     public async SetStatus(
         id: string,
-        status: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready',
+        status: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready' | 'error',
         statusMessage?: string,
     ): Promise<Result<boolean>> {
         return super.runStatement(this.setStatusStatement(id, status, statusMessage));
@@ -122,7 +122,7 @@ export default class OntologyVersionMapper extends Mapper {
 
     private setStatusStatement(
         id: string,
-        status: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready',
+        status: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready' | 'error',
         statusMessage?: string,
     ): QueryConfig {
         return {
