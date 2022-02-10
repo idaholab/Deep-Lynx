@@ -4,6 +4,7 @@ import OntologyVersionMapper from '../../../../mappers/data_warehouse/ontology/v
 import Result from '../../../../../common_classes/result';
 import {User} from '../../../../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
+import UserRepository from '../../../access_management/user_repository';
 
 export default class OntologyVersionRepository extends Repository implements RepositoryInterface<OntologyVersion> {
     #mapper: OntologyVersionMapper = OntologyVersionMapper.Instance;
@@ -41,6 +42,25 @@ export default class OntologyVersionRepository extends Repository implements Rep
 
         Object.assign(v, result.value);
         return Promise.resolve(Result.Success(true));
+    }
+
+    setStatus(
+        id: string,
+        status: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready',
+        statusMessage?: string,
+    ): Promise<Result<boolean>> {
+        return this.#mapper.SetStatus(id, status, statusMessage);
+    }
+
+    async approve(id: string, user: User, containerID: string): Promise<Result<boolean>> {
+        const authed = await new UserRepository().isAdminForContainer(user, containerID);
+        if (!authed) return Promise.resolve(Result.Failure('user cannot approve ontology version, user is not an admin of the container'));
+
+        return this.#mapper.Approve(id, user.id!);
+    }
+
+    revokeApproval(id: string, statusMessage?: string): Promise<Result<boolean>> {
+        return this.#mapper.RevokeApproval(id, statusMessage);
     }
 
     constructor() {

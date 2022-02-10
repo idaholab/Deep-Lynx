@@ -39,7 +39,7 @@ describe('An Ontology Version Repo', async () => {
             new User({
                 identity_provider_id: faker.random.uuid(),
                 identity_provider: 'username_password',
-                admin: false,
+                admin: true,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
                 roles: ['superuser'],
@@ -90,6 +90,38 @@ describe('An Ontology Version Repo', async () => {
         const retrieved = await repo.findByID(version.id!);
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(version.id);
+
+        return repo.delete(version);
+    });
+
+    it('can approve and revoke approval of a record', async () => {
+        const repo = new OntologyVersionRepository();
+
+        const version = new OntologyVersion({
+            container_id: containerID,
+            name: 'Test Version',
+        });
+
+        const saved = await repo.save(version, user);
+
+        expect(saved.isError).false;
+        expect(version.id).not.empty;
+
+        let approved = await repo.approve(version.id!, user, containerID);
+        expect(approved.isError).false;
+
+        let retrieved = await repo.findByID(version.id!);
+        expect(retrieved.isError).false;
+        expect(retrieved.value.id).eq(version.id);
+        expect(retrieved.value.status).eq('approved');
+
+        approved = await repo.revokeApproval(version.id!);
+        expect(approved.isError).false;
+
+        retrieved = await repo.findByID(version.id!);
+        expect(retrieved.isError).false;
+        expect(retrieved.value.id).eq(version.id);
+        expect(retrieved.value.status).eq('rejected');
 
         return repo.delete(version);
     });
