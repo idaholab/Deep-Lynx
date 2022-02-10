@@ -211,6 +211,7 @@ export default class ContainerRoutes {
         busboy.on('finish', () => {
             // we have to force the data_versioning to boolean here - TODO: correct this entire setup to be more friendly to future config options
             if (input.data_versioning_enabled) input.data_versioning_enabled = String(input.data_versioning_enabled).toLowerCase() === 'true';
+            if (input.ontology_versioning_enabled) input.ontology_versioning_enabled = String(input.ontology_versioning_enabled).toLowerCase() === 'true';
 
             containerImport
                 .ImportOntology(user, input as ContainerImportT, fileBuffer, String(req.query.dryrun).toLowerCase() === 'true', false, '')

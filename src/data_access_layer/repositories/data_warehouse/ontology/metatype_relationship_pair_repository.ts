@@ -341,7 +341,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return this;
     }
 
-    ontologyVersion(operator: string, value: any) {
+    ontologyVersion(operator: string, value?: any) {
         super.query('metatype_relationship_pairs.ontology_version', operator, value);
         return this;
     }

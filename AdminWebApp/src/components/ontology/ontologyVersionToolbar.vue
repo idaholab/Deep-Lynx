@@ -10,7 +10,7 @@
       <v-switch
           v-model="isEditMode"
           style="margin-left: 5px; margin-top: 5px"
-          :disabled="!isCurrent"
+          :disabled="!isCurrent || !$auth.Auth('ontology', 'write', containerID)"
           color="orange darken-4"></v-switch>
       <p style="color: white; margin-right: 15px">{{$t('ontologyToolbar.editMode')}}
       </p>

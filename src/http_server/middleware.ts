@@ -788,7 +788,7 @@ export function ontologyVersionContext(): any {
 
         const repo = new OntologyVersionRepository();
 
-        repo.findByID(req.params.changelistID)
+        repo.findByID(req.params.ontologyVersionID)
             .then((result) => {
                 if (result.isError) {
                     result.asResponse(resp);

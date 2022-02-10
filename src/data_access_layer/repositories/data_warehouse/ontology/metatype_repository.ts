@@ -332,7 +332,7 @@ export default class MetatypeRepository extends Repository implements Repository
         return this;
     }
 
-    ontologyVersion(operator: string, value: any) {
+    ontologyVersion(operator: string, value?: any) {
         super.query('ontology_version', operator, value);
         return this;
     }

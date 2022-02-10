@@ -136,6 +136,7 @@ export default class MetatypeRelationships extends Vue {
   countRelationships() {
     this.$client.listMetatypeRelationships(this.containerID, {
       count: true,
+      ontologyVersion: this.$store.getters.selectedOntologyVersionID,
       name: (this.name !== "") ? this.name : undefined,
       description: (this.description !== "") ? this.description : undefined,
     })

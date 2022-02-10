@@ -23,6 +23,7 @@ import {
     KeyPairT,
     OntologyVersionT,
     ChangelistT,
+    ChangelistApprovalT,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -89,6 +90,7 @@ export class Client {
         formData.append('name', container.name);
         formData.append('description', container.description);
         formData.append('data_versioning_enabled', container.config.data_versioning_enabled);
+        formData.append('ontology_versioning_enabled', container.config.ontology_versioning_enabled);
 
         if (owlFile) {
             formData.append('file', owlFile);
@@ -768,10 +770,18 @@ export class Client {
         return this.delete(`/containers/${containerID}/data/export/${exportID}`);
     }
 
-    listChangelists(containerID: string, {status}: {status?: 'pending' | 'approved' | 'rejected' | 'applied' | 'deprecated'}): Promise<ChangelistT[]> {
+    rollbackOntology(containerID: string, ontologyVersionID: string): Promise<boolean> {
+        return this.post<boolean>(`/containers/${containerID}/ontology/versions/${ontologyVersionID}/rollback`, {});
+    }
+
+    listChangelists(
+        containerID: string,
+        {status, createdBy}: {createdBy?: string; status?: 'pending' | 'approved' | 'rejected' | 'applied' | 'deprecated'},
+    ): Promise<ChangelistT[]> {
         const query: {[key: string]: any} = {};
 
         if (status) query.status = status;
+        if (createdBy) query.createdBy = createdBy;
 
         return this.get<ChangelistT[]>(`/containers/${containerID}/ontology/changelists`, query);
     }
@@ -782,6 +792,30 @@ export class Client {
 
     updateChangelist(containerID: string, changelistID: string, changelist: object): Promise<boolean> {
         return this.put<boolean>(`/containers/${containerID}/ontology/changelists/${changelistID}`, {changelist});
+    }
+
+    approveChangelist(containerID: string, changelistID: string): Promise<ChangelistApprovalT> {
+        return this.post<ChangelistApprovalT>(`/containers/${containerID}/ontology/changelists/${changelistID}/approve`, {});
+    }
+
+    revokeApproval(containerID: string, changelistID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/ontology/changelists/${changelistID}/approve`, {});
+    }
+
+    applyChangelist(containerID: string, changelistID: string): Promise<boolean> {
+        return this.post<boolean>(`/containers/${containerID}/ontology/changelists/${changelistID}/apply`, {});
+    }
+
+    setChangelistStatus(
+        containerID: string,
+        changelistID: string,
+        status: 'pending' | 'ready' | 'approved' | 'rejected' | 'applied' | 'deprecated',
+    ): Promise<boolean> {
+        return this.put<boolean>(`/containers/${containerID}/ontology/changelists/${changelistID}`, {status});
+    }
+
+    deleteChangelist(containerID: string, changelistID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/ontology/changelists/${changelistID}`);
     }
 
     private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {
