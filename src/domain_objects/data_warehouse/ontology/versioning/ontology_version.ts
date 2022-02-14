@@ -32,10 +32,6 @@ export default class OntologyVersion extends NakedDomainClass {
 
     @IsString()
     @IsOptional()
-    changelist_id?: string;
-
-    @IsString()
-    @IsOptional()
     created_by?: string;
 
     @IsOptional()
@@ -61,7 +57,6 @@ export default class OntologyVersion extends NakedDomainClass {
         container_id: string;
         name: string;
         description?: string;
-        changelist_id?: string;
         status?: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready';
         status_message?: string;
         published_at?: Date;
@@ -73,7 +68,6 @@ export default class OntologyVersion extends NakedDomainClass {
             this.container_id = input.container_id;
             this.name = input.name;
             if (input.description) this.description = input.description;
-            if (input.changelist_id) this.changelist_id = input.changelist_id;
             if (input.created_by) this.created_by = input.created_by;
             if (input.status) this.status = input.status;
             if (input.status_message) this.status_message = input.status_message;

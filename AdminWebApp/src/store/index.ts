@@ -21,19 +21,19 @@ export default new Vuex.Store({
             id: '',
             name: 'Primary',
         },
-        activeChangelist: undefined,
+        selectedPendingVersion: undefined,
     },
     mutations: {
         initializeStore(state) {
             const activeContainer = localStorage.getItem('activeContainer');
             const ontologyVersion = localStorage.getItem('ontologyVersion');
             const editMode = localStorage.getItem('editMode');
-            const activeChangelist = localStorage.getItem('activeChangelist');
+            const selectedPendingVersion = localStorage.getItem('selectedPendingVersion');
 
             if (activeContainer) state.activeContainer = JSON.parse(activeContainer);
             if (ontologyVersion) state.ontologyVersion = JSON.parse(ontologyVersion);
             if (editMode) state.editMode = JSON.parse(editMode);
-            if (activeChangelist) state.activeChangelist = JSON.parse(activeChangelist);
+            if (selectedPendingVersion) state.selectedPendingVersion = JSON.parse(selectedPendingVersion);
         },
 
         setActiveContainer(state, container) {
@@ -51,9 +51,9 @@ export default new Vuex.Store({
             localStorage.setItem('editMode', JSON.stringify(mode));
         },
 
-        setActiveChangelist(state, changelist: ChangelistT) {
-            state.activeChangelist = changelist as any;
-            localStorage.setItem('activeChangelist', JSON.stringify(changelist));
+        setPendingOntologyVersion(state, version: OntologyVersionT) {
+            state.selectedPendingVersion = version as any;
+            localStorage.setItem('selectedPendingVersion', JSON.stringify(version));
         },
     },
     actions: {
@@ -61,13 +61,8 @@ export default new Vuex.Store({
             commit('setOntologyVersion', version);
         },
 
-        changeActiveChangelist({commit}, changelist) {
-            commit('setActiveChangelist', changelist);
-        },
-
-        updateActiveChangelist({commit}, changelist: ChangelistT) {
-            localStorage.setItem('activeChangelist', JSON.stringify(changelist));
-            return client.updateChangelist(changelist.container_id, changelist.id!, changelist.changelist!);
+        changePendingOntologyVersion({commit}, version) {
+            commit('setPendingOntologyVersion', version);
         },
     },
     modules: {},
@@ -97,8 +92,8 @@ export default new Vuex.Store({
             return undefined;
         },
 
-        activeChangelist: (state) => {
-            if (state.activeChangelist) return state.activeChangelist;
+        selectedPendingOntologyVersion: (state) => {
+            if (state.selectedPendingVersion) return state.selectedPendingVersion;
             return undefined;
         },
 

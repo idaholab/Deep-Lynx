@@ -709,7 +709,7 @@ export default {
             description: 'Description',
             actions: 'Actions',
             status: 'Status',
-            appliedAt: 'Applied At',
+            publishedAt: 'Published At',
             approveChangelist: 'Approve Changelist',
             deleteChangelist: 'Delete Changelist',
             sendApproval: 'Send Changelist for Approval',
