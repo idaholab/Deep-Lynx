@@ -37,7 +37,14 @@
           </v-col>
         </template>
         <template v-slot:[`item.actions`]="{ item }">
-          <edit-node-dialog :node="item" :icon="true" @nodeEdited="listNodes() && listEdges()"></edit-node-dialog>
+          <edit-node-dialog 
+              :node="item" 
+              :icon="true"
+              :dataSourceID="selectedDataSource.id" 
+              :containerID="containerID"
+              @nodeUpdate="listNodes() && listEdges()" 
+              >
+          </edit-node-dialog>
           <v-icon
               small
               @click="deleteNode(item)"

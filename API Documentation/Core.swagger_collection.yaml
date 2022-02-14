@@ -3630,290 +3630,6 @@ paths:
         '200':
           description: OK
       description: Post with no body to acknowledge an alert and remove it from the active alerts list.
-  '/containers/{container_id}/ontology/changelists':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-    get:
-      summary: List Changelists
-      tags:
-        - Containers
-      operationId: ListChangelists
-      description: List all changelists for a container. Will eventually support filters.
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListChangelistResponse'
-    post:
-      summary: Create New Changelist
-      operationId: CreateNewChangelist
-      tags:
-        - Containers
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                description: ''
-                type: object
-                properties:
-                  value:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                      container_id:
-                        type: string
-                      name:
-                        type: string
-                      status:
-                        type: string
-                      changelist:
-                        type: object
-                        properties: {}
-                      applied_at:
-                        type: string
-                    required:
-                      - id
-                      - container_id
-                      - name
-                      - status
-                      - changelist
-                      - applied_at
-                required:
-                  - value
-                x-examples:
-                  example-1:
-                    value:
-                      id: ''
-                      container_id: ''
-                      name: ''
-                      status: ''
-                      changelist: {}
-                      applied_at: ''
-      description: Create a new changelist.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              description: ''
-              type: object
-              properties:
-                name:
-                  type: string
-                  minLength: 1
-              required:
-                - name
-              x-examples:
-                example-1:
-                  name: Changelist Name
-  '/containers/{container_id}/ontology/changelists/{changelist_id}':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: changelist_id
-        in: path
-        required: true
-    get:
-      summary: Retrieve Changelist
-      tags:
-        - Containers
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RetrieveChangelistResponse'
-      operationId: RetrieveChangelist
-      description: Retrieve a changelist by id.
-    put:
-      summary: Update Changelist
-      operationId: UpdateChangelist
-      tags:
-        - Containers
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                description: ''
-                type: object
-                properties:
-                  value:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                      container_id:
-                        type: string
-                      name:
-                        type: string
-                      status:
-                        type: string
-                      changelist:
-                        type: object
-                        properties: {}
-                      applied_at:
-                        type: string
-                    required:
-                      - id
-                      - container_id
-                      - name
-                      - status
-                      - changelist
-                      - applied_at
-                required:
-                  - value
-                x-examples:
-                  example-1:
-                    value:
-                      id: ''
-                      container_id: ''
-                      name: ''
-                      status: ''
-                      changelist: {}
-                      applied_at: ''
-      description: Update a changelist.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              description: ''
-              type: object
-              properties:
-                name:
-                  type: string
-                  minLength: 1
-                changelist:
-                  type: object
-                  properties:
-                    changeExample:
-                      type: string
-                      minLength: 1
-                  required:
-                    - changeExample
-              required:
-                - name
-                - changelist
-              x-examples:
-                example-1:
-                  name: Updated name
-                  changelist:
-                    changeExample: example
-    delete:
-      summary: Delete Changelist
-      operationId: DeleteChangelist
-      tags:
-        - Containers
-      responses:
-        '200':
-          description: OK
-      description: Deletes a changelist
-  '/containers/{container_id}/ontology/changelists/{changelistID}/apply':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: changelistID
-        in: path
-        required: true
-    get:
-      summary: Apply Changelist
-      tags:
-        - Containers
-      responses:
-        '200':
-          description: OK
-      operationId: ApplyChangelist
-      description: 'Applies changelist to the ontology, creates a new ontology version.'
-  '/containers/{container_id}/ontology/changelists/{changelist_id}/approve':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: changelist_id
-        in: path
-        required: true
-    get:
-      summary: List Approvals for Changelist
-      tags:
-        - Containers
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                description: ''
-                type: object
-                properties:
-                  value:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                      changelist_id:
-                        type: string
-                      approved_by:
-                        type: string
-                      approved_at:
-                        type: string
-                    required:
-                      - id
-                      - changelist_id
-                      - approved_by
-                      - approved_at
-                required:
-                  - value
-                x-examples:
-                  example-1:
-                    value:
-                      id: ''
-                      changelist_id: ''
-                      approved_by: ''
-                      approved_at: ''
-      operationId: ListChangelistApprovals
-      description: 'Approves a changelist for application. Note: you must still apply changelist after approval, this does not apply changelist.'
-    delete:
-      summary: Revoke Changelist Approval
-      operationId: RevokeChangelistApproval
-      tags:
-        - Containers
-      responses:
-        '200':
-          description: OK
-      description: Removes all approvals for changelist.
-    post:
-      tags:
-        - Containers
-      summary: Approve Changelist
-      operationId: ApproveChangelist
-      responses:
-        '200':
-          description: OK
-      description: Approves a changelist
   '/containers/{container_id}/ontology/versions':
     parameters:
       - schema:
@@ -4053,6 +3769,54 @@ paths:
         '200':
           description: OK
       description: Rolls back the ontology to the selected version.
+  '/containers/{container_id}/ontology/versions/{ontology_version_id}/approve':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: ontology_version_id
+        in: path
+        required: true
+    post:
+      summary: ''
+      operationId: SendOntologyVersionForApproval
+      responses:
+        '200':
+          description: OK
+    delete:
+      summary: ''
+      operationId: RevokeApprovalOntologyVersion
+      responses:
+        '200':
+          description: OK
+    put:
+      summary: ''
+      operationId: ApproveOntologyVersion
+      responses:
+        '200':
+          description: OK
+  '/containers/{container_id}/ontology/versions/{ontology_version_id}/publish':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: ontology_version_id
+        in: path
+        required: true
+    post:
+      summary: ''
+      operationId: PublishOntologyVersion
+      responses:
+        '200':
+          description: OK
 components:
   securitySchemes:
     BearerAuth:

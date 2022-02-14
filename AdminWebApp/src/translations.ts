@@ -643,6 +643,12 @@ export default {
             errorCreatingAPI: 'Error communicating with Deep Lynx:',
             requiredField: 'Required Field',
         },
+        editNode: {
+            formTitle: 'Properties',
+            keyName: 'Name',
+            value: 'Value',
+            type: 'Type',
+        },
         createEdge: {
             createEdge: 'Create Edge',
             formTitle: 'Create Edge',
@@ -710,7 +716,7 @@ export default {
             description: 'Description',
             actions: 'Actions',
             status: 'Status',
-            appliedAt: 'Applied At',
+            publishedAt: 'Published At',
             approveChangelist: 'Approve Changelist',
             deleteChangelist: 'Delete Changelist',
             sendApproval: 'Send Changelist for Approval',

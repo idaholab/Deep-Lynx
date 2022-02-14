@@ -119,7 +119,7 @@
                 <v-icon
                     @click="deleteChangelist(item)"
                     v-bind="attrs" v-on="on"
-                    v-if="item.status !== 'applied'"
+                    v-if="item.status !== 'published'"
                     small
                     class="mr-2">
                   mdi-delete
@@ -148,7 +148,7 @@ export default class OntologyVersioning extends Vue {
   successMessage = ""
   errorMessage = ""
   ontologyVersions: OntologyVersionT[] = []
-  changelists: ChangelistT[] = []
+  changelists: OntologyVersionT[] = []
 
   versionHeaders() {
     return [{
@@ -179,11 +179,14 @@ export default class OntologyVersioning extends Vue {
       text: this.$t('ontologyVersioning.name'),
       value: "name",
     }, {
+      text: this.$t('ontologyVersioning.description'),
+      value: "description",
+    }, {
       text: this.$t('ontologyVersioning.status'),
       value: "status",
     }, {
-      text: this.$t('ontologyVersioning.appliedAt'),
-      value: "applied_at",
+      text: this.$t('ontologyVersioning.publishedAt'),
+      value: "published_at",
       sortable: false
     }, {
       text: this.$t('ontologyVersioning.actions'),
@@ -199,7 +202,7 @@ export default class OntologyVersioning extends Vue {
   }
 
   listOntologyVersions() {
-    this.$client.listOntologyVersions(this.containerID)
+    this.$client.listOntologyVersions(this.containerID, {status: 'published'})
         .then(results => {
           this.ontologyVersions = results
         })
@@ -208,13 +211,13 @@ export default class OntologyVersioning extends Vue {
 
   listChangelists() {
     if (this.$auth.Auth('containers', 'write', this.containerID)) {
-      this.$client.listChangelists(this.containerID, {})
+      this.$client.listOntologyVersions(this.containerID, {})
           .then(results => {
             this.changelists = results
           })
           .catch(e => this.errorMessage = e)
     } else {
-      this.$client.listChangelists(this.containerID, {createdBy: this.$auth.CurrentUser()?.id})
+      this.$client.listOntologyVersions(this.containerID, {createdBy: this.$auth.CurrentUser()?.id})
           .then(results => {
             this.changelists = results
           })
@@ -222,8 +225,8 @@ export default class OntologyVersioning extends Vue {
     }
   }
 
-  applyChangelist(changelist: ChangelistT) {
-    this.$client.applyChangelist(this.containerID, changelist.id!)
+  applyChangelist(version: OntologyVersionT) {
+    this.$client.applyOntologyVersion(this.containerID, version.id!)
     .then(() => {
       this.successMessage = 'Changelist Applied Successfully'
       this.listChangelists()
@@ -231,8 +234,8 @@ export default class OntologyVersioning extends Vue {
     .catch(e => this.errorMessage = e)
   }
 
-  sendChangelistForApproval(changelist: ChangelistT) {
-    this.$client.setChangelistStatus(this.containerID, changelist.id!, 'ready')
+  sendChangelistForApproval(version: OntologyVersionT) {
+    this.$client.sendOntologyVersionForApproval(this.containerID, version.id!)
         .then(() => {
           this.successMessage = 'Changelist Successfully Updated'
           this.listChangelists()
@@ -240,8 +243,8 @@ export default class OntologyVersioning extends Vue {
         .catch(e => this.errorMessage = e)
   }
 
-  deleteChangelist(changelist: ChangelistT) {
-    this.$client.deleteChangelist(this.containerID, changelist.id!)
+  deleteChangelist(version: OntologyVersionT) {
+    this.$client.deleteOntologyVersion(this.containerID, version.id!)
         .then(() => {
           this.successMessage = 'Changelist Successfully Deleted'
           this.listChangelists()
@@ -249,8 +252,8 @@ export default class OntologyVersioning extends Vue {
         .catch(e => this.errorMessage = e)
   }
 
-  approveChangelist(changelist: ChangelistT) {
-    this.$client.approveChangelist(this.containerID, changelist.id!)
+  approveChangelist(version: OntologyVersionT) {
+    this.$client.approveOntologyVersion(this.containerID, version.id!)
         .then(() => {
           this.successMessage = 'Changelist Successfully Approved'
           this.listChangelists()
@@ -258,8 +261,8 @@ export default class OntologyVersioning extends Vue {
         .catch(e => this.errorMessage = e)
   }
 
-  revokeChangelistApproval(changelist: ChangelistT) {
-    this.$client.revokeApproval(this.containerID, changelist.id!)
+  revokeChangelistApproval(version: OntologyVersionT) {
+    this.$client.revokeOntologyVersionApproval(this.containerID, version.id!)
         .then(() => {
           this.successMessage = 'Changelist Successfully Updated'
           this.listChangelists()
@@ -291,12 +294,16 @@ export default class OntologyVersioning extends Vue {
         return "light-green"
       }
 
-      case "applied": {
+      case "published": {
         return "green"
       }
 
       case "rejected": {
         return "red"
+      }
+
+      case "deprecated": {
+        return "orange"
       }
     }
   }
@@ -315,7 +322,7 @@ export default class OntologyVersioning extends Vue {
         return "color: white"
       }
 
-      case "applied": {
+      case "published": {
         return "color: white"
       }
 

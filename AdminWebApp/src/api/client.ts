@@ -617,8 +617,13 @@ export class Client {
         return this.get<UserContainerInviteT[]>(`/users/invites`);
     }
 
-    listOntologyVersions(containerID: string): Promise<OntologyVersionT[]> {
-        return this.get<OntologyVersionT[]>(`/containers/${containerID}/ontology/versions`);
+    listOntologyVersions(containerID: string, {status, createdBy}: {status?: string; createdBy?: string}): Promise<OntologyVersionT[]> {
+        const query: {[key: string]: any} = {};
+
+        if (status) query.status = status;
+        if (createdBy) query.createdBy = createdBy;
+
+        return this.get<OntologyVersionT[]>(`/containers/${containerID}/ontology/versions`, query);
     }
 
     updateUser(user: UserT | any, userID: string): Promise<UserT> {
@@ -774,48 +779,28 @@ export class Client {
         return this.post<boolean>(`/containers/${containerID}/ontology/versions/${ontologyVersionID}/rollback`, {});
     }
 
-    listChangelists(
-        containerID: string,
-        {status, createdBy}: {createdBy?: string; status?: 'pending' | 'approved' | 'rejected' | 'applied' | 'deprecated'},
-    ): Promise<ChangelistT[]> {
-        const query: {[key: string]: any} = {};
-
-        if (status) query.status = status;
-        if (createdBy) query.createdBy = createdBy;
-
-        return this.get<ChangelistT[]>(`/containers/${containerID}/ontology/changelists`, query);
+    createOntologyVersion(containerID: string, version: OntologyVersionT): Promise<ChangelistT> {
+        return this.post<ChangelistT>(`/containers/${containerID}/ontology/versions/`, version);
     }
 
-    createChangelist(containerID: string, changelist: ChangelistT): Promise<ChangelistT> {
-        return this.post<ChangelistT>(`/containers/${containerID}/ontology/changelists/`, changelist);
+    approveOntologyVersion(containerID: string, versionID: string): Promise<ChangelistApprovalT> {
+        return this.put<ChangelistApprovalT>(`/containers/${containerID}/ontology/versions/${versionID}/approve`, {});
     }
 
-    updateChangelist(containerID: string, changelistID: string, changelist: object): Promise<boolean> {
-        return this.put<boolean>(`/containers/${containerID}/ontology/changelists/${changelistID}`, {changelist});
+    sendOntologyVersionForApproval(containerID: string, versionID: string): Promise<ChangelistApprovalT> {
+        return this.post<ChangelistApprovalT>(`/containers/${containerID}/ontology/versions/${versionID}/approve`, {});
     }
 
-    approveChangelist(containerID: string, changelistID: string): Promise<ChangelistApprovalT> {
-        return this.post<ChangelistApprovalT>(`/containers/${containerID}/ontology/changelists/${changelistID}/approve`, {});
+    revokeOntologyVersionApproval(containerID: string, versionID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/ontology/versions/${versionID}/approve`, {});
     }
 
-    revokeApproval(containerID: string, changelistID: string): Promise<boolean> {
-        return this.delete(`/containers/${containerID}/ontology/changelists/${changelistID}/approve`, {});
+    applyOntologyVersion(containerID: string, versionID: string): Promise<boolean> {
+        return this.post<boolean>(`/containers/${containerID}/ontology/versions/${versionID}/publish`, {});
     }
 
-    applyChangelist(containerID: string, changelistID: string): Promise<boolean> {
-        return this.post<boolean>(`/containers/${containerID}/ontology/changelists/${changelistID}/apply`, {});
-    }
-
-    setChangelistStatus(
-        containerID: string,
-        changelistID: string,
-        status: 'pending' | 'ready' | 'approved' | 'rejected' | 'applied' | 'deprecated',
-    ): Promise<boolean> {
-        return this.put<boolean>(`/containers/${containerID}/ontology/changelists/${changelistID}`, {status});
-    }
-
-    deleteChangelist(containerID: string, changelistID: string): Promise<boolean> {
-        return this.delete(`/containers/${containerID}/ontology/changelists/${changelistID}`);
+    deleteOntologyVersion(containerID: string, versionID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/ontology/versions/${versionID}`);
     }
 
     private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {

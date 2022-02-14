@@ -149,6 +149,8 @@ export default class CreateNodeDialog extends Vue {
          key.default_value = false
       } else if (String(key.default_value) === "") {
         key.default_value = null
+      } else if (String(key.default_value) === "null") {
+        key.default_value = null
       }
       property[key.property_name] = key.default_value
     }) 
