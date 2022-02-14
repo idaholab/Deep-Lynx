@@ -372,13 +372,17 @@ export type GremlinExportConfigT = {
 };
 
 export type OntologyVersionT = {
-    id: string;
+    id?: string;
     container_id: string;
     name: string;
     description?: string;
-    changelist_id?: string;
     created_by?: string;
     created_at?: string;
+    approved_at?: string;
+    approved_by?: string;
+    published_at?: string;
+    status?: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready';
+    status_message?: string;
 };
 
 export type ChangelistT = {

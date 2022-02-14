@@ -16,21 +16,21 @@
       </p>
       <v-select
           dark
-          v-show="$store.getters.isEditMode && changelists.length > 0 || $store.getters.isEditMode && $store.getters.activeChangelist"
-          :items="changelists"
-          v-model="selectedChangelist"
+          v-show="$store.getters.isEditMode"
+          :items="pendingVersions"
+          v-model="selectedPendingVersion"
           item-value="id"
           item-text="name"
           hide-details
           return-object
           :label="$t('ontologyToolbar.activeChangelist')">
       </v-select>
-      <create-changelist-dialog
+      <create-ontology-version-dialog
           v-if="$store.getters.isEditMode"
-          @changelistCreated="listChangelists"
-          :icon="changelists.length > 0"
+          @versionCreated="listPendingVersions"
+          :icon="true"
           :containerID="containerID">
-      </create-changelist-dialog>
+      </create-ontology-version-dialog>
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
       <v-select
@@ -40,7 +40,6 @@
           v-model="selectedVersion"
           item-value="id"
           item-text="name"
-          @input="select"
           hide-details
           return-object
         :label="$t('ontologyToolbar.ontologyVersion')">
@@ -60,10 +59,10 @@
 
 <script lang="ts">
 import {Component, Prop, Vue} from "vue-property-decorator";
-import {ChangelistT, OntologyVersionT} from "@/api/types";
-import CreateChangelistDialog from "@/components/ontology/createChangelistDialog.vue";
+import {OntologyVersionT} from "@/api/types";
+import CreateOntologyVersionDialog from "@/components/ontology/createOntologyVersionDialog.vue";
 
-@Component({components: {CreateChangelistDialog}})
+@Component({components: {CreateOntologyVersionDialog}})
 export default class OntologyVersionToolbar extends Vue {
   @Prop({required: true})
   containerID!: string;
@@ -76,20 +75,23 @@ export default class OntologyVersionToolbar extends Vue {
     return ""
   }
 
-  set selectedVersion(value: string) {
+  set selectedVersion(version: string) {
+    this.$store.dispatch('changeOntologyVersion', version)
+    this.$emit('selected', version)
+
     return
   }
 
-  get selectedChangelist() {
-    if(this.$store.getters.activeChangelist) {
-      return this. $store.getters.activeChangelist
+  get selectedPendingVersion() {
+    if(this.$store.getters.selectedPendingOntologyVersion) {
+      return this. $store.getters.selectedPendingOntologyVersion
     }
     return ""
   }
 
-  set selectedChangelist(changelist: any) {
-    this.$store.dispatch('changeActiveChangelist', changelist)
-    this.$emit('selectedChangelist', changelist)
+  set selectedPendingVersion(version: any) {
+    this.$store.dispatch('changePendingOntologyVersion', version)
+    this.$emit('selectedVersion', version)
     return
   }
 
@@ -117,10 +119,11 @@ export default class OntologyVersionToolbar extends Vue {
     name: "Primary"
   }]
 
-  changelists: ChangelistT[] = []
+  pendingVersions: OntologyVersionT[] = []
 
   mounted() {
-    this.$client.listOntologyVersions(this.containerID)
+    // we want only the published versions for the sidebar's selector
+    this.$client.listOntologyVersions(this.containerID, {status: 'published'})
     .then((results) => {
         if(results.length > 0) {
           this.versions = results
@@ -132,27 +135,22 @@ export default class OntologyVersionToolbar extends Vue {
     })
     .catch((e: any) =>  this.errorMessage = e)
 
-    this.listChangelists()
+    this.listPendingVersions()
   }
 
-  listChangelists() {
-    this.changelists = []
-    this.$client.listChangelists(this.containerID, {status: "pending"})
+  listPendingVersions() {
+    this.pendingVersions = []
+    this.$client.listOntologyVersions(this.containerID, {status: "pending"})
         .then((results) => {
           if(results.length > 0) {
-            this.changelists = results
+            this.pendingVersions = results
 
-            if(!this.$store.getters.activeChangelist) {
-              this.$store.dispatch('changeActiveChangelist', results[0])
+            if(!this.$store.getters.selectedPendingOntologyVersion) {
+              this.$store.dispatch('changePendingOntologyVersion', results[0])
             }
           }
         })
         .catch((e: any) =>  this.errorMessage = e)
-  }
-
-  select(version: OntologyVersionT) {
-    this.$store.dispatch('changeOntologyVersion', version)
-    this.$emit('selected', version)
   }
 }
 </script>

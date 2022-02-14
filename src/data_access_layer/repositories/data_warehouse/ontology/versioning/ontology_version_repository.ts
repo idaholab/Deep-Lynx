@@ -9,7 +9,12 @@ import UserRepository from '../../../access_management/user_repository';
 export default class OntologyVersionRepository extends Repository implements RepositoryInterface<OntologyVersion> {
     #mapper: OntologyVersionMapper = OntologyVersionMapper.Instance;
 
-    delete(t: OntologyVersion): Promise<Result<boolean>> {
+    async delete(t: OntologyVersion): Promise<Result<boolean>> {
+        const found = await this.findByID(t.id!);
+        if (found.isError) return Promise.resolve(Result.Failure('unable to find ontology version'));
+
+        if (found.value.status === 'published') return Promise.resolve(Result.Failure('unable to delete published version'));
+
         return this.#mapper.Delete(t.id!);
     }
 
@@ -17,7 +22,7 @@ export default class OntologyVersionRepository extends Repository implements Rep
         return this.#mapper.Retrieve(id);
     }
 
-    async save(v: OntologyVersion, user: User): Promise<Result<boolean>> {
+    async save(v: OntologyVersion, user: User, baseOntologyVersion?: string): Promise<Result<boolean>> {
         const errors = await v.validationErrors();
         if (errors) {
             return Promise.resolve(Result.Failure(`ontology version does not pass validation ${errors.join(',')}`));
@@ -69,6 +74,16 @@ export default class OntologyVersionRepository extends Repository implements Rep
 
     containerID(operator: string, value: any) {
         super.query('container_id', operator, value);
+        return this;
+    }
+
+    status(operator: string, value: any) {
+        super.query('status', operator, value);
+        return this;
+    }
+
+    createdBy(operator: string, value: any) {
+        super.query('created_by', operator, value);
         return this;
     }
 
