@@ -341,6 +341,14 @@ export default class UserRepository extends Repository implements RepositoryInte
         return new Promise((resolve) => resolve(Result.Success(roles)));
     }
 
+    async isAdminForContainer(user: User, containerID: string): Promise<boolean> {
+        if (user.admin) return Promise.resolve(true);
+
+        const roles = await Authorization.RolesForUser(user.id!, containerID);
+
+        return Promise.resolve(roles.includes('admin'));
+    }
+
     // visit the Authorization domain object to see exactly what the permission
     // return consists of when dealing with this function
     async retrievePermissions(user: User): Promise<Result<string[][]>> {
