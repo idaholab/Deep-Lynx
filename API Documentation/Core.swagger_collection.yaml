@@ -1001,8 +1001,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties: {}
+              $ref: '#/components/schemas/ValidateMetatypePropertiesRequest'
   '/containers/{container_id}/metatypes/{metatype_id}/keys':
     get:
       tags:
@@ -7002,4 +7001,10 @@ components:
             changelist: {}
             applied_at: ''
       title: RetrieveChangelistResponse
+    ValidateMetatypePropertiesRequest:
+      title: ValidateMetatypePropertiesRequest
+      type: object
+      properties:
+        property_name_here:
+          type: string
   responses: {}

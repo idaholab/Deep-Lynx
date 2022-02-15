@@ -79,11 +79,9 @@ async function processFunction(event: Event) {
     }
 
     // filter by events with a specific destination identified in event_config
-    if (event.event_type === 'manual') {
-        if (event.event_config && event.event_config.destination) {
-            // filtering on a match between event_config destination and event action destination data source id
-            actionEvents = actionEvents.filter((action) => action.destination_data_source_id === event.event_config.destination);
-        }
+    if (event.event_config && event.event_config.destination) {
+        // filtering on a match between event_config destination and event action destination data source id
+        actionEvents = actionEvents.filter((action) => action.destination_data_source_id === event.event_config.destination);
     }
 
     // send out events and create event action status
