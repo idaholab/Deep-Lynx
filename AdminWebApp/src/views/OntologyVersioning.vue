@@ -77,7 +77,7 @@
                 <v-icon
                     @click="sendChangelistForApproval(item)"
                     v-bind="attrs" v-on="on"
-                    v-if="item.status === 'pending' || item.status === 'rejected'"
+                    v-if="item.status === 'ready' || item.status === 'rejected'"
                     small
                     class="mr-2">
                   mdi-send
@@ -91,7 +91,7 @@
                 <v-icon
                     @click="approveChangelist(item)"
                     v-bind="attrs" v-on="on"
-                    v-if="item.status === 'ready' && $auth.Auth('containers', 'write', containerID)"
+                    v-if="item.status === 'pending' && $auth.Auth('containers', 'write', containerID)"
                     small
                     class="mr-2">
                   mdi-check
