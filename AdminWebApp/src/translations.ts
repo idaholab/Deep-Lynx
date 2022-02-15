@@ -29,7 +29,7 @@ export default {
             dataExplorerDescription: 'Interactive Data Explorer',
             dataMapping: 'Type Mapping',
             dataMappingDescription: 'Manage Data Mappings',
-            dataExport: 'Export',
+            dataExport: 'Graph Export',
             dataExportDescription: 'Manage Data Export',
             dataTest: 'Test Data',
             dataTestDescription: 'Create and Manage Datasets',
