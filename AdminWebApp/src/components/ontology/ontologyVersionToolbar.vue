@@ -140,7 +140,7 @@ export default class OntologyVersionToolbar extends Vue {
 
   listPendingVersions() {
     this.pendingVersions = []
-    this.$client.listOntologyVersions(this.containerID, {status: "pending"})
+    this.$client.listOntologyVersions(this.containerID, {status: "ready"})
         .then((results) => {
           if(results.length > 0) {
             this.pendingVersions = results

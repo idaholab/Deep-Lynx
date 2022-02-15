@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" max-width="500px" @click:outside="clearNew">
+  <v-dialog max-width="500px" v-model="dialog" @click:outside="clearNew">
     <template v-slot:activator="{ on }">
       <v-icon
           v-show="icon"
@@ -29,8 +29,16 @@
                     :label="$t('createChangelist.name')"
                     required
                 ></v-text-field>
+                <v-textarea
+                    v-model="description"
+                    :label="$t('createChangelist.description')"
+                    required
+                >
+                </v-textarea>
+
 
               </v-form>
+              <p><b>Note:</b> {{$t('createChangelist.creationNote')}}</p>
             </v-col>
           </v-row>
         </v-container>
@@ -77,7 +85,7 @@ export default class CreateOntologyVersionDialog extends Vue {
       name: this.name as any,
       description: this.description as any,
       container_id: this.containerID,
-    })
+    }, this.$store.getters.selectedOntologyVersionID)
         .then((version) => {
           this.loading = false
           this.clearNew()

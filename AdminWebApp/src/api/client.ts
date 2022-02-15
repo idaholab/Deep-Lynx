@@ -779,8 +779,11 @@ export class Client {
         return this.post<boolean>(`/containers/${containerID}/ontology/versions/${ontologyVersionID}/rollback`, {});
     }
 
-    createOntologyVersion(containerID: string, version: OntologyVersionT): Promise<ChangelistT> {
-        return this.post<ChangelistT>(`/containers/${containerID}/ontology/versions/`, version);
+    createOntologyVersion(containerID: string, version: OntologyVersionT, baseVersionID: string): Promise<ChangelistT> {
+        const query: {[key: string]: any} = {};
+        query.baseOntologyVersion = baseVersionID;
+
+        return this.post<ChangelistT>(`/containers/${containerID}/ontology/versions/`, version, query);
     }
 
     approveOntologyVersion(containerID: string, versionID: string): Promise<ChangelistApprovalT> {
