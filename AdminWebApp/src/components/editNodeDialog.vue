@@ -171,18 +171,18 @@ export default class EditMetatypeDialog extends Vue {
    
   }
 
-  editMetatype() {
-    this.$client.createNode(this.selectedNode?.container_id!, this.selectedNode?.id!,)
-        .then(result => {
-          if(!result) {
-            this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
-          } else {
-            this.dialog = false
-            this.$emit('metatypeEdited')
-          }
-        })
-        .catch(e => this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string + e)
-  }
+  // editMetatype() {
+  //   this.$client.createNode(this.selectedNode?.container_id!, this.selectedNode?.id!,)
+  //       .then(result => {
+  //         if(!result) {
+  //           this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
+  //         } else {
+  //           this.dialog = false
+  //           this.$emit('metatypeEdited')
+  //         }
+  //       })
+  //       .catch(e => this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string + e)
+  // }
 
   setProperties() {
     this.property = {}
@@ -215,7 +215,7 @@ export default class EditMetatypeDialog extends Vue {
     )
       .then(results => {
         this.dialog = false
-        this.$emit('nodeUpdated', results[0])
+        this.$emit('nodeUpdated')
       })
       .catch(e => this.errorMessage = this.$t('createNode.errorCreatingAPI') as string + e)
   }

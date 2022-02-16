@@ -23,8 +23,8 @@ export default class OntologyVersion extends NakedDomainClass {
 
     @IsOptional()
     @IsString()
-    @IsIn(['pending', 'approved', 'rejected', 'published', 'deprecated', 'ready', 'error'])
-    status? = 'pending';
+    @IsIn(['pending', 'approved', 'rejected', 'published', 'deprecated', 'ready', 'error', 'generating'])
+    status? = 'ready';
 
     @IsOptional()
     @IsString()
@@ -57,7 +57,7 @@ export default class OntologyVersion extends NakedDomainClass {
         container_id: string;
         name: string;
         description?: string;
-        status?: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready';
+        status?: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready' | 'error' | 'generating';
         status_message?: string;
         published_at?: Date;
         created_by?: string;

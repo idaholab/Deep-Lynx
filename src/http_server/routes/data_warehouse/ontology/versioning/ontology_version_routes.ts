@@ -147,7 +147,7 @@ export default class OntologyVersionRoutes {
 
     private static sendVersionForApproval(req: Request, res: Response, next: NextFunction) {
         if (req.ontologyVersion) {
-            repo.setStatus(req.ontologyVersion.id!, 'ready')
+            repo.setStatus(req.ontologyVersion.id!, 'pending')
                 .then((result) => {
                     result.asResponse(res);
                 })

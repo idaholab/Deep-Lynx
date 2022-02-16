@@ -53,10 +53,18 @@ export default class OntologyVersionMapper extends Mapper {
 
     public async SetStatus(
         id: string,
-        status: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready' | 'error',
+        status: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready' | 'error' | 'generating',
         statusMessage?: string,
     ): Promise<Result<boolean>> {
+        if (status === 'published') {
+            return super.runStatement(this.setPublishedStatement(id, status, statusMessage));
+        }
+
         return super.runStatement(this.setStatusStatement(id, status, statusMessage));
+    }
+
+    public async CloneOntology(userID: string, baseVersionID: string | undefined, targetVersionID: string, transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.cloneOntologyStatement(userID, baseVersionID, targetVersionID), {transaction});
     }
 
     public async Delete(id: string): Promise<Result<boolean>> {
@@ -122,12 +130,32 @@ export default class OntologyVersionMapper extends Mapper {
 
     private setStatusStatement(
         id: string,
-        status: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready' | 'error',
+        status: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready' | 'error' | 'generating',
         statusMessage?: string,
     ): QueryConfig {
         return {
             text: `UPDATE ontology_versions SET status = $2, status_message = $3 WHERE id = $1`,
             values: [id, status, statusMessage],
+        };
+    }
+
+    private setPublishedStatement(
+        id: string,
+        status: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready' | 'error' | 'generating',
+        statusMessage?: string,
+    ): QueryConfig {
+        return {
+            text: `UPDATE ontology_versions SET status = $2, status_message = $3, published_at = NOW() WHERE id = $1`,
+            values: [id, status, statusMessage],
+        };
+    }
+
+    // this statement runs the function for cloning the ontology, requires at least a target ontology version but
+    // base version could be null
+    private cloneOntologyStatement(userID: string, baseOntology: string | undefined, targetOntology: string): QueryConfig {
+        return {
+            text: `SELECT clone_ontology($1::bigint, $2::bigint, $3::bigint);`,
+            values: [userID, baseOntology, targetOntology],
         };
     }
 }
