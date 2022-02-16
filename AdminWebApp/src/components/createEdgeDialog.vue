@@ -34,6 +34,7 @@
                     return-object
                     persistent-hint
                     required
+                    clearable
                 >
                   <template v-slot:label>{{$t('createEdge.originNode')}} <small style="color:red" >*</small></template>
                 </v-autocomplete>
@@ -47,6 +48,7 @@
                     return-object
                     persistent-hint
                     required
+                    clearable
                 >
                   <template v-slot:label>{{$t('createEdge.destinationNode')}} <small style="color:red" >*</small></template>
                 </v-autocomplete>
@@ -60,6 +62,7 @@
                     item-value="id"
                     persistent-hint
                     required
+                    clearable
                 >
                   <template v-slot:label>{{$t('createEdge.relationship')}} <small style="color:red" >*</small></template>
                 </v-autocomplete>
@@ -138,6 +141,7 @@ export default class CreateRelationshipPairDialog extends Vue {
   //BUGS: current implementation shows errors in web console about passing in array and can't read undefined
   @Watch('destinationSelect' || 'originSelect')
   onRelationshipSearchChange() {
+    if(this.destinationSelect.metatype && this.originSelect.metatype) {
        this.$client.listMetatypeRelationshipPairs(this.containerID,  {
         destinationID: this.destinationSelect.metatype.id,
         originID: this.originSelect.metatype.id
@@ -146,6 +150,7 @@ export default class CreateRelationshipPairDialog extends Vue {
           this.metatypeRelationshipPairs = metatypeRelationshipPairs as MetatypeRelationshipPairT[]
         })
         .catch(e => this.errorMessage = e) 
+    }
     
         
   }

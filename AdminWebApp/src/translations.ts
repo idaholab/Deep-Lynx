@@ -29,7 +29,7 @@ export default {
             dataExplorerDescription: 'Interactive Data Explorer',
             dataMapping: 'Type Mapping',
             dataMappingDescription: 'Manage Data Mappings',
-            dataExport: 'Export',
+            dataExport: 'Graph Export',
             dataExportDescription: 'Manage Data Export',
             dataTest: 'Test Data',
             dataTestDescription: 'Create and Manage Datasets',
@@ -704,9 +704,12 @@ export default {
         createChangelist: {
             formTitle: 'Create New Changelist',
             name: 'Name',
+            description: 'Description',
             cancel: 'Cancel',
             save: 'Save',
             newChangelistButton: 'New Changelist',
+            creationNote:
+                'Changelist creation may take upwards of 5 minutes to complete. Your changelist will have a status of "generating" until it is ready to be edited. Please be patient.',
         },
         ontologyVersioning: {
             ontologyVersions: 'Ontology Versions',

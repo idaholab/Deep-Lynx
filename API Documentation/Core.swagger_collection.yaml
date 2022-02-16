@@ -1001,8 +1001,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties: {}
+              $ref: '#/components/schemas/ValidateMetatypePropertiesRequest'
   '/containers/{container_id}/metatypes/{metatype_id}/keys':
     get:
       tags:
@@ -3782,23 +3781,32 @@ paths:
         in: path
         required: true
     post:
-      summary: ''
+      tags:
+        - Containers
+      summary: Send Ontology Version for Approval
       operationId: SendOntologyVersionForApproval
       responses:
         '200':
           description: OK
+      description: Sends an ontology version to be approved by a container admin
     delete:
-      summary: ''
-      operationId: RevokeApprovalOntologyVersion
+      tags:
+        - Containers
+      summary: Reject Ontology Version Approval
+      operationId: RejectOntologyVersionApproval
       responses:
         '200':
           description: OK
+      description: Rejects an ontology version (either in a pending status or after it has been approved).
     put:
-      summary: ''
+      tags:
+        - Containers
+      summary: Approve Ontology Version
       operationId: ApproveOntologyVersion
       responses:
         '200':
           description: OK
+      description: Approves an ontology version
   '/containers/{container_id}/ontology/versions/{ontology_version_id}/publish':
     parameters:
       - schema:
@@ -3812,11 +3820,14 @@ paths:
         in: path
         required: true
     post:
-      summary: ''
+      tags:
+        - Containers
+      summary: Publish Ontology Version
       operationId: PublishOntologyVersion
       responses:
         '200':
           description: OK
+      description: Publishes an ontology version
 components:
   securitySchemes:
     BearerAuth:
@@ -6923,83 +6934,10 @@ components:
           $ref: '#/components/schemas/EventActionStatus'
         isError:
           type: boolean
-    ListChangelistResponse:
-      description: ''
+    ValidateMetatypePropertiesRequest:
+      title: ValidateMetatypePropertiesRequest
       type: object
       properties:
-        value:
-          type: array
-          uniqueItems: true
-          minItems: 1
-          items:
-            required:
-              - id
-              - container_id
-              - name
-              - status
-              - applied_at
-            properties:
-              id:
-                type: string
-              container_id:
-                type: string
-              name:
-                type: string
-              status:
-                type: string
-              changelist:
-                type: object
-                properties: {}
-              applied_at:
-                type: string
-      required:
-        - value
-      x-examples:
-        example-1:
-          value:
-            - id: ''
-              container_id: ''
-              name: ''
-              status: ''
-              changelist: {}
-              applied_at: ''
-    RetrieveChangelistResponse:
-      description: ''
-      type: object
-      properties:
-        value:
-          type: object
-          properties:
-            id:
-              type: string
-            container_id:
-              type: string
-            name:
-              type: string
-            status:
-              type: string
-            changelist:
-              type: object
-              properties: {}
-            applied_at:
-              type: string
-          required:
-            - id
-            - container_id
-            - name
-            - status
-            - changelist
-            - applied_at
-      required:
-        - value
-      x-examples:
-        example-1:
-          value:
-            id: ''
-            container_id: ''
-            name: ''
-            status: ''
-            changelist: {}
-            applied_at: ''
-      title: RetrieveChangelistResponse
+        property_name_here:
+          type: string
   responses: {}
