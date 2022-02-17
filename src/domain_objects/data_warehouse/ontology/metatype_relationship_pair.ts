@@ -79,7 +79,7 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
 
     @Expose({name: 'origin_metatype', toPlainOnly: true})
     private get _origin(): Metatype {
-        return this.destinationMetatype!;
+        return this.originMetatype!;
     }
 
     @MetatypeRelationshipID({
