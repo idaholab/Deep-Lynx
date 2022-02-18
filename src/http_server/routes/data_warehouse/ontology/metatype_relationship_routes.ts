@@ -85,6 +85,12 @@ export default class MetatypeRelationshipRoutes {
             repository = repository.and().description('like', `%${req.query.description}%`);
         }
 
+        if (typeof req.query.ontologyVersion !== 'undefined' && (req.query.ontologyVersion as string) !== '') {
+            repository = repository.and().ontologyVersion('eq', req.query.ontologyVersion);
+        } else {
+            repository = repository.and().ontologyVersion('is null');
+        }
+
         if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
             repository
                 .count()

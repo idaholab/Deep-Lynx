@@ -43,7 +43,7 @@ export default class DataSourceMapper extends Mapper {
             new Event({
                 containerID: r.value[0].container_id,
                 eventType: 'data_source_created',
-                event: {id: r.value[0].id},
+                event: {dataSourceID: r.value[0].id},
             }),
         );
 
@@ -61,7 +61,7 @@ export default class DataSourceMapper extends Mapper {
             new Event({
                 containerID: r.value[0].container_id,
                 eventType: 'data_source_modified',
-                event: {id: r.value[0].id},
+                event: {dataSourceID: r.value[0].id},
             }),
         );
 

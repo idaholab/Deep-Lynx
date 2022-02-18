@@ -34,6 +34,7 @@
                     return-object
                     persistent-hint
                     required
+                    clearable
                 >
                   <template v-slot:label>{{$t('createNode.metatype')}} <small style="color:red" >*</small></template>
                 </v-autocomplete>
@@ -101,6 +102,7 @@ export default class CreateNodeDialog extends Vue {
         "data_source_id": this.dataSourceID,
         "metatype_id": this.metatype.id,
         "properties": this.property,
+        "original_data_id": "1" // set a default original_data_id value to enable future queries
       }
     )
         .then(results => {

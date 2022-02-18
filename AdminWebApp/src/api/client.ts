@@ -21,6 +21,9 @@ import {
     ResultT,
     FileT,
     KeyPairT,
+    OntologyVersionT,
+    ChangelistT,
+    ChangelistApprovalT,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -87,6 +90,7 @@ export class Client {
         formData.append('name', container.name);
         formData.append('description', container.description);
         formData.append('data_versioning_enabled', container.config.data_versioning_enabled);
+        formData.append('ontology_versioning_enabled', container.config.ontology_versioning_enabled);
 
         if (owlFile) {
             formData.append('file', owlFile);
@@ -158,16 +162,28 @@ export class Client {
             description,
             limit,
             offset,
+            ontologyVersion,
             sortBy,
             sortDesc,
             count,
-            loadKeys
-        }: {name?: string; description?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; count?: boolean; loadKeys?: string},
+            loadKeys,
+        }: {
+            name?: string;
+            description?: string;
+            limit?: number;
+            offset?: number;
+            ontologyVersion?: string;
+            sortBy?: string;
+            sortDesc?: boolean;
+            count?: boolean;
+            loadKeys?: string;
+        },
     ): Promise<MetatypeT[] | number> {
         const query: {[key: string]: any} = {};
 
         if (name) query.name = name;
         if (description) query.description = description;
+        if (ontologyVersion) query.ontologyVersion = ontologyVersion;
         if (limit) query.limit = limit;
         if (offset) query.offset = offset;
         if (sortBy) query.sortBy = sortBy;
@@ -183,6 +199,7 @@ export class Client {
         {
             name,
             description,
+            ontologyVersion,
             metatypeID,
             originID,
             destinationID,
@@ -194,6 +211,7 @@ export class Client {
         }: {
             name?: string;
             description?: string;
+            ontologyVersion?: string;
             metatypeID?: string;
             originID?: string;
             destinationID?: string;
@@ -208,6 +226,8 @@ export class Client {
 
         if (name) query.name = name;
         if (description) query.description = description;
+        if (ontologyVersion) query.ontologyVersion = ontologyVersion;
+        query.ontologyVersion = ontologyVersion;
         if (originID) query.originID = originID;
         if (destinationID) query.destinationID = destinationID;
         if (metatypeID) query.metatypeID = metatypeID;
@@ -269,17 +289,28 @@ export class Client {
         {
             name,
             description,
+            ontologyVersion,
             limit,
             offset,
             sortBy,
             sortDesc,
             count,
-        }: {name?: string; description?: string; limit?: number; offset?: number; sortBy?: string; sortDesc?: boolean; count?: boolean},
+        }: {
+            name?: string;
+            description?: string;
+            ontologyVersion?: string;
+            limit?: number;
+            offset?: number;
+            sortBy?: string;
+            sortDesc?: boolean;
+            count?: boolean;
+        },
     ): Promise<MetatypeRelationshipT[] | number> {
         const query: {[key: string]: any} = {};
 
         if (name) query.name = name;
         if (description) query.description = name;
+        if (ontologyVersion) query.ontologyVersion = ontologyVersion;
         if (limit) query.limit = limit;
         if (offset) query.offset = offset;
         if (sortBy) query.sortBy = sortBy;
@@ -429,8 +460,14 @@ export class Client {
 
     listNodes(
         containerID: string,
-        {limit, offset, transformationID, metatypeID, dataSourceID, loadMetatypes}: {limit?: number; offset?: number; transformationID?: string; metatypeID?: string;
-            dataSourceID?: string; loadMetatypes?: string;},
+        {
+            limit,
+            offset,
+            transformationID,
+            metatypeID,
+            dataSourceID,
+            loadMetatypes,
+        }: {limit?: number; offset?: number; transformationID?: string; metatypeID?: string; dataSourceID?: string; loadMetatypes?: string},
     ): Promise<NodeT[]> {
         const query: {[key: string]: any} = {};
 
@@ -440,7 +477,6 @@ export class Client {
         if (transformationID) query.transformationID = transformationID;
         if (metatypeID) query.metatypeID = metatypeID;
         if (loadMetatypes) query.loadMetatypes = loadMetatypes;
-
 
         return this.get<NodeT[]>(`/containers/${containerID}/graphs/nodes`, query);
     }
@@ -464,8 +500,25 @@ export class Client {
     listEdges(
         containerID: string,
 
-        {relationshipPairName, relationshipPairID, limit, offset, originID, destinationID, dataSourceID, loadRelationshipPairs}: {relationshipPairName?: string; relationshipPairID?: string;
-            limit?: number; offset?: number; originID?: string; destinationID?: string; dataSourceID?: string; loadRelationshipPairs?: string;},
+        {
+            relationshipPairName,
+            relationshipPairID,
+            limit,
+            offset,
+            originID,
+            destinationID,
+            dataSourceID,
+            loadRelationshipPairs,
+        }: {
+            relationshipPairName?: string;
+            relationshipPairID?: string;
+            limit?: number;
+            offset?: number;
+            originID?: string;
+            destinationID?: string;
+            dataSourceID?: string;
+            loadRelationshipPairs?: string;
+        },
     ): Promise<EdgeT[]> {
         const query: {[key: string]: any} = {};
 
@@ -562,6 +615,15 @@ export class Client {
 
     listOutstandingContainerInvites(): Promise<UserContainerInviteT[]> {
         return this.get<UserContainerInviteT[]>(`/users/invites`);
+    }
+
+    listOntologyVersions(containerID: string, {status, createdBy}: {status?: string; createdBy?: string}): Promise<OntologyVersionT[]> {
+        const query: {[key: string]: any} = {};
+
+        if (status) query.status = status;
+        if (createdBy) query.createdBy = createdBy;
+
+        return this.get<OntologyVersionT[]>(`/containers/${containerID}/ontology/versions`, query);
     }
 
     updateUser(user: UserT | any, userID: string): Promise<UserT> {
@@ -711,6 +773,37 @@ export class Client {
 
     deleteExport(containerID: string, exportID: string): Promise<boolean> {
         return this.delete(`/containers/${containerID}/data/export/${exportID}`);
+    }
+
+    rollbackOntology(containerID: string, ontologyVersionID: string): Promise<boolean> {
+        return this.post<boolean>(`/containers/${containerID}/ontology/versions/${ontologyVersionID}/rollback`, {});
+    }
+
+    createOntologyVersion(containerID: string, version: OntologyVersionT, baseVersionID: string): Promise<ChangelistT> {
+        const query: {[key: string]: any} = {};
+        query.baseOntologyVersion = baseVersionID;
+
+        return this.post<ChangelistT>(`/containers/${containerID}/ontology/versions/`, version, query);
+    }
+
+    approveOntologyVersion(containerID: string, versionID: string): Promise<ChangelistApprovalT> {
+        return this.put<ChangelistApprovalT>(`/containers/${containerID}/ontology/versions/${versionID}/approve`, {});
+    }
+
+    sendOntologyVersionForApproval(containerID: string, versionID: string): Promise<ChangelistApprovalT> {
+        return this.post<ChangelistApprovalT>(`/containers/${containerID}/ontology/versions/${versionID}/approve`, {});
+    }
+
+    revokeOntologyVersionApproval(containerID: string, versionID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/ontology/versions/${versionID}/approve`, {});
+    }
+
+    applyOntologyVersion(containerID: string, versionID: string): Promise<boolean> {
+        return this.post<boolean>(`/containers/${containerID}/ontology/versions/${versionID}/publish`, {});
+    }
+
+    deleteOntologyVersion(containerID: string, versionID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/ontology/versions/${versionID}`);
     }
 
     private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {

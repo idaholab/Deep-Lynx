@@ -29,7 +29,7 @@ export default {
             dataExplorerDescription: 'Interactive Data Explorer',
             dataMapping: 'Type Mapping',
             dataMappingDescription: 'Manage Data Mappings',
-            dataExport: 'Export',
+            dataExport: 'Graph Export',
             dataExportDescription: 'Manage Data Export',
             dataTest: 'Test Data',
             dataTestDescription: 'Create and Manage Datasets',
@@ -71,6 +71,8 @@ export default {
             inviteUserCardTitle: 'Invite Users to Your Container',
             inviteUserCardText: "Don't go alone! Invite others to help manage your ontology and data.",
             inviteUserCardLinkText: 'Manage Users',
+            ontologyVersioning: 'Ontology Versioning',
+            ontologyVersioningDescription: 'Manage Version and Changelists',
         },
         apiKeys: {
             title: 'Current API Keys',
@@ -627,7 +629,7 @@ export default {
             createdAt: 'Created At',
             id: 'ID',
             viewDeleteData: 'Actions',
-            successfullyDeleted: 'Data Successfully Deleted'
+            successfullyDeleted: 'Data Successfully Deleted',
         },
         createNode: {
             createNode: 'Create Node',
@@ -638,7 +640,7 @@ export default {
             save: 'Save',
             cancel: 'Cancel',
             errorCreatingAPI: 'Error communicating with Deep Lynx:',
-            requiredField: 'Required Field'
+            requiredField: 'Required Field',
         },
         createEdge: {
             createEdge: 'Create Edge',
@@ -652,7 +654,7 @@ export default {
             save: 'Save',
             cancel: 'Cancel',
             errorCreatingAPI: 'Error communicating with Deep Lynx:',
-            requiredField: 'Required Field'
+            requiredField: 'Required Field',
         },
         login: {
             username: 'Email',
@@ -684,6 +686,39 @@ export default {
             home: 'Return to Login',
             password: 'Enter New Password',
             confirmPassword: 'Confirm New Password',
+        },
+        ontologyToolbar: {
+            viewMode: 'View Mode',
+            editMode: 'Edit Mode',
+            activeChangelist: 'Active Changelist',
+            current: 'current',
+            ontologyVersion: 'Ontology Version',
+        },
+        createChangelist: {
+            formTitle: 'Create New Changelist',
+            name: 'Name',
+            description: 'Description',
+            cancel: 'Cancel',
+            save: 'Save',
+            newChangelistButton: 'New Changelist',
+            creationNote:
+                'Changelist creation may take upwards of 5 minutes to complete. Your changelist will have a status of "generating" until it is ready to be edited. Please be patient.',
+        },
+        ontologyVersioning: {
+            ontologyVersions: 'Ontology Versions',
+            changelists: 'Changelists',
+            id: 'ID',
+            name: 'Name',
+            description: 'Description',
+            actions: 'Actions',
+            status: 'Status',
+            publishedAt: 'Published At',
+            approveChangelist: 'Approve Changelist',
+            deleteChangelist: 'Delete Changelist',
+            sendApproval: 'Send Changelist for Approval',
+            applyChangelist: 'Apply Changelist',
+            revokeApproval: 'Revoke Changelist Approval',
+            rollbackOntology: 'Rollback to this Ontology Version (creates changelist for further approval)',
         },
         containers: {
             or: 'Or',

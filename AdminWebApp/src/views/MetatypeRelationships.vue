@@ -1,5 +1,10 @@
 <template>
   <div>
+    <ontology-version-toolbar
+        v-if="$store.getters.ontologyVersioningEnabled"
+        :containerID="containerID"
+        @selected="loadMetatypeRelationships">
+    </ontology-version-toolbar>
     <v-data-table
         :headers="headers()"
         :items="metatypeRelationships"
@@ -70,10 +75,12 @@ import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import EditMetatypeRelationshipDialog from "@/components/editMetatypeRelationshipDialog.vue";
 import CreateMetatypeRelationshipDialog from "@/components/createMetatypeRelationshipDialog.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
+import OntologyVersionToolbar from "@/components/ontology/ontologyVersionToolbar.vue";
 
 @Component({components: {
     EditMetatypeRelationshipDialog,
-    CreateMetatypeRelationshipDialog
+    CreateMetatypeRelationshipDialog,
+    OntologyVersionToolbar
   }})
 export default class MetatypeRelationships extends Vue {
   @Prop({required: true})
@@ -129,6 +136,7 @@ export default class MetatypeRelationships extends Vue {
   countRelationships() {
     this.$client.listMetatypeRelationships(this.containerID, {
       count: true,
+      ontologyVersion: this.$store.getters.selectedOntologyVersionID,
       name: (this.name !== "") ? this.name : undefined,
       description: (this.description !== "") ? this.description : undefined,
     })
@@ -152,6 +160,7 @@ export default class MetatypeRelationships extends Vue {
     if(sortDesc) sortDescParam = sortDesc[0]
 
     this.$client.listMetatypeRelationships(this.containerID, {
+      ontologyVersion: this.$store.getters.selectedOntologyVersionID,
       limit: itemsPerPage,
       offset: itemsPerPage * pageNumber,
       sortBy: sortParam,

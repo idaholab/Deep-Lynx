@@ -4,6 +4,7 @@ export type ContainerT = {
     description: string;
     config: {
         data_versioning_enabled: boolean;
+        ontology_versioning_enabled: boolean;
     };
     created_at: string;
     modified_at: string;
@@ -368,6 +369,40 @@ export type GremlinExportConfigT = {
     modified_at?: string;
     created_by?: string;
     modified_by?: string;
+};
+
+export type OntologyVersionT = {
+    id?: string;
+    container_id: string;
+    name: string;
+    description?: string;
+    created_by?: string;
+    created_at?: string;
+    approved_at?: string;
+    approved_by?: string;
+    published_at?: string;
+    status?: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready';
+    status_message?: string;
+};
+
+export type ChangelistT = {
+    id?: string;
+    container_id: string;
+    name: string;
+    status?: 'pending' | 'ready' | 'approved' | 'rejected' | 'applied' | 'deprecated';
+    changelist?: object;
+    applied_at?: string;
+    created_at?: string;
+    modified_at?: string;
+    created_by?: string;
+    modified_by?: string;
+};
+
+export type ChangelistApprovalT = {
+    id?: string;
+    changelist_id: string;
+    approved_by: string;
+    approved_at?: string;
 };
 
 export type ResultT = {

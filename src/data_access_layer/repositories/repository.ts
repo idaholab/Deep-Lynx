@@ -139,7 +139,7 @@ export class Repository {
                     output.push(`'${v}'`);
                 });
 
-                this._rawQuery.push(`->> ${finalKey}) IN (${output.join(',')})`);
+                this._rawQuery.push(`->> '${finalKey}') IN (${output.join(',')})`);
                 break;
             }
         }
