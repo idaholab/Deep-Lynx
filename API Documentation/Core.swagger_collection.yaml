@@ -1976,7 +1976,7 @@ paths:
       description: |-
         Uploads a file and it's metadata to Deep Lynx. All additional fields on the multipart form will be processed and added as metadata to the file upload itself. 
 
-        If you include a file field and call that "metadata" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once Deep Lynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.
+        This should be a collection of files and normal fields. If you include a file field and call that "metadata" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once Deep Lynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.
 
         NOTE: The metadata file you upload, if json, must be wrapped in an array. If you do not pass in an array of objects, even if it's a single object, then Deep Lynx will attempt to split up your metadata into its parts instead of treating it like a whole object.
       operationId: UploadFile
@@ -2012,6 +2012,10 @@ paths:
               properties:
                 file:
                   type: string
+                  format: binary
+                metadata:
+                  type: string
+                  format: binary
         description: |-
           This should be a collection of files and normal fields. If you include a file field and call that "metadata" - you can include a normal metadata upload as either a json, csv, or xml file. This data will be processed like a normal import and the files attached to the processed data. Once Deep Lynx generates nodes and edges from that data, any files attached will automatically be attached to the resulting nodes/edges as well.
 
@@ -2777,6 +2781,7 @@ paths:
               properties:
                 file:
                   type: string
+                  format: binary
   '/containers/{container_id}/import/datasources/{data_source_id}/mappings/{mapping_id}/transformations':
     get:
       tags:
@@ -3185,6 +3190,7 @@ paths:
               properties:
                 file:
                   type: string
+                  format: binary
   /events:
     post:
       tags:
@@ -5091,6 +5097,7 @@ components:
           minLength: 1
         file:
           type: string
+          format: binary
           minLength: 1
       required:
         - name
