@@ -7,50 +7,42 @@
           class="mr-2"
           v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("editMetatype.editMetatype")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("editNode.editNode")}}</v-btn>
     </template>
-
     <v-card v-if="selectedNode">
       <v-card-text>
         <v-container>
           <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('editMetatype.edit')}} {{selectedNode.metatype.name}}</span>
+          <span class="headline">{{$t('editNode.edit')}} {{selectedNode.metatype.name}}</span>
           <v-row>
             <v-col :cols="12">
-
               <v-form
                   ref="form"
                   v-model="valid"
               >
                 <v-text-field
                     v-model="selectedNode.metatype.name"
-                    :rules="[v => !!v || $t('editMetatype.nameRequired')]"
+                    :rules="[v => !!v || $t('editNode.nameRequired')]"
                     required
                 >
-                  <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
+                  <template v-slot:label>{{$t("editNode.name")}} <small style="color:red" >*</small></template>
                 </v-text-field>
                 <v-textarea
                     v-model="selectedNode.metatype.description"
-                    :rules="[v => !!v || $t('editMetatype.descriptionRequired')]"
+                    :rules="[v => !!v || $t('editNode.descriptionRequired')]"
                     required
                 >
-                  <template v-slot:label>{{$t('editMetatype.description')}} <small style="color:red" >*</small></template>
+                  <template v-slot:label>{{$t('editNode.description')}} <small style="color:red" >*</small></template>
                 </v-textarea>
               </v-form>
-              <p><span style="color:red">*</span> = {{$t('editMetatype.requiredField')}}</p>
-            </v-col>
-
-            <v-col :cols="12" v-if="keysLoading">
-              <v-progress-linear indeterminate></v-progress-linear>
+              <p><span style="color:red">*</span> = {{$t('editNode.requiredField')}}</p>
             </v-col>
             <v-col :cols="12">
               <v-data-table
                   :headers="headers()"
                   :items="nodeProperties"
-                  :items-per-page="100"
-                  :footer-props="{
-                     'items-per-page-options': [25, 50, 100]
-                  }"
+                  :disable-pagination="true"
+                  :hide-default-footer="true"
                   class="elevation-1"
               >
                 <template v-slot:top>
@@ -62,7 +54,6 @@
                         vertical
                     ></v-divider>
                     <v-spacer></v-spacer>
-                    <!-- <create-metatype-key-dialog :metatype="metatype" @metatypeKeyCreated="loadKeys()"></create-metatype-key-dialog> -->
                   </v-toolbar>
                 </template>
                 <template v-slot:[`item.value`]="value">
@@ -78,25 +69,15 @@
                     </template>
                   </v-edit-dialog>
                 </template>
-                <!-- <template v-slot:[`item.actions`]="{ item }">
-                 <edit-node-property-dialog :propertyKey="item" :node="node" :icon="true" @metatypeKeyEdited="loadKeys()"></edit-node-property-dialog>
-                  <v-icon
-                      small
-                      @click="deleteKey(item)"
-                  >
-                    mdi-delete
-                  </v-icon>
-                </template> -->
               </v-data-table>
             </v-col>
           </v-row>
         </v-container>
       </v-card-text>
-
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("editMetatype.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" :disabled="!valid" text @click="updateNode()">{{$t("editMetatype.save")}}</v-btn>
+        <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("editNode.cancel")}}</v-btn>
+        <v-btn color="blue darken-1" :disabled="!valid" text @click="updateNode()">{{$t("editNode.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -105,14 +86,9 @@
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
 import {NodeT, PropertyT} from "../api/types";
-import EditMetatypeKeyDialog from "@/components/editMetatypeKeyDialog.vue";
-import CreateMetatypeKeyDialog from "@/components/createMetatypeKeyDialog.vue";
 
-@Component({components: {
-    EditMetatypeKeyDialog,
-    CreateMetatypeKeyDialog
-  }})
-export default class EditMetatypeDialog extends Vue {
+@Component({components: {}})
+export default class EditNodeDialog extends Vue {
   @Prop({required: true})
   node!: NodeT;
 
@@ -126,32 +102,24 @@ export default class EditMetatypeDialog extends Vue {
   readonly icon!: boolean
 
   errorMessage = ""
-  keysLoading = false
   dialog = false
   selectedNode: NodeT | null  = null
   valid = false
   nodeProperties: PropertyT[] = []
   property = {}
 
-  // this way we only load the keys when the edit dialog is open, so we don't
-  // overload someone using this in a list
+  // load properties to array when the node is selected so that we can edit fields.
   @Watch('dialog', {immediate: true})
   isDialogOpen() {
     if(this.dialog) {
-      // this.loadKeys()
       this.propertiesToArray()
     } 
-    // else {
-    //   close()
-    // }
   }
 
   headers() {
     return  [
       { text: this.$t('editNode.keyName'), value: 'key'},
       { text: this.$t('editNode.value'), value: 'value'},
-      // { text: this.$t('editNode.keyType'), value: 'type'},
-      // { text: this.$t('editNode.actions'), value: 'actions', sortable: false }
     ]
   }
 
@@ -170,19 +138,6 @@ export default class EditMetatypeDialog extends Vue {
     }
    
   }
-
-  // editMetatype() {
-  //   this.$client.createNode(this.selectedNode?.container_id!, this.selectedNode?.id!,)
-  //       .then(result => {
-  //         if(!result) {
-  //           this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
-  //         } else {
-  //           this.dialog = false
-  //           this.$emit('metatypeEdited')
-  //         }
-  //       })
-  //       .catch(e => this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string + e)
-  // }
 
   setProperties() {
     this.property = {}
@@ -215,42 +170,10 @@ export default class EditMetatypeDialog extends Vue {
     )
       .then(results => {
         this.dialog = false
-        this.$emit('nodeUpdated')
+        this.$emit('nodeUpdated', results[0])
       })
       .catch(e => this.errorMessage = this.$t('createNode.errorCreatingAPI') as string + e)
   }
-
-  // close() {
-
-  // }
-
-  // loadKeys() {
-  //   if(this.selectedNode) {
-  //     this.keysLoading = true
-  //     this.$client.listMetatypeKeys(this.selectedNode.container_id, this.selectedNode.id)
-  //         .then(keys => {
-  //           if(this.selectedNode) {
-  //             this.selectedNode.properties = keys
-  //             this.keysLoading = false
-  //             this.$forceUpdate()
-  //           }
-  //         })
-  //         .catch(e => {
-  //           this.errorMessage = e
-  //           this.keysLoading = false
-  //         })
-  //   }
-  // }
-
-  // deleteKey(key: MetatypeKeyT) {
-  //   this.$client.deleteMetatypeKey(this.selectedNode?.container_id!, this.selectedNode?.id!, key.id)
-  //   .then(result => {
-  //     if(!result) this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
-
-  //     this.loadKeys()
-  //   })
-  //   .catch(e => this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string + e)
-  // }
 }
 
 </script>
