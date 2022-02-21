@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" max-width="60%">
+  <v-dialog v-model="dialog" min-width="60%" max-width="60%">
     <template v-slot:activator="{ on }">
       <v-icon
           v-if="icon"
@@ -13,12 +13,10 @@
         <span class="headline">{{$t("createNode.formTitle")}}</span>
         <error-banner :message="errorMessage"></error-banner>
       </v-card-title>
-
       <v-card-text>
         <v-container>
           <v-row>
             <v-col :cols="12">
-
               <v-form
                   ref="form"
                   v-model="valid"
@@ -46,7 +44,8 @@
                   <v-col :cols="12">
                     <v-data-table
                         :items="metatype.keys"
-                        :items-per-page="100"
+                        :disable-pagination="true"
+                        :hide-default-footer="true"
                         v-if="optional === true"
                     >
                       <template v-slot:[`item`]="{ item }">
@@ -117,6 +116,7 @@ export default class CreateNodeDialog extends Vue {
 
   @Watch('metatype', {immediate: true})
   onMetatypeSelect(){
+    if (this.metatype.id !== undefined && this.metatype.id !== null)
       this.$client.listMetatypeKeys(this.containerID, this.metatype.id)
       .then((keys) => {
         this.metatype.keys = keys
@@ -124,21 +124,22 @@ export default class CreateNodeDialog extends Vue {
   }
 
   newNode() {
-    this.setProperties()
-    this.$client.createNode(this.containerID,
-      {
-        "container_id": this.containerID,
-        "data_source_id": this.dataSourceID,
-        "metatype_id": this.metatype.id,
-        "properties": this.property,
-        "original_data_id": "1" // set a default original_data_id value to enable future queries
-      }
-    )
-        .then(results => {
-          this.dialog = false
-          this.$emit('nodeCreated', results[0])
-        })
-        .catch(e => this.errorMessage = this.$t('createNode.errorCreatingAPI') as string + e)
+    if (this.metatype.id !== undefined && this.metatype.id !== null){
+      this.setProperties()
+      this.$client.createNode(this.containerID,
+        {
+          "container_id": this.containerID,
+          "data_source_id": this.dataSourceID,
+          "metatype_id": this.metatype.id,
+          "properties": this.property,
+        }
+      )
+          .then(results => {
+            this.dialog = false
+            this.$emit('nodeCreated', results[0])
+          })
+          .catch(e => this.errorMessage = this.$t('createNode.errorCreatingAPI') as string + e)
+    }
   }
 
   // Fill the property object with values from the metatype keys before sending the createNode query

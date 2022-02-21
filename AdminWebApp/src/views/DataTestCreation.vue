@@ -8,9 +8,7 @@
         :dataSourceID="selectedDataSource"
         @selected="setDataSource">
     </select-data-source>
-
     <v-card v-if="(selectedDataSource !== null)">
-
       <v-data-table
           :headers="headersNode()"
           :items="nodes"
@@ -42,7 +40,8 @@
               :icon="true"
               :dataSourceID="selectedDataSource.id" 
               :containerID="containerID"
-              @nodeUpdate="listNodes() && listEdges()" 
+              :disabled="!selectedDataSource.active || selectedDataSource.archived"
+              @nodeUpdated="listNodes() && listEdges()" 
               >
           </edit-node-dialog>
           <v-icon
@@ -54,9 +53,7 @@
         </template>
       </v-data-table>
     </v-card>
-
         <v-card v-if="(selectedDataSource !== null)">
-
       <v-data-table
           :headers="headersEdge()"
           :items="edges"
@@ -78,7 +75,6 @@
                 >
             </create-edge-dialog>
           </v-col>
-
           <v-col>
             <h2>{{$t('dataTestCreation.edgeTableTitle')}}</h2>
           </v-col>
