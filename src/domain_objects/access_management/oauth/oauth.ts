@@ -2,7 +2,7 @@ import {BaseDomainClass} from '../../../common_classes/base_domain_class';
 import {IsIn, IsOptional, IsString, IsUrl, IsUUID} from 'class-validator';
 import {v4 as uuidv4} from 'uuid';
 import Result from '../../../common_classes/result';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import {User} from '../user';
 import {Exclude} from 'class-transformer';
 
