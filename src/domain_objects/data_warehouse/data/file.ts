@@ -30,7 +30,7 @@ export default class File extends BaseDomainClass {
     adapter_file_path?: string;
 
     @IsString()
-    @IsIn(['filesystem', 'azure_blob', 'mock'])
+    @IsIn(['filesystem', 'azure_blob', 'mock', 'largeobject'])
     adapter?: string;
 
     @IsObject()

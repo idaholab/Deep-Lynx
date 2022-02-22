@@ -38,7 +38,7 @@ export default class EventAction extends BaseDomainClass {
         'send_data',
         'email_user'
     ])
-    action_type?: string;
+    action_type?: string = 'default';
 
     @IsObject()
     action_config?: object = {};
@@ -53,7 +53,7 @@ export default class EventAction extends BaseDomainClass {
     @IsBoolean()
     active = true;
 
-    constructor(input: {containerID?: string; dataSourceID?: string; eventType: string, actionType: string,
+    constructor(input: {containerID?: string; dataSourceID?: string; eventType: string, actionType?: string,
         actionConfig?: object, destination?: string, destinationDataSourceID?: string, active?: boolean;}) {
         super();
 
@@ -61,7 +61,7 @@ export default class EventAction extends BaseDomainClass {
             if (input.containerID) this.container_id = input.containerID;
             if (input.dataSourceID) this.data_source_id = input.dataSourceID;
             this.event_type = input.eventType;
-            this.action_type = input.actionType;
+            if (input.actionType) this.action_type = input.actionType;
             if (input.actionConfig) this.action_config = input.actionConfig;
             if (input.destination) this.destination = input.destination;
             if (input.destinationDataSourceID) this.destination_data_source_id = input.destinationDataSourceID;

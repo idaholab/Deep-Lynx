@@ -1,5 +1,5 @@
 import KeyPairMapper from '../../mappers/access_management/keypair_mapper';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import RepositoryInterface from '../repository';
 import { KeyPair, User } from '../../../domain_objects/access_management/user';
 import Result from '../../../common_classes/result';

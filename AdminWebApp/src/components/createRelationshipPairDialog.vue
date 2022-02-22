@@ -47,6 +47,7 @@
                     item-value="id"
                     persistent-hint
                     required
+                    clearable
                 >
                   <template v-slot:label>{{$t('createMetatypeRelationshipPair.originMetatype')}} <small style="color:red" >*</small></template>
                 </v-autocomplete>
@@ -60,6 +61,7 @@
                     item-value="id"
                     persistent-hint
                     required
+                    clearable
                 >
                   <template v-slot:label>{{$t('createMetatypeRelationshipPair.relationship')}} <small style="color:red" >*</small></template>
                 </v-autocomplete>
@@ -73,6 +75,7 @@
                     item-value="id"
                     persistent-hint
                     required
+                    clearable
                 >
                   <template v-slot:label>{{$t('createMetatypeRelationshipPair.destinationMetatype')}} <small style="color:red" >*</small></template>
                 </v-autocomplete>

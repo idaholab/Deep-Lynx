@@ -17,7 +17,7 @@ import Config from '../../services/config';
 import {v4 as uuidv4} from 'uuid';
 import {Exclude, Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Container from '../data_warehouse/ontology/container';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import Result from '../../common_classes/result';
 const validator = require('validator');
 

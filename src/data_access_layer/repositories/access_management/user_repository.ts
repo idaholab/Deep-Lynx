@@ -1,7 +1,7 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../repository';
 import {AssignUserRolePayload, ContainerUserInvite, KeyPair, ResetUserPasswordPayload, User} from '../../../domain_objects/access_management/user';
 import Result, {ErrorUnauthorized} from '../../../common_classes/result';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import UserMapper from '../../mappers/access_management/user_mapper';
 import Logger from '../../../services/logger';
 import {Emailer} from '../../../services/email/email';
@@ -269,7 +269,7 @@ export default class UserRepository extends Repository implements RepositoryInte
         if (errors) return Promise.resolve(Result.Failure(`reset user password payload fails validation ${errors.join(',')}`));
 
         return new Promise((resolve) => {
-            void bcrypt.hash(payload.new_password, 14).then((hashed) => {
+            void bcrypt.hash(payload.new_password!, 14).then((hashed) => {
                 resolve(UserMapper.Instance.ResetPassword(payload.token!, payload.email!, hashed));
             });
         });

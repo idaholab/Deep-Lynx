@@ -98,6 +98,7 @@
                         :config="cytoscapeConfig"
                         :preConfig="preConfig"
                         :afterCreated="afterCreated"
+                        layout="spread"
                     >
                       <cy-element
                           v-for="def in cytoscapeElements.elements.nodes"
@@ -241,7 +242,7 @@ export default class DataQuery extends Vue {
     function extractEdges(originalJSON: any) {
       function searchItem(item: any) {
         Object.keys(item).forEach(key => {
-          if (typeof item[key] === "object") {
+          if (typeof item[key] === "object" && item[key] != null) {
             searchItem(item[key])
           }
           if (typeof item[key] === "string") {
