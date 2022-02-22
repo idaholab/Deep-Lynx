@@ -264,6 +264,16 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(Result.Failure('metatype has no id'));
     }
 
+    unarchive(user: User, m: Metatype): Promise<Result<boolean>> {
+        if (m.id) {
+            void this.deleteCached(m.id);
+
+            return this.#mapper.Unarchive(m.id, user.id!);
+        }
+
+        return Promise.resolve(Result.Failure('metatype has no id'));
+    }
+
     async findByID(id: string, loadKeys = true): Promise<Result<Metatype>> {
         const cached = await this.getCached(id);
         if (cached) {
@@ -334,6 +344,21 @@ export default class MetatypeRepository extends Repository implements Repository
 
     ontologyVersion(operator: string, value?: any) {
         super.query('ontology_version', operator, value);
+        return this;
+    }
+
+    modified_at(operator: string, value?: any) {
+        super.query('modified_at', operator, value, 'date');
+        return this;
+    }
+
+    created_at(operator: string, value?: any) {
+        super.query('created_at', operator, value, 'date');
+        return this;
+    }
+
+    deleted_at(operator: string, value?: any) {
+        super.query('deleted_at', operator, value, 'date');
         return this;
     }
 

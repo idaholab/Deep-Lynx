@@ -121,12 +121,21 @@ export default class MetatypeRelationshipKeyRoutes {
 
     private static archiveMetatypeRelationshipKey(req: Request, res: Response, next: NextFunction) {
         if (req.metatypeRelationshipKey) {
-            repo.archive(req.currentUser!, req.metatypeRelationshipKey)
-                .then((result) => {
-                    result.asResponse(res);
-                })
-                .catch((err) => res.status(500).send(err))
-                .finally(() => next());
+            if (req.query.permanent !== undefined && String(req.query.permanent).toLowerCase() === 'true') {
+                repo.delete(req.metatypeRelationshipKey)
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => res.status(500).send(err))
+                    .finally(() => next());
+            } else {
+                repo.archive(req.currentUser!, req.metatypeRelationshipKey)
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => res.status(500).send(err))
+                    .finally(() => next());
+            }
         } else {
             Result.Failure('metatype relationship key not found', 404).asResponse(res);
             next();

@@ -105,7 +105,7 @@
                 <v-icon
                     @click="revokeChangelistApproval(item)"
                     v-bind="attrs" v-on="on"
-                    v-if="item.status === 'approved' && $auth.Auth('containers', 'write', containerID)"
+                    v-if="item.status === 'approved' && $auth.Auth('containers', 'write', containerID) || item.status === 'pending' && $auth.Auth('containers', 'write', containerID)"
                     small
                     class="mr-2">
                   mdi-close

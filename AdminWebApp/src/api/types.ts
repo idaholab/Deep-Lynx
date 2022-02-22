@@ -17,11 +17,15 @@ export type MetatypeT = {
     container_id: string;
     name: string;
     description: string;
-    properties: MetatypeKeyT[];
+    keys: MetatypeKeyT[];
     created_at: string;
     modified_at: string;
     created_by: string;
     modified_by: string;
+    deleted_at?: string;
+    parent_id?: string;
+    ontology_version?: string;
+    old_id?: string;
 };
 
 export type MetatypeRelationshipT = {
@@ -75,6 +79,8 @@ export type MetatypeKeyT = {
     modified_at: string;
     created_by: string;
     modified_by: string;
+    deleted_at?: string;
+    ontology_version?: string;
 };
 
 export type MetatypeRelationshipKeyT = {

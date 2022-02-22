@@ -142,7 +142,7 @@ export default class MetatypeKeyMapper extends Mapper {
 
     private archiveStatement(metatypeKeyID: string, userID: string): QueryConfig {
         return {
-            text: `UPDATE metatype_keys SET deleted_at = NOW(), modified_by = $2  WHERE id = $1`,
+            text: `UPDATE metatype_keys SET deleted_at = NOW(), modified_at = NOW(), modified_by = $2  WHERE id = $1`,
             values: [metatypeKeyID, userID],
         };
     }

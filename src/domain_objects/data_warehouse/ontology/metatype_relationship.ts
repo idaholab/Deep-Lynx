@@ -1,5 +1,5 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {IsBoolean, IsNotEmpty, IsOptional, IsString, MinLength, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
+import {IsBoolean, IsDate, IsNotEmpty, IsOptional, IsString, MinLength, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
 import MetatypeRelationshipKey from './metatype_relationship_key';
 import * as t from 'io-ts';
 import Result from '../../../common_classes/result';
@@ -40,6 +40,11 @@ export default class MetatypeRelationship extends BaseDomainClass {
     keys: MetatypeRelationshipKey[] | undefined;
     // for tracking removed keys for update
     #removedKeys: MetatypeRelationshipKey[] | undefined;
+
+    @IsOptional()
+    @IsDate()
+    @Type(() => Date)
+    deleted_at?: Date;
 
     constructor(input: {container_id?: string; name: string; description: string}) {
         super();

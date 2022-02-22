@@ -27,7 +27,6 @@
       </v-select>
       <create-ontology-version-dialog
           v-if="$store.getters.isEditMode"
-          @versionCreated="listPendingVersions"
           :icon="true"
           :containerID="containerID">
       </create-ontology-version-dialog>
@@ -110,6 +109,8 @@ export default class OntologyVersionToolbar extends Vue {
 
   set isEditMode(mode: any) {
     this.$store.commit('setEditMode', mode)
+    this.$emit('editModeToggle')
+    this.listPendingVersions()
     return
   }
 

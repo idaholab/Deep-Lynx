@@ -170,7 +170,7 @@ export default class EditMetatypeRelationshipDialog extends Vue {
   }
 
   deleteKey(key: MetatypeRelationshipKeyT) {
-    this.$client.deleteMetatypeRelationshipKey(this.selectedMetatypeRelationship?.container_id!, this.selectedMetatypeRelationship?.id!, key.id)
+    this.$client.deleteMetatypeRelationshipKey(this.selectedMetatypeRelationship?.container_id!, this.selectedMetatypeRelationship?.id!, key.id, {permanent: !this.$store.getters.isEditMode})
     .then(result => {
       if(!result) this.errorMessage = this.$t('editMetatypeRelationship.errorUpdatingAPI') as string
 
