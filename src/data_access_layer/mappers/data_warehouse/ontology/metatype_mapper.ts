@@ -87,8 +87,8 @@ export default class MetatypeMapper extends Mapper {
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
     private createStatement(userID: string, ...metatypes: Metatype[]): string {
-        const text = `INSERT INTO metatypes(container_id,name,description, created_by, modified_by) VALUES %L RETURNING *`;
-        const values = metatypes.map((metatype) => [metatype.container_id, metatype.name, metatype.description, userID, userID]);
+        const text = `INSERT INTO metatypes(container_id,name,description, created_by, modified_by, ontology_version) VALUES %L RETURNING *`;
+        const values = metatypes.map((metatype) => [metatype.container_id, metatype.name, metatype.description, userID, userID, metatype.ontology_version]);
 
         return format(text, values);
     }
@@ -121,10 +121,11 @@ export default class MetatypeMapper extends Mapper {
                         name = u.name,
                         description = u.description,
                         modified_by = u.modified_by,
+                        ontology_version = u.ontology_version::bigint,
                         modified_at = NOW()
-                      FROM(VALUES %L) AS u(id, name, description, modified_by)
+                      FROM(VALUES %L) AS u(id, name, description, modified_by, ontology_version)
                       WHERE u.id::bigint = m.id RETURNING m.*`;
-        const values = metatypes.map((metatype) => [metatype.id, metatype.name, metatype.description, userID]);
+        const values = metatypes.map((metatype) => [metatype.id, metatype.name, metatype.description, userID, metatype.ontology_version]);
 
         return format(text, values);
     }

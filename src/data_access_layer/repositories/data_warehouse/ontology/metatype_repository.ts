@@ -337,6 +337,21 @@ export default class MetatypeRepository extends Repository implements Repository
         return this;
     }
 
+    modified_at(operator: string, value?: any) {
+        super.query('modified_at', operator, value, 'date');
+        return this;
+    }
+
+    created_at(operator: string, value?: any) {
+        super.query('created_at', operator, value, 'date');
+        return this;
+    }
+
+    deleted_at(operator: string, value?: any) {
+        super.query('deleted_at', operator, value, 'date');
+        return this;
+    }
+
     count(): Promise<Result<number>> {
         return super.count();
     }

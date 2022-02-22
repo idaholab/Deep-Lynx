@@ -46,7 +46,7 @@
             <v-col :cols="12">
               <v-data-table
                   :headers="headers()"
-                  :items="selectedMetatype.properties"
+                  :items="selectedMetatype.keys"
                   :items-per-page="100"
                   :footer-props="{
                      'items-per-page-options': [25, 50, 100]
@@ -156,7 +156,7 @@ export default class EditMetatypeDialog extends Vue {
       this.$client.listMetatypeKeys(this.selectedMetatype.container_id, this.selectedMetatype.id)
           .then(keys => {
             if(this.selectedMetatype) {
-              this.selectedMetatype.properties = keys
+              this.selectedMetatype.keys = keys
               this.keysLoading = false
               this.$forceUpdate()
             }
@@ -169,7 +169,7 @@ export default class EditMetatypeDialog extends Vue {
   }
 
   deleteKey(key: MetatypeKeyT) {
-    this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id)
+    this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id, {permanent: !this.$store.getters.isEditMode})
     .then(result => {
       if(!result) this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
 

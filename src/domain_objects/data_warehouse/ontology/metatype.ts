@@ -1,5 +1,5 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {IsBoolean, IsNotEmpty, IsOptional, IsString, MinLength, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
+import {IsBoolean, IsDate, IsNotEmpty, IsOptional, IsString, MinLength, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
 import MetatypeKey from './metatype_key';
 import * as t from 'io-ts';
 import Result from '../../../common_classes/result';
@@ -33,6 +33,15 @@ export default class Metatype extends BaseDomainClass {
     @IsNotEmpty()
     @IsString()
     description = '';
+
+    @IsOptional()
+    @IsDate()
+    @Type(() => Date)
+    deleted_at?: Date;
+
+    @IsOptional()
+    @IsString()
+    ontology_version?: string;
 
     @Type(() => MetatypeKey)
     keys: MetatypeKey[] | undefined;

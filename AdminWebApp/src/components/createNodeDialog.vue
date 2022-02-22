@@ -86,7 +86,7 @@ export default class CreateNodeDialog extends Vue {
 
   @Watch('originSearch', {immediate: true})
   onOriginSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: 'true'})
+    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: true})
         .then((metatypes) => {
           this.originMetatypes = metatypes as MetatypeT[]
         })

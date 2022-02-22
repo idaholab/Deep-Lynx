@@ -177,7 +177,7 @@ export default class MetatypeRelationships extends Vue {
   }
 
   deleteRelationship(item: any) {
-    this.$client.deleteMetatypeRelationship(this.containerID, item.id)
+    this.$client.deleteMetatypeRelationship(this.containerID, item.id, {permanent: !this.$store.getters.isEditMode})
         .then(() => {
           this.loadMetatypeRelationships()
         })

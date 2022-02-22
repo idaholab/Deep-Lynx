@@ -164,12 +164,21 @@ export default class MetatypeRelationshipPairRoutes {
 
     private static archiveMetatypeRelationshipPair(req: Request, res: Response, next: NextFunction) {
         if (req.metatypeRelationshipPair) {
-            repo.archive(req.currentUser!, req.metatypeRelationshipPair)
-                .then((result) => {
-                    result.asResponse(res);
-                })
-                .catch((err) => res.status(500).send(err))
-                .finally(() => next());
+            if (req.query.permanent !== undefined && String(req.query.permanent).toLowerCase() === 'true') {
+                repo.delete(req.metatypeRelationshipPair)
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => res.status(500).send(err))
+                    .finally(() => next());
+            } else {
+                repo.archive(req.currentUser!, req.metatypeRelationshipPair)
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => res.status(500).send(err))
+                    .finally(() => next());
+            }
         } else {
             Result.Failure('metatype relationship pair not found', 404).asResponse(res);
             next();
