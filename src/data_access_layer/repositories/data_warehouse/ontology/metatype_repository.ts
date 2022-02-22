@@ -264,6 +264,16 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(Result.Failure('metatype has no id'));
     }
 
+    unarchive(user: User, m: Metatype): Promise<Result<boolean>> {
+        if (m.id) {
+            void this.deleteCached(m.id);
+
+            return this.#mapper.Unarchive(m.id, user.id!);
+        }
+
+        return Promise.resolve(Result.Failure('metatype has no id'));
+    }
+
     async findByID(id: string, loadKeys = true): Promise<Result<Metatype>> {
         const cached = await this.getCached(id);
         if (cached) {

@@ -149,6 +149,8 @@ export default {
             importFromFile: 'Import Mappings From File',
         },
         metatypes: {
+            restoreMetatype: 'Restore removed Metatype',
+            removeMetatype: 'Remove Metatype',
             created: 'Created',
             edited: 'Edited',
             removed: 'Removed',

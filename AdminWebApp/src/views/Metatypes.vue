@@ -74,16 +74,45 @@
 
       <template v-slot:[`item.actions`]="{ item }">
         <view-metatype-dialog v-if="!$store.getters.isEditMode && $store.getters.ontologyVersioningEnabled" :metatype="item" :icon="true"></view-metatype-dialog>
-        <edit-metatype-dialog
-            v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled) || !$store.getters.ontologyVersioningEnabled"
-            :metatype="item" :icon="true" @metatypeEdited="loadMetatypes()"></edit-metatype-dialog>
-        <v-icon
-            small
-            v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled) || !$store.getters.ontologyVersioningEnabled"
-            @click="deleteMetatype(item)"
-        >
-          mdi-delete
-        </v-icon>
+
+           <edit-metatype-dialog
+               v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled"
+               :metatype="item"
+               :comparisonMetatype="comparisonMetatypes.find(m => m.name === item.name)"
+               :icon="true"
+               @metatypeEdited="loadMetatypes()"
+           >
+           </edit-metatype-dialog>
+
+        <v-tooltip bottom>
+          <template v-slot:activator="{on, attrs}">
+            <v-icon
+                v-bind="attrs"
+                v-on="on"
+                small
+                v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled"
+                @click="deleteMetatype(item)"
+            >
+              mdi-delete
+            </v-icon>
+          </template>
+          <span>{{$t('metatypes.removeMetatype')}}</span>
+        </v-tooltip>
+        <v-tooltip bottom>
+          <template v-slot:activator="{on, attrs}">
+            <v-icon
+                v-bind="attrs"
+                v-on="on"
+                small
+                v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && item.deleted_at)"
+                @click="undeleteMetatype(item)"
+            >
+              mdi-restore
+            </v-icon>
+          </template>
+          <span>{{$t('metatypes.restoreMetatype')}}</span>
+        </v-tooltip>
+
       </template>
     </v-data-table>
   </div>
@@ -225,6 +254,15 @@ export default class Metatypes extends Vue {
   deleteMetatype(item: any) {
     // if we're in edit mode, set permanent falst
     this.$client.deleteMetatype(this.containerID, item.id, {permanent: !this.$store.getters.isEditMode})
+        .then(() => {
+          this.loadMetatypes()
+        })
+        .catch(e => this.errorMessage = e)
+  }
+
+  undeleteMetatype(item: any) {
+    // if we're in edit mode, set permanent falst
+    this.$client.deleteMetatype(this.containerID, item.id, {reverse: true})
         .then(() => {
           this.loadMetatypes()
         })

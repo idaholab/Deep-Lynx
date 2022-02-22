@@ -89,7 +89,7 @@ export default class MetatypeRoutes {
         }
 
         if (typeof req.query.nameIn !== 'undefined' && (req.query.nameIn as string) !== '') {
-            repository = repository.and().name('in', `%${req.query.nameIn}%`);
+            repository = repository.and().name('in', `${req.query.nameIn}`);
         }
 
         if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
@@ -148,6 +148,13 @@ export default class MetatypeRoutes {
         if (req.metatype) {
             if (req.query.permanent !== undefined && String(req.query.permanent).toLowerCase() === 'true') {
                 repo.delete(req.metatype)
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => res.status(500).send(err))
+                    .finally(() => next());
+            } else if (req.query.reverse !== undefined && String(req.query.reverse).toLowerCase() === 'true') {
+                repo.unarchive(req.currentUser!, req.metatype)
                     .then((result) => {
                         result.asResponse(res);
                     })

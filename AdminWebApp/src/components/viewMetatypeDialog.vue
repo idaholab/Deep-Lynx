@@ -15,13 +15,29 @@
           <span class="headline">{{selectedMetatype.name}}</span>
           <v-row>
             <v-col :cols="12">
-              <h3>{{$t('viewMetatype.name')}}</h3>
-              <hr>
-              <p>{{selectedMetatype.name}}</p>
-
-              <h3>{{$t('viewMetatype.description')}}</h3>
-              <hr>
-              <p>{{selectedMetatype.description}}</p>
+              <v-form
+                  ref="form"
+                  v-model="valid"
+              >
+                <v-text-field
+                    v-model="selectedMetatype.name"
+                    :rules="[v => !!v || $t('editMetatype.nameRequired')]"
+                    required
+                    :disabled="true"
+                    style="color: black"
+                >
+                  <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
+                </v-text-field>
+                <v-textarea
+                    v-model="selectedMetatype.description"
+                    :rules="[v => !!v || $t('editMetatype.descriptionRequired')]"
+                    required
+                    :disabled="true"
+                    style="color: black"
+                >
+                  <template v-slot:label>{{$t('editMetatype.description')}} <small style="color:red" >*</small></template>
+                </v-textarea>
+              </v-form>
             </v-col>
 
             <v-col :cols="12" v-if="keysLoading">
@@ -36,6 +52,7 @@
                      'items-per-page-options': [25, 50, 100]
                   }"
                   class="elevation-1"
+                  sort-by="name"
               >
 
                 <template v-slot:top>
@@ -97,9 +114,9 @@ export default class ViewMetatypeDialog extends Vue {
 
   headers() {
     return  [
-      { text: this.$t('viewMetatype.keyName'), value: 'name' },
-      { text: this.$t('viewMetatype.keyDescription'), value: 'description'},
-      { text: this.$t('viewMetatype.keyType'), value: 'data_type'},
+      { text: this.$t('viewMetatype.keyName'), value: 'name', sortable: false },
+      { text: this.$t('viewMetatype.keyDescription'), value: 'description', sortable: false},
+      { text: this.$t('viewMetatype.keyType'), value: 'data_type', sortable: false},
       { text: this.$t('viewMetatype.actions'), value: 'actions', sortable: false }
     ]
   }

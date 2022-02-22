@@ -264,9 +264,10 @@ export class Client {
         return this.put<boolean>(`/containers/${containerID}/metatypes/${metatypeID}`, metatype);
     }
 
-    deleteMetatype(containerID: string, metatypeID: string, {permanent}: {permanent?: boolean}): Promise<boolean> {
+    deleteMetatype(containerID: string, metatypeID: string, {permanent, reverse}: {permanent?: boolean; reverse?: boolean}): Promise<boolean> {
         const query: {[key: string]: any} = {};
         if (permanent) query.permanent = permanent;
+        if (reverse) query.reverse = reverse;
 
         return this.delete(`/containers/${containerID}/metatypes/${metatypeID}`, query);
     }
