@@ -252,7 +252,7 @@ export default class Metatypes extends Vue {
   }
 
   deleteMetatype(item: any) {
-    // if we're in edit mode, set permanent falst
+    // if we're in edit mode, set permanent false
     this.$client.deleteMetatype(this.containerID, item.id, {permanent: !this.$store.getters.isEditMode})
         .then(() => {
           this.loadMetatypes()

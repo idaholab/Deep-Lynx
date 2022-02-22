@@ -163,22 +163,3 @@ BEGIN
     RETURN;
 END;
 $$ language plpgsql;
-
-SELECT name FROM metatype_keys WHERE metatype_id = 15132
-EXCEPT
-SELECT name from metatype_keys WHERe metatype_id = 15133
-
-    GET METATYPES NOT PART OF THE ORIGINAL ONTOLOGY
-SELECT id FROM metatypes WHERE name IN(SELECT name FROM metatypes WHERE ontology_version = 1238
-                                       EXCEPT
-                                       SELECT name from metatypes WHERE ontology_version = 1239) AND ontology_version = 1238
-
-    GET SHARED METATYPES
-SELECT id FROM metatypes WHERE name IN(SELECT name FROM metatypes WHERE ontology_version = 1238
-                                       INTERSECT
-                                       SELECT name from metatypes WHERE ontology_version = 1239) AND ontology_version = 1238 OR ontology_version = 1239;
-
-
-SELECT * FROm metatype_keys WHERe metatype_id IN(SELECT id FROM metatypes WHERE name IN(SELECT name FROM metatypes WHERE ontology_version = 1238
-                                                                                        INTERSECT
-                                                                                        SELECT name from metatypes WHERE ontology_version = 1239) AND ontology_version = 1238 OR ontology_version = 1239) AND ontology_version = 1239
