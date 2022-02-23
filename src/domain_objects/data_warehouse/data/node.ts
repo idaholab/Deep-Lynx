@@ -6,9 +6,6 @@ import Container from '../ontology/container';
 import Edge from './edge';
 import {Conversion} from '../etl/type_transformation';
 import MetatypeRelationshipPair, {MetatypeRelationshipPairID} from '../ontology/metatype_relationship_pair';
-import EdgeMapper from '../../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
-import { string } from 'io-ts';
-import e from 'express';
 import { EdgeMetadata } from './edge';
 
 export class NodeMetadata {
