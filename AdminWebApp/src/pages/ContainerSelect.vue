@@ -104,7 +104,7 @@ export default class ContainerSelection extends Vue {
     this.$store.commit('setActiveContainer', container)
 
     if(this.$store.getters.ontologyVersioningEnabled) {
-      this.$client.listOntologyVersions(container.id)
+      this.$client.listOntologyVersions(container.id, {status: 'published'})
           .then((results) => {
             if(results.length > 0) {
               this.$store.dispatch('changeOntologyVersion', results[0])

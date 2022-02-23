@@ -63,6 +63,16 @@
           </v-list-item>
 
           <v-list-item two-line link
+                       v-if="$auth.Auth('ontology', 'read', containerID) && $store.getters.ontologyVersioningEnabled"
+                       @click="setActiveComponent('ontology-versioning')"
+                       :input-value="currentMainComponent === 'OntologyVersioning'">
+            <v-list-item-content>
+              <v-list-item-title>{{$t("home.ontologyVersioning")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("home.ontologyVersioningDescription")}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+
+          <v-list-item two-line link
                        v-if="$auth.Auth('ontology', 'read', containerID)"
                        @click="setActiveComponent('ontology-update')"
                        :input-value="currentMainComponent === 'OntologyUpdate'">
@@ -328,6 +338,7 @@ import {TranslateResult} from "vue-i18n";
 import {UserT} from "@/auth/types";
 import {ContainerT, DataSourceT} from "@/api/types";
 import Config from "@/config";
+import OntologyVersioning from "@/views/OntologyVersioning.vue";
 
 @Component({components: {
     ContainerSelect,
@@ -349,6 +360,7 @@ import Config from "@/config";
     ContainerUsers,
     Users,
     Containers,
+    OntologyVersioning,
   }})
 export default class Home extends Vue {
   @Prop(String) readonly containerID: string | undefined
@@ -373,6 +385,7 @@ export default class Home extends Vue {
     this.$client.retrieveContainer(this.containerID!)
         .then(container => {
           this.container = container
+          this.$store.commit('setActiveContainer', this.container)
 
           if(this.view) {
             this.setActiveComponent(this.view)
@@ -539,6 +552,13 @@ export default class Home extends Vue {
         this.currentMainComponent = "ApiKeys"
         this.componentName = this.$t('home.apiKeys')
         this.$router.replace(`/containers/${this.containerID}/api-keys`)
+        break;
+      }
+
+      case "ontology-versioning": {
+        this.currentMainComponent = "OntologyVersioning"
+        this.componentName = this.$t('home.ontologyVersioning')
+        this.$router.replace(`/containers/${this.containerID}/ontology-versioning`)
         break;
       }
 

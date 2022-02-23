@@ -2,7 +2,7 @@ import express from 'express';
 import passport from 'passport';
 import {Strategy} from 'passport-local';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import Logger from '../../services/logger';
 import {classToPlain} from 'class-transformer';
 import OAuthRepository from '../../data_access_layer/repositories/access_management/oauth_repository';

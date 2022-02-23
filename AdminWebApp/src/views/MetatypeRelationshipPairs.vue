@@ -139,6 +139,7 @@ export default class MetatypeRelationshipPairs extends Vue {
 
   countRelationshipPairs() {
     this.$client.listMetatypeRelationshipPairs(this.containerID, {
+      ontologyVersion: this.$store.getters.selectedOntologyVersionID,
       count: true,
       name: (this.name !== "") ? this.name : undefined,
       description: (this.description !== "") ? this.description : undefined,
@@ -178,7 +179,7 @@ export default class MetatypeRelationshipPairs extends Vue {
   }
 
   deleteRelationship(item: any) {
-    this.$client.deleteMetatypeRelationshipPair(this.containerID, item.id)
+    this.$client.deleteMetatypeRelationshipPair(this.containerID, item.id, {permanent: !this.$store.getters.isEditMode})
         .then(() => {
           this.loadMetatypeRelationshipPairs()
         })

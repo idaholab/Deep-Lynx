@@ -5,7 +5,7 @@ import Result from '../../../common_classes/result';
 import {v4 as uuidv4} from 'uuid';
 import Cache from '../../../services/cache/cache';
 import UserRepository from './user_repository';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import {classToPlain, plainToClass} from 'class-transformer';
 import Config from '../../../services/config';
@@ -173,7 +173,7 @@ export default class OAuthRepository extends Repository implements RepositoryInt
             const application = await OAuthMapper.Instance.Retrieve(exchangeReq.client_id!);
             if (application.isError) return new Promise((resolve) => resolve(Result.Pass(application)));
 
-            const valid = await bcrypt.compare(exchangeReq.client_secret, application.value.client_secret!);
+            const valid = await bcrypt.compare(exchangeReq.client_secret!, application.value.client_secret!);
 
             if (!valid) return new Promise((resolve) => resolve(Result.Failure('invalid client')));
         }

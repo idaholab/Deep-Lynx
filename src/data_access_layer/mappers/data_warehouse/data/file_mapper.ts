@@ -44,7 +44,7 @@ export default class FileMapper extends Mapper {
                 containerID: f.container_id,
                 dataSourceID: f.data_source_id,
                 eventType: 'file_created',
-                event: {id: r.value[0].id},
+                event: {fileID: r.value[0].id},
             }),
         );
 
@@ -64,7 +64,7 @@ export default class FileMapper extends Mapper {
                     containerID: file.container_id,
                     dataSourceID: file.data_source_id,
                     eventType: 'file_created',
-                    event: {id: file.id},
+                    event: {fileID: file.id},
                 }),
             );
         });
@@ -85,7 +85,7 @@ export default class FileMapper extends Mapper {
                     containerID: file.container_id,
                     dataSourceID: file.data_source_id,
                     eventType: 'file_modified',
-                    event: {id: file.id},
+                    event: {fileID: file.id},
                 }),
             );
         });
@@ -105,7 +105,7 @@ export default class FileMapper extends Mapper {
                 containerID: f.container_id,
                 dataSourceID: f.data_source_id,
                 eventType: 'file_modified',
-                event: {id: f.id},
+                event: {fileID: f.id},
             }),
         );
 

@@ -30,7 +30,7 @@
     },
     "devDependencies": {
         "@azure/storage-blob": "12.1.2",
-        "@types/bcrypt": "^3.0.0",
+        "@types/bcryptjs": "^2.4.2",
         "@types/busboy": "^0.2.3",
         "@types/chai": "^4.2.22",
         "@types/connect-pg-simple": "^4.2.2",
@@ -98,7 +98,7 @@
         "amqplib": "^0.8.0",
         "axios": "^0.21.1",
         "base64url": "^3.0.1",
-        "bcrypt": "^5.0.1",
+        "bcryptjs": "^2.4.3",
         "body-parser": "^1.19.0",
         "bree": "^7.1.2",
         "buffer": "^6.0.3",

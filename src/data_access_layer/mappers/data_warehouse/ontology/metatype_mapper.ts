@@ -82,13 +82,17 @@ export default class MetatypeMapper extends Mapper {
         return super.runStatement(this.archiveStatement(id, userID));
     }
 
+    public async Unarchive(id: string, userID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.unarchiveStatement(id, userID));
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
     private createStatement(userID: string, ...metatypes: Metatype[]): string {
-        const text = `INSERT INTO metatypes(container_id,name,description, created_by, modified_by) VALUES %L RETURNING *`;
-        const values = metatypes.map((metatype) => [metatype.container_id, metatype.name, metatype.description, userID, userID]);
+        const text = `INSERT INTO metatypes(container_id,name,description, created_by, modified_by, ontology_version) VALUES %L RETURNING *`;
+        const values = metatypes.map((metatype) => [metatype.container_id, metatype.name, metatype.description, userID, userID, metatype.ontology_version]);
 
         return format(text, values);
     }
@@ -109,6 +113,13 @@ export default class MetatypeMapper extends Mapper {
         };
     }
 
+    private unarchiveStatement(metatypeID: string, userID: string): QueryConfig {
+        return {
+            text: `UPDATE metatypes SET deleted_at = NULL, modified_at = NOW(), modified_by = $2  WHERE id = $1`,
+            values: [metatypeID, userID],
+        };
+    }
+
     private deleteStatement(metatypeID: string): QueryConfig {
         return {
             text: `DELETE FROM metatypes WHERE id = $1`,
@@ -121,10 +132,11 @@ export default class MetatypeMapper extends Mapper {
                         name = u.name,
                         description = u.description,
                         modified_by = u.modified_by,
+                        ontology_version = u.ontology_version::bigint,
                         modified_at = NOW()
-                      FROM(VALUES %L) AS u(id, name, description, modified_by)
+                      FROM(VALUES %L) AS u(id, name, description, modified_by, ontology_version)
                       WHERE u.id::bigint = m.id RETURNING m.*`;
-        const values = metatypes.map((metatype) => [metatype.id, metatype.name, metatype.description, userID]);
+        const values = metatypes.map((metatype) => [metatype.id, metatype.name, metatype.description, userID, metatype.ontology_version]);
 
         return format(text, values);
     }

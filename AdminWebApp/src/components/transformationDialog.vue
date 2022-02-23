@@ -216,6 +216,7 @@
                       :rules="[v => !!v || 'Item is required']"
                       required
                       return-object
+                      clearable
                   >
                     <template slot="append-outer"><info-tooltip :message="$t('dataMapping.metatypeSearchHelp')"></info-tooltip> </template>
                   </v-autocomplete>
@@ -337,6 +338,7 @@
                       :search-input.sync="relationshipPairSearch"
                       :single-line="false"
                       item-text="name"
+                      clearable
                       :label="$t('dataMapping.chooseRelationship')"
                       :placeholder="$t('dataMapping.typeToSearch')"
                       return-object
@@ -391,7 +393,7 @@
                       <v-col style="padding: 0px">
                         <select-data-source
                             @selected="setParentDataSource"
-                            :dataSourceID="transformation.origin_data_source_id"
+                            :dataSourceID="originDataSourceID"
                             :containerID="containerID">
                         </select-data-source>
                       </v-col>
@@ -400,7 +402,7 @@
                             :tooltip="true"
                             @selected="setChildDataSource"
                             :tooltipHelp="$t('dataMapping.dataSourceRelationshipHelp')"
-                            :dataSourceID="transformation.destination_data_source_id"
+                            :dataSourceID="destinationDataSourceID"
                             :containerID="containerID">
                         </select-data-source>
                       </v-col>
@@ -412,7 +414,7 @@
                       <v-col>
                         <search-metatypes
                             @selected="setParentMetatype"
-                            :metatypeID="transformation.origin_metatype_id"
+                            :metatypeID="originMetatypeID"
                             :containerID="containerID">
                         </search-metatypes>
                       </v-col>
@@ -421,7 +423,7 @@
                             :tooltip="true"
                             @selected="setChildMetatype"
                             :tooltipHelp="$t('dataMapping.metatypeRelationshipHelp')"
-                            :metatypeID="transformation.destination_metatype_id"
+                            :metatypeID="destinationMetatypeID"
                             :containerID="containerID">
                         </search-metatypes>
                       </v-col>
@@ -834,13 +836,13 @@ export default class TransformationDialog extends Vue {
   }
 
   @Watch('relationshipPairSearch', {immediate: true})
-  onRelationshipSearchChange(newVal: string) {
+  onRelationshipSearchChange(newVal: string, limit = 1000, offset = 0) {
     if(newVal === "") return
 
     this.$client.listMetatypeRelationshipPairs(this.containerID, {
       name: newVal,
-      limit: 1000,
-      offset: 0,
+      limit,
+      offset,
       originID: undefined,
       destinationID: undefined,
     })
@@ -1337,6 +1339,42 @@ export default class TransformationDialog extends Vue {
   setChildMetatype(m: MetatypeT) {
     if(m) {
       this.destination_metatype_id = m.id
+    }
+  }
+
+  get originDataSourceID() {
+    if(this.transformation) {
+      return this.transformation.origin_data_source_id
+    } else {
+      return this.dataSourceID
+    }
+  }
+
+  get destinationDataSourceID() {
+    if(this.transformation) {
+      return this.transformation.destination_data_source_id
+    } else {
+      return this.dataSourceID
+    }
+  }
+
+  get originMetatypeID() {
+    if(this.transformation) {
+      return this.transformation.origin_metatype_id
+    } else if(this.selectedRelationshipPair) {
+      return this.selectedRelationshipPair.origin_metatype_id
+    } else {
+      return null
+    }
+  }
+
+  get destinationMetatypeID() {
+    if(this.transformation) {
+      return this.transformation.destination_metatype_id
+    } else if(this.selectedRelationshipPair) {
+      return this.selectedRelationshipPair.destination_metatype_id
+    } else {
+      return null
     }
   }
 

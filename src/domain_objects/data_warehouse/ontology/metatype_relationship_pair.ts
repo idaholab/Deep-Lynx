@@ -1,6 +1,6 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {IsBoolean, IsIn, IsNotEmpty, IsOptional, IsString, MinLength, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
-import {Expose, plainToClass, Transform} from 'class-transformer';
+import {IsBoolean, IsDate, IsIn, IsNotEmpty, IsOptional, IsString, MinLength, registerDecorator, ValidationArguments, ValidationOptions} from 'class-validator';
+import {Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Metatype, {MetatypeID} from './metatype';
 import MetatypeRelationship, {MetatypeRelationshipID} from './metatype_relationship';
 
@@ -79,7 +79,7 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
 
     @Expose({name: 'origin_metatype', toPlainOnly: true})
     private get _origin(): Metatype {
-        return this.destinationMetatype!;
+        return this.originMetatype!;
     }
 
     @MetatypeRelationshipID({
@@ -110,6 +110,11 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
     @IsString()
     @IsIn(['many:many', 'one:one', 'one:many', 'many:one'])
     relationship_type = 'many:many';
+
+    @IsOptional()
+    @IsDate()
+    @Type(() => Date)
+    deleted_at?: Date;
 
     constructor(input: {
         name: string;

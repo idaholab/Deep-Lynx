@@ -63,6 +63,7 @@ describe('A Container Import', async () => {
                 name: faker.name.findName(),
                 description: faker.random.alphaNumeric(),
                 data_versioning_enabled: false,
+                ontology_versioning_enabled: false,
             },
             fileBuffer,
             false,
@@ -84,6 +85,7 @@ describe('A Container Import', async () => {
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
             data_versioning_enabled: false,
+            ontology_versioning_enabled: false,
         };
         let containerID: string;
 
@@ -116,6 +118,7 @@ describe('A Container Import', async () => {
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
             data_versioning_enabled: false,
+            ontology_versioning_enabled: false,
         };
         let containerID: string;
 
@@ -167,6 +170,7 @@ describe('A Container Import', async () => {
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
             data_versioning_enabled: false,
+            ontology_versioning_enabled: false,
         };
         let containerID: string;
 
@@ -220,6 +224,7 @@ describe('A Container Import', async () => {
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
             data_versioning_enabled: false,
+            ontology_versioning_enabled: false,
         };
         let containerID: string;
 
@@ -309,6 +314,7 @@ describe('A Container Import', async () => {
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
             data_versioning_enabled: false,
+            ontology_versioning_enabled: false,
         };
         let containerID: string;
 

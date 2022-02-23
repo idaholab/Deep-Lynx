@@ -17,6 +17,7 @@ import JSONView from 'vue-json-component';
 import VueCytoscape from 'vue-cytoscape';
 
 Vue.config.productionTip = false;
+Vue.config.devtools = true;
 Vue.use(ElementUI);
 Vue.use(VueI18n);
 Vue.use(JSONView);
@@ -48,5 +49,8 @@ new Vue({
     store,
     // @ts-ignore
     vuetify,
+    beforeCreate() {
+        this.$store.commit('initializeStore');
+    },
     render: (h) => h(App),
 }).$mount('#app');

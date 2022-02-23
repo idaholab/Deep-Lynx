@@ -17,11 +17,15 @@ export type MetatypeT = {
     container_id: string;
     name: string;
     description: string;
-    properties: MetatypeKeyT[];
+    keys: MetatypeKeyT[];
     created_at: string;
     modified_at: string;
     created_by: string;
     modified_by: string;
+    deleted_at?: string;
+    parent_id?: string;
+    ontology_version?: string;
+    old_id?: string;
 };
 
 export type MetatypeRelationshipT = {
@@ -75,6 +79,8 @@ export type MetatypeKeyT = {
     modified_at: string;
     created_by: string;
     modified_by: string;
+    deleted_at?: string;
+    ontology_version?: string;
 };
 
 export type MetatypeRelationshipKeyT = {
@@ -372,13 +378,37 @@ export type GremlinExportConfigT = {
 };
 
 export type OntologyVersionT = {
-    id: string;
+    id?: string;
     container_id: string;
     name: string;
     description?: string;
-    changelist_id?: string;
     created_by?: string;
     created_at?: string;
+    approved_at?: string;
+    approved_by?: string;
+    published_at?: string;
+    status?: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready';
+    status_message?: string;
+};
+
+export type ChangelistT = {
+    id?: string;
+    container_id: string;
+    name: string;
+    status?: 'pending' | 'ready' | 'approved' | 'rejected' | 'applied' | 'deprecated';
+    changelist?: object;
+    applied_at?: string;
+    created_at?: string;
+    modified_at?: string;
+    created_by?: string;
+    modified_by?: string;
+};
+
+export type ChangelistApprovalT = {
+    id?: string;
+    changelist_id: string;
+    approved_by: string;
+    approved_at?: string;
 };
 
 export type ResultT = {

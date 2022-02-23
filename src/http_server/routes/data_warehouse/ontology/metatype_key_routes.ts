@@ -111,12 +111,21 @@ export default class MetatypeKeyRoutes {
 
     private static archiveMetatypeKey(req: Request, res: Response, next: NextFunction) {
         if (req.metatypeKey) {
-            repo.archive(req.currentUser!, req.metatypeKey)
-                .then((result) => {
-                    result.asResponse(res);
-                })
-                .catch((err) => res.status(500).send(err))
-                .finally(() => next());
+            if (req.query.permanent !== undefined && String(req.query.permanent).toLowerCase() === 'true') {
+                repo.delete(req.metatypeKey)
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => res.status(500).send(err))
+                    .finally(() => next());
+            } else {
+                repo.archive(req.currentUser!, req.metatypeKey)
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => res.status(500).send(err))
+                    .finally(() => next());
+            }
         } else {
             Result.Failure('metatype key not found', 404).asResponse(res);
             next();

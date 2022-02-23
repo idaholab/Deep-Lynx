@@ -56,7 +56,7 @@ describe('An Ontology Version Mapper', async () => {
         return mapper.Delete(version.value.id!);
     });
 
-    it('can retrieve and list records', async () => {
+    it('can retrieve a record', async () => {
         const mapper = OntologyVersionMapper.Instance;
 
         const version = await mapper.Create(
@@ -73,6 +73,64 @@ describe('An Ontology Version Mapper', async () => {
         const retrieved = await mapper.Retrieve(version.value.id!);
         expect(retrieved.isError).false;
         expect(retrieved.value.id).eq(version.value.id);
+
+        return mapper.Delete(version.value.id!);
+    });
+
+    it('can set status', async () => {
+        const mapper = OntologyVersionMapper.Instance;
+
+        const version = await mapper.Create(
+            'test suite',
+            new OntologyVersion({
+                container_id: containerID,
+                name: 'Test Version',
+            }),
+        );
+
+        expect(version.isError).false;
+        expect(version.value).not.empty;
+
+        const status = await mapper.SetStatus(version.value.id!, 'ready');
+        expect(status.isError).false;
+
+        const retrieved = await mapper.Retrieve(version.value.id!);
+        expect(retrieved.isError).false;
+        expect(retrieved.value.id).eq(version.value.id);
+        expect(retrieved.value.status).eq('ready');
+
+        return mapper.Delete(version.value.id!);
+    });
+
+    it('can approve and revoke approval', async () => {
+        const mapper = OntologyVersionMapper.Instance;
+
+        const version = await mapper.Create(
+            'test suite',
+            new OntologyVersion({
+                container_id: containerID,
+                name: 'Test Version',
+            }),
+        );
+
+        expect(version.isError).false;
+        expect(version.value).not.empty;
+
+        let approved = await mapper.Approve(version.value.id!, 'test suite');
+        expect(approved.isError).false;
+
+        let retrieved = await mapper.Retrieve(version.value.id!);
+        expect(retrieved.isError).false;
+        expect(retrieved.value.id).eq(version.value.id);
+        expect(retrieved.value.status).eq('approved');
+
+        approved = await mapper.RevokeApproval(version.value.id!);
+        expect(approved.isError).false;
+
+        retrieved = await mapper.Retrieve(version.value.id!);
+        expect(retrieved.isError).false;
+        expect(retrieved.value.id).eq(version.value.id);
+        expect(retrieved.value.status).eq('rejected');
 
         return mapper.Delete(version.value.id!);
     });

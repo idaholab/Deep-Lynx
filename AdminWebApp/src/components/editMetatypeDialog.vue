@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" @click:outside="dialog = false" max-width="60%">
+  <v-dialog v-model="dialog" @click:outside="dialog = false" max-width="90%">
     <template v-slot:activator="{ on }">
       <v-icon
           v-if="icon"
@@ -16,7 +16,64 @@
           <error-banner :message="errorMessage"></error-banner>
           <span class="headline">{{$t('editMetatype.edit')}} {{selectedMetatype.name}}</span>
           <v-row>
-            <v-col :cols="12">
+            <v-col :cols="6" v-if="comparisonMetatype">
+
+              <v-form
+                  ref="form"
+                  v-model="valid"
+              >
+                <v-text-field
+                    v-model="selectedMetatype.name"
+                    :rules="[v => !!v || $t('editMetatype.nameRequired')]"
+                    required
+                    :disabled="true"
+                    style="color: black"
+                >
+                  <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
+                </v-text-field>
+                <v-textarea
+                    v-model="selectedMetatype.description"
+                    :rules="[v => !!v || $t('editMetatype.descriptionRequired')]"
+                    required
+                    :disabled="true"
+                    style="color: black"
+                >
+                  <template v-slot:label>{{$t('editMetatype.description')}} <small style="color:red" >*</small></template>
+                </v-textarea>
+              </v-form>
+              <p><span style="color:red">*</span> = {{$t('editMetatype.requiredField')}}</p>
+
+              <v-progress-linear v-if="keysLoading" indeterminate></v-progress-linear>
+              <v-data-table
+                  :headers="headers()"
+                  :items="selectedMetatype.keys"
+                  :items-per-page="100"
+                  :footer-props="{
+                     'items-per-page-options': [25, 50, 100]
+                  }"
+                  class="elevation-1"
+                  sort-by="name"
+              >
+
+                <template v-slot:top>
+                  <v-toolbar flat color="white">
+                    <v-toolbar-title>{{$t("editMetatype.keys")}}</v-toolbar-title>
+                    <v-divider
+                        class="mx-4"
+                        inset
+                        vertical
+                    ></v-divider>
+                    <v-spacer></v-spacer>
+                  </v-toolbar>
+                </template>
+                <template v-slot:[`item.actions`]="{ item }">
+                  <view-metatype-key-dialog :metatypeKey="item" :metatype="metatype" :icon="true" @metatypeKeyEdited="loadKeys()"></view-metatype-key-dialog>
+                </template>
+              </v-data-table>
+            </v-col>
+
+
+            <v-col :cols="(comparisonMetatype) ? 6 : 12">
 
               <v-form
                   ref="form"
@@ -38,20 +95,18 @@
                 </v-textarea>
               </v-form>
               <p><span style="color:red">*</span> = {{$t('editMetatype.requiredField')}}</p>
-            </v-col>
 
-            <v-col :cols="12" v-if="keysLoading">
-              <v-progress-linear indeterminate></v-progress-linear>
-            </v-col>
-            <v-col :cols="12">
+              <v-progress-linear v-if="keysLoading" indeterminate></v-progress-linear>
               <v-data-table
                   :headers="headers()"
-                  :items="selectedMetatype.properties"
+                  :items="selectedMetatype.keys"
                   :items-per-page="100"
                   :footer-props="{
                      'items-per-page-options': [25, 50, 100]
                   }"
                   class="elevation-1"
+
+                  sort-by="name"
               >
 
                 <template v-slot:top>
@@ -95,10 +150,12 @@ import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
 import {MetatypeKeyT, MetatypeT} from "../api/types";
 import EditMetatypeKeyDialog from "@/components/editMetatypeKeyDialog.vue";
 import CreateMetatypeKeyDialog from "@/components/createMetatypeKeyDialog.vue";
+import ViewMetatypeKeyDialog from "@/components/viewMetatypeKeyDialog.vue";
 
 @Component({components: {
     EditMetatypeKeyDialog,
-    CreateMetatypeKeyDialog
+    CreateMetatypeKeyDialog,
+    ViewMetatypeKeyDialog
   }})
 export default class EditMetatypeDialog extends Vue {
   @Prop({required: true})
@@ -106,6 +163,9 @@ export default class EditMetatypeDialog extends Vue {
 
   @Prop({required: false})
   readonly icon!: boolean
+
+  @Prop({required: false, default: undefined})
+  comparisonMetatype: MetatypeT | undefined
 
   errorMessage = ""
   keysLoading = false
@@ -155,9 +215,10 @@ export default class EditMetatypeDialog extends Vue {
       this.keysLoading = true
       this.$client.listMetatypeKeys(this.selectedMetatype.container_id, this.selectedMetatype.id)
           .then(keys => {
+            this.keysLoading = false
+
             if(this.selectedMetatype) {
-              this.selectedMetatype.properties = keys
-              this.keysLoading = false
+              this.selectedMetatype.keys = keys
               this.$forceUpdate()
             }
           })
@@ -169,7 +230,7 @@ export default class EditMetatypeDialog extends Vue {
   }
 
   deleteKey(key: MetatypeKeyT) {
-    this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id)
+    this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id, {permanent: !this.$store.getters.isEditMode})
     .then(result => {
       if(!result) this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
 

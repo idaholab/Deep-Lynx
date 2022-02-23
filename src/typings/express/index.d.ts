@@ -18,7 +18,6 @@ import EventAction from '../../domain_objects/event_system/event_action';
 import EventActionStatus from '../../domain_objects/event_system/event_action_status';
 import {Exporter} from '../../interfaces_and_impl/data_warehouse/export/exporter';
 import {DataSource} from '../../interfaces_and_impl/data_warehouse/import/data_source';
-import Changelist from '../../domain_objects/data_warehouse/ontology/versioning/changelist';
 import OntologyVersion from '../../domain_objects/data_warehouse/ontology/versioning/ontology_version';
 
 declare global {
@@ -49,7 +48,6 @@ declare global {
             dataSource?: DataSource;
             file?: File;
             task?: TaskRecord;
-            changelist?: Changelist;
             ontologyVersion?: OntologyVersion;
             // needed for nth-node request
             nodeLeaf?: NodeLeaf;
