@@ -38,7 +38,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         if (!node.isError) {
             const metatype = await this.#metatypeRepo.findByID(node.value.metatype!.id!);
             if (metatype.isError) Logger.error(`unable to load node's metatype`);
-            else Object.assign(node.value.metatype, metatype.value);
+            else Object.assign(node.value.metatype!, metatype.value);
         }
 
         return Promise.resolve(node);
@@ -50,7 +50,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         if (!node.isError) {
             const metatype = await this.#metatypeRepo.findByID(node.value.metatype!.id!);
             if (metatype.isError) Logger.error(`unable to load node's metatype`);
-            else Object.assign(node.value.metatype, metatype.value);
+            else Object.assign(node.value.metatype!, metatype.value);
         }
 
         return Promise.resolve(node);
