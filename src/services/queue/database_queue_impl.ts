@@ -40,7 +40,7 @@ export default class DatabaseQueue implements QueueInterface {
 
             // mark the task completed in the database
             stream.on('data', (data: any) => {
-                this.pool.query({text: `UPDATE queue SET processed_at = NOW() WHERE id = $1`, values: [data.id]}).catch((e) => {
+                this.pool.query({text: `DELETE FROM queue WHERE id = $1`, values: [data.id]}).catch((e) => {
                     Logger.error(`unable to mark queue item as done ${e}`);
                 });
             });
