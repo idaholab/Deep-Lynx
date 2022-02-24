@@ -88,6 +88,10 @@ export default class MetatypeKeyMapper extends Mapper {
         return super.runStatement(this.archiveStatement(id, userID));
     }
 
+    public async Unarchive(id: string, userID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.unarchiveStatement(id, userID));
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -143,6 +147,13 @@ export default class MetatypeKeyMapper extends Mapper {
     private archiveStatement(metatypeKeyID: string, userID: string): QueryConfig {
         return {
             text: `UPDATE metatype_keys SET deleted_at = NOW(), modified_at = NOW(), modified_by = $2  WHERE id = $1`,
+            values: [metatypeKeyID, userID],
+        };
+    }
+
+    private unarchiveStatement(metatypeKeyID: string, userID: string): QueryConfig {
+        return {
+            text: `UPDATE metatype_keys SET deleted_at = NULL, modified_at = NOW(), modified_by = $2  WHERE id = $1`,
             values: [metatypeKeyID, userID],
         };
     }

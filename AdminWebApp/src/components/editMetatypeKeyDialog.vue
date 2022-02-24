@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" @click:outside="dialog = false" width="50%">
+  <v-dialog v-model="dialog" @click:outside="dialog = false" width="60%">
     <template v-slot:activator="{ on }">
       <v-icon
           v-if="icon"
@@ -16,8 +16,119 @@
           <error-banner :message="errorMessage"></error-banner>
           <span class="headline">{{$t('editMetatypeKey.edit')}} {{selectedMetatypeKey.name}}</span>
           <v-row>
-            <v-col :cols="12">
+            <v-col v-if="comparisonMetatypeKey" :cols="6">
 
+              <v-form>
+                <v-text-field
+                    v-model="comparisonMetatypeKey.name"
+                >
+                  <template v-slot:label>{{$t('editMetatypeKey.name')}} <small style="color:red" >*</small></template>
+                </v-text-field>
+
+                <v-text-field
+                    v-model="comparisonMetatypeKey.property_name"
+                >
+                  <template v-slot:label>{{$t('editMetatypeKey.propertyName')}} <small style="color:red" >*</small></template>
+                </v-text-field>
+                <v-select
+                    v-model="comparisonMetatypeKey.data_type"
+                    disabled
+                >
+                  <template v-slot:label>{{$t('editMetatypeKey.dataType')}} <small style="color:red" >*</small></template>
+                </v-select>
+                <v-checkbox
+                    disabled
+                    v-model="comparisonMetatypeKey.required"
+                >
+                  <template v-slot:label>{{$t('editMetatypeKey.required')}} <small style="color:#ff0000" >*</small></template>
+                </v-checkbox>
+                <v-textarea
+                    v-model="comparisonMetatypeKey.description"
+                    :rows="2"
+                    disabled
+                >
+                  <template v-slot:label>{{$t('editMetatypeKey.description')}} <small style="color:#ff0000" >*</small></template>
+                </v-textarea>
+
+                <h3>{{$t('editMetatypeKey.validation')}}</h3>
+                <v-text-field
+                    v-model="comparisonMetatypeKey.validation.regex"
+                    disabled
+                    :label="$t('editMetatypeKey.regex')"
+                >
+                  <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.regexHelp')"></info-tooltip></template>
+                </v-text-field>
+                <v-text-field
+                    v-model.number="comparisonMetatypeKey.validation.max"
+                    type="number"
+                    :label="$t('editMetatypeKey.max')"
+                    disabled
+                >
+                  <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.maxHelp')"></info-tooltip></template>
+                </v-text-field>
+                <v-text-field
+                    v-model.number="comparisonMetatypeKey.validation.min"
+                    disabled
+                    type="number"
+                    :label="$t('editMetatypeKey.min')"
+                >
+                  <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.minHelp')"></info-tooltip></template>
+                </v-text-field>
+
+
+
+                <!-- default value and options should be comboboxes when set to enumeration -->
+                <div v-if="comparisonMetatypeKey.data_type === 'enumeration'" >
+                  <v-combobox
+                      v-model="comparisonMetatypeKey.default_value"
+                      multiple
+                      chips
+                      clearable
+                      disabled
+                      deletable-chips
+                  ></v-combobox>
+                </div>
+
+                <div v-if="comparisonMetatypeKey.data_type !== 'enumeration'" >
+                  <v-text-field
+                      v-if="comparisonMetatypeKey.data_type === 'number'"
+                      v-model="comparisonMetatypeKey.default_value"
+                      type="number"
+                      disabled
+                      :label="$t('editMetatypeKey.defaultValue')"
+                  ></v-text-field>
+                  <v-select
+                      v-else-if="comparisonMetatypeKey.data_type === 'boolean'"
+                      v-model="comparisonMetatypeKey.default_value"
+                      disabled
+                      :label="$t('editMetatypeKey.defaultValue')"
+                      :items="booleanOptions"
+                      required
+                  >
+                  </v-select>
+                  <v-text-field
+                      v-else
+                      disabled
+                      v-model="comparisonMetatypeKey.default_value"
+                      :label="$t('editMetatypeKey.defaultValue')"
+                  ></v-text-field>
+                </div>
+
+                <v-combobox
+                    v-model="comparisonMetatypeKey.options"
+                    :label="$t('editMetatypeKey.options')"
+                    multiple
+                    clearable
+                    disabled
+                    chips
+                    deletable-chips
+                ></v-combobox>
+              </v-form>
+              <p><span style="color:red">*</span> = {{$t('editMetatypeKey.requiredField')}}</p>
+            </v-col>
+
+
+            <v-col :cols="(comparisonMetatypeKey) ? 6 : 12">
               <v-form
                   ref="form"
                   v-model="formValid"
@@ -135,7 +246,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="dialog = false" >{{$t("editMetatypeKey.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" :disabled="!formValid" text @click="editMetatypeKey()">{{$t("editMetatypeKey.save")}}</v-btn>
+        <v-btn color="blue darken-1" text @click="editMetatypeKey()">{{$t("editMetatypeKey.save")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -152,6 +263,9 @@ export default class EditMetatypeKeyDialog extends Vue {
 
   @Prop({required: true})
   metatypeKey!: MetatypeKeyT;
+
+  @Prop({required: true, default: undefined})
+  comparisonMetatypeKey!: MetatypeKeyT | undefined;
 
   @Prop({required: false})
   readonly icon!: boolean

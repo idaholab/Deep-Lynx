@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" @click:outside="dialog = false" max-width="60%">
+  <v-dialog v-model="dialog" @click:outside="dialog = false" width="50%">
     <template v-slot:activator="{ on }">
       <v-icon
           v-if="icon"
