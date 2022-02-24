@@ -887,43 +887,18 @@ paths:
                               type: string
                             description:
                               type: string
-                          required:
-                            - name
-                            - description
                         destination_metatype_id:
                           type: string
                       required:
                         - origin_id
                         - origin_container_id
-                        - origin_data_source_id
-                        - origin_created_at
-                        - origin_modified_at
-                        - origin_created_by
-                        - origin_modified_by
-                        - origin_metatype_name
                         - edge_id
                         - edge_container_id
-                        - edge_relationship_pair_id
-                        - edge_data_source_id
-                        - edge_created_at
-                        - edge_modified_at
-                        - edge_modified_by
-                        - edge_created_by
                         - destination_id
                         - destination_container_id
-                        - destination_data_source_id
-                        - destination_created_at
-                        - destination_modified_at
-                        - destination_created_by
-                        - destination_modified_by
-                        - destination_metatype_name
                         - lvl
-                        - destination_metatype_id
                   isError:
                     type: boolean
-                required:
-                  - value
-                  - isError
       deprecated: false
     parameters:
       - schema:
