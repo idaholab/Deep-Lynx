@@ -18,20 +18,23 @@
           <v-row>
             <v-col v-if="comparisonMetatypeKey" :cols="6">
 
-              <v-form>
+              <v-form class="disabled">
                 <v-text-field
                     v-model="comparisonMetatypeKey.name"
+                    disabled
                 >
                   <template v-slot:label>{{$t('editMetatypeKey.name')}} <small style="color:red" >*</small></template>
                 </v-text-field>
 
                 <v-text-field
                     v-model="comparisonMetatypeKey.property_name"
+                    disabled
                 >
                   <template v-slot:label>{{$t('editMetatypeKey.propertyName')}} <small style="color:red" >*</small></template>
                 </v-text-field>
                 <v-select
                     v-model="comparisonMetatypeKey.data_type"
+                    :items="dataTypes"
                     disabled
                 >
                   <template v-slot:label>{{$t('editMetatypeKey.dataType')}} <small style="color:red" >*</small></template>
@@ -312,3 +315,13 @@ export default class EditMetatypeKeyDialog extends Vue {
   }
 }
 </script>
+
+<style lang="scss">
+.disabled input {
+  color: black !important;
+}
+
+.disabled textarea {
+  color: black !important;
+}
+</style>
