@@ -253,10 +253,10 @@ export default class NodeMapper extends Mapper {
     // This should return a node and all connected nodes and connecting edges for n layers.
     private retrieveNthNodesStatement(nodeID: string, depth: string): QueryConfig {
         return {
-            text: `WITH RECURSIVE related (orig_id, orig_container_id, orig_metatype_id, orig_data_source_id, orig_import_data_id,
-                                            orig_data_staging_id, orig_type_mapping_transformation_id, orig_original_data_id, orig_properties,
-                                            orig_metadata, orig_created_at, orig_modified_at, orig_deleted_at, orig_created_by, orig_modified_by,
-                                            orig_metatype_name, edge_id, edge_container_id, edge_relationship_pair_id, edge_data_source_id,
+            text: `WITH RECURSIVE related (origin_id, origin_container_id, origin_metatype_id, origin_data_source_id, origin_import_data_id,
+                                            origin_data_staging_id, origin_type_mapping_transformation_id, origin_original_data_id, origin_properties,
+                                            origin_metadata, origin_created_at, origin_modified_at, origin_deleted_at, origin_created_by, origin_modified_by,
+                                            origin_metatype_name, edge_id, edge_container_id, edge_relationship_pair_id, edge_data_source_id,
                                             edge_import_data_id, edge_data_staging_id, edge_type_mapping_transformation_id, edge_metadata,
                                             edge_created_at, edge_modified_at, edge_deleted_at, edge_properties, edge_modified_by, edge_created_by,
                                             dest_id, dest_container_id, dest_metatype_id, dest_data_source_id, dest_import_data_id, dest_data_staging_id,
@@ -288,7 +288,7 @@ export default class NodeMapper extends Mapper {
                             ON r.dest_id IN (e.origin_id, e.destination_id)
                         JOIN current_nodes d
                             ON d.id IN (e.origin_id, e.destination_id)
-                            AND d.id != r.orig_id AND d.id != r.dest_id
+                            AND d.id != r.origin_id AND d.id != r.dest_id
                     ) SELECT * FROM related WHERE lvl <= $2;`,
             values: [nodeID, depth],
         };
