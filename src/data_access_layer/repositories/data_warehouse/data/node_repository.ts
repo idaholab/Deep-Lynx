@@ -1,5 +1,5 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import Node from '../../../../domain_objects/data_warehouse/data/node';
+import Node, {NodeLeaf} from '../../../../domain_objects/data_warehouse/data/node';
 import Result from '../../../../common_classes/result';
 import NodeMapper from '../../../mappers/data_warehouse/data/node_mapper';
 import {PoolClient} from 'pg';
@@ -38,7 +38,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         if (!node.isError) {
             const metatype = await this.#metatypeRepo.findByID(node.value.metatype!.id!);
             if (metatype.isError) Logger.error(`unable to load node's metatype`);
-            else Object.assign(node.value.metatype, metatype.value);
+            else Object.assign(node.value.metatype!, metatype.value);
         }
 
         return Promise.resolve(node);
@@ -50,10 +50,19 @@ export default class NodeRepository extends Repository implements RepositoryInte
         if (!node.isError) {
             const metatype = await this.#metatypeRepo.findByID(node.value.metatype!.id!);
             if (metatype.isError) Logger.error(`unable to load node's metatype`);
-            else Object.assign(node.value.metatype, metatype.value);
+            else Object.assign(node.value.metatype!, metatype.value);
         }
 
         return Promise.resolve(node);
+    }
+
+    // This should return a node and all connected nodes and connecting edges for n layers.
+    findNthNodesByID(id: string, depth: string): Promise<Result<NodeLeaf[]>> {
+        if (!id) {
+            return Promise.resolve(Result.Failure('must supply root node id'));
+        }
+
+        return this.#mapper.RetrieveNthNodes(id, depth);
     }
 
     async save(n: Node, user: User, transaction?: PoolClient): Promise<Result<boolean>> {
@@ -306,6 +315,22 @@ export default class NodeRepository extends Repository implements RepositoryInte
 
     property(key: string, operator: string, value: any, dataType?: string) {
         super.queryJsonb(key, 'properties', operator, value, dataType);
+        return this;
+    }
+
+    // properties for nth layer node query:
+    depth(operator: string, value: any) {
+        super.query('depth', operator, value);
+        return this;
+    }
+
+    relationshipID(operator: string, value: any) {
+        super.query('relationship_name', operator, value);
+        return this;
+    }
+    
+    relationshipName(operator: string, value: any) {
+        super.query('relationship_id', operator, value);
         return this;
     }
 

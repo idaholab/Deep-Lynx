@@ -495,6 +495,422 @@ paths:
       deprecated: false
       x-codegen-request-body-name: Body
       description: Archives a node
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: node_id
+        in: path
+        required: true
+  '/containers/{container_id}/graphs/nodes/{node_id}/graph':
+    get:
+      tags:
+        - Graph
+      summary: Nth Node Query
+      description: Retrieve n layers of node-edge relationships given a depth n and an origin node id.
+      operationId: RetrieveNthNodes
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: node_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - schema:
+            type: string
+            default: '10'
+          in: query
+          name: depth
+          description: Number of layers deep to query. Defaults to 10.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                x-examples:
+                  example-1:
+                    value:
+                      - origin_properties:
+                          id: null
+                          name: null
+                          room: null
+                          action: null
+                          object: null
+                          building: null
+                          location: null
+                          condition: null
+                          elevation: null
+                          item_type: null
+                          step_type: null
+                          action_verb: null
+                          description: null
+                          instruction: null
+                          requires_CV: null
+                          requires_IV: null
+                          requires_PC: null
+                          requires_QA: null
+                          applicability: null
+                          hold_point_end: null
+                          additional_info: null
+                          hold_point_start: null
+                          critical_location: null
+                          original_duration: null
+                          step_construct_type: null
+                          responsible_performer: null
+                          critical_supplemental_information: null
+                        edge_properties: {}
+                        destination_properties:
+                          id: null
+                          name: null
+                          value: null
+                          status_by: null
+                          description: null
+                          status_date: null
+                          primary_text: null
+                          creation_date: null
+                          creation_user: null
+                          modified_date: null
+                          modified_user: null
+                        origin_id: '1457'
+                        origin_container_id: '13'
+                        origin_data_source_id: '9'
+                        origin_import_data_id: null
+                        origin_data_staging_id: null
+                        origin_type_mapping_transformation_id: null
+                        origin_original_data_id: null
+                        origin_metadata: null
+                        origin_created_at: '2022-02-23T20:24:18.809Z'
+                        origin_modified_at: '2022-02-23T20:24:18.801Z'
+                        origin_deleted_at: null
+                        origin_created_by: '1'
+                        origin_modified_by: '1'
+                        origin_metatype_name: StepAction
+                        edge_id: '16'
+                        edge_container_id: '13'
+                        edge_relationship_pair_id: '56521'
+                        edge_data_source_id: '9'
+                        edge_import_data_id: null
+                        edge_data_staging_id: null
+                        edge_type_mapping_transformation_id: null
+                        edge_metadata: null
+                        edge_created_at: '2022-02-23T20:26:15.605Z'
+                        edge_modified_at: '2022-02-23T20:26:15.563Z'
+                        edge_deleted_at: null
+                        edge_modified_by: '1'
+                        edge_created_by: '1'
+                        destination_id: '1456'
+                        destination_container_id: '13'
+                        destination_data_source_id: '9'
+                        destination_import_data_id: null
+                        destination_data_staging_id: null
+                        destination_type_mapping_transformation_id: null
+                        destination_original_data_id: null
+                        destination_metadata: null
+                        destination_created_at: '2022-02-23T20:23:43.883Z'
+                        destination_modified_at: '2022-02-23T20:23:43.743Z'
+                        destination_deleted_at: null
+                        destination_created_by: '1'
+                        destination_modified_by: '1'
+                        destination_metatype_name: Status
+                        lvl: 1
+                        metatype_id:
+                          name: ''
+                          description: ''
+                        destination_metatype_id: ''
+                      - origin_properties:
+                          id: null
+                          name: null
+                          value: null
+                          status_by: null
+                          description: null
+                          status_date: null
+                          primary_text: null
+                          creation_date: null
+                          creation_user: null
+                          modified_date: null
+                          modified_user: null
+                        edge_properties: {}
+                        destination_properties:
+                          id: null
+                          name: null
+                          description: null
+                          primary_text: null
+                          creation_date: null
+                          creation_user: null
+                          modified_date: null
+                          modified_user: null
+                        origin_id: '1456'
+                        origin_container_id: '13'
+                        origin_data_source_id: '9'
+                        origin_import_data_id: null
+                        origin_data_staging_id: null
+                        origin_type_mapping_transformation_id: null
+                        origin_original_data_id: null
+                        origin_metadata: null
+                        origin_created_at: '2022-02-23T20:23:43.883Z'
+                        origin_modified_at: '2022-02-23T20:23:43.743Z'
+                        origin_deleted_at: null
+                        origin_created_by: '1'
+                        origin_modified_by: '1'
+                        origin_metatype_name: Status
+                        edge_id: '15'
+                        edge_container_id: '13'
+                        edge_relationship_pair_id: '56545'
+                        edge_data_source_id: '9'
+                        edge_import_data_id: null
+                        edge_data_staging_id: null
+                        edge_type_mapping_transformation_id: null
+                        edge_metadata: null
+                        edge_created_at: '2022-02-23T20:26:00.459Z'
+                        edge_modified_at: '2022-02-23T20:26:00.442Z'
+                        edge_deleted_at: null
+                        edge_modified_by: '1'
+                        edge_created_by: '1'
+                        destination_id: '1454'
+                        destination_container_id: '13'
+                        destination_data_source_id: '9'
+                        destination_import_data_id: null
+                        destination_data_staging_id: null
+                        destination_type_mapping_transformation_id: null
+                        destination_original_data_id: null
+                        destination_metadata: null
+                        destination_created_at: '2022-02-23T20:22:17.699Z'
+                        destination_modified_at: '2022-02-23T20:22:17.697Z'
+                        destination_deleted_at: null
+                        destination_created_by: '1'
+                        destination_modified_by: '1'
+                        destination_metatype_name: DataItem
+                        lvl: 2
+                        metatype_id:
+                          name: ''
+                          description: ''
+                        destination_metatype_id: ''
+                      - origin_properties:
+                          id: null
+                          name: null
+                          description: null
+                          primary_text: null
+                          creation_date: null
+                          creation_user: null
+                          modified_date: null
+                          modified_user: null
+                        edge_properties: {}
+                        destination_properties:
+                          id: null
+                          name: null
+                          count: null
+                          active: null
+                          message: null
+                          equation: null
+                          in_alarm: null
+                          setpoint: null
+                          description: null
+                          primary_text: null
+                          creation_date: null
+                          creation_user: null
+                          modified_date: null
+                          modified_user: null
+                          comparison_operator: null
+                        origin_id: '1454'
+                        origin_container_id: '13'
+                        origin_data_source_id: '9'
+                        origin_import_data_id: null
+                        origin_data_staging_id: null
+                        origin_type_mapping_transformation_id: null
+                        origin_original_data_id: null
+                        origin_metadata: null
+                        origin_created_at: '2022-02-23T20:22:17.699Z'
+                        origin_modified_at: '2022-02-23T20:22:17.697Z'
+                        origin_deleted_at: null
+                        origin_created_by: '1'
+                        origin_modified_by: '1'
+                        origin_metatype_name: DataItem
+                        edge_id: '13'
+                        edge_container_id: '13'
+                        edge_relationship_pair_id: '54060'
+                        edge_data_source_id: '9'
+                        edge_import_data_id: null
+                        edge_data_staging_id: null
+                        edge_type_mapping_transformation_id: null
+                        edge_metadata: null
+                        edge_created_at: '2022-02-23T20:25:07.848Z'
+                        edge_modified_at: '2022-02-23T20:25:07.798Z'
+                        edge_deleted_at: null
+                        edge_modified_by: '1'
+                        edge_created_by: '1'
+                        destination_id: '1450'
+                        destination_container_id: '13'
+                        destination_data_source_id: '9'
+                        destination_import_data_id: null
+                        destination_data_staging_id: null
+                        destination_type_mapping_transformation_id: null
+                        destination_original_data_id: null
+                        destination_metadata: null
+                        destination_created_at: '2022-02-23T20:21:15.340Z'
+                        destination_modified_at: '2022-02-23T20:21:15.319Z'
+                        destination_deleted_at: null
+                        destination_created_by: '1'
+                        destination_modified_by: '1'
+                        destination_metatype_name: Alarm
+                        lvl: 3
+                        metatype_id:
+                          name: ''
+                          description: ''
+                        destination_metatype_id: ''
+                    isError: false
+                properties:
+                  value:
+                    type: array
+                    uniqueItems: true
+                    minItems: 1
+                    items:
+                      type: object
+                      properties:
+                        origin_properties:
+                          type: object
+                          properties:
+                            id: {}
+                            name: {}
+                        edge_properties:
+                          type: object
+                        destination_properties:
+                          type: object
+                          properties:
+                            id: {}
+                            name: {}
+                        origin_id:
+                          type: string
+                          minLength: 1
+                        origin_container_id:
+                          type: string
+                          minLength: 1
+                        origin_data_source_id:
+                          type: string
+                          minLength: 1
+                        origin_import_data_id: {}
+                        origin_data_staging_id: {}
+                        origin_type_mapping_transformation_id: {}
+                        origin_original_data_id: {}
+                        origin_metadata: {}
+                        origin_created_at:
+                          type: string
+                          minLength: 1
+                        origin_modified_at:
+                          type: string
+                          minLength: 1
+                        origin_deleted_at: {}
+                        origin_created_by:
+                          type: string
+                          minLength: 1
+                        origin_modified_by:
+                          type: string
+                          minLength: 1
+                        origin_metatype_name:
+                          type: string
+                          minLength: 1
+                        edge_id:
+                          type: string
+                          minLength: 1
+                        edge_container_id:
+                          type: string
+                          minLength: 1
+                        edge_relationship_pair_id:
+                          type: string
+                          minLength: 1
+                        edge_data_source_id:
+                          type: string
+                          minLength: 1
+                        edge_import_data_id: {}
+                        edge_data_staging_id: {}
+                        edge_type_mapping_transformation_id: {}
+                        edge_metadata: {}
+                        edge_created_at:
+                          type: string
+                          minLength: 1
+                        edge_modified_at:
+                          type: string
+                          minLength: 1
+                        edge_deleted_at: {}
+                        edge_modified_by:
+                          type: string
+                          minLength: 1
+                        edge_created_by:
+                          type: string
+                          minLength: 1
+                        destination_id:
+                          type: string
+                          minLength: 1
+                        destination_container_id:
+                          type: string
+                          minLength: 1
+                        destination_data_source_id:
+                          type: string
+                          minLength: 1
+                        destination_import_data_id: {}
+                        destination_data_staging_id: {}
+                        destination_type_mapping_transformation_id: {}
+                        destination_original_data_id: {}
+                        destination_metadata: {}
+                        destination_created_at:
+                          type: string
+                          minLength: 1
+                        destination_modified_at:
+                          type: string
+                          minLength: 1
+                        destination_deleted_at: {}
+                        destination_created_by:
+                          type: string
+                          minLength: 1
+                        destination_modified_by:
+                          type: string
+                          minLength: 1
+                        destination_metatype_name:
+                          type: string
+                          minLength: 1
+                        lvl:
+                          type: number
+                        metatype_id:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            description:
+                              type: string
+                        destination_metatype_id:
+                          type: string
+                      required:
+                        - origin_id
+                        - origin_container_id
+                        - edge_id
+                        - edge_container_id
+                        - destination_id
+                        - destination_container_id
+                        - lvl
+                  isError:
+                    type: boolean
+      deprecated: false
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: node_id
+        in: path
+        required: true
   '/containers/{container_id}/graphs/nodes/metatype/{metatype_id}':
     get:
       tags:
@@ -3834,6 +4250,23 @@ paths:
         '200':
           description: OK
       description: Publishes an ontology version
+  '/Core.swagger_collection.yaml/paths//containers/{container_id}/graphs/nodes/{node_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: node_id
+        in: path
+        required: true
+    get:
+      summary: Nth Node Query
+      tags: []
+      responses: {}
+      operationId: get-Core.swagger_collection.yaml-paths-~1containers~1-container_id-~1graphs~1nodes~1-node_id
 components:
   securitySchemes:
     BearerAuth:
