@@ -138,6 +138,7 @@
               >
                 <v-text-field
                     v-model="selectedMetatypeKey.name"
+                    :class="(comparisonMetatypeKey && selectedMetatypeKey.name !== comparisonMetatypeKey.name) ? 'edited-field' : ''"
                     :rules="[v => !!v || $t('editMetatypeKey.nameRequired')]"
                 >
                   <template v-slot:label>{{$t('editMetatypeKey.name')}} <small style="color:red" >*</small></template>
@@ -146,6 +147,7 @@
                 <v-text-field
                     v-model="selectedMetatypeKey.property_name"
                     :rules="[v => !!v || $t('editMetatypeKey.propertyNameRequired')]"
+                    :class="(comparisonMetatypeKey && selectedMetatypeKey.property_name !== comparisonMetatypeKey.property_name) ? 'edited-field' : ''"
                     required
                 >
                   <template v-slot:label>{{$t('editMetatypeKey.propertyName')}} <small style="color:red" >*</small></template>
@@ -156,6 +158,7 @@
                     @change="selectedMetatypeKey.default_value = undefined"
                     :rules="[v => !!v || $t('editMetatypeKey.dataTypeRequired')]"
                     required
+                    :class="(comparisonMetatypeKey && selectedMetatypeKey.data_type !== comparisonMetatypeKey.data_type) ? 'edited-field' : ''"
                 >
                   <template v-slot:label>{{$t('editMetatypeKey.dataType')}} <small style="color:red" >*</small></template>
                 </v-select>
@@ -166,6 +169,7 @@
                 </v-checkbox>
                 <v-textarea
                     v-model="selectedMetatypeKey.description"
+                    :class="(comparisonMetatypeKey && selectedMetatypeKey.description !== comparisonMetatypeKey.description) ? 'edited-field' : ''"
                     :rows="2"
                     :rules="[v => !!v || $t('editMetatypeKey.descriptionRequired')]"
                 >
@@ -175,12 +179,14 @@
                 <h3>{{$t('editMetatypeKey.validation')}}</h3>
                 <v-text-field
                     v-model="selectedMetatypeKey.validation.regex"
+                    :class="(comparisonMetatypeKey && selectedMetatypeKey.validation.regex !== comparisonMetatypeKey.validation.regex) ? 'edited-field' : ''"
                     :label="$t('editMetatypeKey.regex')"
                 >
                   <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.regexHelp')"></info-tooltip></template>
                 </v-text-field>
                 <v-text-field
                     v-model.number="selectedMetatypeKey.validation.max"
+                    :class="(comparisonMetatypeKey && selectedMetatypeKey.validation.max !== comparisonMetatypeKey.validation.max) ? 'edited-field' : ''"
                     :disabled="selectedMetatypeKey.validation.regex === ''"
                     type="number"
                     :label="$t('editMetatypeKey.max')"
@@ -189,6 +195,7 @@
                 </v-text-field>
                 <v-text-field
                     v-model.number="selectedMetatypeKey.validation.min"
+                    :class="(comparisonMetatypeKey && selectedMetatypeKey.validation.min !== comparisonMetatypeKey.validation.min) ? 'edited-field' : ''"
                     :disabled="selectedMetatypeKey.validation.regex === ''"
                     type="number"
                     :label="$t('editMetatypeKey.min')"
@@ -213,12 +220,14 @@
                   <v-text-field
                       v-if="selectedMetatypeKey.data_type === 'number'"
                       v-model="selectedMetatypeKey.default_value"
+                      :class="(comparisonMetatypeKey && selectedMetatypeKey.default_value !== comparisonMetatypeKey.default_value) ? 'edited-field' : ''"
                       type="number"
                       :label="$t('editMetatypeKey.defaultValue')"
                   ></v-text-field>
                   <v-select
                       v-else-if="selectedMetatypeKey.data_type === 'boolean'"
                       v-model="selectedMetatypeKey.default_value"
+                      :class="(comparisonMetatypeKey && selectedMetatypeKey.default_value !== comparisonMetatypeKey.default_value) ? 'edited-field' : ''"
                       :label="$t('editMetatypeKey.defaultValue')"
                       :items="booleanOptions"
                       required
@@ -227,6 +236,7 @@
                   <v-text-field
                       v-else
                       v-model="selectedMetatypeKey.default_value"
+                      :class="(comparisonMetatypeKey && selectedMetatypeKey.default_value !== comparisonMetatypeKey.default_value) ? 'edited-field' : ''"
                       :label="$t('editMetatypeKey.defaultValue')"
                   ></v-text-field>
                 </div>
@@ -323,5 +333,35 @@ export default class EditMetatypeKeyDialog extends Vue {
 
 .disabled textarea {
   color: black !important;
+}
+
+.disabled .v-select__selection{
+  color: black !important;
+}
+
+.edited-field {
+  input {
+    background: #FB8C00;
+    color: white !important;
+    box-shadow: -5px 0 0 #FB8C00;
+  }
+
+  textarea {
+    background: #FB8C00;
+    color: white !important;
+    box-shadow: -5px 0 0 #FB8C00;
+  }
+
+  .v-select__slot {
+    background: #FB8C00;
+    color: white !important;
+    box-shadow: -5px 0 0 #FB8C00;
+  }
+
+  .v-select__selection {
+    background: #FB8C00;
+    color: white !important;
+    box-shadow: -5px 0 0 #FB8C00;
+  }
 }
 </style>

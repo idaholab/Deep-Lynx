@@ -60,6 +60,8 @@ export default new Vuex.Store({
     actions: {
         changeOntologyVersion({commit}, version) {
             commit('setOntologyVersion', version);
+            commit('setEditMode', false);
+            commit('setPendingOntologyVersion', undefined);
         },
 
         changePendingOntologyVersion({commit}, version) {
