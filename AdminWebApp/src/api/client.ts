@@ -436,12 +436,16 @@ export class Client {
     }
 
     async uploadFile(containerID: string, dataSourceID: string, file: File): Promise<FileT> {
-        const results = await this.postFileRawReturn<ResultT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/files`, 'import', file);
+        const results = await this.postFileRawReturn<ResultT<ResultT<FileT>[]>>(
+            `/containers/${containerID}/import/datasources/${dataSourceID}/files`,
+            'import',
+            file,
+        );
 
         return new Promise((resolve, reject) => {
-            if (results[0].isError) reject(results[0].error);
+            if (results.value[0].isError) reject(results.value[0].error);
 
-            resolve(new Promise((r) => r(results[0].value as FileT)));
+            resolve(new Promise((r) => r(results.value[0].value as FileT)));
         });
     }
 
@@ -698,15 +702,15 @@ export class Client {
 
     // only use this function when exporting type mappings from one data source to another WITHIN THE SAME DL INSTANCE
     // this will not work for exporting to a separate instance of Deep Lynx
-    exportTypeMappings(containerID: string, dataSourceID: string, targetDataSource: string, ...typeMappings: TypeMappingT[]): Promise<ResultT[]> {
-        return this.postRawReturn<ResultT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/export`, {
+    exportTypeMappings(containerID: string, dataSourceID: string, targetDataSource: string, ...typeMappings: TypeMappingT[]): Promise<ResultT<any>[]> {
+        return this.postRawReturn<ResultT<any>[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/export`, {
             mapping_ids: typeMappings.map((mapping) => mapping.id),
             target_data_source: targetDataSource,
         });
     }
 
-    importTypeMappings(containerID: string, dataSourceID: string, file: File): Promise<ResultT[]> {
-        return this.postFileRawReturn<ResultT[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/import`, 'mappings', file);
+    importTypeMappings(containerID: string, dataSourceID: string, file: File): Promise<ResultT<any>[]> {
+        return this.postFileRawReturn<ResultT<any>[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/import`, 'mappings', file);
     }
 
     retrieveTransformations(containerID: string, dataSourceID: string, typeMappingID: string): Promise<TypeMappingTransformationT[]> {

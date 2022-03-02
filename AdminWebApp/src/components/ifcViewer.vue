@@ -1,6 +1,6 @@
 <template>
   <v-dialog
-      v-model="dialog" @click:outside="dialog = false;" width="1080px">
+      v-model="dialog" @click:outside="dialog = false;" width="80%">
     <template v-slot:activator="{ on }">
       <v-icon
           v-if="icon"
@@ -24,8 +24,16 @@
           </v-col>
           <v-col :cols="5">
             <h3 v-if="loaded">{{$t('ifcViewer.Properties')}}</h3>
-            <v-card>
-              <json-view v-if="selected" :data="selected" max-depth="2" style="overflow-y: scroll"></json-view>
+
+            <v-card v-if="loaded && selected">
+              <div style="margin-left: 5px">
+                <h4>{{$t('ifcViewer.name')}}</h4>
+                <p>{{selected.Name.value}}</p>
+                <h4>{{$t('ifcViewer.description')}}</h4>
+                <p>{{selected.Description.value}}</p>
+              </div>
+              <h4 style="margin-left: 5px">{{$t('ifcViewer.rawProperties')}}</h4>
+              <json-view v-if="selected" :max-depth="0" :data="selected" style="overflow-y: scroll"></json-view>
             </v-card>
           </v-col>
         </v-row>
@@ -33,6 +41,7 @@
       <v-card-actions>
         <v-btn v-if="!loaded" @click="load()">{{$t('ifcViewer.loadModel')}}</v-btn>
         <v-btn v-if="loaded" @click="load()">{{$t('ifcViewer.resetModel')}}</v-btn>
+        <v-btn v-if="loaded" @click="dialog = false">{{$t('ifcViewer.close')}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -64,6 +73,21 @@ import {
 import { IFCLoader } from "web-ifc-three/IFCLoader";
 import {FileT} from "@/api/types";
 
+type SelectedItem = {
+  Name: {
+    type: number;
+    value: string;
+  };
+  Description: {
+    type: number;
+    value: string;
+  };
+  GlobalID: {
+    type: number;
+    value: string;
+  };
+}
+
 @Component
 export default class IfcViewer extends Vue {
   @Prop({required: true})
@@ -73,13 +97,14 @@ export default class IfcViewer extends Vue {
   readonly icon!: boolean
 
   dialog = false
-  selected: any | null = null
+  selected: SelectedItem | null = null
 
   loading = false
   loaded = false
 
   load() {
     this.loading = true
+    this.selected = null
 
     //Creates the Three.js scene
     const scene = new Scene();

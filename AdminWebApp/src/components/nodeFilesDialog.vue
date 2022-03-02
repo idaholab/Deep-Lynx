@@ -19,7 +19,7 @@
 
             <v-dialog
                 v-model="addFileDialog"
-                max-width="500px"
+                width="50%"
             >
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
@@ -111,11 +111,10 @@ export default class NodeFilesDialog extends Vue {
         this.loadFiles()
       })
       .catch(e => this.errorMessage = e)
-    })
-    .catch(e => this.errorMessage = e)
-    .finally(() => {
-      this.addFileDialog = false
-      this.fileLoading = false
+      .finally(() => {
+        this.addFileDialog = false
+        this.fileLoading = false
+      })
     })
   }
 

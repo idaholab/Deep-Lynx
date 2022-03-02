@@ -144,7 +144,8 @@ export default class CreateRelationshipPairDialog extends Vue {
     if(this.destinationSelect.metatype && this.originSelect.metatype) {
        this.$client.listMetatypeRelationshipPairs(this.containerID,  {
         destinationID: this.destinationSelect.metatype.id,
-        originID: this.originSelect.metatype.id
+        originID: this.originSelect.metatype.id,
+        ontologyVersion: this.$store.getters.activeOntologyVersionID
       })
         .then((metatypeRelationshipPairs) => {
           this.metatypeRelationshipPairs = metatypeRelationshipPairs as MetatypeRelationshipPairT[]
