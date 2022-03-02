@@ -96,7 +96,7 @@ export default class MetatypeRelationshipMapper extends Mapper {
 
     private archiveStatement(relationshipID: string, userID: string): QueryConfig {
         return {
-            text: `UPDATE metatype_relationships SET deleted_at = NOW(), modified_by = $2  WHERE id = $1`,
+            text: `UPDATE metatype_relationships SET deleted_at = NOW(), modified_at = NOW(), modified_by = $2  WHERE id = $1`,
             values: [relationshipID, userID],
         };
     }

@@ -3,6 +3,7 @@ import Vuex from 'vuex';
 import {ChangelistT, ContainerT, OntologyVersionT} from '@/api/types';
 import {Client} from '@/api/client';
 import Config from '@/config';
+import OntologyVersionToolbar from '@/components/ontology/ontologyVersionToolbar.vue';
 
 Vue.use(Vuex);
 
@@ -21,7 +22,7 @@ export default new Vuex.Store({
             id: '',
             name: 'Primary',
         },
-        selectedPendingVersion: undefined,
+        selectedPendingVersion: {},
     },
     mutations: {
         initializeStore(state) {
@@ -59,6 +60,8 @@ export default new Vuex.Store({
     actions: {
         changeOntologyVersion({commit}, version) {
             commit('setOntologyVersion', version);
+            commit('setEditMode', false);
+            commit('setPendingOntologyVersion', undefined);
         },
 
         changePendingOntologyVersion({commit}, version) {
@@ -97,8 +100,21 @@ export default new Vuex.Store({
             return undefined;
         },
 
+        selectedPendingOntologyVersionID: (state) => {
+            if (state.selectedPendingVersion) return (state.selectedPendingVersion as OntologyVersionT).id;
+            return undefined;
+        },
+
         isEditMode: (state) => {
             return state.editMode;
+        },
+
+        activeOntologyVersionID: (state) => {
+            if (state.editMode) {
+                return (state.selectedPendingVersion as OntologyVersionT).id;
+            } else {
+                return (state.ontologyVersion as OntologyVersionT).id;
+            }
         },
     },
 });

@@ -74,8 +74,22 @@ export default class MetatypeRoutes {
 
         if (typeof req.query.ontologyVersion !== 'undefined' && (req.query.ontologyVersion as string) !== '') {
             repository = repository.and().ontologyVersion('eq', req.query.ontologyVersion);
-        } else {
-            repository = repository.and().ontologyVersion('is null');
+        }
+
+        if (typeof req.query.modifiedAfter !== 'undefined' && (req.query.modifiedAfter as string) !== '') {
+            repository = repository.and().modified_at('>', req.query.modifiedAfter);
+        }
+
+        if (typeof req.query.createdAfter !== 'undefined' && (req.query.createdAfter as string) !== '') {
+            repository = repository.and().created_at('>', req.query.createdAfter);
+        }
+
+        if (typeof req.query.deleted !== 'undefined' && String(req.query.deleted as string).toLowerCase() === 'true') {
+            repository = repository.and().deleted_at('is not null');
+        }
+
+        if (typeof req.query.nameIn !== 'undefined' && (req.query.nameIn as string) !== '') {
+            repository = repository.and().name('in', `${req.query.nameIn}`);
         }
 
         if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
@@ -132,12 +146,28 @@ export default class MetatypeRoutes {
 
     private static archiveMetatype(req: Request, res: Response, next: NextFunction) {
         if (req.metatype) {
-            repo.archive(req.currentUser!, req.metatype)
-                .then((result) => {
-                    result.asResponse(res);
-                })
-                .catch((err) => res.status(500).send(err))
-                .finally(() => next());
+            if (req.query.permanent !== undefined && String(req.query.permanent).toLowerCase() === 'true') {
+                repo.delete(req.metatype)
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => res.status(500).send(err))
+                    .finally(() => next());
+            } else if (req.query.reverse !== undefined && String(req.query.reverse).toLowerCase() === 'true') {
+                repo.unarchive(req.currentUser!, req.metatype)
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => res.status(500).send(err))
+                    .finally(() => next());
+            } else {
+                repo.archive(req.currentUser!, req.metatype)
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => res.status(500).send(err))
+                    .finally(() => next());
+            }
         } else {
             Result.Failure('metatype not found', 404).asResponse(res);
             next();

@@ -356,7 +356,7 @@ export default class DataMapping extends Vue {
   typeMappings: TypeMappingT[] = []
   typeMappingsNoTransformations: TypeMappingT[] = []
   selectedMappings: [] = []
-  importedMappingResults: ResultT[] = []
+  importedMappingResults: ResultT<any>[] = []
   reviewMappings = false
 
   typeMappingCount = 0
@@ -667,7 +667,7 @@ export default class DataMapping extends Vue {
   }
 
   // allows the user to potentially review imported type mappings
-  mappingsImport(results: ResultT[]) {
+  mappingsImport(results: ResultT<any>[]) {
     this.importedMappingResults = results
     this.loadTypeMappings()
   }

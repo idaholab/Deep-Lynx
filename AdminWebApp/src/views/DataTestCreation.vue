@@ -8,9 +8,7 @@
         :dataSourceID="selectedDataSource"
         @selected="setDataSource">
     </select-data-source>
-
     <v-card v-if="(selectedDataSource !== null)">
-
       <v-data-table
           :headers="headersNode()"
           :items="nodes"
@@ -28,16 +26,24 @@
                 :dataSourceID="selectedDataSource.id" 
                 :containerID="containerID" 
                 :disabled="!selectedDataSource.active || selectedDataSource.archived"
-                @nodeCreated="listNodes"
+                @nodeCreated="listNodes() && listEdges()"
                 >
             </create-node-dialog>
           </v-col>
-
           <v-col>
             <h2>{{$t('dataTestCreation.nodeTableTitle')}}</h2>
           </v-col>
         </template>
         <template v-slot:[`item.actions`]="{ item }">
+          <edit-node-dialog 
+              :node="item" 
+              :icon="true"
+              :dataSourceID="selectedDataSource.id" 
+              :containerID="containerID"
+              :disabled="!selectedDataSource.active || selectedDataSource.archived"
+              @nodeUpdated="listNodes() && listEdges()" 
+              >
+          </edit-node-dialog>
           <v-icon
               small
               @click="deleteNode(item)"
@@ -47,9 +53,7 @@
         </template>
       </v-data-table>
     </v-card>
-
         <v-card v-if="(selectedDataSource !== null)">
-
       <v-data-table
           :headers="headersEdge()"
           :items="edges"
@@ -67,11 +71,10 @@
                 :dataSourceID="selectedDataSource.id" 
                 :containerID="containerID" 
                 :disabled="!selectedDataSource.active || selectedDataSource.archived"
-                @edgeCreated="listEdges"
+                @edgeCreated="listEdges()"
                 >
             </create-edge-dialog>
           </v-col>
-
           <v-col>
             <h2>{{$t('dataTestCreation.edgeTableTitle')}}</h2>
           </v-col>
@@ -95,6 +98,7 @@ import {DataSourceT, NodeT, EdgeT} from "@/api/types";
 import SelectDataSource from "@/components/selectDataSource.vue";
 import CreateNodeDialog from "@/components/createNodeDialog.vue";
 import CreateEdgeDialog from "@/components/createEdgeDialog.vue";
+import EditNodeDialog from "@/components/editNodeDialog.vue";
 
 
 @Component({filters: {
@@ -105,7 +109,8 @@ import CreateEdgeDialog from "@/components/createEdgeDialog.vue";
   components: {
     SelectDataSource,
     CreateNodeDialog,
-    CreateEdgeDialog
+    CreateEdgeDialog,
+    EditNodeDialog
   }
 })
 export default class DataTestCreation extends Vue {
@@ -144,6 +149,10 @@ export default class DataTestCreation extends Vue {
       {
         text: this.$t('dataTestCreation.metatype'),
         value: "metatype_name"
+      },
+      {
+        text: this.$t('dataTestCreation.name'),
+        value: "properties.name"
       },
       { text: this.$t('dataTestCreation.viewDeleteData'),  
         value: 'actions', sortable: false 

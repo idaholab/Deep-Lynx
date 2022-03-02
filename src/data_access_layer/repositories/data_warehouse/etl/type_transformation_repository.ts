@@ -18,8 +18,7 @@ import MetatypeRepository from '../ontology/metatype_repository';
 import MetatypeRelationshipPairRepository from '../ontology/metatype_relationship_pair_repository';
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
-import NodeRepository from "../data/node_repository";
-import EdgeRepository from "../data/edge_repository";
+import OntologyVersionRepository from "../ontology/versioning/ontology_version_repository";
 
 /*
     TypeTransformationRepository contains methods for persisting and retrieving
@@ -192,14 +191,24 @@ export default class TypeTransformationRepository extends Repository implements 
         // much faster to loop through some in-memory classes than it is to make a very large amount of database transactions
         // especially when you consider this is generally called as part of a very large export of mappings and this function
         // has to be run for each mapping in the export
-        const metatypeRepo = new MetatypeRepository();
-        const relationshipPairRepo = new MetatypeRelationshipPairRepository();
+        let metatypeRepo = new MetatypeRepository();
+        let relationshipPairRepo = new MetatypeRelationshipPairRepository();
+        // we must get the latest ontology version so we're importing the mappings to the correct ontology version
+        const ontologyRepository = new OntologyVersionRepository()
+        let ontologyVersion: string | undefined
 
         const metatypeNames: string[] = [];
         const relationshipPairNames: string[] = [];
 
         let metatypes: Metatype[] = [];
         let relationshipPairs: MetatypeRelationshipPair[] = [];
+
+        const ontResults = await ontologyRepository.where().containerID('eq', containerID).and().status('eq', 'published').list({sortBy: 'id', sortDesc: true})
+        if(ontResults.isError || ontResults.value.length === 0) {
+            Logger.error('unable to fetch current ontology, or no currently published ontology')
+        } else {
+            ontologyVersion = ontResults.value[0].id
+        }
 
         for (const transformation of transformations) {
             if (transformation.metatype_name && !transformation.metatype_id) metatypeNames.push(transformation.metatype_name);
@@ -210,16 +219,34 @@ export default class TypeTransformationRepository extends Repository implements 
         // fetch all metatypes and relationship pairs by name specified, this allows us to minimize DB calls, though it
         // means we will be looping through the data again further down
         if (metatypeNames.length > 0) {
-            const results = await metatypeRepo.where().containerID('eq', containerID).and().name('in', metatypeNames).list();
+            metatypeRepo = metatypeRepo.where()
+                .containerID('eq', containerID)
+                .and().name('in', metatypeNames)
+
+            if(ontologyVersion) {
+                metatypeRepo = metatypeRepo.and().ontologyVersion('eq', ontologyVersion)
+            } else {
+                metatypeRepo = metatypeRepo.and().ontologyVersion('is null')
+            }
+
+            const results = await metatypeRepo.list();
 
             if (results.isError) Logger.error(`unable to fetch metatypes for set of transformations on backfill ${results.error?.error}`);
             else metatypes = results.value;
         }
 
         if (relationshipPairNames.length > 0) {
-            const results = await relationshipPairRepo.where()
-                .containerID('eq', containerID).and()
-                .name('in', relationshipPairNames).list(true); // we want the relationships so we can easily grab the relationship keys
+            relationshipPairRepo = relationshipPairRepo.where()
+                .containerID('eq', containerID)
+                .and().name('in', relationshipPairNames)
+
+            if(ontologyVersion) {
+                relationshipPairRepo = relationshipPairRepo.and().ontologyVersion('eq', ontologyVersion)
+            } else {
+                relationshipPairRepo = relationshipPairRepo.and().ontologyVersion('is null')
+            }
+
+            const results = await relationshipPairRepo.list(true)
 
             if (results.isError) Logger.error(`unable to fetch relationship pairs for set of transformations on backfill ${results.error?.error}`);
             else relationshipPairs = results.value;
@@ -252,6 +279,10 @@ export default class TypeTransformationRepository extends Repository implements 
 
                 if (foundPair) {
                     transformations[i].metatype_relationship_pair_id = foundPair.id;
+                    transformations[i].origin_metatype_id = foundPair.origin_metatype_id
+                    transformations[i].destination_metatype_id = foundPair.destination_metatype_id
+                    transformations[i].origin_data_source_id = undefined
+                    transformations[i].destination_data_source_id = undefined
 
                     // now set the id's of all the keys
                     for (const j in transformations[i].keys) {

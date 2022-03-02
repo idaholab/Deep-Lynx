@@ -93,7 +93,7 @@ export class Repository {
             }
 
             case 'date': {
-                typeCast = 'timestamp';
+                typeCast = 'timestamp(0)';
                 break;
             }
         }
@@ -147,7 +147,40 @@ export class Repository {
         return this;
     }
 
-    query(fieldName: string, operator: string, value?: any) {
+    query(fieldName: string, operator: string, value?: any, dataType?: string) {
+        let typeCast = 'text';
+
+        switch (dataType) {
+            case undefined: {
+                typeCast = 'text';
+                break;
+            }
+
+            case 'number': {
+                typeCast = 'integer';
+                break;
+            }
+
+            case 'number64': {
+                typeCast = 'bigint';
+                break;
+            }
+
+            case 'float': {
+                typeCast = 'numeric';
+                break;
+            }
+            case 'float64': {
+                typeCast = 'numeric';
+                break;
+            }
+
+            case 'date': {
+                typeCast = 'timestamp(0)';
+                break;
+            }
+        }
+
         switch (operator) {
             case 'eq': {
                 this._values.push(value);
@@ -162,6 +195,16 @@ export class Repository {
             case 'like': {
                 this._values.push(value);
                 this._rawQuery.push(`${fieldName} ILIKE $${this._values.length}`);
+                break;
+            }
+            case '<': {
+                this._values.push(value);
+                this._rawQuery.push(`${fieldName}::${typeCast} < $${this._values.length}::${typeCast}`);
+                break;
+            }
+            case '>': {
+                this._values.push(value);
+                this._rawQuery.push(`${fieldName}::${typeCast} > $${this._values.length}::${typeCast}`);
                 break;
             }
             case 'in': {
