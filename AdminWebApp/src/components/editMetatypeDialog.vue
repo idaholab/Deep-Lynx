@@ -20,33 +20,31 @@
 
               <v-form
                   ref="form"
-                  v-model="valid"
               >
                 <v-text-field
-                    v-model="selectedMetatype.name"
-                    :rules="[v => !!v || $t('editMetatype.nameRequired')]"
+                    v-model="comparisonMetatype.name"
                     required
                     :disabled="true"
-                    style="color: black"
+                    class="disabled"
                 >
                   <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
                 </v-text-field>
                 <v-textarea
-                    v-model="selectedMetatype.description"
-                    :rules="[v => !!v || $t('editMetatype.descriptionRequired')]"
+                    v-model="comparisonMetatype.description"
                     required
                     :disabled="true"
-                    style="color: black"
+                    class="disabled"
                 >
                   <template v-slot:label>{{$t('editMetatype.description')}} <small style="color:red" >*</small></template>
                 </v-textarea>
               </v-form>
               <p><span style="color:red">*</span> = {{$t('editMetatype.requiredField')}}</p>
 
+
               <v-progress-linear v-if="keysLoading" indeterminate></v-progress-linear>
               <v-data-table
                   :headers="headers()"
-                  :items="selectedMetatype.keys"
+                  :items="comparisonMetatype.keys"
                   :items-per-page="100"
                   :footer-props="{
                      'items-per-page-options': [25, 50, 100]
@@ -54,7 +52,6 @@
                   class="elevation-1"
                   sort-by="name"
               >
-
                 <template v-slot:top>
                   <v-toolbar flat color="white">
                     <v-toolbar-title>{{$t("editMetatype.keys")}}</v-toolbar-title>
@@ -83,6 +80,7 @@
                     v-model="selectedMetatype.name"
                     :rules="[v => !!v || $t('editMetatype.nameRequired')]"
                     required
+                    :class="(comparisonMetatype && selectedMetatype.name !== comparisonMetatype.name) ? 'edited-field' : ''"
                 >
                   <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
                 </v-text-field>
@@ -90,6 +88,7 @@
                     v-model="selectedMetatype.description"
                     :rules="[v => !!v || $t('editMetatype.descriptionRequired')]"
                     required
+                    :class="(comparisonMetatype && selectedMetatype.description !== comparisonMetatype.description) ? 'edited-field' : ''"
                 >
                   <template v-slot:label>{{$t('editMetatype.description')}} <small style="color:red" >*</small></template>
                 </v-textarea>
@@ -105,7 +104,7 @@
                      'items-per-page-options': [25, 50, 100]
                   }"
                   class="elevation-1"
-
+                  :item-class="keyItemRowBackground"
                   sort-by="name"
               >
 
@@ -122,15 +121,36 @@
                   </v-toolbar>
                 </template>
                 <template v-slot:[`item.actions`]="{ item }">
-                 <edit-metatype-key-dialog :metatypeKey="item" :metatype="metatype" :icon="true" @metatypeKeyEdited="loadKeys()"></edit-metatype-key-dialog>
+                  <div v-if="($store.getters.isEditMode && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled">
+
+                    <edit-metatype-key-dialog
+                        :metatypeKey="item"
+                        :metatype="metatype"
+                        :icon="true"
+                        :comparison-metatype-key="(comparisonMetatype) ? comparisonMetatype.keys.find(k => k.name === item.name) : undefined"
+                        @metatypeKeyEdited="loadKeys()"></edit-metatype-key-dialog>
+                    <v-icon
+                        small
+                        @click="deleteKey(item)"
+                    >
+                      mdi-delete
+                    </v-icon>
+                  </div>
+
                   <v-icon
+                      v-if="$store.getters.isEditMode && item.deleted_at"
                       small
-                      @click="deleteKey(item)"
+                      @click="undeleteKey(item)"
                   >
-                    mdi-delete
+                    mdi-restore
                   </v-icon>
                 </template>
               </v-data-table>
+              <v-row v-if="$store.getters.isEditMode" style="margin-top: 15px">
+                <v-col :cols="3"><div class="box created"></div><p> - {{$t('metatypes.created')}}</p></v-col>
+                <v-col :cols="3"><div class="box edited"></div><p> - {{$t('metatypes.edited')}}</p></v-col>
+                <v-col :cols="3"><div class="box removed"></div><p> - {{$t('metatypes.removed')}}</p></v-col>
+              </v-row>
             </v-col>
           </v-row>
         </v-container>
@@ -151,6 +171,7 @@ import {MetatypeKeyT, MetatypeT} from "../api/types";
 import EditMetatypeKeyDialog from "@/components/editMetatypeKeyDialog.vue";
 import CreateMetatypeKeyDialog from "@/components/createMetatypeKeyDialog.vue";
 import ViewMetatypeKeyDialog from "@/components/viewMetatypeKeyDialog.vue";
+const diff = require('deep-diff').diff;
 
 @Component({components: {
     EditMetatypeKeyDialog,
@@ -164,6 +185,7 @@ export default class EditMetatypeDialog extends Vue {
   @Prop({required: false})
   readonly icon!: boolean
 
+  // comparison metatype should always be coming in with its keys, so no need to fetch them
   @Prop({required: false, default: undefined})
   comparisonMetatype: MetatypeT | undefined
 
@@ -238,6 +260,160 @@ export default class EditMetatypeDialog extends Vue {
     })
     .catch(e => this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string + e)
   }
+
+  undeleteKey(key: MetatypeKeyT) {
+    this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id, {reverse: true})
+        .then(result => {
+          if(!result) this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
+
+          this.loadKeys()
+        })
+        .catch(e => this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string + e)
+  }
+
+  keyItemRowBackground(item: any) {
+    if(this.$store.getters.isEditMode) {
+      const matchedKey =  this.comparisonMetatype?.keys.find(k => k.name === item.name)!
+
+      if(item.deleted_at) {
+        return 'deleted-item'
+      }
+
+      if(!matchedKey) {
+        return 'created-item'
+      }
+
+      if(this.compareKeys(matchedKey, item)) {
+        return 'edited-item'
+      }
+    }
+    return ''
+  }
+
+  // this function will indicate whether two keys are different
+  compareKeys(original: MetatypeKeyT, target: MetatypeKeyT): boolean {
+    if(typeof this.comparisonMetatype === 'undefined' || typeof this.selectedMetatype === 'undefined') return false
+
+    const o: {[key: string]: any} = {}
+    const t: {[key: string]: any} = {}
+    Object.assign(o, original)
+    Object.assign(t, target)
+
+    // remove the keys we don't want to use to compare
+    function cleanKey(p: MetatypeKeyT) {
+      if(p.created_at) delete p.created_at
+      if(p.created_by) delete p.created_by
+      if(p.modified_at) delete p.modified_at
+      if(p.modified_by) delete p.modified_by
+      if(p.id) delete p.id
+      if(p.metatype_id) delete p.metatype_id
+      if(p.ontology_version) delete  p.ontology_version
+    }
+
+    cleanKey(o as MetatypeKeyT)
+    cleanKey(t as MetatypeKeyT)
+
+    return diff(o, t)
+  }
 }
 
 </script>
+
+<style lang="scss">
+  .disabled input {
+    color: black !important;
+  }
+
+  .disabled textarea {
+    color: black !important;
+  }
+
+  .edited-field {
+    input {
+      background: #FB8C00;
+      color: white !important;
+      box-shadow: -5px 0 0 #FB8C00;
+    }
+
+    textarea {
+      background: #FB8C00;
+      color: white !important;
+      box-shadow: -5px 0 0 #FB8C00;
+    }
+  }
+
+    .edited-item {
+      background: #FB8C00;
+      color: white;
+
+      &:hover {
+        background: #FFA726 !important;
+        color: black;
+      }
+
+      .v-icon__svg {
+        color: white !important;
+      }
+
+      .v-icon {
+        color: white !important;
+      }
+    }
+
+    .created-item {
+      background: #7CB342;
+      color: white;
+
+      &:hover {
+        background: #9CCC65 !important;
+        color: black;
+      }
+
+      .v-icon__svg {
+        color: white !important;
+      }
+
+      .v-icon {
+        color: white !important;
+      }
+    }
+
+    .deleted-item {
+      background: #E53935;
+      color: white;
+
+      &:hover {
+        background: #EF5350 !important;
+        color: black;
+      }
+
+      .v-icon__svg {
+        color: white !important;
+      }
+
+      .v-icon {
+        color: white !important;
+      }
+    }
+
+    .box {
+      float: left;
+      height: 20px;
+      width: 20px;
+      margin-bottom: 15px;
+      margin-left: 15px;
+      clear: both;
+    }
+
+    .created {
+      background-color: #7CB342;
+    }
+
+    .edited {
+      background-color: #FB8C00;
+    }
+
+    .removed {
+      background-color: #E53935;
+    }
+</style>

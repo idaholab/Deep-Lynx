@@ -280,9 +280,15 @@ export class Client {
         return this.post<MetatypeKeyT[]>(`/containers/${containerID}/metatypes/${metatypeID}/keys`, key);
     }
 
-    deleteMetatypeKey(containerID: string, metatypeID: string, keyID: string, {permanent}: {permanent?: boolean}): Promise<boolean> {
+    deleteMetatypeKey(
+        containerID: string,
+        metatypeID: string,
+        keyID: string,
+        {permanent, reverse}: {permanent?: boolean; reverse?: boolean},
+    ): Promise<boolean> {
         const query: {[key: string]: any} = {};
         if (permanent) query.permanent = permanent;
+        if (reverse) query.reverse = reverse;
 
         return this.delete(`/containers/${containerID}/metatypes/${metatypeID}/keys/${keyID}`, query);
     }

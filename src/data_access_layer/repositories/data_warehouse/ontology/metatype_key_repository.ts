@@ -33,6 +33,15 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         return Promise.resolve(Result.Failure(`key has no id`));
     }
 
+    unarchive(user: User, k: MetatypeKey): Promise<Result<boolean>> {
+        if (k.id) {
+            void this.#metatypeRepo.deleteCached(k.metatype_id!);
+            return this.#mapper.Unarchive(k.id, user.id!);
+        }
+
+        return Promise.resolve(Result.Failure(`key has no id`));
+    }
+
     findByID(id: string): Promise<Result<MetatypeKey>> {
         return this.#mapper.Retrieve(id);
     }
