@@ -62,7 +62,10 @@ export default class SearchMetatypes extends Vue {
       }
 
       this.$client.retrieveMetatype(this.containerID, this.metatypeID as string)
-      .then((result: MetatypeT) => this.selectedMetatype = result)
+      .then((result: MetatypeT) => {
+        this.selectedMetatype = result
+        this.emitSelected(this.selectedMetatype)
+      })
     }
   }
 
