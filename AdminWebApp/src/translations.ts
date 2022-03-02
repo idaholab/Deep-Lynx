@@ -114,6 +114,10 @@ export default {
             selectFile: 'Select File to Upload',
         },
         ifcViewer: {
+            rawProperties: 'Raw Properties',
+            name: 'Name',
+            close: 'Close',
+            description: 'Description',
             loadWarning:
                 'Loading an IFC file into the browser can be a resource and time consuming process. If the file is large, or your connection to Deep Lynx slow, it may take several minutes for the file to load and render. Please be patient.',
             loadModel: 'Load IFC File',

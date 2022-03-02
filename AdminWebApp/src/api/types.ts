@@ -411,8 +411,8 @@ export type ChangelistApprovalT = {
     approved_at?: string;
 };
 
-export type ResultT = {
-    value: any;
+export type ResultT<T> = {
+    value: T;
     isError: boolean;
     error: any;
 };
