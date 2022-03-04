@@ -24,6 +24,7 @@ import {
     OntologyVersionT,
     ChangelistT,
     ChangelistApprovalT,
+    ContainerAlertT,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -65,6 +66,14 @@ export class Client {
 
     retrieveContainer(containerID: string): Promise<ContainerT> {
         return this.get<ContainerT>(`/containers/${containerID}`);
+    }
+
+    listContainerAlerts(containerID: string): Promise<ContainerAlertT[]> {
+        return this.get<ContainerAlertT[]>(`/containers/${containerID}/alerts`);
+    }
+
+    acknowledgeContainerAlert(containerID: string, alertID: string): Promise<boolean> {
+        return this.postNoPayload(`/containers/${containerID}/alerts/${alertID}`);
     }
 
     createContainer(container: ContainerT | any): Promise<ContainerT[]> {
@@ -170,7 +179,7 @@ export class Client {
             loadKeys,
             createdAfter,
             modifiedAfter,
-            deleted,
+            deleted = false,
         }: {
             name?: string;
             nameIn?: string;
@@ -184,7 +193,7 @@ export class Client {
             loadKeys?: boolean;
             createdAfter?: string;
             modifiedAfter?: string;
-            deleted?: string;
+            deleted?: boolean;
         },
     ): Promise<MetatypeT[] | number> {
         const query: {[key: string]: any} = {};
@@ -201,7 +210,7 @@ export class Client {
         if (loadKeys) query.loadKeys = 'true';
         if (createdAfter) query.createdAfter = createdAfter;
         if (modifiedAfter) query.modifiedAfter = modifiedAfter;
-        if (deleted) query.deleted = deleted;
+        query.deleted = deleted;
 
         return this.get<MetatypeT[] | number>(`/containers/${containerID}/metatypes`, query);
     }
@@ -220,6 +229,7 @@ export class Client {
             sortBy,
             sortDesc,
             count,
+            deleted = false,
         }: {
             name?: string;
             description?: string;
@@ -232,6 +242,7 @@ export class Client {
             sortBy?: string;
             sortDesc?: boolean;
             count?: boolean;
+            deleted?: boolean;
         },
     ): Promise<MetatypeRelationshipPairT[] | number> {
         const query: {[key: string]: any} = {};
@@ -248,6 +259,7 @@ export class Client {
         if (sortBy) query.sortBy = sortBy;
         if (sortDesc) query.sortDesc = sortDesc;
         if (count) query.count = count;
+        query.deleted = deleted;
 
         return this.get<MetatypeRelationshipPairT[] | number>(`/containers/${containerID}/metatype_relationship_pairs`, query);
     }
@@ -272,8 +284,11 @@ export class Client {
         return this.delete(`/containers/${containerID}/metatypes/${metatypeID}`, query);
     }
 
-    listMetatypeKeys(containerID: string, metatypeID: string): Promise<MetatypeKeyT[]> {
-        return this.get<MetatypeKeyT[]>(`/containers/${containerID}/metatypes/${metatypeID}/keys`);
+    listMetatypeKeys(containerID: string, metatypeID: string, deleted = false): Promise<MetatypeKeyT[]> {
+        const query: {[key: string]: any} = {};
+        query.deleted = deleted;
+
+        return this.get<MetatypeKeyT[]>(`/containers/${containerID}/metatypes/${metatypeID}/keys`, query);
     }
 
     createMetatypeKey(containerID: string, metatypeID: string, key: MetatypeKeyT): Promise<MetatypeKeyT[]> {
@@ -320,6 +335,7 @@ export class Client {
             sortBy,
             sortDesc,
             count,
+            deleted = false,
         }: {
             name?: string;
             description?: string;
@@ -329,6 +345,7 @@ export class Client {
             sortBy?: string;
             sortDesc?: boolean;
             count?: boolean;
+            deleted?: boolean;
         },
     ): Promise<MetatypeRelationshipT[] | number> {
         const query: {[key: string]: any} = {};
@@ -341,6 +358,7 @@ export class Client {
         if (sortBy) query.sortBy = sortBy;
         if (sortDesc) query.sortDesc = sortDesc;
         if (count) query.count = 'true';
+        query.deleted = deleted;
 
         return this.get<MetatypeRelationshipT[] | number>(`/containers/${containerID}/metatype_relationships`, query);
     }
@@ -383,8 +401,11 @@ export class Client {
         return this.delete(`/containers/${containerID}/metatype_relationship_pairs/${metatypeRelationshipPairID}`, query);
     }
 
-    listMetatypeRelationshipKeys(containerID: string, relationshipID: string): Promise<MetatypeRelationshipKeyT[]> {
-        return this.get<MetatypeRelationshipKeyT[]>(`/containers/${containerID}/metatype_relationships/${relationshipID}/keys`);
+    listMetatypeRelationshipKeys(containerID: string, relationshipID: string, deleted = false): Promise<MetatypeRelationshipKeyT[]> {
+        const query: {[key: string]: any} = {};
+        query.deleted = deleted;
+
+        return this.get<MetatypeRelationshipKeyT[]>(`/containers/${containerID}/metatype_relationships/${relationshipID}/keys`, query);
     }
 
     deleteMetatypeRelationshipKey(containerID: string, metatypeRelationshipID: string, keyID: string, {permanent}: {permanent?: boolean}): Promise<boolean> {

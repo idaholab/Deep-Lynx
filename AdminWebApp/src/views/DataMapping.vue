@@ -179,6 +179,7 @@
           <v-btn color="error" @click="reviewMappings = false; importedMappingResults = []">End Review</v-btn>
         </v-toolbar>
 
+        <v-col :cols="4"><div class="box edited"></div><p> - {{$t('dataMapping.deprecated')}} <info-tooltip :message="$t('dataMapping.deprecatedTooltip')"></info-tooltip></p></v-col>
         <v-data-table
             v-if="!selectedMetatype && !selectedRelationshipPair && !reviewMappings"
             :headers="headers()"
@@ -200,8 +201,8 @@
 
           <template v-slot:[`item.resulting_types`]="{ item }">
             <div v-for="transformation in item.transformations" :key="transformation.id">
-              {{transformation.metatype_name}}
-              {{transformation.metatype_relationship_pair_name}}
+              <span :class="isDeprecated(transformation)">{{transformation.metatype_name}}</span>
+              <span :class="isDeprecated(transformation)">{{transformation.metatype_relationship_pair_name}}</span>
             </div>
           </template>
 
@@ -246,6 +247,7 @@
                 'items-per-page-options': [25,50,100]
             }"
         >
+
           <template v-slot:[`item.active`]="{ item }">
             <v-checkbox v-model="item.active" :disabled="true"></v-checkbox>
           </template>
@@ -319,7 +321,14 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
-import {DataSourceT, MetatypeRelationshipPairT, MetatypeT, ResultT, TypeMappingT} from "@/api/types";
+import {
+  DataSourceT,
+  MetatypeRelationshipPairT,
+  MetatypeT, OntologyVersionT,
+  ResultT,
+  TypeMappingT,
+  TypeMappingTransformationT
+} from "@/api/types";
 import DataTypeMapping from "@/components/dataTypeMapping.vue"
 import ExportMappingsDialog from "@/components/exportMappingsDialog.vue";
 import ImportMappingsDialog from "@/components/importMappingsDialog.vue";
@@ -358,6 +367,7 @@ export default class DataMapping extends Vue {
   selectedMappings: [] = []
   importedMappingResults: ResultT<any>[] = []
   reviewMappings = false
+  currentOntologyVersion: OntologyVersionT | null = null
 
   typeMappingCount = 0
   selectedTypeMapping: TypeMappingT | null = null
@@ -507,6 +517,16 @@ export default class DataMapping extends Vue {
   setDataSource(dataSource: any) {
     this.selectedDataSource = dataSource
     this.$router.replace(`/containers/${this.containerID}/data-mapping/${this.selectedDataSource?.id}`)
+  }
+
+  mounted() {
+    this.$client.listOntologyVersions(this.$store.getters.activeContainerID, {status: 'published'})
+        .then((results) => {
+          if(results.length > 0) {
+            this.currentOntologyVersion = results[0]
+          }
+        })
+        .catch((e: any) =>  this.errorMessage = e)
   }
 
   loadTypeMappings() {
@@ -671,5 +691,47 @@ export default class DataMapping extends Vue {
     this.importedMappingResults = results
     this.loadTypeMappings()
   }
+
+  isDeprecated(transformation: TypeMappingTransformationT) {
+   if(transformation && this.$store.getters.ontologyVersioningEnabled) {
+     if(transformation.metatype_ontology_version !== this.currentOntologyVersion?.id) return 'edited-item'
+     if(transformation.metatype_relationship_pair_ontology_version !== this.currentOntologyVersion?.id) return 'edited-item'
+   }
+  }
 }
 </script>
+
+<style lang="scss">
+.edited-item {
+  background: #FB8C00;
+  color: white;
+  box-shadow: -5px 0 0 #FB8C00, 5px 0 0 #FB8C00;
+
+  &:hover {
+    background: #FFA726 !important;
+    color: black;
+  }
+
+  .v-icon__svg {
+    color: white !important;
+  }
+
+  .v-icon {
+    color: white !important;
+  }
+}
+
+.box {
+  float: left;
+  height: 20px;
+  width: 20px;
+  margin-bottom: 15px;
+  margin-left: 15px;
+  clear: both;
+}
+
+.edited {
+  background-color: #FB8C00;
+}
+
+</style>

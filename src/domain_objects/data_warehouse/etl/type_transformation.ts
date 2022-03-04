@@ -204,7 +204,13 @@ export default class TypeTransformation extends BaseDomainClass {
     metatype_name?: string;
 
     @IsOptional()
+    metatype_ontology_version?: string;
+
+    @IsOptional()
     metatype_relationship_pair_name?: string;
+
+    @IsOptional()
+    metatype_relationship_pair_ontology_version?: string;
 
     @IsOptional()
     shape_hash?: string;

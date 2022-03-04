@@ -107,6 +107,10 @@ export default class TypeMappingMapper extends Mapper {
         return super.runAsTransaction(this.setActiveStatement(id));
     }
 
+    public async SetInactiveForContainer(containerID: string): Promise<Result<boolean>> {
+        return super.runAsTransaction(this.setInactiveForContainerStatement(containerID));
+    }
+
     public async SetInActive(id: string): Promise<Result<boolean>> {
         return super.runAsTransaction(this.setInactiveStatement(id));
     }
@@ -302,6 +306,13 @@ export default class TypeMappingMapper extends Mapper {
         return {
             text: `UPDATE type_mappings SET active = false, modified_at = NOW() WHERE id = $1`,
             values: [typeMappingID],
+        };
+    }
+
+    private setInactiveForContainerStatement(containerID: string): QueryConfig {
+        return {
+            text: `UPDATE type_mappings SET active = false, modified_at = NOW() WHERE container_id = $1`,
+            values: [containerID],
         };
     }
 

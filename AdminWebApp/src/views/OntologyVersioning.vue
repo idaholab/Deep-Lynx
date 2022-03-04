@@ -230,6 +230,7 @@ export default class OntologyVersioning extends Vue {
     .then(() => {
       this.successMessage = 'Changelist Applied Successfully'
       this.listChangelists()
+      this.listOntologyVersions()
     })
     .catch(e => this.errorMessage = e)
   }

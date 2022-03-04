@@ -342,6 +342,11 @@ export default class MetatypeRelationshipRepository extends Repository implement
         return this;
     }
 
+    deleted_at(operator: string, value?: any) {
+        super.query('deleted_at', operator, value);
+        return this;
+    }
+
     count(): Promise<Result<number>> {
         return super.count();
     }
