@@ -693,7 +693,7 @@ export default class DataMapping extends Vue {
   }
 
   isDeprecated(transformation: TypeMappingTransformationT) {
-   if(transformation) {
+   if(transformation && this.$store.getters.ontologyVersioningEnabled) {
      if(transformation.metatype_ontology_version !== this.currentOntologyVersion?.id) return 'edited-item'
      if(transformation.metatype_relationship_pair_ontology_version !== this.currentOntologyVersion?.id) return 'edited-item'
    }
