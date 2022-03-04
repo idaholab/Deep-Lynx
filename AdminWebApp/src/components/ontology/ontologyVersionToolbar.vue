@@ -10,7 +10,7 @@
       <v-switch
           v-model="isEditMode"
           style="margin-left: 5px; margin-top: 5px"
-          :disabled="!isCurrent || !$auth.Auth('ontology', 'write', containerID)"
+          :disabled="(!isCurrent || !$auth.Auth('ontology', 'write', containerID)) && !$store.getters.isEditMode"
           color="orange darken-4"></v-switch>
       <p style="color: white; margin-right: 15px">{{$t('ontologyToolbar.editMode')}}
       </p>
@@ -27,6 +27,7 @@
       </v-select>
       <create-ontology-version-dialog
           v-if="$store.getters.isEditMode"
+          @versionCreated="listPendingVersions()"
           :icon="true"
           :containerID="containerID">
       </create-ontology-version-dialog>

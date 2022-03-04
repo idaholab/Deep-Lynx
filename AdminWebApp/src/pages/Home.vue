@@ -233,6 +233,7 @@
       <language-select class="pt-2" style="max-width:125px;"></language-select>
     </v-app-bar>
 
+    <container-alert-banner :containerID="containerID"></container-alert-banner>
 
     <v-main style="padding: 64px 0px 36px 36px">
       <v-container v-if="currentMainComponent && currentMainComponent !== ''">
@@ -339,6 +340,7 @@ import {UserT} from "@/auth/types";
 import {ContainerT, DataSourceT} from "@/api/types";
 import Config from "@/config";
 import OntologyVersioning from "@/views/OntologyVersioning.vue";
+import ContainerAlertBanner from "@/components/containerAlertBanner.vue";
 
 @Component({components: {
     ContainerSelect,
@@ -361,6 +363,7 @@ import OntologyVersioning from "@/views/OntologyVersioning.vue";
     Users,
     Containers,
     OntologyVersioning,
+    ContainerAlertBanner
   }})
 export default class Home extends Vue {
   @Prop(String) readonly containerID: string | undefined

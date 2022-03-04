@@ -220,6 +220,7 @@ export default class Metatypes extends Vue {
       sortDesc: sortDescParam,
       name: (this.name !== "") ? this.name : undefined,
       description: (this.description !== "") ? this.description : undefined,
+      deleted: this.$store.getters.isEditMode
     })
         .then((results) => {
           if(!this.$store.getters.isEditMode) {

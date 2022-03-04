@@ -2,12 +2,17 @@ import RepositoryInterface, {QueryOptions, Repository} from '../../../repository
 import OntologyVersion from '../../../../../domain_objects/data_warehouse/ontology/versioning/ontology_version';
 import OntologyVersionMapper from '../../../../mappers/data_warehouse/ontology/versioning/ontology_version_mapper';
 import Result from '../../../../../common_classes/result';
-import {User} from '../../../../../domain_objects/access_management/user';
+import {SuperUser, User} from '../../../../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
 import UserRepository from '../../../access_management/user_repository';
+import TypeMappingMapper from '../../../../mappers/data_warehouse/etl/type_mapping_mapper';
+import Logger from '../../../../../services/logger';
+import ContainerRepository from '../container_respository';
+import {ContainerAlert} from '../../../../../domain_objects/data_warehouse/ontology/container';
 
 export default class OntologyVersionRepository extends Repository implements RepositoryInterface<OntologyVersion> {
     #mapper: OntologyVersionMapper = OntologyVersionMapper.Instance;
+    #mappingMapper: TypeMappingMapper = TypeMappingMapper.Instance;
 
     async delete(t: OntologyVersion): Promise<Result<boolean>> {
         const found = await this.findByID(t.id!);
@@ -60,6 +65,36 @@ export default class OntologyVersionRepository extends Repository implements Rep
         statusMessage?: string,
     ): Promise<Result<boolean>> {
         return this.#mapper.SetStatus(id, status, statusMessage);
+    }
+
+    // publish finalizes an approved changelist and converts it into the newest ontology version - this also creates
+    // a container alert regarding the publishing and disables all current type mappings in order to let the user migrate
+    // their transformations over at their own pace
+    async publish(id: string): Promise<Result<boolean>> {
+        const version = await this.findByID(id);
+        if (version.isError) return Promise.resolve(Result.Pass(version));
+
+        const status = await this.#mapper.SetStatus(id, 'published');
+        if (status.isError) return Promise.resolve(Result.Failure(`unable to mark ontology version as published ${status.error?.error}`));
+
+        const marked = await this.#mappingMapper.SetInactiveForContainer(version.value.container_id!);
+        if (marked.isError) Logger.error(`unable to mark disabled all type mappings ${marked.error?.error}`);
+
+        const containerRepo = new ContainerRepository();
+
+        const alert = await containerRepo.createAlert(
+            new ContainerAlert({
+                containerID: version.value.container_id!,
+                type: 'warning',
+                message:
+                    // eslint-disable-next-line max-len
+                    'A new Ontology was just published. As a result, all Type Mappings for all Data Sources have been temporarily disabled pending user review. Please review and either delete, update, or re-enable your Type Mappings. More information can be found on the Type Mapping section of the Administration GUI.',
+            }),
+            SuperUser,
+        );
+        if (alert.isError) Logger.error(`unable create container alert for new ontology ${alert.error?.error}`);
+
+        return Promise.resolve(Result.Success(true));
     }
 
     async approve(id: string, user: User, containerID: string): Promise<Result<boolean>> {

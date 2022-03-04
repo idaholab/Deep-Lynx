@@ -227,6 +227,8 @@ export default class TypeTransformationMapper extends Mapper {
             text: `SELECT type_mapping_transformations.*,
                          metatypes.name as metatype_name,
                          metatype_relationship_pairs.name as metatype_relationship_pair_name,
+                         metatypes.ontology_version as metatype_ontology_version,
+                         metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version,
                          mapping.container_id AS container_id,
                          mapping.shape_hash as shape_hash,
                          mapping.data_source_id as data_source_id
@@ -276,6 +278,8 @@ export default class TypeTransformationMapper extends Mapper {
             text: `SELECT type_mapping_transformations.*,
                           metatypes.name as metatype_name,
                           metatype_relationship_pairs.name as metatype_relationship_pair_name,
+                          metatypes.ontology_version as metatype_ontology_version,
+                          metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version,  
                           mapping.container_id AS container_id,
                           mapping.shape_hash as shape_hash,
                           mapping.data_source_id as data_source_id
