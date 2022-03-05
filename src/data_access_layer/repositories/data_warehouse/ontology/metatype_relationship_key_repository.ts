@@ -1,9 +1,10 @@
-import RepositoryInterface, {Repository} from '../../repository';
+import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
 import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 import Result from '../../../../common_classes/result';
 import MetatypeRelationshipKeyMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_key_mapper';
 import {User} from '../../../../domain_objects/access_management/user';
 import MetatypeRelationshipRepository from './metatype_relationship_repository';
+import {PoolClient} from 'pg';
 
 /*
  We have the bare minimum of functions in this repository, and it only exists
@@ -120,5 +121,17 @@ export default class MetatypeRelationshipKeyRepository extends Repository implem
 
     constructor() {
         super(MetatypeRelationshipKeyMapper.tableName);
+    }
+
+    id(operator: string, value: any) {
+        super.query('id', operator, value);
+        return this;
+    }
+
+    async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<MetatypeRelationshipKey[]>> {
+        return super.findAll<MetatypeRelationshipKey>(options, {
+            transaction,
+            resultClass: MetatypeRelationshipKey,
+        });
     }
 }

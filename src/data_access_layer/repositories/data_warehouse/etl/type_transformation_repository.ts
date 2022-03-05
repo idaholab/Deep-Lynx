@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-for-in-array */
-import RepositoryInterface, { DeleteOptions, Repository } from "../../repository";
+import RepositoryInterface, {DeleteOptions, QueryOptions, Repository} from "../../repository";
 import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 import Result from '../../../../common_classes/result';
 import {User} from '../../../../domain_objects/access_management/user';
@@ -19,6 +19,7 @@ import MetatypeRelationshipPairRepository from '../ontology/metatype_relationshi
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import OntologyVersionRepository from "../ontology/versioning/ontology_version_repository";
+import {PoolClient} from "pg";
 
 /*
     TypeTransformationRepository contains methods for persisting and retrieving
@@ -140,9 +141,6 @@ export default class TypeTransformationRepository extends Repository implements 
         return Promise.resolve(Result.Success(true));
     }
 
-    constructor() {
-        super(TypeTransformationMapper.tableName);
-    }
 
     // this method will iterate through all key mappings on this transformation and populate their names
     // generally this method is only used when we need to export mapping/transformations into a separate
@@ -332,5 +330,58 @@ export default class TypeTransformationRepository extends Repository implements 
         if (!deleted) Logger.error(`unable to remove type mapping ${t.id} from cache`);
 
         return Promise.resolve(deleted);
+    }
+
+    constructor() {
+        super(TypeTransformationMapper.tableName);
+        this._rawQuery = [
+            `SELECT type_mapping_transformations.*,
+                         metatypes.name as metatype_name,
+                         metatype_relationship_pairs.name as metatype_relationship_pair_name,
+                         metatypes.ontology_version as metatype_ontology_version,
+                         metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version,
+                         mapping.container_id AS container_id,
+                         mapping.shape_hash as shape_hash,
+                         mapping.data_source_id as data_source_id
+                  FROM ${TypeTransformationMapper.tableName}`,
+            `LEFT JOIN type_mappings as mapping ON type_mapping_transformations.type_mapping_id = mapping.id`,
+            `LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id`,
+            `LEFT JOIN metatype_relationship_pairs 
+                               ON type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id`
+        ]
+    }
+
+    typeMappingID(operator: string, value: any) {
+        super.query('type_mapping_id', operator, value)
+        return this;
+    }
+
+    async count(): Promise<Result<number>> {
+        return super.count()
+    }
+
+    async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<TypeTransformation[]>> {
+        const results = await super.findAll<TypeTransformation>(options, {
+            transaction,
+            resultClass: TypeTransformation
+        })
+
+        this._rawQuery = [
+            `SELECT type_mapping_transformations.*,
+                         metatypes.name as metatype_name,
+                         metatype_relationship_pairs.name as metatype_relationship_pair_name,
+                         metatypes.ontology_version as metatype_ontology_version,
+                         metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version,
+                         mapping.container_id AS container_id,
+                         mapping.shape_hash as shape_hash,
+                         mapping.data_source_id as data_source_id
+                  FROM ${TypeTransformationMapper.tableName}`,
+            `LEFT JOIN type_mappings as mapping ON type_mapping_transformations.type_mapping_id = mapping.id`,
+            `LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id`,
+            `LEFT JOIN metatype_relationship_pairs 
+                               ON type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id`
+        ]
+
+        return Promise.resolve(results)
     }
 }
