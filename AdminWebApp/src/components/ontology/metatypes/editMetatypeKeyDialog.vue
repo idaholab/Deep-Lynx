@@ -267,7 +267,7 @@
 
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeKeyT, MetatypeT} from "../api/types";
+import {MetatypeKeyT, MetatypeT} from "../../../api/types";
 
 @Component
 export default class EditMetatypeKeyDialog extends Vue {

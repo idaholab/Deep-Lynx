@@ -73,11 +73,11 @@
 
 <script lang="ts">
 import {Component, Vue} from 'vue-property-decorator'
-import LanguageSelect from '@/components/languageSelect.vue'
+import LanguageSelect from '@/components/general/languageSelect.vue'
 import {ContainerT, UserContainerInviteT} from "@/api/types";
-import ContainerSelect from "@/components/containerSelect.vue"
-import CreateContainerDialog from "@/components/createContainerDialog.vue";
-import Logout from "@/components/logout.vue";
+import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
+import CreateContainerDialog from "@/components/ontology/containers/createContainerDialog.vue";
+import Logout from "@/components/accessManagement/logout.vue";
 import {RefreshPermissions} from "@/auth/authentication_service";
 
 @Component({components: {

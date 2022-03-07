@@ -91,7 +91,7 @@
    import {Component, Vue} from 'vue-property-decorator'
    import {UserT} from "@/auth/types";
    import {ContainerT} from "@/api/types";
-   import CreateContainerDialog from "@/components/createContainerDialog.vue"
+   import CreateContainerDialog from "@/components/ontology/containers/createContainerDialog.vue"
 
    @Component({components: {CreateContainerDialog}})
    export default class Containers extends Vue {

@@ -13,7 +13,7 @@
 
 <script lang="ts">
     import {Component, Vue} from 'vue-property-decorator'
-    import {ContainerT} from "../api/types";
+    import {ContainerT} from "../../../api/types";
 
     @Component
     export default class ContainerSelect extends Vue {

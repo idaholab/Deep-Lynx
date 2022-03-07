@@ -156,7 +156,7 @@
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
 import {ExportT} from "@/api/types";
-import CreateExportDialog from "@/components/createExportDialog.vue";
+import CreateExportDialog from "@/components/dataExport/createExportDialog.vue";
 
 @Component({components: {
   CreateExportDialog

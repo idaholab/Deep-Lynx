@@ -268,6 +268,16 @@ export default class MetatypeRelationshipRepository extends Repository implement
         return Promise.resolve(Result.Failure('metatype relationship has no id'));
     }
 
+    unarchive(user: User, m: MetatypeRelationship): Promise<Result<boolean>> {
+        if (m.id) {
+            void this.deleteCached(m.id);
+
+            return this.#mapper.Unarchive(m.id, user.id!);
+        }
+
+        return Promise.resolve(Result.Failure('metatype relationship has no id'));
+    }
+
     async findByID(id: string, loadKeys = true): Promise<Result<MetatypeRelationship>> {
         const cached = await this.getCached(id);
         if (cached) {

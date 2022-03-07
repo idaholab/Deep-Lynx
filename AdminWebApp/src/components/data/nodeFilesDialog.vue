@@ -74,7 +74,7 @@
 import {Component, Prop, Vue} from "vue-property-decorator";
 import {FileT, NodeT} from "@/api/types";
 import {mdiFileDocumentMultiple} from "@mdi/js";
-import IfcViewer from "@/components/ifcViewer.vue";
+import IfcViewer from "@/components/general/ifcViewer.vue";
 
 @Component({components: {IfcViewer}})
 export default class NodeFilesDialog extends Vue {

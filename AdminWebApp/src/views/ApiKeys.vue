@@ -29,8 +29,8 @@
 <script lang="ts">
 import {Component, Prop, Vue} from 'vue-property-decorator'
 import {KeyPairT} from "@/api/types";
-import CreateApiKeyDialog from "@/components/createApiKeyDialog.vue";
-import DeleteApiKeyDialog from "@/components/deleteApiKeyDialog.vue";
+import CreateApiKeyDialog from "@/components/accessManagement/createApiKeyDialog.vue";
+import DeleteApiKeyDialog from "@/components/accessManagement/deleteApiKeyDialog.vue";
 
 @Component({components:{CreateApiKeyDialog, DeleteApiKeyDialog}})
 export default class ApiKeys extends Vue {

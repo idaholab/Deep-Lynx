@@ -47,7 +47,7 @@
             <v-col :cols="12">
               <v-data-table
                   :headers="headers()"
-                  :items="selectedMetatypeRelationship.properties"
+                  :items="selectedMetatypeRelationship.keys"
                   :items-per-page="100"
                   :footer-props="{
                      'items-per-page-options': [25, 50, 100]
@@ -93,9 +93,9 @@
 
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeRelationshipKeyT, MetatypeRelationshipT} from "../api/types";
-import EditMetatypeRelationshipKeyDialog from "@/components/editMetatypeRelationshipKeyDialog.vue";
-import CreateMetatypeRelationshipKeyDialog from "@/components/createMetatypeRelationshipKeyDialog.vue";
+import {MetatypeRelationshipKeyT, MetatypeRelationshipT} from "../../../api/types";
+import EditMetatypeRelationshipKeyDialog from "@/components/ontology/metatypeRelationships/editMetatypeRelationshipKeyDialog.vue";
+import CreateMetatypeRelationshipKeyDialog from "@/components/ontology/metatypeRelationships/createMetatypeRelationshipKeyDialog.vue";
 
 @Component({components: {
     EditMetatypeRelationshipKeyDialog,
@@ -157,7 +157,7 @@ export default class EditMetatypeRelationshipDialog extends Vue {
       this.$client.listMetatypeRelationshipKeys(this.selectedMetatypeRelationship.container_id, this.selectedMetatypeRelationship.id)
           .then(keys => {
             if(this.selectedMetatypeRelationship) {
-              this.selectedMetatypeRelationship.properties = keys
+              this.selectedMetatypeRelationship.keys = keys
               this.keysLoading = false
               this.$forceUpdate()
             }

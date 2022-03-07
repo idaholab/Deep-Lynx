@@ -72,10 +72,10 @@
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import { MetatypeRelationshipT, MetatypeRelationshipPairT } from '@/api/types';
-import CreateRelationshipPairDialog from "@/components/createRelationshipPairDialog.vue";
-import EditRelationshipPairDialog from "@/components/editRelationshipPairDialog.vue";
+import CreateRelationshipPairDialog from "@/components/ontology/metatypeRelationshipPairs/createRelationshipPairDialog.vue";
+import EditRelationshipPairDialog from "@/components/ontology/metatypeRelationshipPairs/editRelationshipPairDialog.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
-import OntologyVersionToolbar from "@/components/ontology/ontologyVersionToolbar.vue";
+import OntologyVersionToolbar from "@/components/ontology/versioning/ontologyVersionToolbar.vue";
 
 @Component({components: {
   CreateRelationshipPairDialog,
@@ -139,7 +139,7 @@ export default class MetatypeRelationshipPairs extends Vue {
 
   countRelationshipPairs() {
     this.$client.listMetatypeRelationshipPairs(this.containerID, {
-      ontologyVersion: this.$store.getters.selectedOntologyVersionID,
+      ontologyVersion: this.ontologyVersionID,
       count: true,
       name: (this.name !== "") ? this.name : undefined,
       description: (this.description !== "") ? this.description : undefined,
@@ -163,7 +163,7 @@ export default class MetatypeRelationshipPairs extends Vue {
     if(sortDesc) sortDescParam = sortDesc[0]
 
     this.$client.listMetatypeRelationshipPairs(this.containerID, {
-      ontologyVersion: this.$store.getters.selectedOntologyVersionID,
+      ontologyVersion: this.ontologyVersionID,
       limit: itemsPerPage,
       offset: itemsPerPage * pageNumber,
       sortBy: sortParam,
@@ -194,6 +194,16 @@ export default class MetatypeRelationshipPairs extends Vue {
 
   copyID(id: string) {
     navigator.clipboard.writeText(id)
+  }
+
+  get ontologyVersionID() {
+    if (this.$store.getters.ontologyVersioningEnabled && this.$store.getters.isEditMode) {
+      return this.$store.getters.selectedPendingOntologyVersionID
+    } else if (this.$store.getters.ontologyVersioningEnabled) {
+      return this.$store.getters.selectedOntologyVersionID
+    } else {
+      return undefined
+    }
   }
 }
 </script>

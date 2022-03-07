@@ -90,9 +90,9 @@ import {Component, Prop, Vue} from 'vue-property-decorator'
 import {
   ImportDataT,
   TypeMappingT, TypeMappingTransformationT
-} from "../api/types";
-import TransformationDialog from "@/components/transformationDialog.vue";
-import DeleteTypeTransformationDialog from "@/components/deleteTypeTransformationDialog.vue";
+} from "../../api/types";
+import TransformationDialog from "@/components/etl/transformationDialog.vue";
+import DeleteTypeTransformationDialog from "@/components/etl/deleteTypeTransformationDialog.vue";
 
 @Component({
   filters: {

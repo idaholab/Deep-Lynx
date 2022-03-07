@@ -333,14 +333,14 @@ import Users from "@/views/Users.vue"
 import ContainerUsers from "@/views/ContainerUsers.vue"
 import Containers from "@/views/Containers.vue"
 import ApiKeys from "@/views/ApiKeys.vue";
-import LanguageSelect from "@/components/languageSelect.vue";
-import ContainerSelect from "@/components/containerSelect.vue"
+import LanguageSelect from "@/components/general/languageSelect.vue";
+import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
 import {TranslateResult} from "vue-i18n";
 import {UserT} from "@/auth/types";
 import {ContainerT, DataSourceT} from "@/api/types";
 import Config from "@/config";
 import OntologyVersioning from "@/views/OntologyVersioning.vue";
-import ContainerAlertBanner from "@/components/containerAlertBanner.vue";
+import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
 
 @Component({components: {
     ContainerSelect,

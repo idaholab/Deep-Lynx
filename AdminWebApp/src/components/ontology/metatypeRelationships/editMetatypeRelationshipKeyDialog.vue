@@ -143,7 +143,7 @@
 
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeRelationshipKeyT, MetatypeRelationshipT} from "../api/types";
+import {MetatypeRelationshipKeyT, MetatypeRelationshipT} from "../../../api/types";
 
 @Component
 export default class EditMetatypeRelationshipKeyDialog extends Vue {
