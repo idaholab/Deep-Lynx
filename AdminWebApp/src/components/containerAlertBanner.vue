@@ -1,5 +1,5 @@
 <template>
-  <container>
+  <div>
     <div v-for="alert in alerts" :key="alert.id">
       <v-alert type="error">
         <p>{{alert.message}}</p>
@@ -7,7 +7,7 @@
         <p v-else>{{$t('containerAlert.containerAdminAcknowledge')}}</p>
       </v-alert>
     </div>
-  </container>
+  </div>
 </template>
 
 <script lang="ts">

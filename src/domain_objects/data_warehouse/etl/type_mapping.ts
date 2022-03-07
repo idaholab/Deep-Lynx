@@ -166,6 +166,14 @@ export class TypeMappingExportPayload extends NakedDomainClass {
     target_data_source?: string;
 }
 
+export class TypeMappingUpgradePayload extends NakedDomainClass {
+    @IsOptional()
+    mapping_ids: string[] = [];
+
+    @IsOptional()
+    ontology_version?: string;
+}
+
 export class ShapeHashOptions {
     stop_nodes?: string[];
     value_nodes?: string[];

@@ -13,6 +13,11 @@ import Config from '../../../../services/config';
 import Logger from '../../../../services/logger';
 import DataSourceMapper from '../../../mappers/data_warehouse/import/data_source_mapper';
 import TypeTransformationRepository from './type_transformation_repository';
+import MetatypeRepository from '../ontology/metatype_repository';
+import MetatypeRelationshipPairRepository from '../ontology/metatype_relationship_pair_repository';
+import MetatypeRelationshipRepository from '../ontology/metatype_relationship_repository';
+import MetatypeKeyRepository from '../ontology/metatype_key_repository';
+import MetatypeRelationshipKeyRepository from '../ontology/metatype_relationship_key_repository';
 
 /*
     TypeMappingRepository contains methods for persisting and retrieving nodes
@@ -408,6 +413,153 @@ export default class TypeMappingRepository extends Repository implements Reposit
         typeMapping.modified_by = undefined;
 
         return Promise.resolve(typeMapping);
+    }
+
+    // upgrade mappings accepts an ontology version and a set of mappings and attempts to upgrade all transformations
+    // for the mappings to the current ontology version - this requires stripping the transformations of their current
+    // metatype/pair and key ids and attempting to find the match by name in the current ontology - don't make the mistake
+    // of thinking you can just use the old_id field and pull data that way - an ontology version might not be the one
+    // the changelist was created from, causing mismatches - the only way is by name matching (names are unique per container)
+    // we also assume that none of the mappings here have their transformations
+    // MAPPINGS MUST COME FROM THE SAME CONTAINER
+    async upgradeMappings(ontologyVersion: string, ...mappings: TypeMapping[]): Promise<Result<boolean>[]> {
+        if (mappings.length === 0) return Promise.resolve([Result.Failure('no mappings present to upgrade')]);
+
+        const metatypeRepo = new MetatypeRepository();
+        const relationshipRepo = new MetatypeRelationshipRepository();
+        const pairRepo = new MetatypeRelationshipPairRepository();
+        const transformationRepo = new TypeTransformationRepository();
+
+        // first fetch all transformations for all mappings - don't loop and contain them on the parent object because
+        // we want to minimize the amount of times we're going back to the database, and it simplifies the function if
+        // we're working with a list of transformations
+        const transformations = await transformationRepo
+            .where()
+            .typeMappingID('in', mappings.map((m) => m.id).join(','))
+            .list();
+
+        if (transformations.isError) return Promise.resolve([Result.Failure('unable to list transformations for upgrading')]);
+
+        // with all transformations fetched, fetch all metatypes and pairs based on the transformations NAMES - again we
+        // want to keep our database call amount low, easier to filter in memory than call the same metatype/pair filter
+        // functions on n number of transformations - this might need looked at if we start to run into memory issues, but
+        // generally there won't be tens of thousands of transformations in a container, we'll fetch the keys for the
+        // new metatypes
+        const metatypeNames: string[] = [];
+        const pairNames: string[] = [];
+
+        transformations.value.forEach((t) => {
+            if (t.metatype_name) {
+                metatypeNames.push(t.metatype_name);
+            }
+
+            if (t.metatype_relationship_pair_name) {
+                pairNames.push(t.metatype_relationship_pair_name);
+            }
+        });
+
+        const metatypes = await metatypeRepo
+            .where()
+            .containerID('eq', mappings[0].container_id)
+            .and()
+            .ontologyVersion('eq', ontologyVersion)
+            .and()
+            .name('in', metatypeNames.join(','))
+            .list(true);
+        if (metatypes.isError) return Promise.resolve([Result.Failure('unable to list metatypes')]);
+
+        const pairs = await pairRepo
+            .where()
+            .containerID('eq', mappings[0].container_id)
+            .and()
+            .ontologyVersion('eq', ontologyVersion)
+            .and()
+            .name('in', pairNames.join(','))
+            .list();
+        if (pairs.isError) return Promise.resolve([Result.Failure('unable to list relationship pairs')]);
+
+        // we have to single out the relationships so we can get the keys loaded on them
+        const relationships = await relationshipRepo
+            .where()
+            .containerID('eq', mappings[0].container_id)
+            .and()
+            .ontologyVersion('eq', ontologyVersion)
+            .and()
+            .id('in', pairs.value.map((p) => p.relationship_id).join(','))
+            .list(true);
+        if (relationships.isError) return Promise.resolve([Result.Failure('unable to list relationships')]);
+
+        const results: Result<boolean>[] = [];
+
+        // for each transformation find the current id by searching the fetched metatypes/pair and keys and update the object
+        transformations.value.forEach((t, i) => {
+            if (t.metatype_id) {
+                const foundMetatype = metatypes.value.find((m) => m.name === t.metatype_name);
+                if (!foundMetatype) {
+                    results.push(Result.Failure(`unable to find metatype by name for transformation ${t.id}`));
+                    return;
+                }
+
+                transformations.value[i].metatype_id = foundMetatype.id;
+
+                // now loop through the keys, comparing with the found metatype's keys - if we can't find one, remove it
+                // from the main transformation and add it into the failed upgraded key array on the configuration object
+                transformations.value[i].keys.forEach((k, j) => {
+                    if (k.metatype_key && foundMetatype.keys) {
+                        const foundKey = foundMetatype.keys.find((newKey) => newKey.name === k.metatype_key?.name);
+                        if (!foundKey) {
+                            transformations.value[i].config.failed_upgraded_keys.push(...transformations.value[i].keys.splice(j, 1));
+                            return;
+                        }
+
+                        transformations.value[i].keys[j].metatype_key = foundKey;
+                        transformations.value[i].keys[j].metatype_key_id = foundKey.id;
+                    } else {
+                        transformations.value[i].config.failed_upgraded_keys.push(...transformations.value[i].keys.splice(j, 1));
+                    }
+                });
+            }
+
+            if (t.metatype_relationship_pair_id) {
+                const foundMetatypeRelationshipPair = pairs.value.find((p) => p.name === t.metatype_relationship_pair_name);
+                if (!foundMetatypeRelationshipPair) {
+                    results.push(Result.Failure(`unable to find metatype relationship pair by name for transformation ${t.id}`));
+                    return;
+                }
+
+                transformations.value[i].metatype_relationship_pair_id = foundMetatypeRelationshipPair.id;
+
+                const foundRelationship = relationships.value.find((r) => r.id === foundMetatypeRelationshipPair.relationship_id);
+
+                // now loop through the keys, comparing with the found metatype's keys - if we can't find one, remove it
+                // from the main transformation and add it into the failed upgraded key array on the configuration object
+                transformations.value[i].keys.forEach((k, j) => {
+                    if (k.metatype_relationship_key && foundRelationship?.keys) {
+                        const foundKey = foundRelationship.keys.find((newKey) => newKey.name === k.metatype_relationship_key?.name);
+                        if (!foundKey) {
+                            transformations.value[i].config.failed_upgraded_keys.push(...transformations.value[i].keys.splice(j, 1));
+                            return;
+                        }
+
+                        transformations.value[i].keys[j].metatype_relationship_key = foundKey;
+                        transformations.value[i].keys[j].metatype_relationship_key_id = foundKey.id;
+                    } else {
+                        transformations.value[i].config.failed_upgraded_keys.push(...transformations.value[i].keys.splice(j, 1));
+                    }
+                });
+            }
+
+            // if we've made it here, count it as a successful upgrade
+            results.push(Result.Success(true));
+        });
+
+        const saved = await TypeTransformationMapper.Instance.BulkUpdate('system', transformations.value);
+        if (saved.isError) return Promise.resolve([Result.Failure(`unable to save modified transformations ${saved.error?.error}`)]);
+
+        for (const m of mappings) await this.deleteCached(m);
+
+        // with all transformations saved, bulk save them, use the mapper since we don't need any validation here
+        return Promise.resolve(results);
     }
 
     async countForDataSource(dataSourceID: string): Promise<Result<number>> {

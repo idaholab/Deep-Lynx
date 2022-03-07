@@ -25,6 +25,7 @@ import {
     ChangelistT,
     ChangelistApprovalT,
     ContainerAlertT,
+    TypeMappingUpgradePayloadT,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -450,6 +451,10 @@ export class Client {
             `/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations/${transformationID}`,
             transformation,
         );
+    }
+
+    upgradeTypeMappings(containerID: string, dataSourceID: string, payload: TypeMappingUpgradePayloadT): Promise<ResultT<boolean>[]> {
+        return this.postRawReturn<ResultT<boolean>[]>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/upgrade`, payload);
     }
 
     dataSourceJSONFileImport(containerID: string, dataSourceID: string, file: File): Promise<boolean> {

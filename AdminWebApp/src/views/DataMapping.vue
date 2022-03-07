@@ -71,6 +71,9 @@
             <v-col :cols="3">
               <import-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" @mappingsImported="mappingsImport"></import-mappings-dialog>
             </v-col>
+            <v-col :cols="3">
+              <v-btn color="primary" @click="upgradeMappings">Upgrade All Mappings</v-btn>
+            </v-col>
           </v-row>
 
         </v-card-title>
@@ -327,7 +330,7 @@ import {
   MetatypeT, OntologyVersionT,
   ResultT,
   TypeMappingT,
-  TypeMappingTransformationT
+  TypeMappingTransformationT, TypeMappingUpgradePayloadT
 } from "@/api/types";
 import DataTypeMapping from "@/components/dataTypeMapping.vue"
 import ExportMappingsDialog from "@/components/exportMappingsDialog.vue";
@@ -694,9 +697,23 @@ export default class DataMapping extends Vue {
 
   isDeprecated(transformation: TypeMappingTransformationT) {
    if(transformation && this.$store.getters.ontologyVersioningEnabled) {
-     if(transformation.metatype_ontology_version !== this.currentOntologyVersion?.id) return 'edited-item'
-     if(transformation.metatype_relationship_pair_ontology_version !== this.currentOntologyVersion?.id) return 'edited-item'
+     if(transformation.metatype_id && transformation.metatype_ontology_version !== this.currentOntologyVersion?.id) return 'edited-item'
+     if(transformation.metatype_relationship_pair_id && transformation.metatype_relationship_pair_ontology_version !== this.currentOntologyVersion?.id) return 'edited-item'
    }
+  }
+
+  upgradeMappings() {
+    const payload: TypeMappingUpgradePayloadT = {
+      ontology_version: this.currentOntologyVersion?.id!,
+      mapping_ids: (this.selectedMappings.length > 0) ? this.selectedMappings.map((m: TypeMappingT) => m.id) : this.typeMappings.map(m => m.id)
+    }
+
+    this.$client.upgradeTypeMappings(this.containerID, this.selectedDataSource?.id!, payload)
+    .then(results => {
+      this.loadTypeMappings()
+      this.$forceUpdate()
+    })
+    .catch(e => this.errorMessage = e)
   }
 }
 </script>

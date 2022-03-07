@@ -124,6 +124,9 @@ export class TransformationConfiguration {
 
     @IsEnum(TransformationErrorActions)
     on_key_extraction_error: TransformationErrorAction = 'fail on required';
+
+    @IsOptional()
+    failed_upgraded_keys: KeyMapping[] = [];
 }
 
 /*

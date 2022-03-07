@@ -350,6 +350,11 @@ export type TypeMappingTransformationPayloadT = {
     type_mapping_id: string;
 };
 
+export type TypeMappingUpgradePayloadT = {
+    mapping_ids: string[];
+    ontology_version: string;
+};
+
 export type UserContainerInviteT = {
     id: number;
     email: string;
