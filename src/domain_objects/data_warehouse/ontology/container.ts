@@ -163,7 +163,7 @@ export class ContainerAlert extends NakedDomainClass {
 
     constructor(input: {
         containerID: string;
-        type: 'information' | ' warning' | 'error';
+        type: 'information' | 'warning' | 'error';
         message: string;
         createdBy?: string;
         acknowledgedAt?: Date;

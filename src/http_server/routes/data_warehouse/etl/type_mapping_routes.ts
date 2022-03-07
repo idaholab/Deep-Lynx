@@ -7,7 +7,7 @@ import TypeMappingRepository from '../../../../data_access_layer/repositories/da
 import {plainToClass, serialize} from 'class-transformer';
 import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeTransformationRepository from '../../../../data_access_layer/repositories/data_warehouse/etl/type_transformation_repository';
-import TypeMapping, {TypeMappingExportPayload} from '../../../../domain_objects/data_warehouse/etl/type_mapping';
+import TypeMapping, {TypeMappingExportPayload, TypeMappingUpgradePayload} from '../../../../domain_objects/data_warehouse/etl/type_mapping';
 
 const JSONStream = require('JSONStream');
 const Busboy = require('busboy');
@@ -25,6 +25,12 @@ export default class TypeMappingRoutes {
             ...middleware,
             authInContainer('read', 'data'),
             this.exportTypeMappings,
+        );
+        app.post(
+            '/containers/:containerID/import/datasources/:sourceID/mappings/upgrade',
+            ...middleware,
+            authInContainer('read', 'data'),
+            this.upgradeTypeMappings,
         );
         app.post(
             '/containers/:containerID/import/datasources/:sourceID/mappings/import',
@@ -447,6 +453,45 @@ export default class TypeMappingRoutes {
             });
 
             return req.pipe(busboy);
+        }
+    }
+
+    private static upgradeTypeMappings(req: Request, res: Response, next: NextFunction) {
+        const user = req.currentUser!;
+        const mappingRepo = new TypeMappingRepository();
+
+        if (req.dataSource) {
+            let payload: TypeMappingUpgradePayload | undefined;
+            if (req.body) payload = plainToClass(TypeMappingUpgradePayload, req.body as object);
+
+            // list all the mappings from the supplied data source, or only those mappings specified by the payload
+            let query = mappingRepo.where().containerID('eq', req.container?.id);
+
+            if (payload && payload.mapping_ids && payload.mapping_ids.length > 0) {
+                query = query.and().id('in', payload.mapping_ids);
+            }
+
+            query
+                .list()
+                .then((results) => {
+                    mappingRepo
+                        .upgradeMappings(payload?.ontology_version!, ...results.value)
+                        .then((upgradeResults) => {
+                            Result.Success(upgradeResults).asResponse(res);
+                            next();
+                        })
+                        .catch((e) => {
+                            Result.Failure(e).asResponse(res);
+                            next();
+                        });
+                })
+                .catch((e) => {
+                    Result.Failure(e).asResponse(res);
+                    next();
+                });
+        } else {
+            Result.Failure(`data source not found`).asResponse(res);
+            next();
         }
     }
 }

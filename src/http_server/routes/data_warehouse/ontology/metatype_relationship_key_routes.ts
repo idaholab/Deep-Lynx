@@ -86,7 +86,13 @@ export default class MetatypeRelationshipKeyRoutes {
         // we don't have to do anything fancy here, simply return the metatype in
         // the request's keys
         if (req.metatypeRelationship) {
-            Result.Success(req.metatypeRelationship.keys).asResponse(res);
+            if (typeof req.query.deleted !== 'undefined' && String(req.query.deleted as string).toLowerCase() === 'false') {
+                Result.Success(req.metatypeRelationship?.keys?.filter((key) => !key.deleted_at)).asResponse(res);
+                next();
+                return;
+            }
+
+            Result.Success(req.metatypeRelationship?.keys).asResponse(res);
             next();
             return;
         }

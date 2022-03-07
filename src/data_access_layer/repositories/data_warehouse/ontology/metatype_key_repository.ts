@@ -1,9 +1,11 @@
-import RepositoryInterface, {Repository} from '../../repository';
+import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 import Result from '../../../../common_classes/result';
 import MetatypeKeyMapper from '../../../mappers/data_warehouse/ontology/metatype_key_mapper';
 import {User} from '../../../../domain_objects/access_management/user';
 import MetatypeRepository from './metatype_repository';
+import {PoolClient} from 'pg';
+import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 
 /*
  We have the bare minimum of functions in this repository, and it only exists
@@ -131,5 +133,17 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
 
     constructor() {
         super(MetatypeKeyMapper.tableName);
+    }
+
+    id(operator: string, value: any) {
+        super.query('id', operator, value);
+        return this;
+    }
+
+    async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<MetatypeKey[]>> {
+        return super.findAll<MetatypeKey>(options, {
+            transaction,
+            resultClass: MetatypeKey,
+        });
     }
 }

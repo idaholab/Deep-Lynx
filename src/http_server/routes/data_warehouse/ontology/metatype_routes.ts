@@ -84,8 +84,8 @@ export default class MetatypeRoutes {
             repository = repository.and().created_at('>', req.query.createdAfter);
         }
 
-        if (typeof req.query.deleted !== 'undefined' && String(req.query.deleted as string).toLowerCase() === 'true') {
-            repository = repository.and().deleted_at('is not null');
+        if (typeof req.query.deleted !== 'undefined' && String(req.query.deleted as string).toLowerCase() === 'false') {
+            repository = repository.and().deleted_at('is null');
         }
 
         if (typeof req.query.nameIn !== 'undefined' && (req.query.nameIn as string) !== '') {

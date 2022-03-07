@@ -124,6 +124,9 @@ export class TransformationConfiguration {
 
     @IsEnum(TransformationErrorActions)
     on_key_extraction_error: TransformationErrorAction = 'fail on required';
+
+    @IsOptional()
+    failed_upgraded_keys: KeyMapping[] = [];
 }
 
 /*
@@ -204,7 +207,13 @@ export default class TypeTransformation extends BaseDomainClass {
     metatype_name?: string;
 
     @IsOptional()
+    metatype_ontology_version?: string;
+
+    @IsOptional()
     metatype_relationship_pair_name?: string;
+
+    @IsOptional()
+    metatype_relationship_pair_ontology_version?: string;
 
     @IsOptional()
     shape_hash?: string;

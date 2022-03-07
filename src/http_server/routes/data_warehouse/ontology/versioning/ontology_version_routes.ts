@@ -189,7 +189,7 @@ export default class OntologyVersionRoutes {
 
     private static publishVersion(req: Request, res: Response, next: NextFunction) {
         if (req.ontologyVersion) {
-            repo.setStatus(req.ontologyVersion.id!, 'published')
+            repo.publish(req.ontologyVersion.id!)
                 .then((result) => {
                     result.asResponse(res);
                 })

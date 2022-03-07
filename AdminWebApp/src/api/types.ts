@@ -12,6 +12,15 @@ export type ContainerT = {
     modified_by: string;
 };
 
+export type ContainerAlertT = {
+    id: string;
+    container_id: string;
+    type: string;
+    message: string;
+    created_at: string;
+    created_by: string;
+};
+
 export type MetatypeT = {
     id: string;
     container_id: string;
@@ -318,7 +327,9 @@ export type TypeMappingTransformationT = {
     unique_identifier_key?: string;
     on_conflict?: 'create' | 'update' | 'ignore';
     metatype_name?: string;
+    metatype_ontology_version?: string;
     metatype_relationship_pair_name?: string;
+    metatype_relationship_pair_ontology_version?: string;
     keys: TypeMappingTransformationKeyMapping[];
     archived: boolean;
 };
@@ -337,6 +348,11 @@ export type TypeMappingTransformationPayloadT = {
     on_conflict?: 'create' | 'update' | 'ignore';
     keys: TypeMappingTransformationKeyMapping[];
     type_mapping_id: string;
+};
+
+export type TypeMappingUpgradePayloadT = {
+    mapping_ids: string[];
+    ontology_version: string;
 };
 
 export type UserContainerInviteT = {
