@@ -79,7 +79,7 @@
         <edit-metatype-relationship-dialog
             v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled"
             :metatypeRelationship="item" :icon="true"
-            :comparisonRelationship="comparisonRelationships.find(m => m.name === item.name)"
+            :comparisonMetatypeRelationship="comparisonRelationships.find(m => m.name === item.name)"
             @metatypeRelationshipEdited="loadMetatypeRelationships"
         >
         </edit-metatype-relationship-dialog>

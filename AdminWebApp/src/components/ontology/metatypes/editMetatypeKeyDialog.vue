@@ -127,7 +127,6 @@
                     deletable-chips
                 ></v-combobox>
               </v-form>
-              <p><span style="color:red">*</span> = {{$t('editMetatypeKey.requiredField')}}</p>
             </v-col>
 
 

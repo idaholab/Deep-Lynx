@@ -122,7 +122,6 @@
                 </template>
                 <template v-slot:[`item.actions`]="{ item }">
                   <div v-if="($store.getters.isEditMode && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled">
-
                     <edit-metatype-key-dialog
                         :metatypeKey="item"
                         :metatype="metatype"

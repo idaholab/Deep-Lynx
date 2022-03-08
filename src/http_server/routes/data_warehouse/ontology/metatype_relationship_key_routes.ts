@@ -134,6 +134,13 @@ export default class MetatypeRelationshipKeyRoutes {
                     })
                     .catch((err) => res.status(500).send(err))
                     .finally(() => next());
+            } else if (req.query.reverse !== undefined && String(req.query.reverse).toLowerCase() === 'true') {
+                repo.unarchive(req.currentUser!, req.metatypeRelationshipKey)
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => res.status(500).send(err))
+                    .finally(() => next());
             } else {
                 repo.archive(req.currentUser!, req.metatypeRelationshipKey)
                     .then((result) => {

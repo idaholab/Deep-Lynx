@@ -420,7 +420,12 @@ export class Client {
         return this.get<MetatypeRelationshipKeyT[]>(`/containers/${containerID}/metatype_relationships/${relationshipID}/keys`, query);
     }
 
-    deleteMetatypeRelationshipKey(containerID: string, metatypeRelationshipID: string, keyID: string, {permanent}: {permanent?: boolean}): Promise<boolean> {
+    deleteMetatypeRelationshipKey(
+        containerID: string,
+        metatypeRelationshipID: string,
+        keyID: string,
+        {permanent, reverse}: {permanent?: boolean; reverse?: boolean},
+    ): Promise<boolean> {
         const query: {[key: string]: any} = {};
         if (permanent) query.permanent = permanent;
 
