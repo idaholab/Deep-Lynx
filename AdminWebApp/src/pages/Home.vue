@@ -233,7 +233,7 @@
       <language-select class="pt-2" style="max-width:125px;"></language-select>
     </v-app-bar>
 
-    <container-alert-banner :containerID="containerID"></container-alert-banner>
+    <container-alert-banner :containerID="containerID" :key="componentKey"></container-alert-banner>
 
     <v-main style="padding: 64px 0px 36px 36px">
       <v-container v-if="currentMainComponent && currentMainComponent !== ''">
@@ -333,14 +333,14 @@ import Users from "@/views/Users.vue"
 import ContainerUsers from "@/views/ContainerUsers.vue"
 import Containers from "@/views/Containers.vue"
 import ApiKeys from "@/views/ApiKeys.vue";
-import LanguageSelect from "@/components/languageSelect.vue";
-import ContainerSelect from "@/components/containerSelect.vue"
+import LanguageSelect from "@/components/general/languageSelect.vue";
+import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
 import {TranslateResult} from "vue-i18n";
 import {UserT} from "@/auth/types";
 import {ContainerT, DataSourceT} from "@/api/types";
 import Config from "@/config";
 import OntologyVersioning from "@/views/OntologyVersioning.vue";
-import ContainerAlertBanner from "@/components/containerAlertBanner.vue";
+import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
 
 @Component({components: {
     ContainerSelect,
@@ -377,6 +377,7 @@ export default class Home extends Vue {
   currentMainComponent: string | null = ''
   componentName: string | TranslateResult = 'Home'
   argument: string = this.arguments
+  componentKey = 0 // this is so we can force a re-render of certain components on component change - assign as key
 
   metatypesCount = 0
   relationshipCount = 0
@@ -424,6 +425,8 @@ export default class Home extends Vue {
   }
 
   setActiveComponent(menuIndex: string) {
+    this.componentKey += 1 // increment so we force a re-render
+
     switch(menuIndex) {
       case "dashboard": {
         this.currentMainComponent = null

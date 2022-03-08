@@ -73,7 +73,11 @@
       </template>
 
       <template v-slot:[`item.actions`]="{ item }">
-        <view-metatype-dialog v-if="!$store.getters.isEditMode && $store.getters.ontologyVersioningEnabled" :metatype="item" :icon="true"></view-metatype-dialog>
+        <view-metatype-dialog
+            v-if="!$store.getters.isEditMode && $store.getters.ontologyVersioningEnabled"
+            :metatype="item"
+            :icon="true">
+        </view-metatype-dialog>
 
            <edit-metatype-dialog
                v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled"
@@ -121,11 +125,11 @@
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import {MetatypeT, OntologyVersionT} from '@/api/types';
-import EditMetatypeDialog from "@/components/editMetatypeDialog.vue";
-import CreateMetatypeDialog from "@/components/createMetatypeDialog.vue";
+import EditMetatypeDialog from "@/components/ontology/metatypes/editMetatypeDialog.vue";
+import CreateMetatypeDialog from "@/components/ontology/metatypes/createMetatypeDialog.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
-import OntologyVersionToolbar from "@/components/ontology/ontologyVersionToolbar.vue";
-import ViewMetatypeDialog from "@/components/viewMetatypeDialog.vue";
+import OntologyVersionToolbar from "@/components/ontology/versioning/ontologyVersionToolbar.vue";
+import ViewMetatypeDialog from "@/components/ontology/metatypes/viewMetatypeDialog.vue";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const diff = require('deep-diff').diff;
 

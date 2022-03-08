@@ -47,7 +47,7 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
-import SearchMetatypes from "@/components/searchMetatypes.vue";
+import SearchMetatypes from "@/components/ontology/metatypes/searchMetatypes.vue";
 import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
 import {MetatypeKeyT, MetatypeT} from "@/api/types";
 import PropertyFilter from "@/components/queryBuilder/PropertyFilter.vue";

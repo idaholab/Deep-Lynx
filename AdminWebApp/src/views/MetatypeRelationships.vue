@@ -3,6 +3,8 @@
     <ontology-version-toolbar
         v-if="$store.getters.ontologyVersioningEnabled"
         :containerID="containerID"
+        @editModeToggle="loadMetatypeRelationships"
+        @selectedVersion="loadMetatypeRelationships"
         @selected="loadMetatypeRelationships">
     </ontology-version-toolbar>
     <v-data-table
@@ -16,6 +18,7 @@
           'items-per-page-options': [25, 50, 100]
         }"
         class="elevation-1"
+        :item-class="itemRowBackground"
     >
       <template v-slot:top>
         <error-banner :message="errorMessage"></error-banner>
@@ -44,6 +47,14 @@
             <v-text-field v-model="description" :label="$t('metatypeRelationships.searchDescription')" class="mx-4"></v-text-field>
           </v-col>
         </v-row>
+        <v-row v-if="$store.getters.isEditMode">
+          <v-col :cols="2"><div class="box created"></div><p> - {{$t('metatypes.created')}}</p></v-col>
+          <v-col :cols="2"><div class="box edited"></div><p> - {{$t('metatypes.edited')}}</p></v-col>
+          <v-col :cols="2"><div class="box removed"></div><p> - {{$t('metatypes.removed')}}</p></v-col>
+        </v-row>
+        <v-row>
+          <v-col v-if="$store.getters.isEditMode" :cols="12"><p style="margin-left: 15px"><strong>Note: </strong> {{$t('metatypes.legendNote')}}</p></v-col>
+        </v-row>
       </template>
 
       <template v-slot:[`item.copy`]="{ item }">
@@ -56,31 +67,75 @@
         </v-tooltip>
       </template>
 
+      <v-tooltip bottom>
+
+      </v-tooltip>
       <template v-slot:[`item.actions`]="{ item }">
-        <edit-metatype-relationship-dialog :metatypeRelationship="item" :icon="true" @metatypeRelationshipEdited="loadMetatypeRelationships"></edit-metatype-relationship-dialog>
-        <v-icon
-            small
-            @click="deleteRelationship(item)"
+        <view-metatype-relationship-dialog
+            v-if="!$store.getters.isEditMode && $store.getters.ontologyVersioningEnabled"
+            :metatypeRelationship="item"
+            :icon="true"></view-metatype-relationship-dialog>
+
+        <edit-metatype-relationship-dialog
+            v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled"
+            :metatypeRelationship="item" :icon="true"
+            :comparisonMetatypeRelationship="comparisonRelationships.find(m => m.name === item.name)"
+            @metatypeRelationshipEdited="loadMetatypeRelationships"
         >
-          mdi-delete
-        </v-icon>
+        </edit-metatype-relationship-dialog>
+
+        <v-tooltip bottom>
+          <template v-slot:activator="{on, attrs}">
+            <v-icon
+                v-bind="attrs"
+                small
+                v-on="on"
+                @click="deleteRelationship(item)"
+                v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled"
+            >
+              mdi-delete
+            </v-icon>
+          </template>
+          <span>{{$t('metatypeRelationships.removeRelationship')}}</span>
+        </v-tooltip>
+        <v-tooltip bottom>
+          <template v-slot:activator="{on, attrs}">
+            <v-icon
+                v-bind="attrs"
+                small
+                v-on="on"
+                @click="undeleteRelationship(item)"
+                v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && item.deleted_at)"
+            >
+              mdi-restore
+            </v-icon>
+          </template>
+          <span>{{$t('metatypeRelationships.restoreRelationship')}}</span>
+        </v-tooltip>
+
+
       </template>
     </v-data-table>
   </div>
 </template>
 
 <script lang="ts">
-import {MetatypeRelationshipT} from '@/api/types';
+import {MetatypeRelationshipT, MetatypeT} from '@/api/types';
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
-import EditMetatypeRelationshipDialog from "@/components/editMetatypeRelationshipDialog.vue";
-import CreateMetatypeRelationshipDialog from "@/components/createMetatypeRelationshipDialog.vue";
+import EditMetatypeRelationshipDialog from "@/components/ontology/metatypeRelationships/editMetatypeRelationshipDialog.vue";
+import CreateMetatypeRelationshipDialog from "@/components/ontology/metatypeRelationships/createMetatypeRelationshipDialog.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
-import OntologyVersionToolbar from "@/components/ontology/ontologyVersionToolbar.vue";
+import OntologyVersionToolbar from "@/components/ontology/versioning/ontologyVersionToolbar.vue";
+import ViewMetatypeRelationshipDialog
+  from "@/components/ontology/metatypeRelationships/viewMetatypeRelationshipDialog.vue";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const diff = require('deep-diff').diff;
 
 @Component({components: {
     EditMetatypeRelationshipDialog,
     CreateMetatypeRelationshipDialog,
-    OntologyVersionToolbar
+    OntologyVersionToolbar,
+    ViewMetatypeRelationshipDialog
   }})
 export default class MetatypeRelationships extends Vue {
   @Prop({required: true})
@@ -91,6 +146,7 @@ export default class MetatypeRelationships extends Vue {
   successMessage = ""
   loading = false
   metatypeRelationships: MetatypeRelationshipT[] = []
+  comparisonRelationships: MetatypeRelationshipT[] = []
   createdRelationship: MetatypeRelationshipT | null = null
   metatypeRelationshipCount = 0
   name = ""
@@ -136,7 +192,7 @@ export default class MetatypeRelationships extends Vue {
   countRelationships() {
     this.$client.listMetatypeRelationships(this.containerID, {
       count: true,
-      ontologyVersion: this.$store.getters.selectedOntologyVersionID,
+      ontologyVersion: this.ontologyVersionID,
       name: (this.name !== "") ? this.name : undefined,
       description: (this.description !== "") ? this.description : undefined,
     })
@@ -160,18 +216,40 @@ export default class MetatypeRelationships extends Vue {
     if(sortDesc) sortDescParam = sortDesc[0]
 
     this.$client.listMetatypeRelationships(this.containerID, {
-      ontologyVersion: this.$store.getters.selectedOntologyVersionID,
+      ontologyVersion: this.ontologyVersionID,
       limit: itemsPerPage,
       offset: itemsPerPage * pageNumber,
       sortBy: sortParam,
       sortDesc: sortDescParam,
       name: (this.name !== "") ? this.name : undefined,
       description: (this.description !== "") ? this.description : undefined,
+      deleted: this.$store.getters.isEditMode
     })
         .then((results) => {
-          this.loading = false
-          this.metatypeRelationships = results as MetatypeRelationshipT[]
-          this.$forceUpdate()
+          if(!this.$store.getters.isEditMode){
+            this.loading = false
+            this.metatypeRelationships = results as MetatypeRelationshipT[]
+            this.$forceUpdate()
+          } else {
+            let nameIn = "";
+            (results as MetatypeRelationshipT[]).map((m, i) => {
+              if(i == 0) nameIn = m.name
+              else nameIn = nameIn + "," + m.name
+            })
+
+            this.$client.listMetatypeRelationships(this.containerID, {
+              ontologyVersion: this.$store.getters.selectedOntologyVersionID,
+              nameIn,
+              loadKeys: true
+            })
+            .then((comparison) => {
+              this.loading = false
+              this.comparisonRelationships = comparison as MetatypeRelationshipT[]
+              this.metatypeRelationships = results as MetatypeRelationshipT[]
+              this.$forceUpdate()
+            })
+            .catch((e: any) => this.errorMessage = e)
+          }
         })
         .catch((e: any) => this.errorMessage = e)
   }
@@ -184,14 +262,168 @@ export default class MetatypeRelationships extends Vue {
         .catch(e => console.log(e))
   }
 
+  undeleteRelationship(item: any) {
+    this.$client.deleteMetatypeRelationship(this.containerID, item.id, {reverse: true})
+        .then(() => {
+          this.loadMetatypeRelationships()
+        })
+        .catch(e => console.log(e))
+  }
+
   recentlyCreatedRelationship(relationship: MetatypeRelationshipT) {
     this.createdRelationship = relationship
     this.countRelationships()
     this.loadMetatypeRelationships()
   }
 
+  // compareMetatypes takes two relationships and returns whether they are identical
+  // this is used to indicate when a metatype has been edited as part of the new ontology
+  compareRelationships(original: MetatypeRelationshipT, target: MetatypeRelationshipT): boolean {
+    if(typeof  original === 'undefined' || typeof target === 'undefined') return true
+    // first copy the objects over so that our key deletion does not affect the real object, since we can't compare
+    // ids and metadata we need to get rid of those on each object
+    const o = {}
+    const t = {}
+
+    Object.assign(o, original)
+    Object.assign(t, target)
+
+    // remove the keys we don't want to use to compare
+    function cleanRelationship(m: MetatypeRelationshipT) {
+      if(m.created_at) delete m.created_at
+      if(m.created_by) delete m.created_by
+      if(m.modified_at) delete m.modified_at
+      if(m.modified_by) delete m.modified_by
+      if(m.ontology_version) delete m.ontology_version
+      if(m.id) delete m.id
+      delete m.old_id
+      delete m.parent_id
+
+      m.keys.map(p => {
+        if(p.created_at) delete p.created_at
+        if(p.created_by) delete p.created_by
+        if(p.modified_at) delete p.modified_at
+        if(p.modified_by) delete p.modified_by
+        if(p.id) delete p.id
+        if(p.metatype_relationship_id) delete p.metatype_relationship_id
+        if(p.ontology_version) delete  p.ontology_version
+      })
+    }
+
+    cleanRelationship(o as MetatypeRelationshipT)
+    cleanRelationship(t as MetatypeRelationshipT)
+
+    return diff(o, t)
+  }
+
   copyID(id: string) {
     navigator.clipboard.writeText(id)
   }
+
+  itemRowBackground(item: any) {
+    if(this.$store.getters.isEditMode) {
+      const matchedRelationship =  this.comparisonRelationships.find(m => m.name === item.name)!
+
+      if(item.deleted_at) {
+        return 'deleted-item'
+      }
+
+      if(!matchedRelationship) {
+        return 'created-item'
+      }
+
+      if(this.compareRelationships(matchedRelationship, item)) {
+        return 'edited-item'
+      }
+    }
+    return ''
+  }
+
+  get ontologyVersionID() {
+    if (this.$store.getters.ontologyVersioningEnabled && this.$store.getters.isEditMode) {
+      return this.$store.getters.selectedPendingOntologyVersionID
+    } else if (this.$store.getters.ontologyVersioningEnabled) {
+      return this.$store.getters.selectedOntologyVersionID
+    } else {
+      return undefined
+    }
+  }
 }
 </script>
+
+<style lang="scss">
+.edited-item {
+  background: #FB8C00;
+  color: white;
+
+  &:hover {
+    background: #FFA726 !important;
+    color: black;
+  }
+
+  .v-icon__svg {
+    color: white !important;
+  }
+
+  .v-icon {
+    color: white !important;
+  }
+}
+
+.created-item {
+  background: #7CB342;
+  color: white;
+
+  &:hover {
+    background: #9CCC65 !important;
+    color: black;
+  }
+
+  .v-icon__svg {
+    color: white !important;
+  }
+
+  .v-icon {
+    color: white !important;
+  }
+}
+
+.deleted-item {
+  background: #E53935;
+  color: white;
+
+  &:hover {
+    background: #EF5350 !important;
+    color: black;
+  }
+
+  .v-icon__svg {
+    color: white !important;
+  }
+
+  .v-icon {
+    color: white !important;
+  }
+}
+
+.box {
+  float: left;
+  height: 20px;
+  width: 20px;
+  margin-bottom: 15px;
+  margin-left: 15px;
+  clear: both;
+}
+
+.created {
+  background-color: #7CB342;
+}
+
+.edited {
+  background-color: #FB8C00;
+}
+
+.removed {
+  background-color: #E53935;
+}
+</style>

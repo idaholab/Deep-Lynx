@@ -136,10 +136,10 @@
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import {DataSourceT, ImportDataT, ImportT} from "@/api/types";
-import ImportDataDialog from "@/components/importDataDialog.vue";
-import DataTypeMapping from "@/components/dataTypeMapping.vue"
-import SelectDataSource from "@/components/selectDataSource.vue";
-import DeleteDataImportDialog from "@/components/deleteDataImportDialog.vue";
+import ImportDataDialog from "@/components/dataImport/importDataDialog.vue";
+import DataTypeMapping from "@/components/etl/dataTypeMapping.vue"
+import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
+import DeleteDataImportDialog from "@/components/dataImport/deleteDataImportDialog.vue";
 
 
 @Component({filters: {

@@ -85,7 +85,7 @@
 
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {NodeT, PropertyT} from "../api/types";
+import {NodeT, PropertyT} from "../../api/types";
 
 @Component({components: {}})
 export default class EditNodeDialog extends Vue {

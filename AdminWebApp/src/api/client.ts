@@ -336,6 +336,8 @@ export class Client {
             sortBy,
             sortDesc,
             count,
+            nameIn,
+            loadKeys,
             deleted = false,
         }: {
             name?: string;
@@ -346,6 +348,8 @@ export class Client {
             sortBy?: string;
             sortDesc?: boolean;
             count?: boolean;
+            nameIn?: string;
+            loadKeys?: boolean;
             deleted?: boolean;
         },
     ): Promise<MetatypeRelationshipT[] | number> {
@@ -359,6 +363,8 @@ export class Client {
         if (sortBy) query.sortBy = sortBy;
         if (sortDesc) query.sortDesc = sortDesc;
         if (count) query.count = 'true';
+        if (nameIn) query.nameIn = nameIn;
+        if (loadKeys) query.loadKeys = loadKeys;
         query.deleted = deleted;
 
         return this.get<MetatypeRelationshipT[] | number>(`/containers/${containerID}/metatype_relationships`, query);
@@ -380,9 +386,14 @@ export class Client {
         return this.put<boolean>(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}`, metatypeRelationship);
     }
 
-    deleteMetatypeRelationship(containerID: string, metatypeRelationshipID: string, {permanent}: {permanent?: boolean}): Promise<boolean> {
+    deleteMetatypeRelationship(
+        containerID: string,
+        metatypeRelationshipID: string,
+        {permanent, reverse}: {permanent?: boolean; reverse?: boolean},
+    ): Promise<boolean> {
         const query: {[key: string]: any} = {};
         if (permanent) query.permanent = permanent;
+        if (reverse) query.reverse = reverse;
 
         return this.delete(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}`, query);
     }
@@ -409,7 +420,12 @@ export class Client {
         return this.get<MetatypeRelationshipKeyT[]>(`/containers/${containerID}/metatype_relationships/${relationshipID}/keys`, query);
     }
 
-    deleteMetatypeRelationshipKey(containerID: string, metatypeRelationshipID: string, keyID: string, {permanent}: {permanent?: boolean}): Promise<boolean> {
+    deleteMetatypeRelationshipKey(
+        containerID: string,
+        metatypeRelationshipID: string,
+        keyID: string,
+        {permanent, reverse}: {permanent?: boolean; reverse?: boolean},
+    ): Promise<boolean> {
         const query: {[key: string]: any} = {};
         if (permanent) query.permanent = permanent;
 

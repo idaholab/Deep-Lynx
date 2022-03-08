@@ -96,7 +96,7 @@
    import {Component, Prop, Vue} from 'vue-property-decorator'
    import {UserT} from "@/auth/types";
    import {AssignRolePayloadT} from "@/api/types";
-   import InviteUserToContainerDialog from "@/components/inviteUserToContainerDialog.vue";
+   import InviteUserToContainerDialog from "@/components/accessManagement/inviteUserToContainerDialog.vue";
    @Component({
      components: {InviteUserToContainerDialog}
    })

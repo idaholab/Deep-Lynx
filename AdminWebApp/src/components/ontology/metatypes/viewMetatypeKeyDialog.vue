@@ -14,25 +14,36 @@
           <error-banner :message="errorMessage"></error-banner>
           <v-row>
             <v-col :cols="12">
-              <h3>{{$t('viewMetatype.name')}}</h3>
-              <hr>
-              <p>{{selectedMetatypeKey.name}}</p>
+              <v-text-field
+                  v-model="selectedMetatypeKey.name"
+                  :disabled="true"
+                  class="disabled"
+              >
+                <template v-slot:label>{{$t('viewMetatypeKey.name')}}</template>
+              </v-text-field>
 
-              <h3>{{$t('viewMetatype.description')}}</h3>
-              <hr>
-              <p>{{selectedMetatypeKey.description}}</p>
-
-              <h3>{{$t('viewMetatype.propertyName')}}</h3>
-              <hr>
-              <p>{{selectedMetatypeKey.property_name}}</p>
-
-              <h3>{{$t('viewMetatype.dataType')}}</h3>
-              <hr>
-              <p>{{selectedMetatypeKey.data_type}}</p>
+              <v-text-field
+                  v-model="selectedMetatypeKey.property_name"
+                  required
+                  :disabled="true"
+                  class="disabled"
+              >
+                <template v-slot:label>{{$t('viewMetatypeKey.propertyName')}}</template>
+              </v-text-field>
+              <v-select
+                  v-model="selectedMetatypeKey.data_type"
+                  :items="dataTypes"
+                  @change="selectedMetatypeKey.default_value = undefined"
+                  :disabled="true"
+                  class="disabled"
+              >
+                <template v-slot:label>{{$t('viewMetatypeKey.dataType')}}</template>
+              </v-select>
 
               <v-checkbox
                   v-model="selectedMetatypeKey.required"
                   :disabled="true"
+                  class="disabled"
               >
                 <template v-slot:label>{{$t('editMetatypeKey.required')}}</template>
               </v-checkbox>
@@ -44,22 +55,25 @@
                     v-model="selectedMetatypeKey.validation.regex"
                     :disabled="true"
                     :label="$t('editMetatypeKey.regex')"
+                    class="disabled"
                 >
                   <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.regexHelp')"></info-tooltip></template>
                 </v-text-field>
                 <v-text-field
                     v-model.number="selectedMetatypeKey.validation.max"
-                    :disabled="selectedMetatypeKey.validation.regex === ''"
+                    :disabled="true"
                     type="number"
                     :label="$t('editMetatypeKey.max')"
+                    class="disabled"
                 >
                   <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.maxHelp')"></info-tooltip></template>
                 </v-text-field>
                 <v-text-field
                     v-model.number="selectedMetatypeKey.validation.min"
-                    :disabled="selectedMetatypeKey.validation.regex === ''"
+                    :disabled="true"
                     type="number"
                     :label="$t('editMetatypeKey.min')"
+                    class="disabled"
                 >
                   <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.minHelp')"></info-tooltip></template>
                 </v-text-field>
@@ -74,6 +88,8 @@
                       chips
                       clearable
                       deletable-chips
+                      :disabled="true"
+                      class="disabled"
                   ></v-combobox>
                 </div>
 
@@ -85,6 +101,7 @@
                     chips
                     deletable-chips
                     :disabled="true"
+                    class="disabled"
                 ></v-combobox>
 
               <h3>{{$t('viewMetatype.defaultValue')}}</h3>
@@ -106,7 +123,7 @@
 
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeKeyT, MetatypeT} from "../api/types";
+import {MetatypeKeyT, MetatypeT} from "../../../api/types";
 
 @Component
 export default class ViewMetatypeKeyDialog extends Vue {
@@ -141,3 +158,43 @@ export default class ViewMetatypeKeyDialog extends Vue {
   }
 }
 </script>
+
+<style lang="scss">
+.disabled input {
+  color: black !important;
+}
+
+.disabled textarea {
+  color: black !important;
+}
+
+.disabled .v-select__selection{
+  color: black !important;
+}
+
+.edited-field {
+  input {
+    background: #FB8C00;
+    color: white !important;
+    box-shadow: -5px 0 0 #FB8C00;
+  }
+
+  textarea {
+    background: #FB8C00;
+    color: white !important;
+    box-shadow: -5px 0 0 #FB8C00;
+  }
+
+  .v-select__slot {
+    background: #FB8C00;
+    color: white !important;
+    box-shadow: -5px 0 0 #FB8C00;
+  }
+
+  .v-select__selection {
+    background: #FB8C00;
+    color: white !important;
+    box-shadow: -5px 0 0 #FB8C00;
+  }
+}
+</style>

@@ -10,9 +10,9 @@ import vuetify from './plugins/vuetify';
 import AuthPlugin from '@/auth/authentication_service';
 import ClientPlugin from '@/api/client';
 import Config from '@/config';
-import ErrorBanner from '@/components/errorBanner.vue';
-import SuccessBanner from '@/components/successBanner.vue';
-import InfoTooltip from '@/components/infoTooltip.vue';
+import ErrorBanner from '@/components/general/errorBanner.vue';
+import SuccessBanner from '@/components/general/successBanner.vue';
+import InfoTooltip from '@/components/general/infoTooltip.vue';
 import JSONView from 'vue-json-component';
 import VueCytoscape from 'vue-cytoscape';
 

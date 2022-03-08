@@ -24,18 +24,18 @@
                     :rules="[v => !!v || $t('editMetatype.nameRequired')]"
                     required
                     :disabled="true"
-                    style="color: black"
+                    class="disabled"
                 >
-                  <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
+                  <template v-slot:label>{{$t('editMetatype.name')}}</template>
                 </v-text-field>
                 <v-textarea
                     v-model="selectedMetatype.description"
                     :rules="[v => !!v || $t('editMetatype.descriptionRequired')]"
                     required
                     :disabled="true"
-                    style="color: black"
+                    class="disabled"
                 >
-                  <template v-slot:label>{{$t('editMetatype.description')}} <small style="color:red" >*</small></template>
+                  <template v-slot:label>{{$t('editMetatype.description')}} </template>
                 </v-textarea>
               </v-form>
             </v-col>
@@ -85,13 +85,11 @@
 
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeKeyT, MetatypeT} from "../api/types";
-import ViewMetatypeKeyDialog from "@/components/viewMetatypeKeyDialog.vue";
-import CreateMetatypeKeyDialog from "@/components/createMetatypeKeyDialog.vue";
+import {MetatypeT} from "../../../api/types";
+import ViewMetatypeKeyDialog from "@/components/ontology/metatypes/viewMetatypeKeyDialog.vue";
 
 @Component({components: {
-    ViewMetatypeKeyDialog,
-    CreateMetatypeKeyDialog
+    ViewMetatypeKeyDialog
   }})
 export default class ViewMetatypeDialog extends Vue {
   @Prop({required: true})
@@ -146,3 +144,43 @@ export default class ViewMetatypeDialog extends Vue {
 }
 
 </script>
+
+<style lang="scss">
+.disabled input {
+  color: black !important;
+}
+
+.disabled textarea {
+  color: black !important;
+}
+
+.disabled .v-select__selection{
+  color: black !important;
+}
+
+.edited-field {
+  input {
+    background: #FB8C00;
+    color: white !important;
+    box-shadow: -5px 0 0 #FB8C00;
+  }
+
+  textarea {
+    background: #FB8C00;
+    color: white !important;
+    box-shadow: -5px 0 0 #FB8C00;
+  }
+
+  .v-select__slot {
+    background: #FB8C00;
+    color: white !important;
+    box-shadow: -5px 0 0 #FB8C00;
+  }
+
+  .v-select__selection {
+    background: #FB8C00;
+    color: white !important;
+    box-shadow: -5px 0 0 #FB8C00;
+  }
+}
+</style>

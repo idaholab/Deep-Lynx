@@ -63,8 +63,8 @@
 <script lang="ts">
 import {Component, Prop, Vue} from 'vue-property-decorator'
 import {DataSourceT} from "@/api/types";
-import CreateDataSourceDialog from "@/components/createDataSourceDialog.vue"
-import DeleteDataSourceDialog from "@/components/deleteDataSourceDialog.vue";
+import CreateDataSourceDialog from "@/components/dataSources/createDataSourceDialog.vue"
+import DeleteDataSourceDialog from "@/components/dataSources/deleteDataSourceDialog.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
 
 @Component({components:{CreateDataSourceDialog, DeleteDataSourceDialog}})
