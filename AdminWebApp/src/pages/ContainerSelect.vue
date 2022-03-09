@@ -119,6 +119,9 @@ export default class ContainerSelection extends Vue {
   }
 
   toContainerHome() {
+    this.$store.commit('setEditMode', false)
+    this.$store.commit('setPendingOntologyVersion', undefined)
+
     // @ts-ignore
     RefreshPermissions()
     .then(() => {
@@ -128,6 +131,9 @@ export default class ContainerSelection extends Vue {
   }
 
   newContainer(containerID: string) {
+    this.$store.commit('setEditMode', false)
+    this.$store.commit('setPendingOntologyVersion', undefined)
+
     RefreshPermissions()
         .then(() => {
           this.$router.push({name: 'Home', params: {containerID: containerID}})
@@ -136,6 +142,9 @@ export default class ContainerSelection extends Vue {
   }
 
   acceptInvite(token: string, containerName: string) {
+    this.$store.commit('setEditMode', false)
+    this.$store.commit('setPendingOntologyVersion', undefined)
+
     RefreshPermissions()
         .then(() => {
           this.$router.push({name: 'ContainerInvite', query: {token, containerName}})

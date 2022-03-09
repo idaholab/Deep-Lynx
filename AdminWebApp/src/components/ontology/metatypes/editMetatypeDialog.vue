@@ -234,7 +234,7 @@ export default class EditMetatypeDialog extends Vue {
   loadKeys() {
     if(this.selectedMetatype) {
       this.keysLoading = true
-      this.$client.listMetatypeKeys(this.selectedMetatype.container_id, this.selectedMetatype.id)
+      this.$client.listMetatypeKeys(this.selectedMetatype.container_id, this.selectedMetatype.id, this.$store.getters.isEditMode)
           .then(keys => {
             this.keysLoading = false
 
