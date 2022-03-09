@@ -30,7 +30,7 @@
                 <h4>{{$t('ifcViewer.name')}}</h4>
                 <p>{{selected.Name.value}}</p>
                 <h4>{{$t('ifcViewer.description')}}</h4>
-                <p>{{selected.Description.value}}</p>
+                <p v-if="selected.Description">{{selected.Description.value}}</p>
               </div>
               <h4 style="margin-left: 5px">{{$t('ifcViewer.rawProperties')}}</h4>
               <json-view v-if="selected" :max-depth="0" :data="selected" style="overflow-y: scroll"></json-view>
