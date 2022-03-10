@@ -37,7 +37,11 @@
               vertical
           ></v-divider>
           <v-spacer></v-spacer>
-          <create-metatype-relationship-dialog :containerID="containerID" @metatypeRelationshipCreated="recentlyCreatedRelationship"></create-metatype-relationship-dialog>
+          <create-metatype-relationship-dialog
+              v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled) || !$store.getters.ontologyVersioningEnabled"
+              :containerID="containerID"
+              @metatypeRelationshipCreated="recentlyCreatedRelationship">
+          </create-metatype-relationship-dialog>
         </v-toolbar>
         <v-row>
           <v-col :cols="6">

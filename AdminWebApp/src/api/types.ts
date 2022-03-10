@@ -66,6 +66,11 @@ export type MetatypeRelationshipPairT = {
     modified_at: string;
     created_by: string;
     modified_by: string;
+    ontology_version?: string;
+    old_id?: string;
+    origin_metatype?: MetatypeT;
+    destination_metatype?: MetatypeT;
+    relationship?: MetatypeRelationshipT;
 };
 
 export type MetatypeKeyT = {

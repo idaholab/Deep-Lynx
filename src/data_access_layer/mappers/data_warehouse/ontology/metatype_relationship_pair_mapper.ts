@@ -70,6 +70,10 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
         return super.runStatement(this.archiveStatement(pairID, userID));
     }
 
+    public async Unarchive(pairID: string, userID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.unarchiveStatement(pairID, userID));
+    }
+
     public async Delete(pairID: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(pairID));
     }
@@ -145,6 +149,13 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
     private archiveStatement(pairID: string, userID: string): QueryConfig {
         return {
             text: `UPDATE metatype_relationship_pairs SET deleted_at = NOW(), modified_at = NOW(), modified_by = $2  WHERE id = $1`,
+            values: [pairID, userID],
+        };
+    }
+
+    private unarchiveStatement(pairID: string, userID: string): QueryConfig {
+        return {
+            text: `UPDATE metatype_relationship_pairs SET deleted_at = NULL, modified_at = NOW(), modified_by = $2  WHERE id = $1`,
             values: [pairID, userID],
         };
     }
