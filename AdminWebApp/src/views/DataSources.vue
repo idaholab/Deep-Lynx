@@ -55,6 +55,12 @@
             @dataSourceArchived="refreshDataSources()"
             :dataSource="item"
             icon="trash"></delete-data-source-dialog>
+        <reprocess-data-source-dialog
+            :containerID="containerID"
+            :dataSource="item"
+            :icon="true"
+            @dataSourceReprocessed="refreshDataSources()"
+        ></reprocess-data-source-dialog>
       </template>
     </v-data-table>
   </div>
@@ -66,8 +72,13 @@ import {DataSourceT} from "@/api/types";
 import CreateDataSourceDialog from "@/components/dataSources/createDataSourceDialog.vue"
 import DeleteDataSourceDialog from "@/components/dataSources/deleteDataSourceDialog.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
+import ReprocessDataSourceDialog from "@/components/dataImport/reprocessDataSourceDialog.vue";
 
-@Component({components:{CreateDataSourceDialog, DeleteDataSourceDialog}})
+@Component({components:{
+    CreateDataSourceDialog,
+    DeleteDataSourceDialog,
+    ReprocessDataSourceDialog
+  }})
 export default class DataSources extends Vue {
   @Prop({required: true})
   readonly containerID!: string;

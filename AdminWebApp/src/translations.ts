@@ -602,6 +602,24 @@ export default {
             in: 'in',
             withData: 'Delete All Data Generated From Import',
         },
+        reprocessDataImport: {
+            title: 'Reprocess Import',
+            warning:
+                'This will initiate a reprocessing of all data in this import. All previously ingested data from this import will be archived so as not to cause conflicts.',
+            cancel: 'Cancel',
+            reprocess: 'Reprocess',
+            in: 'in',
+            tooltip: 'Reprocess Data from Import',
+        },
+        reprocessDataSource: {
+            title: 'Reprocess Data Source',
+            warning:
+                'This will initiate a reprocessing of all data ingested by this data source. All previously ingested data from this source will be archived so as not to cause conflicts.',
+            cancel: 'Cancel',
+            reprocess: 'Reprocess',
+            in: 'in',
+            tooltip: 'Reprocess Data from Data Source',
+        },
         deleteTransformation: {
             deleteTransformation: 'Delete Transformation',
             deleteTitle: 'Delete Transformation Permanently',

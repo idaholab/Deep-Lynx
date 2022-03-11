@@ -84,6 +84,10 @@ export default class ImportRepository extends Repository implements RepositoryIn
         return this.#mapper.ListWithUninsertedData(dataSourceID, limit);
     }
 
+    reprocess(importID: string): Promise<Result<boolean>> {
+        return this.#mapper.ReprocessImport(importID);
+    }
+
     dataSourceID(operator: string, value: any) {
         super.query('imports.data_source_id', operator, value);
         return this;

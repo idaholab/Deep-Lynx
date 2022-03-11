@@ -10,6 +10,7 @@ import ImportMapper from '../../../mappers/data_warehouse/import/import_mapper';
 import JazzDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/jazz_data_source_impl';
 import AvevaDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/aveva_data_source';
 import {DataSource} from '../../../../interfaces_and_impl/data_warehouse/import/data_source';
+import ImportRepository from './import_repository';
 
 /*
     DataSourceRepository contains methods for persisting and retrieving data sources
@@ -22,6 +23,7 @@ import {DataSource} from '../../../../interfaces_and_impl/data_warehouse/import/
  */
 export default class DataSourceRepository extends Repository implements RepositoryInterface<DataSource> {
     #mapper = DataSourceMapper.Instance;
+    #importRepo = new ImportRepository();
     #factory = new DataSourceFactory();
 
     async delete(t: DataSource, options?: DeleteOptions): Promise<Result<boolean>> {
@@ -124,6 +126,21 @@ export default class DataSourceRepository extends Repository implements Reposito
         if (t.DataSourceRecord && t.DataSourceRecord.id) {
             return this.#mapper.SetStatus(t.DataSourceRecord.id, user.id!, status, status_message, transaction);
         } else return Promise.resolve(Result.Failure(`data source's record must be instantiated and have an id`));
+    }
+
+    async reprocess(dataSourceID: string): Promise<Result<boolean>> {
+        const result = await this.#mapper.ReprocessDataSource(dataSourceID);
+        if (result.isError) return Promise.resolve(Result.Pass(result));
+
+        // set all imports to processing status
+        const imports = await this.#importRepo.where().dataSourceID('eq', dataSourceID).list();
+        if (!imports.isError) {
+            imports.value.forEach((i) => {
+                void this.#importRepo.setStatus(i.id!, 'processing', 'reprocessing initiated');
+            });
+        }
+
+        return Promise.resolve(Result.Success(true));
     }
 
     constructor() {
