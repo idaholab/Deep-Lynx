@@ -50,6 +50,7 @@
             mdi-eye
           </v-icon>
           <delete-data-import-dialog :containerID="containerID" :dataImport="item" :icon="true" @dataImportDeleted="listImports"></delete-data-import-dialog>
+          <reprocess-data-import-dialog :containerID="containerID" :dataImport="item" :icon="true" @dataImportReprocessed="listImports"></reprocess-data-import-dialog>
         </template>
       </v-data-table>
     </v-card>
@@ -136,10 +137,11 @@
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import {DataSourceT, ImportDataT, ImportT} from "@/api/types";
-import ImportDataDialog from "@/components/importDataDialog.vue";
-import DataTypeMapping from "@/components/dataTypeMapping.vue"
-import SelectDataSource from "@/components/selectDataSource.vue";
-import DeleteDataImportDialog from "@/components/deleteDataImportDialog.vue";
+import ImportDataDialog from "@/components/dataImport/importDataDialog.vue";
+import DataTypeMapping from "@/components/etl/dataTypeMapping.vue"
+import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
+import DeleteDataImportDialog from "@/components/dataImport/deleteDataImportDialog.vue";
+import ReprocessDataImportDialog from "@/components/dataImport/reprocessDataImportDialog.vue";
 
 
 @Component({filters: {
@@ -151,7 +153,8 @@ import DeleteDataImportDialog from "@/components/deleteDataImportDialog.vue";
     ImportDataDialog,
     DataTypeMapping,
     SelectDataSource,
-    DeleteDataImportDialog
+    DeleteDataImportDialog,
+    ReprocessDataImportDialog
   }
 })
 export default class DataImports extends Vue {

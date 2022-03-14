@@ -22,7 +22,7 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
-import SelectDataSource from "@/components/selectDataSource.vue";
+import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import OperatorsSelect from "@/components/queryBuilder/operatorsSelect.vue";
 import {DataSourceT} from "@/api/types";
 

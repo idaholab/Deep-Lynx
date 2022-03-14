@@ -122,7 +122,6 @@
                 </template>
                 <template v-slot:[`item.actions`]="{ item }">
                   <div v-if="($store.getters.isEditMode && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled">
-
                     <edit-metatype-key-dialog
                         :metatypeKey="item"
                         :metatype="metatype"
@@ -167,10 +166,10 @@
 
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeKeyT, MetatypeT} from "../api/types";
-import EditMetatypeKeyDialog from "@/components/editMetatypeKeyDialog.vue";
-import CreateMetatypeKeyDialog from "@/components/createMetatypeKeyDialog.vue";
-import ViewMetatypeKeyDialog from "@/components/viewMetatypeKeyDialog.vue";
+import {MetatypeKeyT, MetatypeT} from "../../../api/types";
+import EditMetatypeKeyDialog from "@/components/ontology/metatypes/editMetatypeKeyDialog.vue";
+import CreateMetatypeKeyDialog from "@/components/ontology/metatypes/createMetatypeKeyDialog.vue";
+import ViewMetatypeKeyDialog from "@/components/ontology/metatypes/viewMetatypeKeyDialog.vue";
 const diff = require('deep-diff').diff;
 
 @Component({components: {
@@ -235,7 +234,7 @@ export default class EditMetatypeDialog extends Vue {
   loadKeys() {
     if(this.selectedMetatype) {
       this.keysLoading = true
-      this.$client.listMetatypeKeys(this.selectedMetatype.container_id, this.selectedMetatype.id)
+      this.$client.listMetatypeKeys(this.selectedMetatype.container_id, this.selectedMetatype.id, this.$store.getters.isEditMode)
           .then(keys => {
             this.keysLoading = false
 

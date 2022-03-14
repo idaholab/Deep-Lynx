@@ -42,11 +42,14 @@ export type MetatypeRelationshipT = {
     container_id: string;
     name: string;
     description: string;
-    properties: MetatypeRelationshipKeyT[];
+    keys: MetatypeRelationshipKeyT[];
     created_at: string;
     modified_at: string;
     created_by: string;
     modified_by: string;
+    parent_id?: string;
+    ontology_version?: string;
+    old_id?: string;
 };
 
 export type MetatypeRelationshipPairT = {
@@ -63,6 +66,11 @@ export type MetatypeRelationshipPairT = {
     modified_at: string;
     created_by: string;
     modified_by: string;
+    ontology_version?: string;
+    old_id?: string;
+    origin_metatype?: MetatypeT;
+    destination_metatype?: MetatypeT;
+    relationship?: MetatypeRelationshipT;
 };
 
 export type MetatypeKeyT = {
@@ -113,6 +121,7 @@ export type MetatypeRelationshipKeyT = {
     modified_at: string;
     created_by: string;
     modified_by: string;
+    ontology_version?: string;
 };
 
 export type KeyPairT = {

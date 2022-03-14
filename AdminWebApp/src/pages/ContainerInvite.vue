@@ -60,7 +60,7 @@
 
 <script lang="ts">
     import {Component, Vue} from 'vue-property-decorator'
-    import LanguageSelect from '@/components/languageSelect.vue'
+    import LanguageSelect from '@/components/general/languageSelect.vue'
 
     @Component({components: {
             LanguageSelect,

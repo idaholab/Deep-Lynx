@@ -49,7 +49,7 @@
 <script lang="ts">
     import {Component, Vue} from 'vue-property-decorator'
     import Config from '@/config'
-    import LanguageSelect from '@/components/languageSelect.vue'
+    import LanguageSelect from '@/components/general/languageSelect.vue'
     import buildURL from "build-url"
 
     @Component({components: {

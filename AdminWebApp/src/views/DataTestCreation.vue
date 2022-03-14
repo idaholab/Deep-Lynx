@@ -95,10 +95,10 @@
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import {DataSourceT, NodeT, EdgeT} from "@/api/types";
-import SelectDataSource from "@/components/selectDataSource.vue";
-import CreateNodeDialog from "@/components/createNodeDialog.vue";
-import CreateEdgeDialog from "@/components/createEdgeDialog.vue";
-import EditNodeDialog from "@/components/editNodeDialog.vue";
+import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
+import CreateNodeDialog from "@/components/data/createNodeDialog.vue";
+import CreateEdgeDialog from "@/components/data/createEdgeDialog.vue";
+import EditNodeDialog from "@/components/data/editNodeDialog.vue";
 
 
 @Component({filters: {

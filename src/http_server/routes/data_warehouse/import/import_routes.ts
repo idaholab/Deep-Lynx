@@ -60,6 +60,7 @@ export default class ImportRoutes {
             authInContainer('write', 'data'),
             this.addDataToImport,
         );
+        app.post('/containers/:containerID/import/imports/:importID/reprocess', ...middleware, authInContainer('write', 'data'), this.reprocessImport);
         app.get(
             '/containers/:containerID/import/imports/:importID/data',
             ...middleware,
@@ -576,6 +577,21 @@ export default class ImportRoutes {
 
                 return req.pipe(busboy);
             }
+        } else {
+            Result.Failure(`unable to find data source or import`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static reprocessImport(req: Request, res: Response, next: NextFunction) {
+        if (req.dataImport) {
+            importRepo
+                .reprocess(req.dataImport.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
         } else {
             Result.Failure(`unable to find data source or import`, 404).asResponse(res);
             next();

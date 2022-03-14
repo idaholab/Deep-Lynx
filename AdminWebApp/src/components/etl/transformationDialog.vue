@@ -581,8 +581,8 @@ import {
   TypeMappingTransformationT
 } from "@/api/types";
 import {getNestedValue} from "@/utilities";
-import SelectDataSource from "@/components/selectDataSource.vue";
-import SearchMetatypes from "@/components/searchMetatypes.vue";
+import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
+import SearchMetatypes from "@/components/ontology/metatypes/searchMetatypes.vue";
 
 @Component({
   components: {SelectDataSource, SearchMetatypes},

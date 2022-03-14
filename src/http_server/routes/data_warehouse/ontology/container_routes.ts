@@ -26,13 +26,13 @@ export default class ContainerRoutes {
         app.get('/containers', ...middleware, this.listContainers);
 
         app.get('/containers/:containerID', ...middleware, authInContainer('read', 'data'), this.retrieveContainer);
-        app.put('/containers/:containerID', ...middleware, authInContainer('write', 'data'), this.updateContainer);
-        app.delete('/containers/:containerID', ...middleware, authInContainer('write', 'data'), this.archiveContainer);
-        app.post('/containers/:containerID/active', ...middleware, authInContainer('read', 'data'), this.setActive);
+        app.put('/containers/:containerID', ...middleware, authInContainer('write', 'containers'), this.updateContainer);
+        app.delete('/containers/:containerID', ...middleware, authInContainer('write', 'containers'), this.archiveContainer);
+        app.post('/containers/:containerID/active', ...middleware, authInContainer('read', 'containers'), this.setActive);
 
         app.post('/containers/:containerID/permissions', ...middleware, authRequest('write', 'containers'), this.repairPermissions);
 
-        app.get('/containers/:containerID/alerts', ...middleware, authRequest('read', 'data'), this.listAlerts);
+        app.get('/containers/:containerID/alerts', ...middleware, authRequest('read', 'ontology'), this.listAlerts);
         app.post('/containers/:containerID/alerts/:alertID', ...middleware, authInContainer('write', 'containers'), this.acknowledgeAlert);
     }
 

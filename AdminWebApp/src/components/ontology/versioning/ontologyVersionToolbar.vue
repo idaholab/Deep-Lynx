@@ -60,7 +60,7 @@
 <script lang="ts">
 import {Component, Prop, Vue} from "vue-property-decorator";
 import {OntologyVersionT} from "@/api/types";
-import CreateOntologyVersionDialog from "@/components/ontology/createOntologyVersionDialog.vue";
+import CreateOntologyVersionDialog from "@/components/ontology/versioning/createOntologyVersionDialog.vue";
 
 @Component({components: {CreateOntologyVersionDialog}})
 export default class OntologyVersionToolbar extends Vue {

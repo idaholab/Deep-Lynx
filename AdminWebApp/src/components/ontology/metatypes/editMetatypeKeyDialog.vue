@@ -127,7 +127,6 @@
                     deletable-chips
                 ></v-combobox>
               </v-form>
-              <p><span style="color:red">*</span> = {{$t('editMetatypeKey.requiredField')}}</p>
             </v-col>
 
 
@@ -267,7 +266,7 @@
 
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {MetatypeKeyT, MetatypeT} from "../api/types";
+import {MetatypeKeyT, MetatypeT} from "../../../api/types";
 
 @Component
 export default class EditMetatypeKeyDialog extends Vue {

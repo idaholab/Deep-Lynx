@@ -4,9 +4,16 @@ import {PoolClient, QueryConfig} from 'pg';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 import Event from '../../../../domain_objects/event_system/event';
 import EventRepository from '../../../repositories/event_system/event_repository';
+import {QueueFactory} from '../../../../services/queue/queue';
+import PostgresAdapter from '../../db_adapters/postgres/postgres';
+import QueryStream from 'pg-query-stream';
+import {plainToClass} from 'class-transformer';
+import {DataStaging} from '../../../../domain_objects/data_warehouse/import/import';
+import Config from '../../../../services/config';
 
 const format = require('pg-format');
 const resultClass = DataSourceRecord;
+const devnull = require('dev-null');
 
 /*
     DataSourceMapper extends the Postgres database Mapper class and allows
@@ -102,6 +109,36 @@ export default class DataSourceMapper extends Mapper {
 
     public DeleteWithData(id: string): Promise<Result<boolean>> {
         return super.runAsTransaction(...this.deleteWithDataStatement(id));
+    }
+
+    // Reprocess takes a data source and will remove all previous data ingested by it, then attempt
+    // to queue up all data it's received in the past for reprocessing. Generally used by someone who
+    // has made changes to the ontology and mappings, this insures the data they have in the system
+    // is the latest
+    public async ReprocessDataSource(dataSourceID: string): Promise<Result<boolean>> {
+        // first we delete the old nodes/edges - don't wait though, the sql handles not deleting
+        // any records created after the time you start this statement
+        void super.runAsTransaction(...this.deleteDataStatement(dataSourceID));
+
+        // now we stream process this part because a data source might have a large number of
+        // records and we really don't want to read that into memory - we also don't wait
+        // for this to complete as it could take a night and a day
+        const queue = await QueueFactory();
+        void PostgresAdapter.Instance.Pool.connect((err, client, done) => {
+            const stream = client.query(new QueryStream(this.listStagingForSourceStreaming(dataSourceID)));
+
+            stream.on('data', (data) => {
+                void queue.Put(Config.process_queue, plainToClass(DataStaging, data as object).id);
+            });
+
+            stream.on('end', () => done());
+
+            // we pipe to devnull because we need to trigger the stream and don't
+            // care where the data ultimately ends up
+            stream.pipe(devnull({objectMode: true}));
+        });
+
+        return Promise.resolve(Result.Success(true));
     }
 
     public async SetStatus(
@@ -210,6 +247,22 @@ export default class DataSourceMapper extends Mapper {
         ];
     }
 
+    private deleteDataStatement(dataSourceID: string): QueryConfig[] {
+        // reminder that we don't actually delete nodes or edges, we just set the deleted_at fields accordingly
+        // we also make sure we're only deleting nodes/edges from this import previous to this time so we don't
+        // accidentally delete any records in process (in case this is from reprocessing an import)
+        return [
+            {
+                text: `UPDATE nodes SET deleted_at = NOW() WHERE deleted_at IS NULL AND data_source_id = $1 AND created_at < NOW() `,
+                values: [dataSourceID],
+            },
+            {
+                text: `UPDATE edges SET deleted_at = NOW() WHERE deleted_at IS NULL AND data_source_id = $1 AND created_at < NOW()`,
+                values: [dataSourceID],
+            },
+        ];
+    }
+
     private setActiveStatement(dataSourceID: string, userID: string): QueryConfig {
         return {
             text: `UPDATE data_sources SET active = true, modified_at = NOW(), modified_by = $2 WHERE id = $1`,
@@ -248,5 +301,11 @@ export default class DataSourceMapper extends Mapper {
     // should only be used with a streaming query so as not to swamp memory
     public listAllActiveStatement(): string {
         return `SELECT * FROM data_sources WHERE active IS TRUE`;
+    }
+
+    // we're only pulling the ID here because that's all we need for the re-queue process, we
+    // don't want to read the data in needlessly
+    private listStagingForSourceStreaming(dataSourceID: string): string {
+        return format(`SELECT data_staging.id FROM data_staging WHERE data_source_id = %L`, dataSourceID);
     }
 }

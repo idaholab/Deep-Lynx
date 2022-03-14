@@ -73,11 +73,11 @@
 
 <script lang="ts">
 import {Component, Vue} from 'vue-property-decorator'
-import LanguageSelect from '@/components/languageSelect.vue'
+import LanguageSelect from '@/components/general/languageSelect.vue'
 import {ContainerT, UserContainerInviteT} from "@/api/types";
-import ContainerSelect from "@/components/containerSelect.vue"
-import CreateContainerDialog from "@/components/createContainerDialog.vue";
-import Logout from "@/components/logout.vue";
+import ContainerSelect from "@/components/ontology/containers/containerSelect.vue"
+import CreateContainerDialog from "@/components/ontology/containers/createContainerDialog.vue";
+import Logout from "@/components/accessManagement/logout.vue";
 import {RefreshPermissions} from "@/auth/authentication_service";
 
 @Component({components: {
@@ -119,6 +119,9 @@ export default class ContainerSelection extends Vue {
   }
 
   toContainerHome() {
+    this.$store.commit('setEditMode', false)
+    this.$store.commit('setPendingOntologyVersion', undefined)
+
     // @ts-ignore
     RefreshPermissions()
     .then(() => {
@@ -128,6 +131,9 @@ export default class ContainerSelection extends Vue {
   }
 
   newContainer(containerID: string) {
+    this.$store.commit('setEditMode', false)
+    this.$store.commit('setPendingOntologyVersion', undefined)
+
     RefreshPermissions()
         .then(() => {
           this.$router.push({name: 'Home', params: {containerID: containerID}})
@@ -136,6 +142,9 @@ export default class ContainerSelection extends Vue {
   }
 
   acceptInvite(token: string, containerName: string) {
+    this.$store.commit('setEditMode', false)
+    this.$store.commit('setPendingOntologyVersion', undefined)
+
     RefreshPermissions()
         .then(() => {
           this.$router.push({name: 'ContainerInvite', query: {token, containerName}})

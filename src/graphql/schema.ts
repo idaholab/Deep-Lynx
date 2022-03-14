@@ -47,6 +47,7 @@ export default class GraphQLSchemaGenerator {
         const recordInputType = new GraphQLInputObjectType({
             name: 'record_input',
             fields: {
+                id: {type: GraphQLString},
                 data_source_id: {type: GraphQLString},
                 original_id: {type: GraphQLJSON}, // since the original ID might be a number, treat it as valid JSON
                 import_id: {type: GraphQLString},
@@ -181,6 +182,11 @@ export default class GraphQLSchemaGenerator {
             // you might notice that metatype_id and metatype_name are missing as filters - these are not
             // needed as we've already dictated what metatype to look for based on the query itself
             if (input._record) {
+                if (input._record.id) {
+                    const query = this.breakQuery(input._record.id);
+                    repo = repo.and().id(query[0], query[1]);
+                }
+
                 if (input._record.data_source_id) {
                     const query = this.breakQuery(input._record.data_source_id);
                     repo = repo.and().dataSourceID(query[0], query[1]);

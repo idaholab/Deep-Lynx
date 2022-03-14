@@ -23,6 +23,8 @@ export default class DataSourceRoutes {
 
         app.post('/containers/:containerID/import/datasources/:sourceID/active', ...middleware, authInContainer('write', 'data'), this.setActive);
         app.delete('/containers/:containerID/import/datasources/:sourceID/active', ...middleware, authInContainer('write', 'data'), this.setInactive);
+
+        app.post('/containers/:containerID/import/datasources/:sourceID/reprocess', ...middleware, authInContainer('write', 'data'), this.reprocessDataSource);
     }
 
     private static createDataSource(req: Request, res: Response, next: NextFunction) {
@@ -204,6 +206,21 @@ export default class DataSourceRoutes {
                     force: String(req.query.forceDelete).toLowerCase() === 'true',
                     removeData: String(req.query.removeData).toLowerCase() === 'true',
                 })
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err))
+                .finally(() => next());
+        } else {
+            Result.Failure(`unable to find data source`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static reprocessDataSource(req: Request, res: Response, next: NextFunction) {
+        if (req.dataSource) {
+            dataSourceRepo
+                .reprocess(req.dataSource.DataSourceRecord!.id!)
                 .then((result) => {
                     result.asResponse(res);
                 })

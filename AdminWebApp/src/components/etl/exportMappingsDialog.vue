@@ -45,7 +45,7 @@
 
 <script lang="ts">
 import {Component, Prop, Watch, Vue} from 'vue-property-decorator'
-import {ContainerT, DataSourceT, TypeMappingT} from "../api/types";
+import {ContainerT, DataSourceT, TypeMappingT} from "../../api/types";
 import {RetrieveJWT} from "@/auth/authentication_service";
 import buildURL from "build-url";
 import {AxiosBasicCredentials, AxiosRequestConfig, AxiosResponse} from "axios";

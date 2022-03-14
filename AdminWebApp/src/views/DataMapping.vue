@@ -332,11 +332,11 @@ import {
   TypeMappingT,
   TypeMappingTransformationT, TypeMappingUpgradePayloadT
 } from "@/api/types";
-import DataTypeMapping from "@/components/dataTypeMapping.vue"
-import ExportMappingsDialog from "@/components/exportMappingsDialog.vue";
-import ImportMappingsDialog from "@/components/importMappingsDialog.vue";
-import SelectDataSource from "@/components/selectDataSource.vue";
-import DeleteTypeMappingDialog from "@/components/deleteTypeMappingDialog.vue";
+import DataTypeMapping from "@/components/etl/dataTypeMapping.vue"
+import ExportMappingsDialog from "@/components/etl/exportMappingsDialog.vue";
+import ImportMappingsDialog from "@/components/etl/importMappingsDialog.vue";
+import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
+import DeleteTypeMappingDialog from "@/components/etl/deleteTypeMappingDialog.vue";
 
 @Component({filters: {
     pretty: function(value: any) {

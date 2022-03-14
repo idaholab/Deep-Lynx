@@ -3,7 +3,7 @@ import Vuex from 'vuex';
 import {ChangelistT, ContainerT, OntologyVersionT} from '@/api/types';
 import {Client} from '@/api/client';
 import Config from '@/config';
-import OntologyVersionToolbar from '@/components/ontology/ontologyVersionToolbar.vue';
+import OntologyVersionToolbar from '@/components/ontology/versioning/ontologyVersionToolbar.vue';
 
 Vue.use(Vuex);
 
@@ -70,6 +70,10 @@ export default new Vuex.Store({
     },
     modules: {},
     getters: {
+        activeContainer: (state) => {
+            return state.activeContainer;
+        },
+
         activeContainerID: (state) => {
             if (state.activeContainer) {
                 const container = state.activeContainer as unknown as ContainerT;
