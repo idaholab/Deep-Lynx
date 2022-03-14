@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="dialog" max-width="500px" @click:outside="clearNew">
+    <v-dialog v-model="dialog" width="60%" @click:outside="clearNew">
         <template v-slot:activator="{ on }">
             <v-btn color="primary" dark class="mb-2" v-on="on">{{$t("containers.newContainerButton")}}</v-btn>
         </template>
@@ -46,15 +46,13 @@
                                 </template>
                                 <template slot="append-outer"><info-tooltip :message="$t('containers.owlUrlHelp')"></info-tooltip> </template>
                               </v-text-field>
-                              <!-- Uncomment once we actually have versioning
-                              <v-checkbox v-model="newContainer.config.data_versioning_enabled">
+                              <v-checkbox v-model="newContainer.config.ontology_versioning_enabled">
                                 <template v-slot:label>
-                                  {{$t('containers.dataVersioningEnabled')}}
+                                  {{$t('containers.ontologyVersioningEnabled')}}
                                 </template>
 
-                                <template slot="append-outer"><info-tooltip :message="$t('containers.dataVersioningHelp')"></info-tooltip> </template>
+                                <template slot="prepend"><info-tooltip :message="$t('containers.ontologyVersioningHelp')"></info-tooltip> </template>
                               </v-checkbox>
-                              -->
                             </v-form>
                         </v-col>
                     </v-row>
@@ -84,7 +82,7 @@
           name: null,
           description:null, config: {
           data_versioning_enabled: true,
-          ontology_versioning_enabled: false,
+          ontology_versioning_enabled: true,
           }}
       owlFilePath = ""
         owlFile: File | null = null
@@ -98,7 +96,7 @@
               name: null,
               description:null, config: {
                 data_versioning_enabled: true,
-                ontology_versioning_enabled: false,
+                ontology_versioning_enabled: true,
               }}
             this.dialog = false
         }

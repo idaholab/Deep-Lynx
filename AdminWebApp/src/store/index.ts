@@ -70,6 +70,10 @@ export default new Vuex.Store({
     },
     modules: {},
     getters: {
+        activeContainer: (state) => {
+            return state.activeContainer;
+        },
+
         activeContainerID: (state) => {
             if (state.activeContainer) {
                 const container = state.activeContainer as unknown as ContainerT;

@@ -161,8 +161,8 @@ export class Client {
         return this.delete(`/containers/${containerID}`);
     }
 
-    updateContainer(container: ContainerT | any, containerID: string): Promise<ContainerT> {
-        return this.put<ContainerT>(`/containers/${containerID}`, container);
+    updateContainer(container: ContainerT | any): Promise<ContainerT> {
+        return this.put<ContainerT>(`/containers/${container.id}`, container);
     }
 
     listMetatypes(

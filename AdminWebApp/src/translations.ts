@@ -34,7 +34,7 @@ export default {
             dataTest: 'Test Data',
             dataTestDescription: 'Create and Manage Datasets',
             settings: 'Settings',
-            settingsDescription: 'Application Level Settings',
+            settingsDescription: 'Container Level Settings',
             dataImports: 'Import Data',
             dataImportsDescription: 'Manage Imported Data',
             containerAdministration: 'Container Administration',
@@ -884,9 +884,8 @@ export default {
             urlOwlFile: 'URL to .owl File',
             optional: 'optional',
             owlFile: '.owl File',
-            dataVersioningEnabled: 'Data Versioning Enabled',
-            dataVersioningHelp:
-                'Toggle whether or not this container will maintain historical versions of all data inserted or modified into it. Note: this does not apply to the ontology portion of the container, only the data.',
+            ontologyVersioningEnabled: 'Ontology Versioning Enabled',
+            ontologyVersioningHelp: 'Toggle whether or not this container will maintain historical versions of the ontology.',
         },
         containerSelect: {
             container: 'Container',
@@ -941,6 +940,8 @@ export default {
             generateKey: 'Generate New Key',
             accessKeyFormTitle: 'Generate New Key',
             actions: 'Actions',
+            title: 'Container Settings',
+            explanation: "This page allows you to make changes to your currently selected container. Note that you cannot change your container's name",
         },
         dataImports: {
             tableTitle: 'Imports',
