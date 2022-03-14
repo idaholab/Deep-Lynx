@@ -38,11 +38,9 @@ void postgresAdapter.init().then(() => {
             {
                 name: 'events_queue', // will run events_queue.js - a never ending processing of the events queue
             },
-            /*
             {
                 name: 'processing_queue', // will run processing_queue.js
             },
-             */
             {
                 name: 'data_source_queue', // will run data_source_queue.js
             },
