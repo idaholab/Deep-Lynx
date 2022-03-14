@@ -27,7 +27,7 @@
                     :disabled="true"
                     class="disabled"
                 >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.name')}} <small style="color:red" >*</small></template>
+                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.name')}}</template>
                 </v-text-field>
 
                 <v-text-field
@@ -35,7 +35,7 @@
                     :disabled="true"
                     class="disabled"
                 >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.propertyName')}} <small style="color:red" >*</small></template>
+                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.propertyName')}} </template>
                 </v-text-field>
                 <v-select
                     v-model="selectedMetatypeRelationshipKey.data_type"
@@ -44,14 +44,14 @@
                     :disabled="true"
                     class="disabled"
                 >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.dataType')}} <small style="color:red" >*</small></template>
+                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.dataType')}} </template>
                 </v-select>
                 <v-checkbox
                     v-model="selectedMetatypeRelationshipKey.required"
                     :disabled="true"
                     class="disabled"
                 >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.required')}} <small style="color:#ff0000" >*</small></template>
+                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.required')}} </template>
                 </v-checkbox>
                 <v-textarea
                     v-model="selectedMetatypeRelationshipKey.description"
@@ -59,7 +59,7 @@
                     :disabled="true"
                     class="disabled"
                 >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.description')}} <small style="color:#ff0000" >*</small></template>
+                  <template v-slot:label>{{$t('viewMetatypeRelationshipKey.description')}} </template>
                 </v-textarea>
 
                 <div v-if="selectedMetatypeRelationshipKey.validation">
