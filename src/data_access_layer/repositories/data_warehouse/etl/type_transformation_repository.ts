@@ -325,8 +325,8 @@ export default class TypeTransformationRepository extends Repository implements 
         if (!deleted) Logger.error(`unable to remove type mapping ${t.id} from cache`);
 
         // we must also clear the parent mapping's cache
-        deleted = await Cache.del(`${TypeMappingMapper.tableName}:${t.id}`);
-        if (!deleted) Logger.error(`unable to remove type mapping ${t.id} from cache`);
+        deleted = await Cache.del(`${TypeMappingMapper.tableName}:${t.type_mapping_id}`);
+        if (!deleted) Logger.error(`unable to remove type mapping ${t.type_mapping_id} from cache`);
 
         deleted = await Cache.del(`${TypeMappingMapper.tableName}:dataSourceID:${t.data_source_id}:shapeHash:${t.shape_hash}`);
         if (!deleted) Logger.error(`unable to remove type mapping ${t.id} from cache`);
