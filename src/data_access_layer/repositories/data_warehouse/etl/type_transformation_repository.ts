@@ -123,18 +123,20 @@ export default class TypeTransformationRepository extends Repository implements 
 
             Object.assign(original.value, t);
 
-            void this.deleteCached(t);
-
             const updated = await this.#mapper.Update(user.id!, original.value);
             if (updated.isError) return Promise.resolve(Result.Pass(updated));
 
             Object.assign(t, updated.value);
+
+            await this.deleteCached(t);
             return Promise.resolve(Result.Success(true));
         } else {
             const created = await this.#mapper.Create(user.id!, t);
             if (created.isError) return Promise.resolve(Result.Pass(created));
 
             Object.assign(t, created.value);
+
+            await this.deleteCached(t);
             return Promise.resolve(Result.Success(true));
         }
 

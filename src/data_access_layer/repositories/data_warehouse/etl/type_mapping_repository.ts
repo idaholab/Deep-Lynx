@@ -106,8 +106,6 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
             Object.assign(original.value, t);
 
-            void this.deleteCached(t);
-
             const result = await this.#mapper.Update(user.id!, original.value, transaction);
             if (result.isError) {
                 await this.#mapper.rollbackTransaction(transaction);
@@ -127,6 +125,8 @@ export default class TypeMappingRepository extends Repository implements Reposit
                 }
             }
 
+            await this.deleteCached(t);
+
             const committed = await this.#mapper.completeTransaction(transaction);
             if (committed.isError) {
                 if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
@@ -143,6 +143,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
         }
 
         Object.assign(t, result.value);
+        await this.deleteCached(t);
 
         // assign the id to all transformations
         if (t.transformations) t.transformations.forEach((transformation) => (transformation.type_mapping_id = t.id));
