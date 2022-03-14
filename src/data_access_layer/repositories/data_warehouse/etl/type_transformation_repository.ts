@@ -123,18 +123,20 @@ export default class TypeTransformationRepository extends Repository implements 
 
             Object.assign(original.value, t);
 
-            void this.deleteCached(t);
-
             const updated = await this.#mapper.Update(user.id!, original.value);
             if (updated.isError) return Promise.resolve(Result.Pass(updated));
 
             Object.assign(t, updated.value);
+
+            await this.deleteCached(t);
             return Promise.resolve(Result.Success(true));
         } else {
             const created = await this.#mapper.Create(user.id!, t);
             if (created.isError) return Promise.resolve(Result.Pass(created));
 
             Object.assign(t, created.value);
+
+            await this.deleteCached(t);
             return Promise.resolve(Result.Success(true));
         }
 
@@ -323,8 +325,8 @@ export default class TypeTransformationRepository extends Repository implements 
         if (!deleted) Logger.error(`unable to remove type mapping ${t.id} from cache`);
 
         // we must also clear the parent mapping's cache
-        deleted = await Cache.del(`${TypeMappingMapper.tableName}:${t.id}`);
-        if (!deleted) Logger.error(`unable to remove type mapping ${t.id} from cache`);
+        deleted = await Cache.del(`${TypeMappingMapper.tableName}:${t.type_mapping_id}`);
+        if (!deleted) Logger.error(`unable to remove type mapping ${t.type_mapping_id} from cache`);
 
         deleted = await Cache.del(`${TypeMappingMapper.tableName}:dataSourceID:${t.data_source_id}:shapeHash:${t.shape_hash}`);
         if (!deleted) Logger.error(`unable to remove type mapping ${t.id} from cache`);
