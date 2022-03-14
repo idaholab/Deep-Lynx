@@ -137,7 +137,7 @@
       }
 
       saveContainer() {
-         this.$client.updateContainer({"name": this.toEdit!.name, "description": this.toEdit!.description}, this.toEdit!.id)
+         this.$client.updateContainer({"name": this.toEdit!.name, "description": this.toEdit!.description})
          this.editDialog = false
          this.refreshContainers()
       }
