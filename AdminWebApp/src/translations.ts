@@ -34,7 +34,7 @@ export default {
             dataTest: 'Test Data',
             dataTestDescription: 'Create and Manage Datasets',
             settings: 'Settings',
-            settingsDescription: 'Application Level Settings',
+            settingsDescription: 'Container Level Settings',
             dataImports: 'Import Data',
             dataImportsDescription: 'Manage Imported Data',
             containerAdministration: 'Container Administration',
@@ -602,6 +602,24 @@ export default {
             in: 'in',
             withData: 'Delete All Data Generated From Import',
         },
+        reprocessDataImport: {
+            title: 'Reprocess Import',
+            warning:
+                'This will initiate a reprocessing of all data in this import. All previously ingested data from this import will be archived so as not to cause conflicts.',
+            cancel: 'Cancel',
+            reprocess: 'Reprocess',
+            in: 'in',
+            tooltip: 'Reprocess Data from Import',
+        },
+        reprocessDataSource: {
+            title: 'Reprocess Data Source',
+            warning:
+                'This will initiate a reprocessing of all data ingested by this data source. All previously ingested data from this source will be archived so as not to cause conflicts.',
+            cancel: 'Cancel',
+            reprocess: 'Reprocess',
+            in: 'in',
+            tooltip: 'Reprocess Data from Data Source',
+        },
         deleteTransformation: {
             deleteTransformation: 'Delete Transformation',
             deleteTitle: 'Delete Transformation Permanently',
@@ -866,9 +884,8 @@ export default {
             urlOwlFile: 'URL to .owl File',
             optional: 'optional',
             owlFile: '.owl File',
-            dataVersioningEnabled: 'Data Versioning Enabled',
-            dataVersioningHelp:
-                'Toggle whether or not this container will maintain historical versions of all data inserted or modified into it. Note: this does not apply to the ontology portion of the container, only the data.',
+            ontologyVersioningEnabled: 'Ontology Versioning Enabled',
+            ontologyVersioningHelp: 'Toggle whether or not this container will maintain historical versions of the ontology.',
         },
         containerSelect: {
             container: 'Container',
@@ -923,6 +940,8 @@ export default {
             generateKey: 'Generate New Key',
             accessKeyFormTitle: 'Generate New Key',
             actions: 'Actions',
+            title: 'Container Settings',
+            explanation: "This page allows you to make changes to your currently selected container. Note that you cannot change your container's name",
         },
         dataImports: {
             tableTitle: 'Imports',

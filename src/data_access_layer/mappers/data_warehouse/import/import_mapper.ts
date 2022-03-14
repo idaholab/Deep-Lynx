@@ -2,11 +2,17 @@ import Mapper from '../../mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient, QueryConfig} from 'pg';
 import Event from '../../../../domain_objects/event_system/event';
-import Import from '../../../../domain_objects/data_warehouse/import/import';
+import Import, {DataStaging} from '../../../../domain_objects/data_warehouse/import/import';
 import EventRepository from '../../../repositories/event_system/event_repository';
+import PostgresAdapter from '../../db_adapters/postgres/postgres';
+import QueryStream from 'pg-query-stream';
+import {QueueFactory} from '../../../../services/queue/queue';
+import Config from '../../../../services/config';
+import {plainToClass} from 'class-transformer';
 
 const format = require('pg-format');
 const resultClass = Import;
+const devnull = require('dev-null');
 
 /*
     ImportMapper extends the Postgres database Mapper class and allows
@@ -127,6 +133,37 @@ export default class ImportMapper extends Mapper {
         return super.runStatement(this.deleteStatement(importID));
     }
 
+    // Reprocess an import will take an importID and attempt to first clear all data processed
+    // from it by setting the deleted_at tag of any nodes or edges that have been created. Then
+    // it will attempt to re-queue all data staging records for that import
+    public async ReprocessImport(importID: string): Promise<Result<boolean>> {
+        // first we delete the old nodes/edges - don't wait though, the sql handles not deleting
+        // any records created after the time you start this statement
+        void super.runAsTransaction(...this.deleteDataStatement(importID));
+
+        // now we stream process this part because an import might have a large number of
+        // records and we really don't want to read that into memory - we also don't wait
+        // for this to complete as it could take a night and a day
+        const queue = await QueueFactory();
+        void PostgresAdapter.Instance.Pool.connect((err, client, done) => {
+            const stream = client.query(new QueryStream(this.listStagingForImportStreaming(importID)));
+
+            stream.on('data', (data) => {
+                void queue.Put(Config.process_queue, plainToClass(DataStaging, data as object).id);
+            });
+
+            stream.on('end', () => done());
+
+            // we pipe to devnull because we need to trigger the stream and don't
+            // care where the data ultimately ends up
+            stream.pipe(devnull({objectMode: true}));
+        });
+
+        await this.SetStatus(importID, 'processing', 'reprocessing initiated');
+
+        return Promise.resolve(Result.Success(true));
+    }
+
     // can only allow deletes on unprocessed imports
     private deleteStatement(importID: string): QueryConfig {
         return {
@@ -153,6 +190,22 @@ export default class ImportMapper extends Mapper {
         ];
     }
 
+    private deleteDataStatement(importID: string): QueryConfig[] {
+        // reminder that we don't actually delete nodes or edges, we just set the deleted_at fields accordingly
+        // we also make sure we're only deleting nodes/edges from this import previous to this time so we don't
+        // accidentally delete any records in process (in case this is from reprocessing an import)
+        return [
+            {
+                text: `UPDATE nodes SET deleted_at = NOW() WHERE deleted_at IS NULL AND import_data_id = $1 AND created_at < NOW() `,
+                values: [importID],
+            },
+            {
+                text: `UPDATE edges SET deleted_at = NOW() WHERE deleted_at IS NULL AND import_data_id = $1 AND created_at < NOW()`,
+                values: [importID],
+            },
+        ];
+    }
+
     private createStatement(userID: string, ...imports: Import[]): string {
         const text = `INSERT INTO imports(
             data_source_id,
@@ -162,6 +215,12 @@ export default class ImportMapper extends Mapper {
         const values = imports.map((i) => [i.data_source_id, i.reference, userID, userID]);
 
         return format(text, values);
+    }
+
+    // we're only pulling the ID here because that's all we need for the re-queue process, we
+    // don't want to read the data in needlessly
+    private listStagingForImportStreaming(importID: string): string {
+        return format(`SELECT data_staging.id FROM data_staging WHERE import_id = %L`, importID);
     }
 
     private retrieveStatement(logID: string): QueryConfig {

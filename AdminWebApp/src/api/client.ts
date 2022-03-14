@@ -161,8 +161,8 @@ export class Client {
         return this.delete(`/containers/${containerID}`);
     }
 
-    updateContainer(container: ContainerT | any, containerID: string): Promise<ContainerT> {
-        return this.put<ContainerT>(`/containers/${containerID}`, container);
+    updateContainer(container: ContainerT | any): Promise<ContainerT> {
+        return this.put<ContainerT>(`/containers/${container.id}`, container);
     }
 
     listMetatypes(
@@ -539,6 +539,14 @@ export class Client {
 
     deactivateDataSource(containerID: string, dataSourceID: string): Promise<boolean> {
         return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/active`);
+    }
+
+    reprocessDataSource(containerID: string, dataSourceID: string): Promise<boolean> {
+        return this.postNoPayload(`/containers/${containerID}/import/datasources/${dataSourceID}/reprocess`);
+    }
+
+    reprocessImport(containerID: string, importID: string): Promise<boolean> {
+        return this.postNoPayload(`/containers/${containerID}/import/imports/${importID}/reprocess`);
     }
 
     createNode(containerID: string, node: any): Promise<NodeT[]> {

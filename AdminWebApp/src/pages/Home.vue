@@ -159,6 +159,16 @@
               <v-list-item-subtitle>{{$t("home.containerUsersDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
+
+          <v-list-item two-line link
+                       v-if="$auth.Auth('users', 'write', containerID)"
+                       @click="setActiveComponent('settings')"
+                       :input-value="currentMainComponent === 'Settings'">
+            <v-list-item-content>
+              <v-list-item-title>{{$t("home.settings")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("home.settingsDescription")}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
         </v-list-group>
 
         <v-list-group :value="false" v-if="$auth.IsAdmin()">   <!-- TODO: correct to use auth function -->
@@ -199,14 +209,6 @@
             <v-list-item-title>{{$t("home.changeContainer")}}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-
-        <!--
-        <v-list-item link @click="setActiveComponent('settings')" :input-value="currentMainComponent === 'Settings'">
-          <v-list-item-content>
-            <v-list-item-title>{{$t("home.settings")}}</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        -->
 
         <v-list-item link @click="logout">
           <v-list-item-content>
