@@ -73,7 +73,7 @@
           </v-list-item>
 
           <v-list-item two-line link
-                       v-if="$auth.Auth('ontology', 'read', containerID)"
+                       v-if="$auth.Auth('ontology', 'read', containerID) && $store.getters.ontologyVersioningEnabled"
                        @click="setActiveComponent('ontology-update')"
                        :input-value="currentMainComponent === 'OntologyUpdate'">
             <v-list-item-content>
