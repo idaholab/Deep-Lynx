@@ -63,6 +63,10 @@ export default class MetatypeKey extends BaseDomainClass {
     @Type(() => Date)
     deleted_at?: Date;
 
+    @IsOptional()
+    @IsString()
+    ontology_version?: string;
+
     constructor(input: {
         metatype_id?: string;
         container_id?: string;
@@ -78,6 +82,7 @@ export default class MetatypeKey extends BaseDomainClass {
             max?: number;
             min?: number;
         };
+        ontology_version?: string;
     }) {
         super();
 
@@ -94,6 +99,7 @@ export default class MetatypeKey extends BaseDomainClass {
             if (input.metatype_id) this.metatype_id = input.metatype_id;
             if (input.default_value) this.default_value = input.default_value;
             if (input.container_id) this.container_id = input.container_id;
+            if (input.ontology_version) this.ontology_version = input.ontology_version;
         }
     }
 }

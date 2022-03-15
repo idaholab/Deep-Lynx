@@ -115,7 +115,7 @@ export default class OntologyVersionMapper extends Mapper {
 
     private deleteStatement(id: string): QueryConfig {
         return {
-            text: `DELETE FROM ontology_versions WHERE id = $1 AND status <> 'applied'`,
+            text: `DELETE FROM ontology_versions WHERE id = $1 AND status <> 'published'`,
             values: [id],
         };
     }

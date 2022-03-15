@@ -53,7 +53,9 @@ export default class OntologyVersionRepository extends Repository implements Rep
         // on creation each ontology version should be populated with the base version, or a NULL base version - this
         // function should not be waited on and the cloning function handles it's own status changes of the ontology
         // version
-        void this.cloneOntology(user, baseOntologyVersion, result.value.id!, result.value.container_id!);
+        if (baseOntologyVersion) {
+            void this.cloneOntology(user, baseOntologyVersion, result.value.id!, result.value.container_id!);
+        }
 
         Object.assign(v, result.value);
         return Promise.resolve(Result.Success(true));
