@@ -63,8 +63,14 @@ export default class OntologyVersionMapper extends Mapper {
         return super.runStatement(this.setStatusStatement(id, status, statusMessage));
     }
 
-    public async CloneOntology(userID: string, baseVersionID: string | undefined, targetVersionID: string, transaction?: PoolClient): Promise<Result<boolean>> {
-        return super.runStatement(this.cloneOntologyStatement(userID, baseVersionID, targetVersionID), {transaction});
+    public async CloneOntology(
+        userID: string,
+        baseVersionID: string | undefined,
+        targetVersionID: string,
+        containerID: string,
+        transaction?: PoolClient,
+    ): Promise<Result<boolean>> {
+        return super.runStatement(this.cloneOntologyStatement(userID, baseVersionID, targetVersionID, containerID), {transaction});
     }
 
     public async Delete(id: string): Promise<Result<boolean>> {
@@ -152,10 +158,10 @@ export default class OntologyVersionMapper extends Mapper {
 
     // this statement runs the function for cloning the ontology, requires at least a target ontology version but
     // base version could be null
-    private cloneOntologyStatement(userID: string, baseOntology: string | undefined, targetOntology: string): QueryConfig {
+    private cloneOntologyStatement(userID: string, baseOntology: string | undefined, targetOntology: string, containerID: string): QueryConfig {
         return {
-            text: `SELECT clone_ontology($1::bigint, $2::bigint, $3::bigint);`,
-            values: [userID, baseOntology, targetOntology],
+            text: `SELECT clone_ontology($1::bigint, $2::bigint, $3::bigint, $4::bigint);`,
+            values: [userID, baseOntology, targetOntology, containerID],
         };
     }
 }
