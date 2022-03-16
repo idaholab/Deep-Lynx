@@ -116,6 +116,10 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
     @Type(() => Date)
     deleted_at?: Date;
 
+    @IsOptional()
+    @IsString()
+    ontology_version?: string;
+
     constructor(input: {
         name: string;
         description: string;
@@ -124,6 +128,7 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
         destination_metatype: Metatype | string;
         relationship: MetatypeRelationship | string;
         container_id?: string;
+        ontology_version?: string;
     }) {
         super();
 
@@ -150,6 +155,7 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
                   }));
 
             if (input.container_id) this.container_id = input.container_id;
+            if (input.ontology_version) this.ontology_version = input.ontology_version;
         }
     }
 }

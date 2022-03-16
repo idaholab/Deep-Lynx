@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="dialog" width="60%" @click:outside="clearNew">
+    <v-dialog v-model="dialog" width="40%" @click:outside="clearNew">
         <template v-slot:activator="{ on }">
             <v-btn color="primary" dark class="mb-2" v-on="on">{{$t("containers.newContainerButton")}}</v-btn>
         </template>

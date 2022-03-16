@@ -13,10 +13,13 @@ import MetatypeRelationshipPairRepository from '../../../repositories/data_wareh
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import MetatypeKeyRepository from '../../../repositories/data_warehouse/ontology/metatype_key_repository';
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
-import {User} from '../../../../domain_objects/access_management/user';
+import {SuperUser, User} from '../../../../domain_objects/access_management/user';
 import NodeRepository from '../../../repositories/data_warehouse/data/node_repository';
 import EdgeRepository from '../../../repositories/data_warehouse/data/edge_repository';
 import {stringToValidPropertyName} from "../../../../services/utilities";
+import OntologyVersionRepository
+    from "../../../repositories/data_warehouse/ontology/versioning/ontology_version_repository";
+import OntologyVersion from "../../../../domain_objects/data_warehouse/ontology/versioning/ontology_version";
 const convert = require('xml-js');
 
 const containerRepo = new ContainerRepository();
@@ -24,6 +27,7 @@ const metatypeRelationshipRepo = new MetatypeRelationshipRepository();
 const metatypeRepo = new MetatypeRepository();
 const metatypeRelationshipPairRepo = new MetatypeRelationshipPairRepository();
 const metatypeKeyRepo = new MetatypeKeyRepository();
+const ontologyRepo = new OntologyVersionRepository();
 const nodeRepo = new NodeRepository();
 const edgeRepo = new EdgeRepository();
 
@@ -490,7 +494,31 @@ export default class ContainerImport {
                     }
                 });
 
-                if (update) {
+                // if it's an update we need to set the ontology version manually so that we're not actually updating
+                // the ontology if versioning is enabled
+                let ontologyVersionID: string | undefined
+                if(container.config!.ontology_versioning_enabled && update) {
+                    if(container.config!.ontology_versioning_enabled) {
+                        const ontologyVersion  =  new OntologyVersion({
+                            container_id: containerID,
+                            name: `Update from OWL File`,
+                            description: 'Updates created from uploading an .OWL file',
+                            status: 'ready'
+                        })
+
+                        const saved = await ontologyRepo.save(ontologyVersion, user)
+
+                        if(saved.isError) {
+                            Logger.error(`unable to create ontology version for update from .OWL file ${saved.error?.error}`)
+                        } else {
+                            ontologyVersionID = ontologyVersion.id
+                        }
+                    }
+                }
+
+                // only pull and map the old data if we're updating an ontology in place, in a container where versioning
+                // isn't enabled
+                if (update && !container.config!.ontology_versioning_enabled) {
                     let oldMetatypeRelationships: MetatypeRelationship[] = [];
                     let oldMetatypes: Metatype[] = [];
                     let oldMetatypeRelationshipPairs: MetatypeRelationshipPair[] = [];
@@ -609,6 +637,7 @@ export default class ContainerImport {
                         container_id: containerID,
                         name: relationship.name,
                         description: relationship.description,
+                        ontology_version: ontologyVersionID
                     });
 
                     // if marked for update, assign relationship id
@@ -622,7 +651,7 @@ export default class ContainerImport {
 
                 const relationshipPromise = await metatypeRelationshipRepo.bulkSave(user, metatypeRelationships);
                 // check for an error and rollback if necessary
-                if (relationshipPromise.isError) {
+                if (relationshipPromise.isError && !update) {
                     const rollback = await this.rollbackOntology(container)
                         .then((result) => {
                             return result + ' ' + relationshipPromise.error?.error;
@@ -632,6 +661,8 @@ export default class ContainerImport {
                         });
                     resolve(Result.SilentFailure(rollback));
                     return;
+                } else if (relationshipPromise.isError) {
+                    resolve(Result.Pass(relationshipPromise))
                 }
 
                 // loop through relationships (with new IDs if created)
@@ -650,6 +681,7 @@ export default class ContainerImport {
                         container_id: containerID,
                         name: thisClass.name,
                         description: thisClass.description,
+                        ontology_version: ontologyVersionID,
                     });
 
                     // if marked for update, assign metatype id
@@ -663,7 +695,7 @@ export default class ContainerImport {
 
                 const metatypePromise = await metatypeRepo.bulkSave(user, metatypes);
                 // check for an error and rollback if necessary
-                if (metatypePromise.isError) {
+                if (metatypePromise.isError && !update) {
                     const rollback = await this.rollbackOntology(container)
                         .then((result) => {
                             return result + ' ' + metatypePromise.error?.error;
@@ -673,6 +705,8 @@ export default class ContainerImport {
                         });
                     resolve(Result.SilentFailure(rollback));
                     return;
+                } else if (metatypePromise.isError) {
+                    resolve(Result.Pass(metatypePromise))
                 }
 
                 // loop through metatypes adding new database IDs
@@ -705,6 +739,7 @@ export default class ContainerImport {
                             relationship: relationship.db_id,
                             relationship_type: 'many:one',
                             container_id: containerID,
+                            ontology_version: ontologyVersionID
                         });
 
                         if (thisClass.updateKeyNames.includes(relationshipName)) {
@@ -764,6 +799,7 @@ export default class ContainerImport {
                                     max,
                                 },
                                 options: propertyOptions.length > 0 ? propertyOptions : undefined,
+                                ontology_version: ontologyVersionID
                             });
 
                             if (thisClass.updateKeyNames.includes(dataProp.name)) {
@@ -786,6 +822,7 @@ export default class ContainerImport {
                                 relationship: relationshipID,
                                 relationship_type: 'many:many',
                                 container_id: containerID,
+                                ontology_version: ontologyVersionID
                             });
 
                             if (thisClass.updateKeyNames.includes(relationshipName)) {
@@ -808,7 +845,7 @@ export default class ContainerImport {
                 });
                 const propertyResults: Result<boolean>[] = await Promise.all(propertyPromises);
                 for (const propResult of propertyResults) {
-                    if (propResult.isError) {
+                    if (propResult.isError && !update) {
                         const rollback = await this.rollbackOntology(container)
                             .then((result) => {
                                 return result + ' ' + propResult.error?.error;
@@ -818,6 +855,8 @@ export default class ContainerImport {
                             });
                         resolve(Result.SilentFailure(rollback));
                         return;
+                    } else if (propResult.isError) {
+                        resolve(Result.Pass(propResult))
                     }
                 }
 
