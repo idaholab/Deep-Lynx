@@ -53,7 +53,9 @@ export default class OntologyVersionRepository extends Repository implements Rep
         // on creation each ontology version should be populated with the base version, or a NULL base version - this
         // function should not be waited on and the cloning function handles it's own status changes of the ontology
         // version
-        void this.cloneOntology(user, baseOntologyVersion, result.value.id!);
+        if (baseOntologyVersion) {
+            void this.cloneOntology(user, baseOntologyVersion, result.value.id!, result.value.container_id!);
+        }
 
         Object.assign(v, result.value);
         return Promise.resolve(Result.Success(true));
@@ -111,14 +113,14 @@ export default class OntologyVersionRepository extends Repository implements Rep
     // typically clone ontology takes a few minutes to return - it's better to call this and forget it it, the function
     // itself has methods for updating the ontology in case of errors and the transaction its wrapped in will make sure
     // there won't be orphaned or changed data
-    async cloneOntology(user: User, baseVersionID: string | undefined, targetVersionID: string): Promise<Result<boolean>> {
+    async cloneOntology(user: User, baseVersionID: string | undefined, targetVersionID: string, containerID: string): Promise<Result<boolean>> {
         const transaction = await this.#mapper.startTransaction();
 
         // run this outside the transaction so that it shows the user we're generating - the transaction or function
         // will take care of changing it
         await this.#mapper.SetStatus(targetVersionID, 'generating');
 
-        const result = await this.#mapper.CloneOntology(user.id!, baseVersionID, targetVersionID, transaction.value);
+        const result = await this.#mapper.CloneOntology(user.id!, baseVersionID, targetVersionID, containerID, transaction.value);
         if (result.isError) {
             await this.#mapper.rollbackTransaction(transaction.value);
             await this.#mapper.SetStatus(targetVersionID, 'error', result.error?.error);

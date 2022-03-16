@@ -238,7 +238,7 @@ export default class MetatypeRelationshipPairs extends Vue {
             })
 
             this.$client.listMetatypeRelationshipPairs(this.containerID, {
-              ontologyVersion: this.ontologyVersionID,
+              ontologyVersion: this.$store.getters.selectedOntologyVersionID,
               nameIn,
               loadRelationships: true
             })

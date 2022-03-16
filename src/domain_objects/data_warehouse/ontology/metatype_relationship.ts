@@ -34,6 +34,10 @@ export default class MetatypeRelationship extends BaseDomainClass {
     @IsString()
     description = '';
 
+    @IsOptional()
+    @IsString()
+    ontology_version?: string;
+
     // because we need to track removed keys in case of update, keys is made private
     // and only accessible through a getter.
     @Type(() => MetatypeRelationshipKey)
@@ -46,13 +50,14 @@ export default class MetatypeRelationship extends BaseDomainClass {
     @Type(() => Date)
     deleted_at?: Date;
 
-    constructor(input: {container_id?: string; name: string; description: string}) {
+    constructor(input: {container_id?: string; name: string; description: string; ontology_version?: string}) {
         super();
 
         // we have to do this because class-transformer doesn't know to create
         // an object with our specifications for the parameter
         if (input) {
             if (input.container_id) this.container_id = input.container_id;
+            if (input.ontology_version) this.ontology_version = input.ontology_version;
             this.name = input.name;
             this.description = input.description;
         }
