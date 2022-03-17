@@ -140,7 +140,6 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
     async listForMetatype(metatypeID: string): Promise<Result<MetatypeKey[]>> {
         const cached = await this.getCachedForMetatype(metatypeID);
         if (cached) {
-            Logger.debug(`retrieved metatype key's from cache`);
             return Promise.resolve(Result.Success(cached));
         }
 
