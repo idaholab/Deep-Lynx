@@ -828,7 +828,7 @@ export default class TransformationDialog extends Vue {
 
   @Watch('search', {immediate: true})
   onSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.containerID, {name: newVal})
+    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: false})
         .then((metatypes) => {
           this.metatypes = metatypes as MetatypeT[]
         })
