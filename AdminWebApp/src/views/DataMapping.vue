@@ -489,7 +489,7 @@ export default class DataMapping extends Vue {
     this.loadTypeMappingsNoTransformations()
   }
 
-  @Watch('metatypeSearch', {immediate: true})
+  @Watch('metatypeSearch', {immediate: false})
   onSearchChange(newVal: string) {
     if(newVal === "") return;
 
@@ -500,7 +500,7 @@ export default class DataMapping extends Vue {
         .catch((e: any) => this.errorMessage = e)
   }
 
-  @Watch('relationshipPairSearch', {immediate: true})
+  @Watch('relationshipPairSearch', {immediate: false})
   onRelationshipSearchChange(newVal: string) {
     if(newVal === "") return
 
