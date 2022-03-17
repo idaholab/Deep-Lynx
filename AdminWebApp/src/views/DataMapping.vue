@@ -493,7 +493,7 @@ export default class DataMapping extends Vue {
   onSearchChange(newVal: string) {
     if(newVal === "") return;
 
-    this.$client.listMetatypes(this.containerID, {name: newVal})
+    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: false})
         .then((metatypes) => {
           this.metatypes = metatypes as MetatypeT[]
         })
