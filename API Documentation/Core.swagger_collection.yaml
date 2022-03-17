@@ -408,6 +408,11 @@ paths:
           in: query
           name: metatypeID
           description: Return only nodes for the selected metatype
+        - schema:
+            type: string
+          in: query
+          name: dataSourceID
+          description: Return only nodes for the selected datasource
       responses:
         '200':
           description: ''
@@ -6195,9 +6200,7 @@ components:
         - id
         - data_source_id
         - created_at
-        - modified_at
         - created_by
-        - modified_by
         - reference
     FileInfo:
       description: ''
@@ -6254,20 +6257,15 @@ components:
           minLength: 1
         md5hash:
           type: string
-          minLength: 1
+          nullable: true
       required:
         - id
         - file_name
-        - file_size
         - adapter_file_path
-        - adapter
         - data_source_id
         - created_at
-        - modified_at
         - created_by
-        - modified_by
         - container_id
-        - md5hash
     DataSourceImport:
       description: ''
       type: object
