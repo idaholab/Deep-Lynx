@@ -208,7 +208,7 @@ export class Client {
         if (sortBy) query.sortBy = sortBy;
         if (sortDesc) query.sortDesc = sortDesc;
         if (count) query.count = 'true';
-        if (loadKeys) query.loadKeys = 'true';
+        if (loadKeys) query.loadKeys = loadKeys;
         if (createdAfter) query.createdAfter = createdAfter;
         if (modifiedAfter) query.modifiedAfter = modifiedAfter;
         query.deleted = deleted;
