@@ -10,6 +10,7 @@ import MetatypeKeyMapper from '../../../mappers/data_warehouse/ontology/metatype
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
+import MetatypeKeyRepository from './metatype_key_repository';
 
 /*
     MetatypeRepository contains methods for persisting and retrieving a metatype
@@ -314,6 +315,10 @@ export default class MetatypeRepository extends Repository implements Repository
         const deleted = await Cache.del(`${MetatypeMapper.tableName}:${id}`);
         if (!deleted) Logger.error(`unable to remove metatype ${id} from cache`);
 
+        const keyRepo = new MetatypeKeyRepository();
+        const keysDeleted = await keyRepo.deleteCachedForMetatype(id);
+        if (!keysDeleted) Logger.error(`unable to remove keys for metatype ${id} from cache`);
+
         return Promise.resolve(deleted);
     }
 
@@ -373,10 +378,12 @@ export default class MetatypeRepository extends Repository implements Repository
         });
         if (results.isError) return Promise.resolve(Result.Pass(results));
 
+        const keyRepo = new MetatypeKeyRepository();
+
         if (loadKeys) {
             await Promise.all(
                 results.value.map(async (metatype) => {
-                    const keys = await this.#keyMapper.ListForMetatype(metatype.id!);
+                    const keys = await keyRepo.listForMetatype(metatype.id!);
 
                     return metatype.addKey(...keys.value);
                 }),

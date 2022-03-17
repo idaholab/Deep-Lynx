@@ -5,7 +5,11 @@ import MetatypeKeyMapper from '../../../mappers/data_warehouse/ontology/metatype
 import {User} from '../../../../domain_objects/access_management/user';
 import MetatypeRepository from './metatype_repository';
 import {PoolClient} from 'pg';
-import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
+import Cache from '../../../../services/cache/cache';
+import Logger from '../../../../services/logger';
+import Config from '../../../../services/config';
+import MetatypeMapper from '../../../mappers/data_warehouse/ontology/metatype_mapper';
+import {plainToClass, serialize} from 'class-transformer';
 
 /*
  We have the bare minimum of functions in this repository, and it only exists
@@ -56,6 +60,7 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
 
         // clear the parent metatype's cache
         void this.#metatypeRepo.deleteCached(m.metatype_id!);
+        void this.deleteCachedForMetatype(m.metatype_id!);
 
         if (m.id) {
             // to allow partial updates we must first fetch the original object
@@ -91,6 +96,7 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
 
             // clear the parent metatype's cache
             void this.#metatypeRepo.deleteCached(key.metatype_id!);
+            void this.deleteCachedForMetatype(key.metatype_id!);
             key.id ? toUpdate.push(key) : toCreate.push(key);
         }
 
@@ -129,6 +135,44 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         });
 
         return Promise.resolve(Result.Success(true));
+    }
+
+    async listForMetatype(metatypeID: string): Promise<Result<MetatypeKey[]>> {
+        const cached = await this.getCachedForMetatype(metatypeID);
+        if (cached) {
+            return Promise.resolve(Result.Success(cached));
+        }
+
+        const keys = await this.#mapper.ListForMetatype(metatypeID);
+        if (keys.isError) return Promise.resolve(Result.Pass(keys));
+
+        void (await this.setCachedForMetatype(metatypeID, keys.value));
+
+        return Promise.resolve(keys);
+    }
+
+    async deleteCachedForMetatype(metatypeID: string): Promise<boolean> {
+        const deleted = await Cache.del(`${MetatypeMapper.tableName}:${metatypeID}:keys`);
+        if (!deleted) Logger.error(`unable to remove metatype ${metatypeID}'s keys from cache`);
+
+        return Promise.resolve(deleted);
+    }
+
+    async setCachedForMetatype(metatypeID: string, keys: MetatypeKey[]): Promise<boolean> {
+        const set = await Cache.set(`${MetatypeMapper.tableName}:${metatypeID}:keys`, serialize(keys), Config.cache_default_ttl);
+        if (!set) Logger.error(`unable to set cache for metatype ${metatypeID}'s keys`);
+
+        return Promise.resolve(set);
+    }
+
+    async getCachedForMetatype(metatypeID: string): Promise<MetatypeKey[] | undefined> {
+        const cached = await Cache.get<object[]>(`${MetatypeMapper.tableName}:${metatypeID}:keys`);
+        if (cached) {
+            const keys = plainToClass(MetatypeKey, cached);
+            return Promise.resolve(keys);
+        }
+
+        return Promise.resolve(undefined);
     }
 
     constructor() {
