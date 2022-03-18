@@ -117,7 +117,7 @@ export default new Vuex.Store({
             if (state.editMode) {
                 return (state.selectedPendingVersion as OntologyVersionT).id;
             } else {
-                return (state.ontologyVersion as OntologyVersionT).id;
+                state.ontologyVersion ? (state.ontologyVersion as OntologyVersionT).id : undefined;
             }
         },
     },
