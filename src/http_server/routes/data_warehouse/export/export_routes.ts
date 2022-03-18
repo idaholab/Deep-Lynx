@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { Request, Response, NextFunction, Application } from 'express';
-import { authInContainer } from '../../../middleware';
-import ExporterRepository, { ExporterFactory } from '../../../../data_access_layer/repositories/data_warehouse/export/export_repository';
-import { plainToClass } from 'class-transformer';
+import {Request, Response, NextFunction, Application} from 'express';
+import {authInContainer} from '../../../middleware';
+import ExporterRepository, {ExporterFactory} from '../../../../data_access_layer/repositories/data_warehouse/export/export_repository';
+import {plainToClass} from 'class-transformer';
 import ExportRecord from '../../../../domain_objects/data_warehouse/export/export';
 import Result from '../../../../common_classes/result';
-import { QueryOptions } from '../../../../data_access_layer/repositories/repository';
+import {QueryOptions} from '../../../../data_access_layer/repositories/repository';
 
 const exporterRepo = new ExporterRepository();
 const exporterFactory = new ExporterFactory();
@@ -47,10 +47,14 @@ export default class ExportRoutes {
                         .then((result) => {
                             result.asResponse(res);
                         })
-                        .catch((err) => res.status(500).send(err))
+                        .catch((err) => {
+                            Result.Error(err).asResponse(res);
+                        })
                         .finally(() => next());
                 })
-                .catch((err) => res.status(500).send(err));
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                });
         } else {
             Result.Failure(`unable to find container to created export on`).asResponse(res);
             next();
@@ -91,7 +95,7 @@ export default class ExportRoutes {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                     sortBy: req.query.sortBy,
-                    sortDesc: req.query.sortDesc ? String(req.query.sortDesc).toLowerCase() === 'true' : undefined
+                    sortDesc: req.query.sortDesc ? String(req.query.sortDesc).toLowerCase() === 'true' : undefined,
                 } as QueryOptions)
                 .then((result) => {
                     if (result.isError) {

@@ -45,7 +45,7 @@ export default class EventRoutes {
 
                 Result.Success(payload).asResponse(res);
             })
-            .catch((err) => res.status(500).send(err))
+            .catch((err) => Result.Error(err).asResponse(res))
             .finally(() => next());
     }
 
@@ -65,7 +65,7 @@ export default class EventRoutes {
 
                 Result.Success(payload).asResponse(res);
             })
-            .catch((err) => res.status(500).send(err))
+            .catch((err: any) => Result.Failure(err, 499).asResponse(res))
             .finally(() => next());
     }
 
@@ -79,7 +79,7 @@ export default class EventRoutes {
                     .then((updated) => {
                         updated.asResponse(res);
                     })
-                    .catch((updated: any) => res.status(500).send(updated))
+                    .catch((err: any) => Result.Error(err).asResponse(res))
                     .finally(() => next());
             } else if (active && active === 'false') {
                 actionRepo
@@ -87,7 +87,7 @@ export default class EventRoutes {
                     .then((updated) => {
                         updated.asResponse(res);
                     })
-                    .catch((updated: any) => res.status(500).send(updated))
+                    .catch((err: any) => Result.Error(err).asResponse(res))
                     .finally(() => next());
             } else {
                 const payload = plainToClass(EventAction, req.body as object);
@@ -102,7 +102,7 @@ export default class EventRoutes {
                         }
                         Result.Success(payload).asResponse(res);
                     })
-                    .catch((updated: any) => res.status(500).send(updated));
+                    .catch((err: any) => Result.Error(err).asResponse(res));
             }
         } else {
             Result.Failure(`event action not found`, 404).asResponse(res);
@@ -120,7 +120,7 @@ export default class EventRoutes {
                 }
                 res.status(200).json(result);
             })
-            .catch((err) => res.status(404).send(err))
+            .catch((err) => Result.Failure(err, 404).asResponse(res))
             .finally(() => next());
     }
 
@@ -142,7 +142,9 @@ export default class EventRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`event action not found`, 404).asResponse(res);
@@ -166,7 +168,7 @@ export default class EventRoutes {
                     }
                     Result.Success(payload).asResponse(res);
                 })
-                .catch((updated: any) => res.status(500).send(updated));
+                .catch((err: any) => Result.Error(err).asResponse(res));
         } else {
             Result.Failure(`event action status not found`, 404).asResponse(res);
             next();
@@ -176,10 +178,9 @@ export default class EventRoutes {
     private static listEventActionStatuses(req: Request, res: Response, next: NextFunction) {
         let repo = new EventActionStatusRepository();
         if (typeof req.query.eventID !== 'undefined' && (req.query.eventID as string) !== '') {
-            repo = repo.where().eventID('eq', req.query.eventID)
+            repo = repo.where().eventID('eq', req.query.eventID);
         }
-        repo
-            .list()
+        repo.list()
             .then((result) => {
                 if (result.isError && result.error) {
                     res.status(result.error.errorCode).json(result);
@@ -187,7 +188,7 @@ export default class EventRoutes {
                 }
                 res.status(200).json(result);
             })
-            .catch((err) => res.status(404).send(err))
+            .catch((err) => Result.Failure(err, 404).asResponse(res))
             .finally(() => next());
     }
 

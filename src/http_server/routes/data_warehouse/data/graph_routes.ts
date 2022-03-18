@@ -20,7 +20,6 @@ export default class GraphRoutes {
         // This should return a node and all connected nodes and connecting edges for n layers.
         app.get('/containers/:containerID/graphs/nodes/:nodeID/graph', ...middleware, authInContainer('read', 'data'), this.retrieveNthNodes);
 
-        
         app.get('/containers/:containerID/graphs/nodes/:nodeID/files', ...middleware, authInContainer('read', 'data'), this.listFilesForNode);
         app.put('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.attachFileToNode);
         app.delete('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.detachFileFromNode);
@@ -99,18 +98,19 @@ export default class GraphRoutes {
 
     // This should return a node and all connected nodes and connecting edges for n layers.
     private static retrieveNthNodes(req: Request, res: Response, next: NextFunction) {
-        console.log(req);
         if (req.node) {
             let depth: any = '10';
             if (typeof req.query.depth !== 'undefined' && (req.query.depth as string) !== '') {
                 depth = req.query.depth;
-            } 
+            }
             nodeRepo
                 .findNthNodesByID(req.node.id!, depth)
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`graph not found`, 404).asResponse(res);
@@ -277,7 +277,9 @@ export default class GraphRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure('edge not found', 404).asResponse(res);
@@ -292,7 +294,9 @@ export default class GraphRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure('node not found', 404).asResponse(res);
@@ -307,7 +311,9 @@ export default class GraphRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`node not found`, 404).asResponse(res);
@@ -322,7 +328,9 @@ export default class GraphRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`node or file not found`, 404).asResponse(res);
@@ -337,7 +345,9 @@ export default class GraphRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`node or file not found`, 404).asResponse(res);
@@ -352,7 +362,9 @@ export default class GraphRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`edge not found`, 404).asResponse(res);
@@ -367,7 +379,9 @@ export default class GraphRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`edge or file not found`, 404).asResponse(res);
@@ -382,7 +396,9 @@ export default class GraphRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`edge or file not found`, 404).asResponse(res);

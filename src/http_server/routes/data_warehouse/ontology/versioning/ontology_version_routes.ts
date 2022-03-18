@@ -84,7 +84,7 @@ export default class OntologyVersionRoutes {
                 Result.Success(toCreate).asResponse(res);
             })
             .catch((err) => {
-                res.status(500).json(err.message);
+                Result.Error(err).asResponse(res);
             })
             .finally(() => next());
     }
@@ -111,7 +111,7 @@ export default class OntologyVersionRoutes {
             .then((results) => {
                 results.asResponse(res);
             })
-            .catch((e) => res.status(500).send(e))
+            .catch((e) => Result.Error(e).asResponse(res))
             .finally(() => next());
     }
 

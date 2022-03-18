@@ -62,7 +62,9 @@ export default class UserRoutes {
             .then((result) => {
                 result.asResponse(res);
             })
-            .catch((err) => res.status(500).send(err))
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
             .finally(() => next());
     }
 
@@ -72,7 +74,9 @@ export default class UserRoutes {
             .then((result) => {
                 result.asResponse(res);
             })
-            .catch((err) => res.status(500).send(err))
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
             .finally(() => next());
     }
 
@@ -82,7 +86,9 @@ export default class UserRoutes {
             .then((result) => {
                 result.asResponse(res);
             })
-            .catch((err) => res.status(500).send(err))
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
             .finally(() => next());
     }
 

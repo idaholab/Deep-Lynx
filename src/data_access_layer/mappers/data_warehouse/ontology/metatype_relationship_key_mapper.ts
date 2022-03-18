@@ -193,7 +193,18 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
                      modified_by = k.modified_by,
                      modified_at = NOW()
                  FROM(VALUES %L) AS 
-                 k(id, name, metatype_relationship_id, container_id, description, property_name, required, data_type, options, default_value, validation, modified_by)
+                 k(id, 
+                   name, 
+                     metatype_relationship_id, 
+                     container_id, 
+                     description, 
+                     property_name, 
+                     required, 
+                     data_type, 
+                     options, 
+                     default_value, 
+                     validation, 
+                     modified_by)
                  WHERE k.id::bigint = m.id RETURNING m.*`;
         const values = keys.map((key) => [
             key.id,

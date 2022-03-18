@@ -46,7 +46,7 @@ export default class TaskRoutes {
                     Result.Success(payload).asResponse(res);
                 })
                 .catch((err) => {
-                    res.status(500).send(err);
+                    Result.Error(err).asResponse(res);
                 })
                 .finally(() => next());
         } else {
@@ -76,7 +76,9 @@ export default class TaskRoutes {
 
                     Result.Success(payload).asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`unable to find container or task `).asResponse(res);
@@ -96,7 +98,9 @@ export default class TaskRoutes {
 
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`unable to find task`, 404).asResponse(res);
@@ -127,7 +131,7 @@ export default class TaskRoutes {
                 Result.Success(result.value).asResponse(res);
             })
             .catch((err) => {
-                res.status(404).send(err);
+                Result.Failure(err, 404).asResponse(res);
             })
             .finally(() => next());
     }

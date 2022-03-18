@@ -79,7 +79,9 @@ export default class DataSourceRoutes {
 
                     Result.Success(req.dataSource!.DataSourceRecord).asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`unable to find container or data source `).asResponse(res);
@@ -99,7 +101,9 @@ export default class DataSourceRoutes {
                     count.asResponse(res);
                     next();
                 })
-                .catch((err) => res.status(500).send(err));
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                });
         } else {
             Result.Failure(`unable to find data source`, 404).asResponse(res);
             next();
@@ -123,7 +127,9 @@ export default class DataSourceRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`unable to find data source`, 404).asResponse(res);
@@ -138,7 +144,9 @@ export default class DataSourceRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`unable to find data source`, 404).asResponse(res);
@@ -198,7 +206,9 @@ export default class DataSourceRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else if (req.dataSource) {
             dataSourceRepo

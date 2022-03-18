@@ -270,7 +270,9 @@ export default class ImportRoutes {
                             next();
                             return;
                         })
-                        .catch((err) => res.status(500).send(err));
+                        .catch((err) => {
+                            Result.Error(err).asResponse(res);
+                        });
                 });
 
                 return req.pipe(busboy);
@@ -288,7 +290,9 @@ export default class ImportRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`unable to find data staging record`, 404).asResponse(res);
@@ -323,7 +327,9 @@ export default class ImportRoutes {
 
                     Result.Success(payload).asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`data staging record or import not found `, 404).asResponse(res);
@@ -365,7 +371,9 @@ export default class ImportRoutes {
 
                         stream.pipe(res);
                     })
-                    .catch((err) => res.status(500).send(err));
+                    .catch((err) => {
+                        Result.Error(err).asResponse(res);
+                    });
             })
             .catch(() => Result.Failure(`unable to find file`).asResponse(res));
     }
@@ -500,7 +508,9 @@ export default class ImportRoutes {
                             next();
                             return;
                         })
-                        .catch((err) => res.status(500).send(err));
+                        .catch((err) => {
+                            Result.Error(err).asResponse(res);
+                        });
                 }
             });
         });
@@ -572,7 +582,9 @@ export default class ImportRoutes {
                             next();
                             return;
                         })
-                        .catch((err) => res.status(500).send(err));
+                        .catch((err) => {
+                            Result.Error(err).asResponse(res);
+                        });
                 });
 
                 return req.pipe(busboy);
@@ -590,7 +602,9 @@ export default class ImportRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`unable to find data source or import`, 404).asResponse(res);

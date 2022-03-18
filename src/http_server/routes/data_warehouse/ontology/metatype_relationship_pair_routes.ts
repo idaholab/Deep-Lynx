@@ -66,7 +66,7 @@ export default class MetatypeRelationshipPairRoutes {
                 Result.Success(toCreate).asResponse(res);
             })
             .catch((err) => {
-                res.status(500).json(err.message);
+                Result.Error(err).asResponse(res);
             })
             .finally(() => next());
     }
@@ -126,7 +126,7 @@ export default class MetatypeRelationshipPairRoutes {
                     res.status(200).json(result);
                 })
                 .catch((err) => {
-                    res.status(404).send(err);
+                    Result.Failure(err, 404).asResponse(res);
                 })
                 .finally(() => next());
         } else {
@@ -139,7 +139,7 @@ export default class MetatypeRelationshipPairRoutes {
                     result.asResponse(res);
                 })
                 .catch((err) => {
-                    res.status(404).send(err);
+                    Result.Failure(err, 404).asResponse(res);
                 })
                 .finally(() => next());
         }
@@ -160,7 +160,9 @@ export default class MetatypeRelationshipPairRoutes {
 
                     Result.Success(payload).asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure('metatype relationship not found', 404).asResponse(res);
@@ -175,21 +177,27 @@ export default class MetatypeRelationshipPairRoutes {
                     .then((result) => {
                         result.asResponse(res);
                     })
-                    .catch((err) => res.status(500).send(err))
+                    .catch((err) => {
+                        Result.Error(err).asResponse(res);
+                    })
                     .finally(() => next());
             } else if (req.query.reverse !== undefined && String(req.query.reverse).toLowerCase() === 'true') {
                 repo.unarchive(req.currentUser!, req.metatypeRelationshipPair)
                     .then((result) => {
                         result.asResponse(res);
                     })
-                    .catch((err) => res.status(500).send(err))
+                    .catch((err) => {
+                        Result.Error(err).asResponse(res);
+                    })
                     .finally(() => next());
             } else {
                 repo.archive(req.currentUser!, req.metatypeRelationshipPair)
                     .then((result) => {
                         result.asResponse(res);
                     })
-                    .catch((err) => res.status(500).send(err))
+                    .catch((err) => {
+                        Result.Error(err).asResponse(res);
+                    })
                     .finally(() => next());
             }
         } else {

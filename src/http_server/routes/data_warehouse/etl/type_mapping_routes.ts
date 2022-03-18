@@ -100,7 +100,9 @@ export default class TypeMappingRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`type mapping not found`).asResponse(res);
@@ -137,7 +139,9 @@ export default class TypeMappingRoutes {
 
                 Result.Success(toCreate).asResponse(res);
             })
-            .catch((err) => res.status(500).send(err))
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
             .finally(() => next());
     }
 
@@ -225,7 +229,9 @@ export default class TypeMappingRoutes {
 
                     Result.Success(payload).asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`type mapping or type transformation not found`).asResponse(res);
@@ -243,7 +249,9 @@ export default class TypeMappingRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else if (req.typeTransformation && String(req.query.archive).toLowerCase() === 'true') {
             transformationRepo
@@ -251,7 +259,9 @@ export default class TypeMappingRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else if (req.typeTransformation) {
             transformationRepo
@@ -262,7 +272,9 @@ export default class TypeMappingRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`type transformation not found`, 404).asResponse(res);
@@ -290,7 +302,9 @@ export default class TypeMappingRoutes {
 
                     Result.Success(payload).asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`type mapping,container, or data source not found`).asResponse(res);
