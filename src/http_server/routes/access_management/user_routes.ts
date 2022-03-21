@@ -62,7 +62,9 @@ export default class UserRoutes {
             .then((result) => {
                 result.asResponse(res);
             })
-            .catch((err) => res.status(500).send(err))
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
             .finally(() => next());
     }
 
@@ -72,7 +74,9 @@ export default class UserRoutes {
             .then((result) => {
                 result.asResponse(res);
             })
-            .catch((err) => res.status(500).send(err))
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
             .finally(() => next());
     }
 
@@ -82,7 +86,9 @@ export default class UserRoutes {
             .then((result) => {
                 result.asResponse(res);
             })
-            .catch((err) => res.status(500).send(err))
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
             .finally(() => next());
     }
 
@@ -93,7 +99,7 @@ export default class UserRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => Result.Error(err).asResponse(res))
                 .finally(() => next());
         } else {
             Result.Failure('user not found', 404).asResponse(res);
@@ -111,7 +117,7 @@ export default class UserRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => Result.Error(err).asResponse(res))
                 .finally(() => next());
         } else {
             Result.Failure('user not found', 404).asResponse(res);
@@ -125,7 +131,7 @@ export default class UserRoutes {
             .then((result) => {
                 result.asResponse(res);
             })
-            .catch((err) => res.status(500).send(err))
+            .catch((err) => Result.Error(err).asResponse(res))
             .finally(() => next());
     }
 
@@ -136,7 +142,7 @@ export default class UserRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => Result.Error(err).asResponse(res))
                 .finally(() => next());
         } else {
             Result.Failure('user not found', 404).asResponse(res);
@@ -152,7 +158,7 @@ export default class UserRoutes {
                     // @ts-ignore
                     res.status(200).json(result.value);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => Result.Error(err).asResponse(res))
                 .finally(() => next());
         } else {
             Result.Failure('user not found', 404).asResponse(res);
@@ -190,7 +196,7 @@ export default class UserRoutes {
                     results.asResponse(res);
                 })
                 .catch((err) => {
-                    res.status(404).send(err);
+                    Result.Failure(err, 404).asResponse(res);
                 })
                 .finally(() => next());
         } else {
@@ -206,7 +212,7 @@ export default class UserRoutes {
                     result.asResponse(res);
                 })
                 .catch((err) => {
-                    res.status(404).send(err);
+                    Result.Failure(err, 404).asResponse(res);
                 })
                 .finally(() => next());
         } else {
@@ -226,7 +232,7 @@ export default class UserRoutes {
                         result.asResponse(res);
                     })
                     .catch((err) => {
-                        res.status(404).send(err);
+                        Result.Failure(err, 404).asResponse(res);
                     })
                     .finally(() => next());
             }
@@ -243,7 +249,7 @@ export default class UserRoutes {
                     result.asResponse(res);
                 })
                 .catch((err) => {
-                    res.status(404).send(err);
+                    Result.Failure(err, 404).asResponse(res);
                 })
                 .finally(() => next());
         }

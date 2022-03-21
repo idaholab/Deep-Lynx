@@ -328,7 +328,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
         super.query('relationship_name', operator, value);
         return this;
     }
-    
+
     relationshipName(operator: string, value: any) {
         super.query('relationship_id', operator, value);
         return this;
@@ -353,7 +353,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
             await Promise.all(
                 results.value.map((node) => {
                     return new Promise((resolve) => {
-                        void this.#metatypeRepo.findByID(node.metatype_id!).then((metatype) => {
+                        void this.#metatypeRepo.findByID(node.metatype_id).then((metatype) => {
                             if (metatype.isError) {
                                 resolve(Result.Failure(`unable to load node's metatypes ${metatype.error?.error}`));
                                 return;

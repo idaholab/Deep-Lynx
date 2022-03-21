@@ -121,7 +121,7 @@ export default class ImportRoutes {
                     Result.Success(toSave).asResponse(res);
                 })
                 .catch((err) => {
-                    res.status(500).json(err.message);
+                    Result.Error(err).asResponse(res);
                 })
                 .finally(() => next());
         } else {
@@ -134,14 +134,14 @@ export default class ImportRoutes {
         ImportMapper.Instance.Delete(req.params.importID, String(req.query.withData).toLowerCase() === 'true')
             .then((result) => {
                 if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
+                    result.asResponse(res);
                     return;
                 }
 
                 res.sendStatus(200);
             })
             .catch((err) => {
-                res.status(404).send(err);
+                Result.Failure(err, 404).asResponse(res);
             })
             .finally(() => next());
     }
@@ -157,7 +157,7 @@ export default class ImportRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(404).send(err))
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
                 .finally(() => next());
         } else {
             repository
@@ -171,7 +171,7 @@ export default class ImportRoutes {
                     result.asResponse(res);
                 })
                 .catch((err) => {
-                    res.status(404).send(err);
+                    Result.Failure(err, 404).asResponse(res);
                 })
                 .finally(() => next());
         }
@@ -188,7 +188,7 @@ export default class ImportRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(404).send(err))
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
                 .finally(() => next());
         } else {
             repository
@@ -202,7 +202,7 @@ export default class ImportRoutes {
                     result.asResponse(res);
                 })
                 .catch((err) => {
-                    res.status(404).send(err);
+                    Result.Failure(err, 404).asResponse(res);
                 })
                 .finally(() => next());
         }
@@ -217,7 +217,9 @@ export default class ImportRoutes {
                     .then((result) => {
                         result.asResponse(res);
                     })
-                    .catch((err) => res.status(404).send(err))
+                    .catch((err) => {
+                        Result.Failure(err, 404).asResponse(res);
+                    })
                     .finally(() => next());
                 // @ts-ignore
             } else {
@@ -270,7 +272,9 @@ export default class ImportRoutes {
                             next();
                             return;
                         })
-                        .catch((err) => res.status(500).send(err));
+                        .catch((err) => {
+                            Result.Error(err).asResponse(res);
+                        });
                 });
 
                 return req.pipe(busboy);
@@ -288,7 +292,9 @@ export default class ImportRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`unable to find data staging record`, 404).asResponse(res);
@@ -323,7 +329,9 @@ export default class ImportRoutes {
 
                     Result.Success(payload).asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`data staging record or import not found `, 404).asResponse(res);
@@ -341,7 +349,9 @@ export default class ImportRoutes {
 
                 res.status(200).json(result);
             })
-            .catch((err) => res.status(404).send(err))
+            .catch((err) => {
+                Result.Failure(err, 404).asResponse(res);
+            })
             .finally(() => next());
     }
 
@@ -365,7 +375,9 @@ export default class ImportRoutes {
 
                         stream.pipe(res);
                     })
-                    .catch((err) => res.status(500).send(err));
+                    .catch((err) => {
+                        Result.Error(err).asResponse(res);
+                    });
             })
             .catch(() => Result.Failure(`unable to find file`).asResponse(res));
     }
@@ -500,7 +512,9 @@ export default class ImportRoutes {
                             next();
                             return;
                         })
-                        .catch((err) => res.status(500).send(err));
+                        .catch((err) => {
+                            Result.Error(err).asResponse(res);
+                        });
                 }
             });
         });
@@ -517,7 +531,7 @@ export default class ImportRoutes {
                     .then((result) => {
                         result.asResponse(res);
                     })
-                    .catch((err) => res.status(404).send(err))
+                    .catch((err) => Result.Failure(err, 404).asResponse(res))
                     .finally(() => next());
                 // @ts-ignore
             } else {
@@ -572,7 +586,9 @@ export default class ImportRoutes {
                             next();
                             return;
                         })
-                        .catch((err) => res.status(500).send(err));
+                        .catch((err) => {
+                            Result.Error(err).asResponse(res);
+                        });
                 });
 
                 return req.pipe(busboy);
@@ -590,7 +606,9 @@ export default class ImportRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`unable to find data source or import`, 404).asResponse(res);

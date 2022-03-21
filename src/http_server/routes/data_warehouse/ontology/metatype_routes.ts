@@ -43,7 +43,7 @@ export default class MetatypeRoutes {
                 Result.Success(toCreate).asResponse(res);
             })
             .catch((err) => {
-                res.status(500).json(err.message);
+                Result.Error(err).asResponse(res);
             })
             .finally(() => next());
     }
@@ -99,7 +99,7 @@ export default class MetatypeRoutes {
                     result.asResponse(res);
                 })
                 .catch((err) => {
-                    res.status(404).send(err);
+                    Result.Failure(err, 404).asResponse(res);
                 })
                 .finally(() => next());
         } else {
@@ -114,7 +114,7 @@ export default class MetatypeRoutes {
                     result.asResponse(res);
                 })
                 .catch((err) => {
-                    res.status(404).send(err);
+                    Result.Failure(err, 404).asResponse(res);
                 })
                 .finally(() => next());
         }
@@ -136,7 +136,9 @@ export default class MetatypeRoutes {
 
                     Result.Success(payload).asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure('metatype not found', 404).asResponse(res);
@@ -151,21 +153,27 @@ export default class MetatypeRoutes {
                     .then((result) => {
                         result.asResponse(res);
                     })
-                    .catch((err) => res.status(500).send(err))
+                    .catch((err) => {
+                        Result.Error(err).asResponse(res);
+                    })
                     .finally(() => next());
             } else if (req.query.reverse !== undefined && String(req.query.reverse).toLowerCase() === 'true') {
                 repo.unarchive(req.currentUser!, req.metatype)
                     .then((result) => {
                         result.asResponse(res);
                     })
-                    .catch((err) => res.status(500).send(err))
+                    .catch((err) => {
+                        Result.Error(err).asResponse(res);
+                    })
                     .finally(() => next());
             } else {
                 repo.archive(req.currentUser!, req.metatype)
                     .then((result) => {
                         result.asResponse(res);
                     })
-                    .catch((err) => res.status(500).send(err))
+                    .catch((err) => {
+                        Result.Error(err).asResponse(res);
+                    })
                     .finally(() => next());
             }
         } else {
@@ -188,7 +196,9 @@ export default class MetatypeRoutes {
 
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure('metatype not found', 404).asResponse(res);

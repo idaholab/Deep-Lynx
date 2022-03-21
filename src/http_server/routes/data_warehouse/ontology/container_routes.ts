@@ -55,7 +55,9 @@ export default class ContainerRoutes {
 
                 Result.Success(toCreate).asResponse(res);
             })
-            .catch((err) => res.status(500).send(err))
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
             .finally(() => next());
     }
 
@@ -76,7 +78,9 @@ export default class ContainerRoutes {
 
                 Result.Success(containers).asResponse(res);
             })
-            .catch((err) => res.status(500).send(err))
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
             .finally(() => next());
     }
 
@@ -89,7 +93,7 @@ export default class ContainerRoutes {
             return;
         }
 
-        res.status(404).json(Result.Failure('unable to find container'));
+        Result.Failure('unable to find container', 404).asResponse(res);
         next();
     }
 
@@ -99,7 +103,7 @@ export default class ContainerRoutes {
             .then((result) => {
                 result.asResponse(res);
             })
-            .catch((err) => res.status(404).send(err))
+            .catch((err) => Result.Failure(err, 404).asResponse(res))
             .finally(() => next());
     }
 
@@ -109,7 +113,7 @@ export default class ContainerRoutes {
             .then((result) => {
                 result.asResponse(res);
             })
-            .catch((err) => res.status(404).send(err))
+            .catch((err) => Result.Failure(err, 404).asResponse(res))
             .finally(() => next());
     }
 
@@ -119,7 +123,7 @@ export default class ContainerRoutes {
             .then((result) => {
                 result.asResponse(res);
             })
-            .catch((err) => res.status(404).send(err))
+            .catch((err) => Result.Failure(err, 404).asResponse(res))
             .finally(() => next());
     }
 
@@ -137,7 +141,7 @@ export default class ContainerRoutes {
 
                 Result.Success(container).asResponse(res);
             })
-            .catch((updated) => res.status(500).send(updated));
+            .catch((err) => Result.Error(err).asResponse(res));
     }
 
     private static archiveContainer(req: Request, res: Response, next: NextFunction) {
@@ -152,7 +156,9 @@ export default class ContainerRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             repository
@@ -160,7 +166,9 @@ export default class ContainerRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         }
     }
@@ -172,7 +180,9 @@ export default class ContainerRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure(`unable to find container`, 404).asResponse(res);
@@ -191,7 +201,7 @@ export default class ContainerRoutes {
         busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
             const ext = path.extname(filename);
             if (ext !== '.owl') {
-                res.status(500).send('Unsupported filetype supplied. Please provide a .owl file');
+                Result.Failure('Unsupported filetype supplied. Please provide an .owl file').asResponse(res);
                 return;
             }
 
@@ -218,7 +228,7 @@ export default class ContainerRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => Result.Error(err).asResponse(res))
                 .finally(() => next());
         });
 
@@ -259,7 +269,7 @@ export default class ContainerRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => Result.Error(err).asResponse(res))
                 .finally(() => next());
         });
 
@@ -268,7 +278,7 @@ export default class ContainerRoutes {
 
     private static repairPermissions(req: Request, res: Response, next: NextFunction) {
         if (!req.container) {
-            res.status(500).json(Result.Failure('must provide container to repair'));
+            Result.Failure(`must provide container to repair`).asResponse(res);
             next();
             return;
         }
@@ -278,6 +288,6 @@ export default class ContainerRoutes {
             .then((set) => {
                 set.asResponse(res);
             })
-            .catch((err) => res.status(500).send(err));
+            .catch((err) => Result.Error(err).asResponse(res));
     }
 }

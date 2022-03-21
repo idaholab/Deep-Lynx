@@ -1019,7 +1019,7 @@ export default class TransformationDialog extends Vue {
         if(relationship) {
           this.propertyMapping.push({
             key: payloadKey,
-            metatype_relationshipc_key_id: relationship.id
+            metatype_relationship_key_id: relationship.id
           })
         }
       })
