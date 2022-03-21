@@ -17,14 +17,14 @@ module.exports = {
         es6: true,
         node: true,
     },
-    extends: ['plugin:@typescript-eslint/recommended', 'plugin:@typescript-eslint/recommended-requiring-type-checking', 'prettier'],
+    extends: ['plugin:@typescript-eslint/recommended', 'plugin:@typescript-eslint/recommended-requiring-type-checking', 'prettier', 'plugin:security-node/recommended'],
     parser: '@typescript-eslint/parser',
     parserOptions: {
         sourceType: 'module',
         tsconfigRootDir: __dirname,
         project: ['./tsconfig.json'],
     },
-    plugins: ['eslint-plugin-prefer-arrow', '@typescript-eslint'],
+    plugins: ['eslint-plugin-prefer-arrow', '@typescript-eslint', 'security-node'],
     rules: {
         'max-len': [
             'error',

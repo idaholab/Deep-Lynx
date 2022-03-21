@@ -140,19 +140,13 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
             // compatibility issue
             input.origin_metatype instanceof Metatype
                 ? (this.originMetatype = input.origin_metatype)
-                : (this.originMetatype = plainToClass(Metatype, {
-                      id: input.origin_metatype,
-                  }));
+                : (this.originMetatype = plainToClass(Metatype, {id: input.origin_metatype}));
             input.destination_metatype instanceof Metatype
                 ? (this.destinationMetatype = input.destination_metatype)
-                : (this.destinationMetatype = plainToClass(Metatype, {
-                      id: input.destination_metatype,
-                  }));
+                : (this.destinationMetatype = plainToClass(Metatype, {id: input.destination_metatype}));
             input.relationship instanceof MetatypeRelationship
                 ? (this.relationship = input.relationship)
-                : (this.relationship = plainToClass(MetatypeRelationship, {
-                      id: input.relationship,
-                  }));
+                : (this.relationship = plainToClass(MetatypeRelationship, {id: input.relationship}));
 
             if (input.container_id) this.container_id = input.container_id;
             if (input.ontology_version) this.ontology_version = input.ontology_version;

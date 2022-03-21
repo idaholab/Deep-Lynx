@@ -84,7 +84,7 @@ export default class OntologyVersionRoutes {
                 Result.Success(toCreate).asResponse(res);
             })
             .catch((err) => {
-                res.status(500).json(err.message);
+                Result.Error(err).asResponse(res);
             })
             .finally(() => next());
     }
@@ -111,7 +111,7 @@ export default class OntologyVersionRoutes {
             .then((results) => {
                 results.asResponse(res);
             })
-            .catch((e) => res.status(500).send(e))
+            .catch((e) => Result.Error(e).asResponse(res))
             .finally(() => next());
     }
 
@@ -121,7 +121,7 @@ export default class OntologyVersionRoutes {
             next();
             return;
         } else {
-            res.status(404).json(Result.Failure('unable to find ontology version record'));
+            Result.Failure('unable to find ontology version record', 404).asResponse(res);
             next();
         }
     }
@@ -135,7 +135,7 @@ export default class OntologyVersionRoutes {
                 .catch((e) => res.status(500).send(e))
                 .finally(() => next());
         } else {
-            res.status(404).json(Result.Failure('unable to find ontology version record'));
+            Result.Failure('unable to find ontology version record', 404).asResponse(res);
             next();
         }
     }
@@ -154,7 +154,7 @@ export default class OntologyVersionRoutes {
                 .catch((e) => res.status(500).send(e))
                 .finally(() => next());
         } else {
-            res.status(404).json(Result.Failure('unable to find ontology version record'));
+            Result.Failure('unable to find ontology version record', 404).asResponse(res);
             next();
         }
     }
@@ -168,7 +168,7 @@ export default class OntologyVersionRoutes {
                 .catch((e) => res.status(500).send(e))
                 .finally(() => next());
         } else {
-            res.status(404).json(Result.Failure('unable to find ontology version record'));
+            Result.Failure('unable to find ontology version record', 404).asResponse(res);
             next();
         }
     }
@@ -182,7 +182,7 @@ export default class OntologyVersionRoutes {
                 .catch((e) => res.status(500).send(e))
                 .finally(() => next());
         } else {
-            res.status(404).json(Result.Failure('unable to find ontology version record'));
+            Result.Failure('unable to find ontology version record', 404).asResponse(res);
             next();
         }
     }
@@ -196,7 +196,7 @@ export default class OntologyVersionRoutes {
                 .catch((e) => res.status(500).send(e))
                 .finally(() => next());
         } else {
-            res.status(404).json(Result.Failure('unable to find ontology version record'));
+            Result.Failure('unable to find ontology version record', 404).asResponse(res);
             next();
         }
     }

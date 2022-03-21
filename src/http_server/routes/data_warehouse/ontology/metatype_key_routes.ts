@@ -56,7 +56,7 @@ export default class MetatypeKeyRoutes {
                 Result.Success(toCreate).asResponse(res);
             })
             .catch((err) => {
-                res.status(500).json(err.message);
+                Result.Error(err).asResponse(res);
             })
             .finally(() => next());
     }
@@ -107,7 +107,9 @@ export default class MetatypeKeyRoutes {
 
                     Result.Success(payload).asResponse(res);
                 })
-                .catch((err) => res.status(500).send(err))
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                })
                 .finally(() => next());
         } else {
             Result.Failure('metatype or metatype key not found', 404).asResponse(res);
@@ -122,21 +124,27 @@ export default class MetatypeKeyRoutes {
                     .then((result) => {
                         result.asResponse(res);
                     })
-                    .catch((err) => res.status(500).send(err))
+                    .catch((err) => {
+                        Result.Error(err).asResponse(res);
+                    })
                     .finally(() => next());
             } else if (req.query.reverse !== undefined && String(req.query.reverse).toLowerCase() === 'true') {
                 repo.unarchive(req.currentUser!, req.metatypeKey)
                     .then((result) => {
                         result.asResponse(res);
                     })
-                    .catch((err) => res.status(500).send(err))
+                    .catch((err) => {
+                        Result.Error(err).asResponse(res);
+                    })
                     .finally(() => next());
             } else {
                 repo.archive(req.currentUser!, req.metatypeKey)
                     .then((result) => {
                         result.asResponse(res);
                     })
-                    .catch((err) => res.status(500).send(err))
+                    .catch((err) => {
+                        Result.Error(err).asResponse(res);
+                    })
                     .finally(() => next());
             }
         } else {
