@@ -319,7 +319,7 @@ export default class TypeMappingRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(404).send(err))
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
                 .finally(() => next());
         } else if (req.query.count) {
             mappingRepo
@@ -327,7 +327,7 @@ export default class TypeMappingRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(404).send(err))
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
                 .finally(() => next());
         } else if (req.query.resultingMetatypeName || req.query.resultingMetatypeRelationshipName) {
             // new filter so as not to pollute the existing one
@@ -348,13 +348,13 @@ export default class TypeMappingRoutes {
                 .findAll(+req.query.limit, +req.query.offset)
                 .then((result) => {
                     if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
+                        result.asResponse(res);
                         return;
                     }
 
                     res.status(200).json(result);
                 })
-                .catch((err) => res.status(404).send(err))
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
                 .finally(() => next());
         } else if (req.query.needsTransformations) {
             // @ts-ignore
@@ -371,13 +371,13 @@ export default class TypeMappingRoutes {
             )
                 .then((result) => {
                     if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
+                        result.asResponse(res);
                         return;
                     }
 
                     res.status(200).json(result);
                 })
-                .catch((err) => res.status(404).send(err))
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
                 .finally(() => next());
         } else {
             // @ts-ignore
@@ -394,13 +394,13 @@ export default class TypeMappingRoutes {
             )
                 .then((result) => {
                     if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
+                        result.asResponse(res);
                         return;
                     }
 
                     res.status(200).json(result);
                 })
-                .catch((err) => res.status(404).send(err))
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
                 .finally(() => next());
         }
     }
@@ -427,7 +427,7 @@ export default class TypeMappingRoutes {
                     res.status(201).json(results);
                     next();
                 })
-                .catch((e) => res.status(500).send(e));
+                .catch((e) => Result.Error(e).asResponse(res));
         } else {
             const busboy = new Busboy({headers: req.headers});
             busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
@@ -463,7 +463,7 @@ export default class TypeMappingRoutes {
 
                         res.status(201).json(finalResults);
                     })
-                    .catch((e) => res.status(500).send(e));
+                    .catch((e) => Result.Error(e).asResponse(res));
             });
 
             return req.pipe(busboy);

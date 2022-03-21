@@ -84,7 +84,7 @@ export default class ExportRoutes {
                         result.asResponse(res);
                     })
                     .catch((err) => {
-                        res.status(404).send(err);
+                        Result.Failure(err, 404).asResponse(res);
                     })
                     .finally(() => next());
             }
@@ -106,7 +106,7 @@ export default class ExportRoutes {
                     Result.Success(result.value.map((exporter) => exporter?.ExportRecord)).asResponse(res);
                 })
                 .catch((err) => {
-                    res.status(404).send(err);
+                    Result.Failure(err, 404).asResponse(res);
                 })
                 .finally(() => next());
         }
@@ -119,7 +119,7 @@ export default class ExportRoutes {
                 .then((started) => {
                     started.asResponse(res);
                 })
-                .catch((e) => res.status(500).send(e))
+                .catch((e) => Result.Error(e).asResponse(res))
                 .finally(() => next());
         } else {
             Result.Failure(`unable to find export record`).asResponse(res);
@@ -134,7 +134,7 @@ export default class ExportRoutes {
                 .then((started) => {
                     started.asResponse(res);
                 })
-                .catch((e) => res.status(500).send(e))
+                .catch((e) => Result.Error(e).asResponse(res))
                 .finally(() => next());
         } else {
             Result.Failure(`unable to find export record`).asResponse(res);
@@ -149,7 +149,7 @@ export default class ExportRoutes {
                 .then((started) => {
                     started.asResponse(res);
                 })
-                .catch((e) => res.status(500).send(e))
+                .catch((e) => Result.Error(e).asResponse(res))
                 .finally(() => next());
         } else {
             Result.Failure(`unable to find export record`).asResponse(res);

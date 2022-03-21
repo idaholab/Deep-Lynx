@@ -121,7 +121,7 @@ export default class ImportRoutes {
                     Result.Success(toSave).asResponse(res);
                 })
                 .catch((err) => {
-                    res.status(500).json(err.message);
+                    Result.Error(err).asResponse(res);
                 })
                 .finally(() => next());
         } else {
@@ -134,14 +134,14 @@ export default class ImportRoutes {
         ImportMapper.Instance.Delete(req.params.importID, String(req.query.withData).toLowerCase() === 'true')
             .then((result) => {
                 if (result.isError && result.error) {
-                    res.status(result.error.errorCode).json(result);
+                    result.asResponse(res);
                     return;
                 }
 
                 res.sendStatus(200);
             })
             .catch((err) => {
-                res.status(404).send(err);
+                Result.Failure(err, 404).asResponse(res);
             })
             .finally(() => next());
     }
@@ -157,7 +157,7 @@ export default class ImportRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(404).send(err))
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
                 .finally(() => next());
         } else {
             repository
@@ -171,7 +171,7 @@ export default class ImportRoutes {
                     result.asResponse(res);
                 })
                 .catch((err) => {
-                    res.status(404).send(err);
+                    Result.Failure(err, 404).asResponse(res);
                 })
                 .finally(() => next());
         }
@@ -188,7 +188,7 @@ export default class ImportRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => res.status(404).send(err))
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
                 .finally(() => next());
         } else {
             repository
@@ -202,7 +202,7 @@ export default class ImportRoutes {
                     result.asResponse(res);
                 })
                 .catch((err) => {
-                    res.status(404).send(err);
+                    Result.Failure(err, 404).asResponse(res);
                 })
                 .finally(() => next());
         }
@@ -217,7 +217,9 @@ export default class ImportRoutes {
                     .then((result) => {
                         result.asResponse(res);
                     })
-                    .catch((err) => res.status(404).send(err))
+                    .catch((err) => {
+                        Result.Failure(err, 404).asResponse(res);
+                    })
                     .finally(() => next());
                 // @ts-ignore
             } else {
@@ -347,7 +349,9 @@ export default class ImportRoutes {
 
                 res.status(200).json(result);
             })
-            .catch((err) => res.status(404).send(err))
+            .catch((err) => {
+                Result.Failure(err, 404).asResponse(res);
+            })
             .finally(() => next());
     }
 
@@ -527,7 +531,7 @@ export default class ImportRoutes {
                     .then((result) => {
                         result.asResponse(res);
                     })
-                    .catch((err) => res.status(404).send(err))
+                    .catch((err) => Result.Failure(err, 404).asResponse(res))
                     .finally(() => next());
                 // @ts-ignore
             } else {

@@ -1,20 +1,20 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { plainToClass } from "class-transformer";
-import { Application, NextFunction, Request, Response } from "express";
-import Result from "../../../common_classes/result";
-import { RSARequest, RSAResponse, RSAStatusRequest, RSAStatusResponse } from "../../../domain_objects/access_management/rsa";
-import { authInContainer } from "../../middleware";
-import Config from "../../../services/config";
+import axios, {AxiosRequestConfig, AxiosResponse} from 'axios';
+import {plainToClass} from 'class-transformer';
+import {Application, NextFunction, Request, Response} from 'express';
+import Result from '../../../common_classes/result';
+import {RSARequest, RSAResponse, RSAStatusRequest, RSAStatusResponse} from '../../../domain_objects/access_management/rsa';
+import {authInContainer} from '../../middleware';
+import Config from '../../../services/config';
 
 export default class RSARoutes {
     public static mount(app: Application, middleware: any[]) {
-        app.post('/rsa/initialize', ...middleware, authInContainer('read', 'data'), this.init)
+        app.post('/rsa/initialize', ...middleware, authInContainer('read', 'data'), this.init);
 
-        app.post('/rsa/verify', ...middleware, authInContainer('read', 'data'), this.verify)
+        app.post('/rsa/verify', ...middleware, authInContainer('read', 'data'), this.verify);
 
-        app.post('/rsa/status', ...middleware, authInContainer('read', 'data'), this.status)
+        app.post('/rsa/status', ...middleware, authInContainer('read', 'data'), this.status);
 
-        app.post('/rsa/cancel', ...middleware, authInContainer('read', 'data'), this.cancel)
+        app.post('/rsa/cancel', ...middleware, authInContainer('read', 'data'), this.cancel);
     }
 
     /*
@@ -35,24 +35,25 @@ export default class RSARoutes {
             const payload = new RSARequest({
                 clientID: Config.rsa_client_id,
                 subjectName: req.body.subjectName,
-                securID: (req.body.securID ? req.body.securID : null),
-                methodId: 'SECURID'
-            })
+                securID: req.body.securID ? req.body.securID : null,
+                methodId: 'SECURID',
+            });
 
             const axiosConfig: AxiosRequestConfig = {
                 headers: {
                     'Content-Type': 'application/json;charset=UTF-8',
-                    'client-key': Config.rsa_client_key
-                }
+                    'client-key': Config.rsa_client_key,
+                },
             };
 
-            axios.post(`${Config.rsa_url}/mfa/v1_1/authn/initialize`, payload, axiosConfig)
+            axios
+                .post(`${Config.rsa_url}/mfa/v1_1/authn/initialize`, payload, axiosConfig)
                 .then((response: AxiosResponse) => {
                     const responsePayload = plainToClass(RSAResponse, response.data as object);
-                    Result.Success(responsePayload).asResponse(res)
+                    Result.Success(responsePayload).asResponse(res);
                 })
                 .catch((e: string) => {
-                    res.status(500).json(e);
+                    Result.Failure(e).asResponse(res);
                 })
                 .finally(() => next());
         } else {
@@ -77,23 +78,24 @@ export default class RSARoutes {
                 securID: req.body.securID,
                 authnAttemptId: req.body.authnAttemptId,
                 inResponseTo: req.body.inResponseTo,
-                methodId: 'SECURID'
-            })
+                methodId: 'SECURID',
+            });
 
             const axiosConfig: AxiosRequestConfig = {
                 headers: {
                     'Content-Type': 'application/json;charset=UTF-8',
-                    'client-key': Config.rsa_client_key
-                }
+                    'client-key': Config.rsa_client_key,
+                },
             };
 
-            axios.post(`${Config.rsa_url}/mfa/v1_1/authn/verify`, payload, axiosConfig)
+            axios
+                .post(`${Config.rsa_url}/mfa/v1_1/authn/verify`, payload, axiosConfig)
                 .then((response: AxiosResponse) => {
                     const responsePayload = plainToClass(RSAResponse, response.data as object);
-                    Result.Success(responsePayload).asResponse(res)
+                    Result.Success(responsePayload).asResponse(res);
                 })
                 .catch((e: string) => {
-                    res.status(500).json(e);
+                    Result.Failure(e).asResponse(res);
                 })
                 .finally(() => next());
         } else {
@@ -108,19 +110,20 @@ export default class RSARoutes {
             const axiosConfig: AxiosRequestConfig = {
                 headers: {
                     'Content-Type': 'application/json;charset=UTF-8',
-                    'client-key': Config.rsa_client_key
-                }
+                    'client-key': Config.rsa_client_key,
+                },
             };
 
             const payload = plainToClass(RSAStatusRequest, req.body as object);
 
-            axios.post(`${Config.rsa_url}/mfa/v1_1/authn/status`, payload, axiosConfig)
+            axios
+                .post(`${Config.rsa_url}/mfa/v1_1/authn/status`, payload, axiosConfig)
                 .then((response: AxiosResponse) => {
                     const responsePayload = plainToClass(RSAStatusResponse, response.data as object);
-                    Result.Success(responsePayload).asResponse(res)
+                    Result.Success(responsePayload).asResponse(res);
                 })
                 .catch((e: string) => {
-                    res.status(500).json(e);
+                    Result.Failure(e).asResponse(res);
                 })
                 .finally(() => next());
         } else {
@@ -135,19 +138,20 @@ export default class RSARoutes {
             const axiosConfig: AxiosRequestConfig = {
                 headers: {
                     'Content-Type': 'application/json;charset=UTF-8',
-                    'client-key': Config.rsa_client_key
-                }
+                    'client-key': Config.rsa_client_key,
+                },
             };
 
             const payload = plainToClass(RSAStatusRequest, req.body as object);
 
-            axios.post(`${Config.rsa_url}/mfa/v1_1/authn/cancel`, payload, axiosConfig)
+            axios
+                .post(`${Config.rsa_url}/mfa/v1_1/authn/cancel`, payload, axiosConfig)
                 .then((response: AxiosResponse) => {
                     const responsePayload = plainToClass(RSAResponse, response.data as object);
-                    Result.Success(responsePayload).asResponse(res)
+                    Result.Success(responsePayload).asResponse(res);
                 })
-                .catch((e: string) => {
-                    res.status(500).json(e);
+                .catch((e) => {
+                    Result.Error(e).asResponse(res);
                 })
                 .finally(() => next());
         } else {

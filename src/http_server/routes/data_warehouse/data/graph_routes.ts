@@ -62,7 +62,7 @@ export default class GraphRoutes {
                         result.asResponse(res);
                     })
                     .catch((err) => {
-                        res.status(404).send(err);
+                        Result.Failure(err, 404).asResponse(res);
                     })
                     .finally(() => next());
             } else {
@@ -72,12 +72,12 @@ export default class GraphRoutes {
                 })
                     .then((result) => {
                         if (result.isError && result.error) {
-                            res.status(result.error.errorCode).json(result);
+                            result.asResponse(res);
                             return;
                         }
                         res.status(200).json(result);
                     })
-                    .catch((err) => res.status(404).send(err))
+                    .catch((err) => Result.Failure(err, 404).asResponse(res))
                     .finally(() => next());
             }
         } else {
@@ -143,12 +143,12 @@ export default class GraphRoutes {
                 })
                 .then((result) => {
                     if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
+                        result.asResponse(res);
                         return;
                     }
                     res.status(200).json(result);
                 })
-                .catch((err) => res.status(404).send(err))
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
                 .finally(() => next());
         } else {
             Result.Failure(`container or metatype not found`, 404).asResponse(res);
@@ -189,13 +189,13 @@ export default class GraphRoutes {
                 })
                 .then((result) => {
                     if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
+                        result.asResponse(res);
                         return;
                     }
                     res.status(200).json(result);
                 })
                 .catch((err) => {
-                    res.status(404).send(err);
+                    Result.Failure(err, 404).asResponse(res);
                 })
                 .finally(() => next());
         } else {
@@ -206,12 +206,12 @@ export default class GraphRoutes {
                 })
                 .then((result) => {
                     if (result.isError && result.error) {
-                        res.status(result.error.errorCode).json(result);
+                        result.asResponse(res);
                         return;
                     }
                     res.status(200).json(result);
                 })
-                .catch((err) => res.status(404).send(err))
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
                 .finally(() => next());
         }
     }
@@ -238,7 +238,7 @@ export default class GraphRoutes {
                 result.asResponse(res);
             })
             .catch((err) => {
-                res.status(500).json(err.message);
+                Result.Error(err).asResponse(res);
             })
             .finally(() => next());
     }
@@ -265,7 +265,7 @@ export default class GraphRoutes {
                 result.asResponse(res);
             })
             .catch((err) => {
-                res.status(500).json(err.message);
+                Result.Error(err).asResponse(res);
             })
             .finally(() => next());
     }
