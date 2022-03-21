@@ -201,7 +201,7 @@ export default class ContainerRoutes {
         busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
             const ext = path.extname(filename);
             if (ext !== '.owl') {
-                Result.Failure('Unsuppored filetype supplied. Please provide an .owl file').asResponse(res);
+                Result.Failure('Unsupported filetype supplied. Please provide an .owl file').asResponse(res);
                 return;
             }
 
