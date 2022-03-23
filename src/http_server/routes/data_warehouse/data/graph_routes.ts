@@ -6,6 +6,7 @@ import {plainToClass} from 'class-transformer';
 import Node from '../../../../domain_objects/data_warehouse/data/node';
 import EdgeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
+import NodeLeafRepository from '../../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
 
 const nodeRepo = new NodeRepository();
 const edgeRepo = new EdgeRepository();
@@ -103,8 +104,9 @@ export default class GraphRoutes {
             if (typeof req.query.depth !== 'undefined' && (req.query.depth as string) !== '') {
                 depth = req.query.depth;
             }
-            nodeRepo
-                .findNthNodesByID(req.node.id!, depth)
+            const repo = new NodeLeafRepository(req.node.id!, req.node.container_id!, depth);
+            repo
+                .list()
                 .then((result) => {
                     result.asResponse(res);
                 })

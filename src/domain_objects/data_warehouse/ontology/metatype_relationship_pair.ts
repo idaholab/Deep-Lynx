@@ -120,6 +120,15 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
     @IsString()
     ontology_version?: string;
 
+    @IsString()
+    origin_metatype_name?: string;
+
+    @IsString()
+    destination_metatype_name?: string;
+
+    @IsString()
+    relationship_name?: string;
+
     constructor(input: {
         name: string;
         description: string;
