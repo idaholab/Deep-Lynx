@@ -75,6 +75,14 @@ export default class EdgeMapper extends Mapper {
         });
     }
 
+    public RetrieveByRelationship(
+        origin: string, relationship: string, destination: string, transaction?: PoolClient): Promise<Result<Edge[]>> {
+        return super.rows<Edge>(this.retrieveByRelationshipStatement(origin, relationship, destination), {
+            transaction,
+            resultClass,
+        });
+    }
+
     public AddFile(id: string, fileID: string): Promise<Result<boolean>> {
         return super.runStatement(this.addFileStatement(id, fileID));
     }
@@ -204,6 +212,21 @@ export default class EdgeMapper extends Mapper {
             text: `SELECT * FROM current_edges WHERE id = $1`,
             values: [id],
         };
+    }
+
+    private retrieveByRelationshipStatement(origin: string, relationship: string, destination: string): QueryConfig {
+        return {
+            text: `SELECT origin.name, e.*
+            FROM current_edges e
+            INNER JOIN metatype_relationship_pairs mpr ON mpr.id = e.relationship_pair_id
+            LEFT JOIN metatypes origin ON mpr.origin_metatype_id = origin.id
+            LEFT JOIN metatypes destination ON mpr.destination_metatype_id = destination.id
+            LEFT JOIN metatype_relationships relationship ON mpr.relationship_id = relationship.id
+            WHERE origin.name = $1
+            AND relationship.name = $2
+            AND destination.name = $3`,
+            values: [origin, relationship, destination]
+        }
     }
 
     private deleteStatement(edgeID: string): QueryConfig {
