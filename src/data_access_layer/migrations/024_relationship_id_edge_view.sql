@@ -3,7 +3,7 @@
 DROP VIEW IF EXISTS current_edges;
 
 CREATE VIEW current_edges AS (
-	SELECT DISTINCT ON (edges.id) edges.id,
+	SELECT DISTINCT ON (edges.id)
 		edges.*,
 		metatype_relationship_pairs.relationship_id,
 		metatype_relationships.name AS metatype_relationship_name
