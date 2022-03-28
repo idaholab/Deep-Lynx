@@ -136,10 +136,11 @@ export function IsNodes(set: Node[] | Edge[]): set is Node[] {
     Contains validations required for said object to be considered valid.
 */
 export class NodeLeaf extends BaseDomainClass {
+    // container in which node-edge pairs reside
+    container_id?: string;
+
     // origin (root node) properties
     origin_id?: string;
-
-    origin_container_id?: string;
 
     // use metatype id to retrieve information on the origin node's metatype.
     // Retrieves the whole class, not just the id.
@@ -183,8 +184,6 @@ export class NodeLeaf extends BaseDomainClass {
     // edge properties
     edge_id?: string;
 
-    edge_container_id?: string;
-
     // use metatype relationship pair id to get info on the edge's
     // relationship type. Gets the whole class, not just the id.
     @MetatypeRelationshipPairID({
@@ -193,7 +192,7 @@ export class NodeLeaf extends BaseDomainClass {
     @Expose({name: 'relationship_pair_id', toClassOnly: true})
     @Transform(
         ({value}) => {
-            const p = plainToClass(MetatypeRelationshipPair, {});
+            const p = plainToClass(MetatypeRelationshipPair, {})
             p.id = value;
             return p;
         },
@@ -224,10 +223,10 @@ export class NodeLeaf extends BaseDomainClass {
 
     edge_created_at?: Date;
 
+    edge_relationship_name?: string;
+
     // destination (outer node) properties
     destination_id?: string;
-
-    destination_container_id?: string;
 
     // use metatype id to retrieve information on the origin node's metatype.
     // Retrieves the whole class, not just the id.
@@ -272,15 +271,13 @@ export class NodeLeaf extends BaseDomainClass {
     depth?: string;
 
     constructor(input: {
-        origin_container_id: Container | string;
-        edge_container_id: Container | string;
-        destination_container_id: Container | string;
+        container_id: Container | string;
         origin_metatype: Metatype | string;
         destination_metatype: Metatype | string;
         origin_metatype_name?: string;
         destination_metatype_name?: string;
         metatype_relationship_pair: MetatypeRelationshipPair | string;
-        metatype_name?: string;
+        edge_relationship_name?: string;
         origin_properties: object;
         edge_properties: object;
         destination_properties: object;
@@ -309,23 +306,16 @@ export class NodeLeaf extends BaseDomainClass {
         super();
 
         if (input) {
-            input.origin_container_id instanceof Container
-                ? (this.origin_container_id = input.origin_container_id.id)
-                : (this.origin_container_id = input.origin_container_id);
-            input.destination_container_id instanceof Container
-                ? (this.destination_container_id = input.destination_container_id.id)
-                : (this.destination_container_id = input.destination_container_id);
-            input.edge_container_id instanceof Container
-                ? (this.edge_container_id = input.edge_container_id.id)
-                : (this.edge_container_id = input.edge_container_id);
+            input.container_id instanceof Container? (this.container_id = input.container_id.id) : (this.container_id = input.container_id);
             input.origin_metatype instanceof Metatype
                 ? (this.origin_metatype = input.origin_metatype)
                 : (this.origin_metatype = plainToClass(Metatype, {id: input.origin_metatype_name}));
             input.destination_metatype instanceof Metatype
                 ? (this.destination_metatype = input.destination_metatype)
                 : (this.destination_metatype = plainToClass(Metatype, {id: input.destination_metatype_name}));
-            if (input.origin_metatype_name) this.origin_metatype_name = input.metatype_name;
-            if (input.destination_metatype_name) this.destination_metatype_name = input.metatype_name;
+            if (input.origin_metatype_name) {this.origin_metatype_name = input.origin_metatype_name};
+            if (input.destination_metatype_name) {this.destination_metatype_name = input.destination_metatype_name};
+            if (input.edge_relationship_name) this.edge_relationship_name = input.edge_relationship_name;
             this.origin_properties = input.origin_properties;
             this.edge_properties = input.edge_properties;
             this.destination_properties = input.destination_properties;

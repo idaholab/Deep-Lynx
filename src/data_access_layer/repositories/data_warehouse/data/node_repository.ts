@@ -56,15 +56,6 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return Promise.resolve(node);
     }
 
-    // This should return a node and all connected nodes and connecting edges for n layers.
-    findNthNodesByID(id: string, depth: string): Promise<Result<NodeLeaf[]>> {
-        if (!id) {
-            return Promise.resolve(Result.Failure('must supply root node id'));
-        }
-
-        return this.#mapper.RetrieveNthNodes(id, depth);
-    }
-
     async save(n: Node, user: User, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction = false;
         const errors = await n.validationErrors();

@@ -298,7 +298,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         this._rawQuery = [
             `SELECT metatype_relationship_pairs.*, origin.name as origin_metatype_name , 
                     destination.name AS destination_metatype_name, 
-                    relationships.name AS relationship_pair_name 
+                    relationships.name AS relationship_name 
                 FROM ${MetatypeRelationshipPairMapper.tableName}`,
             `LEFT JOIN metatypes origin ON metatype_relationship_pairs.origin_metatype_id = origin.id`,
             `LEFT JOIN metatypes destination ON metatype_relationship_pairs.destination_metatype_id = destination.id`,
@@ -369,7 +369,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             `SELECT metatype_relationship_pairs.*, 
                     origin.name as origin_metatype_name , 
                     destination.name AS destination_metatype_name, 
-                    relationships.name AS relationship_pair_name FROM ${MetatypeRelationshipPairMapper.tableName}`,
+                    relationships.name AS relationship_name FROM ${MetatypeRelationshipPairMapper.tableName}`,
             `LEFT JOIN metatypes origin ON metatype_relationship_pairs.origin_metatype_id = origin.id`,
             `LEFT JOIN metatypes destination ON metatype_relationship_pairs.destination_metatype_id = destination.id`,
             `LEFT JOIN metatype_relationships relationships ON metatype_relationship_pairs.relationship_id = relationships.id`,
@@ -390,7 +390,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             `SELECT metatype_relationship_pairs.*, 
                     origin.name as origin_metatype_name , 
                     destination.name AS destination_metatype_name, 
-                    relationships.name AS relationship_pair_name FROM ${MetatypeRelationshipPairMapper.tableName}`,
+                    relationships.name AS relationship_name FROM ${MetatypeRelationshipPairMapper.tableName}`,
             `LEFT JOIN metatypes origin ON metatype_relationship_pairs.origin_metatype_id = origin.id`,
             `LEFT JOIN metatypes destination ON metatype_relationship_pairs.destination_metatype_id = destination.id`,
             `LEFT JOIN metatype_relationships relationships ON metatype_relationship_pairs.relationship_id = relationships.id`,
