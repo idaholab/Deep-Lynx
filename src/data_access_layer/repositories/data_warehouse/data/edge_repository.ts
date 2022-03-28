@@ -42,10 +42,14 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         if (!edge.isError) {
             const pair = await this.#pairRepo.findByID(edge.value.relationship_pair_id);
             if (pair.isError) Logger.error(`unable to load node's metatype`);
-            else Object.assign(edge.value.metatypeRelationshipPair, pair.value);
+            else Object.assign(edge.value.metatypeRelationshipPair!, pair.value);
         }
 
         return Promise.resolve(edge);
+    }
+
+    async findByRelationship(origin: string, relationship: string, destination: string, transaction?: PoolClient): Promise<Result<Edge[]>> {
+        return this.#mapper.RetrieveByRelationship(origin, relationship, destination, transaction);
     }
 
     async save(e: Edge, user: User, transaction?: PoolClient): Promise<Result<boolean>> {
@@ -449,8 +453,8 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         return this;
     }
 
-    property(key: string, operator: string, value: any) {
-        super.queryJsonb(key, 'properties', operator, value);
+    property(key: string, operator: string, value: any, dataType?: string) {
+        super.queryJsonb(key, 'properties', operator, value, dataType);
         return this;
     }
 
