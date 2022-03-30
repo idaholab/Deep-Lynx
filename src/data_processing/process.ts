@@ -38,7 +38,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     if (!staging.shape_hash) {
         const shapeHash = TypeMapping.objectToShapeHash(staging.data, {
             value_nodes: dataSource.value.DataSourceRecord?.config?.value_nodes,
-            stop_nodes: dataSource.value.DataSourceRecord?.config?.value_nodes,
+            stop_nodes: dataSource.value.DataSourceRecord?.config?.stop_nodes,
         });
         staging.shape_hash = shapeHash;
 
