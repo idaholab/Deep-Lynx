@@ -109,7 +109,13 @@ export default class StandardDataSourceImpl implements DataSource {
                     data_source_id: this.DataSourceRecord!.id!,
                     import_id: retrievedImport.value.id!,
                     data,
-                    shape_hash: options && options.generateShapeHash ? TypeMapping.objectToShapeHash(data) : undefined,
+                    shape_hash:
+                        options && options.generateShapeHash
+                            ? TypeMapping.objectToShapeHash(data, {
+                                  value_nodes: this.DataSourceRecord?.config?.value_nodes,
+                                  stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
+                              })
+                            : undefined,
                 }),
             );
 
