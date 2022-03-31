@@ -6,7 +6,7 @@ import Logger from '../../../services/logger';
 import Node, {NodeMetadata} from '../data/node';
 import Edge, {EdgeMetadata} from '../data/edge';
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
-import {IsDefined, IsEnum, IsIn, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
+import {IsBoolean, IsDefined, IsEnum, IsIn, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
 import {Type} from 'class-transformer';
 import {DataStaging} from '../import/import';
 import MetatypeRelationshipKey from '../ontology/metatype_relationship_key';
@@ -56,6 +56,12 @@ export class Condition extends NakedDomainClass {
    to handle a type mapping that results in both a Node and Edge final product.
  */
 export class KeyMapping extends NakedDomainClass {
+    // id is completely optional, we include it mainly because we need to be able to differentiate keys on the
+    // guid
+    @IsOptional()
+    @IsString()
+    id?: string;
+
     @IsOptional()
     @IsString()
     key?: string;
@@ -81,7 +87,17 @@ export class KeyMapping extends NakedDomainClass {
 
     @IsOptional()
     @IsString()
-    @IsIn(['number', 'date', 'string', 'boolean', 'enumeration', 'file'])
+    column_name?: string;
+
+    // this key dictates whether this should be used as the primary timestamp in timescaledb table creation
+    // for tabular data - there can only be one primary timestamp per transformation
+    @IsOptional()
+    @IsBoolean()
+    is_primary_timestamp = false;
+
+    @IsOptional()
+    @IsString()
+    @IsIn(['number', 'date', 'string', 'boolean', 'enumeration', 'file', 'list'])
     value_type?: string;
 
     @IsOptional()
@@ -95,6 +111,8 @@ export class KeyMapping extends NakedDomainClass {
         value?: string;
         value_type?: string;
         date_conversion_format_string?: string;
+        column_name?: string;
+        is_primary_timestamp?: boolean;
     }) {
         super();
 
@@ -105,6 +123,8 @@ export class KeyMapping extends NakedDomainClass {
             if (input.value) this.value = input.value;
             if (input.value_type) this.value_type = input.value_type;
             if (input.date_conversion_format_string) this.date_conversion_format_string = input.date_conversion_format_string;
+            if (input.column_name) this.column_name = input.column_name;
+            if (input.is_primary_timestamp) this.is_primary_timestamp = input.is_primary_timestamp;
         }
     }
 }
@@ -183,6 +203,23 @@ export default class TypeTransformation extends BaseDomainClass {
     @IsString()
     destination_data_source_id?: string;
 
+    // tabular data specific fields
+    @ValidateIf((o) => typeof o.metatype_relationship_pair_id === 'undefined' && typeof o.metatype_id === 'undefined')
+    @IsString()
+    tab_data_source_id?: string;
+
+    @ValidateIf((o) => typeof o.metatype_relationship_pair_id === 'undefined' && typeof o.metatype_id === 'undefined')
+    @IsString()
+    tab_metatype_id?: string;
+
+    @ValidateIf((o) => typeof o.metatype_relationship_pair_id === 'undefined' && typeof o.metatype_id === 'undefined' && typeof o.tab_node_key === 'undefined')
+    @IsString()
+    tab_node_id?: string;
+
+    @ValidateIf((o) => typeof o.metatype_relationship_pair_id === 'undefined' && typeof o.metatype_id === 'undefined' && typeof o.tab_node_id === 'undefined')
+    @IsString()
+    tab_node_key?: string;
+
     @IsOptional()
     @IsString()
     root_array?: string;
@@ -237,6 +274,10 @@ export default class TypeTransformation extends BaseDomainClass {
         destination_id_key?: string;
         destination_metatype_id?: string;
         destination_data_source_id?: string;
+        tab_data_source_id?: string;
+        tab_metatype_id?: string;
+        tab_node_id?: string;
+        tab_node_key?: string;
         root_array?: string;
         unique_identifier_key?: string;
         container_id?: string;
@@ -257,6 +298,10 @@ export default class TypeTransformation extends BaseDomainClass {
             if (input.destination_id_key) this.destination_id_key = input.destination_id_key;
             if (input.destination_metatype_id) this.destination_metatype_id = input.destination_metatype_id;
             if (input.destination_data_source_id) this.destination_data_source_id = input.destination_data_source_id;
+            if (input.tab_data_source_id) this.tab_data_source_id = input.tab_data_source_id;
+            if (input.tab_metatype_id) this.tab_metatype_id = input.tab_metatype_id;
+            if (input.tab_node_id) this.tab_node_id = input.tab_node_id;
+            if (input.tab_node_key) this.tab_node_key = input.tab_node_key;
             if (input.root_array) this.root_array = input.root_array;
             if (input.unique_identifier_key) this.unique_identifier_key = input.unique_identifier_key;
             if (input.container_id) this.container_id = input.container_id;

@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" @click:outside="reset">
+  <v-dialog v-model="dialog" @click:outside="reset" width="90%">
     <template v-slot:activator="{ on }">
       <v-icon
           v-if="icon"
@@ -12,12 +12,27 @@
     </template>
     <v-card>
       <error-banner :message="errorMessage"></error-banner>
+      <v-card-title>
+        <h2 v-if="!transformation">{{$t("dataMapping.createNewTransformation")}}</h2>
+        <h2 v-if="transformation && !transformation.archived">{{$t("dataMapping.editTransformation")}}</h2>
+        <h2 v-if="transformation && transformation.archived">{{$t("dataMapping.viewArchivedTransformation")}}</h2>
+      </v-card-title>
       <v-card-text>
         <v-row>
-          <v-col :cols="6" >
-            <h2 v-if="!transformation">{{$t("dataMapping.createNewTransformation")}}</h2>
-            <h2 v-if="transformation && !transformation.archived">{{$t("dataMapping.editTransformation")}}</h2>
-            <h2 v-if="transformation && transformation.archived">{{$t("dataMapping.viewArchivedTransformation")}}</h2>
+
+          <v-col :cols="12" style="position: sticky; top: 0px; z-index: 99; background: white" >
+            <div >
+              <h4>{{$t('typeTransformation.currentDataSet')}}<info-tooltip :message="$t('dataMapping.samplePayloadHelp')"></info-tooltip> </h4>
+              <v-card  style="overflow-y: scroll;" max-height="250px" id="dataCol">
+                <json-view
+                    :data="payload"
+                    :maxDepth=1
+                />
+              </v-card>
+            </div>
+          </v-col>
+
+          <v-col :cols="12" >
             <h4 v-if="transformation">{{transformation.id}}</h4>
             <v-divider></v-divider>
             <div id="mappingCol">
@@ -32,159 +47,6 @@
                     <template v-slot:label>{{$t('dataMapping.rootArray')}} <small>{{$t('dataMapping.optional')}}</small></template>
                     <template slot="append-outer"><info-tooltip :message="$t('dataMapping.rootArrayHelp')"></info-tooltip> </template>
                   </v-select>
-                </v-col>
-              </v-row>
-              <h3 style="padding-top: 10px">{{$t("dataMapping.conditions")}} <small>{{$t("dataMapping.optional")}}</small> <info-tooltip :message="$t('dataMapping.conditionsHelp')"></info-tooltip></h3>
-              <v-data-table
-                  :single-expand="true"
-                  :expanded.sync="expanded"
-                  :headers="conditionsHeader()"
-                  :items="conditions"
-                  item-key="value"
-                  show-expand
-                  :hide-default-footer="true">
-                <template v-slot:item.actions="{item}" >
-                  <v-icon
-                      small
-                      @click="deleteCondition(item)"
-                  >
-                    mdi-delete
-                  </v-icon>
-                </template>
-                <template v-slot:expanded-item="{headers, item}">
-                  <td :colspan="headers.length">
-                    <h3>{{$t("dataMapping.subexpressions")}} <small>{{$t("dataMapping.optional")}}</small> <info-tooltip :message="$t('dataMapping.subexpressionsHelp')"></info-tooltip></h3>
-                    <v-data-table
-                        :headers="subexpressionHeader()"
-                        :items="item.subexpressions"
-                        :hide-default-footer="true"
-                    >
-                      <template v-slot:item.actions="{item: subexpression}" >
-                        <v-icon
-                            small
-                            @click="deleteSubexpression(item, subexpression)"
-                        >
-                          mdi-delete
-                        </v-icon>
-                      </template>
-                    </v-data-table>
-                    <v-form ref="subexpressionForm" v-model="subexpressionFormValid">
-                      <v-row>
-                        <v-col :cols="3">
-                          <v-select
-                              :items="expressions"
-                              :rules="[v => !!v || 'Select one']"
-                              v-model="subexpressionExpression"
-                              :label="$t('dataMapping.expression')"
-                              required
-                          >
-
-                            <template slot="append-outer"><info-tooltip :message="$t('dataMapping.expressionHelp')"></info-tooltip> </template>
-                          </v-select>
-                        </v-col>
-                        <v-col :cols="3">
-                          <v-select
-                              :items="payloadKeys"
-                              :rules="[v => !!v || 'Select one']"
-                              v-model="subexpressionKey"
-                              :label="$t('dataMapping.key')"
-                              required
-                          >
-
-                            <template slot="append-outer"><info-tooltip :message="$t('dataMapping.keyHelp')"></info-tooltip> </template>
-                          </v-select>
-                        </v-col>
-                        <v-col :cols="3">
-                          <v-select
-                              :items="operators"
-                              :rules="[v => !!v || 'Select one']"
-                              v-model="subexpressionOperator"
-                              :return-object="true"
-                              :label="$t('dataMapping.operator')"
-                              required
-                          >
-
-                            <template slot="append-outer"><info-tooltip :message="$t('dataMapping.operatorHelp')"></info-tooltip> </template>
-                          </v-select>
-                        </v-col>
-                        <v-col :cols="3">
-                          <v-text-field
-                              v-model="subexpressionValue"
-                              :disabled="subexpressionOperator && !subexpressionOperator.requiresValue"
-                              :label="$t('dataMapping.value')">
-
-                          </v-text-field>
-                          <v-btn :disabled="!subexpressionFormValid" @click="addSubexpression(item)">Add</v-btn>
-                        </v-col>
-                      </v-row>
-                    </v-form>
-
-                  </td>
-                </template>
-
-              </v-data-table>
-              <v-form ref="conditionForm" v-model="conditionFormValid">
-                <v-row>
-                  <v-col :cols="4">
-                    <v-select
-                        :items="payloadKeys"
-                        v-model="conditionKey"
-                        :rules="[v => !!v || 'Select one']"
-                        :label="$t('dataMapping.key')"
-                        required
-                    >
-
-                      <template slot="append-outer"><info-tooltip :message="$t('dataMapping.keyHelp')"></info-tooltip> </template>
-                    </v-select>
-                  </v-col>
-                  <v-col :cols="4">
-                    <v-select
-                        :items="operators"
-                        v-model="conditionOperator"
-                        :return-object="true"
-                        :rules="[v => !!v || 'Select one']"
-                        :label="$t('dataMapping.operator')"
-                        required
-                    >
-
-                      <template slot="append-outer"><info-tooltip :message="$t('dataMapping.operatorHelp')"></info-tooltip> </template>
-                    </v-select>
-                  </v-col>
-                  <v-col :cols="4">
-                    <v-text-field
-                        v-model="conditionValue"
-                        :disabled="conditionOperator && !conditionOperator.requiresValue"
-                        :label="$t('dataMapping.value')">
-
-                    </v-text-field>
-                    <v-btn :disabled="!conditionFormValid" @click="addCondition">{{$t("dataMapping.addCondition")}}</v-btn>
-                  </v-col>
-                </v-row>
-
-              </v-form>
-
-
-              <h3 style="padding-top: 10px">{{$t("dataMapping.configuration")}} <info-tooltip :message="$t('dataMapping.configurationHelp')"></info-tooltip></h3>
-              <v-row>
-                <v-col :cols="6">
-                  <v-form>
-                    <v-select
-                        :items="actionErrors()"
-                        v-model="onConversionError"
-                    >
-                      <template v-slot:label>{{$t('dataMapping.onConversionError')}}</template>
-                    </v-select>
-                  </v-form>
-                </v-col>
-                <v-col :cols="6">
-                  <v-form>
-                    <v-select
-                        :items="actionErrors()"
-                        v-model="onKeyExtractionError"
-                    >
-                      <template v-slot:label>{{$t('dataMapping.onKeyExtractionError')}}</template>
-                    </v-select>
-                  </v-form>
                 </v-col>
               </v-row>
 
@@ -490,6 +352,131 @@
 
                 </div>
 
+                <div v-if="payloadType === 'tabular'">
+                  <h4>{{$t('dataMapping.selectNodeID')}}<info-tooltip :message="$t('dataMapping.nodeIDHelp')"></info-tooltip></h4>
+                    <v-row>
+                      <v-col style="padding-left: 0px">
+                        <select-data-source
+                            @selected="setTabDataSource"
+                            :dataSourceID="tab_data_source_id"
+                            :rules="[tabDataSourceValid]"
+                            :containerID="containerID">
+                        </select-data-source>
+                      </v-col>
+                      <v-col style="padding-left: 0px">
+                        <search-metatypes
+                            @selected="setTabMetatype"
+                            :metatypeID="tab_metatype_id"
+                            :rules="[tabMetatypeValid]"
+                            :containerID="containerID">
+                        </search-metatypes>
+                      </v-col>
+                    </v-row>
+
+
+                  <v-row>
+                    <v-col :cols="6">
+                      <v-combobox
+                          :items="payloadKeys"
+                          clearable
+                          v-model="tab_node_key"
+                          :disabled="tab_node_id !== null"
+                          :rules="[tabNodeValid]"
+                      >
+
+                        <template v-slot:append-outer>{{$t('dataMapping.or')}}</template>
+                        <template v-slot:label>{{$t('dataMapping.nodeIDKey')}}</template>
+                      </v-combobox>
+                    </v-col>
+                    <v-col :cols="6">
+                      <v-text-field
+                          :label="$t('dataMapping.nodeID')"
+                          clearable
+                          v-model="tab_node_id"
+                          :disabled="tab_node_key !== null"
+                          :rules="[tabNodeValid]"
+                      />
+                    </v-col>
+                  </v-row>
+
+                  <h4>{{$t('dataMapping.tableDesign')}}<info-tooltip :message="$t('dataMapping.tableDesignHelp')"></info-tooltip></h4>
+                  <v-data-table
+                      :headers="timeSeriesHeader()"
+                      :items="propertyMapping"
+                      :items-per-page="-1"
+                      :expanded.sync="expandedTimeSeries"
+                      mobile-breakpoint="960"
+                      item-key="id"
+                      show-expand
+                      flat
+                      tile
+                      fixed-header
+                      disable-pagination
+                      disable-sort
+                      hide-default-footer
+                  >
+                    <template v-slot:[`item.column_name`]="{ item, index }">
+
+                      <v-text-field
+                          :label="$t('dataMapping.columnName')"
+                          v-model="item.column_name"
+                          :rules="[v => !!v || $t('dataMapping.required'),validColumnName(index, item.column_name)]"
+                      >
+                      </v-text-field>
+                    </template>
+
+                    <template v-slot:[`item.value_type`]="{ item }">
+                      <v-select
+                          :label="$t('dataMapping.columnDataType')"
+                          :items=dataTypes
+                          :disabled="item.is_primary_timestamp"
+                          v-model="item.value_type"
+                          :rules="[v => !!v || $t('dataMapping.required')]"
+                      />
+                    </template>
+
+                    <template v-slot:[`item.key`]="{ item }">
+                      <v-combobox
+                          :items="payloadKeys"
+                          v-model="item.key"
+                          :label="$t('dataMapping.mapPayloadKey')"
+                          :rules="[v => !!v || $t('dataMapping.required')]"
+                      >
+                      </v-combobox>
+                    </template>
+                    <template v-slot:[`item.actions`]="{ index }">
+                      <v-icon v-if="index !== 0" @click="removeMapping(index)">mdi-close</v-icon>
+                    </template>
+
+                    <template v-slot:expanded-item="{ item }">
+                      <td :colspan="timeSeriesHeader().length">
+                      <v-col v-if="item.value_type === 'date'" :cols="12">
+                        <v-text-field
+                            :label="$t('dataMapping.dateFormatString')"
+                            v-model="item.date_conversion_format_string"
+                        >
+                          <template slot="append-outer"><a href="https://date-fns.org/v2.28.0/docs/parse" target="_blank">{{$t('dataMapping.dateFormatStringHelp')}}</a></template>
+                        </v-text-field>
+                      </v-col>
+                      <v-col v-if="item.value_type === 'date'" class="text-left">
+                        <v-checkbox
+                            :label="$t('dataMapping.isPrimaryTimestamp')"
+                            v-model="item.is_primary_timestamp"
+                            disabled
+                        >
+                        </v-checkbox>
+                      </v-col>
+                      </td>
+                    </template>
+                  </v-data-table>
+
+                  <v-row >
+                    <v-col :cols="12" style="padding:25px" align="center" justify="center">
+                      <v-btn @click="addMapping">{{$t('dataMapping.addColumn')}}</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+
                 <div>
                   <h4 style="padding-bottom: 20px;">
                     <span v-if="!rootArray">{{propertyMapping.length}} / {{payloadKeys.length}} properties selected</span>
@@ -497,72 +484,234 @@
                   </h4>
                 </div>
 
-                <v-btn
-                    v-if="!transformation"
-                    @click="createTransformation()"
-                    color="success"
-                    class="mr-4"
-                    :disabled="!isMainFormValid"
-                >
-                  <v-progress-circular
-                      indeterminate
-                      v-if="loading"
-                  ></v-progress-circular>
-                  <span v-if="!loading">{{$t("dataMapping.create")}}</span>
-                </v-btn>
+                <error-banner :message="validationErrorMessage"></error-banner>
 
-                <v-btn
-                    v-if="transformation"
-                    @click="editTransformation()"
-                    color="success"
-                    class="mr-4"
-                    :disabled="!isMainFormValid || transformation.archived"
-                >
-                  <v-progress-circular
-                      indeterminate
-                      v-if="loading"
-                  ></v-progress-circular>
-                  <span v-if="!loading">{{$t("dataMapping.edit")}}</span>
-                </v-btn>
-
-                <v-btn
-                    @click="reset()"
-                    color="error"
-                    class="mr-4"
-                    v-if="!loading && !transformation"
-                >
-                  {{$t("dataMapping.reset")}}
-                </v-btn>
-
-                <v-btn
-                    @click="editReset()"
-                    color="error"
-                    class="mr-4"
-                    v-if="!loading && transformation"
-                    :disabled="transformation.archived"
-                >
-                  {{$t("dataMapping.reset")}}
-                </v-btn>
-
-                <p><span style="color:red">*</span> = {{$t('dataMapping.requiredField')}}</p>
               </v-form>
             </div>
           </v-col>
 
-          <v-col :cols="6">
-            <div style="position: sticky; top: 0px;">
-              <h4>{{$t('typeTransformation.currentDataSet')}}<info-tooltip :message="$t('dataMapping.samplePayloadHelp')"></info-tooltip> </h4>
-              <v-card  style="overflow-y: scroll;" max-height="800px" id="dataCol">
-                <json-view
-                    :data="payload"
-                    :maxDepth=1
-                />
-              </v-card>
-            </div>
-          </v-col>
         </v-row>
 
+        <v-expansion-panels v-model="openPanels">
+         <v-expansion-panel>
+           <v-expansion-panel-header>
+             <h3 v-if="transformation && transformation.conditions && transformation.conditions.length > 0"
+                 style="padding-top: 10px">{{transformation.conditions.length}} {{$t("dataMapping.conditions")}} <small>{{$t("dataMapping.optional")}}</small> <info-tooltip :message="$t('dataMapping.conditionsHelp')"></info-tooltip></h3>
+             <h3 v-else style="padding-top: 10px">0 {{$t("dataMapping.conditions")}} <small>{{$t("dataMapping.optional")}}</small> <info-tooltip :message="$t('dataMapping.conditionsHelp')"></info-tooltip></h3>
+           </v-expansion-panel-header>
+
+           <v-expansion-panel-content eager>
+             <v-data-table
+                 :single-expand="true"
+                 :expanded.sync="expanded"
+                 :headers="conditionsHeader()"
+                 :items="conditions"
+                 item-key="value"
+                 show-expand
+                 :hide-default-footer="true">
+               <template v-slot:item.actions="{item}" >
+                 <v-icon
+                     small
+                     @click="deleteCondition(item)"
+                 >
+                   mdi-delete
+                 </v-icon>
+               </template>
+               <template v-slot:expanded-item="{headers, item}">
+                 <td :colspan="headers.length">
+                   <h3>{{$t("dataMapping.subexpressions")}} <small>{{$t("dataMapping.optional")}}</small> <info-tooltip :message="$t('dataMapping.subexpressionsHelp')"></info-tooltip></h3>
+                   <v-data-table
+                       :headers="subexpressionHeader()"
+                       :items="item.subexpressions"
+                       :hide-default-footer="true"
+                   >
+                     <template v-slot:item.actions="{item: subexpression}" >
+                       <v-icon
+                           small
+                           @click="deleteSubexpression(item, subexpression)"
+                       >
+                         mdi-delete
+                       </v-icon>
+                     </template>
+                   </v-data-table>
+                   <v-form ref="subexpressionForm" v-model="subexpressionFormValid">
+                     <v-row>
+                       <v-col :cols="3">
+                         <v-select
+                             :items="expressions"
+                             :rules="[v => !!v || 'Select one']"
+                             v-model="subexpressionExpression"
+                             :label="$t('dataMapping.expression')"
+                             required
+                         >
+
+                           <template slot="append-outer"><info-tooltip :message="$t('dataMapping.expressionHelp')"></info-tooltip> </template>
+                         </v-select>
+                       </v-col>
+                       <v-col :cols="3">
+                         <v-select
+                             :items="payloadKeys"
+                             :rules="[v => !!v || 'Select one']"
+                             v-model="subexpressionKey"
+                             :label="$t('dataMapping.key')"
+                             required
+                         >
+
+                           <template slot="append-outer"><info-tooltip :message="$t('dataMapping.keyHelp')"></info-tooltip> </template>
+                         </v-select>
+                       </v-col>
+                       <v-col :cols="3">
+                         <v-select
+                             :items="operators"
+                             :rules="[v => !!v || 'Select one']"
+                             v-model="subexpressionOperator"
+                             :return-object="true"
+                             :label="$t('dataMapping.operator')"
+                             required
+                         >
+
+                           <template slot="append-outer"><info-tooltip :message="$t('dataMapping.operatorHelp')"></info-tooltip> </template>
+                         </v-select>
+                       </v-col>
+                       <v-col :cols="3">
+                         <v-text-field
+                             v-model="subexpressionValue"
+                             :disabled="subexpressionOperator && !subexpressionOperator.requiresValue"
+                             :label="$t('dataMapping.value')">
+
+                         </v-text-field>
+                         <v-btn :disabled="!subexpressionFormValid" @click="addSubexpression(item)">Add</v-btn>
+                       </v-col>
+                     </v-row>
+                   </v-form>
+
+                 </td>
+               </template>
+
+             </v-data-table>
+             <v-form ref="conditionForm" v-model="conditionFormValid">
+               <v-row>
+                 <v-col :cols="4">
+                   <v-select
+                       :items="payloadKeys"
+                       v-model="conditionKey"
+                       :rules="[v => !!v || 'Select one']"
+                       :label="$t('dataMapping.key')"
+                       required
+                   >
+
+                     <template slot="append-outer"><info-tooltip :message="$t('dataMapping.keyHelp')"></info-tooltip> </template>
+                   </v-select>
+                 </v-col>
+                 <v-col :cols="4">
+                   <v-select
+                       :items="operators"
+                       v-model="conditionOperator"
+                       :return-object="true"
+                       :rules="[v => !!v || 'Select one']"
+                       :label="$t('dataMapping.operator')"
+                       required
+                   >
+
+                     <template slot="append-outer"><info-tooltip :message="$t('dataMapping.operatorHelp')"></info-tooltip> </template>
+                   </v-select>
+                 </v-col>
+                 <v-col :cols="4">
+                   <v-text-field
+                       v-model="conditionValue"
+                       :disabled="conditionOperator && !conditionOperator.requiresValue"
+                       :label="$t('dataMapping.value')">
+
+                   </v-text-field>
+                   <v-btn :disabled="!conditionFormValid" @click="addCondition">{{$t("dataMapping.addCondition")}}</v-btn>
+                 </v-col>
+               </v-row>
+
+             </v-form>
+           </v-expansion-panel-content>
+         </v-expansion-panel>
+
+          <v-expansion-panel>
+            <v-expansion-panel-header>
+
+              <h3 style="padding-top: 10px">{{$t("dataMapping.configuration")}} <small>{{$t('dataMapping.optional')}}</small> <info-tooltip :message="$t('dataMapping.configurationHelp')"></info-tooltip></h3>
+            </v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <v-row>
+                <v-col :cols="6">
+                  <v-form>
+                    <v-select
+                        :items="actionErrors()"
+                        v-model="onConversionError"
+                    >
+                      <template v-slot:label>{{$t('dataMapping.onConversionError')}}</template>
+                    </v-select>
+                  </v-form>
+                </v-col>
+                <v-col :cols="6">
+                  <v-form>
+                    <v-select
+                        :items="actionErrors()"
+                        v-model="onKeyExtractionError"
+                    >
+                      <template v-slot:label>{{$t('dataMapping.onKeyExtractionError')}}</template>
+                    </v-select>
+                  </v-form>
+                </v-col>
+              </v-row>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
       </v-card-text>
+      <v-card-actions class="fixedContainer">
+          <v-btn
+              v-if="!transformation"
+              @click="createTransformation()"
+              color="success"
+              class="mr-4"
+          >
+            <v-progress-circular
+                indeterminate
+                v-if="loading"
+            ></v-progress-circular>
+            <span v-if="!loading">{{$t("dataMapping.create")}}</span>
+          </v-btn>
+
+          <v-btn
+              v-if="transformation"
+              @click="editTransformation()"
+              color="success"
+              class="mr-4"
+              :disabled="transformation.archived"
+          >
+            <v-progress-circular
+                indeterminate
+                v-if="loading"
+            ></v-progress-circular>
+            <span v-if="!loading">{{$t("dataMapping.edit")}}</span>
+          </v-btn>
+
+          <v-btn
+              @click="reset()"
+              color="error"
+              class="mr-4"
+              v-if="!loading && !transformation"
+          >
+            {{$t("dataMapping.reset")}}
+          </v-btn>
+
+          <v-btn
+              @click="editReset()"
+              color="error"
+              class="mr-4"
+              v-if="!loading && transformation"
+              :disabled="transformation.archived"
+          >
+            {{$t("dataMapping.reset")}}
+          </v-btn>
+
+          <p><span style="color:red">*</span> = {{$t('dataMapping.requiredField')}}</p>
+      </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
@@ -583,6 +732,7 @@ import {
 import {getNestedValue} from "@/utilities";
 import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import SearchMetatypes from "@/components/ontology/metatypes/searchMetatypes.vue";
+import {v4 as uuidv4} from 'uuid'
 
 @Component({
   components: {SelectDataSource, SearchMetatypes},
@@ -612,8 +762,11 @@ export default class TransformationDialog extends Vue {
   readonly icon!: boolean
 
   errorMessage = ""
+  validationErrorMessage = ""
   search = ""
+  openPanels: number[] = []
   expanded = []
+  expandedTimeSeries = []
   loading = false
   keysLoading = false
   dialog = false
@@ -656,6 +809,13 @@ export default class TransformationDialog extends Vue {
     {text: ">=", value: ">=", requiresValue: true},
   ]
   expressions = ["AND", "OR"]
+  dataTypes = [
+      'number',
+      'date',
+      'string',
+      'boolean',
+      'list'
+  ]
 
   relationshipPairSearch = ""
   relationshipPairs: MetatypeRelationshipPairT[] = []
@@ -671,6 +831,11 @@ export default class TransformationDialog extends Vue {
   destination_key: any = null
   destination_data_source_id: any = null
   destination_metatype_id: any = null
+
+  tab_data_source_id: any = null
+  tab_metatype_id: any = null
+  tab_node_id: any = null
+  tab_node_key: any = null
 
   uniqueIdentifierKey: any = null
   propertyMapping: {[key: string]: any}[] = []
@@ -709,6 +874,24 @@ export default class TransformationDialog extends Vue {
     ]
   }
 
+  timeSeriesHeader() {
+    return [
+      {
+        text: this.$t('dataMapping.columnName'),
+        value: "column_name"
+      },
+      {
+        text: this.$t('dataMapping.dataType'),
+        value: "value_type"
+      },
+      {
+        text: this.$t('dataMapping.payloadKey'),
+        value: "key"
+      },
+      {text: this.$t('dataMapping.actions'), value: "actions", sortable: false}
+    ]
+  }
+
   actionErrors() {
     return [{
       text: this.$t('dataMapping.failOnRequired'),
@@ -737,6 +920,7 @@ export default class TransformationDialog extends Vue {
     this.selectedMetatypeRelationshipPairKeys = []
     this.selectedMetatype = null
     this.selectedMetatypeKeys = []
+    this.propertyMapping = []
   }
 
   editReset() {
@@ -770,10 +954,46 @@ export default class TransformationDialog extends Vue {
           })
           .catch(e => this.errorMessage = e)
     }
+
+    if(!this.transformation?.metatype_id && !this.transformation?.metatype_relationship_pair_id) {
+      this.payloadType = 'tabular'
+      this.tab_data_source_id = this.transformation?.tab_data_source_id
+      this.tab_metatype_id = this.transformation?.metatype_id
+      this.tab_node_id =  this.transformation?.tab_node_id
+      this.tab_node_key =  this.transformation?.tab_node_key
+      this.propertyMapping = this.transformation?.keys as any
+    }
+
   }
 
   updated() {
     this.handleResize()
+  }
+
+  addMapping() {
+    if(this.propertyMapping.length === 0 ) {
+      this.propertyMapping.push({
+        id: uuidv4(),
+        column_name: '',
+        key: '',
+        value_type: 'date',
+        is_primary_timestamp: true
+      })
+
+      this.expandedTimeSeries.push(this.propertyMapping[0] as never)
+    } else {
+      this.propertyMapping.push({
+        id: uuidv4(),
+        column_name: '',
+        key: '',
+        value_type: 'string',
+        is_primary_timestamp: false
+      })
+    }
+  }
+
+  removeMapping(index: any) {
+    this.propertyMapping.splice(index, 1)
   }
 
   // retrieves the height of the type mapping column (on left) if present
@@ -791,7 +1011,7 @@ export default class TransformationDialog extends Vue {
     }
   }
 
-  // returns whether or not all required keys of the selected metatype or metatype relationship have been mapped
+  // returns whether all required keys of the selected metatype or metatype relationship have been mapped
   @Watch('propertyMapping', {immediate: true})
   areRequiredKeysMapped() {
     if(this.selectedMetatype) {
@@ -986,6 +1206,18 @@ export default class TransformationDialog extends Vue {
     })
   }
 
+  @Watch('tab_node_id', {immediate: false})
+  onTabNodeIDChange() {
+    // @ts-ignore
+    this.$refs.mainForm.validate()
+  }
+
+  @Watch('tab_node_key', {immediate: false})
+  onTabNodeKeyChange() {
+    // @ts-ignore
+    this.$refs.mainForm.validate()
+  }
+
   // autoPopulateMetatypeKeys attempts to match a selected metatype key's to payload
   // keys by property name
   autoPopulateMetatypeKeys() {
@@ -999,6 +1231,7 @@ export default class TransformationDialog extends Vue {
 
         if(metatypeKey) {
           this.propertyMapping.push({
+            id: uuidv4(),
             key: payloadKey,
             metatype_key_id: metatypeKey.id
           })
@@ -1018,6 +1251,7 @@ export default class TransformationDialog extends Vue {
 
         if(relationship) {
           this.propertyMapping.push({
+            id: uuidv4(),
             key: payloadKey,
             metatype_relationship_key_id: relationship.id
           })
@@ -1027,6 +1261,14 @@ export default class TransformationDialog extends Vue {
   }
 
   createTransformation() {
+    // @ts-ignore
+    if(!this.$refs.mainForm!.validate()) return;
+
+    if(this.payloadType == 'tabular' && (this.propertyMapping.length === 0 || !this.primaryTimestampSelected)) {
+      this.validationErrorMessage = this.$t('dataMapping.tabularValidationError') as string
+      return;
+    }
+
     this.loading = true
     const payload: {[key: string]: any} = {}
 
@@ -1043,6 +1285,10 @@ export default class TransformationDialog extends Vue {
       payload.destination_data_source_id = this.destination_data_source_id
     }
 
+    payload.tab_data_source_id = this.tab_data_source_id
+    payload.tab_metatype_id = this.tab_metatype_id
+    payload.tab_node_key = this.tab_node_key
+    payload.tab_node_id = this.tab_node_id
     payload.conditions = this.conditions
     payload.keys = this.propertyMapping
     if(this.uniqueIdentifierKey) payload.unique_identifier_key = this.uniqueIdentifierKey
@@ -1059,6 +1305,9 @@ export default class TransformationDialog extends Vue {
   }
 
   editTransformation() {
+    // @ts-ignore
+    if(!this.$refs.mainForm!.validate()) return;
+
     this.loading = true
     const payload: {[key: string]: any} = {}
 
@@ -1071,6 +1320,10 @@ export default class TransformationDialog extends Vue {
     payload.destination_id_key = this.destination_key
     payload.destination_metatype_id = this.destination_metatype_id
     payload.destination_data_source_id = this.destination_data_source_id
+    payload.tab_data_source_id = this.tab_data_source_id
+    payload.tab_metatype_id = this.tab_metatype_id
+    payload.tab_node_key = this.tab_node_key
+    payload.tab_node_id = this.tab_node_id
 
     payload.conditions = this.conditions
     payload.keys = this.propertyMapping
@@ -1095,7 +1348,10 @@ export default class TransformationDialog extends Vue {
     },{
       name: this.$t("dataMapping.relationship"),
       value: 'relationship'
-    }]
+    },/*{
+      name: this.$t("dataMapping.tabularData"), -- enable this when ready to release time series data
+      value: 'tabular'                             or when you need to test the system
+    }*/]
   }
 
   isKeyMapped(key: MetatypeKeyT) {
@@ -1183,6 +1439,7 @@ export default class TransformationDialog extends Vue {
     if(value) {
       if(this.propertyMapping.length <= 0) {
         this.propertyMapping.push({
+          id: uuidv4(),
           value: key,
           value_type: metatypeKey.data_type,
           metatype_key_id: metatypeKey.id
@@ -1194,6 +1451,7 @@ export default class TransformationDialog extends Vue {
       this.propertyMapping = this.propertyMapping.filter(prop => {return prop.metatype_key_id !== metatypeKey.id})
 
       this.propertyMapping.push({
+        id: uuidv4(),
         value:key,
         value_type: metatypeKey.data_type,
         metatype_key_id: metatypeKey.id
@@ -1203,6 +1461,7 @@ export default class TransformationDialog extends Vue {
 
     if(this.propertyMapping.length <= 0) {
       this.propertyMapping.push({
+        id: uuidv4(),
         key: key,
         metatype_key_id: metatypeKey.id
       })
@@ -1213,6 +1472,7 @@ export default class TransformationDialog extends Vue {
     this.propertyMapping = this.propertyMapping.filter(prop => {return prop.metatype_key_id !== metatypeKey.id})
 
     this.propertyMapping.push({
+      id: uuidv4(),
       key:key,
       metatype_key_id: metatypeKey.id
     })
@@ -1243,6 +1503,7 @@ export default class TransformationDialog extends Vue {
     if(value) {
       if(this.propertyMapping.length <= 0) {
         this.propertyMapping.push({
+          id: uuidv4(),
           value: key,
           metatype_relationship_key_id: metatypeRelationshipKey.id
         })
@@ -1253,6 +1514,7 @@ export default class TransformationDialog extends Vue {
       this.propertyMapping = this.propertyMapping.filter(prop => {return prop.metatype_relationship_key_id !== metatypeRelationshipKey.id})
 
       this.propertyMapping.push({
+        id: uuidv4(),
         value:key,
         metatype_relationship_key_id: metatypeRelationshipKey.id
       })
@@ -1263,6 +1525,7 @@ export default class TransformationDialog extends Vue {
 
     if(this.propertyMapping.length <= 0) {
       this.propertyMapping.push({
+        id: uuidv4(),
         key: key,
         metatype_relationship_key_id: metatypeRelationshipKey.id
       })
@@ -1273,6 +1536,7 @@ export default class TransformationDialog extends Vue {
     this.propertyMapping = this.propertyMapping.filter(prop => {return prop.metatype_relationship_key_id !== metatypeRelationshipKey.id})
 
     this.propertyMapping.push({
+      id: uuidv4(),
       key:key,
       metatype_relationship_key_id: metatypeRelationshipKey.id
     })
@@ -1314,6 +1578,36 @@ export default class TransformationDialog extends Vue {
     this.subexpressionOperator = null
   }
 
+  tabDataSourceValid() {
+    if(!this.tab_data_source_id || this.tab_data_source_id === '') {
+      return this.$t('dataMapping.required')
+    }
+    return true
+  }
+
+  tabMetatypeValid() {
+    if(!this.tab_metatype_id || this.tab_metatype_id === '') {
+      return this.$t('dataMapping.required')
+    }
+    return true
+  }
+
+  tabNodeValid(){
+    if((!this.tab_node_key || this.tab_node_key === '') && (!this.tab_node_id || this.tab_node_id ==='')) {
+      return this.$t('dataMapping.required')
+    }
+
+    return true
+  }
+
+  validColumnName(index: any, value: any) {
+   if(this.propertyMapping.filter(p  => value === p.column_name).length > 1){
+     return this.$t('dataMapping.columnNameMustBeUnique')
+   }
+
+   return true
+  }
+
   deleteSubexpression(condition: TypeMappingTransformationCondition, subexpression: TypeMappingTransformationSubexpression){
     condition.subexpressions = condition.subexpressions.filter(s => s !== subexpression)
   }
@@ -1330,6 +1624,12 @@ export default class TransformationDialog extends Vue {
     }
   }
 
+  setTabDataSource(ds: DataSourceT) {
+    if(ds) {
+      this.tab_data_source_id = ds.id as string
+    }
+  }
+
   setParentMetatype(m: MetatypeT) {
     if(m) {
       this.origin_metatype_id = m.id
@@ -1339,6 +1639,12 @@ export default class TransformationDialog extends Vue {
   setChildMetatype(m: MetatypeT) {
     if(m) {
       this.destination_metatype_id = m.id
+    }
+  }
+
+  setTabMetatype(m: MetatypeT) {
+    if(m) {
+      this.tab_metatype_id = m.id
     }
   }
 
@@ -1378,20 +1684,12 @@ export default class TransformationDialog extends Vue {
     }
   }
 
-  get isMainFormValid() {
-    if(!this.requiredKeysMapped) {
-      return false
+  get primaryTimestampSelected() {
+    if(this.propertyMapping.length > 0) {
+      if(this.propertyMapping.find(p => p.is_primary_timestamp)) return true
     }
 
-    if(!this.selectedMetatype && !this.selectedRelationshipPair) {
-      return false
-    }
-
-    if(!this.uniqueIdentifierKey) {
-      return this.mainFormValid
-    }
-
-    return (this.uniqueIdentifierKey && this.mainFormValid)
+    return false;
   }
 
   // we need all the keys in a given data payload, this
@@ -1445,3 +1743,9 @@ export default class TransformationDialog extends Vue {
   }  
 }
 </script>
+
+<style lang="scss">
+tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, .05);
+}
+</style>

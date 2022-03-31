@@ -52,7 +52,7 @@
 
 <script lang="ts">
 import {Component, Prop, Vue} from 'vue-property-decorator'
-import {DataSourceT, ImportT} from "@/api/types";
+import {DataSourceT} from "@/api/types";
 
 @Component
 export default class ReprocessDataSourceDialog extends Vue {

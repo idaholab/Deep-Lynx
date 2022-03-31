@@ -312,6 +312,7 @@ export default {
             create: 'Create',
             cancel: 'Cancel',
             errorUpdatingAPI: 'Error communicating with Deep Lynx:',
+            errorCreatingAPI: 'Error communicating with Deep Lynx:',
             requiredField: 'Required Field',
         },
         editMetatypeRelationshipKey: {
@@ -640,6 +641,7 @@ export default {
                 'Data may have already been generated using this Transformation. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Transformation. If you would like to keep this data and orphan it, please uncheck the box below.',
         },
         dataMapping: {
+            tabularData: 'Time-series Data',
             deprecated: 'Deprecated Transformation',
             deprecatedTooltip:
                 "These refer to transformations who's types and keys no longer use the current ontology versions. Any data resulting from these transformations will refer to a previous ontology version and not the current. Consider updating them",
@@ -678,7 +680,7 @@ export default {
             optional: 'optional',
             rootArray: 'Root Array',
             rootArrayHelp: 'Selecting a root array means this transformation will be applied for every object contained in the selected root array.',
-            conditions: 'Conditions',
+            conditions: 'Condition(s)',
             conditionsHelp: 'Your transformation will only be applied to the data when these conditions are met.',
             key: 'Key',
             operator: 'Operator',
@@ -729,6 +731,17 @@ export default {
             requiredField: 'Required Field',
             dateFormatString: 'Date Format String(blank for ISO)',
             dateFormatStringHelp: 'Formatting your date/time',
+            selectNodeID: 'Target Node',
+            selectNodeIDHelp: 'These fields allow you to select which node this time series data should be attached to.',
+            nodeIDKey: 'Node ID Key',
+            nodeID: 'Original Node ID',
+            tableDesign: 'Table Design',
+            tableDesignHelp: 'You must design a database table in which to store this time series data. More information can be found on our wiki.',
+            columnName: 'Column Name',
+            columnDataType: 'Column Data Type',
+            dataType: 'Data Type',
+            addColumn: 'Add Column',
+            configurationHelp: 'Transformation configuration options, generally how to deal with errors on key mapping and conversion.',
         },
         deleteTypeMapping: {
             deleteTypeMapping: 'Delete Type Mapping',

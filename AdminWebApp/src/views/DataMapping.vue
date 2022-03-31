@@ -709,7 +709,7 @@ export default class DataMapping extends Vue {
     }
 
     this.$client.upgradeTypeMappings(this.containerID, this.selectedDataSource?.id!, payload)
-    .then(results => {
+    .then(() => {
       this.loadTypeMappings()
       this.$forceUpdate()
     })
