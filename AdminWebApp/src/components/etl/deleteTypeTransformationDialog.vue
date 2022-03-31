@@ -116,7 +116,7 @@ export default class DeleteTypeTransformationDialog extends Vue {
   archiveLoading = false
   timerRunning = false
   withData = true
-  countDown = 10
+  countDown = 5
 
   get displayIcon() {
     return this.icon
@@ -141,7 +141,7 @@ export default class DeleteTypeTransformationDialog extends Vue {
   }
 
   startCountdown() {
-    this.countDown = 10
+    this.countDown = 5
 
     if(!this.timerRunning) this.countdown()
   }

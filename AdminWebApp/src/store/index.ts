@@ -1,18 +1,8 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import {ChangelistT, ContainerT, OntologyVersionT} from '@/api/types';
-import {Client} from '@/api/client';
-import Config from '@/config';
-import OntologyVersionToolbar from '@/components/ontology/versioning/ontologyVersionToolbar.vue';
+import {ContainerT, OntologyVersionT} from '@/api/types';
 
 Vue.use(Vuex);
-
-const client = new Client({
-    rootURL: Config.deepLynxApiUri,
-    auth_method: Config.deepLynxApiAuth,
-    username: Config.deepLynxApiAuthBasicUser,
-    password: Config.deepLynxApiAuthBasicPass,
-});
 
 export default new Vuex.Store({
     state: {

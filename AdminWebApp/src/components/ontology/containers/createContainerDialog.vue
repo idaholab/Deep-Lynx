@@ -82,7 +82,7 @@
           name: null,
           description:null, config: {
           data_versioning_enabled: true,
-          ontology_versioning_enabled: true,
+          ontology_versioning_enabled: false,
           }}
       owlFilePath = ""
         owlFile: File | null = null
@@ -96,7 +96,7 @@
               name: null,
               description:null, config: {
                 data_versioning_enabled: true,
-                ontology_versioning_enabled: true,
+                ontology_versioning_enabled: false,
               }}
             this.dialog = false
         }
