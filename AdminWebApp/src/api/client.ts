@@ -439,6 +439,7 @@ export class Client {
     ): Promise<boolean> {
         const query: {[key: string]: any} = {};
         if (permanent) query.permanent = permanent;
+        if (reverse) query.reverse = reverse;
 
         return this.delete(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}/keys/${keyID}`, query);
     }
@@ -908,6 +909,9 @@ export class Client {
     private async get<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
+        config.validateStatus = () => {
+            return true;
+        };
 
         if (this.config?.auth_method === 'token') {
             config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
@@ -929,7 +933,7 @@ export class Client {
         const resp: AxiosResponse = await axios.get(url, config);
 
         return new Promise<T>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
 
             if (resp.data.isError) reject(resp.data.value);
 
@@ -941,6 +945,9 @@ export class Client {
     private async getNoData(uri: string, queryParams?: {[key: string]: any}): Promise<boolean> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
+        config.validateStatus = () => {
+            return true;
+        };
 
         if (this.config?.auth_method === 'token') {
             config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
@@ -962,7 +969,7 @@ export class Client {
         const resp: AxiosResponse = await axios.get(url, config);
 
         return new Promise<boolean>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
 
             if (resp.data.isError) reject(resp.data.value);
 
@@ -973,6 +980,9 @@ export class Client {
     private async delete(uri: string, queryParams?: {[key: string]: any}): Promise<boolean> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
+        config.validateStatus = () => {
+            return true;
+        };
 
         if (this.config?.auth_method === 'token') {
             config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
@@ -993,7 +1003,7 @@ export class Client {
         const resp: AxiosResponse = await axios.delete(url, config);
 
         return new Promise<boolean>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
 
             resolve(true);
         });
@@ -1002,6 +1012,9 @@ export class Client {
     private async deleteWithResponse(uri: string, queryParams?: {[key: string]: any}): Promise<boolean> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
+        config.validateStatus = () => {
+            return true;
+        };
 
         if (this.config?.auth_method === 'token') {
             config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
@@ -1022,7 +1035,7 @@ export class Client {
         const resp: AxiosResponse = await axios.delete(url, config);
 
         return new Promise<boolean>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
 
             resolve(resp.data.value);
         });
@@ -1031,6 +1044,9 @@ export class Client {
     private async post<T>(uri: string, data: any, queryParams?: {[key: string]: any}): Promise<T> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
+        config.validateStatus = () => {
+            return true;
+        };
 
         if (this.config?.auth_method === 'token') {
             config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
@@ -1051,7 +1067,7 @@ export class Client {
         const resp: AxiosResponse = await axios.post(url, data, config);
 
         return new Promise<T>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error.error);
 
             if (resp.data.isError) reject(resp.data.value);
 
@@ -1062,6 +1078,9 @@ export class Client {
     private async postRawReturn<T>(uri: string, data: any, queryParams?: {[key: string]: any}): Promise<T> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
+        config.validateStatus = () => {
+            return true;
+        };
 
         if (this.config?.auth_method === 'token') {
             config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
@@ -1082,7 +1101,7 @@ export class Client {
         const resp: AxiosResponse = await axios.post(url, data, config);
 
         return new Promise<T>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
 
             resolve(resp.data as T);
         });
@@ -1091,6 +1110,9 @@ export class Client {
     private async postNoData(uri: string, data: any, queryParams?: {[key: string]: any}): Promise<boolean> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
+        config.validateStatus = () => {
+            return true;
+        };
 
         if (this.config?.auth_method === 'token') {
             config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
@@ -1111,7 +1133,7 @@ export class Client {
         const resp: AxiosResponse = await axios.post(url, data, config);
 
         return new Promise<boolean>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
 
             resolve(true);
         });
@@ -1120,6 +1142,9 @@ export class Client {
     private async postNoPayload(uri: string): Promise<boolean> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
+        config.validateStatus = () => {
+            return true;
+        };
 
         if (this.config?.auth_method === 'token') {
             config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
@@ -1132,7 +1157,7 @@ export class Client {
         const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), {}, config);
 
         return new Promise<boolean>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
 
             resolve(true);
         });
@@ -1141,6 +1166,9 @@ export class Client {
     private async postFile(uri: string, inputName: string, file: File): Promise<boolean> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*', 'Content-Type': 'multipart/form-data'};
+        config.validateStatus = () => {
+            return true;
+        };
 
         if (this.config?.auth_method === 'token') {
             config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
@@ -1156,7 +1184,7 @@ export class Client {
         const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), formData, config);
 
         return new Promise<boolean>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
 
             resolve(true);
         });
@@ -1165,6 +1193,9 @@ export class Client {
     private async postFileRawReturn<T>(uri: string, inputName: string, file: File): Promise<T> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*', 'Content-Type': 'multipart/form-data'};
+        config.validateStatus = () => {
+            return true;
+        };
 
         if (this.config?.auth_method === 'token') {
             config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
@@ -1180,7 +1211,7 @@ export class Client {
         const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: uri}), formData, config);
 
         return new Promise<T>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
 
             resolve(resp.data as T);
         });
@@ -1189,6 +1220,9 @@ export class Client {
     private async put<T>(uri: string, data?: any): Promise<T> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
+        config.validateStatus = () => {
+            return true;
+        };
 
         if (this.config?.auth_method === 'token') {
             config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
@@ -1201,7 +1235,7 @@ export class Client {
         const resp: AxiosResponse = await axios.put(`${this.config?.rootURL}${uri}`, data, config);
 
         return new Promise<T>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
 
             if (resp.data.isError) reject(resp.data.value);
 
@@ -1212,6 +1246,9 @@ export class Client {
     private async putNoData(uri: string, data: any, queryParams?: {[key: string]: any}): Promise<boolean> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
+        config.validateStatus = () => {
+            return true;
+        };
 
         if (this.config?.auth_method === 'token') {
             config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
@@ -1232,7 +1269,7 @@ export class Client {
         const resp: AxiosResponse = await axios.put(url, data, config);
 
         return new Promise<boolean>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
 
             resolve(true);
         });

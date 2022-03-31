@@ -11,6 +11,7 @@
         :clearable="multiple"
         :disabled="disabled"
         v-model="selected"
+        :rules="rules"
     >
       <template slot="item" slot-scope="data">
         <span v-if="data.item.archived" class="text--disabled">{{data.item.name}} - <i class="text-caption">{{$t('dataSources.archived')}}</i></span>
@@ -49,6 +50,9 @@ export default class SelectDataSource extends Vue {
 
   @Prop({required: false})
   dataSourceID?: string | string[]
+
+  @Prop({required: false})
+  rules?: any
 
   errorMessage = ""
   dataSources: DataSourceT[] = []

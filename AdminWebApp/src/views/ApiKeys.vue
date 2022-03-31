@@ -27,7 +27,7 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from 'vue-property-decorator'
+import {Component,Vue} from 'vue-property-decorator'
 import {KeyPairT} from "@/api/types";
 import CreateApiKeyDialog from "@/components/accessManagement/createApiKeyDialog.vue";
 import DeleteApiKeyDialog from "@/components/accessManagement/deleteApiKeyDialog.vue";

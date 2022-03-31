@@ -291,10 +291,14 @@ export type TypeMappingT = {
 };
 
 export type TypeMappingTransformationKeyMapping = {
+    id?: string;
     key: string;
     metatype_key_id?: string;
     metatype_relationship_key_id?: string;
     data_conversion_format_string?: string;
+    column_name?: string;
+    is_primary_timestamp?: boolean;
+    value_type?: string;
 };
 
 export type TypeMappingTransformationSubexpression = {
@@ -333,6 +337,10 @@ export type TypeMappingTransformationT = {
     destination_id_key?: string;
     destination_metatype_id?: string;
     destination_data_source_id?: string;
+    tab_data_source_id?: string;
+    tab_metatype_id?: string;
+    tab_node_id?: string;
+    tab_node_key?: string;
     unique_identifier_key?: string;
     on_conflict?: 'create' | 'update' | 'ignore';
     metatype_name?: string;

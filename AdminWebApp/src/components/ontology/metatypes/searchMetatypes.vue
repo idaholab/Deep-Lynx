@@ -14,6 +14,7 @@
         :multiple="multiple"
         :clearable="multiple"
         :disabled="disabled"
+        :rules="rules"
     >
       <template v-if="tooltip" slot="append-outer"><info-tooltip :message="tooltipHelp"></info-tooltip> </template>
     </v-combobox>
@@ -43,6 +44,9 @@ export default class SearchMetatypes extends Vue {
 
   @Prop({required: false})
   metatypeID?: string | string[]
+
+  @Prop({required: false})
+  rules?: any
 
   search = ""
   errorMessage = ""

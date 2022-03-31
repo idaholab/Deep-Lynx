@@ -137,7 +137,7 @@
 
 <script lang="ts">
 import {Component, Prop, Vue} from "vue-property-decorator";
-import {ChangelistT, OntologyVersionT} from "@/api/types";
+import {OntologyVersionT} from "@/api/types";
 
 @Component
 export default class OntologyVersioning extends Vue {
