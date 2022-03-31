@@ -124,7 +124,7 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
-import {MetatypeT, OntologyVersionT} from '@/api/types';
+import {MetatypeT} from '@/api/types';
 import EditMetatypeDialog from "@/components/ontology/metatypes/editMetatypeDialog.vue";
 import CreateMetatypeDialog from "@/components/ontology/metatypes/createMetatypeDialog.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
@@ -429,4 +429,6 @@ export default class Metatypes extends Vue {
   .removed {
     background-color: #E53935;
   }
+
+
 </style>

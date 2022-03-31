@@ -124,7 +124,7 @@
 </template>
 
 <script lang="ts">
-import {MetatypeRelationshipT, MetatypeT} from '@/api/types';
+import {MetatypeRelationshipT} from '@/api/types';
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import EditMetatypeRelationshipDialog from "@/components/ontology/metatypeRelationships/editMetatypeRelationshipDialog.vue";
 import CreateMetatypeRelationshipDialog from "@/components/ontology/metatypeRelationships/createMetatypeRelationshipDialog.vue";

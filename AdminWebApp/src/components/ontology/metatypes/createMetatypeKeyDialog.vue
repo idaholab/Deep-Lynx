@@ -179,7 +179,9 @@ export default class CreateMetatypeKeyDialog extends Vue {
               this.$emit('metatypeKeyCreated', result[0])
             }
           })
-          .catch(e => this.errorMessage = this.$t('createMetatypeKey.errorCreatingAPI') as string + e)
+          .catch(e => {
+            this.errorMessage = this.$t('createMetatypeKey.errorCreatingAPI') as string + e
+          })
     }
   }
 
