@@ -176,11 +176,11 @@ export default class ImportMapper extends Mapper {
         // reminder that we don't actually delete nodes or edges, we just set the deleted_at fields accordingly
         return [
             {
-                text: `UPDATE nodes SET deleted_at = NOW() WHERE deleted_at IS NULL AND import_data_id = $1`,
+                text: `DELETE FROM nodes WHERE import_data_id = $1`,
                 values: [importID],
             },
             {
-                text: `UPDATE edges SET deleted_at = NOW() WHERE deleted_at IS NULL AND import_data_id = $1`,
+                text: `DELETE FROM edges WHERE import_data_id = $1`,
                 values: [importID],
             },
             {

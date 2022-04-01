@@ -113,9 +113,6 @@ export default class TypeTransformationRepository extends Repository implements 
             return Promise.resolve(Result.Failure(`type transformation does not pass validation ${errors.join(',')}`));
         }
 
-        const mappingRepo = new TypeMappingRepository();
-        void mappingRepo.deleteCached(t.type_mapping_id!);
-
         if (t.id) {
             // to allow partial updates we must first fetch the original object
             const original = await this.findByID(t.id);
@@ -139,6 +136,8 @@ export default class TypeTransformationRepository extends Repository implements 
             await this.deleteCached(t);
             return Promise.resolve(Result.Success(true));
         }
+        const mappingRepo = new TypeMappingRepository();
+        void mappingRepo.deleteCached(t.type_mapping_id!);
 
         return Promise.resolve(Result.Success(true));
     }
