@@ -1,16 +1,13 @@
 import { BaseDomainClass } from "../../../common_classes/base_domain_class";
-import {IsArray, IsBoolean, IsObject, IsOptional, IsString, ValidateIf, ValidateNested} from 'class-validator';
+import {IsArray, IsBoolean, IsIn, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsNotEmpty} from 'class-validator';
 import {Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Container from '../ontology/container';
 import {Conversion} from '../etl/type_transformation';
-import { StringValueNode } from "graphql";
 
 /*
     ReportQuery represents a query and its execution status. Queries can
     be attached to a report or be executed independent of a report.
 */
-
-// id, container_id, status, status_message, notify_users, created_by, created_at
 export default class Report extends BaseDomainClass{
     @IsOptional()
     @IsString()
@@ -20,13 +17,15 @@ export default class Report extends BaseDomainClass{
     container_id?: string;
 
     @IsString()
+    @IsIn(['error', 'ready', 'processing', 'completed'])
     status?: string;
 
+    @IsNotEmpty()
     @IsString()
-    status_message?: string;
+    status_message = '';
 
     @IsBoolean()
-    notify_users?: boolean;
+    notify_users = true;
     
     constructor(input: {
         container_id?: Container | string;

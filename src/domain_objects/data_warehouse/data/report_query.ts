@@ -1,6 +1,8 @@
 import { BaseDomainClass } from "../../../common_classes/base_domain_class";
-import {IsOptional, IsString} from 'class-validator';
+import {IsArray, IsBoolean, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, ValidateIf, ValidateNested} from 'class-validator';
+import {Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Report from './report';
+import {Conversion} from '../etl/type_transformation';
 
 /*
     ReportQuery represents a query and its execution status. Queries can
@@ -15,14 +17,17 @@ export default class ReportQuery extends BaseDomainClass{
     @IsString()
     report_id?: string;
 
+    @IsNotEmpty()
     @IsString()
-    query?: string;
+    query = '';
 
     @IsString()
+    @IsIn(['error', 'ready', 'processing', 'completed'])
     status?: string;
 
+    @IsNotEmpty()
     @IsString()
-    status_message?: string;
+    status_message = '';
     
     constructor(input: {
         report_id?: Report | string;
