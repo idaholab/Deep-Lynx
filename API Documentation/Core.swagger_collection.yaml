@@ -341,8 +341,11 @@ paths:
     post:
       tags:
         - Data Query
-      summary: Query Graph
-      description: Query the graph of the specified container using GraphQL. GraphQL queries may be formatted as json or plain text.
+      summary: Query Graph (Deprecated)
+      description: |-
+        Query the graph of the specified container using GraphQL. GraphQL queries may be formatted as json or plain text.
+
+        This has been deprecated in favor of the `/containers/{container_id}/data` endpoint.
       operationId: QueryGraph
       parameters:
         - name: container_id
@@ -373,6 +376,48 @@ paths:
                     type: object
       deprecated: false
       x-codegen-request-body-name: Body
+  '/containers/{container_id}/data':
+    post:
+      tags:
+        - Data Query
+      summary: Query Data
+      description: 'Query data from your container using GraphQL. You can learn more here - https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Querying-Data-With-GraphQL'
+      operationId: QueryData
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+          text/plain:
+            schema:
+              type: string
+              example: "{\r\n    nodes {\r\n        id\r\n        metatype{id}\r\n        archived\r\n    }\r\n}"
+        required: true
+        description: ''
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+      deprecated: false
+      x-codegen-request-body-name: Body
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
   '/containers/{container_id}/graphs/nodes':
     get:
       tags:

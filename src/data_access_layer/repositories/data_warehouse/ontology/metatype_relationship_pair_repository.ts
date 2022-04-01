@@ -352,7 +352,11 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
     }
 
     ontologyVersion(operator: string, value?: any) {
-        super.query('metatype_relationship_pairs.ontology_version', operator, value);
+        if (typeof value === 'undefined') {
+            super.query('metatype_relationship_pairs.ontology_version', 'is null');
+        } else {
+            super.query('metatype_relationship_pairs.ontology_version', operator, value);
+        }
         return this;
     }
 
