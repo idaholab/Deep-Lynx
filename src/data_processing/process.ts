@@ -28,17 +28,11 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
 
     const transaction = await stagingMapper.startTransaction();
 
-    const dataSource = await dataSourceRepo.findByID(staging.data_source_id!);
-    if (dataSource.isError) {
-        await stagingRepo.addError(staging.id!, `unable to load data source for data staging record`);
-        return Promise.resolve(Result.SilentFailure(`unable to load data source for data staging record ${dataSource.error?.error}`));
-    }
-
     // pull the transformations, abort if none
     if (!staging.shape_hash) {
         const shapeHash = TypeMapping.objectToShapeHash(staging.data, {
-            value_nodes: dataSource.value.DataSourceRecord?.config?.value_nodes,
-            stop_nodes: dataSource.value.DataSourceRecord?.config?.stop_nodes,
+            value_nodes: staging.data_source_config?.value_nodes,
+            stop_nodes: staging.data_source_config?.stop_nodes,
         });
         staging.shape_hash = shapeHash;
 
@@ -66,7 +60,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
             SuperUser,
         );
 
-        await stagingRepo.addError(staging.id!, 'no transformations for type mapping');
+        await stagingRepo.setErrors(staging.id!, ['no transformations for type mapping']);
 
         if (inserted.isError) return Promise.resolve(Result.Pass(inserted));
         return Promise.resolve(Result.Success(true));
@@ -74,7 +68,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
 
     if (!mapping.value.active) {
         await stagingMapper.completeTransaction(transaction.value);
-        await stagingRepo.addError(staging.id!, 'no active type mapping for record');
+        await stagingRepo.setErrors(staging.id!, ['no active type mapping for record']);
 
         return Promise.resolve(Result.Success(true));
     }
@@ -102,7 +96,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
             const results = await transformation.applyTransformation(staging);
             if (results.isError) {
                 await stagingMapper.rollbackTransaction(transaction.value);
-                await stagingRepo.addError(staging.id!, `unable to apply transformation ${transformation.id} to data: ${results.error}`);
+                await stagingRepo.setErrors(staging.id!, [`unable to apply transformation ${transformation.id} to data: ${results.error}`]);
 
                 return new Promise((resolve) => resolve(Result.SilentFailure(`unable to apply transformation ${transformation.id} to data: ${results.error}`)));
             }
@@ -118,7 +112,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
         if (inserted.isError) {
             await stagingMapper.rollbackTransaction(transaction.value);
 
-            await stagingRepo.addError(staging.id!, `error attempting to insert nodes ${inserted.error?.error}`);
+            await stagingRepo.setErrors(staging.id!, [`error attempting to insert nodes ${inserted.error?.error}`]);
             return new Promise((resolve) => resolve(Result.SilentFailure(`error attempting to insert nodes ${inserted.error?.error}`)));
         }
 
@@ -154,7 +148,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
         if (inserted.isError) {
             await stagingMapper.rollbackTransaction(transaction.value);
 
-            await stagingRepo.addError(staging.id!, `error attempting to insert edges ${inserted.error?.error}`);
+            await stagingRepo.setErrors(staging.id!, [`error attempting to insert edges ${inserted.error?.error}`]);
             return new Promise((resolve) => resolve(Result.SilentFailure(`error attempting to insert edges ${inserted.error?.error}`)));
         }
 
@@ -189,7 +183,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
         await stagingMapper.rollbackTransaction(transaction.value);
 
         // update the individual data row which failed
-        await stagingRepo.addError(staging.id!, `error attempting to mark data inserted ${marked.error}`);
+        await stagingRepo.setErrors(staging.id!, [`error attempting to mark data inserted ${marked.error}`]);
         return new Promise((resolve) => resolve(Result.SilentFailure(`error attempting to mark data inserted ${marked.error}`)));
     }
 

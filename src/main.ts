@@ -2,6 +2,7 @@
 import {Server} from './http_server/server';
 import BackedLogger from './services/logger';
 import Config from './services/config';
+import Cache from './services/cache/cache';
 const path = require('path');
 import Bree from 'bree';
 const Graceful = require('@ladjs/graceful');
@@ -13,6 +14,8 @@ import OAuthRepository from './data_access_layer/repositories/access_management/
 const postgresAdapter = PostgresAdapter.Instance;
 
 void postgresAdapter.init().then(() => {
+    void Cache.flush();
+
     // Bree is a job runner that allows us to start and schedule independent processes across threads
     // We use it primarily for data processing and mapping, as those cpu heavy tasks tend to block the
     // main execution thread frequently
