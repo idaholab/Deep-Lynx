@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS reports (
 	status character varying(255),
 	status_message text DEFAULT ''::text,
 	notify_users boolean NOT NULL DEFAULT true,
-	created_by bigint REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
+	created_by character varying(255) NOT NULL,
 	created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY(id)
 );
