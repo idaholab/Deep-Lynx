@@ -103,16 +103,6 @@ export default class GraphQLSchemaGenerator {
             if (!(dest in metatypePairObjects[origin][rel])) {
                 metatypePairObjects[origin][rel][dest] = {type: GraphQLString};
             }
-            // populate list for reverse searching
-            if (!(dest in metatypePairObjects)) {
-                metatypePairObjects[dest] = {};
-            }
-            if (!(rel in metatypePairObjects[dest])) {
-                metatypePairObjects[dest][rel] = {};
-            }
-            if (!(origin in metatypePairObjects[dest][rel])) {
-                metatypePairObjects[dest][rel][origin] = {type: GraphQLString};
-            }
         });
 
         const metatypeGraphQLObjects: {[key: string]: any} = {};
@@ -182,6 +172,9 @@ export default class GraphQLSchemaGenerator {
                         Object.keys(metatypePairObjects[metatype.name]).forEach((rel) => {
                             fields[rel] = {type: new GraphQLList(destinationInputType)};
                         });
+                    } else {
+                        // if no relationships exists, set relationship to _none: true
+                        fields._none = {type: GraphQLBoolean};
                     }
                     return fields;
                 },
@@ -214,6 +207,9 @@ export default class GraphQLSchemaGenerator {
                         Object.keys(metatypePairObjects[metatype.name]).forEach((pair) => {
                             fields[pair] = {type: destinationInfo};
                         });
+                    } else {
+                        // if no relationships exists, set relationship to _none: true
+                        fields._none = {type: GraphQLBoolean};
                     }
                     return fields;
                 },
@@ -595,23 +591,26 @@ export default class GraphQLSchemaGenerator {
             if (input._relationship) {
                 const edgeRepo = new EdgeRepository();
 
-                // check input for the relationship type and destination metatype
-                const relationship = Object.keys(input._relationship)[0];
-                const destination = Object.keys(input._relationship[relationship][0])[0];
+                // since _none only appears when no relationships exist, ignore it if filtered on
+                if (Object.keys(input._relationship)[0] !== '_none') {
+                    // check input for the relationship type and destination metatype
+                    const relationship = Object.keys(input._relationship)[0];
+                    const destination = Object.keys(input._relationship[relationship][0])[0];
 
-                // query to find all edges with specified relationship
-                edgeResults = await edgeRepo.findByRelationship(metatype.name, relationship, destination);
-                if (edgeResults.value.length) {
-                    // store nodes connected as the origin of this relationship
-                    const edge_ids: string[] = [];
-                    edgeResults.value.forEach((edge: any) => {
-                        edge_ids.push(edge.origin_id);
-                    });
-                    // query these matching nodes
-                    repo = repo.and().id('in', edge_ids);
-                } else {
-                    // nothing is returned if no such relationships exist
-                    repo = repo.and().id('eq', 0);
+                    // query to find all edges with specified relationship
+                    edgeResults = await edgeRepo.findByRelationship(metatype.name, relationship, destination);
+                    if (edgeResults.value.length) {
+                        // store nodes connected as the origin of this relationship
+                        const edge_ids: string[] = [];
+                        edgeResults.value.forEach((edge: any) => {
+                            edge_ids.push(edge.origin_id);
+                        });
+                        // query these matching nodes
+                        repo = repo.and().id('in', edge_ids);
+                    } else {
+                        // nothing is returned if no such relationships exist
+                        repo = repo.and().id('eq', 0);
+                    }
                 }
             }
 
