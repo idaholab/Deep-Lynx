@@ -30,5 +30,94 @@ export default class ReportMapper extends Mapper {
         return ReportMapper.instance;
     }
 
-    
+    public async Create(userID: string, report: Report, transaction?: PoolClient): Promise<Result<Report>> {
+        const r = await super.run(this.createStatement(userID, report), {
+            transaction,
+            resultClass,
+        });
+        if (r.isError) {return Promise.resolve(Result.Pass(r));}
+
+        return Promise.resolve(Result.Success(r.value[0]));
+    }
+
+    public async Update(userID: string, report: Report, transaction?: PoolClient): Promise<Result<Report>> {
+        const r = await super.run(this.updateStatement(userID, report), {
+            transaction,
+            resultClass,
+        });
+        if (r.isError) {return Promise.resolve(Result.Pass(r));}
+
+        return Promise.resolve(Result.Success(r.value[0]));
+    }
+
+    public async Retrieve(id: string, transaction?: PoolClient): Promise<Result<Report>> {
+        return super.retrieve<Report>(this.retrieveStatement(id), {
+            transaction,
+            resultClass,
+        });
+    }
+
+    public async Delete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.deleteStatement(id), {transaction});
+    }
+
+    // Below are a set of query building functions. So far they're very simple
+    // and the return value is something that the postgres driver can understand.
+    // The hope is that this method will allow us to be more flexible and create
+    // more complicated queries more easily.
+    private createStatement(userID: string, ...reports: Report[]): string {
+        const text = `INSERT INTO reports(
+                        container_id,
+                        status,
+                        status_message,
+                        notify_users,
+                        created_by) VALUES %L RETURNING *`;
+        const values = reports.map((r) => [
+            r.container_id,
+            r.status,
+            r.status_message,
+            r.notify_users,
+            userID,
+        ]);
+
+        return format(text, values);
+    }
+
+    private updateStatement(userID: string, ...reports: Report[]): string {
+        const text = `UPDATE reports as r SET
+                    container_id = u.container_id::bigint,
+                    status = u.status,
+                    status_message = u.status_message
+                    notify_users = u.notify_users
+                    FROM(VALUES %L) AS u(
+                    id,
+                    container_id,
+                    status,
+                    status_message,
+                    notify_users)
+                    WHERE u.id::bigint = r.id RETURNING r.*`;
+        const values = reports.map((r) => [
+            r.id,
+            r.container_id,
+            r.status,
+            r.status_message,
+            r.notify_users
+        ]);
+
+        return format(text, values);
+    }
+
+    private retrieveStatement(id: string): QueryConfig {
+        return {
+            text: `SELECT * FROM reports WHERE id = $1`,
+            values: [id],
+        };
+    }
+
+    private deleteStatement(id: string): QueryConfig {
+        return {
+            text: `DELETE FROM reports WHERE id = $1`,
+            values: [id],
+        };
+    }
 }
