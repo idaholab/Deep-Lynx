@@ -348,7 +348,11 @@ export default class MetatypeRepository extends Repository implements Repository
     }
 
     ontologyVersion(operator: string, value?: any) {
-        super.query('ontology_version', operator, value);
+        if (typeof value === 'undefined') {
+            super.query('ontology_version', 'is null');
+        } else {
+            super.query('ontology_version', operator, value);
+        }
         return this;
     }
 

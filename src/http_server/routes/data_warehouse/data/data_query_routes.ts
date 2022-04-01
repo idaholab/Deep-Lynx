@@ -14,7 +14,7 @@ export default class DataQueryRoutes {
         const generator = new GraphQLSchemaGenerator();
 
         generator
-            .ForContainer(req.container?.id!)
+            .ForContainer(req.container?.id!, req.query.ontologyVersionID as string)
             .then((schemaResult) => {
                 if (schemaResult.isError) {
                     schemaResult.asResponse(res);

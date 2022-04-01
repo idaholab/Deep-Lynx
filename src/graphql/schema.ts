@@ -28,6 +28,7 @@ import MetatypeRelationshipPairRepository from '../data_access_layer/repositorie
 import EdgeRepository from '../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import MetatypeRelationshipRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository';
 import NodeLeafRepository from '../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
+import OntologyVersionRepository from '../data_access_layer/repositories/data_warehouse/ontology/versioning/ontology_version_repository';
 
 // GraphQLSchemaGenerator takes a container and generates a valid GraphQL schema for all contained metatypes. This will
 // allow users to query and filter data based on node type, the various properties that type might have, and other bits
@@ -36,55 +37,83 @@ export default class GraphQLSchemaGenerator {
     #metatypeRepo: MetatypeRepository;
     #metatypePairRepo: MetatypeRelationshipPairRepository;
     #relationshipRepo: MetatypeRelationshipRepository;
+    #ontologyRepo: OntologyVersionRepository;
 
     constructor() {
         this.#metatypeRepo = new MetatypeRepository();
         this.#metatypePairRepo = new MetatypeRelationshipPairRepository();
         this.#relationshipRepo = new MetatypeRelationshipRepository();
+        this.#ontologyRepo = new OntologyVersionRepository();
     }
 
     // generate requires a containerID because the schema it generates is based on a user's ontology and ontologies are
     // separated by containers
-    async ForContainer(containerID: string): Promise<Result<GraphQLSchema>> {
+    async ForContainer(containerID: string, ontologyVersionID?: string): Promise<Result<GraphQLSchema>> {
+        // fetch the currently published ontology if the versionID wasn't provided
+        if (!ontologyVersionID) {
+            const ontResults = await this.#ontologyRepo
+                .where()
+                .containerID('eq', containerID)
+                .and()
+                .status('eq', 'published')
+                .list({sortBy: 'id', sortDesc: true});
+            if (ontResults.isError || ontResults.value.length === 0) {
+                Logger.error('unable to fetch current ontology, or no currently published ontology');
+            } else {
+                ontologyVersionID = ontResults.value[0].id;
+            }
+        }
+
         // fetch all metatypes for the container, with their keys - the single most expensive call of this function
-        const metatypeResults = await this.#metatypeRepo.where().containerID('eq', containerID).list(true);
-        if (metatypeResults.isError) {return Promise.resolve(Result.Pass(metatypeResults))};
+        const metatypeResults = await this.#metatypeRepo.where().containerID('eq', containerID).and().ontologyVersion('eq', ontologyVersionID).list(true);
+        if (metatypeResults.isError) {
+            return Promise.resolve(Result.Pass(metatypeResults));
+        }
 
         // fetch all metatype relationship pairs - used for _relationship queries.
-        const metatypePairResults = await this.#metatypePairRepo.where().containerID('eq', containerID).list();
-        if (metatypePairResults.isError) {return Promise.resolve(Result.Pass(metatypePairResults))};
+        const metatypePairResults = await this.#metatypePairRepo.where().containerID('eq', containerID).and().ontologyVersion('eq', ontologyVersionID).list();
+        if (metatypePairResults.isError) {
+            return Promise.resolve(Result.Pass(metatypePairResults));
+        }
 
         // fetch all relationship types. Used for relationship wrapper queries.
-        const relationshipResults = await this.#relationshipRepo.where().containerID('eq', containerID).list(true);
-        if (relationshipResults.isError) {return Promise.resolve(Result.Pass(relationshipResults))};
+        const relationshipResults = await this.#relationshipRepo
+            .where()
+            .containerID('eq', containerID)
+            .and()
+            .ontologyVersion('eq', ontologyVersionID)
+            .list(true);
+        if (relationshipResults.isError) {
+            return Promise.resolve(Result.Pass(relationshipResults));
+        }
 
         // used for querying edges based on node (see input._relationship resolver)
         const metatypePairObjects: {[key: string]: any} = {};
         metatypePairResults.value.forEach((pair) => {
-            const origin = pair.origin_metatype_name!
-            const rel = pair.relationship_name!
-            const dest = pair.destination_metatype_name!
+            const origin = pair.origin_metatype_name!;
+            const rel = pair.relationship_name!;
+            const dest = pair.destination_metatype_name!;
             // populate list for forward searching
-            if(!(origin in metatypePairObjects)){
-                metatypePairObjects[origin] = {}
+            if (!(origin in metatypePairObjects)) {
+                metatypePairObjects[origin] = {};
             }
-            if(!(rel in metatypePairObjects[origin])){
-                metatypePairObjects[origin][rel] = {}
+            if (!(rel in metatypePairObjects[origin])) {
+                metatypePairObjects[origin][rel] = {};
             }
-            if(!(dest in metatypePairObjects[origin][rel])){
-                metatypePairObjects[origin][rel][dest] = {type: GraphQLString}
+            if (!(dest in metatypePairObjects[origin][rel])) {
+                metatypePairObjects[origin][rel][dest] = {type: GraphQLString};
             }
             // populate list for reverse searching
-            if(!(dest in metatypePairObjects)){
-                metatypePairObjects[dest] = {}
+            if (!(dest in metatypePairObjects)) {
+                metatypePairObjects[dest] = {};
             }
-            if(!(rel in metatypePairObjects[dest])){
-                metatypePairObjects[dest][rel] = {}
+            if (!(rel in metatypePairObjects[dest])) {
+                metatypePairObjects[dest][rel] = {};
             }
-            if(!(origin in metatypePairObjects[dest][rel])){
-                metatypePairObjects[dest][rel][origin] = {type: GraphQLString}
+            if (!(origin in metatypePairObjects[dest][rel])) {
+                metatypePairObjects[dest][rel][origin] = {type: GraphQLString};
             }
-        })
+        });
 
         const metatypeGraphQLObjects: {[key: string]: any} = {};
 
@@ -122,71 +151,73 @@ export default class GraphQLSchemaGenerator {
         });
 
         metatypeResults.value.forEach((metatype) => {
+            if (!metatype.keys || metatype.keys.length === 0) return;
+
             // the following 4 input/object types are used for querying or introspection on _relationship
             const destinationInputType = new GraphQLInputObjectType({
-                name: `${metatype.name}_destination_input`,
+                name: `${stringToValidPropertyName(metatype.name)}_destination_input`,
                 // needed because the return type accepts an object, but throws a fit about it
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 fields: () => {
                     const fields: {[key: string]: {[key: string]: any}} = {};
-                    if(metatypePairObjects[metatype.name]){
+                    if (metatypePairObjects[metatype.name]) {
                         Object.keys(metatypePairObjects[metatype.name]).forEach((pair) => {
                             Object.keys(metatypePairObjects[metatype.name][pair]).forEach((dest) => {
-                                fields[dest] = {type: GraphQLBoolean}
-                            })
-                        })
+                                fields[dest] = {type: GraphQLBoolean};
+                            });
+                        });
                     }
                     return fields;
-                }
-            })
+                },
+            });
 
             const relationshipInputType = new GraphQLInputObjectType({
-                name: `${metatype.name}_relationship_input`,
+                name: `${stringToValidPropertyName(metatype.name)}_relationship_input`,
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 fields: () => {
                     const fields: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
-                    if(metatypePairObjects[metatype.name]){
+                    if (metatypePairObjects[metatype.name]) {
                         Object.keys(metatypePairObjects[metatype.name]).forEach((rel) => {
-                            fields[rel] = {type: new GraphQLList(destinationInputType)}
-                        })
+                            fields[rel] = {type: new GraphQLList(destinationInputType)};
+                        });
                     }
                     return fields;
-                }
-            })
+                },
+            });
 
             const destinationInfo = new GraphQLObjectType({
-                name: `${metatype.name}_destinationInfo`,
+                name: `${stringToValidPropertyName(metatype.name)}_destinationInfo`,
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 fields: () => {
                     const fields: {[key: string]: any} = {};
-                    if(metatypePairObjects[metatype.name]){
+                    if (metatypePairObjects[metatype.name]) {
                         Object.keys(metatypePairObjects[metatype.name]).forEach((pair) => {
                             Object.keys(metatypePairObjects[metatype.name][pair]).forEach((dest) => {
-                                fields[dest] = {type: GraphQLString}
-                            })
-                        })
+                                fields[dest] = {type: GraphQLString};
+                            });
+                        });
                     }
-                    return fields
-                }
-            })
+                    return fields;
+                },
+            });
 
             const relationshipInfo = new GraphQLObjectType({
-                name: `${metatype.name}_relationshipInfo`,
+                name: `${stringToValidPropertyName(metatype.name)}_relationshipInfo`,
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 fields: () => {
                     const fields: {[key: string]: any} = {};
-                    if(metatypePairObjects[metatype.name]){
+                    if (metatypePairObjects[metatype.name]) {
                         Object.keys(metatypePairObjects[metatype.name]).forEach((pair) => {
-                            fields[pair] = {type: destinationInfo}
-                        })
+                            fields[pair] = {type: destinationInfo};
+                        });
                     }
-                    return fields
-                }
-            })
+                    return fields;
+                },
+            });
 
             metatypeGraphQLObjects[stringToValidPropertyName(metatype.name)] = {
                 args: {
@@ -293,8 +324,8 @@ export default class GraphQLSchemaGenerator {
                 destination_id: {type: GraphQLString},
                 limit: {type: GraphQLInt, defaultValue: 10000},
                 page: {type: GraphQLInt, defaultValue: 1},
-            }
-        })
+            },
+        });
 
         const edgeRecordInfo = new GraphQLObjectType({
             name: 'edge_recordInfo',
@@ -315,8 +346,8 @@ export default class GraphQLSchemaGenerator {
                 metadata: {type: GraphQLJSON},
                 count: {type: GraphQLInt},
                 page: {type: GraphQLInt},
-            }
-        })
+            },
+        });
 
         relationshipResults.value.forEach((relationship) => {
             relationshipGraphQLObjects[stringToValidPropertyName(relationship.name)] = {
@@ -394,10 +425,10 @@ export default class GraphQLSchemaGenerator {
                                         };
                                     }
                                 }
-                            })
-                            return output
-                        }
-                    })
+                            });
+                            return output;
+                        },
+                    }),
                 ),
                 resolve: this.resolverForRelationships(containerID, relationship),
             };
@@ -406,12 +437,12 @@ export default class GraphQLSchemaGenerator {
         const metatypeObjects = new GraphQLObjectType({
             name: 'metatypes',
             fields: metatypeGraphQLObjects,
-        })
+        });
 
         const relationshipObjects = new GraphQLObjectType({
             name: 'relationships',
             fields: relationshipGraphQLObjects,
-        })
+        });
 
         // nodeType and edgeType for flexibility in filtering graph return
         const nodeInputType = new GraphQLInputObjectType({
@@ -423,16 +454,16 @@ export default class GraphQLSchemaGenerator {
                 origin_id: {type: GraphQLString},
                 destination_name: {type: GraphQLString},
                 destination_id: {type: GraphQLString},
-            }
-        })
+            },
+        });
 
         const edgeInputType = new GraphQLInputObjectType({
             name: 'edge_input',
             fields: {
                 name: {type: GraphQLString},
-                id: {type: GraphQLString}
-            }
-        })
+                id: {type: GraphQLString},
+            },
+        });
 
         // the fields on which a user can filter the graph return
         const graphInput: {[key: string]: any} = {
@@ -440,7 +471,7 @@ export default class GraphQLSchemaGenerator {
             node_type: {type: nodeInputType},
             edge_type: {type: edgeInputType},
             depth: {type: new GraphQLNonNull(GraphQLString)}, // depth must be specified
-        }
+        };
 
         const graphType = new GraphQLList(
             new GraphQLObjectType({
@@ -496,9 +527,9 @@ export default class GraphQLSchemaGenerator {
                     destination_metatype_id: {type: GraphQLString},
                     destination_metatype_name: {type: GraphQLString},
                     depth: {type: GraphQLInt},
-                }
-            })
-        )
+                },
+            }),
+        );
 
         return Promise.resolve(
             Result.Success(
@@ -508,17 +539,21 @@ export default class GraphQLSchemaGenerator {
                         fields: {
                             metatypes: {
                                 type: metatypeObjects,
-                                resolve: () => { return metatypeGraphQLObjects }
+                                resolve: () => {
+                                    return metatypeGraphQLObjects;
+                                },
                             },
                             relationships: {
                                 type: relationshipObjects,
-                                resolve: () => { return relationshipGraphQLObjects }
+                                resolve: () => {
+                                    return relationshipGraphQLObjects;
+                                },
                             },
                             graph: {
                                 args: {...graphInput},
                                 type: graphType,
                                 resolve: this.resolverForGraph(containerID) as any,
-                            }
+                            },
                         },
                     }),
                 }),
@@ -562,21 +597,21 @@ export default class GraphQLSchemaGenerator {
 
                 // check input for the relationship type and destination metatype
                 const relationship = Object.keys(input._relationship)[0];
-                const destination = Object.keys(input._relationship[relationship][0])[0]
+                const destination = Object.keys(input._relationship[relationship][0])[0];
 
                 // query to find all edges with specified relationship
-                edgeResults = await edgeRepo.findByRelationship(metatype.name, relationship, destination)
-                if(edgeResults.value.length){
+                edgeResults = await edgeRepo.findByRelationship(metatype.name, relationship, destination);
+                if (edgeResults.value.length) {
                     // store nodes connected as the origin of this relationship
-                    const edge_ids: string[] = []
+                    const edge_ids: string[] = [];
                     edgeResults.value.forEach((edge: any) => {
-                        edge_ids.push(edge.origin_id)
-                    })
+                        edge_ids.push(edge.origin_id);
+                    });
                     // query these matching nodes
-                    repo = repo.and().id('in',edge_ids)
+                    repo = repo.and().id('in', edge_ids);
                 } else {
                     // nothing is returned if no such relationships exist
-                    repo = repo.and().id('eq', 0)
+                    repo = repo.and().id('eq', 0);
                 }
             }
 
@@ -599,7 +634,9 @@ export default class GraphQLSchemaGenerator {
             // iterate through the input object, ignoring reserved properties and adding all others to
             // the query as property queries
             Object.keys(input).forEach((key) => {
-                if ((key === '_record') || (key === '_relationship')) {return};
+                if (key === '_record' || key === '_relationship') {
+                    return;
+                }
 
                 const query = this.breakQuery(String(input[key]));
                 repo = repo.and().property(propertyMap[key].name, query[0], query[1], propertyMap[key].data_type);
@@ -726,7 +763,7 @@ export default class GraphQLSchemaGenerator {
         return fields;
     }
 
-    resolverForRelationships(containerID: string, relationship: MetatypeRelationship):(_: any, {input}: {input: any}) => any {
+    resolverForRelationships(containerID: string, relationship: MetatypeRelationship): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
             let repo = new EdgeRepository();
             repo = repo.where().containerID('eq', containerID).and().relationshipName('eq', relationship.name);
@@ -782,7 +819,9 @@ export default class GraphQLSchemaGenerator {
             // iterate through the input object, ignoring reserved properties
             // and adding all others to the query as property queries
             Object.keys(input).forEach((key) => {
-                if (key === '_record') {return};
+                if (key === '_record') {
+                    return;
+                }
 
                 const query = this.breakQuery(String(input[key]));
                 repo = repo.and().property(propertyMap[key].name, query[0], query[1], propertyMap[key].data_type);
@@ -913,39 +952,39 @@ export default class GraphQLSchemaGenerator {
 
     resolverForGraph(containerID: string): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
-            let repo = new NodeLeafRepository(input.root_node, containerID, input.depth)
+            let repo = new NodeLeafRepository(input.root_node, containerID, input.depth);
 
-            if(input.edge_type){
-                if(input.edge_type.name){
+            if (input.edge_type) {
+                if (input.edge_type.name) {
                     const query = this.breakQuery(input.edge_type.name);
                     repo = repo.and().relationshipName(query[0], query[1]);
-                }else if(input.edge_type.id){
+                } else if (input.edge_type.id) {
                     const query = this.breakQuery(input.edge_type.id);
                     repo = repo.and().relationshipId(query[0], query[1]);
                 }
             }
 
-            if(input.node_type){
-                if(input.node_type.id){
+            if (input.node_type) {
+                if (input.node_type.id) {
                     const query = this.breakQuery(input.node_type.id);
                     repo = repo.and().metatypeId(query[0], query[1]);
-                }else if(input.node_type.name){
+                } else if (input.node_type.name) {
                     const query = this.breakQuery(input.node_type.name);
                     repo = repo.and().metatypeName(query[0], query[1]);
                 }
 
-                if(input.node_type.origin_id){
+                if (input.node_type.origin_id) {
                     const query = this.breakQuery(input.node_type.origin_id);
                     repo = repo.and().originMetatypeId(query[0], query[1]);
-                }else if(input.node_type.origin_name){
+                } else if (input.node_type.origin_name) {
                     const query = this.breakQuery(input.node_type.origin_name);
                     repo = repo.and().originMetatypeName(query[0], query[1]);
                 }
 
-                if(input.node_type.destination_id){
+                if (input.node_type.destination_id) {
                     const query = this.breakQuery(input.node_type.destination_id);
                     repo = repo.and().destinationMetatypeId(query[0], query[1]);
-                }else if(input.node_type.destination_name){
+                } else if (input.node_type.destination_name) {
                     const query = this.breakQuery(input.node_type.destination_name);
                     repo = repo.and().destinationMetatypeName(query[0], query[1]);
                 }
@@ -964,8 +1003,8 @@ export default class GraphQLSchemaGenerator {
                         const nodeLeafOutput: {[key: string]: any}[] = [];
 
                         results.value.forEach((nodeLeaf: any) => {
-                            nodeLeafOutput.push({...nodeLeaf})
-                        })
+                            nodeLeafOutput.push({...nodeLeaf});
+                        });
 
                         resolve(nodeLeafOutput);
                     })
