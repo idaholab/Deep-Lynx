@@ -68,8 +68,8 @@ export default class ReportQueryMapper extends Mapper {
         return super.runStatement(this.addFile(reportID, id, fileID));
     }
 
-    public RemoveFile(reportID: string, id: string, fileID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.removeFile(reportID, id, fileID));
+    public RemoveFile(id: string, fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.removeFile(id, fileID));
     }
 
     public async Delete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
@@ -150,12 +150,12 @@ export default class ReportQueryMapper extends Mapper {
         };
     }
 
-    private removeFile(reportID: string, queryID: string, fileID: string): QueryConfig {
+    private removeFile(queryID: string, fileID: string): QueryConfig {
         return {
             text: `DELETE FROM report_query_files
                     WHERE report_id = $1
-                    AND query_id = $2 AND file_id = $3`,
-            values: [reportID, fileID],
+                    AND query_id = $2`,
+            values: [queryID, fileID],
         }
     }
 }

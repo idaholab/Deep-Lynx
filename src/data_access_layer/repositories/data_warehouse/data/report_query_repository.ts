@@ -76,7 +76,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
             return Promise.resolve(Result.Failure('report query must have id'));
         }
 
-        return this.#mapper.RemoveFile(query.report_id!, query.id, fileID);
+        return this.#mapper.RemoveFile(query.id, fileID);
     }
 
     listFiles(query: ReportQuery): Promise<Result<File[]>> {
