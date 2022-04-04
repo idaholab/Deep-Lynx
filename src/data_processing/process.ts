@@ -20,7 +20,6 @@ import DataSourceRepository from '../data_access_layer/repositories/data_warehou
 // on matching transformation records - this acts on a single record
 export async function ProcessData(staging: DataStaging): Promise<Result<boolean>> {
     const stagingMapper = DataStagingMapper.Instance;
-    const dataSourceRepo = new DataSourceRepository();
     const stagingRepo = new DataStagingRepository();
     const mappingRepo = new TypeMappingRepository();
     const nodeRepository = new NodeRepository();
@@ -187,6 +186,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
         return new Promise((resolve) => resolve(Result.SilentFailure(`error attempting to mark data inserted ${marked.error}`)));
     }
 
+    await stagingRepo.setErrors(staging.id!, []);
     await stagingMapper.completeTransaction(transaction.value);
     return Promise.resolve(Result.Success(true));
 }

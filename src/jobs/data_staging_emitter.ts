@@ -27,7 +27,7 @@ void postgresAdapter.init().then(() => {
 
                     stream.on('data', (data) => {
                         // we're simply putting the id on the queue here
-                        putPromises.push(queue.Put(Config.process_queue, plainToClass(DataStaging, data as object).id));
+                        putPromises.push(queue.Put(Config.process_queue, plainToClass(DataStaging, data as object)));
                     });
 
                     stream.on('end', () => {

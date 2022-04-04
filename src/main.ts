@@ -34,23 +34,33 @@ void postgresAdapter.init().then(() => {
             {
                 name: 'data_source_emitter', // will run data_source_emitter.js - puts data sources on queue to run
                 interval: '1m',
+                timeout: 0,
             },
             {
                 name: 'data_staging_emitter', // will run data_staging_emitter on an infinite loop
                 interval: '1m',
+                timeout: 0,
             },
             {
                 name: 'events_queue', // will run events_queue.js - a never ending processing of the events queue
                 interval: '1m',
+                timeout: 0,
             },
             {
                 name: 'processing_queue', // will run processing_queue.js
                 interval: '1m',
+                timeout: 0,
             },
             {
                 name: 'data_source_queue', // will run data_source_queue.js
                 interval: '1m',
+                timeout: 0,
             },
+            {
+                name: 'staging_clean', // will run staging_clean.js
+                interval: '1 day',
+                timeout: 0,
+            }
         ],
     });
 
