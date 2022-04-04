@@ -1,8 +1,6 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import Node, {NodeLeaf} from '../../../../domain_objects/data_warehouse/data/node';
-import {NodeFile} from '../../../../domain_objects/data_warehouse/data/file';
 import Report from '../../../../domain_objects/data_warehouse/data/report';
 
 const format = require('pg-format');
@@ -40,8 +38,8 @@ export default class ReportMapper extends Mapper {
         return Promise.resolve(Result.Success(r.value[0]));
     }
 
-    public async Update(userID: string, report: Report, transaction?: PoolClient): Promise<Result<Report>> {
-        const r = await super.run(this.updateStatement(userID, report), {
+    public async Update(report: Report, transaction?: PoolClient): Promise<Result<Report>> {
+        const r = await super.run(this.updateStatement(report), {
             transaction,
             resultClass,
         });
@@ -83,7 +81,7 @@ export default class ReportMapper extends Mapper {
         return format(text, values);
     }
 
-    private updateStatement(userID: string, ...reports: Report[]): string {
+    private updateStatement(...reports: Report[]): string {
         const text = `UPDATE reports as r SET
                     container_id = u.container_id::bigint,
                     status = u.status,

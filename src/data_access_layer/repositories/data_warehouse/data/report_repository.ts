@@ -4,11 +4,6 @@ import Result from '../../../../common_classes/result';
 import ReportMapper from '../../../mappers/data_warehouse/data/report_mapper';
 import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
-import MetatypeRepository from '../ontology/metatype_repository';
-import Logger from '../../../../services/logger';
-import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
-import File from '../../../../domain_objects/data_warehouse/data/file';
-import { nodeContext } from '../../../../http_server/middleware';
 
 /*
     ReportRepository contains methods for persisting and retrieving reports
@@ -30,7 +25,7 @@ export default class ReportRepository extends Repository implements RepositoryIn
         return Promise.resolve(report);
     }
 
-    async save(r: Report, user: User, transaction?: PoolClient): Promise<Result<boolean>> {
+    async save(r: Report, user: User): Promise<Result<boolean>> {
         const errors = await r.validationErrors();
         if (errors) {return Promise.resolve(Result.Failure(`report does not pass validation ${errors.join(',')}`));}
 
@@ -41,7 +36,7 @@ export default class ReportRepository extends Repository implements RepositoryIn
 
             Object.assign(original.value, r);
 
-            const updated = await this.#mapper.Update(user.id!, original.value);
+            const updated = await this.#mapper.Update(original.value);
             if (updated.isError) {return Promise.resolve(Result.Pass(updated));}
 
             Object.assign(r, updated.value);
