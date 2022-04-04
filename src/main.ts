@@ -15,6 +15,7 @@ const postgresAdapter = PostgresAdapter.Instance;
 
 void postgresAdapter.init().then(() => {
     void Cache.flush();
+    process.setMaxListeners(100);
 
     // Bree is a job runner that allows us to start and schedule independent processes across threads
     // We use it primarily for data processing and mapping, as those cpu heavy tasks tend to block the
@@ -60,7 +61,7 @@ void postgresAdapter.init().then(() => {
                 name: 'staging_clean', // will run staging_clean.js
                 interval: '1 day',
                 timeout: 0,
-            }
+            },
         ],
     });
 
