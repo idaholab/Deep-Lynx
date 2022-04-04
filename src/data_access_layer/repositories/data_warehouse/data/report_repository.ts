@@ -4,6 +4,9 @@ import Result from '../../../../common_classes/result';
 import ReportMapper from '../../../mappers/data_warehouse/data/report_mapper';
 import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
+import { nodeContext } from '../../../../http_server/middleware';
+import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
+import File from '../../../../domain_objects/data_warehouse/data/file';
 
 /*
     ReportRepository contains methods for persisting and retrieving reports
@@ -14,6 +17,7 @@ import {User} from '../../../../domain_objects/access_management/user';
 */
 export default class ReportRepository extends Repository implements RepositoryInterface<Report> {
     #mapper: ReportMapper = ReportMapper.Instance;
+    #fileMapper: FileMapper = FileMapper.Instance;
 
     constructor() {
         super(ReportMapper.tableName);
@@ -57,6 +61,30 @@ export default class ReportRepository extends Repository implements RepositoryIn
         }
 
         return Promise.resolve(Result.Success(true));
+    }
+
+    addFile(report: Report, fileID: string): Promise<Result<boolean>> {
+        if (!report.id) {
+            return Promise.resolve(Result.Failure('report must have id'));
+        }
+
+        return this.#mapper.AddFile(report.id, fileID);
+    }
+
+    removeFile(report: Report, fileID: string): Promise<Result<boolean>> {
+        if (!report.id) {
+            return Promise.resolve(Result.Failure('report must have id'));
+        }
+
+        return this.#mapper.RemoveFile(report.id, fileID);
+    }
+
+    listFiles(report: Report): Promise<Result<File[]>> {
+        if (!report.id) {
+            return Promise.resolve(Result.Failure('report must have id'));
+        }
+
+        return this.#fileMapper.ListForReport(report.id);
     }
 
     delete(r: Report): Promise<Result<boolean>> {

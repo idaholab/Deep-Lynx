@@ -1,6 +1,6 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import {PoolClient, QueryConfig} from 'pg';
+import {PoolClient, Query, QueryConfig} from 'pg';
 import Report from '../../../../domain_objects/data_warehouse/data/report';
 
 const format = require('pg-format');
@@ -62,6 +62,14 @@ export default class ReportMapper extends Mapper {
             transaction,
             resultClass,
         });
+    }
+
+    public AddFile(id: string, fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.addFile(id, fileID));
+    }
+
+    public RemoveFile(id: string, fileID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.removeFile(id, fileID));
     }
 
     public async Delete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
@@ -132,6 +140,24 @@ export default class ReportMapper extends Mapper {
         return {
             text: `DELETE FROM reports WHERE id = $1`,
             values: [id],
+        };
+    }
+
+    private addFile(reportID: string, fileID: string): QueryConfig {
+        return {
+            text: `INSERT INTO report_query_files
+                    (report_id, query_id, file_id)
+                    VALUES ($1, NULL, $2)`,
+            values: [reportID, fileID],
+        };
+    }
+
+    private removeFile(reportID: string, fileID: string): QueryConfig {
+        return {
+            text: `DELETE FROM report_query_files
+                    WHERE report_id = $1
+                    AND file_id = $2`,
+            values: [reportID, fileID],
         };
     }
 }

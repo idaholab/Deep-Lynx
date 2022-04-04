@@ -5,6 +5,8 @@ import ReportQueryMapper from '../../../mappers/data_warehouse/data/report_query
 import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
 import ReportMapper from '../../../mappers/data_warehouse/data/report_mapper';
+import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
+import File from '../../../../domain_objects/data_warehouse/data/file';
 
 /*
     ReportQueryRepository contains methods for persisting and retrieving report
@@ -15,6 +17,7 @@ import ReportMapper from '../../../mappers/data_warehouse/data/report_mapper';
 */
 export default class ReportQueryRepository extends Repository implements RepositoryInterface<ReportQuery> {
     #mapper: ReportQueryMapper = ReportQueryMapper.Instance;
+    #fileMapper: FileMapper = FileMapper.Instance;
 
     constructor() {
         super(ReportQueryMapper.tableName);
@@ -58,6 +61,30 @@ export default class ReportQueryRepository extends Repository implements Reposit
         }
 
         return Promise.resolve(Result.Success(true));
+    }
+
+    addFile(query: ReportQuery, fileID: string): Promise<Result<boolean>> {
+        if (!query.id) {
+            return Promise.resolve(Result.Failure('report query must have id'));
+        }
+
+        return this.#mapper.AddFile(query.report_id!, query.id, fileID);
+    }
+
+    removeFile(query: ReportQuery, fileID: string): Promise<Result<boolean>> {
+        if (!query.id) {
+            return Promise.resolve(Result.Failure('report query must have id'));
+        }
+
+        return this.#mapper.RemoveFile(query.report_id!, query.id, fileID);
+    }
+
+    listFiles(query: ReportQuery): Promise<Result<File[]>> {
+        if (!query.id) {
+            return Promise.resolve(Result.Failure('report query must have id'));
+        }
+
+        return this.#fileMapper.ListForReportQuery(query.id)
     }
 
     delete(rq: ReportQuery): Promise<Result<boolean>> {
