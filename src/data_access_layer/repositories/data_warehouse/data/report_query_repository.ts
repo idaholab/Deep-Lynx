@@ -26,6 +26,15 @@ export default class ReportQueryRepository extends Repository implements Reposit
         return Promise.resolve(reportQ);
     }
 
+    setStatus(
+        queryID: string,
+        status: 'ready' | 'processing' | 'error' | 'completed',
+        message?: string,
+        transaction?: PoolClient,
+    ): Promise<Result<boolean>> {
+        return this.#mapper.SetStatus(queryID, status, message, transaction);
+    }
+
     async save(rq: ReportQuery): Promise<Result<boolean>> {
         const errors = await rq.validationErrors();
         if (errors) {return Promise.resolve(Result.Failure(`query does not pass validation ${errors.join(',')}`));}
@@ -69,7 +78,7 @@ export default class ReportQueryRepository extends Repository implements Reposit
         return this;
     }
 
-    status(operator: string, value: any) {
+    status(operator: string, value: 'ready' | 'processing' | 'error' | 'completed') {
         super.query('status', operator, value);
         return this;
     }

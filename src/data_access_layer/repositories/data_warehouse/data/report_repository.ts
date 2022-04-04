@@ -25,6 +25,15 @@ export default class ReportRepository extends Repository implements RepositoryIn
         return Promise.resolve(report);
     }
 
+    setStatus(
+        reportID: string,
+        status: 'ready' | 'processing' | 'error' | 'completed',
+        message?: string,
+        transaction?: PoolClient,
+    ): Promise<Result<boolean>> {
+        return this.#mapper.SetStatus(reportID, status, message, transaction);
+    }
+
     async save(r: Report, user: User): Promise<Result<boolean>> {
         const errors = await r.validationErrors();
         if (errors) {return Promise.resolve(Result.Failure(`report does not pass validation ${errors.join(',')}`));}

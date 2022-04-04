@@ -38,6 +38,15 @@ export default class ReportQueryMapper extends Mapper {
         return Promise.resolve(Result.Success(r.value[0]));
     }
 
+    public async SetStatus(
+        queryID: string,
+        status: 'ready' | 'processing' | 'error' | 'completed',
+        message?: string,
+        transaction?: PoolClient,
+    ): Promise<Result<boolean>> {
+        return super.runStatement(this.setStatusStatement(queryID, status, message), {transaction});
+    }
+
     public async Update(query: ReportQuery, transaction?: PoolClient): Promise<Result<ReportQuery>> {
         const r = await super.run(this.updateStatement(query), {
             transaction,
@@ -77,6 +86,13 @@ export default class ReportQueryMapper extends Mapper {
         ]);
 
         return format(text, values);
+    }
+
+    private setStatusStatement(id: string, status: 'ready' | 'processing' | 'error' | 'completed', message?: string): QueryConfig {
+        return {
+            text: `UPDATE report_queries SET status = $2, status_message = $3 WHERE id = $1`,
+            values: [status, message, id]
+        }
     }
 
     private updateStatement(...queries: ReportQuery[]): string {
