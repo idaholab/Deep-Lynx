@@ -62,4 +62,42 @@ export default class ReportRepository extends Repository implements RepositoryIn
 
         return Promise.resolve(Result.Failure(`file must have id`));
     }
+
+    id(operator: string, value: any) {
+        super.query('id', operator, value);
+        return this;
+    }
+
+    containerID(operator: string, value: any) {
+        super.query('container_id', operator, value);
+        return this;
+    }
+
+    status(operator: string, value: any) {
+        super.query('status', operator, value);
+        return this;
+    }
+
+    notifyUsers(operator: string, value: any) {
+        super.query('notify_users', operator, value);
+        return this;
+    }
+
+    async count(transaction?: PoolClient, queryOptions?: QueryOptions): Promise<Result<number>> {
+        const results = await super.count(transaction, queryOptions);
+
+        if (results.isError) {return Promise.resolve(Result.Pass(results));}
+        return Promise.resolve(Result.Success(results.value));
+    }
+
+    async list(queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<Report[]>> {
+        const results = await super.findAll<Report>(queryOptions, {
+            transaction,
+            resultClass: Report
+        });
+
+        if (results.isError) { return Promise.resolve(Result.Pass(results)); }
+
+        return Promise.resolve(Result.Success(results.value));
+    }
 }
