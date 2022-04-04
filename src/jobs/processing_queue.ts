@@ -10,30 +10,18 @@ import {Writable} from 'stream';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 import {ProcessData} from '../data_processing/process';
 import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
+import {plainToClass} from "class-transformer";
+import {DataStaging} from "../domain_objects/data_warehouse/import/import";
 
 void PostgresAdapter.Instance.init().then(() => {
-    const stagingRepo = new DataStagingRepository();
-
     void QueueFactory().then((queue) => {
         const destination = new Writable({
             objectMode: true,
             write(chunk: any, encoding: string, callback: (error?: Error | null) => void) {
-                stagingRepo
-                    .findByID(chunk as string)
-                    .then((staging) => {
-                        if (staging.isError) {
-                            Logger.error(`unable to fetch data staging record ${staging.error?.error}`);
-                            callback();
-                            return;
-                        }
-                        ProcessData(staging.value)
-                            .then(() => {
-                                callback();
-                            })
-                            .catch((e) => {
-                                Logger.error(`unable to process event from queue ${e}`);
-                                callback();
-                            });
+                const stagingRecord = plainToClass(DataStaging, chunk as object)
+                ProcessData(stagingRecord)
+                    .then(() => {
+                        callback();
                     })
                     .catch((e) => {
                         Logger.error(`unable to process event from queue ${e}`);

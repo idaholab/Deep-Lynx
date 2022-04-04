@@ -128,6 +128,18 @@ export default class DataStagingMapper extends Mapper {
         });
     }
 
+    // this runs a prepared statement which removes all data staging records who's created_at date is older than its
+    // attached data source's data retention policy.
+    public DeleteOlderThanRetention(): Promise<Result<boolean>> {
+        return super.runAsTransaction(this.deleteDataOlderThanRetention());
+    }
+
+    // we must also vacuum as part of the data retention delete, but you can't run vacuum as part of a transaction
+    // so we pull it out into its own statement
+    public Vacuum(): Promise<Result<boolean>> {
+        return super.runStatement(this.vacuum());
+    }
+
     private createStatement(...data: DataStaging[]): string {
         const text = `INSERT INTO data_staging(
                          data_source_id,
@@ -146,7 +158,7 @@ export default class DataStagingMapper extends Mapper {
                          data = u.data::jsonb,
                          shape_hash = u.shape_hash::text
                         FROM(VALUES %L) AS u(id,data_source_id, import_id, data, shape_hash)
-                        WHERE u.id::bigint = s.id RETURNING s.*`;
+                        WHERE u.id::uuid = s.id RETURNING s.*`;
         const values = data.map((d) => [d.id, d.data_source_id, d.import_id, JSON.stringify(d.data), d.shape_hash]);
 
         return format(text, values);
@@ -164,10 +176,11 @@ export default class DataStagingMapper extends Mapper {
 
     private listUninsertedActiveMappingStatement(importID: string, offset: number, limit: number): QueryConfig {
         return {
-            text: `SELECT data_staging.*
+            text: `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config
                    FROM data_staging
                    LEFT JOIN type_mappings ON type_mappings.shape_hash = data_staging.shape_hash
-                                                AND type_mappings.data_source_id = data_staging.data_source_id    
+                                                AND type_mappings.data_source_id = data_staging.data_source_id
+                   LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
                    WHERE import_id = $1
                    AND inserted_at IS NULL
                    AND type_mappings.active IS TRUE
@@ -260,15 +273,34 @@ export default class DataStagingMapper extends Mapper {
     }
 
     public listImportUninsertedActiveMappingStatement(): string {
-        return `SELECT data_staging.*
+        return `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config 
                    FROM data_staging
                             LEFT JOIN type_mappings ON type_mappings.shape_hash = data_staging.shape_hash
                                                          AND type_mappings.data_source_id = data_staging.data_source_id
+                            LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
                    WHERE (data_staging.inserted_at IS NULL
                    AND type_mappings.active IS TRUE
                    AND EXISTS 
                         (SELECT * from type_mapping_transformations 
                             WHERE type_mapping_transformations.type_mapping_id = type_mappings.id))
                    OR data_staging.shape_hash IS NULL`;
+    }
+
+    // this deletes all data staging records older than the attached data sources data retention period, this will
+    // need to be updated with drop_chunks once we switch to timescale db - records without a data retention policy
+    // config are treated as if they had choosen indefinite
+    public deleteDataOlderThanRetention(): string {
+        return `DELETE FROM data_staging 
+                    WHERE id IN(
+                        SELECT data_staging.id FROM data_staging 
+                            LEFT JOIN data_sources ds ON ds.id = data_staging.data_source_id 
+                        WHERE data_staging.created_at < NOW() - ((ds.config->>'data_retention_days') || ' days')::interval 
+                        AND (ds.config->>'data_retention_days')::int > 0 
+                        AND (ds.config->>'data_retention_days')::int IS NOT NULL)`;
+    }
+
+    // we have to vacuum manually if we're cleaning in order to free up space taken by dead tuples
+    public vacuum(): string {
+        return `VACUUM ${DataStagingMapper.tableName}`;
     }
 }

@@ -574,6 +574,8 @@ export default {
                 structure: 'Structure',
                 cable: 'Cable',
             },
+            dataRetentionDays: 'Raw Data Retention Policy (days)',
+            dataRetentionHelp: 'This controls how many days Deep Lynx will retain the raw data you import. A value of 0 will retain no raw data after processing and a value of -1 will retain raw data indefinitely.'
         },
         deleteDataSource: {
             deleteDataSource: 'Delete Data Source',

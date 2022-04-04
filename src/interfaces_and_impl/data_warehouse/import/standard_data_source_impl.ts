@@ -12,6 +12,7 @@ import {User} from '../../../domain_objects/access_management/user';
 import {PassThrough, Readable} from 'stream';
 import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
 import {DataSource} from './data_source';
+import {QueueFactory} from '../../../services/queue/queue';
 const JSONStream = require('JSONStream');
 
 /*
@@ -67,13 +68,15 @@ export default class StandardDataSourceImpl implements DataSource {
         if (options && options.importID) {
             importID = options.importID;
         } else {
+            // we're not making the import as part of the transaction because even if we error, we want to record the
+            // problem - and if we have 0 data retention on the source we need the import created prior to loading up
+            // the data as messages for the process queue
             const newImport = await ImportMapper.Instance.CreateImport(
                 user.id!,
                 new Import({
                     data_source_id: this.DataSourceRecord.id,
                     reference: 'manual upload',
                 }),
-                transaction,
             );
 
             if (newImport.isError) {
@@ -90,22 +93,69 @@ export default class StandardDataSourceImpl implements DataSource {
         if (retrievedImport.isError) {
             if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
             Logger.error(`unable to retrieve and lock import ${retrievedImport.error}`);
-            return Promise.resolve(Result.Failure(`unable to retrieve and lock import ${retrievedImport.error?.error}`));
+            return Promise.resolve(Result.Failure(`unable to retrieve ${retrievedImport.error?.error}`));
         }
 
-        // basically a buffer, once it's full we'll write these records to the database and wipe to start again
+        // a buffer, once it's full we'll write these records to the database and wipe to start again
         let recordBuffer: DataStaging[] = [];
 
-        // let's us wait for all save operations to complete - we can still fail fast on a bad import since all the
-        // save operations will share the same database transaction under the hood
+        // lets us wait for all save operations to complete - we can still fail fast on a bad import since all the
+        // save operations will share the same database transaction under the hood - that is if we're saving and not
+        // emitting the data straight to the queue
         const saveOperations: Promise<Result<boolean>>[] = [];
 
         // our PassThrough stream is what actually processes the data, it's the last step in our eventual pipe
         const pass = new PassThrough({objectMode: true});
 
-        pass.on('data', (data) => {
-            recordBuffer.push(
-                new DataStaging({
+        // default to storing the raw data
+        if (
+            !this.DataSourceRecord.config?.data_retention_days ||
+            (this.DataSourceRecord.config?.data_retention_days && this.DataSourceRecord.config.data_retention_days !== 0)
+        ) {
+            pass.on('data', (data) => {
+                recordBuffer.push(
+                    new DataStaging({
+                        data_source_id: this.DataSourceRecord!.id!,
+                        import_id: retrievedImport.value.id!,
+                        data,
+                        shape_hash:
+                            options && options.generateShapeHash
+                                ? TypeMapping.objectToShapeHash(data, {
+                                      value_nodes: this.DataSourceRecord?.config?.value_nodes,
+                                      stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
+                                  })
+                                : undefined,
+                    }),
+                );
+
+                // if we've reached the process record limit, insert into the database and wipe the records array
+                // make sure to COPY the array into bulkSave function so that we can push it into the array of promises
+                // and not modify the underlying array on save, allowing us to move asynchronously,
+                if (recordBuffer.length >= Config.data_source_receive_buffer) {
+                    // if we are returning
+                    // the staging records, don't wipe the buffer just keep adding
+                    if (!options || !options.returnStagingRecords) {
+                        const toSave = [...recordBuffer];
+                        recordBuffer = [];
+
+                        saveOperations.push(this.#stagingRepo.bulkSave(toSave, transaction));
+                    }
+                }
+            });
+
+            // catch any records remaining in the buffer
+            pass.on('end', () => {
+                saveOperations.push(this.#stagingRepo.bulkSave(recordBuffer, transaction));
+            });
+        } else {
+            // if data retention isn't configured, or it is 0 - we do not retain the data permanently
+            // instead of our pipe saving data staging records to the database and having them emitted
+            // later we immediately put the full message on the queue for processing - we also only log
+            // errors that we encounter when putting on the queue, we don't fail outright
+            const queue = await QueueFactory();
+
+            pass.on('data', (data) => {
+                const staging = new DataStaging({
                     data_source_id: this.DataSourceRecord!.id!,
                     import_id: retrievedImport.value.id!,
                     data,
@@ -116,28 +166,11 @@ export default class StandardDataSourceImpl implements DataSource {
                                   stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
                               })
                             : undefined,
-                }),
-            );
+                });
 
-            // if we've reached the process record limit, insert into the database and wipe the records array
-            // make sure to COPY the array into bulkSave function so that we can push it into the array of promises
-            // and not modify the underlying array on save, allowing us to move asynchronously,
-            if (recordBuffer.length >= Config.data_source_receive_buffer) {
-                // if we are returning
-                // the staging records, don't wipe the buffer just keep adding
-                if (!options || !options.returnStagingRecords) {
-                    const toSave = [...recordBuffer];
-                    recordBuffer = [];
-
-                    saveOperations.push(this.#stagingRepo.bulkSave(toSave, transaction));
-                }
-            }
-        });
-
-        // catch any records remaining in the buffer
-        pass.on('end', () => {
-            saveOperations.push(this.#stagingRepo.bulkSave(recordBuffer, transaction));
-        });
+                queue.Put(Config.process_queue, staging).catch((err) => Logger.error(`unable to put data staging record on the queue ${err}`));
+            });
+        }
 
         // the JSONStream pipe is simple, parsing a single array of json objects into parts
         const fromJSON = JSONStream.parse('*');
