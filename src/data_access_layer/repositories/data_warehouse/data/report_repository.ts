@@ -110,6 +110,11 @@ export default class ReportRepository extends Repository implements RepositoryIn
         return this;
     }
 
+    statusMessage(operator: string, value: any) {
+        super.query('status_message', operator, value);
+        return this;
+    }
+
     notifyUsers(operator: string, value: any) {
         super.query('notify_users', operator, value);
         return this;
