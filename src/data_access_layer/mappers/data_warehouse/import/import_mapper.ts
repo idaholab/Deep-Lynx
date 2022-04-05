@@ -149,7 +149,7 @@ export default class ImportMapper extends Mapper {
             const stream = client.query(new QueryStream(this.listStagingForImportStreaming(importID)));
 
             stream.on('data', (data) => {
-                void queue.Put(Config.process_queue, plainToClass(DataStaging, data as object).id);
+                void queue.Put(Config.process_queue, plainToClass(DataStaging, data as object));
             });
 
             stream.on('end', () => done());
