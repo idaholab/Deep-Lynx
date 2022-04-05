@@ -13,6 +13,7 @@ import {plainToClass} from 'class-transformer';
 import DataStagingMapper from '../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
 import {DataStaging} from '../domain_objects/data_warehouse/import/import';
 const devnull = require('dev-null');
+process.setMaxListeners(0);
 
 const postgresAdapter = PostgresAdapter.Instance;
 const dataStagingMapper = DataStagingMapper.Instance;

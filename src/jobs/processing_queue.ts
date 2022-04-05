@@ -10,15 +10,17 @@ import {Writable} from 'stream';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 import {ProcessData} from '../data_processing/process';
 import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
-import {plainToClass} from "class-transformer";
-import {DataStaging} from "../domain_objects/data_warehouse/import/import";
+import {plainToClass} from 'class-transformer';
+import {DataStaging} from '../domain_objects/data_warehouse/import/import';
+
+process.setMaxListeners(0);
 
 void PostgresAdapter.Instance.init().then(() => {
     void QueueFactory().then((queue) => {
         const destination = new Writable({
             objectMode: true,
             write(chunk: any, encoding: string, callback: (error?: Error | null) => void) {
-                const stagingRecord = plainToClass(DataStaging, chunk as object)
+                const stagingRecord = plainToClass(DataStaging, chunk as object);
                 ProcessData(stagingRecord)
                     .then(() => {
                         callback();
