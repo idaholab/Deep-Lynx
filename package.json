@@ -25,7 +25,7 @@
         "build:dev": "npm run build:admin-web-app && tsc && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"src/http_server/assets/**\" ./dist",
         "build:dev-with-web": "npm run build:dev",
         "test": "cross-env TS_NODE_FILES=true npm run test:raw",
-        "test:raw": " cd src/tests && cross-env-shell nyc mocha --exit -r ts-node/register -r dotenv/config --recursive \"**/*.spec.ts\" \"**/**/*.spec.ts\" \"**/**/**/*.spec.ts\" --prof ",
+        "test:raw": " cd src/tests && cross-env-shell nyc mocha --exit -r ts-node/register -r dotenv/config --recursive \"**/report*/*.spec.ts\" \"**/**/report*/*.spec.ts\" \"**/**/**/report*/*.spec.ts\" --prof ",
         "prepare": "husky install",
         "build:admin-web-app": "tsc && node -r dotenv/config ./dist/build_scripts/build_admin_web_app.js"
     },
