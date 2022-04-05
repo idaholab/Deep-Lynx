@@ -9,7 +9,6 @@ import Logger from '../services/logger';
 import {Writable} from 'stream';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 import {ProcessData} from '../data_processing/process';
-import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import {plainToClass} from 'class-transformer';
 import {DataStaging} from '../domain_objects/data_warehouse/import/import';
 
@@ -26,7 +25,7 @@ void PostgresAdapter.Instance.init().then(() => {
                         callback();
                     })
                     .catch((e) => {
-                        Logger.error(`unable to process event from queue ${e}`);
+                        Logger.error(`unable to process data from queue ${e}`);
                         callback();
                     });
 
