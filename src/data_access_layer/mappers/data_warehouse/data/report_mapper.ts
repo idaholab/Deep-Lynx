@@ -109,8 +109,8 @@ export default class ReportMapper extends Mapper {
         const text = `UPDATE reports as r SET
                     container_id = u.container_id::bigint,
                     status = u.status,
-                    status_message = u.status_message
-                    notify_users = u.notify_users
+                    status_message = u.status_message,
+                    notify_users = u.notify_users::boolean
                     FROM(VALUES %L) AS u(
                     id,
                     container_id,
