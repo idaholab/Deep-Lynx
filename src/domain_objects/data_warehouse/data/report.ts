@@ -17,8 +17,7 @@ export default class Report extends BaseDomainClass{
     container_id?: string;
 
     @IsString()
-    @IsIn(['error', 'ready', 'processing', 'completed'])
-    status?: string;
+    status: 'ready' | 'processing' | 'error' | 'completed' = 'ready';
 
     @IsNotEmpty()
     @IsString()
@@ -29,7 +28,6 @@ export default class Report extends BaseDomainClass{
     
     constructor(input: {
         container_id?: Container | string;
-        status: string;
         status_message: string;
         notify_users: boolean;
         created_at?: Date;
@@ -37,7 +35,6 @@ export default class Report extends BaseDomainClass{
         super();
         if (input) {
             input.container_id instanceof Container ? (this.container_id = input.container_id.id) : (this.container_id = input.container_id);
-            if (input.status) {this.status = input.status};
             if (input.status_message) {this.status_message = input.status_message};
             if (input.notify_users) {this.notify_users = input.notify_users};
             if (input.created_at) {this.created_at = input.created_at};
