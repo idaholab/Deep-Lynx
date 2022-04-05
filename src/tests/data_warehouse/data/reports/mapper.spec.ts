@@ -202,7 +202,7 @@ describe('A Report Mapper', async () => {
         return Promise.resolve();
     });
 
-    it('can add a file to the report', async () => {
+    it('can add/remove a file to/from a report', async () => {
         const mapper = ReportMapper.Instance;
 
         const report = await mapper.Create(
@@ -220,30 +220,6 @@ describe('A Report Mapper', async () => {
         const fileAdded = await mapper.AddFile(report.value.id!, fileID);
         expect(fileAdded.isError).false;
         expect(fileAdded.value).true;
-
-        const fileRemoved = await mapper.RemoveFile(report.value.id!, fileID);
-        expect(fileRemoved.isError).false;
-
-        return mapper.Delete(report.value.id!);
-    });
-
-    it('can remove a file from the report', async () => {
-        const mapper = ReportMapper.Instance;
-
-        const report = await mapper.Create(
-            'test suite',
-            new Report({
-                container_id: containerID,
-                status_message: faker.random.alphaNumeric(),
-                notify_users: true
-            }),
-        );
-
-        expect(report.isError).false;
-        expect(report.value).not.empty;
-
-        const fileAdded = await mapper.AddFile(report.value.id!, fileID);
-        expect(fileAdded.isError).false;
 
         const fileRemoved = await mapper.RemoveFile(report.value.id!, fileID);
         expect(fileRemoved.isError).false;
