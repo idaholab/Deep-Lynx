@@ -49,13 +49,15 @@ void postgresAdapter.init().then(() => {
             },
             {
                 name: 'processing_queue', // will run processing_queue.js
-                interval: '1m',
+                interval: '5m',
                 timeout: 0,
+                closeWorkerAfterMs: 300000,
             },
             {
                 name: 'data_source_queue', // will run data_source_queue.js
-                interval: '1m',
+                interval: '5m',
                 timeout: 0,
+                closeWorkerAfterMs: 300000,
             },
             {
                 name: 'staging_clean', // will run staging_clean.js
