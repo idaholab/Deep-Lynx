@@ -129,7 +129,6 @@ export default class NodeMapper extends Mapper {
                   ON CONFLICT(created_at, id) DO UPDATE SET
                       properties = EXCLUDED.properties,
                       metadata = EXCLUDED.metadata,
-                      deleted_at = NULL
                     WHERE EXCLUDED.id = nodes.id 
                    RETURNING *`;
 
