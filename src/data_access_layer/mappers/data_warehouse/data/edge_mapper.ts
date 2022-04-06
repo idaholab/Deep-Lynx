@@ -75,8 +75,7 @@ export default class EdgeMapper extends Mapper {
         });
     }
 
-    public RetrieveByRelationship(
-        origin: string, relationship: string, destination: string, transaction?: PoolClient): Promise<Result<Edge[]>> {
+    public RetrieveByRelationship(origin: string, relationship: string, destination: string, transaction?: PoolClient): Promise<Result<Edge[]>> {
         return super.rows<Edge>(this.retrieveByRelationshipStatement(origin, relationship, destination), {
             transaction,
             resultClass,
@@ -129,10 +128,12 @@ export default class EdgeMapper extends Mapper {
             data_staging_id,
             metadata,
             created_by,
-            modified_by) VALUES %L 
+            modified_by,
+            created_at) VALUES %L 
             ON CONFLICT(created_at, id) DO UPDATE SET
                 properties = EXCLUDED.properties,
-                metadata = EXCLUDED.metadata
+                metadata = EXCLUDED.metadata,
+                deleted_at = NULL
             WHERE EXCLUDED.id = edges.id
             RETURNING *`;
 
@@ -155,6 +156,7 @@ export default class EdgeMapper extends Mapper {
             JSON.stringify(e.metadata),
             userID,
             userID,
+            e.created_at ? e.created_at : new Date(),
         ]);
 
         return format(text, values);
@@ -225,8 +227,8 @@ export default class EdgeMapper extends Mapper {
             WHERE origin.name = $1
             AND relationship.name = $2
             AND destination.name = $3`,
-            values: [origin, relationship, destination]
-        }
+            values: [origin, relationship, destination],
+        };
     }
 
     private deleteStatement(edgeID: string): QueryConfig {

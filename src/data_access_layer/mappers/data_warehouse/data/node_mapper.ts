@@ -124,10 +124,12 @@ export default class NodeMapper extends Mapper {
                   data_staging_id,
                   metadata,
                   created_by,
-                  modified_by) VALUES %L
+                  modified_by,
+                  created_at) VALUES %L
                   ON CONFLICT(created_at, id) DO UPDATE SET
                       properties = EXCLUDED.properties,
-                      metadata = EXCLUDED.metadata
+                      metadata = EXCLUDED.metadata,
+                      deleted_at = NULL
                     WHERE EXCLUDED.id = nodes.id 
                    RETURNING *`;
 
@@ -143,6 +145,7 @@ export default class NodeMapper extends Mapper {
             JSON.stringify(n.metadata),
             userID,
             userID,
+            n.created_at ? n.created_at : new Date(),
         ]);
 
         return format(text, values);
