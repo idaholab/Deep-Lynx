@@ -132,7 +132,7 @@ export default class EdgeMapper extends Mapper {
             created_at) VALUES %L 
             ON CONFLICT(created_at, id) DO UPDATE SET
                 properties = EXCLUDED.properties,
-                metadata = EXCLUDED.metadata,
+                metadata = EXCLUDED.metadata
             WHERE EXCLUDED.id = edges.id
             RETURNING *`;
 
