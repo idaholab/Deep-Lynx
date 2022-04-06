@@ -39,8 +39,14 @@
           </v-col>
         </template>
         <template v-slot:item.percentage_processed="{ item }">
-          {{ (item.records_inserted / item.total_records) * 100 }}%
+          {{ (Math.round((item.records_inserted / item.total_records) * 100) * 100 / 100).toFixed(2) }}%
         </template>
+
+        <template v-slot:item.status="{ item }">
+          <div v-if="item.records_inserted === item.total_records">{{$t('dataImports.completed')}}</div>
+          <div v-else>{{item.status}}</div>
+        </template>
+
         <template v-slot:item.actions="{ item }">
           <v-icon
               small

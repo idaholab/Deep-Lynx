@@ -13,6 +13,7 @@ import {plainToClass} from 'class-transformer';
 import DataStagingMapper from '../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
 import {DataStaging} from '../domain_objects/data_warehouse/import/import';
 const devnull = require('dev-null');
+process.setMaxListeners(0);
 
 const postgresAdapter = PostgresAdapter.Instance;
 const dataStagingMapper = DataStagingMapper.Instance;
@@ -27,7 +28,7 @@ void postgresAdapter.init().then(() => {
 
                     stream.on('data', (data) => {
                         // we're simply putting the id on the queue here
-                        putPromises.push(queue.Put(Config.process_queue, plainToClass(DataStaging, data as object).id));
+                        putPromises.push(queue.Put(Config.process_queue, plainToClass(DataStaging, data as object)));
                     });
 
                     stream.on('end', () => {

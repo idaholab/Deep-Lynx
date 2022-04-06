@@ -308,6 +308,14 @@
 
 
                 <div v-if="newDataSource.adapter_type">
+                  <small>{{$t('createDataSource.dataRetentionHelp')}}</small>
+                  <v-text-field
+                    type="number"
+                    v-model="dataRetentionDays"
+                    :min="-1"
+                  >
+                    <template v-slot:label>{{$t('createDataSource.dataRetentionDays')}} </template>
+                  </v-text-field>
                   <v-checkbox
                       v-model="newDataSource.active"
                       :label="$t('createDataSource.enable')"
@@ -386,6 +394,7 @@ export default class CreateDataSourceDialog extends Vue {
   authMethods = ["Basic", "Token"]
   stopNodes = []
   valueNodes = []
+  dataRetentionDays = 30
 
   newDataSource: DataSourceT = {
     name: "",
@@ -462,6 +471,7 @@ export default class CreateDataSourceDialog extends Vue {
 
     if(this.stopNodes.length > 0) this.newDataSource.config.stop_nodes = this.stopNodes
     if(this.valueNodes.length > 0) this.newDataSource.config.value_nodes = this.valueNodes
+    this.newDataSource.config.data_retention_days = parseInt(String(this.dataRetentionDays), 10)
 
     this.$client.createDataSource(this.containerID, this.newDataSource)
         .then((dataSource)=> {

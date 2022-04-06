@@ -171,6 +171,9 @@ export default class EdgeRepository extends Repository implements RepositoryInte
 
                                             edge.properties = transformed.value;
 
+                                            resolve(Result.Success(true));
+
+                                            /* TODO: This needs completely rethought as we can possibly create the edge before the nodes
                                             this.validateRelationship(edge, transaction)
                                                 .then((valid) => {
                                                     if (valid.isError) {
@@ -181,6 +184,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                                                     resolve(Result.Success(true));
                                                 })
                                                 .catch((error) => resolve(Result.Failure(`unable to validate relationships for edge ${error}`)));
+                                             */
                                         })
                                         .catch((error) => resolve(Result.Failure(`unable to validate properties for edge ${error}`)));
                                 })

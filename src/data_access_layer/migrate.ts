@@ -104,6 +104,12 @@ class Migrator {
             // for each file create a new transaction and run each sql statement
             // contained within
             for (const file of files) {
+                // if this is a timescaledb migration, check first to see if we're in a timescale enabled environment
+                if(file.includes('[ts]') && !Config.timescaledb_enabled) {
+                    Logger.warn(`Skipping ${file}, TimescaleDB is not enabled`)
+                    continue;
+                }
+
                 await this.pool.query('BEGIN');
 
                 try {
