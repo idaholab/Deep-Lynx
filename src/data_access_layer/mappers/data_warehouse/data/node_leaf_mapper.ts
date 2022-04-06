@@ -1,7 +1,7 @@
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import Result from '../../../../common_classes/result';
-import {NodeLeaf} from '../../../../domain_objects/data_warehouse/data/node';
+import NodeLeaf from '../../../../domain_objects/data_warehouse/data/node_leaf';
 
 const format = require('pg-format');
 const resultClass = NodeLeaf;

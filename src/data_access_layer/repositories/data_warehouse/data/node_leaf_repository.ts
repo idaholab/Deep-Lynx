@@ -1,5 +1,5 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import {NodeLeaf} from '../../../../domain_objects/data_warehouse/data/node';
+import NodeLeaf from '../../../../domain_objects/data_warehouse/data/node_leaf';
 import Result from '../../../../common_classes/result';
 import NodeLeafMapper from '../../../mappers/data_warehouse/data/node_leaf_mapper';
 import {PoolClient} from 'pg';
@@ -19,44 +19,79 @@ export default class NodeLeafRepository extends Repository {
         // in order to add filters to the base node leaf query we must set it
         // as the raw query here
         this._rawQuery = [
-            `WITH RECURSIVE related (container_id, origin_id, origin_metatype_id, origin_data_source_id, origin_import_data_id, origin_data_staging_id, 
-                origin_type_mapping_transformation_id, origin_original_data_id, origin_properties, origin_metadata, origin_created_at, origin_modified_at, 
-                origin_deleted_at, origin_created_by, origin_modified_by, origin_metatype_name, edge_id, edge_relationship_pair_id, edge_data_source_id, 
-                edge_import_data_id, edge_data_staging_id, edge_type_mapping_transformation_id, edge_metadata, edge_created_at, edge_modified_at, 
-                edge_deleted_at, edge_properties, edge_modified_by, edge_created_by, edge_relationship_name, edge_relationship_id, destination_id, 
-                destination_metatype_id, destination_data_source_id, destination_import_data_id, destination_data_staging_id, 
-                destination_type_mapping_transformation_id, destination_original_data_id, destination_properties, destination_metadata, 
-                destination_created_at, destination_modified_at, destination_deleted_at, destination_created_by, destination_modified_by, 
-                destination_metatype_name, depth) AS (
-            SELECT o.container_id, o.id, o.metatype_id, o.data_source_id, o.import_data_id, o.data_staging_id, o.type_mapping_transformation_id, 
-            o.original_data_id, o.properties, o.metadata, o.created_at, o.modified_at, o.deleted_at, o.created_by, o.modified_by, o.metatype_name, e.id, 
-            e.relationship_pair_id, e.data_source_id, e.import_data_id, e.data_staging_id, e.type_mapping_transformation_id, e.metadata, e.created_at, 
-            e.modified_at, e.deleted_at, e.properties, e.modified_by, e.created_by, e.metatype_relationship_name, e.relationship_id, d.id, d.metatype_id, 
-            d.data_source_id, d.import_data_id, d.data_staging_id, d.type_mapping_transformation_id, d.original_data_id, d.properties, d.metadata, 
-            d.created_at, d.modified_at, d.deleted_at, d.created_by, d.modified_by, d.metatype_name, 1
-            FROM current_nodes o
-                JOIN current_edges e
-                    ON o.id IN (e.origin_id, e.destination_id)
-                JOIN current_nodes d
-                    ON d.id IN (e.origin_id, e.destination_id)
-                    AND d.id != o.id
-            WHERE o.id = $1
-            UNION ALL
-            SELECT r.container_id, r.destination_id, r.destination_metatype_id, r.destination_data_source_id, r.destination_import_data_id, 
-            r.destination_data_staging_id, r.destination_type_mapping_transformation_id, r.destination_original_data_id, r.destination_properties, 
-            r.destination_metadata, r.destination_created_at, r.destination_modified_at, r.destination_deleted_at, r.destination_created_by, 
-            r.destination_modified_by, r.destination_metatype_name, e.id, e.relationship_pair_id, e.data_source_id, e.import_data_id, e.data_staging_id, 
-            e.type_mapping_transformation_id, e.metadata, e.created_at, e.modified_at, e.deleted_at, e.properties, e.modified_by, e.created_by, 
-            e.metatype_relationship_name, e.relationship_id, d.id, d.metatype_id, d.data_source_id, d.import_data_id, d.data_staging_id, 
-            d.type_mapping_transformation_id, d.original_data_id, d.properties, d.metadata, d.created_at, d.modified_at, d.deleted_at, d.created_by, 
-            d.modified_by, d.metatype_name, r.depth+1
-            FROM related r
-                JOIN current_edges e
-                    ON r.destination_id IN (e.origin_id, e.destination_id)
-                JOIN current_nodes d
-                    ON d.id IN (e.origin_id, e.destination_id)
-                    AND d.id != r.origin_id AND d.id != r.destination_id
-        ) SELECT * FROM related WHERE container_id = $2 AND depth <= $3`,
+            `SELECT * FROM
+            (WITH RECURSIVE search_graph(
+                origin_id, origin_metatype_id, origin_metatype_name, origin_properties, origin_data_source,
+                origin_metadata, origin_created_by, origin_created_at, origin_modified_by, origin_modified_at,
+                edge_id, relationship_name, edge_properties, relationship_pair_id, relationship_id,
+                edge_data_source, edge_metadata, edge_created_by, edge_created_at, edge_modified_by,
+                edge_modified_at, destination_id, destination_metatype_id, destination_metatype_name,
+                destination_properties, destination_data_source, destination_metadata, destination_created_by,
+                destination_created_at, destination_modified_by, destination_modified_at, depth, path
+            ) AS (
+                SELECT n1.id, n1.metatype_id, n1.metatype_name, n1.properties, n1.data_source_id,
+                    n1.metadata, n1.created_by, n1.created_at, n1.modified_by, n1.modified_at,
+                    g.id, g.metatype_relationship_name, g.properties, g.relationship_pair_id, g.relationship_id,
+                    g.data_source_id, g.metadata, g.created_by, g.created_at, g.modified_at, g.modified_by,
+                    n2.id, n2.metatype_id, n2.metatype_name, n2.properties, n2.data_source_id,
+                    n2.metadata, n2.created_by, n2.created_at, n2.modified_by, n2.modified_at,
+                    1 as depth, ARRAY[g.origin_id] AS path
+                FROM current_edges g
+                 LEFT JOIN current_nodes n1 ON n1.id IN (g.origin_id, g.destination_id)
+                 LEFT JOIN current_nodes n2 ON n2.id IN (g.origin_id, g.destination_id) AND n2.id != n1.id
+                WHERE n1.id = $1 AND g.container_id = $2
+            UNION
+                SELECT sg.destination_id, sg.destination_metatype_id, sg.destination_metatype_name,
+                    sg.destination_properties, sg.destination_data_source, sg.destination_metadata,
+                    sg.destination_created_by, sg.destination_created_at, sg.destination_modified_by,
+                    sg.destination_created_at, g.id, g.metatype_relationship_name, g.properties,
+                    g.relationship_pair_id, g.relationship_id, g.data_source_id, g.metadata, g.created_by,
+                    g.created_at, g.modified_at, g.modified_by, n2.id, n2.metatype_id, n2.metatype_name,
+                    n2.properties, n2.data_source_id, n2.metadata, n2.created_by, n2.created_at, n2.modified_by,
+                    n2.modified_at, sg.depth + 1, path || sg.destination_id
+                FROM current_edges g INNER JOIN search_graph sg
+                ON sg.destination_id IN (g.origin_id, g.destination_id) AND (sg.destination_id <> ALL(sg.path))
+                 LEFT JOIN current_nodes n2 ON n2.id IN (g.origin_id, g.destination_id)
+                    AND n2.id NOT IN (sg.origin_id, sg.destination_id)
+                 WHERE g.container_id = $2 AND sg.depth <= $3
+            ) SELECT * FROM search_graph WHERE destination_id IS NOT NULL AND origin_id IS NOT NULL) origins
+            UNION
+            (WITH RECURSIVE search_graph(
+                origin_id, origin_metatype_id, origin_metatype_name, origin_properties, origin_data_source,
+                origin_metadata, origin_created_by, origin_created_at, origin_modified_by, origin_modified_at,
+                edge_id, relationship_name, edge_properties, relationship_pair_id, relationship_id,
+                edge_data_source, edge_metadata, edge_created_by, edge_created_at, edge_modified_by,
+                edge_modified_at, destination_id, destination_metatype_id, destination_metatype_name,
+                destination_properties, destination_data_source, destination_metadata, destination_created_by,
+                destination_created_at, destination_modified_by, destination_modified_at, depth, path
+            ) AS (
+                SELECT n2.id, n2.metatype_id, n2.metatype_name, n2.properties, n2.data_source_id,
+                    n2.metadata, n2.created_by, n2.created_at, n2.modified_by, n2.modified_at,
+                    g.id, g.metatype_relationship_name, g.properties, g.relationship_pair_id, g.relationship_id,
+                    g.data_source_id, g.metadata, g.created_by, g.created_at, g.modified_at, g.modified_by,
+                    n1.id, n1.metatype_id, n1.metatype_name, n1.properties, n1.data_source_id,
+                    n1.metadata, n1.created_by, n1.created_at, n1.modified_by, n1.modified_at,
+                    1 as depth, ARRAY[g.destination_id] AS path
+                FROM current_edges g
+                 LEFT JOIN current_nodes n1 ON n1.id IN (g.origin_id, g.destination_id)
+                 LEFT JOIN current_nodes n2 ON n2.id IN (g.origin_id, g.destination_id) AND n2.id != n1.id
+                WHERE n2.id = $1 AND g.container_id = $2
+            UNION
+                SELECT sg.destination_id, sg.destination_metatype_id, sg.destination_metatype_name,
+                    sg.destination_properties, sg.destination_data_source, sg.destination_metadata,
+                    sg.destination_created_by, sg.destination_created_at, sg.destination_modified_by,
+                    sg.destination_created_at, g.id, g.metatype_relationship_name, g.properties,
+                    g.relationship_pair_id, g.relationship_id, g.data_source_id, g.metadata, g.created_by,
+                    g.created_at, g.modified_at, g.modified_by, n2.id, n2.metatype_id, n2.metatype_name,
+                    n2.properties, n2.data_source_id, n2.metadata, n2.created_by, n2.created_at, n2.modified_by,
+                    n2.modified_at, sg.depth + 1, path || sg.destination_id
+                FROM current_edges g INNER JOIN search_graph sg
+                ON sg.destination_id IN (g.origin_id, g.destination_id) AND (sg.destination_id <> ALL(sg.path))
+                 LEFT JOIN current_nodes n2 ON n2.id IN (g.origin_id, g.destination_id)
+                    AND n2.id NOT IN (sg.origin_id, sg.destination_id)
+                 WHERE g.container_id = $2 AND sg.depth <= $3
+            ) SELECT * FROM search_graph WHERE destination_id IS NOT NULL AND origin_id IS NOT NULL)
+            ORDER BY depth`,
         ];
 
         this._values = [id, container_id, depth];
@@ -128,44 +163,79 @@ export default class NodeLeafRepository extends Repository {
         });
         // reset the query
         this._rawQuery = [
-            `WITH RECURSIVE related (container_id, origin_id, origin_metatype_id, origin_data_source_id, origin_import_data_id, origin_data_staging_id, 
-                origin_type_mapping_transformation_id, origin_original_data_id, origin_properties, origin_metadata, origin_created_at, origin_modified_at, 
-                origin_deleted_at, origin_created_by, origin_modified_by, origin_metatype_name, edge_id, edge_relationship_pair_id, edge_data_source_id, 
-                edge_import_data_id, edge_data_staging_id, edge_type_mapping_transformation_id, edge_metadata, edge_created_at, edge_modified_at, 
-                edge_deleted_at, edge_properties, edge_modified_by, edge_created_by, edge_relationship_name, edge_relationship_id, destination_id, 
-                destination_metatype_id, destination_data_source_id, destination_import_data_id, destination_data_staging_id, 
-                destination_type_mapping_transformation_id, destination_original_data_id, destination_properties, destination_metadata, 
-                destination_created_at, destination_modified_at, destination_deleted_at, destination_created_by, destination_modified_by, 
-                destination_metatype_name, depth) AS (
-            SELECT o.container_id, o.id, o.metatype_id, o.data_source_id, o.import_data_id, o.data_staging_id, o.type_mapping_transformation_id, 
-            o.original_data_id, o.properties, o.metadata, o.created_at, o.modified_at, o.deleted_at, o.created_by, o.modified_by, o.metatype_name, e.id, 
-            e.relationship_pair_id, e.data_source_id, e.import_data_id, e.data_staging_id, e.type_mapping_transformation_id, e.metadata, e.created_at, 
-            e.modified_at, e.deleted_at, e.properties, e.modified_by, e.created_by, e.metatype_relationship_name, e.relationship_id, d.id, d.metatype_id, 
-            d.data_source_id, d.import_data_id, d.data_staging_id, d.type_mapping_transformation_id, d.original_data_id, d.properties, d.metadata, 
-            d.created_at, d.modified_at, d.deleted_at, d.created_by, d.modified_by, d.metatype_name, 1
-            FROM current_nodes o
-                JOIN current_edges e
-                    ON o.id IN (e.origin_id, e.destination_id)
-                JOIN current_nodes d
-                    ON d.id IN (e.origin_id, e.destination_id)
-                    AND d.id != o.id
-            WHERE o.id = $1
-            UNION ALL
-            SELECT r.container_id, r.destination_id, r.destination_metatype_id, r.destination_data_source_id, r.destination_import_data_id, 
-            r.destination_data_staging_id, r.destination_type_mapping_transformation_id, r.destination_original_data_id, r.destination_properties, 
-            r.destination_metadata, r.destination_created_at, r.destination_modified_at, r.destination_deleted_at, r.destination_created_by, 
-            r.destination_modified_by, r.destination_metatype_name, e.id, e.relationship_pair_id, e.data_source_id, e.import_data_id, e.data_staging_id, 
-            e.type_mapping_transformation_id, e.metadata, e.created_at, e.modified_at, e.deleted_at, e.properties, e.modified_by, e.created_by, 
-            e.metatype_relationship_name, e.relationship_id, d.id, d.metatype_id, d.data_source_id, d.import_data_id, d.data_staging_id, 
-            d.type_mapping_transformation_id, d.original_data_id, d.properties, d.metadata, d.created_at, d.modified_at, d.deleted_at, d.created_by, 
-            d.modified_by, d.metatype_name, r.depth+1
-            FROM related r
-                JOIN current_edges e
-                    ON r.destination_id IN (e.origin_id, e.destination_id)
-                JOIN current_nodes d
-                    ON d.id IN (e.origin_id, e.destination_id)
-                    AND d.id != r.origin_id AND d.id != r.destination_id
-        ) SELECT * FROM related WHERE container_id = $2 AND depth <= $3`,
+            `SELECT * FROM
+            (WITH RECURSIVE search_graph(
+                origin_id, origin_metatype_id, origin_metatype_name, origin_properties, origin_data_source,
+                origin_metadata, origin_created_by, origin_created_at, origin_modified_by, origin_modified_at,
+                edge_id, relationship_name, edge_properties, relationship_pair_id, relationship_id,
+                edge_data_source, edge_metadata, edge_created_by, edge_created_at, edge_modified_by,
+                edge_modified_at, destination_id, destination_metatype_id, destination_metatype_name,
+                destination_properties, destination_data_source, destination_metadata, destination_created_by,
+                destination_created_at, destination_modified_by, destination_modified_at, depth, path
+            ) AS (
+                SELECT n1.id, n1.metatype_id, n1.metatype_name, n1.properties, n1.data_source_id,
+                    n1.metadata, n1.created_by, n1.created_at, n1.modified_by, n1.modified_at,
+                    g.id, g.metatype_relationship_name, g.properties, g.relationship_pair_id, g.relationship_id,
+                    g.data_source_id, g.metadata, g.created_by, g.created_at, g.modified_at, g.modified_by,
+                    n2.id, n2.metatype_id, n2.metatype_name, n2.properties, n2.data_source_id,
+                    n2.metadata, n2.created_by, n2.created_at, n2.modified_by, n2.modified_at,
+                    1 as depth, ARRAY[g.origin_id] AS path
+                FROM current_edges g
+                 LEFT JOIN current_nodes n1 ON n1.id IN (g.origin_id, g.destination_id)
+                 LEFT JOIN current_nodes n2 ON n2.id IN (g.origin_id, g.destination_id) AND n2.id != n1.id
+                WHERE n1.id = $1 AND g.container_id = $2
+            UNION
+                SELECT sg.destination_id, sg.destination_metatype_id, sg.destination_metatype_name,
+                    sg.destination_properties, sg.destination_data_source, sg.destination_metadata,
+                    sg.destination_created_by, sg.destination_created_at, sg.destination_modified_by,
+                    sg.destination_created_at, g.id, g.metatype_relationship_name, g.properties,
+                    g.relationship_pair_id, g.relationship_id, g.data_source_id, g.metadata, g.created_by,
+                    g.created_at, g.modified_at, g.modified_by, n2.id, n2.metatype_id, n2.metatype_name,
+                    n2.properties, n2.data_source_id, n2.metadata, n2.created_by, n2.created_at, n2.modified_by,
+                    n2.modified_at, sg.depth + 1, path || sg.destination_id
+                FROM current_edges g INNER JOIN search_graph sg
+                ON sg.destination_id IN (g.origin_id, g.destination_id) AND (sg.destination_id <> ALL(sg.path))
+                 LEFT JOIN current_nodes n2 ON n2.id IN (g.origin_id, g.destination_id)
+                    AND n2.id NOT IN (sg.origin_id, sg.destination_id)
+                 WHERE g.container_id = $2 AND sg.depth <= $3
+            ) SELECT * FROM search_graph WHERE destination_id IS NOT NULL AND origin_id IS NOT NULL) origins
+            UNION
+            (WITH RECURSIVE search_graph(
+                origin_id, origin_metatype_id, origin_metatype_name, origin_properties, origin_data_source,
+                origin_metadata, origin_created_by, origin_created_at, origin_modified_by, origin_modified_at,
+                edge_id, relationship_name, edge_properties, relationship_pair_id, relationship_id,
+                edge_data_source, edge_metadata, edge_created_by, edge_created_at, edge_modified_by,
+                edge_modified_at, destination_id, destination_metatype_id, destination_metatype_name,
+                destination_properties, destination_data_source, destination_metadata, destination_created_by,
+                destination_created_at, destination_modified_by, destination_modified_at, depth, path
+            ) AS (
+                SELECT n2.id, n2.metatype_id, n2.metatype_name, n2.properties, n2.data_source_id,
+                    n2.metadata, n2.created_by, n2.created_at, n2.modified_by, n2.modified_at,
+                    g.id, g.metatype_relationship_name, g.properties, g.relationship_pair_id, g.relationship_id,
+                    g.data_source_id, g.metadata, g.created_by, g.created_at, g.modified_at, g.modified_by,
+                    n1.id, n1.metatype_id, n1.metatype_name, n1.properties, n1.data_source_id,
+                    n1.metadata, n1.created_by, n1.created_at, n1.modified_by, n1.modified_at,
+                    1 as depth, ARRAY[g.destination_id] AS path
+                FROM current_edges g
+                 LEFT JOIN current_nodes n1 ON n1.id IN (g.origin_id, g.destination_id)
+                 LEFT JOIN current_nodes n2 ON n2.id IN (g.origin_id, g.destination_id) AND n2.id != n1.id
+                WHERE n2.id = $1 AND g.container_id = $2
+            UNION
+                SELECT sg.destination_id, sg.destination_metatype_id, sg.destination_metatype_name,
+                    sg.destination_properties, sg.destination_data_source, sg.destination_metadata,
+                    sg.destination_created_by, sg.destination_created_at, sg.destination_modified_by,
+                    sg.destination_created_at, g.id, g.metatype_relationship_name, g.properties,
+                    g.relationship_pair_id, g.relationship_id, g.data_source_id, g.metadata, g.created_by,
+                    g.created_at, g.modified_at, g.modified_by, n2.id, n2.metatype_id, n2.metatype_name,
+                    n2.properties, n2.data_source_id, n2.metadata, n2.created_by, n2.created_at, n2.modified_by,
+                    n2.modified_at, sg.depth + 1, path || sg.destination_id
+                FROM current_edges g INNER JOIN search_graph sg
+                ON sg.destination_id IN (g.origin_id, g.destination_id) AND (sg.destination_id <> ALL(sg.path))
+                 LEFT JOIN current_nodes n2 ON n2.id IN (g.origin_id, g.destination_id)
+                    AND n2.id NOT IN (sg.origin_id, sg.destination_id)
+                 WHERE g.container_id = $2 AND sg.depth <= $3
+            ) SELECT * FROM search_graph WHERE destination_id IS NOT NULL AND origin_id IS NOT NULL)
+            ORDER BY depth`,
         ];
         // reset the values to correspond with reset query
         this._values = resetValues
