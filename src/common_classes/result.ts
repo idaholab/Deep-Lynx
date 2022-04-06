@@ -17,12 +17,12 @@ export default class Result<TSuccess> {
         return new Result<T>(success, false);
     }
 
-    // this method also logs an error in order to facilitate fast,easy logging
     public static Failure(error: string, errorCode?: number, value?: any) {
         return new Result<any>(value, true, new Error(error, errorCode));
     }
 
-    public static SilentFailure(error: string, errorCode?: number) {
+    public static DebugFailure(error: string, errorCode?: number) {
+        Logger.debug(error);
         return new Result<any>(null, true, new Error(error, errorCode));
     }
 
