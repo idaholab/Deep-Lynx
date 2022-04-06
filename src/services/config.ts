@@ -31,6 +31,7 @@ export class Config {
     private readonly _cache_redis_connection_string: string;
 
     private readonly _core_db_connection_string: string;
+    private readonly _timescaledb_enabled: boolean = false;
     private readonly _session_secret: string;
     private readonly _encryption_key_path: string | undefined;
 
@@ -124,6 +125,7 @@ export class Config {
         this._cache_redis_connection_string = process.env.CACHE_REDIS_CONNECTION_STRING || '//localhost:6379';
 
         this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || '';
+        this._timescaledb_enabled = process.env.TIMESCALEDB_ENABLED === 'true';
 
         this._template_dir = process.env.TEMPLATE_DIR || './dist/http_server/views';
         this._asset_dir = process.env.ASSET_DIR || './dist/http_server/assets';
@@ -266,6 +268,10 @@ export class Config {
 
     get core_db_connection_string(): string {
         return this._core_db_connection_string;
+    }
+
+    get timescaledb_enabled(): boolean {
+        return this._timescaledb_enabled;
     }
 
     get file_storage_method(): string {

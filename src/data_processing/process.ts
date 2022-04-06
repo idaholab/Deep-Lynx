@@ -14,13 +14,11 @@ import DataStagingRepository from '../data_access_layer/repositories/data_wareho
 import {EdgeFile, NodeFile} from '../domain_objects/data_warehouse/data/file';
 import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_mapper';
-import DataSourceRepository from '../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 
 // ProcessData accepts a data staging record and inserts nodes and edges based
 // on matching transformation records - this acts on a single record
 export async function ProcessData(staging: DataStaging): Promise<Result<boolean>> {
     const stagingMapper = DataStagingMapper.Instance;
-    const dataSourceRepo = new DataSourceRepository();
     const stagingRepo = new DataStagingRepository();
     const mappingRepo = new TypeMappingRepository();
     const nodeRepository = new NodeRepository();
@@ -43,7 +41,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     const errors = await staging.validationErrors();
     if (errors) {
         await stagingRepo.addError(staging.id!, 'data does not pass validation for processing');
-        return Promise.resolve(Result.SilentFailure(`data staging does not pass validation ${errors.join(',')}`));
+        return Promise.resolve(Result.DebugFailure(`data staging does not pass validation ${errors.join(',')}`));
     }
 
     // if we don't have the mapping, create one and abort the processing, as we have no transformations
@@ -98,7 +96,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
                 await stagingMapper.rollbackTransaction(transaction.value);
                 await stagingRepo.setErrors(staging.id!, [`unable to apply transformation ${transformation.id} to data: ${results.error}`]);
 
-                return new Promise((resolve) => resolve(Result.SilentFailure(`unable to apply transformation ${transformation.id} to data: ${results.error}`)));
+                return new Promise((resolve) => resolve(Result.DebugFailure(`unable to apply transformation ${transformation.id} to data: ${results.error}`)));
             }
 
             // check to see result type, force into corresponding container
@@ -113,7 +111,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
             await stagingMapper.rollbackTransaction(transaction.value);
 
             await stagingRepo.setErrors(staging.id!, [`error attempting to insert nodes ${inserted.error?.error}`]);
-            return new Promise((resolve) => resolve(Result.SilentFailure(`error attempting to insert nodes ${inserted.error?.error}`)));
+            return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to insert nodes ${inserted.error?.error}`)));
         }
 
         // now that the nodes are inserted, attempt to attach any files from their original staging records
@@ -149,7 +147,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
             await stagingMapper.rollbackTransaction(transaction.value);
 
             await stagingRepo.setErrors(staging.id!, [`error attempting to insert edges ${inserted.error?.error}`]);
-            return new Promise((resolve) => resolve(Result.SilentFailure(`error attempting to insert edges ${inserted.error?.error}`)));
+            return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to insert edges ${inserted.error?.error}`)));
         }
 
         // now that the edges are inserted, attempt to attach any files from their original staging records
@@ -184,9 +182,10 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
 
         // update the individual data row which failed
         await stagingRepo.setErrors(staging.id!, [`error attempting to mark data inserted ${marked.error}`]);
-        return new Promise((resolve) => resolve(Result.SilentFailure(`error attempting to mark data inserted ${marked.error}`)));
+        return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to mark data inserted ${marked.error}`)));
     }
 
+    await stagingRepo.setErrors(staging.id!, [], transaction.value);
     await stagingMapper.completeTransaction(transaction.value);
     return Promise.resolve(Result.Success(true));
 }

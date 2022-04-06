@@ -645,11 +645,13 @@ export default class TypeTransformation extends BaseDomainClass {
     private static compare(operator: string, value: any, expected?: any): boolean {
         switch (operator) {
             case '==': {
-                return value === expected;
+                // eslint-disable-next-line eqeqeq
+                return value == expected;
             }
 
             case '!=': {
-                return value !== expected;
+                // eslint-disable-next-line eqeqeq
+                return value != expected;
             }
 
             case 'in': {

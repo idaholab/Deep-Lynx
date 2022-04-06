@@ -9,6 +9,8 @@ import QueryStream from 'pg-query-stream';
 import {QueueFactory} from '../../../../services/queue/queue';
 import Config from '../../../../services/config';
 import {plainToClass} from 'class-transformer';
+import Logger from '../../../../services/logger';
+import DataStagingMapper from './data_staging_mapper';
 
 const format = require('pg-format');
 const resultClass = Import;
@@ -140,6 +142,7 @@ export default class ImportMapper extends Mapper {
         // first we delete the old nodes/edges - don't wait though, the sql handles not deleting
         // any records created after the time you start this statement
         void super.runAsTransaction(...this.deleteDataStatement(importID));
+        await super.runStatement(this.setProcessedNull(importID));
 
         // now we stream process this part because an import might have a large number of
         // records and we really don't want to read that into memory - we also don't wait
@@ -147,12 +150,22 @@ export default class ImportMapper extends Mapper {
         const queue = await QueueFactory();
         void PostgresAdapter.Instance.Pool.connect((err, client, done) => {
             const stream = client.query(new QueryStream(this.listStagingForImportStreaming(importID)));
+            const putPromises: Promise<boolean>[] = [];
 
             stream.on('data', (data) => {
-                void queue.Put(Config.process_queue, plainToClass(DataStaging, data as object).id);
+                putPromises.push(queue.Put(Config.process_queue, plainToClass(DataStaging, data as object)));
             });
 
-            stream.on('end', () => done());
+            stream.on('end', () => {
+                Promise.all(putPromises)
+                    .then(() => {
+                        done();
+                    })
+                    .catch((e) => {
+                        done();
+                        Logger.error(`error reprocessing import ${e}`);
+                    });
+            });
 
             // we pipe to devnull because we need to trigger the stream and don't
             // care where the data ultimately ends up
@@ -162,6 +175,13 @@ export default class ImportMapper extends Mapper {
         await this.SetStatus(importID, 'processing', 'reprocessing initiated');
 
         return Promise.resolve(Result.Success(true));
+    }
+
+    private setProcessedNull(importID: string): QueryConfig {
+        return {
+            text: `UPDATE ${DataStagingMapper.tableName} SET inserted_at = NULL WHERE import_id = $1`,
+            values: [importID],
+        };
     }
 
     // can only allow deletes on unprocessed imports
@@ -220,12 +240,17 @@ export default class ImportMapper extends Mapper {
     // we're only pulling the ID here because that's all we need for the re-queue process, we
     // don't want to read the data in needlessly
     private listStagingForImportStreaming(importID: string): string {
-        return format(`SELECT data_staging.id FROM data_staging WHERE import_id = %L`, importID);
+        return format(`SELECT data_staging.* FROM data_staging WHERE import_id = %L`, importID);
     }
 
     private retrieveStatement(logID: string): QueryConfig {
         return {
-            text: `SELECT * FROM imports WHERE id = $1`,
+            text: `SELECT imports.*,
+                SUM(CASE WHEN data_staging.inserted_at <> NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
+                SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
+            FROM imports
+                LEFT JOIN data_staging ON data_staging.import_id = imports.id 
+            WHERE imports.id = $1 GROUP BY imports.id`,
             values: [logID],
         };
     }

@@ -441,7 +441,7 @@ export default class ContainerImport {
                     });
 
                     const saved = await containerRepo.save(container, user);
-                    if (saved.isError) return resolve(Result.SilentFailure(saved.error!.error));
+                    if (saved.isError) return resolve(Result.DebugFailure(saved.error!.error));
                     containerID = container.id!;
                 } else {
                     const containerResult = await containerRepo.findByID(containerID);
@@ -659,7 +659,7 @@ export default class ContainerImport {
                         .catch((err: string) => {
                             return err + ' ' + relationshipPromise.error?.error;
                         });
-                    resolve(Result.SilentFailure(rollback));
+                    resolve(Result.DebugFailure(rollback));
                     return;
                 } else if (relationshipPromise.isError) {
                     resolve(Result.Pass(relationshipPromise))
@@ -703,7 +703,7 @@ export default class ContainerImport {
                         .catch((err: string) => {
                             return err + ' ' + metatypePromise.error?.error;
                         });
-                    resolve(Result.SilentFailure(rollback));
+                    resolve(Result.DebugFailure(rollback));
                     return;
                 } else if (metatypePromise.isError) {
                     resolve(Result.Pass(metatypePromise))
@@ -853,7 +853,7 @@ export default class ContainerImport {
                             .catch((err: string) => {
                                 return err + ' ' + propResult.error?.error;
                             });
-                        resolve(Result.SilentFailure(rollback));
+                        resolve(Result.DebugFailure(rollback));
                         return;
                     } else if (propResult.isError) {
                         resolve(Result.Pass(propResult))
@@ -863,7 +863,7 @@ export default class ContainerImport {
                 resolve(Result.Success(containerID));
             }
         }).catch<Result<string>>((e: string) => {
-            return Promise.resolve(Result.SilentFailure(e));
+            return Promise.resolve(Result.DebugFailure(e));
         });
     }
 }
