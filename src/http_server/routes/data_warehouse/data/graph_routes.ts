@@ -106,7 +106,7 @@ export default class GraphRoutes {
             }
             const repo = new NodeLeafRepository(req.node.id!, req.node.container_id!, depth);
             repo
-                .list()
+                .list({sortBy: "depth"})
                 .then((result) => {
                     result.asResponse(res);
                 })

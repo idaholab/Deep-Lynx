@@ -479,50 +479,38 @@ export default class GraphQLSchemaGenerator {
                     origin_properties: {type: GraphQLJSON},
                     edge_properties: {type: GraphQLJSON},
                     destination_properties: {type: GraphQLJSON},
-                    // other properties to query on
+                    // origin data
                     origin_id: {type: GraphQLString},
-                    origin_data_source_id: {type: GraphQLString},
-                    origin_import_data_id: {type: GraphQLString},
-                    origin_data_staging_id: {type: GraphQLString},
-                    origin_type_mapping_transformation_id: {type: GraphQLString},
-                    origin_original_data_id: {type: GraphQLString},
-                    origin_metadata: {type: GraphQLJSON},
-                    origin_created_at: {type: GraphQLString},
-                    origin_modified_at: {type: GraphQLString},
-                    origin_deleted_at: {type: GraphQLString},
-                    origin_created_by: {type: GraphQLString},
-                    origin_modified_by: {type: GraphQLString},
-                    origin_metatype_id: {type: GraphQLString},
                     origin_metatype_name: {type: GraphQLString},
+                    origin_data_source: {type: GraphQLString},
+                    origin_metadata: {type: GraphQLJSON},
+                    origin_created_by: {type: GraphQLString},
+                    origin_created_at: {type: GraphQLString},
+                    origin_modified_by: {type: GraphQLString},
+                    origin_modified_at: {type: GraphQLString},
+                    // edge data
                     edge_id: {type: GraphQLString},
-                    edge_relationship_pair_id: {type: GraphQLString},
-                    edge_data_source_id: {type: GraphQLString},
-                    edge_import_data_id: {type: GraphQLString},
-                    edge_data_staging_id: {type: GraphQLString},
-                    edge_type_mapping_transformation_id: {type: GraphQLString},
+                    relationship_name: {type: GraphQLString},
+                    relationship_pair_id: {type: GraphQLString},
+                    relationship_id: {type: GraphQLString},
+                    edge_data_source: {type: GraphQLString},
                     edge_metadata: {type: GraphQLJSON},
-                    edge_created_at: {type: GraphQLString},
-                    edge_modified_at: {type: GraphQLString},
-                    edge_deleted_at: {type: GraphQLString},
-                    edge_modified_by: {type: GraphQLString},
                     edge_created_by: {type: GraphQLString},
-                    edge_relationship_name: {type: GraphQLString},
-                    edge_relationship_id: {type: GraphQLString},
+                    edge_created_at: {type: GraphQLString},
+                    edge_modified_by: {type: GraphQLString},
+                    edge_modified_at: {type: GraphQLString},
+                    // destination data
                     destination_id: {type: GraphQLString},
-                    destination_data_source_id: {type: GraphQLString},
-                    destination_import_data_id: {type: GraphQLString},
-                    destination_data_staging_id: {type: GraphQLString},
-                    destination_type_mapping_transformation_id: {type: GraphQLString},
-                    destination_original_data_id: {type: GraphQLString},
-                    destination_metadata: {type: GraphQLJSON},
-                    destination_created_at: {type: GraphQLString},
-                    destination_modified_at: {type: GraphQLString},
-                    destination_deleted_at: {type: GraphQLString},
-                    destination_created_by: {type: GraphQLString},
-                    destination_modified_by: {type: GraphQLString},
-                    destination_metatype_id: {type: GraphQLString},
                     destination_metatype_name: {type: GraphQLString},
+                    destination_data_source: {type: GraphQLString},
+                    destination_metadata: {type: GraphQLJSON},
+                    destination_created_by: {type: GraphQLString},
+                    destination_created_at: {type: GraphQLString},
+                    destination_modified_by: {type: GraphQLString},
+                    destination_modified_at: {type: GraphQLString},
+                    // graph metadata
                     depth: {type: GraphQLInt},
+                    path: {type: GraphQLList(GraphQLString)}
                 },
             }),
         );
@@ -587,7 +575,7 @@ export default class GraphQLSchemaGenerator {
             }
 
             // variable to store results of edge DB call if _relationship input
-            let edgeResults: {[key: string]: any} = {};
+            let edgeResults: {[key: string]: any} = {}; 
             if (input._relationship) {
                 const edgeRepo = new EdgeRepository();
 
@@ -992,7 +980,7 @@ export default class GraphQLSchemaGenerator {
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             return new Promise((resolve) =>
                 repo
-                    .list()
+                    .list({sortBy: "depth"})
                     .then((results) => {
                         if (results.isError) {
                             Logger.error(`unable to list nodeLeaf objects ${results.error?.error}`);

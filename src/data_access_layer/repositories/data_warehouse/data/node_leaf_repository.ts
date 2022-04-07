@@ -92,7 +92,8 @@ export default class NodeLeafRepository extends Repository {
                     AND n2.id NOT IN (sg.origin_id, sg.destination_id)
                  WHERE g.container_id = $2 AND sg.depth < $3
             ) SELECT * FROM search_graph
-            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL)) nodeleafs`,
+            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL)) nodeleafs
+            WHERE depth <= $3`,
         ];
 
         this._values = [id, container_id, depth];
@@ -237,7 +238,8 @@ export default class NodeLeafRepository extends Repository {
                     AND n2.id NOT IN (sg.origin_id, sg.destination_id)
                  WHERE g.container_id = $2 AND sg.depth < $3
             ) SELECT * FROM search_graph
-            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL)) nodeleafs`,
+            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL)) nodeleafs
+            WHERE depth <= $3`,
         ];
         // reset the values to correspond with reset query
         this._values = resetValues
