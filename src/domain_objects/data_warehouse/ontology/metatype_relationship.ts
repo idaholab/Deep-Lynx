@@ -30,7 +30,7 @@ export default class MetatypeRelationship extends BaseDomainClass {
     @MinLength(1)
     name = '';
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     description = '';
 

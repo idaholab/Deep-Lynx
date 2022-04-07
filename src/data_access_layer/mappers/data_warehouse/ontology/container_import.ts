@@ -252,9 +252,9 @@ export default class ContainerImport {
 
                 let parentID;
                 const properties: {[key: string]: PropertyT} = {};
-                if (typeof selectedClass['rdfs:subClassOf'][0] === 'undefined') {
+                if (selectedClass['rdf:subClassOf'] && typeof selectedClass['rdfs:subClassOf'][0] === 'undefined') {
                     parentID = selectedClass['rdfs:subClassOf']._attributes['rdf:resource'];
-                } else {
+                } else if(selectedClass['rdf:subClassOf']) {
                     // if no other properties, subClassOf is not an array
                     parentID = selectedClass['rdfs:subClassOf'][0]._attributes['rdf:resource'];
                     // loop through properties
@@ -354,24 +354,27 @@ export default class ContainerImport {
             }
 
             // Relationships
-            for (const relationship of objectProperties) {
-                const relationshipID = relationship._attributes['rdf:about'];
-                const relationshipName = relationship['rdfs:label']._text ? relationship['rdfs:label']._text : relationship['rdfs:label'];
-                let relationshipDescription = '';
-                if (typeof relationship['obo:IAO_0000115'] !== 'undefined') {
-                    relationshipDescription = relationship['obo:IAO_0000115']._text ? relationship['obo:IAO_0000115']._text : relationship['obo:IAO_0000115'];
+            if(objectProperties) {
+                for (const relationship of objectProperties) {
+                    const relationshipID = relationship._attributes['rdf:about'];
+                    const relationshipName = relationship['rdfs:label']._text ? relationship['rdfs:label']._text : relationship['rdfs:label'];
+                    let relationshipDescription = '';
+                    if (typeof relationship['obo:IAO_0000115'] !== 'undefined') {
+                        relationshipDescription = relationship['obo:IAO_0000115']._text ? relationship['obo:IAO_0000115']._text : relationship['obo:IAO_0000115'];
+                    }
+                    relationshipMap.set(relationshipName, {
+                        id: relationshipID,
+                        name: relationshipName,
+                        description: relationshipDescription,
+                    });
+                    relationshipIDMap.set(relationshipID, {
+                        id: relationshipID,
+                        name: relationshipName,
+                        description: relationshipDescription,
+                    });
                 }
-                relationshipMap.set(relationshipName, {
-                    id: relationshipID,
-                    name: relationshipName,
-                    description: relationshipDescription,
-                });
-                relationshipIDMap.set(relationshipID, {
-                    id: relationshipID,
-                    name: relationshipName,
-                    description: relationshipDescription,
-                });
             }
+
             // Add inheritance relationship to relationship map
             relationshipMap.set('inheritance', {
                 name: 'inheritance',
@@ -455,7 +458,7 @@ export default class ContainerImport {
                 // prepare inheritance relationship pairs
                 classListMap.forEach((thisClass: MetatypeExtendT) => {
                     // don't add parent relationship for root entity
-                    if (!/owl#Thing/.exec(thisClass.parent_id!)) {
+                    if (thisClass.parent_id && !/owl#Thing/.exec(thisClass.parent_id)) {
                         allRelationshipPairNames.push(thisClass.name + ' : child of : ' + classIDMap.get(thisClass.parent_id).name);
 
                         // add inherited properties and relationships (flatten ontology)
@@ -728,7 +731,7 @@ export default class ContainerImport {
                     // Add relationship to parent class
                     const relationship = relationshipMap.get('inheritance');
                     // Don't add parent relationship for root entity
-                    if (!/owl#Thing/.exec(thisClass.parent_id!)) {
+                    if (thisClass.parent_id && !/owl#Thing/.exec(thisClass.parent_id)) {
                         const relationshipName = thisClass.name + ' : child of : ' + classIDMap.get(thisClass.parent_id).name;
 
                         const data = new MetatypeRelationshipPair({

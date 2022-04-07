@@ -30,7 +30,7 @@ export default class Metatype extends BaseDomainClass {
     @MinLength(1)
     name = '';
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     description = '';
 
