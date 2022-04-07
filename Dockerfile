@@ -18,7 +18,8 @@ WORKDIR /srv/core_api
 COPY --chown=node:node package*.json ./
 
 RUN apt update && apt upgrade -y
-RUN npm update -g 
+RUN npm update -g
+RUN npm install -g --unsafe-perm clinic
 RUN npm install
 
 # Bundle app source
