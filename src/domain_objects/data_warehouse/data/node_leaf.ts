@@ -70,12 +70,12 @@ export default class NodeLeaf extends BaseDomainClass {
         },
         {toClassOnly: true},
     )
-    metatypeRelationshipPair: MetatypeRelationshipPair | undefined;
+    relationship_pair: MetatypeRelationshipPair | undefined;
 
     // get relationship pair id from Metatype Relationship Pair class
     @Expose({toPlainOnly: true})
     get relationship_pair_id(): string {
-        return this.metatypeRelationshipPair ? this.metatypeRelationshipPair.id! : '';
+        return this.relationship_pair ? this.relationship_pair.id! : '';
     }
 
     relationship_id?: string;
@@ -129,58 +129,56 @@ export default class NodeLeaf extends BaseDomainClass {
     path?: string[];
 
     constructor(input: {
+        origin_id: string;
         origin_metatype: Metatype | string;
-        destination_metatype: Metatype | string;
         origin_metatype_name?: string;
-        destination_metatype_name?: string;
-        metatype_relationship_pair: MetatypeRelationshipPair | string;
-        edge_relationship_name?: string;
         origin_properties: object;
-        edge_properties: object;
-        destination_properties: object;
-        origin_original_data_id?: string;
-        destination_original_data_id?: string;
-        origin_import_data_id?: string;
-        edge_import_data_id?: string;
-        destination_import_data_id?: string;
-        origin_data_staging_id?: string;
-        edge_data_staging_id?: string;
-        destination_data_staging_id?: string;
-        origin_data_source_id?: string;
-        edge_data_source_id?: string;
-        destination_data_source_id?: string;
-        origin_type_mapping_transformation_id?: string;
-        edge_type_mapping_transformation_id?: string;
-        destination_type_mapping_transformation_id?: string;
+        origin_data_source?: string;
         origin_metadata?: NodeMetadata;
+        edge_id: string;
+        relationship_name?: string
+        edge_properties: object;
+        relationship_pair: MetatypeRelationshipPair | string;
+        relationship_id?: string;
         edge_metadata?: EdgeMetadata;
+        destination_id?: string;
+        destination_metatype: Metatype | string;
+        destination_metatype_name?: string;
+        destination_properties: object;
+        destination_data_source?: string;
         destination_metadata?: NodeMetadata;
-        origin_created_at?: Date;
-        edge_created_at?: Date;
-        destination_created_at?: Date;
         depth?: string;
+        path?: string[];
     }) {
         super();
 
         if (input) {
+            this.origin_id = input.origin_id;
             input.origin_metatype instanceof Metatype
                 ? (this.origin_metatype = input.origin_metatype)
                 : (this.origin_metatype = plainToClass(Metatype, {id: input.origin_metatype_name}));
+            if (input.origin_metatype_name) {this.origin_metatype_name = input.origin_metatype_name};
+            this.origin_properties = input.origin_properties;
+            if (input.origin_data_source) {this.origin_data_source = input.origin_data_source};
+            if (input.origin_metadata) {this.origin_metadata = input.origin_metadata};
+            this.edge_id = input.edge_id;
+            if (input.relationship_name) {this.relationship_name = input.relationship_name};
+            this.edge_properties = input.edge_properties;
+            input.relationship_pair instanceof MetatypeRelationshipPair
+                ? (this.relationship_pair = input.relationship_pair)
+                : (this.relationship_pair = plainToClass(MetatypeRelationshipPair, {id: input.relationship_pair}));
+            if (input.relationship_id) {this.relationship_id = input.relationship_id};
+            if (input.edge_metadata) {this.edge_metadata = input.edge_metadata};
+            this.destination_id = input.destination_id;
             input.destination_metatype instanceof Metatype
                 ? (this.destination_metatype = input.destination_metatype)
                 : (this.destination_metatype = plainToClass(Metatype, {id: input.destination_metatype_name}));
-            if (input.origin_metatype_name) {this.origin_metatype_name = input.origin_metatype_name};
             if (input.destination_metatype_name) {this.destination_metatype_name = input.destination_metatype_name};
-            this.origin_properties = input.origin_properties;
-            this.edge_properties = input.edge_properties;
             this.destination_properties = input.destination_properties;
-            if (input.origin_metadata) this.origin_metadata = input.origin_metadata;
-            if (input.edge_metadata) this.edge_metadata = input.edge_metadata;
-            if (input.destination_metadata) this.destination_metadata = input.destination_metadata;
-            if (input.origin_created_at) this.origin_created_at = input.origin_created_at;
-            if (input.edge_created_at) this.edge_created_at = input.edge_created_at;
-            if (input.destination_created_at) this.destination_created_at = input.destination_created_at;
-            if (input.depth) this.depth = input.depth;
+            if (input.destination_data_source) {this.destination_data_source = input.destination_data_source};
+            if (input.destination_metadata) {this.destination_metadata = input.destination_metadata};
+            if (input.depth) {this.depth = input.depth};
+            if (input.path) {this.path = input.path};
         }
     }
 }
