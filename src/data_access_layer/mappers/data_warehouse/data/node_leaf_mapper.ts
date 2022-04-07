@@ -78,8 +78,9 @@ export default class NodeLeafMapper extends Mapper {
                 ON sg.destination_id IN (g.origin_id, g.destination_id) AND (sg.destination_id <> ALL(sg.path))
                  LEFT JOIN current_nodes n2 ON n2.id IN (g.origin_id, g.destination_id)
                     AND n2.id NOT IN (sg.origin_id, sg.destination_id)
-                 WHERE g.container_id = $2 AND sg.depth <= $3
-            ) SELECT * FROM search_graph WHERE destination_id IS NOT NULL AND origin_id IS NOT NULL) origins
+                 WHERE g.container_id = $2 AND sg.depth < $3
+            ) SELECT * FROM search_graph
+            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL
             UNION
             (WITH RECURSIVE search_graph(
                 origin_id, origin_metatype_id, origin_metatype_name, origin_properties, origin_data_source,
@@ -114,8 +115,9 @@ export default class NodeLeafMapper extends Mapper {
                 ON sg.destination_id IN (g.origin_id, g.destination_id) AND (sg.destination_id <> ALL(sg.path))
                  LEFT JOIN current_nodes n2 ON n2.id IN (g.origin_id, g.destination_id)
                     AND n2.id NOT IN (sg.origin_id, sg.destination_id)
-                 WHERE g.container_id = $2 AND sg.depth <= $3
-            ) SELECT * FROM search_graph WHERE destination_id IS NOT NULL AND origin_id IS NOT NULL)
+                 WHERE g.container_id = $2 AND sg.depth < $3
+            ) SELECT * FROM search_graph
+            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL)) nodeleafs
             ORDER BY depth`,
             values: [nodeID, container_id, depth],
         };

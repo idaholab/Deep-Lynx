@@ -19,7 +19,7 @@ export default class NodeLeafRepository extends Repository {
         // in order to add filters to the base node leaf query we must set it
         // as the raw query here
         this._rawQuery = [
-            `SELECT * FROM
+        `SELECT * FROM
             (WITH RECURSIVE search_graph(
                 origin_id, origin_metatype_id, origin_metatype_name, origin_properties, origin_data_source,
                 origin_metadata, origin_created_by, origin_created_at, origin_modified_by, origin_modified_at,
@@ -53,8 +53,9 @@ export default class NodeLeafRepository extends Repository {
                 ON sg.destination_id IN (g.origin_id, g.destination_id) AND (sg.destination_id <> ALL(sg.path))
                  LEFT JOIN current_nodes n2 ON n2.id IN (g.origin_id, g.destination_id)
                     AND n2.id NOT IN (sg.origin_id, sg.destination_id)
-                 WHERE g.container_id = $2 AND sg.depth <= $3
-            ) SELECT * FROM search_graph WHERE destination_id IS NOT NULL AND origin_id IS NOT NULL) origins
+                 WHERE g.container_id = $2 AND sg.depth < $3
+            ) SELECT * FROM search_graph
+            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL
             UNION
             (WITH RECURSIVE search_graph(
                 origin_id, origin_metatype_id, origin_metatype_name, origin_properties, origin_data_source,
@@ -89,9 +90,10 @@ export default class NodeLeafRepository extends Repository {
                 ON sg.destination_id IN (g.origin_id, g.destination_id) AND (sg.destination_id <> ALL(sg.path))
                  LEFT JOIN current_nodes n2 ON n2.id IN (g.origin_id, g.destination_id)
                     AND n2.id NOT IN (sg.origin_id, sg.destination_id)
-                 WHERE g.container_id = $2 AND sg.depth <= $3
-            ) SELECT * FROM search_graph WHERE destination_id IS NOT NULL AND origin_id IS NOT NULL)
-            ORDER BY depth`,
+                 WHERE g.container_id = $2 AND sg.depth < $3
+            ) SELECT * FROM search_graph
+            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL)) nodeleafs
+        ORDER BY depth`,
         ];
 
         this._values = [id, container_id, depth];
@@ -163,7 +165,7 @@ export default class NodeLeafRepository extends Repository {
         });
         // reset the query
         this._rawQuery = [
-            `SELECT * FROM
+        `SELECT * FROM
             (WITH RECURSIVE search_graph(
                 origin_id, origin_metatype_id, origin_metatype_name, origin_properties, origin_data_source,
                 origin_metadata, origin_created_by, origin_created_at, origin_modified_by, origin_modified_at,
@@ -197,8 +199,9 @@ export default class NodeLeafRepository extends Repository {
                 ON sg.destination_id IN (g.origin_id, g.destination_id) AND (sg.destination_id <> ALL(sg.path))
                  LEFT JOIN current_nodes n2 ON n2.id IN (g.origin_id, g.destination_id)
                     AND n2.id NOT IN (sg.origin_id, sg.destination_id)
-                 WHERE g.container_id = $2 AND sg.depth <= $3
-            ) SELECT * FROM search_graph WHERE destination_id IS NOT NULL AND origin_id IS NOT NULL) origins
+                 WHERE g.container_id = $2 AND sg.depth < $3
+            ) SELECT * FROM search_graph
+            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL
             UNION
             (WITH RECURSIVE search_graph(
                 origin_id, origin_metatype_id, origin_metatype_name, origin_properties, origin_data_source,
@@ -233,9 +236,10 @@ export default class NodeLeafRepository extends Repository {
                 ON sg.destination_id IN (g.origin_id, g.destination_id) AND (sg.destination_id <> ALL(sg.path))
                  LEFT JOIN current_nodes n2 ON n2.id IN (g.origin_id, g.destination_id)
                     AND n2.id NOT IN (sg.origin_id, sg.destination_id)
-                 WHERE g.container_id = $2 AND sg.depth <= $3
-            ) SELECT * FROM search_graph WHERE destination_id IS NOT NULL AND origin_id IS NOT NULL)
-            ORDER BY depth`,
+                 WHERE g.container_id = $2 AND sg.depth < $3
+            ) SELECT * FROM search_graph
+            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL)) nodeleafs
+        ORDER BY depth`,
         ];
         // reset the values to correspond with reset query
         this._values = resetValues
