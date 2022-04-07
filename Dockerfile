@@ -10,6 +10,8 @@ ENV VUE_APP_DEEP_LYNX_API_AUTH_METHOD="token"
 ENV VUE_APP_APP_URL="http://localhost:8090/gui/#"
 # this should be an alphanumeric random string of at least 15 characters
 ENV VUE_APP_DEEP_LYNX_APP_ID="CHANGEMEBEFOREYOURAPPLICATION"
+# global npm needs to be writable
+ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
 
 # Create the base directory and make user "node" the owner
 RUN mkdir /srv/core_api && chown node:node /srv/core_api
@@ -18,7 +20,8 @@ WORKDIR /srv/core_api
 COPY --chown=node:node package*.json ./
 
 RUN apt update && apt upgrade -y
-RUN npm update -g 
+RUN npm update -g
+RUN npm install -g clinic
 RUN npm install
 
 # Bundle app source
