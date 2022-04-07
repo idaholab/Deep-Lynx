@@ -139,9 +139,7 @@ export default class ImportMapper extends Mapper {
     // from it by setting the deleted_at tag of any nodes or edges that have been created. Then
     // it will attempt to re-queue all data staging records for that import
     public async ReprocessImport(importID: string): Promise<Result<boolean>> {
-        // first we delete the old nodes/edges - don't wait though, the sql handles not deleting
-        // any records created after the time you start this statement
-        void super.runAsTransaction(...this.deleteDataStatement(importID));
+        await super.runAsTransaction(...this.deleteDataStatement(importID));
         await super.runStatement(this.setProcessedNull(importID));
 
         // now we stream process this part because an import might have a large number of
@@ -216,11 +214,11 @@ export default class ImportMapper extends Mapper {
         // accidentally delete any records in process (in case this is from reprocessing an import)
         return [
             {
-                text: `UPDATE nodes SET deleted_at = NOW() WHERE deleted_at IS NULL AND import_data_id = $1 AND created_at < NOW() `,
+                text: `DELETE FROM nodes WHERE import_data_id = $1 AND created_at < NOW() `,
                 values: [importID],
             },
             {
-                text: `UPDATE edges SET deleted_at = NOW() WHERE deleted_at IS NULL AND import_data_id = $1 AND created_at < NOW()`,
+                text: `DELETE FROM edges WHERE import_data_id = $1 AND created_at < NOW()`,
                 values: [importID],
             },
         ];
