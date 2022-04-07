@@ -4,11 +4,11 @@ import Result from '../../../../common_classes/result';
 import NodeLeafMapper from '../../../mappers/data_warehouse/data/node_leaf_mapper';
 import {PoolClient} from 'pg';
 /*
-    NodeLeafRepository contains methods for persisting and retrieving nodes
-    to storage as well as mapping things like validation. Users should
+    NodeLeafRepository contains methods for retrieving NodeLeaf objects from
+    storage. Users should interact with this repository. Users should
     interact with repositories when possible and not the mappers as the
     repositories contain additional logic such as validation or
-    transformation prior to storage or returning.
+    transformation prior to returning.
 */
 
 export default class NodeLeafRepository extends Repository {
@@ -92,8 +92,7 @@ export default class NodeLeafRepository extends Repository {
                     AND n2.id NOT IN (sg.origin_id, sg.destination_id)
                  WHERE g.container_id = $2 AND sg.depth < $3
             ) SELECT * FROM search_graph
-            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL)) nodeleafs
-        ORDER BY depth`,
+            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL)) nodeleafs`,
         ];
 
         this._values = [id, container_id, depth];
@@ -145,12 +144,12 @@ export default class NodeLeafRepository extends Repository {
     }
 
     relationshipName(operator: string, value: any) {
-        super.query('edge_relationship_name', operator, value);
+        super.query('relationship_name', operator, value);
         return this;
     }
 
     relationshipId(operator: string, value: any) {
-        super.query('edge_relationship_id', operator, value);
+        super.query('relationship_id', operator, value);
         return this;
     }
 
@@ -238,8 +237,7 @@ export default class NodeLeafRepository extends Repository {
                     AND n2.id NOT IN (sg.origin_id, sg.destination_id)
                  WHERE g.container_id = $2 AND sg.depth < $3
             ) SELECT * FROM search_graph
-            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL)) nodeleafs
-        ORDER BY depth`,
+            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL)) nodeleafs`,
         ];
         // reset the values to correspond with reset query
         this._values = resetValues

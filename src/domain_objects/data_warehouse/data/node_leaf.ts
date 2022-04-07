@@ -1,8 +1,6 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {IsArray, IsObject, IsOptional, isString, IsString, ValidateIf, ValidateNested} from 'class-validator';
 import {Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Metatype, {MetatypeID} from '../ontology/metatype';
-import Container from '../ontology/container';
 import MetatypeRelationshipPair, {MetatypeRelationshipPairID} from '../ontology/metatype_relationship_pair';
 import {EdgeMetadata} from './edge';
 import {NodeMetadata} from './node';
@@ -10,7 +8,11 @@ import {NodeMetadata} from './node';
 /*
     The NodeLeaf object represents a tree-like record object which consists of
     information on a node, one connected nodes, and the edge that connect them.
-    Contains validations required for said object to be considered valid.
+    Contains validations required for said object to be considered valid. This
+    object is not like other objects, in the sense that it will likely never be
+    initialized via user input. It does not represent any one table in the
+    database but rather the fetched result of a combination of nodes and edges,
+    along with a few other fields.
 */
 export default class NodeLeaf extends BaseDomainClass {
     // origin (root node) properties

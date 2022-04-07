@@ -8,12 +8,12 @@ const resultClass = NodeLeaf;
 
 /*
     NodeLeafMapper extends the Postgres database Mapper class and allows the
-    user to map a data structure to and from the attached database. The mappers
-    are designed to be as simple as possible and should not contain things like
-    validation or transformation of the data prior to storage - those operations
-    should live in a Repository or on the data structure's class itself. Also try
-    to avoid listing functions, and those are generally covered by the Repository
-    class/interface as well.
+    NodeLeaf structure to be fetched from the database. Unlike other mapper
+    structures in Deep Lynx, the NodeLeafMapper is used exclusively to fetch
+    data instead of creating, updating, or deleting it, as its structure does
+    not represent any one table in the database but a complex fetched result
+    that combines data from several tables. The mapper's primary function is
+    retrieving NodeLeaf objects.
 */
 
 export default class NodeLeafMapper extends Mapper {
@@ -117,8 +117,7 @@ export default class NodeLeafMapper extends Mapper {
                     AND n2.id NOT IN (sg.origin_id, sg.destination_id)
                  WHERE g.container_id = $2 AND sg.depth < $3
             ) SELECT * FROM search_graph
-            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL)) nodeleafs
-            ORDER BY depth`,
+            WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL)) nodeleafs`,
             values: [nodeID, container_id, depth],
         };
     }
