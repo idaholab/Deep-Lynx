@@ -90,9 +90,9 @@ export default class GraphQLSchemaGenerator {
         // used for querying edges based on node (see input._relationship resolver)
         const metatypePairObjects: {[key: string]: any} = {};
         metatypePairResults.value.forEach((pair) => {
-            const origin = pair.origin_metatype_name!;
-            const rel = pair.relationship_name!;
-            const dest = pair.destination_metatype_name!;
+            const origin = stringToValidPropertyName(pair.origin_metatype_name!);
+            const rel = stringToValidPropertyName(pair.relationship_name!);
+            const dest = stringToValidPropertyName(pair.destination_metatype_name!);
             // populate list for forward searching
             if (!(origin in metatypePairObjects)) {
                 metatypePairObjects[origin] = {};
@@ -151,9 +151,9 @@ export default class GraphQLSchemaGenerator {
                 // @ts-ignore
                 fields: () => {
                     const fields: {[key: string]: {[key: string]: any}} = {};
-                    if (metatypePairObjects[metatype.name]) {
-                        Object.keys(metatypePairObjects[metatype.name]).forEach((pair) => {
-                            Object.keys(metatypePairObjects[metatype.name][pair]).forEach((dest) => {
+                    if (metatypePairObjects[stringToValidPropertyName(metatype.name)]) {
+                        Object.keys(metatypePairObjects[stringToValidPropertyName(metatype.name)]).forEach((pair) => {
+                            Object.keys(metatypePairObjects[stringToValidPropertyName(metatype.name)][pair]).forEach((dest) => {
                                 fields[dest] = {type: GraphQLBoolean};
                             });
                         });
@@ -575,7 +575,7 @@ export default class GraphQLSchemaGenerator {
             }
 
             // variable to store results of edge DB call if _relationship input
-            let edgeResults: {[key: string]: any} = {}; 
+            let edgeResults: {[key: string]: any} = {};
             if (input._relationship) {
                 const edgeRepo = new EdgeRepository();
 

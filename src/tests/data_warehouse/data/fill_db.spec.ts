@@ -574,7 +574,11 @@ describe('We can generate test data', async () => {
             type_mapping_id: typeMappingID,
             metatype_relationship_pair_id: maintenancePair!.id,
             origin_id_key: 'car_maintenance.id',
+            origin_data_source_id: dataSource!.DataSourceRecord!.id,
+            origin_metatype_id: test_metatypes.find((m) => m.name === 'Maintenance')!.id!,
             destination_id_key: 'car_maintenance.maintenance_entries.[].id',
+            destination_metatype_id: test_metatypes.find((m) => m.name === 'Maintenance Entry')!.id!,
+            destination_data_source_id: dataSource!.DataSourceRecord!.id,
             root_array: 'car_maintenance.maintenance_entries',
             keys: [],
         });
