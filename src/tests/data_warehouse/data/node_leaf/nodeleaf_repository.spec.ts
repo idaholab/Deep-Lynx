@@ -5,13 +5,11 @@ import Logger from '../../../../services/logger';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import NodeLeafRepository from '../../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
-import NodeLeaf from '../../../../domain_objects/data_warehouse/data/node_leaf';
 import {User} from '../../../../domain_objects/access_management/user';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
 import MetatypeMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import MetatypeKeyMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
-import NodeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/node_repository';
 import Node from '../../../../domain_objects/data_warehouse/data/node';
 import MetatypeRelationshipMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
 import MetatypeRelationshipPairMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
@@ -25,8 +23,6 @@ import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatyp
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
-import { realpath } from 'fs';
-import EdgeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 
 describe('A NodeLeaf Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
