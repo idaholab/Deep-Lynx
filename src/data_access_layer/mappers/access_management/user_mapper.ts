@@ -115,6 +115,18 @@ export default class UserMapper extends Mapper {
         return super.runStatement(this.archiveStatement(userID, id));
     }
 
+    public AddServiceUserToContainer(serviceUserID: string, containerID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.addServiceUserToContainerStatement(serviceUserID, containerID));
+    }
+
+    public DeleteServiceUser(serviceUserID: string, containerID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.deleteServiceUserStatement(serviceUserID, containerID));
+    }
+
+    public ListServiceUsersForContainer(containerID: string): Promise<Result<User[]>> {
+        return super.rows(this.listServiceUsersForContainerStatement(containerID));
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -212,7 +224,7 @@ export default class UserMapper extends Mapper {
 
     private archiveStatement(userID: string, id: string): QueryConfig {
         return {
-            text: `UPDATE users SET active = false, modified_by $2, modified_at = NOW() WHERE id = $1`,
+            text: `UPDATE users SET active = false, modified_by = $2, modified_at = NOW() WHERE id = $1`,
             values: [id, userID],
         };
     }
@@ -258,5 +270,28 @@ export default class UserMapper extends Mapper {
         const values = ids;
 
         return format(text, values);
+    }
+
+    private addServiceUserToContainerStatement(serviceUserID: string, containerID: string): QueryConfig {
+        return {
+            text: `INSERT INTO container_service_users (user_id, container_id) VALUES ($1, $2)`,
+            values: [serviceUserID, containerID],
+        };
+    }
+
+    private deleteServiceUserStatement(serviceUserID: string, containerID: string): QueryConfig {
+        return {
+            text: `DELETE FROM users WHERE id = $1 AND id IN(SELECT user_id FROM container_service_users WHERE container_id = $2)`,
+            values: [serviceUserID, containerID],
+        };
+    }
+
+    private listServiceUsersForContainerStatement(containerID: string): QueryConfig {
+        return {
+            text: `SELECT users.* FROM container_service_users 
+                        LEFT JOIN users ON users.id = container_service_users.user_id
+                        WHERE container_service_users.container_id = $1`,
+            values: [containerID],
+        };
     }
 }
