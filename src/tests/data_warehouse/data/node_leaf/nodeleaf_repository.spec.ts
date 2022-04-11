@@ -34,8 +34,6 @@ describe('A NodeLeaf Repository', async () => {
     let pair: MetatypeRelationshipPair;
     let nodes: Node[] = [];
     let dataSourceID: string = '';
-    let metatype: Metatype;
-    let edges: Edge[] = [];
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
@@ -106,6 +104,11 @@ describe('A NodeLeaf Repository', async () => {
                 name: faker.name.findName(),
                 description: faker.random.alphaNumeric(),
             }),
+            new Metatype({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
         ]);
 
         expect(metatypes.isError).false;
@@ -120,6 +123,11 @@ describe('A NodeLeaf Repository', async () => {
         testKeys2.forEach((key) => (key.metatype_id = metatypes.value[1].id!));
         const keys2 = await mKeyMapper.BulkCreate('test suite', testKeys2);
         expect(keys2.isError).false;
+
+        const testKeys3 = [...test_keys];
+        testKeys3.forEach((key) => (key.metatype_id = metatypes.value[2].id!));
+        const keys3 = await mKeyMapper.BulkCreate('test suite', testKeys3);
+        expect(keys3.isError).false;
 
         const nodeList = [
             new Node({
@@ -136,6 +144,13 @@ describe('A NodeLeaf Repository', async () => {
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
             }),
+            new Node({
+                container_id: containerID,
+                metatype: metatypes.value[2].id!,
+                properties: payload,
+                data_source_id: dataSourceID,
+                original_data_id: faker.name.findName(),
+            }),
         ];
 
         const saveNodes = await nMapper.BulkCreateOrUpdateByCompositeID('test suite', nodeList);
@@ -143,66 +158,109 @@ describe('A NodeLeaf Repository', async () => {
 
         nodes = saveNodes.value;
 
-        const relationship = await mrMapper.Create(
-            'test suite',
+        const relationshipList = [
             new MetatypeRelationship({
                 container_id: containerID,
                 name: faker.name.findName(),
                 description: faker.random.alphaNumeric(),
             }),
-        );
+            new MetatypeRelationship({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+        ];
 
-        expect(relationship.isError).false;
-        expect(relationship.value).not.empty;
+        const relationships = await mrMapper.BulkCreate('test suite', relationshipList);
 
-        const relationshipTestKeys = [...test_rel_keys];
-        relationshipTestKeys.forEach((key) => (key.metatype_relationship_id = relationship.value.id!));
+        expect(relationships.isError).false;
+        expect(relationships.value).not.empty;
 
-        const rKeys = await mrKeyMapper.BulkCreate('test suite', relationshipTestKeys);
-        expect(rKeys.isError).false;
+        const relTestKeys1 = [...test_rel_keys];
+        relTestKeys1.forEach((key) => (key.metatype_relationship_id = relationships.value[0].id!));
+        const rKeys1 = await mrKeyMapper.BulkCreate('test suite', relTestKeys1);
+        expect(rKeys1.isError).false;
 
-        const relPair = await pairMapper.Create(
-            'test suite',
+        const relTestKeys2 = [...test_rel_keys];
+        relTestKeys2.forEach((key) => (key.metatype_relationship_id = relationships.value[1].id!));
+        const rKeys2 = await mrKeyMapper.BulkCreate('test suite', relTestKeys2);
+        expect(rKeys2.isError).false;
+
+        const relPairs = [
             new MetatypeRelationshipPair({
                 name: faker.name.findName(),
                 description: faker.random.alphaNumeric(),
                 origin_metatype: metatypes.value[0].id!,
                 destination_metatype: metatypes.value[1].id!,
-                relationship: relationship.value.id!,
+                relationship: relationships.value[0].id!,
                 relationship_type: 'many:many',
                 container_id: containerID,
             }),
-        );
+            new MetatypeRelationshipPair({
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+                origin_metatype: metatypes.value[1].id!,
+                destination_metatype: metatypes.value[2].id!,
+                relationship: relationships.value[1].id!,
+                relationship_type: 'many:many',
+                container_id: containerID,
+            }),
+        ]
 
-        expect(relPair.isError).false;
-        pair = relPair.value;
+        const pairResults = await pairMapper.BulkCreate('test suite', relPairs);
+
+        expect(pairResults.isError).false;
+        const pair1 = pairResults.value[0];
+        const pair2 = pairResults.value[1];
+
+        const edgeList = [
+            new Edge({
+                container_id: containerID,
+                metatype_relationship_pair: pair1.id!,
+                properties: payload,
+                origin_id: nodes[0].id,
+                destination_id: nodes[1].id,
+            }),
+            new Edge({
+                container_id: containerID,
+                metatype_relationship_pair: pair2.id!,
+                properties: payload,
+                origin_id: nodes[1].id,
+                destination_id: nodes[2].id,
+            })
+        ]
+
+        const edgeResults = await eMapper.BulkCreate('test suite', edgeList);
+        expect (edgeResults.isError).false;
 
         return Promise.resolve();
     });
 
     after(async () => {
+        await UserMapper.Instance.Delete(user.id!);
         await DataSourceMapper.Instance.Delete(dataSourceID);
         await ContainerMapper.Instance.Delete(containerID);
         return PostgresAdapter.Instance.close();
     });
 
-    it('can do stuff', async () => {
-        const edgeRepo = new EdgeRepository();
-        
-        let edge = new Edge({
-            container_id: containerID,
-            metatype_relationship_pair: pair.id!,
-            properties: payload,
-            origin_id: nodes[0].id,
-            destination_id: nodes[1].id,
-        });
+    it('can retrieve data', async () => {
+        const repo = new NodeLeafRepository(nodes[0].id!, containerID, '2');
+        const results = await repo.list({sortBy: "depth"});
+        expect(results.isError).false;
+        expect(results.value.length).eq(2);
 
-        let saved = await edgeRepo.save(edge, user);
-        expect(saved.isError).false;
-        expect(edge.id).not.undefined;
+        const nodeLeaf1 = results.value[0];
+        expect(nodeLeaf1.origin_id).eq(nodes[0].id);
+        expect(nodeLeaf1.destination_id).eq(nodes[1].id);
+        expect(nodeLeaf1.depth).eq(1);
 
-        return edgeRepo.delete(edge);
-    })
+        const nodeLeaf2 = results.value[1];
+        expect(nodeLeaf2.origin_id).eq(nodes[1].id);
+        expect(nodeLeaf2.destination_id).eq(nodes[2].id);
+        expect(nodeLeaf2.depth).eq(2);
+
+        return Promise.resolve();
+    });
 });
 
 const test_keys: MetatypeKey[] = [
