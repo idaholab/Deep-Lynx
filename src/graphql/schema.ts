@@ -348,6 +348,7 @@ export default class GraphQLSchemaGenerator {
         relationshipResults.value.forEach((relationship) => {
             relationshipGraphQLObjects[stringToValidPropertyName(relationship.name)] = {
                 args: {
+                    // ...this.inputFieldsForRelationship(relationship),
                     _record: {type: edgeRecordInputType},
                 },
                 description: relationship.description,
@@ -933,7 +934,6 @@ export default class GraphQLSchemaGenerator {
                 }
             }
         });
-
         return fields;
     }
 

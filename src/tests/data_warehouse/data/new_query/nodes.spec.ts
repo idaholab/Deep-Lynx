@@ -5,7 +5,6 @@ import MetatypeMapper from '../../../../data_access_layer/mappers/data_warehouse
 import faker from 'faker';
 import {expect} from 'chai';
 import NodeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
-import ContainerStorage from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import {graphql, GraphQLSchema} from 'graphql';
 import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
@@ -21,12 +20,9 @@ import MetatypeRelationship from '../../../../domain_objects/data_warehouse/onto
 import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 import MetatypeRelationshipKeyMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper';
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
-import { test_relationship_keys } from '../edges/mapper.spec';
-import KeyPairMapper from '../../../../data_access_layer/mappers/access_management/keypair_mapper';
 import MetatypeRelationshipPairMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
 import EdgeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
-import { da } from 'date-fns/locale';
 import GraphQLSchemaGenerator from '../../../../graphql/schema';
 
 describe('Using a new GraphQL Query on nodes we', async () => {
@@ -170,7 +166,10 @@ describe('Using a new GraphQL Query on nodes we', async () => {
             }),
         ];
 
-        const saveNodes = await nMapper.BulkCreateOrUpdateByCompositeID('test suite', nodeList);
+        const saveNodes = await nMapper.BulkCreateOrUpdateByCompositeID(
+            'test suite',
+            nodeList
+        );
         expect(saveNodes.isError, metatypes.error?.error).false;
         expect(saveNodes.value.length).eq(4);
 
@@ -331,6 +330,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
 
         for (const n of data) {
             expect(n._record.id).not.undefined;
+            expect(n._record.id).eq(nodes[0].id);
             expect(n.name).not.undefined;
             expect(n.color).not.undefined;
             expect(n.invalidAttribute).undefined;
@@ -357,7 +357,6 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                 }
             }`
         });
-        if(response.errors){console.log(response.errors)}
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.metatypes.Multimeta;

@@ -27,7 +27,6 @@ import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/o
 describe('A NodeLeaf Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
-    let pair: MetatypeRelationshipPair;
     let nodes: Node[] = [];
     let dataSourceID: string = '';
 
@@ -110,20 +109,12 @@ describe('A NodeLeaf Repository', async () => {
         expect(metatypes.isError).false;
         expect(metatypes.value).not.empty;
 
-        const testKeys1 = [...test_keys];
-        testKeys1.forEach((key) => (key.metatype_id = metatypes.value[0].id!));
-        const keys = await mKeyMapper.BulkCreate('test suite', testKeys1);
-        expect(keys.isError).false;
-
-        const testKeys2 = [...test_keys];
-        testKeys2.forEach((key) => (key.metatype_id = metatypes.value[1].id!));
-        const keys2 = await mKeyMapper.BulkCreate('test suite', testKeys2);
-        expect(keys2.isError).false;
-
-        const testKeys3 = [...test_keys];
-        testKeys3.forEach((key) => (key.metatype_id = metatypes.value[2].id!));
-        const keys3 = await mKeyMapper.BulkCreate('test suite', testKeys3);
-        expect(keys3.isError).false;
+        metatypes.value.forEach(async(mt) => {
+            const testKeys = [...test_keys];
+            testKeys.forEach((key) => (key.metatype_id = mt.id));
+            const keys = await mKeyMapper.BulkCreate('test suite', testKeys);
+            expect(keys.isError).false;
+        });
 
         const nodeList = [
             new Node({
