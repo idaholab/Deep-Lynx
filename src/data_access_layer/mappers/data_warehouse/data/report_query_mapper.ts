@@ -99,7 +99,7 @@ export default class ReportQueryMapper extends Mapper {
     private setStatusStatement(id: string, status: 'ready' | 'processing' | 'error' | 'completed', message?: string): QueryConfig {
         return {
             text: `UPDATE report_queries SET status = $2, status_message = $3 WHERE id = $1`,
-            values: [status, message, id]
+            values: [id, status, message]
         }
     }
 

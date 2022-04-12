@@ -16,8 +16,6 @@ describe('A Report Mapper', async () => {
     let dataSourceID: string = '';
     let fileID: string = '';
 
-    const status_opts = ['processing', 'error', 'ready', 'completed']
-
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
             Logger.debug('skipping report tests, no mapper layer');

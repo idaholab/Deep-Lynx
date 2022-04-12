@@ -22,8 +22,7 @@ export default class ReportQuery extends BaseDomainClass{
     query = '';
 
     @IsString()
-    @IsIn(['error', 'ready', 'processing', 'completed'])
-    status?: string;
+    status: 'ready' | 'processing' | 'error' | 'completed' = 'ready';
 
     @IsNotEmpty()
     @IsString()
@@ -32,7 +31,6 @@ export default class ReportQuery extends BaseDomainClass{
     constructor(input: {
         report_id?: Report | string;
         query: string;
-        status: string;
         status_message: string;
     }) {
         super();
@@ -41,7 +39,6 @@ export default class ReportQuery extends BaseDomainClass{
                 input.report_id instanceof Report ? (this.report_id = input.report_id.id) : (this.report_id = input.report_id);
             }
             this.query = input.query;
-            if (input.status) {this.status = input.status};
             if (input.status_message) { this.status_message = input.status_message};
         }
     }
