@@ -28,9 +28,8 @@ import GraphQLSchemaGenerator from '../../../../graphql/schema';
 describe('Using a new GraphQL Query on nodes we', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
-    let dataSourceID: string = '';
+    let dataSourceID = '';
     let nodes: Node[] = [];
-    let metatype: Metatype;
     let schema: GraphQLSchema;
 
     before(async function () {
@@ -395,7 +394,6 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                 }
             }`
         });
-        if(response.errors){console.log('ERROR',response.errors)}
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.metatypes.Multimeta;

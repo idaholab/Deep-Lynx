@@ -1,5 +1,5 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {IsArray, IsObject, IsOptional, isString, IsString, ValidateIf, ValidateNested} from 'class-validator';
+import {IsArray, IsObject, IsOptional, IsString, ValidateIf, ValidateNested} from 'class-validator';
 import {Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Metatype, {MetatypeID} from '../ontology/metatype';
 import Container from '../ontology/container';

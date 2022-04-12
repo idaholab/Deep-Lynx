@@ -28,7 +28,7 @@ describe('A NodeLeaf Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
     let nodes: Node[] = [];
-    let dataSourceID: string = '';
+    let dataSourceID = '';
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {

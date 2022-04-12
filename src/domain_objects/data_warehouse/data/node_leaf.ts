@@ -53,11 +53,11 @@ export default class NodeLeaf extends BaseDomainClass {
 
     // edge properties
     edge_id?: string;
-    
+
     relationship_name?: string;
 
     edge_properties: object = {};
-    
+
     // use metatype relationship pair id to get info on the edge's
     // relationship type. Gets the whole class, not just the id.
     @MetatypeRelationshipPairID({

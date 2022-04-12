@@ -348,7 +348,7 @@ export default class GraphQLSchemaGenerator {
         relationshipResults.value.forEach((relationship) => {
             relationshipGraphQLObjects[stringToValidPropertyName(relationship.name)] = {
                 args: {
-                    // ...this.inputFieldsForRelationship(relationship),
+                    ...this.inputFieldsForRelationship(relationship),
                     _record: {type: edgeRecordInputType},
                 },
                 description: relationship.description,
@@ -920,7 +920,7 @@ export default class GraphQLSchemaGenerator {
 
                     fields[propertyName] = {
                         type: new GraphQLEnumType({
-                            name: stringToValidPropertyName(`${relationship.name}_${relationshipKey.name}_Enum_TypeA`),
+                            name: stringToValidPropertyName(`${relationship.name}_${relationshipKey.name}_Enum_TypeB`),
                             values: enumMap,
                         }),
                     };

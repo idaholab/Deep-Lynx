@@ -1,7 +1,6 @@
-import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
+import {QueryOptions, Repository} from '../../repository';
 import NodeLeaf from '../../../../domain_objects/data_warehouse/data/node_leaf';
 import Result from '../../../../common_classes/result';
-import NodeLeafMapper from '../../../mappers/data_warehouse/data/node_leaf_mapper';
 import {PoolClient} from 'pg';
 /*
     NodeLeafRepository contains methods for retrieving NodeLeaf objects from
@@ -12,14 +11,12 @@ import {PoolClient} from 'pg';
 */
 
 export default class NodeLeafRepository extends Repository {
-    #mapper: NodeLeafMapper = NodeLeafMapper.Instance;
-
     constructor(id: string, container_id: string, depth: string){
         super('');
         // in order to add filters to the base node leaf query we must set it
         // as the raw query here
         this._rawQuery = [
-        `SELECT * FROM
+            `SELECT * FROM
             (WITH RECURSIVE search_graph(
                 origin_id, origin_metatype_id, origin_metatype_name, origin_properties, origin_data_source,
                 origin_metadata, origin_created_by, origin_created_at, origin_modified_by, origin_modified_at,
@@ -165,7 +162,7 @@ export default class NodeLeafRepository extends Repository {
         });
         // reset the query
         this._rawQuery = [
-        `SELECT * FROM
+            `SELECT * FROM
             (WITH RECURSIVE search_graph(
                 origin_id, origin_metatype_id, origin_metatype_name, origin_properties, origin_data_source,
                 origin_metadata, origin_created_by, origin_created_at, origin_modified_by, origin_modified_at,

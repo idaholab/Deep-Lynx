@@ -5,7 +5,7 @@ import MetatypeMapper from '../../../../data_access_layer/mappers/data_warehouse
 import faker from 'faker';
 import {expect} from 'chai';
 import NodeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
-import {graphql, GraphQLSchema, responsePathAsArray} from 'graphql';
+import {graphql, GraphQLSchema} from 'graphql';
 import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
@@ -28,9 +28,8 @@ import GraphQLSchemaGenerator from '../../../../graphql/schema';
 describe('Using a new GraphQL Query on edges we', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
-    let dataSourceID: string = '';
+    let dataSourceID = '';
     let nodes: Node[] = [];
-    let edges: Edge[] = [];
     let schema: GraphQLSchema;
 
     before(async function () {
@@ -306,7 +305,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
                 container_id: containerID,
                 metatype_relationship_pair: pairs[3].id!,
                 properties: {
-                    name: faker.name.findName(),
+                    name: "Timbo Crooks Jr.",
                     color: 'blue',
                 },
                 origin_id: nodes[1].id,
@@ -316,7 +315,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
                 container_id: containerID,
                 metatype_relationship_pair: pairs[4].id!,
                 properties: {
-                    name: "Timbo Crooks Jr.",
+                    name: faker.name.findName(),
                     color: 'blue',
                 },
                 origin_id: nodes[1].id,
@@ -347,7 +346,6 @@ describe('Using a new GraphQL Query on edges we', async () => {
         expect(edgeResults.isError).false;
         expect(relPairs.value).not.empty;
         expect(edgeResults.value.length).eq(7);
-        edges = edgeResults.value;
 
         return Promise.resolve();
     });
@@ -417,7 +415,6 @@ describe('Using a new GraphQL Query on edges we', async () => {
                 }
             }`
         });
-        if(response.errors){console.log(response.errors)}
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.relationships.forwards;
@@ -453,7 +450,6 @@ describe('Using a new GraphQL Query on edges we', async () => {
                 }
             }`
         });
-        if(response.errors){console.log(response.errors)}
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.relationships.forwards;
