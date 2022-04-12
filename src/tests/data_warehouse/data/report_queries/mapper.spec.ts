@@ -229,4 +229,29 @@ describe('A Report Query Mapper', async () => {
 
         return Promise.resolve();
     });
+
+    it('can add/remove a file to/from a report', async () => {
+        const mapper = ReportQueryMapper.Instance;
+
+        const rQuery = await mapper.Create(
+            new ReportQuery({
+                report_id: reportID,
+                query: `{metatypes{Requirement{id name}}}`,
+                status_message: faker.random.alphaNumeric(),
+            }),
+        );
+
+        expect(rQuery.isError).false;
+        expect(rQuery.value).not.empty;
+
+        const fileAdded = await mapper.AddFile(reportID, rQuery.value.id!, fileID);
+        expect(fileAdded.isError).false;
+        expect(fileAdded.value).true;
+
+        const fileRemoved = await mapper.RemoveFile(rQuery.value.id!, fileID);
+        expect(fileRemoved.isError).false;
+        expect(fileRemoved.value).true;
+
+        return mapper.Delete(rQuery.value.id!);
+    });
 });
