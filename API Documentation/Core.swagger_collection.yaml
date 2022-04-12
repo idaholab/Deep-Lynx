@@ -382,7 +382,7 @@ paths:
         - Data Query
       summary: Query Data
       description: 'Query data from your container using GraphQL. You can learn more here - https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Querying-Data-With-GraphQL'
-      operationId: QueryData
+      operationId: DataQuery
       parameters:
         - name: container_id
           in: path
@@ -2907,6 +2907,218 @@ paths:
               schema:
                 $ref: '#/components/schemas/GetUserResponse'
       deprecated: false
+  '/containers/{container_id}/service-users':
+    get:
+      tags:
+        - Users
+      summary: List Service Users
+      description: Retrieve a list of all service users for container
+      operationId: ListServiceUsers
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListServiceUserResponse'
+      deprecated: false
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+    post:
+      summary: Create Service User
+      operationId: CreateServiceUser
+      responses:
+        '200':
+          description: OK
+      description: Creates a new service user for container
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServiceUser'
+      tags:
+        - Users
+  '/containers/{container_id}/service-users/{service_user_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: service_user_id
+        in: path
+        required: true
+    delete:
+      summary: Delete Service User
+      operationId: DeleteServiceUser
+      responses:
+        '200':
+          description: OK
+      description: Deletes a service user.
+      tags:
+        - Users
+  '/containers/{container_id}/service-users/{service_user_id}/permissions':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: service_user_id
+        in: path
+        required: true
+    put:
+      summary: Set Service User Permissions
+      operationId: SetServiceUserPermissions
+      responses:
+        '200':
+          description: OK
+      description: Set service user permissions.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: ''
+              type: object
+              x-examples:
+                example-1:
+                  containers:
+                    - read
+                    - write
+                  data:
+                    - read
+                    - write
+                  users:
+                    - read
+                    - write
+                  ontology:
+                    - read
+                    - write
+              properties:
+                containers:
+                  type: array
+                  items:
+                    type: string
+                data:
+                  type: array
+                  items:
+                    type: string
+                users:
+                  type: array
+                  items:
+                    type: string
+                ontology:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - containers
+                - data
+                - users
+                - ontology
+      tags:
+        - Users
+    get:
+      summary: Get Service User Permissions
+      operationId: GetServiceUserPermissions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                description: ''
+                minItems: 1
+                uniqueItems: true
+                items:
+                  type: object
+                  required:
+                    - '0'
+                  properties:
+                    '0':
+                      type: array
+                      uniqueItems: true
+                      items:
+                        properties: {}
+                x-examples:
+                  example-1:
+                    - - '70'
+                      - ontology
+                      - write
+      tags:
+        - Users
+      description: Get service user permissions.
+  '/containers/{container_id}/service-users/{service_user_id}/keys':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: service_user_id
+        in: path
+        required: true
+    get:
+      summary: List Service User KeyPairs
+      operationId: ListServiceUserKeyPairs
+      responses:
+        '200':
+          description: OK
+      description: 'Lists a service user''s api/secret keypairs. This lists only the key, not the secret.'
+      tags:
+        - Users
+    post:
+      summary: Create Service User KeyPair
+      operationId: CreateServiceUserKeyPair
+      responses:
+        '200':
+          description: OK
+      description: Creates a new api/secret keypair. This will return the secret as well - this is the only time that you will be able to see the secret.
+      tags:
+        - Users
+  '/containers/{container_id}/service-users/{service_user_id}/keys/{key_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: service_user_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: key_id
+        in: path
+        required: true
+    delete:
+      summary: Delete Service User KeyPair
+      operationId: DeleteServiceUserKeyPair
+      responses:
+        '200':
+          description: OK
+      description: Delete a service user keypair.
+      tags:
+        - Users
   '/containers/{container_id}/users/{user_id}/roles':
     get:
       tags:
@@ -4300,23 +4512,6 @@ paths:
         '200':
           description: OK
       description: Publishes an ontology version
-  '/Core.swagger_collection.yaml/paths//containers/{container_id}/graphs/nodes/{node_id}':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: node_id
-        in: path
-        required: true
-    get:
-      summary: Nth Node Query
-      tags: []
-      responses: {}
-      operationId: get-Core.swagger_collection.yaml-paths-~1containers~1-container_id-~1graphs~1nodes~1-node_id
 components:
   securitySchemes:
     BearerAuth:
@@ -7423,4 +7618,134 @@ components:
       properties:
         property_name_here:
           type: string
+    ServiceUser:
+      title: ServiceUser
+      type: object
+      properties:
+        identity_provider:
+          type: string
+          minLength: 1
+        display_name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          minLength: 1
+        admin:
+          type: boolean
+        active:
+          type: boolean
+        reset_required:
+          type: boolean
+        email_valid:
+          type: boolean
+        permissions:
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            properties: {}
+        roles:
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            properties: {}
+        id:
+          type: string
+          minLength: 1
+        identity_provider_id:
+          type: string
+          minLength: 1
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        reset_token_issued:
+          type: string
+          minLength: 1
+        keys:
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            required:
+              - key
+              - secret_raw
+              - user_id
+            properties:
+              key:
+                type: string
+                minLength: 1
+              secret_raw:
+                type: string
+                minLength: 1
+              user_id:
+                type: string
+                minLength: 1
+      required:
+        - identity_provider
+        - display_name
+        - email
+        - admin
+        - active
+        - reset_required
+        - email_valid
+        - id
+        - identity_provider_id
+        - created_at
+        - modified_at
+        - created_by
+        - modified_by
+        - reset_token_issued
+      x-examples:
+        example-1:
+          identity_provider: string
+          display_name: string
+          email: string
+          admin: true
+          active: true
+          reset_required: true
+          email_valid: true
+          permissions:
+            - {}
+          roles:
+            - {}
+          id: string
+          identity_provider_id: string
+          created_at: string
+          modified_at: string
+          created_by: string
+          modified_by: string
+          reset_token_issued: string
+          keys:
+            - key: string
+              secret_raw: string
+              user_id: string
+    ListServiceUserResponse:
+      title: ListServiceUserResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceUser'
+        isError:
+          type: boolean
+    CreateServiceUser:
+      title: CreateServiceUser
+      type: object
+      properties:
+        display_name:
+          type: string
+      required:
+        - display_name
   responses: {}

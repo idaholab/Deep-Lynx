@@ -26,7 +26,9 @@ export class Authorization {
         if (!this.e) {
             const a = await PostgresAdapter.newAdapter({
                 connectionString: Config.core_db_connection_string,
+                migrate: !this.e,
             });
+            a.enabledFiltered(false);
 
             const e = await newEnforcer(Config.auth_config_file, a);
             await e.loadPolicy();
@@ -91,6 +93,13 @@ export class Authorization {
             // permissions return is an array of strings that follows the pattern of
             // role name, containerID, resource, actions - we only need resource and actions
             const permissions = await this.e.getImplicitPermissionsForUser(userID, role[2]);
+            permissions.map((perm) => perm.shift());
+            permissionReturn.push(...permissions);
+        }
+
+        // if we don't have a role, need to check free floating permissions
+        if (roles.length === 0) {
+            const permissions = await this.e.getPermissionsForUser(userID);
             permissions.map((perm) => perm.shift());
             permissionReturn.push(...permissions);
         }

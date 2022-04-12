@@ -2,7 +2,7 @@ const NodeCache = require('node-cache');
 const Redis = require('ioredis');
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { RedisStatic } from 'ioredis';
+import {RedisStatic} from 'ioredis';
 import Config from '../config';
 import Logger from '../logger';
 
@@ -49,6 +49,7 @@ class Cache {
 export interface CacheInterface {
     set(key: string, val: any, ttl?: number): Promise<boolean>;
     del(key: string): Promise<boolean>;
+    flush(): Promise<boolean>;
     get<T>(key: string): Promise<T | undefined>;
 }
 
@@ -82,6 +83,11 @@ export class MemoryCacheImpl implements CacheInterface {
             return new Promise((resolve) => resolve(false));
         }
 
+        return new Promise((resolve) => resolve(true));
+    }
+
+    flush(): Promise<boolean> {
+        this._cache.flushAll();
         return new Promise((resolve) => resolve(true));
     }
 
@@ -130,6 +136,16 @@ export class RedisCacheImpl implements CacheInterface {
         if (deleted !== 1 && deleted !== 0) {
             Logger.error(`error deleting value from redis: ${deleted}`);
             return new Promise((resolve) => resolve(false));
+        }
+
+        return new Promise((resolve) => resolve(true));
+    }
+
+    async flush(): Promise<boolean> {
+        const flushed = await this._redis.flushall();
+
+        if (flushed !== 1 && flushed !== 0) {
+            Logger.error(`error flushing all values from redis`);
         }
 
         return new Promise((resolve) => resolve(true));

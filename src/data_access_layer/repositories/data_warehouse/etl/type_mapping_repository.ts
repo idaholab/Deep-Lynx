@@ -16,8 +16,6 @@ import TypeTransformationRepository from './type_transformation_repository';
 import MetatypeRepository from '../ontology/metatype_repository';
 import MetatypeRelationshipPairRepository from '../ontology/metatype_relationship_pair_repository';
 import MetatypeRelationshipRepository from '../ontology/metatype_relationship_repository';
-import MetatypeKeyRepository from '../ontology/metatype_key_repository';
-import MetatypeRelationshipKeyRepository from '../ontology/metatype_relationship_key_repository';
 
 /*
     TypeMappingRepository contains methods for persisting and retrieving nodes
@@ -42,42 +40,28 @@ export default class TypeMappingRepository extends Repository implements Reposit
         return Promise.resolve(Result.Failure(`type mapping must have id`));
     }
 
+    // TODO: figure out caching, ripped out due to bug
     async findByID(id: string, loadTransformations = true): Promise<Result<TypeMapping>> {
-        const cached = await this.getCached(id);
-        if (cached) {
-            return Promise.resolve(Result.Success(cached));
-        }
-
         const retrieved = await this.#mapper.Retrieve(id);
 
         if (!retrieved.isError && loadTransformations) {
             // we do not want to cache this object unless we have the entire object
             const transformations = await this.#transformationMapper.ListForTypeMapping(retrieved.value.id!);
             if (!transformations.isError) retrieved.value.addTransformation(...transformations.value);
-
-            // don't fail on cache set failed, it will log itself and move on
-            void this.setCache(retrieved.value);
         }
 
         return Promise.resolve(retrieved);
     }
 
+    // TODO: figure out caching, ripped out due to bug
     // shape hashes are unique only to data sources, so it will need both to find one
     async findByShapeHash(shapeHash: string, dataSourceID: string, loadTransformations = true): Promise<Result<TypeMapping>> {
-        const cached = await this.getCachedByShapeHash(shapeHash, dataSourceID);
-        if (cached) {
-            return Promise.resolve(Result.Success(cached));
-        }
-
         const retrieved = await this.#mapper.RetrieveByShapeHash(dataSourceID, shapeHash);
 
         if (!retrieved.isError && loadTransformations) {
             // we do not want to cache this object unless we have the entire object
             const transformations = await this.#transformationMapper.ListForTypeMapping(retrieved.value.id!);
             if (!transformations.isError) retrieved.value.addTransformation(...transformations.value);
-
-            // don't fail on cache set failed, it will log itself and move one
-            void this.setCache(retrieved.value);
         }
 
         return Promise.resolve(retrieved);
@@ -125,14 +109,13 @@ export default class TypeMappingRepository extends Repository implements Reposit
                 }
             }
 
-            await this.deleteCached(t);
-
             const committed = await this.#mapper.completeTransaction(transaction);
             if (committed.isError) {
                 if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
                 return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`));
             }
 
+            await this.deleteCached(t);
             return Promise.resolve(Result.Success(true));
         }
 
@@ -143,7 +126,6 @@ export default class TypeMappingRepository extends Repository implements Reposit
         }
 
         Object.assign(t, result.value);
-        await this.deleteCached(t);
 
         // assign the id to all transformations
         if (t.transformations) t.transformations.forEach((transformation) => (transformation.type_mapping_id = t.id));
@@ -164,6 +146,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
             }
         }
 
+        await this.deleteCached(t);
         return Promise.resolve(Result.Success(true));
     }
 

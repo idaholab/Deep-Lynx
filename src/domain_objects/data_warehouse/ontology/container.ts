@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
-import {IsBoolean, IsDate, IsIn, IsNotEmpty, IsOptional, IsString, MinLength, ValidateNested} from 'class-validator';
+import {ArrayContains, IsArray, IsBoolean, IsDate, IsIn, IsNotEmpty, IsOptional, IsString, MinLength, ValidateNested} from 'class-validator';
 import Result from '../../../common_classes/result';
 import Authorization from '../../access_management/authorization/authorization';
 import Logger from '../../../services/logger';
@@ -179,5 +179,85 @@ export class ContainerAlert extends NakedDomainClass {
             if (input.acknowledgedBy) this.acknowledged_by = input.acknowledgedBy;
             if (input.createdBy) this.created_by = input.createdBy;
         }
+    }
+}
+
+export class ContainerPermissionSet extends NakedDomainClass {
+    @IsOptional()
+    @IsArray()
+    containers: string[] | undefined;
+
+    @IsOptional()
+    @IsArray()
+    ontology: string[] | undefined;
+
+    @IsOptional()
+    @IsArray()
+    data: string[] | undefined;
+
+    @IsOptional()
+    @IsArray()
+    users: string[] | undefined;
+
+    constructor(input: {containers?: string[]; ontology?: string[]; data?: string[]; users?: string[]}) {
+        super();
+        if (input) {
+            this.containers = input.containers;
+            this.ontology = input.ontology;
+            this.data = input.data;
+            this.users = input.users;
+        }
+    }
+
+    async writePermissions(userID: string, containerID: string): Promise<Result<boolean>> {
+        const e = await Authorization.enforcer();
+
+        // clear out the old permissions first
+        await e.removePolicies([
+            [userID, containerID, 'containers', 'write'],
+            [userID, containerID, 'containers', 'read'],
+            [userID, containerID, 'ontology', 'write'],
+            [userID, containerID, 'ontology', 'read'],
+            [userID, containerID, 'data', 'write'],
+            [userID, containerID, 'data', 'read'],
+            [userID, containerID, 'users', 'write'],
+            [userID, containerID, 'users', 'read'],
+        ]);
+
+        await e.savePolicy();
+
+        if (this.containers && this.containers.length > 0) {
+            this.containers.forEach((permission) => {
+                e.addPolicy(userID, containerID, 'containers', permission).catch((e) =>
+                    Logger.error(`error while setting container permissions for user ${userID}: ${e}`),
+                );
+            });
+        }
+
+        if (this.ontology && this.ontology.length > 0) {
+            this.ontology.forEach((permission) => {
+                e.addPolicy(userID, containerID, 'ontology', permission).catch((e) =>
+                    Logger.error(`error while setting container permissions for user ${userID}: ${e}`),
+                );
+            });
+        }
+
+        if (this.data && this.data.length > 0) {
+            this.data.forEach((permission) => {
+                e.addPolicy(userID, containerID, 'data', permission).catch((e) =>
+                    Logger.error(`error while setting container permissions for user ${userID}: ${e}`),
+                );
+            });
+        }
+
+        if (this.users && this.users.length > 0) {
+            this.users.forEach((permission) => {
+                e.addPolicy(userID, containerID, 'users', permission).catch((e) =>
+                    Logger.error(`error while setting container permissions for user ${userID}: ${e}`),
+                );
+            });
+        }
+
+        return Promise.resolve(Result.Success(true));
     }
 }

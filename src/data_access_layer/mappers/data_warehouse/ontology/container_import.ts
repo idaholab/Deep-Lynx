@@ -252,9 +252,9 @@ export default class ContainerImport {
 
                 let parentID;
                 const properties: {[key: string]: PropertyT} = {};
-                if (typeof selectedClass['rdfs:subClassOf'][0] === 'undefined') {
+                if (selectedClass['rdf:subClassOf'] && typeof selectedClass['rdfs:subClassOf'][0] === 'undefined') {
                     parentID = selectedClass['rdfs:subClassOf']._attributes['rdf:resource'];
-                } else {
+                } else if(selectedClass['rdf:subClassOf']) {
                     // if no other properties, subClassOf is not an array
                     parentID = selectedClass['rdfs:subClassOf'][0]._attributes['rdf:resource'];
                     // loop through properties
@@ -354,24 +354,27 @@ export default class ContainerImport {
             }
 
             // Relationships
-            for (const relationship of objectProperties) {
-                const relationshipID = relationship._attributes['rdf:about'];
-                const relationshipName = relationship['rdfs:label']._text ? relationship['rdfs:label']._text : relationship['rdfs:label'];
-                let relationshipDescription = '';
-                if (typeof relationship['obo:IAO_0000115'] !== 'undefined') {
-                    relationshipDescription = relationship['obo:IAO_0000115']._text ? relationship['obo:IAO_0000115']._text : relationship['obo:IAO_0000115'];
+            if(objectProperties) {
+                for (const relationship of objectProperties) {
+                    const relationshipID = relationship._attributes['rdf:about'];
+                    const relationshipName = relationship['rdfs:label']._text ? relationship['rdfs:label']._text : relationship['rdfs:label'];
+                    let relationshipDescription = '';
+                    if (typeof relationship['obo:IAO_0000115'] !== 'undefined') {
+                        relationshipDescription = relationship['obo:IAO_0000115']._text ? relationship['obo:IAO_0000115']._text : relationship['obo:IAO_0000115'];
+                    }
+                    relationshipMap.set(relationshipName, {
+                        id: relationshipID,
+                        name: relationshipName,
+                        description: relationshipDescription,
+                    });
+                    relationshipIDMap.set(relationshipID, {
+                        id: relationshipID,
+                        name: relationshipName,
+                        description: relationshipDescription,
+                    });
                 }
-                relationshipMap.set(relationshipName, {
-                    id: relationshipID,
-                    name: relationshipName,
-                    description: relationshipDescription,
-                });
-                relationshipIDMap.set(relationshipID, {
-                    id: relationshipID,
-                    name: relationshipName,
-                    description: relationshipDescription,
-                });
             }
+
             // Add inheritance relationship to relationship map
             relationshipMap.set('inheritance', {
                 name: 'inheritance',
@@ -441,7 +444,7 @@ export default class ContainerImport {
                     });
 
                     const saved = await containerRepo.save(container, user);
-                    if (saved.isError) return resolve(Result.SilentFailure(saved.error!.error));
+                    if (saved.isError) return resolve(Result.DebugFailure(saved.error!.error));
                     containerID = container.id!;
                 } else {
                     const containerResult = await containerRepo.findByID(containerID);
@@ -455,7 +458,7 @@ export default class ContainerImport {
                 // prepare inheritance relationship pairs
                 classListMap.forEach((thisClass: MetatypeExtendT) => {
                     // don't add parent relationship for root entity
-                    if (!/owl#Thing/.exec(thisClass.parent_id!)) {
+                    if (thisClass.parent_id && !/owl#Thing/.exec(thisClass.parent_id)) {
                         allRelationshipPairNames.push(thisClass.name + ' : child of : ' + classIDMap.get(thisClass.parent_id).name);
 
                         // add inherited properties and relationships (flatten ontology)
@@ -659,7 +662,7 @@ export default class ContainerImport {
                         .catch((err: string) => {
                             return err + ' ' + relationshipPromise.error?.error;
                         });
-                    resolve(Result.SilentFailure(rollback));
+                    resolve(Result.DebugFailure(rollback));
                     return;
                 } else if (relationshipPromise.isError) {
                     resolve(Result.Pass(relationshipPromise))
@@ -703,7 +706,7 @@ export default class ContainerImport {
                         .catch((err: string) => {
                             return err + ' ' + metatypePromise.error?.error;
                         });
-                    resolve(Result.SilentFailure(rollback));
+                    resolve(Result.DebugFailure(rollback));
                     return;
                 } else if (metatypePromise.isError) {
                     resolve(Result.Pass(metatypePromise))
@@ -728,7 +731,7 @@ export default class ContainerImport {
                     // Add relationship to parent class
                     const relationship = relationshipMap.get('inheritance');
                     // Don't add parent relationship for root entity
-                    if (!/owl#Thing/.exec(thisClass.parent_id!)) {
+                    if (thisClass.parent_id && !/owl#Thing/.exec(thisClass.parent_id)) {
                         const relationshipName = thisClass.name + ' : child of : ' + classIDMap.get(thisClass.parent_id).name;
 
                         const data = new MetatypeRelationshipPair({
@@ -853,7 +856,7 @@ export default class ContainerImport {
                             .catch((err: string) => {
                                 return err + ' ' + propResult.error?.error;
                             });
-                        resolve(Result.SilentFailure(rollback));
+                        resolve(Result.DebugFailure(rollback));
                         return;
                     } else if (propResult.isError) {
                         resolve(Result.Pass(propResult))
@@ -863,7 +866,7 @@ export default class ContainerImport {
                 resolve(Result.Success(containerID));
             }
         }).catch<Result<string>>((e: string) => {
-            return Promise.resolve(Result.SilentFailure(e));
+            return Promise.resolve(Result.DebugFailure(e));
         });
     }
 }

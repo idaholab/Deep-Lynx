@@ -193,6 +193,7 @@ export type StandardDataSourceConfig = {
     data_type: 'json' | 'csv';
     stop_nodes?: string[];
     value_nodes?: string[];
+    data_retention_days?: number;
 };
 
 export type HttpDataSourceConfig = {
@@ -206,6 +207,7 @@ export type HttpDataSourceConfig = {
     password?: string; // auth method basic
     stop_nodes?: string[];
     value_nodes?: string[];
+    data_retention_days?: number;
 };
 
 export type JazzDataSourceConfig = {
@@ -219,6 +221,7 @@ export type JazzDataSourceConfig = {
     token: string; // security token for http authentication
     stop_nodes?: string[];
     value_nodes?: string[];
+    data_retention_days?: number;
 };
 
 export type AvevaDataSourceConfig = {
@@ -244,6 +247,7 @@ export type AvevaDataSourceConfig = {
     };
     stop_nodes?: string[];
     value_nodes?: string[];
+    data_retention_days?: number;
 };
 
 export type ImportT = {
@@ -456,6 +460,7 @@ export type ResultT<T> = {
 export function DefaultAvevaDataSourceConfig(): AvevaDataSourceConfig {
     return {
         kind: 'aveva',
+        data_retention_days: 30,
         ignore_dbs: [
             'SYSTEM',
             'DICTIONARY',
@@ -556,6 +561,7 @@ export function DefaultJazzDataSourceConfig(): JazzDataSourceConfig {
         poll_interval: 10,
         token: '',
         limit: 10,
+        data_retention_days: 30
     };
 }
 
@@ -566,6 +572,7 @@ export function DefaultHttpDataSourceConfig(): HttpDataSourceConfig {
         secure: true,
         auth_method: 'none',
         poll_interval: 10,
+        data_retention_days: 30
     };
 }
 
@@ -573,5 +580,6 @@ export function DefaultStandardDataSourceConfig(): StandardDataSourceConfig {
     return {
         kind: 'standard',
         data_type: 'json',
+        data_retention_days: 30
     };
 }
