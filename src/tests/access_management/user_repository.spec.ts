@@ -2,12 +2,13 @@ import {AssignUserRolePayload, ContainerUserInvite, KeyPair, ResetUserPasswordPa
 import Logger from '../../services/logger';
 import PostgresAdapter from '../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerMapper from '../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import Container from '../../domain_objects/data_warehouse/ontology/container';
+import Container, {ContainerPermissionSet} from '../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
 import {expect} from 'chai';
 import UserRepository from '../../data_access_layer/repositories/access_management/user_repository';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
 import KeyPairMapper from '../../data_access_layer/mappers/access_management/keypair_mapper';
+import ContainerRepository from "../../data_access_layer/repositories/data_warehouse/ontology/container_respository";
 
 describe('A User Repository', async () => {
     let container: Container;
@@ -24,21 +25,23 @@ describe('A User Repository', async () => {
         });
     };
 
+    const testServiceUser = () => {
+        return new User({
+            identity_provider: 'service',
+            admin: false,
+            display_name: faker.name.findName(),
+            type: 'service'
+        });
+    };
+
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
             Logger.debug('skipping metatype tests, no mapper layer');
             this.skip();
         }
         await PostgresAdapter.Instance.init();
-        const mapper = ContainerMapper.Instance;
+        const repo = new ContainerRepository()
 
-        const created = await mapper.Create(
-            'test suite',
-            new Container({
-                name: faker.name.findName(),
-                description: faker.random.alphaNumeric(),
-            }),
-        );
 
         const userResult = await UserMapper.Instance.Create(
             'test suite',
@@ -57,9 +60,16 @@ describe('A User Repository', async () => {
         expect(userResult.value).not.empty;
         user = userResult.value;
 
+        container = new Container({
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric(),
+        })
+
+        const created = await repo.save(
+            container, user
+        );
+
         expect(created.isError).false;
-        expect(created.value.id).not.null;
-        container = created.value;
 
         return Promise.resolve();
     });
@@ -196,6 +206,54 @@ describe('A User Repository', async () => {
         // now we accept the invite
         results = await repository.acceptContainerInvite(u, invite.token!);
         expect(results.isError).false;
+
+        return repository.delete(u);
+    });
+
+
+    it('can save a Service User', async () => {
+        const repository = new UserRepository();
+        const u = testServiceUser();
+
+        let results = await repository.save(u, user);
+        expect(results.isError, results.error?.error).false;
+        expect(u.id).not.undefined;
+
+        return repository.delete(u);
+    });
+
+    it('can set a Service User\'s container permissions', async () => {
+        const repository = new UserRepository();
+        const u = testServiceUser();
+
+        let results = await repository.save(u, user);
+        expect(results.isError, results.error?.error).false;
+        expect(u.id).not.undefined;
+
+        const added = await repository.addServiceUserToContainer(u.id!, container.id!)
+        expect(added.isError).false
+
+        const assigned = await repository.assignRole(user, new AssignUserRolePayload({
+           userID: u.id,
+           containerID: container.id,
+           roleName: 'user'
+        }))
+        expect(assigned.isError, assigned.error?.error).false
+
+        // first check the ones we are about to add don't exist
+        let permissions = await repository.retrievePermissions(u)
+        let filtered = permissions.value.filter(set => (set[1] === 'containers' && set[2] === 'write') || (set[1] === 'users' && set[2] === 'read'))
+        expect(filtered.length).eq(0)
+
+        const set = await repository.setContainerPermissions(u.id!, container.id!, new ContainerPermissionSet({
+            containers: ['write'],
+            users: ['read']
+        }))
+        expect(set.isError, set.error?.error).false
+
+        permissions = await repository.retrievePermissions(u)
+        filtered = permissions.value.filter(set => (set[1] === 'containers' && set[2] === 'write') || (set[1] === 'users' && set[2] === 'read'))
+        expect(filtered).not.empty
 
         return repository.delete(u);
     });

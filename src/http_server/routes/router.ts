@@ -35,6 +35,7 @@ import {
     eventActionContext,
     eventActionStatusContext,
     ontologyVersionContext,
+    serviceUserContext,
 } from '../middleware';
 import ContainerRoutes from './data_warehouse/ontology/container_routes';
 import MetatypeRoutes from './data_warehouse/ontology/metatype_routes';
@@ -109,7 +110,7 @@ export class Router {
         // large json bodies into memory)
         this.app.use(express.json({limit: `${Config.max_request_body_size}mb`}));
 
-        UserRoutes.mount(this.app, [authenticateRoute(), containerContext(), userContext(), currentUser()]);
+        UserRoutes.mount(this.app, [authenticateRoute(), containerContext(), userContext(), currentUser(), serviceUserContext()]);
         ContainerRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         ExportRoutes.mount(this.app, [authenticateRoute(), containerContext(), exporterContext(), currentUser()]);
         DataSourceRoutes.mount(this.app, [authenticateRoute(), containerContext(), dataSourceContext(), currentUser()]);

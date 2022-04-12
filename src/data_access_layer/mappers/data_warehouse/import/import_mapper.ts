@@ -214,11 +214,11 @@ export default class ImportMapper extends Mapper {
         // accidentally delete any records in process (in case this is from reprocessing an import)
         return [
             {
-                text: `UPDATE nodes SET deleted_at = NOW() WHERE deleted_at IS NULL AND import_data_id = $1 AND created_at < NOW() `,
+                text: `DELETE FROM nodes WHERE import_data_id = $1 AND created_at < NOW() `,
                 values: [importID],
             },
             {
-                text: `UPDATE edges SET deleted_at = NOW() WHERE deleted_at IS NULL AND import_data_id = $1 AND created_at < NOW()`,
+                text: `DELETE FROM edges WHERE import_data_id = $1 AND created_at < NOW()`,
                 values: [importID],
             },
         ];

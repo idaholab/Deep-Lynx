@@ -9,6 +9,7 @@ import {AssignUserRolePayload, ContainerUserInvite, KeyPair, User} from '../../.
 import {QueryOptions} from '../../../data_access_layer/repositories/repository';
 import KeyPairMapper from '../../../data_access_layer/mappers/access_management/keypair_mapper';
 import KeyPairRepository from '../../../data_access_layer/repositories/access_management/keypair_repository';
+import {ContainerPermissionSet} from '../../../domain_objects/data_warehouse/ontology/container';
 
 const userRepo = new UserRepository();
 
@@ -33,7 +34,7 @@ export default class UserRoutes {
 
         // this endpoint will return all users of the application, not users who have permissions in the container
         // we use the container to make sure the requester has permissions to view all users, but this could be
-        // be a little confusing
+        // a little confusing
         app.get('/containers/:containerID/users', ...middleware, authInContainer('read', 'users'), this.listUsersForContainer);
         app.get('/containers/:containerID/users/:userID', ...middleware, authInContainer('read', 'users'), this.retrieveUser);
 
@@ -42,6 +43,46 @@ export default class UserRoutes {
 
         app.post('/containers/:containerID/users/invite', ...middleware, authInContainer('write', 'users'), this.inviteUserToContainer);
         app.get('/containers/:containerID/users/invite', ...middleware, authInContainer('read', 'users'), this.listInvitedUsers);
+
+        app.get('/containers/:containerID/service-users', ...middleware, authInContainer('read', 'users'), this.listServiceUsersForContainer);
+        app.post('/containers/:containerID/service-users', ...middleware, authInContainer('write', 'users'), this.createServiceUserForContainer);
+        app.delete(
+            '/containers/:containerID/service-users/:serviceUserID',
+            ...middleware,
+            authInContainer('write', 'users'),
+            this.deleteServiceUserForContainer,
+        );
+        app.get(
+            '/containers/:containerID/service-users/:serviceUserID/permissions',
+            ...middleware,
+            authInContainer('read', 'users'),
+            this.listServiceUserPermissions,
+        );
+        app.put(
+            '/containers/:containerID/service-users/:serviceUserID/permissions',
+            ...middleware,
+            authInContainer('write', 'users'),
+            this.setServiceUserPermissions,
+        );
+
+        app.get(
+            '/containers/:containerID/service-users/:serviceUserID/keys',
+            ...middleware,
+            authInContainer('write', 'users'),
+            this.listKeyPairsForServiceUser,
+        );
+        app.post(
+            '/containers/:containerID/service-users/:serviceUserID/keys',
+            ...middleware,
+            authInContainer('write', 'users'),
+            this.generateKeyPairForServiceUser,
+        );
+        app.delete(
+            '/containers/:containerID/service-users/:serviceUserID/keys/:keyID',
+            ...middleware,
+            authInContainer('write', 'users'),
+            this.deleteKeyPairForServiceUser,
+        );
     }
 
     private static retrieveUser(req: Request, res: Response, next: NextFunction) {
@@ -285,6 +326,154 @@ export default class UserRoutes {
                 .finally(() => next());
         } else {
             Result.Failure('container or current user not found', 404).asResponse(res);
+            next();
+        }
+    }
+
+    // service type users specific handlers
+    private static createServiceUserForContainer(req: Request, res: Response, next: NextFunction) {
+        if (req.container && req.currentUser) {
+            const toCreate = plainToClass(User, req.body as object);
+
+            // manually set the type to service so there is no way for someone to overwrite this and create another user
+            toCreate.type = 'service';
+            toCreate.identity_provider = 'service';
+            toCreate.admin = false;
+
+            userRepo
+                .save(toCreate, req.currentUser)
+                .then((result) => {
+                    if (result.isError) {
+                        result.asResponse(res);
+                        return;
+                    }
+
+                    userRepo
+                        .addServiceUserToContainer(toCreate.id!, req.container!.id!)
+                        .then((result) => {
+                            Result.Success(toCreate).asResponse(res);
+                        })
+                        .catch((e) => Result.Error(e).asResponse(res))
+                        .finally(() => next());
+                })
+                .catch((e) => Result.Error(e).asResponse(res));
+        } else {
+            Result.Failure('container or current user not found', 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static deleteServiceUserForContainer(req: Request, res: Response, next: NextFunction) {
+        if (req.container && req.serviceUser) {
+            userRepo
+                .deleteServiceUserFromContainer(req.serviceUser.id!, req.container.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((e) => Result.Error(e).asResponse(res))
+                .finally(() => next());
+        } else {
+            Result.Failure('container or service user not found', 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static setServiceUserPermissions(req: Request, res: Response, next: NextFunction) {
+        const permissionSet = plainToClass(ContainerPermissionSet, req.body as object);
+        if (req.container && req.serviceUser) {
+            userRepo
+                .setContainerPermissions(req.serviceUser.id!, req.container.id!, permissionSet)
+                .then((result) => result.asResponse(res))
+                .catch((e) => Result.Error(e).asResponse(res))
+                .finally(() => next());
+        } else {
+            Result.Failure('container or service user not found', 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static listServiceUserPermissions(req: Request, res: Response, next: NextFunction) {
+        if (req.serviceUser) {
+            userRepo
+                .retrievePermissions(req.serviceUser)
+                .then((result) => {
+                    // @ts-ignore
+                    res.status(200).json(result.value);
+                })
+                .catch((err) => Result.Error(err).asResponse(res))
+                .finally(() => next());
+        } else {
+            Result.Failure('user not found', 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static listServiceUsersForContainer(req: Request, res: Response, next: NextFunction) {
+        if (req.container) {
+            userRepo
+                .listServiceUsersForContainer(req.container.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((e) => Result.Error(e).asResponse(res))
+                .finally(() => next());
+        } else {
+            Result.Failure('container not found', 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static generateKeyPairForServiceUser(req: Request, res: Response, next: NextFunction) {
+        const keyRepo = new KeyPairRepository();
+        if (req.serviceUser) {
+            const keyPair = new KeyPair(req.serviceUser.id);
+
+            keyRepo
+                .save(keyPair, req.serviceUser)
+                .then((result) => {
+                    if (result.isError) {
+                        res.status(500);
+                        return;
+                    }
+
+                    delete keyPair.secret;
+                    Result.Success(keyPair).asResponse(res);
+                })
+                .catch((err) => res.status(500).send(err));
+        } else {
+            Result.Failure('unauthorized', 401).asResponse(res);
+            next();
+        }
+    }
+
+    private static listKeyPairsForServiceUser(req: Request, res: Response, next: NextFunction) {
+        if (req.serviceUser) {
+            KeyPairMapper.Instance.KeysForUser(req.serviceUser.id!)
+                .then((results) => {
+                    results.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Failure(err, 404).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure('unauthorized', 401).asResponse(res);
+            next();
+        }
+    }
+
+    private static deleteKeyPairForServiceUser(req: Request, res: Response, next: NextFunction) {
+        if (req.serviceUser) {
+            KeyPairMapper.Instance.DeleteForUser(req.params.keyID, req.serviceUser.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => {
+                    Result.Failure(err, 404).asResponse(res);
+                })
+                .finally(() => next());
+        } else {
+            Result.Failure('unauthorized', 401).asResponse(res);
             next();
         }
     }

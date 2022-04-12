@@ -15,6 +15,7 @@ import KeyPairMapper from '../../mappers/access_management/keypair_mapper';
 import {plainToClass} from 'class-transformer';
 import {PoolClient} from 'pg';
 import {ValidateEmailTemplate} from '../../../services/email/templates/validate_email';
+import {ContainerPermissionSet} from '../../../domain_objects/data_warehouse/ontology/container';
 
 const UIDGenerator = require('uid-generator');
 const uidgen = new UIDGenerator();
@@ -432,6 +433,36 @@ export default class UserRepository extends Repository implements RepositoryInte
         });
 
         return UserMapper.Instance.ListFromIDs(userIDs);
+    }
+
+    addServiceUserToContainer(serviceUserID: string, containerID: string): Promise<Result<boolean>> {
+        return this.#mapper.AddServiceUserToContainer(serviceUserID, containerID);
+    }
+
+    deleteServiceUserFromContainer(serviceUserID: string, containerID: string): Promise<Result<boolean>> {
+        return this.#mapper.DeleteServiceUser(serviceUserID, containerID);
+    }
+
+    async setContainerPermissions(userID: string, containerID: string, permissionSet: ContainerPermissionSet): Promise<Result<boolean>> {
+        const invalid = await permissionSet.validationErrors();
+        if (invalid) {
+            return Promise.resolve(
+                Result.Failure(`unable to set container permissions for user, permission set does not pass validation: ${invalid.join(',')}`),
+            );
+        }
+
+        const containerUsers = await this.listServiceUsersForContainer(containerID)
+        if(containerUsers.isError) return Promise.resolve(Result.Pass(containerUsers))
+        else {
+            const found = containerUsers.value.find(user => user.id === userID)
+            if(!found) return Promise.resolve(Result.Failure('unable to set permissions for service user, service user does not belong to proposed container'))
+        }
+
+        return await permissionSet.writePermissions(userID, containerID);
+    }
+
+    listServiceUsersForContainer(containerID: string): Promise<Result<User[]>> {
+        return this.#mapper.ListServiceUsersForContainer(containerID);
     }
 
     constructor() {
