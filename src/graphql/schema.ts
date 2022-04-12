@@ -483,6 +483,7 @@ export default class GraphQLSchemaGenerator {
                     // origin data
                     origin_id: {type: GraphQLString},
                     origin_metatype_name: {type: GraphQLString},
+                    origin_metatype_id: {type: GraphQLString},
                     origin_data_source: {type: GraphQLString},
                     origin_metadata: {type: GraphQLJSON},
                     origin_created_by: {type: GraphQLString},
@@ -503,6 +504,7 @@ export default class GraphQLSchemaGenerator {
                     // destination data
                     destination_id: {type: GraphQLString},
                     destination_metatype_name: {type: GraphQLString},
+                    destination_metatype_id: {type: GraphQLString},
                     destination_data_source: {type: GraphQLString},
                     destination_metadata: {type: GraphQLJSON},
                     destination_created_by: {type: GraphQLString},
