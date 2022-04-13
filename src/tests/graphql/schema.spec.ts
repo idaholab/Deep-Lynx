@@ -22,14 +22,12 @@ import DataStagingMapper from '../../data_access_layer/mappers/data_warehouse/im
 import DataStagingRepository from '../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import Container from '../../domain_objects/data_warehouse/ontology/container';
 import GraphQLSchemaGenerator from '../../graphql/schema';
-import {GraphQLObjectType, GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLList, GraphQLEnumType} from 'graphql';
-import GraphQLJSON from 'graphql-type-json';
+import {GraphQLObjectType, GraphQLString, GraphQLFloat, GraphQLBoolean, GraphQLList, GraphQLEnumType} from 'graphql';
 import {DataSourceFactory} from '../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import TypeTransformation, {KeyMapping} from '../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeTransformationMapper from '../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper';
 import TypeMappingMapper from '../../data_access_layer/mappers/data_warehouse/etl/type_mapping_mapper';
 import {ProcessData} from '../../data_processing/process';
-import { driver } from 'gremlin';
 
 describe('The GraphQL Schema Generator', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
