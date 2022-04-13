@@ -15,7 +15,7 @@ import ContainerMapper from '../../../../data_access_layer/mappers/data_warehous
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 import Node from '../../../../domain_objects/data_warehouse/data/node';
 
-describe('Using a GraphQL Query on nodes we', async () => {
+describe('Using a legacy GraphQL Query on nodes we', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let node: Node;
     let metatype: Metatype;

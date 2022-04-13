@@ -23,7 +23,7 @@ import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/o
 import Node from '../../../../domain_objects/data_warehouse/data/node';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 
-describe('Using a GraphQL Query for a nodes edges', async () => {
+describe('Using a legacy GraphQL Query for a nodes edges', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let node: Node;
     let edge: Edge;
