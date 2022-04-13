@@ -97,7 +97,7 @@ export class KeyMapping extends NakedDomainClass {
 
     @IsOptional()
     @IsString()
-    @IsIn(['number', 'date', 'string', 'boolean', 'enumeration', 'file', 'list'])
+    @IsIn(['number', 'number64', 'float', 'float64', 'date', 'string', 'boolean', 'enumeration', 'file', 'list'])
     value_type?: string;
 
     @IsOptional()
@@ -170,6 +170,9 @@ export default class TypeTransformation extends BaseDomainClass {
     @ValidateNested()
     @Type(() => KeyMapping)
     keys: KeyMapping[] = [];
+
+    @IsString()
+    type?: 'node' | 'edge' | 'timeseries';
 
     @ValidateIf((o) => o.metatype_relationship_pair_id === null && typeof o.metatype_relationship_pair_id === 'undefined')
     @IsString()
@@ -266,6 +269,7 @@ export default class TypeTransformation extends BaseDomainClass {
         type_mapping_id: string;
         conditions?: Condition[];
         keys?: KeyMapping[];
+        type?: 'node' | 'edge' | 'timeseries';
         metatype_id?: string;
         metatype_relationship_pair_id?: string;
         origin_id_key?: string;
@@ -290,6 +294,7 @@ export default class TypeTransformation extends BaseDomainClass {
             this.type_mapping_id = input.type_mapping_id;
             if (input.conditions) this.conditions = input.conditions;
             if (input.keys) this.keys = input.keys;
+            if (input.type) this.type = input.type;
             if (input.metatype_id) this.metatype_id = input.metatype_id;
             if (input.metatype_relationship_pair_id) this.metatype_relationship_pair_id = input.metatype_relationship_pair_id;
             if (input.origin_id_key) this.origin_id_key = input.origin_id_key;

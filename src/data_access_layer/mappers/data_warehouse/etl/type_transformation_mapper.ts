@@ -89,12 +89,35 @@ export default class TypeTransformationMapper extends Mapper {
         return super.runStatement(this.archiveStatement(id, userID));
     }
 
-    public async Delete(id: string): Promise<Result<boolean>> {
+    public Delete(id: string): Promise<Result<boolean>> {
+        // in case the hypertable didn't get dropped earlier
+        void this.DeleteHypertable(id);
+
         return super.runStatement(this.deleteStatement(id));
     }
 
-    public async DeleteWithData(id: string): Promise<Result<boolean>> {
+    public DeleteWithData(id: string): Promise<Result<boolean>> {
+        // in case the hypertable didn't get dropped earlier
+        void this.DeleteHypertable(id);
+
         return super.runAsTransaction(...this.deleteWithDataStatement(id));
+    }
+
+    // taking a time series transformation create a hypertable based on its column mapping data
+    public async CreateHypertable(transformation: TypeTransformation): Promise<Result<boolean>> {
+        if (!transformation.id || !transformation.keys || transformation.keys.length === 0) {
+            return Result.Failure('transformation must have id and mapping keys in order to create time series table');
+        }
+
+        if (transformation.metatype_id || transformation.metatype_relationship_pair_id) {
+            return Result.Failure('transformation is not a time series transformation');
+        }
+
+        return super.runAsTransaction(...this.createHypertableStatement(transformation));
+    }
+
+    public async DeleteHypertable(transformationID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.deleteHypertableStatement(transformationID));
     }
 
     // Below are a set of query building functions. So far they're very simple
@@ -104,6 +127,7 @@ export default class TypeTransformationMapper extends Mapper {
     private createStatement(userID: string, ...t: TypeTransformation[]): string {
         const text = `WITH ins as(INSERT INTO type_mapping_transformations(
             keys,
+            type,
             type_mapping_id,
             conditions,
             metatype_id,
@@ -137,6 +161,7 @@ export default class TypeTransformationMapper extends Mapper {
         `;
         const values = t.map((tt) => [
             JSON.stringify(tt.keys),
+            tt.type,
             tt.type_mapping_id,
             JSON.stringify(tt.conditions),
             tt.metatype_id === '' ? undefined : tt.metatype_id,
@@ -164,6 +189,7 @@ export default class TypeTransformationMapper extends Mapper {
     private fullUpdateStatement(userID: string, ...t: TypeTransformation[]): string {
         const text = `WITH ins as(UPDATE type_mapping_transformations as t SET
             keys = u.keys::jsonb,
+            type = u.type::varchar,
             type_mapping_id = u.type_mapping_id::bigint,
             conditions = u.conditions::jsonb,
             metatype_id = u.metatype_id::bigint,
@@ -186,6 +212,7 @@ export default class TypeTransformationMapper extends Mapper {
             FROM (VALUES %L) as u(
                             id,
                             keys,
+                            type,
                             type_mapping_id,
                             conditions,
                             metatype_id,
@@ -219,6 +246,7 @@ export default class TypeTransformationMapper extends Mapper {
         const values = t.map((tt) => [
             tt.id,
             JSON.stringify(tt.keys),
+            tt.type,
             tt.type_mapping_id,
             JSON.stringify(tt.conditions),
             tt.metatype_id === '' ? undefined : tt.metatype_id,
@@ -332,5 +360,78 @@ export default class TypeTransformationMapper extends Mapper {
                     SELECT e.id FROM edges e WHERE e.type_mapping_transformation_id = $1) LIMIT 1`,
             values: [transformationID],
         };
+    }
+
+    private createHypertableStatement(transformation: TypeTransformation): QueryConfig[] {
+        let primaryTimestampColumnName = '';
+        const columnStatements: string[] = transformation.keys.map((key) => {
+            if (key.is_primary_timestamp) {
+                primaryTimestampColumnName = key.column_name!;
+            }
+            // this determines the data type of the column to be created
+            let type = 'text';
+
+            switch (key.value_type) {
+                case undefined: {
+                    type = 'text';
+                    break;
+                }
+
+                case 'number': {
+                    type = 'integer';
+                    break;
+                }
+
+                case 'number64': {
+                    type = 'bigint';
+                    break;
+                }
+
+                case 'float': {
+                    type = 'numeric';
+                    break;
+                }
+                case 'float64': {
+                    type = 'numeric';
+                    break;
+                }
+
+                case 'date': {
+                    type = 'timestamp';
+                    break;
+                }
+
+                case 'boolean': {
+                    type = 'boolean';
+                    break;
+                }
+            }
+
+            return format('%I %I DEFAULT NULL', key.column_name, type);
+        });
+
+        const createStatement = format(
+            `CREATE TABLE IF NOT EXISTS %I (
+                ${columnStatements.join(',')},
+                _nodes bigint[] DEFAULT NULL
+                )`,
+            'z_' + transformation.id!,
+        );
+
+        return [
+            {
+                text: createStatement,
+            },
+            {
+                text: format(`SELECT create_hypertable(%L, %L)`, 'z_' + transformation.id!, primaryTimestampColumnName),
+            },
+        ];
+    }
+
+    private deleteHypertableStatement(transformationID: string): string {
+        const text = `DROP TABLE IF EXISTS %s`;
+        const values = ['z_' + transformationID];
+
+        return format(text, values);
     }
 }
