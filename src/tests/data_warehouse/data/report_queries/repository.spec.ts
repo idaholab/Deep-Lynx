@@ -15,10 +15,8 @@ import ReportQuery from '../../../../domain_objects/data_warehouse/data/report_q
 import {User} from '../../../../domain_objects/access_management/user';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
 import ReportQueryRepository from '../../../../data_access_layer/repositories/data_warehouse/data/report_query_repository';
-import { report } from 'process';
-import { reduceWithIndex } from 'fp-ts/lib/FoldableWithIndex';
 
-describe('A Report Query Mapper', async () => {
+describe('A Report Query Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let dataSourceID: string = '';
     let fileID: string = '';
@@ -206,6 +204,137 @@ describe('A Report Query Mapper', async () => {
         expect(results).not.empty;
         expect(results.value.length).eq(1);
 
+        // test the where clause
+        results = await repository.where().statusMessage('eq', rQuery2.status_message).findAll();
+        expect(results.isError).false;
+        expect(results).not.empty;
+        expect(results.value[0].status_message).eq(rQuery2.status_message);
+
+        // test count
+        const count = await repository.where().reportID('eq', reportID).count();
+        expect(count.isError).false;
+        expect(count.value).eq(2);
+
+        const delete1 = await repository.delete(rQuery1);
+        const delete2 = await repository.delete(rQuery2);
+        expect(delete1.isError).false;
+        expect(delete2.isError).false;
+
         return Promise.resolve();
+    });
+
+    it('can retrieve query by ID', async () => {
+        const repository = new ReportQueryRepository();
+        const rQuery = new ReportQuery({
+            report_id: reportID,
+            query: `{metatypes{Requirement{id name}}}`,
+            status_message: faker.random.alphaNumeric(),
+        });
+
+        const results = await repository.save(rQuery);
+        expect(results.isError).false;
+        expect(rQuery.id).not.undefined;
+
+        const retrieved = await repository.findByID(rQuery.id!);
+        expect(retrieved.isError).false;
+        expect(retrieved.value.id).eq(rQuery.id);
+
+        return repository.delete(rQuery);
+    });
+
+    it('can set status in repo', async () => {
+        const repository = new ReportQueryRepository();
+        const rQuery = new ReportQuery({
+            report_id: reportID,
+            query: `{metatypes{Requirement{id name}}}`,
+            status_message: faker.random.alphaNumeric(),
+        });
+
+        const results = await repository.save(rQuery);
+        expect(results.isError).false;
+        expect(rQuery.id).not.undefined;
+
+        const id = rQuery.id!
+        const message = faker.random.alphaNumeric();
+
+        const setStatus = await repository.setStatus(id, 'completed', message);
+        expect(setStatus.isError).false;
+
+        const retrieved = await repository.findByID(rQuery.id!);
+        expect(retrieved.isError).false;
+        expect(retrieved.value.id).eq(id);
+        expect(retrieved.value.status).eq('completed');
+        expect(retrieved.value.status_message).eq(message);
+
+        return repository.delete(rQuery);
+    });
+
+    it('can add/remove a file to/from a report query', async () => {
+        const repository = new ReportQueryRepository();
+        const rQuery = new ReportQuery({
+            report_id: reportID,
+            query: `{metatypes{Requirement{id name}}}`,
+            status_message: faker.random.alphaNumeric(),
+        });
+
+        const results = await repository.save(rQuery);
+        expect(results.isError).false;
+        expect(rQuery.id).not.undefined;
+
+        const fileAdded = await repository.addFile(rQuery, fileID);
+        expect(fileAdded.isError).false;
+        expect(fileAdded.value).true;
+
+        const fileRemoved = await repository.removeFile(rQuery, fileID);
+        expect(fileRemoved.isError).false;
+
+        return repository.delete(rQuery);
+    });
+
+    it('can list all files attached to a query', async () => {
+        const file2 = await FileMapper.Instance.Create(
+            'test suite',
+            new File({
+                file_name: faker.name.findName(),
+                file_size: 200,
+                md5hash: '',
+                adapter_file_path: faker.name.findName(),
+                adapter: 'filesystem',
+                data_source_id: dataSourceID,
+                container_id: containerID,
+            }),
+        );
+
+        expect(file2.isError).false;
+        expect(file2.value).not.empty;
+        const file2ID = file2.value.id!;
+
+        const repository = new ReportQueryRepository();
+        const rQuery = new ReportQuery({
+            report_id: reportID,
+            query: `{metatypes{Requirement{id name}}}`,
+            status_message: faker.random.alphaNumeric(),
+        });
+
+        const results = await repository.save(rQuery);
+        expect(results.isError).false;
+        expect(rQuery.id).not.undefined;
+
+        const file1added = await repository.addFile(rQuery, fileID);
+        expect(file1added.isError).false;
+        const file2added = await repository.addFile(rQuery, file2ID);
+        expect(file2added.isError).false;
+
+        const fileList = await repository.listFiles(rQuery);
+        expect(fileList.isError).false;
+        expect(fileList.value.length).eq(2);
+
+        const file1removed = await repository.removeFile(rQuery, fileID);
+        expect(file1removed.isError).false;
+        const file2removed = await repository.removeFile(rQuery, file2ID);
+        expect(file2removed.isError).false;const fileRemoved = await repository.removeFile(rQuery, fileID);
+        expect(fileRemoved.isError).false;
+
+        return repository.delete(rQuery);
     });
 });

@@ -105,8 +105,13 @@ export default class ReportQueryRepository extends Repository implements Reposit
         return this;
     }
 
-    status(operator: string, value: 'ready' | 'processing' | 'error' | 'completed') {
+    status(operator: string, value: any) {
         super.query('status', operator, value);
+        return this;
+    }
+
+    statusMessage(operator: string, value: any) {
+        super.query('status_message', operator, value);
         return this;
     }
 

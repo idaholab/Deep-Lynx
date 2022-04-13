@@ -299,7 +299,8 @@ export default class FileMapper extends Mapper {
         return {
             text: `SELECT f.* FROM report_query_files rqf
                     LEFT JOIN files f ON f.id = rqf.file_id
-                    WHERE rqf.query_id = $1`
+                    WHERE rqf.query_id = $1`,
+            values: [queryID],
         }
     }
 

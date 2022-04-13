@@ -4,7 +4,6 @@ import Result from '../../../../common_classes/result';
 import ReportMapper from '../../../mappers/data_warehouse/data/report_mapper';
 import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
-import { nodeContext } from '../../../../http_server/middleware';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 import File from '../../../../domain_objects/data_warehouse/data/file';
 
