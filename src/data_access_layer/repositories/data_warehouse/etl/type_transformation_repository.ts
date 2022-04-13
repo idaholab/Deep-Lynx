@@ -62,6 +62,11 @@ export default class TypeTransformationRepository extends Repository implements 
         void this.deleteCached(t);
         void mappingRepo.deleteCached(t.type_mapping_id!);
 
+        const removed = await this.#mapper.DeleteHypertable(t.id)
+        if(removed.isError) {
+            return Result.Failure(`unable to remove timeseries tables for transformation ${removed.error}`)
+        }
+
         if(options && options.removeData) {
             return this.#mapper.DeleteWithData(t.id);
         } else {
@@ -127,17 +132,21 @@ export default class TypeTransformationRepository extends Repository implements 
 
             await this.deleteCached(t);
             return Promise.resolve(Result.Success(true));
-        } else {
-            const created = await this.#mapper.Create(user.id!, t);
-            if (created.isError) return Promise.resolve(Result.Pass(created));
-
-            Object.assign(t, created.value);
-
-            await this.deleteCached(t);
-            return Promise.resolve(Result.Success(true));
         }
-        const mappingRepo = new TypeMappingRepository();
-        void mappingRepo.deleteCached(t.type_mapping_id!);
+
+        const created = await this.#mapper.Create(user.id!, t);
+        if (created.isError) return Promise.resolve(Result.Pass(created));
+
+        Object.assign(t, created.value);
+
+        await this.deleteCached(t);
+        await new TypeMappingRepository().deleteCached(t.type_mapping_id!);
+
+        // now we create the hypertable IF NEEDED, lack of both metatype and pair indicate this is timeseries transformation
+        if(!t.metatype_id && !t.metatype_relationship_pair_id) {
+            const built = await this.#mapper.CreateHypertable(t)
+            if(built.isError) Logger.error(`unable to create hypertable for transformation`)
+        }
 
         return Promise.resolve(Result.Success(true));
     }

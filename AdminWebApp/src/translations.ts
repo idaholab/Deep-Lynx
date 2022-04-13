@@ -663,7 +663,7 @@ export default {
             viewArchivedTransformation: 'View Archived Transformation',
             importedSuccessfully: 'Import Status',
             mappingsImported: 'Mappings Successfully Imported',
-            record: 'Record',
+            record: 'Node',
             relationship: 'Relationship',
             typeMapping: 'Type Mapping',
             resultingTypeName: 'Resulting Metatype/Metatype Relationship',

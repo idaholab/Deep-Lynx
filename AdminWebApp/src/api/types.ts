@@ -332,6 +332,7 @@ export type TypeMappingTransformationT = {
     id: string;
     root_array: string;
     type_mapping_id: string;
+    type: string;
     conditions?: TypeMappingTransformationCondition[];
     metatype_id?: string;
     metatype_relationship_pair_id?: string;
@@ -561,7 +562,7 @@ export function DefaultJazzDataSourceConfig(): JazzDataSourceConfig {
         poll_interval: 10,
         token: '',
         limit: 10,
-        data_retention_days: 30
+        data_retention_days: 30,
     };
 }
 
@@ -572,7 +573,7 @@ export function DefaultHttpDataSourceConfig(): HttpDataSourceConfig {
         secure: true,
         auth_method: 'none',
         poll_interval: 10,
-        data_retention_days: 30
+        data_retention_days: 30,
     };
 }
 
@@ -580,6 +581,6 @@ export function DefaultStandardDataSourceConfig(): StandardDataSourceConfig {
     return {
         kind: 'standard',
         data_type: 'json',
-        data_retention_days: 30
+        data_retention_days: 30,
     };
 }
