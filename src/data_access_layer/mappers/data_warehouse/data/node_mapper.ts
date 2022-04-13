@@ -1,7 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import Node from '../../../../domain_objects/data_warehouse/data/node';
+import Node, {NodeTransformation} from '../../../../domain_objects/data_warehouse/data/node';
 import {NodeFile} from '../../../../domain_objects/data_warehouse/data/file';
 
 const format = require('pg-format');
@@ -81,6 +81,21 @@ export default class NodeMapper extends Mapper {
 
     public RemoveFile(id: string, fileID: string): Promise<Result<boolean>> {
         return super.runStatement(this.removeFile(id, fileID));
+    }
+
+    public AddTransformation(id: string, transformationID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.addTransformation(id, transformationID));
+    }
+
+    public BulkAddTransformation(nodeTransformations: NodeTransformation[], transaction?: PoolClient): Promise<Result<NodeTransformation[]>> {
+        return super.run(this.bulkAddTransformationStatement(nodeTransformations), {
+            transaction,
+            resultClass: NodeTransformation,
+        });
+    }
+
+    public RemoveTransformation(id: string, transformationID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.removeFile(id, transformationID));
     }
 
     public async Delete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
@@ -242,6 +257,30 @@ export default class NodeMapper extends Mapper {
         return {
             text: `DELETE FROM node_files WHERE node_id = $1 AND file_id = $2`,
             values: [nodeID, fileID],
+        };
+    }
+
+    private addTransformation(nodeID: string, transformationID: string): QueryConfig {
+        return {
+            text: `INSERT INTO node_transformations(node_id, transformation_id) VALUES ($1, $2)`,
+            values: [nodeID, transformationID],
+        };
+    }
+
+    private bulkAddTransformationStatement(nodeTransformations: NodeTransformation[]): string {
+        const text = `INSERT INTO node_transformations(
+                       node_id,
+                       transformation_id) VALUES %L RETURNING *`;
+
+        const values = nodeTransformations.map((nt) => [nt.node_id, nt.transformation_id]);
+
+        return format(text, values);
+    }
+
+    private removeTransformation(nodeID: string, transformationID: string): QueryConfig {
+        return {
+            text: `DELETE FROM node_transformations WHERE node_id = $1 AND transformation_id = $2`,
+            values: [nodeID, transformationID],
         };
     }
 }

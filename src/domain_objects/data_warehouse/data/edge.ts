@@ -5,6 +5,7 @@ import Container from '../ontology/container';
 import MetatypeRelationshipPair, {MetatypeRelationshipPairID} from '../ontology/metatype_relationship_pair';
 import Node from './node';
 import {Conversion} from '../etl/type_transformation';
+import TimeseriesEntry from './timeseries';
 
 export class EdgeMetadata {
     @IsOptional()
@@ -166,7 +167,7 @@ export default class Edge extends BaseDomainClass {
 }
 
 // type guard for differentiating an array of edges from either array of nodes or edges
-export function IsEdges(set: Node[] | Edge[]): set is Edge[] {
+export function IsEdges(set: Node[] | Edge[] | TimeseriesEntry[]): set is Edge[] {
     // technically an empty array could be a set of EdgeT
     if (Array.isArray(set) && set.length === 0) return true;
 

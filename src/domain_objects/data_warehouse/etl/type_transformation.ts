@@ -13,6 +13,7 @@ import MetatypeRelationshipKey from '../ontology/metatype_relationship_key';
 import MetatypeKey from '../ontology/metatype_key';
 
 import {toDate, parse} from 'date-fns';
+import TimeseriesEntry, {TimeseriesData, TimeseriesMetadata} from '../data/timeseries';
 
 /*
    Condition represents a logical operation which can determine whether or not
@@ -436,10 +437,11 @@ export default class TypeTransformation extends BaseDomainClass {
     private async generateResults(data: DataStaging, index?: number[]): Promise<Result<Node[] | Edge[]>> {
         const newPayload: {[key: string]: any} = {};
         const newPayloadRelationship: {[key: string]: any} = {};
+        const timeseriesData: TimeseriesData[] = [];
         const failedConversions: Conversion[] = [];
         const conversions: Conversion[] = [];
 
-        if (this.keys) {
+        if ((this.type === 'node' || this.type === 'edge') && this.keys) {
             for (const k of this.keys) {
                 // separate the metatype and metatype relationship keys from each other
                 // the type mapping _should_ have easily handled the combination of keys
@@ -471,7 +473,7 @@ export default class TypeTransformation extends BaseDomainClass {
                             }
                         }
 
-                        const conversion = TypeTransformation.convertValue(fetched.value, value);
+                        const conversion = TypeTransformation.convertValue(fetched.value.data_type, value);
                         if (conversion === null) {
                             newPayload[fetched.value.property_name] = value;
                         } else {
@@ -533,7 +535,7 @@ export default class TypeTransformation extends BaseDomainClass {
                             }
                         }
 
-                        const conversion = TypeTransformation.convertValue(fetched.value, value);
+                        const conversion = TypeTransformation.convertValue(fetched.value.data_type, value);
                         if (conversion === null) {
                             newPayload[fetched.value.property_name] = value;
                         } else {
@@ -569,8 +571,60 @@ export default class TypeTransformation extends BaseDomainClass {
             }
         }
 
-        // create a node if metatype id is set
-        if (this.metatype_id && !this.metatype_relationship_pair_id) {
+        if (this.type === 'timeseries' && this.keys) {
+            for (const k of this.keys) {
+                const value = TypeTransformation.getNestedValue(k.key!, data.data, index);
+
+                if (typeof value === 'undefined') {
+                    switch (this.config.on_key_extraction_error) {
+                        case 'fail' || 'fail_on_required': {
+                            return Promise.resolve(Result.Failure('unable to fetch data from payload for a required key'));
+                            break;
+                        }
+
+                        // ignore means we can skip this key
+                        case 'ignore': {
+                            continue;
+                        }
+                    }
+                }
+
+                let convertedValue: any;
+
+                const conversion = TypeTransformation.convertValue(k.value_type!, value);
+                if (conversion === null) {
+                    convertedValue = value;
+                } else {
+                    if (conversion.errors) {
+                        failedConversions.push(conversion);
+
+                        switch (this.config.on_conversion_error) {
+                            case 'fail on required' || 'fail': {
+                                return Promise.resolve(Result.Failure('unable to fetch data from payload for a required key'));
+                            }
+
+                            // ignore means we can skip this key
+                            case 'ignore': {
+                                continue;
+                            }
+                        }
+                    } else {
+                        convertedValue = conversion.converted_value;
+                        conversions.push(conversion);
+                    }
+                }
+
+                timeseriesData.push(
+                    new TimeseriesData({
+                        column_name: k.column_name!,
+                        value_type: k.value_type!,
+                        value: convertedValue,
+                    }),
+                );
+            }
+        }
+
+        if (this.type === 'node' && this.metatype_id) {
             const node = new Node({
                 metatype: this.metatype_id,
                 properties: newPayload,
@@ -593,8 +647,7 @@ export default class TypeTransformation extends BaseDomainClass {
             return new Promise((resolve) => resolve(Result.Success([node])));
         }
 
-        // create an edge if the relationship id is set
-        if (this.metatype_relationship_pair_id && !this.metatype_id) {
+        if (this.type === 'edge' && this.metatype_relationship_pair_id) {
             const edge = new Edge({
                 metatype_relationship_pair: this.metatype_relationship_pair_id,
                 properties: newPayloadRelationship,
@@ -619,7 +672,18 @@ export default class TypeTransformation extends BaseDomainClass {
             return new Promise((resolve) => resolve(Result.Success([edge])));
         }
 
-        return new Promise((resolve) => resolve(Result.Failure('unable to generate either node or edge')));
+        if (this.type === 'timeseries') {
+            const entry = new TimeseriesEntry({
+                transformation_id: this.id,
+                metadata: new TimeseriesMetadata({
+                    conversions,
+                    failed_conversions: failedConversions,
+                }),
+                data: timeseriesData,
+            });
+        }
+
+        return new Promise((resolve) => resolve(Result.Failure('unable to generate a node, edge, or timeseries data')));
     }
 
     // will return whether or not a transformation condition is valid for a given payload
@@ -719,12 +783,12 @@ export default class TypeTransformation extends BaseDomainClass {
 
     // convertValue will return a Conversion on successful or unsuccessful conversion, and null
     // on values that need no conversion
-    static convertValue(key: MetatypeKey | MetatypeRelationshipKey, value: any, date_conversion_format?: string): Conversion | null {
+    static convertValue(dataType: string, value: any, date_conversion_format?: string): Conversion | null {
         if (typeof value === 'undefined' || value === null || value === 'null') {
             return new Conversion({original_value: value, errors: 'unable to convert value, value is null or undefined'});
         }
 
-        switch (key.data_type) {
+        switch (dataType) {
             case 'number': {
                 if (typeof value === 'number') {
                     return null;

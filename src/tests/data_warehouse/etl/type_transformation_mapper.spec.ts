@@ -445,74 +445,74 @@ describe('A Data Type Mapping Transformation', async () => {
 
     it('can convert values from payload type to the type specified on a key', async () => {
         // we don't need much on the metatype key to trigger the conversion, so no need to save them to check conversion
-        let conversion = TypeTransformation.convertValue({data_type: 'string'} as MetatypeKey, 'test');
+        let conversion = TypeTransformation.convertValue('string', 'test');
         // null on no conversion needed
         expect(conversion).null;
 
-        conversion = TypeTransformation.convertValue({data_type: 'string'} as MetatypeKey, 1.2);
+        conversion = TypeTransformation.convertValue('string', 1.2);
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).eq('1.2');
 
-        conversion = TypeTransformation.convertValue({data_type: 'string'} as MetatypeKey, true);
+        conversion = TypeTransformation.convertValue('string', true);
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).eq('true');
 
-        conversion = TypeTransformation.convertValue({data_type: 'number'} as MetatypeKey, '1');
+        conversion = TypeTransformation.convertValue('number', '1');
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).eq(1);
 
-        conversion = TypeTransformation.convertValue({data_type: 'float'} as MetatypeKey, '.02');
+        conversion = TypeTransformation.convertValue('float', '.02');
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).eq(0.02);
 
-        conversion = TypeTransformation.convertValue({data_type: 'float'} as MetatypeKey, '5.600e-3');
+        conversion = TypeTransformation.convertValue('float', '5.600e-3');
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).eq(0.0056);
 
-        conversion = TypeTransformation.convertValue({data_type: 'number'} as MetatypeKey, 'false');
+        conversion = TypeTransformation.convertValue('number', 'false');
         expect(conversion?.errors).not.undefined;
 
-        conversion = TypeTransformation.convertValue({data_type: 'date'} as MetatypeKey, new Date());
+        conversion = TypeTransformation.convertValue('date', new Date());
         expect(conversion?.errors).undefined;
 
         // should convert to a string
-        conversion = TypeTransformation.convertValue({data_type: 'enumeration'} as MetatypeKey, 1);
+        conversion = TypeTransformation.convertValue('enumeration', 1);
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).eq('1');
 
         // should convert to an array
-        conversion = TypeTransformation.convertValue({data_type: 'list'} as MetatypeKey, 1);
+        conversion = TypeTransformation.convertValue('list', 1);
         expect(conversion?.errors).undefined;
         expect(Array.isArray(conversion?.converted_value)).true;
 
-        conversion = TypeTransformation.convertValue({data_type: 'list'} as MetatypeKey, [1]);
+        conversion = TypeTransformation.convertValue('list', [1]);
         expect(conversion).null;
 
-        conversion = TypeTransformation.convertValue({data_type: 'boolean'} as MetatypeKey, 1);
+        conversion = TypeTransformation.convertValue('boolean', 1);
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).true;
 
-        conversion = TypeTransformation.convertValue({data_type: 'boolean'} as MetatypeKey, 0);
+        conversion = TypeTransformation.convertValue('boolean', 0);
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).false;
 
-        conversion = TypeTransformation.convertValue({data_type: 'boolean'} as MetatypeKey, 'true');
+        conversion = TypeTransformation.convertValue('boolean', 'true');
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).true;
 
-        conversion = TypeTransformation.convertValue({data_type: 'boolean'} as MetatypeKey, 'True');
+        conversion = TypeTransformation.convertValue('boolean', 'True');
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).true;
 
-        conversion = TypeTransformation.convertValue({data_type: 'boolean'} as MetatypeKey, '1');
+        conversion = TypeTransformation.convertValue('boolean', '1');
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).true;
 
-        conversion = TypeTransformation.convertValue({data_type: 'boolean'} as MetatypeKey, 'false');
+        conversion = TypeTransformation.convertValue('boolean', 'false');
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).false;
 
-        conversion = TypeTransformation.convertValue({data_type: 'boolean'} as MetatypeKey, '0');
+        conversion = TypeTransformation.convertValue('boolean', '0');
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).false;
 

@@ -73,6 +73,10 @@ export default class TypeTransformationMapper extends Mapper {
     }
 
     public async BulkDelete(transformations: TypeTransformation[], transaction?: PoolClient): Promise<Result<boolean>> {
+        transformations.forEach((t) => {
+            void this.DeleteHypertable(t.id!);
+        });
+
         return super.runStatement(this.bulkDeleteStatement(transformations), {
             transaction,
         });
@@ -419,6 +423,9 @@ export default class TypeTransformationMapper extends Mapper {
         );
 
         return [
+            {
+                text: format(`DROP TABLE IF EXISTS %s`, 'z_' + transformation.id!),
+            },
             {
                 text: createStatement,
             },

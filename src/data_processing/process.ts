@@ -14,6 +14,7 @@ import DataStagingRepository from '../data_access_layer/repositories/data_wareho
 import {EdgeFile, NodeFile} from '../domain_objects/data_warehouse/data/file';
 import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_mapper';
+import TimeseriesEntry, {IsTimeseries} from '../domain_objects/data_warehouse/data/timeseries';
 
 // ProcessData accepts a data staging record and inserts nodes and edges based
 // on matching transformation records - this acts on a single record
@@ -80,6 +81,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
 
     const nodesToInsert: Node[] = [];
     const edgesToInsert: Edge[] = [];
+    const timeseriesToInsert: TimeseriesEntry[] = [];
 
     // for each transformation run the transformation process. Results will either be an array of nodes or an array of edges
     // if we run into errors, add the error to the data staging row, and immediately return. Do not attempt to
@@ -102,6 +104,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
             // check to see result type, force into corresponding container
             if (IsNodes(results.value)) nodesToInsert.push(...results.value);
             if (IsEdges(results.value)) edgesToInsert.push(...results.value);
+            if (IsTimeseries(results.value)) timeseriesToInsert.push(...results.value);
         }
 
     // insert all nodes and files
@@ -175,6 +178,8 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
             }
         }
     }
+
+    // TODO: timeseries data insert - repository save
 
     const marked = await stagingRepo.setInserted(staging, transaction.value);
     if (marked.isError) {
