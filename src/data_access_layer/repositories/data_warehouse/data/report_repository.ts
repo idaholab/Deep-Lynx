@@ -24,7 +24,6 @@ export default class ReportRepository extends Repository implements RepositoryIn
 
     async findByID(id: string, transaction?: PoolClient): Promise<Result<Report>> {
         const report = await this.#mapper.Retrieve(id, transaction);
-        
         return Promise.resolve(report);
     }
 

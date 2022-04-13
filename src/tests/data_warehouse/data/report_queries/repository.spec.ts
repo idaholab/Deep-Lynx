@@ -10,7 +10,6 @@ import FileMapper from '../../../../data_access_layer/mappers/data_warehouse/dat
 import File from '../../../../domain_objects/data_warehouse/data/file';
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
-import ReportQueryMapper from '../../../../data_access_layer/mappers/data_warehouse/data/report_query_mapper';
 import ReportQuery from '../../../../domain_objects/data_warehouse/data/report_query';
 import {User} from '../../../../domain_objects/access_management/user';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
@@ -18,9 +17,9 @@ import ReportQueryRepository from '../../../../data_access_layer/repositories/da
 
 describe('A Report Query Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
-    let dataSourceID: string = '';
-    let fileID: string = '';
-    let reportID: string = '';
+    let dataSourceID = '';
+    let fileID = '';
+    let reportID = '';
     let user: User;
 
     before(async function () {
@@ -171,7 +170,7 @@ describe('A Report Query Repository', async () => {
             status_message: faker.random.alphaNumeric(),
         });
 
-        let results = await repository.save(rQuery);
+        const results = await repository.save(rQuery);
         expect(results.isError).false;
 
         const deleted = await repository.delete(rQuery);

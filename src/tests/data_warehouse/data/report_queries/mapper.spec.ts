@@ -15,9 +15,9 @@ import ReportQuery from '../../../../domain_objects/data_warehouse/data/report_q
 
 describe('A Report Query Mapper', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
-    let dataSourceID: string = '';
-    let fileID: string = '';
-    let reportID: string = '';
+    let dataSourceID = '';
+    let fileID = '';
+    let reportID = '';
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
@@ -197,7 +197,7 @@ describe('A Report Query Mapper', async () => {
 
         const id = rQuery.value.id!;
         const message = faker.random.alphaNumeric();
-        
+
         const setStatus = await mapper.SetStatus(id, 'completed', message);
         expect(setStatus.isError).false;
 

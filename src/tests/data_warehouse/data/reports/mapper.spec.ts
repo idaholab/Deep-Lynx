@@ -13,8 +13,8 @@ import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/d
 
 describe('A Report Mapper', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
-    let dataSourceID: string = '';
-    let fileID: string = '';
+    let dataSourceID = '';
+    let fileID = '';
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {

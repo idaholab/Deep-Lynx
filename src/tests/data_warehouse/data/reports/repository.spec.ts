@@ -15,8 +15,8 @@ import UserMapper from '../../../../data_access_layer/mappers/access_management/
 
 describe('A Report Reposiory', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
-    let dataSourceID: string = '';
-    let fileID: string = '';
+    let dataSourceID = '';
+    let fileID = '';
     let user: User;
 
     before(async function () {

@@ -17,7 +17,7 @@ const resultClass = ReportQuery;
 */
 export default class ReportQueryMapper extends Mapper {
     public static tableName = 'report_queries';
-    
+
     private static instance: ReportQueryMapper;
 
     public static get Instance(): ReportQueryMapper {

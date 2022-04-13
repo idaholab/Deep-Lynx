@@ -1,8 +1,6 @@
 import { BaseDomainClass } from "../../../common_classes/base_domain_class";
-import {IsArray, IsBoolean, IsIn, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsNotEmpty} from 'class-validator';
-import {Expose, plainToClass, Transform, Type} from 'class-transformer';
+import {IsBoolean, IsOptional, IsString, IsNotEmpty} from 'class-validator';
 import Container from '../ontology/container';
-import {Conversion} from '../etl/type_transformation';
 
 /*
     ReportQuery represents a query and its execution status. Queries can
@@ -25,7 +23,7 @@ export default class Report extends BaseDomainClass{
 
     @IsBoolean()
     notify_users = true;
-    
+
     constructor(input: {
         container_id?: Container | string;
         status_message: string;

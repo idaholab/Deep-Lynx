@@ -3,8 +3,6 @@ import ReportQuery from '../../../../domain_objects/data_warehouse/data/report_q
 import Result from '../../../../common_classes/result';
 import ReportQueryMapper from '../../../mappers/data_warehouse/data/report_query_mapper';
 import {PoolClient} from 'pg';
-import {User} from '../../../../domain_objects/access_management/user';
-import ReportMapper from '../../../mappers/data_warehouse/data/report_mapper';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 import File from '../../../../domain_objects/data_warehouse/data/file';
 

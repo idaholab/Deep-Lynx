@@ -1,6 +1,6 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import {PoolClient, Query, QueryConfig} from 'pg';
+import {PoolClient, QueryConfig} from 'pg';
 import Report from '../../../../domain_objects/data_warehouse/data/report';
 
 const format = require('pg-format');
@@ -17,7 +17,7 @@ const resultClass = Report;
 */
 export default class ReportMapper extends Mapper {
     public static tableName = 'reports';
-    
+
     private static instance: ReportMapper;
 
     public static get Instance(): ReportMapper {
