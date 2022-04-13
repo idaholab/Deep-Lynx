@@ -1,5 +1,5 @@
 import { BaseDomainClass } from "../../../common_classes/base_domain_class";
-import {IsNotEmpty, IsOptional, IsString} from 'class-validator';
+import {IsOptional, IsString} from 'class-validator';
 import Report from './report';
 
 /*
@@ -15,16 +15,14 @@ export default class ReportQuery extends BaseDomainClass{
     @IsString()
     report_id?: string;
 
-    @IsNotEmpty()
     @IsString()
-    query = '';
+    query?: string;
 
     @IsString()
     status: 'ready' | 'processing' | 'error' | 'completed' = 'ready';
 
-    @IsNotEmpty()
     @IsString()
-    status_message = '';
+    status_message?: string;
 
     constructor(input: {
         report_id?: Report | string;

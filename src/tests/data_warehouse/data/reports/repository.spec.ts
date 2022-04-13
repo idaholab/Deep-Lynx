@@ -102,7 +102,7 @@ describe('A Report Reposiory', async () => {
         const report = new Report({
             container_id: containerID,
             status_message: faker.random.alphaNumeric(),
-            notify_users: true
+            notify_users: false
         });
 
         let results = await repository.save(report, user);
@@ -126,7 +126,7 @@ describe('A Report Reposiory', async () => {
         const report = new Report({
             container_id: containerID,
             status_message: faker.random.alphaNumeric(),
-            notify_users: true
+            notify_users: false
         });
 
         const results = await repository.save(report, user);
@@ -143,7 +143,7 @@ describe('A Report Reposiory', async () => {
         const report1 = new Report({
             container_id: containerID,
             status_message: faker.random.alphaNumeric(),
-            notify_users: true
+            notify_users: false
         });
         const report2 = new Report({
             container_id: containerID,
@@ -196,7 +196,7 @@ describe('A Report Reposiory', async () => {
         const report = new Report({
             container_id: containerID,
             status_message: faker.random.alphaNumeric(),
-            notify_users: true
+            notify_users: false
         });
 
         const results = await repository.save(report, user);
@@ -215,7 +215,7 @@ describe('A Report Reposiory', async () => {
         const report = new Report({
             container_id: containerID,
             status_message: faker.random.alphaNumeric(),
-            notify_users: true
+            notify_users: false
         });
 
         const results = await repository.save(report, user);
@@ -242,7 +242,7 @@ describe('A Report Reposiory', async () => {
         const report = new Report({
             container_id: containerID,
             status_message: faker.random.alphaNumeric(),
-            notify_users: true
+            notify_users: false
         });
 
         const results = await repository.save(report, user);
@@ -281,7 +281,7 @@ describe('A Report Reposiory', async () => {
         const report = new Report({
             container_id: containerID,
             status_message: faker.random.alphaNumeric(),
-            notify_users: true
+            notify_users: false
         });
 
         const results = await repository.save(report, user);

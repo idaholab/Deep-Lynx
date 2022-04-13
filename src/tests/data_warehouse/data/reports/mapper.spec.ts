@@ -86,7 +86,7 @@ describe('A Report Mapper', async () => {
             new Report({
                 container_id: containerID,
                 status_message: faker.random.alphaNumeric(),
-                notify_users: true
+                notify_users: false
             }),
         );
 
@@ -105,7 +105,7 @@ describe('A Report Mapper', async () => {
             new Report({
                 container_id: containerID,
                 status_message: faker.random.alphaNumeric(),
-                notify_users: true
+                notify_users: false
             }),
         );
 
@@ -127,7 +127,7 @@ describe('A Report Mapper', async () => {
             new Report({
                 container_id: containerID,
                 status_message: faker.random.alphaNumeric(),
-                notify_users: true
+                notify_users: false
             }),
         );
 
@@ -157,7 +157,7 @@ describe('A Report Mapper', async () => {
             new Report({
                 container_id: containerID,
                 status_message: faker.random.alphaNumeric(),
-                notify_users: true
+                notify_users: false
             }),
         );
 
@@ -187,7 +187,7 @@ describe('A Report Mapper', async () => {
             new Report({
                 container_id: containerID,
                 status_message: faker.random.alphaNumeric(),
-                notify_users: true
+                notify_users: false
             }),
         );
 
@@ -208,7 +208,7 @@ describe('A Report Mapper', async () => {
             new Report({
                 container_id: containerID,
                 status_message: faker.random.alphaNumeric(),
-                notify_users: true
+                notify_users: false
             }),
         );
 
