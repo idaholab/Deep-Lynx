@@ -140,6 +140,18 @@ export default class FileMapper extends Mapper {
         });
     }
 
+    public async ListForReport(reportID: string): Promise<Result<File[]>> {
+        return super.rows<File>(this.filesForReportStatement(reportID), {
+            resultClass,
+        });
+    }
+
+    public async ListForReportQuery(queryID: string): Promise<Result<File[]>> {
+        return super.rows<File>(this.filesForReportQueryStatement(queryID), {
+            resultClass,
+        });
+    }
+
     public async ListForDataStaging(...stagingID: string[]): Promise<Result<File[]>> {
         return super.rows<File>(this.filesForDataStagingStatement(stagingID), {
             resultClass,
@@ -272,6 +284,24 @@ export default class FileMapper extends Mapper {
             text: `SELECT files.* FROM edge_files LEFT JOIN files ON files.id = edge_files.file_id WHERE edge_id = $1`,
             values: [edgeID],
         };
+    }
+
+    private filesForReportStatement(reportID: string): QueryConfig {
+        return {
+            text: `SELECT f.* FROM report_query_files rqf
+                    LEFT JOIN files f ON f.id = rqf.file_id
+                    WHERE rqf.report_id = $1`,
+            values: [reportID],
+        };
+    }
+
+    private filesForReportQueryStatement(queryID: string): QueryConfig {
+        return {
+            text: `SELECT f.* FROM report_query_files rqf
+                    LEFT JOIN files f ON f.id = rqf.file_id
+                    WHERE rqf.query_id = $1`,
+            values: [queryID],
+        }
     }
 
     private filesForDataStagingStatement(dataStagingID: string[]): QueryConfig {
