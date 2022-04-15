@@ -1,7 +1,7 @@
 <template>
   <v-card>
     <v-toolbar flat color="white">
-      <v-toolbar-title>{{$t('dataQuery.dataQuery')}}</v-toolbar-title>
+      <v-toolbar-title>{{$t('home.dataQueryDescription')}}</v-toolbar-title>
     </v-toolbar>
     <query-builder :containerID="containerID" @results="loadResults"></query-builder>
 

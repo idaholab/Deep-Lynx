@@ -23,17 +23,20 @@
             >
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
-                    color="primary"
-                    dark
-                    class="mb-2"
-                    v-bind="attrs"
-                    v-on="on"
+                  color="primary"
+                  dark
+                  class="mb-2"
+                  v-bind="attrs"
+                  v-on="on"
                 >
                   {{$t('nodeFiles.addFile')}}
                 </v-btn>
               </template>
-              <v-card>
-                <v-card-title></v-card-title>
+
+              <v-card class="pt-1 pb-3 px-2">
+                <v-card-title>
+                  <!-- <span class="headline text-h3"></span> -->
+                </v-card-title>   
                 <v-card-text>
                   <v-progress-linear indeterminate v-if="fileLoading"></v-progress-linear>
                   <v-file-input v-if="!fileLoading" :label="$t('nodeFiles.selectFile')" @change="addFile"></v-file-input>

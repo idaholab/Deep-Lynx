@@ -7,91 +7,89 @@
           class="mr-2"
           v-on="on"
       >mdi-card-plus</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("createMetatypeRelationshipPair.createMetatypeRelationshipPair")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("createMetatypeRelationshipPair.createMetatypeRelationshipPair")}}</v-btn>
     </template>
-    <v-card>
+
+    <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline">{{$t("createMetatypeRelationshipPair.formTitle")}}</span>
-        <error-banner :message="errorMessage"></error-banner>
-      </v-card-title>
-
+        <span class="headline text-h3">{{$t("createMetatypeRelationshipPair.formTitle")}}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-container>
-          <v-row>
-            <v-col :cols="12">
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>    
+          <v-col :cols="12">
 
-              <v-form
-                  ref="form"
-                  v-model="valid"
+            <v-form
+                ref="form"
+                v-model="valid"
+            >
+              <v-text-field
+                  v-model="name"
+                  :rules="[v => !!v || $t('createMetatypeRelationshipPair.originRequired')]"
+                  required
               >
-                <v-text-field
-                    v-model="name"
-                    :rules="[v => !!v || $t('createMetatypeRelationshipPair.originRequired')]"
-                    required
-                >
-                  <template v-slot:label>{{$t('createMetatypeRelationshipPair.name')}} <small style="color:red" >*</small></template>
-                </v-text-field>
-                <v-textarea
-                    v-model="description"
-                    :rules="[v => !!v || $t('createMetatypeRelationshipPair.originRequired')]"
-                >
-                  <template v-slot:label>{{$t('createMetatypeRelationshipPair.description')}} <small style="color:red" >*</small></template>
-                </v-textarea>
-                <v-autocomplete
-                    v-model="originSelect"
-                    :rules="[v => !!v || $t('createMetatypeRelationshipPair.originRequired')]"
-                    :single-line="false"
-                    :items="originMetatypes"
-                    :search-input.sync="originSearch"
-                    item-text="name"
-                    item-value="id"
-                    persistent-hint
-                    required
-                    clearable
-                >
-                  <template v-slot:label>{{$t('createMetatypeRelationshipPair.originMetatype')}} <small style="color:red" >*</small></template>
-                </v-autocomplete>
-                <v-autocomplete
-                    v-model="relationshipSelect"
-                    :rules="[v => !!v || $t('createMetatypeRelationshipPair.relationshipRequired')]"
-                    :single-line="false"
-                    :items="metatypeRelationships"
-                    :search-input.sync="relationshipSearch"
-                    item-text="name"
-                    item-value="id"
-                    persistent-hint
-                    required
-                    clearable
-                >
-                  <template v-slot:label>{{$t('createMetatypeRelationshipPair.relationship')}} <small style="color:red" >*</small></template>
-                </v-autocomplete>
-                <v-autocomplete
-                    v-model="destinationSelect"
-                    :rules="[v => !!v || $t('createMetatypeRelationshipPair.destinationRequired')]"
-                    :single-line="false"
-                    :items="destinationMetatypes"
-                    :search-input.sync="destinationSearch"
-                    item-text="name"
-                    item-value="id"
-                    persistent-hint
-                    required
-                    clearable
-                >
-                  <template v-slot:label>{{$t('createMetatypeRelationshipPair.destinationMetatype')}} <small style="color:red" >*</small></template>
-                </v-autocomplete>
-                <v-select
-                    v-model="relationshipType"
-                    :rules="[v => !!v || $t('createMetatypeRelationshipPair.relationshipTypeRequired')]"
-                    :items="relationshipTypeChoices"
-                    required
-                >
-                  <template v-slot:label>{{$t('createMetatypeRelationshipPair.relationshipType')}} <small style="color:red" >*</small></template>
-                </v-select>
-              </v-form>
-              <p><span style="color:red">*</span> = {{$t('createMetatypeRelationshipPair.requiredField')}}</p>
-            </v-col>
-          </v-row>
-        </v-container>
+                <template v-slot:label>{{$t('createMetatypeRelationshipPair.name')}} <small style="color:red" >*</small></template>
+              </v-text-field>
+              <v-textarea
+                  v-model="description"
+                  :rules="[v => !!v || $t('createMetatypeRelationshipPair.originRequired')]"
+              >
+                <template v-slot:label>{{$t('createMetatypeRelationshipPair.description')}} <small style="color:red" >*</small></template>
+              </v-textarea>
+              <v-autocomplete
+                  v-model="originSelect"
+                  :rules="[v => !!v || $t('createMetatypeRelationshipPair.originRequired')]"
+                  :single-line="false"
+                  :items="originMetatypes"
+                  :search-input.sync="originSearch"
+                  item-text="name"
+                  item-value="id"
+                  persistent-hint
+                  required
+                  clearable
+              >
+                <template v-slot:label>{{$t('createMetatypeRelationshipPair.originMetatype')}} <small style="color:red" >*</small></template>
+              </v-autocomplete>
+              <v-autocomplete
+                  v-model="relationshipSelect"
+                  :rules="[v => !!v || $t('createMetatypeRelationshipPair.relationshipRequired')]"
+                  :single-line="false"
+                  :items="metatypeRelationships"
+                  :search-input.sync="relationshipSearch"
+                  item-text="name"
+                  item-value="id"
+                  persistent-hint
+                  required
+                  clearable
+              >
+                <template v-slot:label>{{$t('createMetatypeRelationshipPair.relationship')}} <small style="color:red" >*</small></template>
+              </v-autocomplete>
+              <v-autocomplete
+                  v-model="destinationSelect"
+                  :rules="[v => !!v || $t('createMetatypeRelationshipPair.destinationRequired')]"
+                  :single-line="false"
+                  :items="destinationMetatypes"
+                  :search-input.sync="destinationSearch"
+                  item-text="name"
+                  item-value="id"
+                  persistent-hint
+                  required
+                  clearable
+              >
+                <template v-slot:label>{{$t('createMetatypeRelationshipPair.destinationMetatype')}} <small style="color:red" >*</small></template>
+              </v-autocomplete>
+              <v-select
+                  v-model="relationshipType"
+                  :rules="[v => !!v || $t('createMetatypeRelationshipPair.relationshipTypeRequired')]"
+                  :items="relationshipTypeChoices"
+                  required
+              >
+                <template v-slot:label>{{$t('createMetatypeRelationshipPair.relationshipType')}} <small style="color:red" >*</small></template>
+              </v-select>
+            </v-form>
+            <p><span style="color:red">*</span> = {{$t('createMetatypeRelationshipPair.requiredField')}}</p>
+          </v-col>
+        </v-row>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>

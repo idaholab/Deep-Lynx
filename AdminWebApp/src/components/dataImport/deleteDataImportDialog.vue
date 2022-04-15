@@ -2,34 +2,34 @@
   <v-dialog v-model="dialog" @click:outside="reset()"  max-width="60%">
     <template v-slot:activator="{ on }">
       <v-icon
-          v-if="icon"
-          small
-          class="mr-2"
-          v-on="on"
-          @click="isDelete = true; initiate()"
+        v-if="icon"
+        small
+        class="mr-2"
+        v-on="on"
+        @click="isDelete = true; initiate()"
       >mdi-delete</v-icon>
       <v-btn v-if="!displayIcon" color="primary" dark class="mb-1" v-on="on">{{$t("deleteDataImport.deleteTypeMapping")}}</v-btn>
     </template>
 
-    <v-card>
+    <v-card class="pt-1 pb-3 px-2">
+      <v-card-title>
+        <span class="headline text-h3">{{$t('deleteDataImport.deleteTitle')}}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('deleteDataImport.deleteTitle')}}</span>
-          <v-row>
-            <v-col :cols="12">
-              <div>
-                <v-alert type="warning">
-                  {{$t('deleteDataImport.deleteWarning')}}
-                  <v-checkbox
-                      v-model="withData"
-                      :label="$t('deleteDataImport.withData')"
-                  ></v-checkbox>
-                </v-alert>
-              </div>
-            </v-col>
-          </v-row>
-        </v-container>
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
+            <div>
+              <v-alert type="warning">
+                {{$t('deleteDataImport.deleteWarning')}}
+                <v-checkbox
+                    v-model="withData"
+                    :label="$t('deleteDataImport.withData')"
+                ></v-checkbox>
+              </v-alert>
+            </div>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>

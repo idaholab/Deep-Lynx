@@ -8,109 +8,110 @@
       >mdi-eye</v-icon>
     </template>
 
-    <v-card v-if="selectedMetatypeKey">
+    <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatypeKey">
+      <v-card-title>
+        <span class="headline text-h3">{{selectedMetatypeKey.name}}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <v-row>
-            <v-col :cols="12">
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>    
+          <v-col :cols="12">
+            <v-text-field
+                v-model="selectedMetatypeKey.name"
+                :disabled="true"
+                class="disabled"
+            >
+              <template v-slot:label>{{$t('viewMetatypeKey.name')}}</template>
+            </v-text-field>
+
+            <v-text-field
+                v-model="selectedMetatypeKey.property_name"
+                required
+                :disabled="true"
+                class="disabled"
+            >
+              <template v-slot:label>{{$t('viewMetatypeKey.propertyName')}}</template>
+            </v-text-field>
+            <v-select
+                v-model="selectedMetatypeKey.data_type"
+                :items="dataTypes"
+                @change="selectedMetatypeKey.default_value = undefined"
+                :disabled="true"
+                class="disabled"
+            >
+              <template v-slot:label>{{$t('viewMetatypeKey.dataType')}}</template>
+            </v-select>
+
+            <v-checkbox
+                v-model="selectedMetatypeKey.required"
+                :disabled="true"
+                class="disabled"
+            >
+              <template v-slot:label>{{$t('editMetatypeKey.required')}}</template>
+            </v-checkbox>
+
+
+
+              <h3>{{$t('editMetatypeKey.validation')}}</h3>
               <v-text-field
-                  v-model="selectedMetatypeKey.name"
+                  v-model="selectedMetatypeKey.validation.regex"
                   :disabled="true"
+                  :label="$t('editMetatypeKey.regex')"
                   class="disabled"
               >
-                <template v-slot:label>{{$t('viewMetatypeKey.name')}}</template>
+                <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.regexHelp')"></info-tooltip></template>
+              </v-text-field>
+              <v-text-field
+                  v-model.number="selectedMetatypeKey.validation.max"
+                  :disabled="true"
+                  type="number"
+                  :label="$t('editMetatypeKey.max')"
+                  class="disabled"
+              >
+                <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.maxHelp')"></info-tooltip></template>
+              </v-text-field>
+              <v-text-field
+                  v-model.number="selectedMetatypeKey.validation.min"
+                  :disabled="true"
+                  type="number"
+                  :label="$t('editMetatypeKey.min')"
+                  class="disabled"
+              >
+                <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.minHelp')"></info-tooltip></template>
               </v-text-field>
 
-              <v-text-field
-                  v-model="selectedMetatypeKey.property_name"
-                  required
-                  :disabled="true"
-                  class="disabled"
-              >
-                <template v-slot:label>{{$t('viewMetatypeKey.propertyName')}}</template>
-              </v-text-field>
-              <v-select
-                  v-model="selectedMetatypeKey.data_type"
-                  :items="dataTypes"
-                  @change="selectedMetatypeKey.default_value = undefined"
-                  :disabled="true"
-                  class="disabled"
-              >
-                <template v-slot:label>{{$t('viewMetatypeKey.dataType')}}</template>
-              </v-select>
-
-              <v-checkbox
-                  v-model="selectedMetatypeKey.required"
-                  :disabled="true"
-                  class="disabled"
-              >
-                <template v-slot:label>{{$t('editMetatypeKey.required')}}</template>
-              </v-checkbox>
 
 
-
-                <h3>{{$t('editMetatypeKey.validation')}}</h3>
-                <v-text-field
-                    v-model="selectedMetatypeKey.validation.regex"
-                    :disabled="true"
-                    :label="$t('editMetatypeKey.regex')"
-                    class="disabled"
-                >
-                  <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.regexHelp')"></info-tooltip></template>
-                </v-text-field>
-                <v-text-field
-                    v-model.number="selectedMetatypeKey.validation.max"
-                    :disabled="true"
-                    type="number"
-                    :label="$t('editMetatypeKey.max')"
-                    class="disabled"
-                >
-                  <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.maxHelp')"></info-tooltip></template>
-                </v-text-field>
-                <v-text-field
-                    v-model.number="selectedMetatypeKey.validation.min"
-                    :disabled="true"
-                    type="number"
-                    :label="$t('editMetatypeKey.min')"
-                    class="disabled"
-                >
-                  <template slot="append-outer"> <info-tooltip :message="$t('editMetatypeKey.minHelp')"></info-tooltip></template>
-                </v-text-field>
-
-
-
-                <!-- default value and options should be comboboxes when set to enumeration -->
-                <div v-if="selectedMetatypeKey.data_type === 'enumeration'" >
-                  <v-combobox
-                      v-model="selectedMetatypeKey.default_value"
-                      multiple
-                      chips
-                      clearable
-                      deletable-chips
-                      :disabled="true"
-                      class="disabled"
-                  ></v-combobox>
-                </div>
-
+              <!-- default value and options should be comboboxes when set to enumeration -->
+              <div v-if="selectedMetatypeKey.data_type === 'enumeration'" >
                 <v-combobox
-                    v-model="selectedMetatypeKey.options"
-                    :label="$t('editMetatypeKey.options')"
+                    v-model="selectedMetatypeKey.default_value"
                     multiple
-                    clearable
                     chips
+                    clearable
                     deletable-chips
                     :disabled="true"
                     class="disabled"
                 ></v-combobox>
+              </div>
 
-              <h3>{{$t('viewMetatype.defaultValue')}}</h3>
-              <hr>
-              <p>{{selectedMetatypeKey.default_value}}</p>
+              <v-combobox
+                  v-model="selectedMetatypeKey.options"
+                  :label="$t('editMetatypeKey.options')"
+                  multiple
+                  clearable
+                  chips
+                  deletable-chips
+                  :disabled="true"
+                  class="disabled"
+              ></v-combobox>
 
-            </v-col>
-          </v-row>
-        </v-container>
+            <h3>{{$t('viewMetatype.defaultValue')}}</h3>
+            <hr>
+            <p>{{selectedMetatypeKey.default_value}}</p>
+
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>
@@ -174,27 +175,27 @@ export default class ViewMetatypeKeyDialog extends Vue {
 
 .edited-field {
   input {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   textarea {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   .v-select__slot {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   .v-select__selection {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 }
 </style>

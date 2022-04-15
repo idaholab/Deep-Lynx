@@ -8,18 +8,33 @@
           v-on="on"
           @click="editReset()"
       >mdi-eye</v-icon>
-      <v-btn v-if="!transformation && !icon" color="primary" dark class="mb-2" v-on="on">{{$t("dataMapping.newTransformationButton")}}</v-btn>
+      <v-btn v-if="!transformation && !icon" color="primary" dark class="mt-2" v-on="on">{{$t("dataMapping.newTransformationButton")}}</v-btn>
     </template>
-    <v-card>
-      <error-banner :message="errorMessage"></error-banner>
-      <v-card-title>
-        <h2 v-if="!transformation">{{$t("dataMapping.createNewTransformation")}}</h2>
-        <h2 v-if="transformation && !transformation.archived">{{$t("dataMapping.editTransformation")}}</h2>
-        <h2 v-if="transformation && transformation.archived">{{$t("dataMapping.viewArchivedTransformation")}}</h2>
-      </v-card-title>
-      <v-card-text>
-        <v-row>
 
+    <v-card class="pt-1 pb-3 px-2">
+      <v-card-title>
+        <span
+          class="headline text-h3"
+          v-if="!transformation"
+        >
+          {{$t("dataMapping.createNewTransformation")}}
+        </span>
+        <span
+          class="headline text-h3"
+          v-if="transformation && !transformation.archived"
+        >
+          {{$t("dataMapping.editTransformation")}}
+        </span>
+        <span
+          class="headline text-h3"
+          v-if="transformation && transformation.archived"
+        >
+          {{$t("dataMapping.viewArchivedTransformation")}}
+        </span>
+      </v-card-title>   
+      <v-card-text>
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>    
           <v-col :cols="12" style="position: sticky; top: 0px; z-index: 99; background: white" >
             <div >
               <h4>{{$t('typeTransformation.currentDataSet')}}<info-tooltip :message="$t('dataMapping.samplePayloadHelp')"></info-tooltip> </h4>

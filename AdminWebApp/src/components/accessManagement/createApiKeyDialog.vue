@@ -1,13 +1,13 @@
 <template>
   <v-dialog v-model="dialog" max-width="700px" @click:outside="errorMessage = ''; dialog = false; returnedKey = null">
     <template v-slot:activator="{ on }">
-      <v-btn color="primary" dark class="mb-2" v-on="on">{{$t("createApiKey.createApiKey")}}</v-btn>
+      <v-btn color="primary" dark class="mt-2" v-on="on">{{$t("createApiKey.createApiKey")}}</v-btn>
     </template>
-    <v-card>
-      <v-card-title>
-        <span class="headline">{{$t("createApiKey.formTitle")}}</span>
-      </v-card-title>
 
+    <v-card class="pt-1 pb-3 px-2">
+      <v-card-title>
+        <span class="headline text-h3">{{$t("createApiKey.formTitle")}}</span>
+      </v-card-title>   
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
         <v-alert type="success" v-if="returnedKey" class="multi-line">
@@ -17,13 +17,11 @@
           <p><strong>{{$t('createApiKey.secret')}}</strong></p>
           <p>{{returnedKey.secret_raw}}</p>
         </v-alert>
-        <v-container>
-          <v-row>
-            <v-col :cols="12">
-            <p>{{$t('createApiKey.description')}}</p>
-            </v-col>
-          </v-row>
-        </v-container>
+        <v-row>
+          <v-col :cols="12">
+          <p>{{$t('createApiKey.description')}}</p>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>

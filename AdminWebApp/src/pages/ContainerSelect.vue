@@ -4,7 +4,7 @@
       <v-col cols="12">
         <v-card elevation="5" class="login-dialog mx-auto d-flex">
           <v-row align="stretch">
-            <v-col cols="5" class="py-0 pr-0">
+            <v-col cols="5" class="pr-0">
               <v-container class="pa-0 d-flex">
                 <div class="align-self-center ma-auto">
                   <h1 class="login-title text-center white--text mb-5">Deep Lynx</h1>
@@ -62,7 +62,7 @@
         app
     >
       <v-col :cols="2" class="pa-0">
-        <span class="text-h6">&copy; 2021 Idaho National Laboratory</span>
+        <span class="d-block text-h6">&copy; {{ new Date().getFullYear() }} Idaho National Laboratory</span>
       </v-col>
       <v-col :cols="2" :offset="8" class="pa-0">
         <language-select class="mb-1"></language-select>

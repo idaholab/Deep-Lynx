@@ -1,20 +1,28 @@
 <template>
   <div>
-    <v-card
-    >
+    <v-card>
       <error-banner :message="errorMessage"></error-banner>
       <success-banner :message="successMessage"></success-banner>
       <v-alert type="success" v-if="importedMappingResults.length > 0">
         {{$t('dataMapping.mappingsImported')}} -
         <v-btn style="margin-top: 10px" class="mb-2" @click="reviewMappings = true">Review</v-btn>
       </v-alert>
-      <select-data-source
+      <v-toolbar flat color="white">
+        <v-toolbar-title>{{$t('home.dataMappingDescription')}}</v-toolbar-title>
+      </v-toolbar>
+
+      <div class="mx-2">
+        <select-data-source
           :containerID="containerID"
           :show-archived="true"
           :dataSourceID="argument"
           @selected="setDataSource">
-      </select-data-source>
-      <v-tabs v-if="selectedDataSource !== null" grow>
+        </select-data-source>
+      </div>
+
+      <v-divider v-if="selectedDataSource !== null"></v-divider>
+
+      <v-tabs v-if="selectedDataSource !== null" grow class="mt-4">
         <v-tab @click="activeTab = 'currentMappings'">{{$t('dataMapping.currentMappings')}}</v-tab>
         <v-tab @click="activeTab = 'pendingTransformations'" :disabled="noTransformationsCount === 0">
           <v-badge v-if="noTransformationsCount !== 0" color="green" :content="noTransformationsCount">
@@ -25,58 +33,63 @@
           </div>
         </v-tab>
       </v-tabs>
-      <v-card v-if="(selectedDataSource !== null && activeTab ==='currentMappings')">
-        <v-card-title>
-          <v-row v-if="!reviewMappings">
-            <v-col :cols="6">
-              <v-autocomplete
-                  :items="metatypes"
-                  v-model="selectedMetatype"
-                  :search-input.sync="metatypeSearch"
-                  :single-line="false"
-                  item-text="name"
-                  :label="$t('dataMapping.chooseResultingMetatype')"
-                  :placeholder="$t('dataMapping.typeToSearch')"
-                  return-object
-                  :disabled="selectedRelationshipPair != null"
-                  clearable
-              >
-                <template slot="append-outer"><info-tooltip :message="$t('dataMapping.metatypeSearchHelp')"></info-tooltip> </template>
-              </v-autocomplete>
-            </v-col>
-            <v-col :cols="6">
-              <v-autocomplete
-                  :items="relationshipPairs"
-                  v-model="selectedRelationshipPair"
-                  :search-input.sync="relationshipPairSearch"
-                  :single-line="false"
-                  item-text="name"
-                  :label="$t('dataMapping.chooseResultingRelationship')"
-                  :placeholder="$t('dataMapping.typeToSearchRelationship')"
-                  return-object
-                  :disabled="selectedMetatype != null"
-                  clearable
-              >
-                <template slot="append-outer"><info-tooltip :message="$t('dataMapping.relationshipPairSearchHelp')"></info-tooltip></template>
+    
+      <v-divider v-if="selectedDataSource !== null"></v-divider>
 
-                <template slot="item" slot-scope="data">
-                  {{data.item.origin_metatype_name}} - {{data.item.relationship_pair_name}} - {{data.item.destination_metatype_name}}
-                </template>
+      <div v-if="(selectedDataSource !== null && activeTab ==='currentMappings')">
+        <v-row v-if="!reviewMappings" class="mt-2">
+          <v-col :cols="6" class="px-8">
+            <v-autocomplete
+                :items="metatypes"
+                v-model="selectedMetatype"
+                :search-input.sync="metatypeSearch"
+                :single-line="false"
+                item-text="name"
+                :label="$t('dataMapping.chooseResultingMetatype')"
+                :placeholder="$t('dataMapping.typeToSearch')"
+                return-object
+                :disabled="selectedRelationshipPair != null"
+                clearable
+            >
+              <template slot="append-outer"><info-tooltip :message="$t('dataMapping.metatypeSearchHelp')"></info-tooltip> </template>
+            </v-autocomplete>
+          </v-col>
+          <v-col :cols="6" class="px-8">
+            <v-autocomplete
+                :items="relationshipPairs"
+                v-model="selectedRelationshipPair"
+                :search-input.sync="relationshipPairSearch"
+                :single-line="false"
+                item-text="name"
+                :label="$t('dataMapping.chooseResultingRelationship')"
+                :placeholder="$t('dataMapping.typeToSearchRelationship')"
+                return-object
+                :disabled="selectedMetatype != null"
+                clearable
+            >
+              <template slot="append-outer"><info-tooltip :message="$t('dataMapping.relationshipPairSearchHelp')"></info-tooltip></template>
 
-              </v-autocomplete>
-            </v-col>
-            <v-col :cols="3">
-              <export-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" :mappings="selectedMappings" @mappingsExported="mappingsExported()"></export-mappings-dialog>
-            </v-col>
-            <v-col :cols="3">
-              <import-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" @mappingsImported="mappingsImport"></import-mappings-dialog>
-            </v-col>
-            <v-col :cols="3">
-              <v-btn color="primary" @click="upgradeMappings">Upgrade All Mappings</v-btn>
-            </v-col>
-          </v-row>
+              <template slot="item" slot-scope="data">
+                {{data.item.origin_metatype_name}} - {{data.item.relationship_pair_name}} - {{data.item.destination_metatype_name}}
+              </template>
 
-        </v-card-title>
+            </v-autocomplete>
+          </v-col>
+        </v-row>
+        <v-row class="mb-3"> 
+          <v-col :cols="4" class="d-flex justify-center">
+            <export-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" :mappings="selectedMappings" @mappingsExported="mappingsExported()"></export-mappings-dialog>
+          </v-col>
+          <v-col :cols="4" class="d-flex justify-center">
+            <import-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" @mappingsImported="mappingsImport"></import-mappings-dialog>
+          </v-col>
+          <v-col :cols="4" class="d-flex justify-center">
+            <v-btn color="primary" @click="upgradeMappings">Upgrade All Mappings</v-btn>
+          </v-col>
+        </v-row>
+
+        <v-divider v-if="selectedDataSource !== null"></v-divider>
+
         <v-data-table
             v-if="selectedMetatype || selectedRelationshipPair && !reviewMappings"
             v-model="selectedMappings"
@@ -84,7 +97,6 @@
             :headers="headers()"
             :items="typeMappings"
             :items-per-page="25"
-            class="elevation-1"
             :footer-props="{
                 'items-per-page-options': [25,50,100]
             }"
@@ -182,14 +194,13 @@
           <v-btn color="error" @click="reviewMappings = false; importedMappingResults = []">End Review</v-btn>
         </v-toolbar>
 
-        <v-col :cols="4"><div class="box edited"></div><p> - {{$t('dataMapping.deprecated')}} <info-tooltip :message="$t('dataMapping.deprecatedTooltip')"></info-tooltip></p></v-col>
+        <v-col :cols="4" class="mt-2 mb-n3"><div class="box edited mr-2"></div><p>{{$t('dataMapping.deprecated')}} <info-tooltip :message="$t('dataMapping.deprecatedTooltip')"></info-tooltip></p></v-col>
         <v-data-table
             v-if="!selectedMetatype && !selectedRelationshipPair && !reviewMappings"
             :headers="headers()"
             :items="typeMappings"
             v-model="selectedMappings"
             show-select
-            class="elevation-1"
             :server-items-length="typeMappingCount"
             :options.sync="options"
             :loading="mappingsLoading"
@@ -236,7 +247,7 @@
             ></delete-type-mapping-dialog>
           </template>
         </v-data-table>
-      </v-card>
+      </div>
       <div v-if="(selectedDataSource !== null && activeTab === 'pendingTransformations')">
         <v-data-table
             :headers="noTransformationHeaders()"
@@ -284,18 +295,21 @@
         </v-data-table>
       </div>
     </v-card>
+
     <v-dialog
-        v-model="dataDialog"
-        width="500"
+      v-model="dataDialog"
+      width="60%"
     >
-      <v-card style="overflow-y: scroll">
-        <v-card-title class="headline grey lighten-2">
-          {{$t('dataMapping.viewSamplePayload')}}
-        </v-card-title>
+      <v-card>
+        <v-card-title class="grey lighten-2">
+          <span class="headline text-h3">{{$t('dataMapping.viewSamplePayload')}}</span>
+        </v-card-title>   
+
         <json-view
-            class="text-wrap"
-            :data="samplePayload"
-            :maxDepth=4
+          class="pt-4 px-4"
+          :data="samplePayload"
+          :maxDepth=4
+          style="overflow-x: auto"
         />
 
         <v-card-actions>
@@ -304,16 +318,19 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
     <v-dialog
-        v-model="mappingDialog"
+      v-model="mappingDialog"
+      width="90%"
     >
       <v-card>
-        <v-card-title class="headline grey lighten-2">
-          {{$t('dataImports.editTypeMapping')}}
+        <v-card-title class="grey lighten-2">
+          <span class="headline text-h3">{{$t('dataImports.editTypeMapping')}}</span>
           <v-flex class="text-right">
             <v-icon class="justify-right"  @click="mappingDialog = false">mdi-window-close</v-icon>
           </v-flex>
         </v-card-title>
+
         <div v-if="selectedDataSource !== null && mappingDialog">
           <data-type-mapping :dataSourceID="selectedDataSource.id" :containerID="containerID" :typeMappingID="selectedTypeMapping.id" @mappingCreated="mappingDialog = false" @updated="loadTypeMappings"></data-type-mapping>
         </div>
@@ -720,9 +737,9 @@ export default class DataMapping extends Vue {
 
 <style lang="scss">
 .edited-item {
-  background: #FB8C00;
+  background: #CD7F32;
   color: white;
-  box-shadow: -5px 0 0 #FB8C00, 5px 0 0 #FB8C00;
+  box-shadow: -5px 0 0 #CD7F32, 5px 0 0 #CD7F32;
 
   &:hover {
     background: #FFA726 !important;
@@ -748,7 +765,7 @@ export default class DataMapping extends Vue {
 }
 
 .edited {
-  background-color: #FB8C00;
+  background-color: #CD7F32;
 }
 
 </style>

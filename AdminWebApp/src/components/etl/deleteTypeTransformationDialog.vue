@@ -15,37 +15,37 @@
           v-on="on"
           @click="isDelete = true; initiate()"
       >mdi-delete</v-icon>
-      <v-btn v-if="displayIcon ==='none'" color="primary" dark class="mb-2" v-on="on">{{$t("deleteTransformation.deleteTransformation")}}</v-btn>
+      <v-btn v-if="displayIcon ==='none'" color="primary" dark class="mt-2" v-on="on">{{$t("deleteTransformation.deleteTransformation")}}</v-btn>
     </template>
 
-    <v-card v-if="isDelete">
+    <v-card class="pt-1 pb-3 px-2" v-if="isDelete">
+      <v-card-title>
+        <span class="headline text-h3">{{$t('deleteTransformation.deleteTitle')}}</span>
+      </v-card-title>
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('deleteTransformation.deleteTitle')}}</span>
-          <v-row>
-            <v-col :cols="12">
-              <v-progress-linear v-if="inUseLoading" indeterminate></v-progress-linear>
-              <div v-else>
-                <v-alert type="warning">
-                  {{$t('deleteTransformation.deleteWarning')}}
-                </v-alert>
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
+            <v-progress-linear v-if="inUseLoading" indeterminate></v-progress-linear>
+            <div v-else>
+              <v-alert type="warning">
+                {{$t('deleteTransformation.deleteWarning')}}
+              </v-alert>
 
-                <v-alert type="error" v-if="inUse">
-                  {{$t('deleteTransformation.forceDeleteWarning')}}
-                </v-alert>
+              <v-alert type="error" v-if="inUse">
+                {{$t('deleteTransformation.forceDeleteWarning')}}
+              </v-alert>
 
-                <v-alert type="error" v-if="inUse">
-                  {{$t('deleteTransformation.withDataWarning')}}
-                  <v-checkbox
-                      v-model="withData"
-                      :label="$t('deleteTransformation.withData')"
-                  ></v-checkbox>
-                </v-alert>
-              </div>
-            </v-col>
-          </v-row>
-        </v-container>
+              <v-alert type="error" v-if="inUse">
+                {{$t('deleteTransformation.withDataWarning')}}
+                <v-checkbox
+                    v-model="withData"
+                    :label="$t('deleteTransformation.withData')"
+                ></v-checkbox>
+              </v-alert>
+            </div>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions v-if="!inUseLoading">
@@ -64,19 +64,19 @@
       </v-card-actions>
     </v-card>
 
-    <v-card v-if="isArchive">
+    <v-card class="pt-1 pb-3 px-2" v-if="isArchive">
+      <v-card-title>
+        <span class="headline text-h3">{{$t('deleteTransformation.archiveTitle')}}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('deleteTransformation.archiveTitle')}}</span>
-          <v-row>
-            <v-col :cols="12">
-              <v-alert type="warning">
-                {{$t('deleteTransformation.archiveWarning')}}
-              </v-alert>
-            </v-col>
-          </v-row>
-        </v-container>
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
+            <v-alert type="warning">
+              {{$t('deleteTransformation.archiveWarning')}}
+            </v-alert>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>

@@ -1,81 +1,112 @@
 <template>
   <div v-if="container">
     <error-banner :message="errorMessage"></error-banner>
-    <v-navigation-drawer
-        v-model="drawer"
-        app
-        class="grey--text text--darken-2 d-flex"
+    <v-app-bar
+      app
+      color="secondary"
+      flat
+      dark
     >
-      <div class="mt-4">
-        <v-avatar tile height="25" width="25" class="mt-n1">
-          <img src="../assets/data-orange.png">
+      <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
+      <v-toolbar-title class="pl-0">{{componentName}}</v-toolbar-title>
+      <v-spacer></v-spacer>
+
+      <language-select class="pt-2" style="max-width:125px;"></language-select>
+    </v-app-bar>
+    <v-navigation-drawer
+      v-model="drawer"
+      app
+      flat
+      mobile-break-point="960"
+      width="260"
+      class="grey--text text--darken-2"
+    >
+      <div class="logo-div d-flex align-center pa-1">
+        <v-avatar tile height="25" width="25">
+          <img src="../assets/data-white.png">
         </v-avatar>
-        <h1 class="text-h1 d-inline">Deep Lynx</h1>
+        <h1 class="text-h1 d-inline white--text">Deep Lynx</h1>
       </div>
-      <div class="mx-3">
-        <v-divider class="my-4"></v-divider>
-        <h2 class="text-h5 pb-0" style="line-height: 1rem">Current Container</h2>
-        <p>{{container.name}}</p>
-        <p>{{$t('home.id')}}# {{container.id}}</p>
-        <v-divider class="my-4"></v-divider>
-        <span class="d-block">{{user.display_name}}</span>
-        <span class="d-block text-h6" style="line-height: .875rem">{{user.email}}</span>
-      </div>
-      <v-list dense class="nav-drawer-accordion mt-2">
-        <v-list-item link @click="setActiveComponent('dashboard')">
+
+      <v-list dense class="nav-drawer-accordion pa-0">
+        <v-list-item
+          link
+          @click="setActiveComponent('dashboard')"
+          :ripple="{class:'list-ripple'}"
+        >
           <v-list-item-content>
             <v-list-item-title>{{$t("Dashboard")}}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-group :value="false" dense>
+        <v-list-group :value="false" dense :ripple="{class:'list-ripple'}">
           <template v-slot:activator>
             <v-list-item-title>{{$t("home.taxonomy")}}</v-list-item-title>
           </template>
 
-          <v-list-item two-line link
-                       v-if="$auth.Auth('ontology', 'read', containerID)"
-                       @click="setActiveComponent('metatypes')"
-                       :input-value="currentMainComponent === 'Metatypes'">
+          <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('ontology', 'read', containerID)"
+            @click="setActiveComponent('metatypes')"
+            :input-value="currentMainComponent === 'Metatypes'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.metatypes")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("home.metatypesDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
-          <v-list-item two-line link
-                       v-if="$auth.Auth('ontology', 'read', containerID)"
-                       @click="setActiveComponent('metatype-relationships')"
-                       :input-value="currentMainComponent === 'MetatypeRelationships'">
+          <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('ontology', 'read', containerID)"
+            @click="setActiveComponent('metatype-relationships')"
+            :input-value="currentMainComponent === 'MetatypeRelationships'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.metatypeRelationships")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("home.metatypeRelationshipsDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
-          <v-list-item two-line link
-                       v-if="$auth.Auth('ontology', 'read', containerID)"
-                       @click="setActiveComponent('metatype-relationship-pairs')"
-                       :input-value="currentMainComponent === 'MetatypeRelationshipPairs'">
+          <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('ontology', 'read', containerID)"
+            @click="setActiveComponent('metatype-relationship-pairs')"
+            :input-value="currentMainComponent === 'MetatypeRelationshipPairs'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.metatypeRelationshipPairs")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("home.metatypeRelationshipPairsDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
-          <v-list-item two-line link
-                       v-if="$auth.Auth('ontology', 'read', containerID) && $store.getters.ontologyVersioningEnabled"
-                       @click="setActiveComponent('ontology-versioning')"
-                       :input-value="currentMainComponent === 'OntologyVersioning'">
+          <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('ontology', 'read', containerID) && $store.getters.ontologyVersioningEnabled"
+            @click="setActiveComponent('ontology-versioning')"
+            :input-value="currentMainComponent === 'OntologyVersioning'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.ontologyVersioning")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("home.ontologyVersioningDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
-          <v-list-item two-line link
-                       v-if="$auth.Auth('ontology', 'read', containerID)"
-                       @click="setActiveComponent('ontology-update')"
-                       :input-value="currentMainComponent === 'OntologyUpdate'">
+          <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('ontology', 'read', containerID)"
+            @click="setActiveComponent('ontology-update')"
+            :input-value="currentMainComponent === 'OntologyUpdate'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.ontologyUpdate")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("home.ontologyUpdateDescription")}}</v-list-item-subtitle>
@@ -84,60 +115,87 @@
 
         </v-list-group>
 
-        <v-list-group :value="false" dense>
+        <v-list-group
+          :value="false"
+          dense
+          :ripple="{class:'list-ripple'}"
+        >
           <template v-slot:activator>
             <v-list-item-title>{{$t("home.data")}}</v-list-item-title>
           </template>
 
-          <v-list-item two-line link
-                       v-if="$auth.Auth('data', 'write', containerID)"
-                       @click="setActiveComponent('data-query')"
-                       :input-value="currentMainComponent === 'DataQuery'">
+          <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('data', 'write', containerID)"
+            @click="setActiveComponent('data-query')"
+            :input-value="currentMainComponent === 'DataQuery'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.dataQuery")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("home.dataQueryDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-          <v-list-item two-line link
-                       v-if="$auth.Auth('data', 'write', containerID)"
-                       @click="setActiveComponent('data-sources')"
-                       :input-value="currentMainComponent === 'DataSources'">
+          <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('data', 'write', containerID)"
+            @click="setActiveComponent('data-sources')"
+            :input-value="currentMainComponent === 'DataSources'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.dataSources")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("home.dataSourcesDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-          <v-list-item two-line link
-                       v-if="$auth.Auth('data', 'write', containerID)"
-                       @click="setActiveComponent('data-test-creation')"
-                       :input-value="currentMainComponent === 'DataTestCreation'">
+          <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('data', 'write', containerID)"
+            @click="setActiveComponent('data-test-creation')"
+            :input-value="currentMainComponent === 'DataTestCreation'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.dataTest")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("home.dataTestDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-          <v-list-item two-line link
-                       v-if="$auth.Auth('data', 'read', containerID)"
-                       @click="setActiveComponent('data-imports')"
-                       :input-value="currentMainComponent === 'DataImports'">
+          <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('data', 'read', containerID)"
+            @click="setActiveComponent('data-imports')"
+            :input-value="currentMainComponent === 'DataImports'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.dataImports")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("home.dataImportsDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-          <v-list-item two-line link
-                       v-if="$auth.Auth('data','write', containerID)"
-                       @click="setActiveComponent('data-mapping')"
-                       :input-value="currentMainComponent === 'DataMapping'">
+          <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('data','write', containerID)"
+            @click="setActiveComponent('data-mapping')"
+            :input-value="currentMainComponent === 'DataMapping'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.dataMapping")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("home.dataMappingDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-          <v-list-item two-line link
-                       v-if="$auth.Auth('data', 'write', containerID)"
-                       @click="setActiveComponent('data-export')"
-                       :input-value="currentMainComponent === 'DataExport'">
+          <v-list-item
+            two-line link
+            v-if="$auth.Auth('data', 'write', containerID)"
+            @click="setActiveComponent('data-export')"
+            :input-value="currentMainComponent === 'DataExport'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.dataExport")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("home.dataExportDescription")}}</v-list-item-subtitle>
@@ -146,24 +204,37 @@
 
         </v-list-group>
 
-        <v-list-group :value="false" v-if="$auth.Auth('users', 'read', containerID)" dense>
+        <v-list-group
+          :value="false"
+          v-if="$auth.Auth('users', 'read', containerID)"
+          dense
+          :ripple="{class:'list-ripple'}"
+        >
           <template v-slot:activator>
             <v-list-item-title>{{$t("home.containerAdministration")}}</v-list-item-title>
           </template>
-          <v-list-item two-line link
-                       v-if="$auth.Auth('users', 'write', containerID)"
-                       @click="setActiveComponent('container-users')"
-                       :input-value="currentMainComponent === 'ContainerUsers'">
+          <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('users', 'write', containerID)"
+            @click="setActiveComponent('container-users')"
+            :input-value="currentMainComponent === 'ContainerUsers'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.containerUsers")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("home.containerUsersDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
-          <v-list-item two-line link
-                       v-if="$auth.Auth('users', 'write', containerID)"
-                       @click="setActiveComponent('settings')"
-                       :input-value="currentMainComponent === 'Settings'">
+          <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('users', 'write', containerID)"
+            @click="setActiveComponent('settings')"
+            :input-value="currentMainComponent === 'Settings'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.settings")}}</v-list-item-title>
               <v-list-item-subtitle>{{$t("home.settingsDescription")}}</v-list-item-subtitle>
@@ -171,19 +242,35 @@
           </v-list-item>
         </v-list-group>
 
-        <v-list-group :value="false" v-if="$auth.IsAdmin()">   <!-- TODO: correct to use auth function -->
+        <v-list-group
+          :value="false"
+          v-if="$auth.IsAdmin()"
+          :ripple="{class:'list-ripple'}"
+        >   <!-- TODO: correct to use auth function -->
           <template v-slot:activator>
             <v-list-item-title >{{$t("home.administration")}}</v-list-item-title>
           </template>
 
-          <v-list-item  two-line link @click="setActiveComponent('containers')" :input-value="currentMainComponent === 'Metatypes'">
+          <v-list-item
+            two-line
+            link
+            @click="setActiveComponent('containers')"
+            :input-value="currentMainComponent === 'Containers'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.containers")}}</v-list-item-title>
               <v-list-item-subtitle >{{$t("home.containersDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
-          <v-list-item  two-line link @click="setActiveComponent('users')" :input-value="currentMainComponent === 'Metatypes'">
+          <v-list-item
+            two-line
+            link
+            @click="setActiveComponent('users')"
+            :input-value="currentMainComponent === 'Users'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.users")}}</v-list-item-title>
               <v-list-item-subtitle >{{$t("home.usersDescription")}}</v-list-item-subtitle>
@@ -191,12 +278,21 @@
           </v-list-item>
         </v-list-group>
 
-        <v-list-group :value="false" >
+        <v-list-group
+          :value="false"
+          :ripple="{class:'list-ripple'}"
+        >
           <template v-slot:activator>
             <v-list-item-title >{{$t("home.accessManagement")}}</v-list-item-title>
           </template>
 
-          <v-list-item  two-line link @click="setActiveComponent('api-keys')" :input-value="currentMainComponent === 'ApiKeys'">
+          <v-list-item
+            two-line
+            link
+            @click="setActiveComponent('api-keys')"
+            :input-value="currentMainComponent === 'ApiKeys'"
+            :ripple="{class:'list-ripple'}"
+          >
             <v-list-item-content>
               <v-list-item-title>{{$t("home.apiKeys")}}</v-list-item-title>
               <v-list-item-subtitle >{{$t("home.apiKeysDescription")}}</v-list-item-subtitle>
@@ -204,82 +300,115 @@
           </v-list-item>
         </v-list-group>
 
-        <v-list-item link @click="containerSelect">
+        <v-list-item
+          link
+          @click="containerSelect"
+          :ripple="{class:'list-ripple'}"
+        >
           <v-list-item-content>
             <v-list-item-title>{{$t("home.changeContainer")}}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item link @click="logout">
+        <v-list-item
+          link
+          @click="logout"
+          :ripple="{class:'list-ripple'}"
+        >
           <v-list-item-content>
             <v-list-item-title>{{$t("home.logout")}}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>
+
       <template v-slot:append>
+        <v-container class="pb-0">
+          <v-card class=" pa-3 signed-in-info elevation-0">
+            <div class="mb-3">
+              <h2 class="d-block title">User</h2>
+              <span class="d-block sub-title">{{user.display_name}}</span>
+              <span class="d-block sub-title">{{user.email}}</span>
+            </div>
+            <div>
+              <h2 class="d-block title">Current Container</h2>
+              <span class="d-block sub-title">{{container.name}}, #{{container.id}}</span>
+            </div>
+          </v-card>
+        </v-container>
         <v-container class="justify-end">
-          <span class="d-block text-h6">&copy; 2021 Idaho National Laboratory</span>
+          <span class="d-block text-h6">&copy; {{ new Date().getFullYear() }} Idaho National Laboratory</span>
         </v-container>
       </template>
     </v-navigation-drawer>
 
-    <v-app-bar
-        app
-        color="secondary"
-        dark
-    >
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
-      <v-toolbar-title class="pl-0">{{componentName}}</v-toolbar-title>
-      <v-spacer></v-spacer>
-
-      <language-select class="pt-2" style="max-width:125px;"></language-select>
-    </v-app-bar>
-
     <container-alert-banner :containerID="containerID" :key="componentKey"></container-alert-banner>
 
-    <v-main style="padding: 64px 0px 36px 36px">
-      <v-container v-if="currentMainComponent && currentMainComponent !== ''">
+    <v-main id="main-content-container">
+
+      <!-- If Component: Dashboard Selected Component Page -->
+      <v-container fluid v-if="currentMainComponent && currentMainComponent !== ''">
         <!-- we provide both containerID and container as some of the components require either/or or both -->
-        <component v-bind:is="currentMainComponent" :containerID="containerID" :container="container" :argument="argument"></component>
+        <transition name="fade" mode="out-in">
+          <component v-bind:is="currentMainComponent" :containerID="containerID" :container="container" :argument="argument"></component>
+        </transition>
       </v-container>
-      <v-container v-else>
+
+      <!-- Else: Dashboard Landing Page -->
+      <v-container fluid v-else>
         <v-row>
-          <v-col :lg="6" :md="6">
-            <v-card>
-              <v-card-title>{{$t('home.welcomeCardTitle')}}</v-card-title>
-              <v-card-text>{{$t('home.welcomeCardText')}}</v-card-text>
-              <v-card-actions><p><a :href="welcomeLink">{{$t('home.welcomeCardLinkText')}}</a></p></v-card-actions>
-            </v-card>
-          </v-col>
-          <v-col :lg="6" :md="6">
-            <v-card>
-              <v-card-title>{{$t('home.ontologyCardTitle')}}</v-card-title>
-              <v-card-text v-if="!ontologyPopulated">{{$t('home.ontologyCardText')}}</v-card-text>
-              <v-card-actions v-if="!ontologyPopulated">
-                <p><a :href="ontologyLinkOne">{{$t('home.ontologyCardLinkText1')}}</a></p>
-              </v-card-actions>
 
-              <v-card-text v-if="ontologyPopulated">
-                <v-row>
-                  <v-col :cols="12">
-                    <h3>{{$t('home.metatypes')}}</h3>
-                    <p>{{metatypesCount}}</p>
-                  </v-col>
-                  <v-col :cols="12">
-                    <h3>{{$t('home.relationships')}}</h3>
-                    <p>{{relationshipCount}}</p>
-                  </v-col>
-                </v-row>
+          <!-- Dashboard Landing Page Card: Welcome to Deep Lynx! -->
+          <v-col cols="12" :md="6" :lg="6">
+            <v-card class="d-flex flex-column height-full">
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.welcomeCardTitle')}}</v-card-title>
+              <v-card-text>
+                <p>{{$t('home.welcomeCardText')}}</p>
+                <p><a :href="welcomeLink">{{$t('home.welcomeCardLinkText')}}</a></p>
               </v-card-text>
-              <v-card-actions>
-
-                <p><a @click="currentMainComponent = 'Metatypes'">{{$t('home.ontologyCardLinkText2')}}</a></p>
-              </v-card-actions>
             </v-card>
           </v-col>
-          <v-col :lg="6" :md="6">
-            <v-card>
-              <v-card-title>{{$t('home.setupDataSourceCardTitle')}}</v-card-title>
+
+          <!-- Dashboard Landing Page Card: Ontology -->
+          <v-col cols="12" :md="6" :lg="6">
+            <v-card class="d-flex flex-column height-full">
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.ontologyCardTitle')}}</v-card-title>
+
+              <!-- If Condition: If Ontology is not populated, show default text -->
+              <template v-if="!ontologyPopulated">
+                <!-- <template> -->
+                <v-card-text>
+                  <p>{{$t('home.ontologyCardText')}}</p>
+                  <p><a :href="ontologyLinkOne">{{$t('home.ontologyCardLinkText1')}}</a></p>
+                </v-card-text>
+              </template>
+
+              <!-- Else Condition: If Ontology is populated, show Numbers of Metatypes and Relationships -->
+              <template v-else>
+                <v-card-text class="mt-4">
+                  <v-row>
+                    <v-col :cols="6" class="text-center">
+                      <p class="text-h2 ma-2" style="line-height: unset">{{metatypesCount}}</p>
+                      <h3 class="text-h3" style="line-height: unset">{{$t('home.metatypes')}}</h3>
+                    </v-col>
+                    <v-col :cols="6" class="text-center">
+                      <p class="text-h2 ma-2" style="line-height: unset">{{relationshipCount}}</p>
+                      <h3 class="text-h3" style="line-height: unset">{{$t('home.relationships')}}</h3>
+                    </v-col>
+                  </v-row>
+                </v-card-text>
+              <v-card-actions class="d-flex flex-grow-1 pa-4 justify-center align-end">
+                  <v-btn color="primary" @click="currentMainComponent = 'Metatypes'">
+                    {{$t('home.ontologyCardLinkText2')}}
+                  </v-btn>
+                </v-card-actions>
+              </template>
+            </v-card>
+          </v-col>
+
+          <!-- Dashboard Landing Page Card: Data Sources -->
+          <v-col cols="12" :md="6" :lg="6">
+            <v-card class="d-flex flex-column height-full">
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.setupDataSourceCardTitle')}}</v-card-title>
               <v-card-text v-if="dataSources.length <= 0">{{$t('home.setupDataSourceCardText')}}</v-card-text>
               <v-card-text v-else>
                 <v-carousel
@@ -300,14 +429,24 @@
                   </v-carousel-item>
                 </v-carousel>
               </v-card-text>
-              <v-card-actions><p><a @click="currentMainComponent='DataSources'">{{$t('home.setupDataSourceCardLinkText')}}</a></p></v-card-actions>
+              <v-card-actions class="d-flex flex-grow-1 pa-4 justify-center align-end">
+                <v-btn color="primary" @click="currentMainComponent='DataSources'">
+                  {{$t('home.setupDataSourceCardLinkText')}}
+                </v-btn>
+              </v-card-actions>
             </v-card>
           </v-col>
-          <v-col :lg="6" :md="6">
-            <v-card>
-              <v-card-title>{{$t('home.inviteUserCardTitle')}}</v-card-title>
+
+          <!-- Dashboard Landing Page Card: Invite Users to Your Container -->
+          <v-col cols="12" :md="6" :lg="6">
+            <v-card class="d-flex flex-column height-full">
+              <v-card-title class="text-h3 ma-0 pb-1" style="line-height: unset;">{{$t('home.inviteUserCardTitle')}}</v-card-title>
               <v-card-text>{{$t('home.inviteUserCardText')}}</v-card-text>
-              <v-card-actions><p><a @click="currentMainComponent='ContainerUsers'">{{$t('home.inviteUserCardLinkText')}}</a></p></v-card-actions>
+              <v-card-actions class="d-flex flex-grow-1 pa-4 justify-center align-end">
+                <v-btn color="primary" @click="currentMainComponent='ContainerUsers'">
+                  {{$t('home.inviteUserCardLinkText')}}
+                </v-btn>
+              </v-card-actions>
             </v-card>
           </v-col>
         </v-row>
@@ -600,61 +739,80 @@ export default class Home extends Vue {
 }
 </script>
 
-<style lang="scss">
-.nav-drawer-accordion.v-list {
-  .theme--light.v-list-item:not(.v-list-item--active):not(.v-list-item--disabled) {
-    color: darken($darkgray, 25%)!important;
-    background-color: $lightgray!important;
+<style lang="scss" scoped>
+#main-content-container {
+  max-width: 2000px;
+  padding: 30px !important;
+  margin: auto;
+}
+
+.fade {
+  &-enter {
+    opacity: 0;
+    &-active {
+      transition: opacity .3s;
+    }
+  }
+  &-leave {
+    &-active {
+      transition: opacity .3s;
+      opacity: 0;
+    }
+  }
+}
+
+.logo-div {
+  height: 64px;
+  background-color: $secondary;
+}
+
+.signed-in-info {
+  background-color: lighten($lightgray, 5%);
+
+  .sub-title {
+    font-size: 0.85rem;
+  }
+}
+.nav-drawer-accordion.v-list ::v-deep .theme--light {
+  &.v-list-item:not(.v-list-item--active):not(.v-list-item--disabled) {
+    color: darken($darkgray2, 20%);
+    background-color: $lightgray;
     margin-bottom: 1px;
     transition: background-color .1s;
+  }
 
-    .theme--light.v-icon {
-      color: darken($darkgray, 25%)!important;
+  .list-ripple {
+    color: $darkgray2;
+  }
 
+  .v-list-group__header__append-icon {
+    svg {
+      transition: fill .1s;
+      fill: $darkgray2;
     }
   }
 
-  .theme--light.v-list-item .v-list-item__subtitle {
-    color: unset!important;
-  }
-
-  &-group__items {
-    margin:10px;
-
-    .theme--light.v-list-item:not(.v-list-item--active):not(.v-list-item--disabled) {
-      color: darken($darkgray, 25%)!important;
-      background-color: white!important;
+  &.v-list-item {
+    &.v-list-item--active {
+      background-color: lighten($darkgray2, 13%);
       transition: background-color .1s, color .1s;
+      border-bottom: 1px solid white;
 
-      .v-list-item__subtitle {
-        color: darken($lightgray, 15%)!important;
-        transition: color .1s;
+      .v-list-item__title, .v-list-item__subtitle {
+        color: white;
+      }
+
+      &.v-list-group__header {
+        background-color: $darkgray2;
+
+        .v-list-group__header__append-icon {
+          svg {
+            transition: fill .1s;
+            fill: white;
+          }
+        }
       }
     }
-  }
-
-  .theme--light.v-list-item--active,
-  .theme--light.v-list-item--active:hover,
-  .theme--light.v-list-item--active:before,
-  .theme--light.v-list-item--active:hover:before,
-  .theme--light.v-list-item--active::before,
-  .theme--light.v-list-item--active:hover::before,
-  &-item--link:active,
-  &-item--link:active:before,
-  &-group__header.v-list-item--active:not(:hover):not(:focus) {
-    color: white;
-    background-color: $darkgray;
-    transition: background-color .1s, color .1s;
-
-    & > .v-list-item__subtitle {
-      color: white;
-      transition: color .1s;
-    }
-  }
-
-  &-item--active .v-icon {
-    color: white!important;
-
   }
 }
 </style>
