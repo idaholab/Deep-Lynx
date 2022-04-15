@@ -26,7 +26,7 @@ RUN npm install
 COPY --chown=node:node . .
 
 # Build the admin web app with the proper destination
-RUN cd /srv/core_api/./AdminWebApp && npm install && npm run build -- --dest /srv/core_api/dist/http_server/web_gui && npm audit fix
+RUN cd /srv/core_api/./AdminWebApp && npm install && npm run build -- --dest /srv/core_api/dist/http_server/web_gui
 
 # Add docker-compose-wait tool ----------------------
 USER root
