@@ -39,4 +39,14 @@ export default class App extends Vue {
     border-color: $error !important;
   }
 }
+
+.height-full {
+  height: 100% !important;
+}
+
+// Global: Changes weight of chevron arrow in JSON-viewer
+.chevron-arrow {
+  border-right: 2px solid black !important;
+  border-bottom: 2px solid black !important;
+}
 </style>

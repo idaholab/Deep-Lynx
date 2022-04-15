@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <div class="pa-4">
     <v-row>
       <v-col :cols="3">
         <v-card class="mx-auto">
@@ -99,7 +99,7 @@
         </v-card>
       </v-col>
     </v-row>
-  </v-container>
+  </div>
 </template>
 
 <script lang="ts">

@@ -5,32 +5,32 @@
       <v-btn color="primary" v-else dark class="mb-2" v-on="on">{{$t("exportMapping.exportAll")}}</v-btn>
     </template>
 
-    <v-card>
+    <v-card class="pt-1 pb-3 px-2">
+      <v-card-title>
+        <span class="headline text-h3">{{$t('exportMapping.title')}}</span>
+      </v-card-title>
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('exportMapping.title')}}</span>
-          <v-row>
-            <v-col :cols="12">
-              <v-select
-                  :items="containers"
-                  item-text="name"
-                  :label="$t('exportMapping.selectContainer')"
-                  return-object
-                  @input="setContainer"
-              ></v-select>
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
+            <v-select
+              :items="containers"
+              item-text="name"
+              :label="$t('exportMapping.selectContainer')"
+              return-object
+              @input="setContainer"
+            ></v-select>
 
-              <v-select
-                  :items="dataSources"
-                  item-text="name"
-                  :label="$t('exportMapping.selectDataSource')"
-                  return-object
-                  @input="setDataSource"
-                  :disabled="!container"
-              ></v-select>
-            </v-col>
-          </v-row>
-        </v-container>
+            <v-select
+              :items="dataSources"
+              item-text="name"
+              :label="$t('exportMapping.selectDataSource')"
+              return-object
+              @input="setDataSource"
+              :disabled="!container"
+            ></v-select>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>

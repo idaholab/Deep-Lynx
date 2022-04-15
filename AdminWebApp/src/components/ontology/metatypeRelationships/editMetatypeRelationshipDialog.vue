@@ -7,158 +7,158 @@
           class="mr-2"
           v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("editMetatypeRelationship.editMetatypeRelationship")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("editMetatypeRelationship.editMetatypeRelationship")}}</v-btn>
     </template>
 
-    <v-card v-if="selectedMetatypeRelationship">
+    <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatypeRelationship">
+      <v-card-title>
+        <span class="headline text-h3">{{ $t('editMetatypeRelationship.edit') }} {{ selectedMetatypeRelationship.name }}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{ $t('editMetatypeRelationship.edit') }} {{ selectedMetatypeRelationship.name }}</span>
-          <v-row>
-            <v-col v-if="comparisonMetatypeRelationship" :cols="6">
-              <v-form
-                  ref="form"
-                  v-model="valid"
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col v-if="comparisonMetatypeRelationship" :cols="6">
+            <v-form
+                ref="form"
+                v-model="valid"
+            >
+              <v-text-field
+                  v-model="comparisonMetatypeRelationship.name"
+                  :rules="[v => !!v || $t('editMetatypeRelationship.nameRequired')]"
+                  required
+                  disabled
+                  class="disabled"
               >
-                <v-text-field
-                    v-model="comparisonMetatypeRelationship.name"
-                    :rules="[v => !!v || $t('editMetatypeRelationship.nameRequired')]"
-                    required
-                    disabled
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationship.name')}}</template>
-                </v-text-field>
-                <v-textarea
-                    v-model="comparisonMetatypeRelationship.description"
-                    :rules="[v => !!v || $t('editMetatypeRelationship.descriptionRequired')]"
-                    required
-                    disabled
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationship.description')}}</template>
-                </v-textarea>
-
-              </v-form>
-              <p><span style="color:white">*</span></p>
-
-              <v-progress-linear indeterminate v-if="keysLoading"></v-progress-linear>
-              <v-data-table
-                  :headers="headers()"
-                  :items="comparisonMetatypeRelationship.keys"
-                  :items-per-page="100"
-                  :footer-props="{
-                     'items-per-page-options': [25, 50, 100]
-                  }"
-                  class="elevation-1"
-                  :item-class="keyItemRowBackground"
-                  sort-by="name"
+                <template v-slot:label>{{$t('editMetatypeRelationship.name')}}</template>
+              </v-text-field>
+              <v-textarea
+                  v-model="comparisonMetatypeRelationship.description"
+                  :rules="[v => !!v || $t('editMetatypeRelationship.descriptionRequired')]"
+                  required
+                  disabled
+                  class="disabled"
               >
+                <template v-slot:label>{{$t('editMetatypeRelationship.description')}}</template>
+              </v-textarea>
 
-                <template v-slot:top>
-                  <v-toolbar flat color="white">
-                    <v-toolbar-title>{{$t("editMetatypeRelationship.keys")}}</v-toolbar-title>
-                    <v-divider
-                        class="mx-4"
-                        inset
-                        vertical
-                    ></v-divider>
-                    <v-spacer></v-spacer>
-                  </v-toolbar>
-                </template>
-                <template v-slot:[`item.actions`]="{ item }">
-                    <view-metatype-relationship-key-dialog
-                        :metatypeRelationshipKey="item"
-                        :metatypeRelationship="comparisonMetatypeRelationship"
-                        :icon="true"
-                        ></view-metatype-relationship-key-dialog>
-                </template>
-              </v-data-table>
-            </v-col>
+            </v-form>
+            <p><span style="color:white">*</span></p>
+
+            <v-progress-linear indeterminate v-if="keysLoading"></v-progress-linear>
+            <v-data-table
+                :headers="headers()"
+                :items="comparisonMetatypeRelationship.keys"
+                :items-per-page="100"
+                :footer-props="{
+                    'items-per-page-options': [25, 50, 100]
+                }"
+                class="elevation-1"
+                :item-class="keyItemRowBackground"
+                sort-by="name"
+            >
+
+              <template v-slot:top>
+                <v-toolbar flat color="white">
+                  <v-toolbar-title>{{$t("editMetatypeRelationship.keys")}}</v-toolbar-title>
+                  <v-divider
+                      class="mx-4"
+                      inset
+                      vertical
+                  ></v-divider>
+                  <v-spacer></v-spacer>
+                </v-toolbar>
+              </template>
+              <template v-slot:[`item.actions`]="{ item }">
+                  <view-metatype-relationship-key-dialog
+                      :metatypeRelationshipKey="item"
+                      :metatypeRelationship="comparisonMetatypeRelationship"
+                      :icon="true"
+                      ></view-metatype-relationship-key-dialog>
+              </template>
+            </v-data-table>
+          </v-col>
 
 
-            <v-col :cols="(comparisonMetatypeRelationship) ? 6 : 12">
-              <v-form
-                  ref="form"
-                  v-model="valid"
+          <v-col :cols="(comparisonMetatypeRelationship) ? 6 : 12">
+            <v-form
+                ref="form"
+                v-model="valid"
+            >
+              <v-text-field
+                  v-model="selectedMetatypeRelationship.name"
+                  :rules="[v => !!v || $t('editMetatypeRelationship.nameRequired')]"
+                  required
               >
-                <v-text-field
-                    v-model="selectedMetatypeRelationship.name"
-                    :rules="[v => !!v || $t('editMetatypeRelationship.nameRequired')]"
-                    required
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationship.name')}} <small style="color:red" >*</small></template>
-                </v-text-field>
-                <v-textarea
-                    v-model="selectedMetatypeRelationship.description"
-                    :rules="[v => !!v || $t('editMetatypeRelationship.descriptionRequired')]"
-                    required
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationship.description')}} <small style="color:red" >*</small></template>
-                </v-textarea>
-
-              </v-form>
-              <p><span style="color:red">*</span> = {{$t('editMetatypeRelationship.requiredField')}}</p>
-
-              <v-progress-linear indeterminate v-if="keysLoading"></v-progress-linear>
-              <v-data-table
-                  :headers="headers()"
-                  :items="selectedMetatypeRelationship.keys"
-                  :items-per-page="100"
-                  :footer-props="{
-                     'items-per-page-options': [25, 50, 100]
-                  }"
-                  class="elevation-1"
-                  :item-class="keyItemRowBackground"
-                  sort-by="name"
+                <template v-slot:label>{{$t('editMetatypeRelationship.name')}} <small style="color:red" >*</small></template>
+              </v-text-field>
+              <v-textarea
+                  v-model="selectedMetatypeRelationship.description"
+                  :rules="[v => !!v || $t('editMetatypeRelationship.descriptionRequired')]"
+                  required
               >
+                <template v-slot:label>{{$t('editMetatypeRelationship.description')}} <small style="color:red" >*</small></template>
+              </v-textarea>
 
-                <template v-slot:top>
-                  <v-toolbar flat color="white">
-                    <v-toolbar-title>{{$t("editMetatypeRelationship.keys")}}</v-toolbar-title>
-                    <v-divider
-                        class="mx-4"
-                        inset
-                        vertical
-                    ></v-divider>
-                    <v-spacer></v-spacer>
-                    <create-metatype-relationship-key-dialog :metatypeRelationship="metatypeRelationship" @metatypeRelationshipKeyCreated="loadKeys()"></create-metatype-relationship-key-dialog>
-                  </v-toolbar>
-                </template>
-                <template v-slot:[`item.actions`]="{ item }">
-                  <div v-if="($store.getters.isEditMode && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled">
-                    <edit-metatype-relationship-key-dialog
-                        :metatypeRelationshipKey="item"
-                        :metatypeRelationship="metatypeRelationship"
-                        :comparison-relationship-key="(comparisonMetatypeRelationship) ? comparisonMetatypeRelationship.keys.find(k => k.name === item.name) : undefined"
-                        :icon="true"
-                        @metatypeKeyEdited="loadKeys()"></edit-metatype-relationship-key-dialog>
-                    <v-icon
-                        small
-                        @click="deleteKey(item)"
-                    >
-                      mdi-delete
-                    </v-icon>
-                  </div>
+            </v-form>
+            <p><span style="color:red">*</span> = {{$t('editMetatypeRelationship.requiredField')}}</p>
 
-                    <v-icon
-                        v-if="$store.getters.isEditMode && item.deleted_at"
-                        small
-                        @click="undeleteKey(item)"
-                    >
-                      mdi-restore
-                    </v-icon>
-                </template>
-              </v-data-table>
-              <v-row v-if="$store.getters.isEditMode" style="margin-top: 15px">
-                <v-col :cols="3"><div class="box created"></div><p> - {{$t('metatypes.created')}}</p></v-col>
-                <v-col :cols="3"><div class="box edited"></div><p> - {{$t('metatypes.edited')}}</p></v-col>
-                <v-col :cols="3"><div class="box removed"></div><p> - {{$t('metatypes.removed')}}</p></v-col>
-              </v-row>
-            </v-col>
-          </v-row>
-        </v-container>
+            <v-progress-linear indeterminate v-if="keysLoading"></v-progress-linear>
+            <v-data-table
+                :headers="headers()"
+                :items="selectedMetatypeRelationship.keys"
+                :items-per-page="100"
+                :footer-props="{
+                    'items-per-page-options': [25, 50, 100]
+                }"
+                class="elevation-1"
+                :item-class="keyItemRowBackground"
+                sort-by="name"
+            >
+
+              <template v-slot:top>
+                <v-toolbar flat color="white">
+                  <v-toolbar-title>{{$t("editMetatypeRelationship.keys")}}</v-toolbar-title>
+                  <v-divider
+                      class="mx-4"
+                      inset
+                      vertical
+                  ></v-divider>
+                  <v-spacer></v-spacer>
+                  <create-metatype-relationship-key-dialog :metatypeRelationship="metatypeRelationship" @metatypeRelationshipKeyCreated="loadKeys()"></create-metatype-relationship-key-dialog>
+                </v-toolbar>
+              </template>
+              <template v-slot:[`item.actions`]="{ item }">
+                <div v-if="($store.getters.isEditMode && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled">
+                  <edit-metatype-relationship-key-dialog
+                      :metatypeRelationshipKey="item"
+                      :metatypeRelationship="metatypeRelationship"
+                      :comparison-relationship-key="(comparisonMetatypeRelationship) ? comparisonMetatypeRelationship.keys.find(k => k.name === item.name) : undefined"
+                      :icon="true"
+                      @metatypeKeyEdited="loadKeys()"></edit-metatype-relationship-key-dialog>
+                  <v-icon
+                      small
+                      @click="deleteKey(item)"
+                  >
+                    mdi-delete
+                  </v-icon>
+                </div>
+
+                  <v-icon
+                      v-if="$store.getters.isEditMode && item.deleted_at"
+                      small
+                      @click="undeleteKey(item)"
+                  >
+                    mdi-restore
+                  </v-icon>
+              </template>
+            </v-data-table>
+            <v-row v-if="$store.getters.isEditMode" style="margin-top: 15px">
+              <v-col :cols="3"><div class="box created mr-2"></div><p>{{$t('metatypes.created')}}</p></v-col>
+              <v-col :cols="3"><div class="box edited mr-2"></div><p>{{$t('metatypes.edited')}}</p></v-col>
+              <v-col :cols="3"><div class="box removed mr-2"></div><p>{{$t('metatypes.removed')}}</p></v-col>
+            </v-row>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>
@@ -334,20 +334,20 @@ export default class EditMetatypeRelationshipDialog extends Vue {
 
 .edited-field {
   input {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   textarea {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 }
 
 .edited-item {
-  background: #FB8C00;
+  background: #CD7F32;
   color: white;
 
   &:hover {
@@ -414,7 +414,7 @@ export default class EditMetatypeRelationshipDialog extends Vue {
 }
 
 .edited {
-  background-color: #FB8C00;
+  background-color: #CD7F32;
 }
 
 .removed {

@@ -8,71 +8,71 @@
       >mdi-eye</v-icon>
     </template>
 
-    <v-card v-if="selectedMetatype">
+    <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatype">
+      <v-card-title>
+        <span class="headline text-h3">{{selectedMetatype.name}}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{selectedMetatype.name}}</span>
-          <v-row>
-            <v-col :cols="12">
-              <v-form
-                  ref="form"
-                  v-model="valid"
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>    
+          <v-col :cols="12">
+            <v-form
+                ref="form"
+                v-model="valid"
+            >
+              <v-text-field
+                  v-model="selectedMetatype.name"
+                  :rules="[v => !!v || $t('editMetatype.nameRequired')]"
+                  required
+                  :disabled="true"
+                  class="disabled"
               >
-                <v-text-field
-                    v-model="selectedMetatype.name"
-                    :rules="[v => !!v || $t('editMetatype.nameRequired')]"
-                    required
-                    :disabled="true"
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('editMetatype.name')}}</template>
-                </v-text-field>
-                <v-textarea
-                    v-model="selectedMetatype.description"
-                    :rules="[v => !!v || $t('editMetatype.descriptionRequired')]"
-                    required
-                    :disabled="true"
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('editMetatype.description')}} </template>
-                </v-textarea>
-              </v-form>
-            </v-col>
-
-            <v-col :cols="12" v-if="keysLoading">
-              <v-progress-linear indeterminate></v-progress-linear>
-            </v-col>
-            <v-col :cols="12">
-              <v-data-table
-                  :headers="headers()"
-                  :items="selectedMetatype.keys"
-                  :items-per-page="100"
-                  :footer-props="{
-                     'items-per-page-options': [25, 50, 100]
-                  }"
-                  class="elevation-1"
-                  sort-by="name"
+                <template v-slot:label>{{$t('editMetatype.name')}}</template>
+              </v-text-field>
+              <v-textarea
+                  v-model="selectedMetatype.description"
+                  :rules="[v => !!v || $t('editMetatype.descriptionRequired')]"
+                  required
+                  :disabled="true"
+                  class="disabled"
               >
+                <template v-slot:label>{{$t('editMetatype.description')}} </template>
+              </v-textarea>
+            </v-form>
+          </v-col>
 
-                <template v-slot:top>
-                  <v-toolbar flat color="white">
-                    <v-toolbar-title>{{$t("viewMetatype.keys")}}</v-toolbar-title>
-                    <v-divider
-                        class="mx-4"
-                        inset
-                        vertical
-                    ></v-divider>
-                    <v-spacer></v-spacer>
-                  </v-toolbar>
-                </template>
-                <template v-slot:[`item.actions`]="{ item }">
-                 <view-metatype-key-dialog :metatypeKey="item" :metatype="metatype" :icon="true"></view-metatype-key-dialog>
-                </template>
-              </v-data-table>
-            </v-col>
-          </v-row>
-        </v-container>
+          <v-col :cols="12" v-if="keysLoading">
+            <v-progress-linear indeterminate></v-progress-linear>
+          </v-col>
+          <v-col :cols="12">
+            <v-data-table
+                :headers="headers()"
+                :items="selectedMetatype.keys"
+                :items-per-page="100"
+                :footer-props="{
+                    'items-per-page-options': [25, 50, 100]
+                }"
+                class="elevation-1"
+                sort-by="name"
+            >
+
+              <template v-slot:top>
+                <v-toolbar flat color="white">
+                  <v-toolbar-title>{{$t("viewMetatype.keys")}}</v-toolbar-title>
+                  <v-divider
+                      class="mx-4"
+                      inset
+                      vertical
+                  ></v-divider>
+                  <v-spacer></v-spacer>
+                </v-toolbar>
+              </template>
+              <template v-slot:[`item.actions`]="{ item }">
+                <view-metatype-key-dialog :metatypeKey="item" :metatype="metatype" :icon="true"></view-metatype-key-dialog>
+              </template>
+            </v-data-table>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>
@@ -160,27 +160,27 @@ export default class ViewMetatypeDialog extends Vue {
 
 .edited-field {
   input {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   textarea {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   .v-select__slot {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   .v-select__selection {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 }
 </style>
