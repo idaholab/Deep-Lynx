@@ -318,15 +318,15 @@ export default class TypeTransformation extends BaseDomainClass {
 
     // applyTransformation will take a mapping, a transformation, and a data record
     // in order to generate an array of nodes or edges based on the transformation type
-    async applyTransformation(data: DataStaging): Promise<Result<Node[] | Edge[]>> {
+    async applyTransformation(data: DataStaging): Promise<Result<Node[] | Edge[] | TimeseriesEntry[]>> {
         return this.transform(data);
     }
 
     // transform is used to recursively generate node/edges based on the transformation
     // this allows us to handle the root array portion of type transformations and to
     // generate nodes/edges based on nested data.
-    private async transform(data: DataStaging, index?: number[]): Promise<Result<Node[] | Edge[]>> {
-        let results: Node[] | Edge[] = [];
+    private async transform(data: DataStaging, index?: number[]): Promise<Result<Node[] | Edge[] | TimeseriesEntry[]>> {
+        let results: Node[] | Edge[] | TimeseriesEntry[] = [];
         // if no root array, act normally
         if (!this.root_array) {
             const results = await this.generateResults(data);
@@ -434,7 +434,7 @@ export default class TypeTransformation extends BaseDomainClass {
     // generate results is the actual node/edge creation. While this only ever returns
     // a single node/edge, it returns it in an array for ease of use in the recursive
     // transform function
-    private async generateResults(data: DataStaging, index?: number[]): Promise<Result<Node[] | Edge[]>> {
+    private async generateResults(data: DataStaging, index?: number[]): Promise<Result<Node[] | Edge[] | TimeseriesEntry[]>> {
         const newPayload: {[key: string]: any} = {};
         const newPayloadRelationship: {[key: string]: any} = {};
         const timeseriesData: TimeseriesData[] = [];
@@ -681,6 +681,8 @@ export default class TypeTransformation extends BaseDomainClass {
                 }),
                 data: timeseriesData,
             });
+
+            return new Promise((resolve) => resolve(Result.Success([entry])));
         }
 
         return new Promise((resolve) => resolve(Result.Failure('unable to generate a node, edge, or timeseries data')));
