@@ -9,12 +9,7 @@
     >
       <template v-slot:top>
         <v-toolbar flat color="white">
-          <v-toolbar-title>{{$t('dataSources.title')}}</v-toolbar-title>
-          <v-divider
-              class="mx-4"
-              inset
-              vertical
-          ></v-divider>
+          <v-toolbar-title>{{$t('home.dataSourcesDescription')}}</v-toolbar-title>
           <v-spacer></v-spacer>
           <create-data-source-dialog :containerID="containerID" @dataSourceCreated="refreshDataSources"></create-data-source-dialog>
         </v-toolbar>
@@ -29,16 +24,28 @@
         </v-tooltip>
       </template>
       <template v-slot:[`item.name`]="{ item }">
-        <p v-if="!item.archived">{{item.name}}</p>
-        <p v-else class="text--disabled">{{item.name}}</p>
+        <span v-if="!item.archived">{{item.name}}</span>
+        <span v-else class="text--disabled">{{item.name}}</span>
       </template>
       <template v-slot:[`item.adapter_type`]="{ item }">
-        <p v-if="!item.archived">{{item.adapter_type}}</p>
-        <p v-else class="text--disabled">{{item.adapter_type}}</p>
+        <span v-if="!item.archived">{{item.adapter_type}}</span>
+        <span v-else class="text--disabled">{{item.adapter_type}}</span>
       </template>
       <template v-slot:[`item.active`]="{ item }">
-        <v-switch v-if="!item.archived" @change="toggleDataSourceActive(item)" v-model="item.active"></v-switch>
-        <v-switch v-else :value="false" disabled></v-switch>
+        <v-switch
+          v-if="!item.archived"
+          @change="toggleDataSourceActive(item)"
+          v-model="item.active"
+          class="mt-0"
+          hide-details
+        />
+        <v-switch
+          v-else
+          :value="false"
+          class="mt-0"
+          hide-details
+          disabled
+        />
       </template>
       <template v-slot:[`item.actions`]="{ item }">
         <delete-data-source-dialog

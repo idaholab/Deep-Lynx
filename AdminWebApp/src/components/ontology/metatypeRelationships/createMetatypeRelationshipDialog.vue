@@ -7,40 +7,40 @@
           class="mr-2"
           v-on="on"
       >mdi-card-plus</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("createMetatypeRelationship.createMetatypeRelationship")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("createMetatypeRelationship.createMetatypeRelationship")}}</v-btn>
     </template>
 
-    <v-card>
+    <v-card class="pt-1 pb-3 px-2">
+      <v-card-title>
+        <span class="headline text-h3">{{$t('createMetatypeRelationship.newMetatypeRelationship')}}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('createMetatypeRelationship.newMetatypeRelationship')}}</span>
-          <v-row>
-            <v-col :cols="12">
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
 
-              <v-form
-                  ref="form"
-                  v-model="valid"
+            <v-form
+                ref="form"
+                v-model="valid"
+            >
+              <v-text-field
+                  v-model="name"
+                  :rules="[v => !!v || $t('createMetatypeRelationship.nameRequired')]"
+                  required
               >
-                <v-text-field
-                    v-model="name"
-                    :rules="[v => !!v || $t('createMetatypeRelationship.nameRequired')]"
-                    required
-                >
-                  <template v-slot:label>{{$t('createMetatypeRelationship.name')}} <small style="color:red" >*</small></template>
-                </v-text-field>
-                <v-textarea
-                    v-model="description"
-                    :rules="[v => !!v || $t('createMetatypeRelationship.descriptionRequired')]"
-                    required
-                >
-                  <template v-slot:label>{{$t('createMetatypeRelationship.description')}} <small style="color:red" >*</small></template>
-                </v-textarea>
-              </v-form>
-              <p><span style="color:red">*</span> = {{$t('createMetatypeRelationship.requiredField')}}</p>
-            </v-col>
-          </v-row>
-        </v-container>
+                <template v-slot:label>{{$t('createMetatypeRelationship.name')}} <small style="color:red" >*</small></template>
+              </v-text-field>
+              <v-textarea
+                  v-model="description"
+                  :rules="[v => !!v || $t('createMetatypeRelationship.descriptionRequired')]"
+                  required
+              >
+                <template v-slot:label>{{$t('createMetatypeRelationship.description')}} <small style="color:red" >*</small></template>
+              </v-textarea>
+            </v-form>
+            <p><span style="color:red">*</span> = {{$t('createMetatypeRelationship.requiredField')}}</p>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>

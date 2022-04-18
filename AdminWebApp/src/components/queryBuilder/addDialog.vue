@@ -1,29 +1,32 @@
 <template>
   <v-dialog
-      v-model="dialog"
-      width="500"
+    v-model="dialog"
+    width="500"
   >
     <template v-slot:activator="{ on, attrs }">
       <v-icon
-          v-bind="attrs"
-          v-on="on"
-          large
+        v-bind="attrs"
+        v-on="on"
+        large
       >
         mdi-plus-circle
       </v-icon>
     </template>
 
-    <v-card>
-      <v-card-title class="text-h5 grey lighten-2">
-        {{$t('queryBuilder.selectFilterType')}}
-      </v-card-title>
+    <v-card class="pt-1 pb-3 px-2">
+      <v-card-title class="grey lighten-2">
+        <span class="headline text-h3">{{$t('queryBuilder.selectFilterType')}}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-select
-            :items="options()"
-            @change="select"
-            v-model="model"
-        >
-        </v-select>
+        <v-row>  
+          <v-col>
+            <v-select
+              :items="options()"
+              @change="select"
+              v-model="model"
+            />
+          </v-col>
+        </v-row>
       </v-card-text>
     </v-card>
   </v-dialog>

@@ -2,27 +2,29 @@
   <v-dialog v-model="dialog" @click:outside="dialog = false"  max-width="60%">
     <template v-slot:activator="{ on }">
       <v-icon
-          v-if="icon"
-          small
-          class="mr-2"
-          v-on="on"
-      >mdi-delete</v-icon>
-      <v-btn v-if="!displayIcon" color="primary" dark class="mb-1" v-on="on">{{$t("deleteApiKey.deleteApiKey")}}</v-btn>
+        v-if="icon"
+        small
+        class="mr-2"
+        v-on="on"
+      >
+        mdi-delete
+      </v-icon>
+      <v-btn v-if="!displayIcon" color="primary" dark class="mt-2" v-on="on">{{$t("deleteApiKey.deleteApiKey")}}</v-btn>
     </template>
 
-    <v-card>
+    <v-card class="pt-1 pb-3 px-2">
+      <v-card-title>
+        <span class="headline text-h3">{{$t('deleteApiKey.deleteTitle')}}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('deleteApiKey.deleteTitle')}}</span>
-          <v-row>
-            <v-col :cols="12">
-                <v-alert type="warning">
-                  {{$t('deleteApiKey.deleteWarning')}}
-                </v-alert>
-            </v-col>
-          </v-row>
-        </v-container>
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
+              <v-alert type="warning">
+                {{$t('deleteApiKey.deleteWarning')}}
+              </v-alert>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>

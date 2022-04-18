@@ -4,22 +4,22 @@
       <v-btn color="primary" dark class="mb-2" v-on="on">{{$t("importMapping.importMappings")}}</v-btn>
     </template>
 
-    <v-card>
+    <v-card class="pt-1 pb-3 px-2">
+      <v-card-title>
+        <span class="headline text-h3">{{$t('importMapping.title')}}</span>
+      </v-card-title>
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('importMapping.title')}}</span>
-          <v-row>
-            <v-col :cols="12">
-              <v-form
-                  ref="form"
-                  lazy-validation
-              >
-                <v-file-input label=".json File" @change="addFile"></v-file-input>
-              </v-form>
-            </v-col>
-          </v-row>
-        </v-container>
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
+            <v-form
+              ref="form"
+              lazy-validation
+            >
+              <v-file-input label=".json File" @change="addFile"></v-file-input>
+            </v-form>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>

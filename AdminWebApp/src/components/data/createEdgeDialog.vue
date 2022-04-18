@@ -2,77 +2,75 @@
   <v-dialog v-model="dialog" max-width="60%">
     <template v-slot:activator="{ on }">
       <v-icon
-          v-if="icon"
-          small
-          class="mr-2"
-          v-on="on"
+        v-if="icon"
+        small
+        class="mr-2"
+        v-on="on"
       >mdi-card-plus</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("createEdge.createEdge")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-1" v-on="on">{{$t("createEdge.createEdge")}}</v-btn>
     </template>
-    <v-card>
+
+    <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline">{{$t("createEdge.formTitle")}}</span>
-        <error-banner :message="errorMessage"></error-banner>
-      </v-card-title>
-
+        <span class="headline text-h3">{{$t("createEdge.formTitle")}}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-container>
-          <v-row>
-            <v-col :cols="12">
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
 
-              <v-form
-                  ref="form"
-                  v-model="valid"
+            <v-form
+                ref="form"
+                v-model="valid"
+            >
+              <v-autocomplete
+                  v-model="originSelect"
+                  :rules="[v => !!v || $t('createEdge.originNodeRequired')]"
+                  :single-line="false"
+                  :items="originNodes"
+                  :search-input.sync="originSearch"
+                  item-text="metatype_name"
+                  return-object
+                  persistent-hint
+                  required
+                  clearable
               >
-                <v-autocomplete
-                    v-model="originSelect"
-                    :rules="[v => !!v || $t('createEdge.originNodeRequired')]"
-                    :single-line="false"
-                    :items="originNodes"
-                    :search-input.sync="originSearch"
-                    item-text="metatype_name"
-                    return-object
-                    persistent-hint
-                    required
-                    clearable
-                >
-                  <template v-slot:label>{{$t('createEdge.originNode')}} <small style="color:red" >*</small></template>
-                </v-autocomplete>
-                <v-autocomplete
-                    v-model="destinationSelect"
-                    :rules="[v => !!v || $t('createEdge.destinationNodeRequired')]"
-                    :single-line="false"
-                    :items="destinationNodes"
-                    :search-input.sync="destinationSearch"
-                    item-text="metatype_name"
-                    return-object
-                    persistent-hint
-                    required
-                    clearable
-                >
-                  <template v-slot:label>{{$t('createEdge.destinationNode')}} <small style="color:red" >*</small></template>
-                </v-autocomplete>
-                <v-autocomplete
-                    v-model="relationshipPairSelect"
-                    :rules="[v => !!v || $t('createEdge.relationshipRequired')]"
-                    :single-line="false"
-                    :items="metatypeRelationshipPairs"
-                    :search-input.sync="relationshipSearch"
-                    item-text="name"
-                    item-value="id"
-                    persistent-hint
-                    required
-                    clearable
-                >
-                  <template v-slot:label>{{$t('createEdge.relationship')}} <small style="color:red" >*</small></template>
-                </v-autocomplete>
+                <template v-slot:label>{{$t('createEdge.originNode')}} <small style="color:red" >*</small></template>
+              </v-autocomplete>
+              <v-autocomplete
+                  v-model="destinationSelect"
+                  :rules="[v => !!v || $t('createEdge.destinationNodeRequired')]"
+                  :single-line="false"
+                  :items="destinationNodes"
+                  :search-input.sync="destinationSearch"
+                  item-text="metatype_name"
+                  return-object
+                  persistent-hint
+                  required
+                  clearable
+              >
+                <template v-slot:label>{{$t('createEdge.destinationNode')}} <small style="color:red" >*</small></template>
+              </v-autocomplete>
+              <v-autocomplete
+                  v-model="relationshipPairSelect"
+                  :rules="[v => !!v || $t('createEdge.relationshipRequired')]"
+                  :single-line="false"
+                  :items="metatypeRelationshipPairs"
+                  :search-input.sync="relationshipSearch"
+                  item-text="name"
+                  item-value="id"
+                  persistent-hint
+                  required
+                  clearable
+              >
+                <template v-slot:label>{{$t('createEdge.relationship')}} <small style="color:red" >*</small></template>
+              </v-autocomplete>
 
-                
-              </v-form>
-              <p><span style="color:red">*</span> = {{$t('createEdge.requiredField')}}</p>
-            </v-col>
-          </v-row>
-        </v-container>
+              
+            </v-form>
+            <p><span style="color:red">*</span> = {{$t('createEdge.requiredField')}}</p>
+          </v-col>
+        </v-row>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>

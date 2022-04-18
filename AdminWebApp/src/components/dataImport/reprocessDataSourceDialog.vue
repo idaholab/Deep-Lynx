@@ -18,21 +18,21 @@
       <v-btn v-if="!displayIcon" color="primary" dark class="mb-1" v-on="on">{{$t("reprocessDataSource.reprocessImport")}}</v-btn>
     </template>
 
-    <v-card>
+    <v-card class="pt-1 pb-3 px-2">
+      <v-card-title>
+        <span class="headline text-h3">{{$t('reprocessDataSource.title')}}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('reprocessDataSource.title')}}</span>
-          <v-row>
-            <v-col :cols="12">
-              <div>
-                <v-alert type="warning">
-                  {{$t('reprocessDataSource.warning')}}
-                </v-alert>
-              </div>
-            </v-col>
-          </v-row>
-        </v-container>
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
+            <div>
+              <v-alert type="warning">
+                {{$t('reprocessDataSource.warning')}}
+              </v-alert>
+            </div>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>

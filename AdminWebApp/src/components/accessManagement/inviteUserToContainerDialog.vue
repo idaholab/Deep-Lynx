@@ -1,43 +1,41 @@
 <template>
-    <v-dialog v-model="dialog" max-width="500px" @click:outside="clearNew">
-        <template v-slot:activator="{ on }">
-            <v-btn color="primary" dark class="mb-2" v-on="on">{{$t("containerInvite.button")}}</v-btn>
-        </template>
-        <v-card>
-            <v-card-title>
-                <span class="headline">{{$t("containerInvite.formTitle")}}</span>
-            </v-card-title>
+  <v-dialog v-model="dialog" max-width="500px" @click:outside="clearNew">
+    <template v-slot:activator="{ on }">
+      <v-btn color="primary" dark class="mt-2" v-on="on">{{$t("containerInvite.button")}}</v-btn>
+    </template>
 
-            <v-card-text>
-                <error-banner :message="errorMessage"></error-banner>
-                <v-container>
-                    <v-row>
-                        <v-col :cols="12">
+    <v-card class="pt-1 pb-3 px-2">
+      <v-card-title>
+        <span class="headline text-h3">{{$t("containerInvite.formTitle")}}</span>
+      </v-card-title>   
+      <v-card-text>
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
 
-                            <v-form
-                                    ref="form"
-                                    lazy-validation
-                                    v-model="formValid"
-                            >
-                                <v-text-field
-                                        v-model="email"
-                                        :label="$t('containerInvite.email')"
-                                        :rules="emailRules()"
-                                        required
-                                ></v-text-field>
-                            </v-form>
-                        </v-col>
-                    </v-row>
-                </v-container>
-            </v-card-text>
+            <v-form
+              ref="form"
+              lazy-validation
+              v-model="formValid"
+            >
+              <v-text-field
+                v-model="email"
+                :label="$t('containerInvite.email')"
+                :rules="emailRules()"
+                required
+              ></v-text-field>
+            </v-form>
+          </v-col>
+        </v-row>
+      </v-card-text>
 
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="clearNew" >{{$t("containerInvite.cancel")}}</v-btn>
-              <v-btn color="blue darken-1" text @click="sendInvite" :disabled="!formValid || email === ''" ><span v-if="!loading">{{$t("containerInvite.sendInvite")}}</span><v-progress-circular indeterminate v-if="loading"></v-progress-circular> </v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="clearNew" >{{$t("containerInvite.cancel")}}</v-btn>
+        <v-btn color="blue darken-1" text @click="sendInvite" :disabled="!formValid || email === ''" ><span v-if="!loading">{{$t("containerInvite.sendInvite")}}</span><v-progress-circular indeterminate v-if="loading"></v-progress-circular> </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts">

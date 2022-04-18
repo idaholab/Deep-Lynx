@@ -8,29 +8,29 @@
           v-on="on"
           @click="isDelete = true; initiate()"
       >mdi-delete</v-icon>
-      <v-btn v-if="!displayIcon" color="primary" dark class="mb-1" v-on="on">{{$t("deleteTypeMapping.deleteTypeMapping")}}</v-btn>
+      <v-btn v-if="!displayIcon" color="primary" dark class="mt-2" v-on="on">{{$t("deleteTypeMapping.deleteTypeMapping")}}</v-btn>
     </template>
 
-    <v-card>
+    <v-card class="pt-1 pb-3 px-2" v-if="isDelete">
+      <v-card-title>
+        <span class="headline text-h3">{{$t('deleteTypeMapping.deleteTitle')}}</span>
+      </v-card-title>
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('deleteTypeMapping.deleteTitle')}}</span>
-          <v-row>
-            <v-col :cols="12">
-              <v-progress-linear v-if="transformationsLoading" indeterminate></v-progress-linear>
-              <div v-else>
-                <v-alert type="warning" v-if="transformationCount <= 0">
-                  {{$t('deleteTypeMapping.deleteWarning')}}
-                </v-alert>
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
+            <v-progress-linear v-if="transformationsLoading" indeterminate></v-progress-linear>
+            <div v-else>
+              <v-alert type="warning" v-if="transformationCount <= 0">
+                {{$t('deleteTypeMapping.deleteWarning')}}
+              </v-alert>
 
-                <v-alert type="error" v-else>
-                  {{$t('deleteTypeMapping.unableToDelete')}}
-                </v-alert>
-              </div>
-            </v-col>
-          </v-row>
-        </v-container>
+              <v-alert type="error" v-else>
+                {{$t('deleteTypeMapping.unableToDelete')}}
+              </v-alert>
+            </div>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions v-if="!transformationsLoading">

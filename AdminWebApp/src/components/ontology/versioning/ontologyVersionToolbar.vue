@@ -1,19 +1,35 @@
 <template>
   <div>
     <v-toolbar
-        elevation="4"
-        :color="backgroundColor"
+      :color="backgroundColor"
+      style="border-top-left-radius: 5px; border-top-right-radius: 5px;"
     >
-      <p style="color: white">{{$t('ontologyToolbar.viewMode')}}
-      </p>
 
-      <v-switch
-          v-model="isEditMode"
-          style="margin-left: 5px; margin-top: 5px"
-          :disabled="(!isCurrent || !$auth.Auth('ontology', 'write', containerID)) && !$store.getters.isEditMode"
-          color="orange darken-4"></v-switch>
-      <p style="color: white; margin-right: 15px">{{$t('ontologyToolbar.editMode')}}
-      </p>
+      <div class="d-flex flex-row white--text">
+        <div
+          class="pr-3 mr-3"
+          style="border-right: 1px solid white"
+        >
+          Mode
+        </div>
+        <div class="d-flex flex-row align-center">
+          <span class="mr-2">
+            {{$t('ontologyToolbar.viewMode')}}
+          </span>
+
+          <v-switch
+            hide-details
+            class="d-flex justify-center"
+            v-model="isEditMode"
+            :disabled="(!isCurrent || !$auth.Auth('ontology', 'write', containerID)) && !$store.getters.isEditMode"
+            color="orange lighten-3"
+          ></v-switch>
+          <span class="ml-2 mr-8">
+            {{$t('ontologyToolbar.editMode')}}
+          </span>
+        </div>
+      </div>
+
       <v-select
           dark
           v-show="$store.getters.isEditMode"

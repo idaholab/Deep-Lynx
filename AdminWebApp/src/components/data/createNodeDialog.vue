@@ -2,63 +2,62 @@
   <v-dialog v-model="dialog" width="40%" max-width="60%">
     <template v-slot:activator="{ on }">
       <v-icon
-          v-if="icon"
-          small
-          class="mr-2"
+        v-if="icon"
+        small
+        class="mr-2"
       >mdi-card-plus</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("createNode.createNode")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-1" v-on="on">{{$t("createNode.createNode")}}</v-btn>
     </template>
-    <v-card>
+
+    <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline">{{$t("createNode.formTitle")}}</span>
-        <error-banner :message="errorMessage"></error-banner>
-      </v-card-title>
+        <span class="headline text-h3">{{$t("createNode.formTitle")}}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-container>
-          <v-row>
-            <v-col :cols="12">
-              <v-form
-                  ref="form"
-                  v-model="valid"
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
+            <v-form
+                ref="form"
+                v-model="valid"
+            >
+              <v-autocomplete
+                  v-model="metatype"
+                  :rules="[v => !!v || $t('createNode.metatypeRequired')]"
+                  :single-line="false"
+                  :loading="metatypesLoading"
+                  :items="originMetatypes"
+                  :search-input.sync="originSearch"
+                  item-text="name"
+                  return-object
+                  persistent-hint
+                  required
+                  clearable
               >
-                <v-autocomplete
-                    v-model="metatype"
-                    :rules="[v => !!v || $t('createNode.metatypeRequired')]"
-                    :single-line="false"
-                    :loading="metatypesLoading"
-                    :items="originMetatypes"
-                    :search-input.sync="originSearch"
-                    item-text="name"
-                    return-object
-                    persistent-hint
-                    required
-                    clearable
-                >
-                  <template v-slot:label>{{$t('createNode.metatype')}} <small style="color:red" >*</small></template>
-                </v-autocomplete>
-                <v-col :cols="12" v-if="Object.keys(metatype).length !== 0">
-                  <v-checkbox 
-                    v-model="optional"
-                    :label="'Show Optional Fields'"
-                  ></v-checkbox>
-                  <v-col :cols="12">
-                    <v-data-table
-                        :items="metatype.keys"
-                        :disable-pagination="true"
-                        :hide-default-footer="true"
-                        v-if="optional === true"
-                    >
-                      <template v-slot:[`item`]="{ item }">
-                        <v-text-field v-model="item['default_value']"><template v-slot:label>{{item["name"]}}</template></v-text-field>
-                      </template>
-                    </v-data-table>
-                  </v-col>
+                <template v-slot:label>{{$t('createNode.metatype')}} <small style="color:red" >*</small></template>
+              </v-autocomplete>
+              <v-col :cols="12" v-if="Object.keys(metatype).length !== 0">
+                <v-checkbox 
+                  v-model="optional"
+                  :label="'Show Optional Fields'"
+                ></v-checkbox>
+                <v-col :cols="12">
+                  <v-data-table
+                      :items="metatype.keys"
+                      :disable-pagination="true"
+                      :hide-default-footer="true"
+                      v-if="optional === true"
+                  >
+                    <template v-slot:[`item`]="{ item }">
+                      <v-text-field v-model="item['default_value']"><template v-slot:label>{{item["name"]}}</template></v-text-field>
+                    </template>
+                  </v-data-table>
                 </v-col>
-              </v-form>
-              <p><span style="color:red">*</span> = {{$t('createNode.requiredField')}}</p>
-            </v-col>
-          </v-row>
-        </v-container>
+              </v-col>
+            </v-form>
+            <p><span style="color:red">*</span> = {{$t('createNode.requiredField')}}</p>
+          </v-col>
+        </v-row>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>

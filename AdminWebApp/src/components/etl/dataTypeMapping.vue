@@ -1,36 +1,35 @@
 <template>
-  <v-card>
+  <div>
     <error-banner :message="errorMessage"></error-banner>
-    <v-row no-gutters style="padding: 10px 10px 10px 10px">
-      <v-col :cols="12" style="padding-right: 10px">
-        <h1>{{$t('dataMapping.typeMapping')}}</h1>
+    <v-row>
+      <v-col :cols="12" class="pt-9 px-9">
         <p>{{$t('dataMapping.typeMappingHelp')}}</p>
         <v-checkbox
-            v-if="typeMapping"
-            v-model="typeMapping.active"
-            @click="updateTypeMapping"
-            :label="$t('dataMapping.active')"
+          v-if="typeMapping"
+          v-model="typeMapping.active"
+          @click="updateTypeMapping"
+          :label="$t('dataMapping.active')"
+          class="ml-n1"
         ></v-checkbox>
-        <v-divider></v-divider>
       </v-col>
-      <v-col :cols="8">
+    </v-row>
+    <v-divider></v-divider>
+    <v-row no-gutters>
+      <v-col :cols="8" class="pt-2">
+        <h3 class="text-h3 px-6">{{$t('dataMapping.transformationsTableTitle')}}</h3>
         <v-data-table
-            :headers="headers()"
-            :items="transformations"
-            class="elevation-1"
+          :headers="headers()"
+          :items="transformations"
         >
-          <template v-slot:top>
-            <h2>{{$t('dataMapping.transformationsTableTitle')}}</h2>
-          </template>
           <template v-slot:item.names="{ item }">
-                <span v-if="item.archived" class="text--disabled">
-                {{item.metatype_name}}
-                {{item.metatype_relationship_pair_name}}
-                </span>
-            <span v-else>
-               {{item.metatype_name}}
+            <span v-if="item.archived" class="text--disabled">
+              {{item.metatype_name}}
               {{item.metatype_relationship_pair_name}}
-               </span>
+            </span>
+            <span v-else>
+              {{item.metatype_name}}
+              {{item.metatype_relationship_pair_name}}
+            </span>
           </template>
           <template v-slot:item.actions="{ item }">
             <transformation-dialog
@@ -70,19 +69,21 @@
           />
         </v-col>
       </v-col>
-      <v-col :cols="4">
-        <h2>{{$t('dataMapping.currentDataSet')}}</h2>
-        <v-card max-height="360" style="overflow-y: scroll" flat>
+      <v-divider vertical></v-divider>
+      <v-col :cols="4" class="pt-2 pl-6">
+        <h3 class="text-h3 pr-6">{{$t('dataMapping.currentDataSet')}}</h3>
+        <v-card
+          max-height="360"
+          style="overflow-y: scroll" flat
+        >
           <json-view
-              :data="unmappedData"
-              :maxDepth=1
+            :data="unmappedData"
+            :maxDepth=1
           />
         </v-card>
       </v-col>
-
-
     </v-row>
-  </v-card>
+  </div>
 </template>
 
 <script lang="ts">

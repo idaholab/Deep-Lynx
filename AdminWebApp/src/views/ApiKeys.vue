@@ -8,12 +8,7 @@
     >
       <template v-slot:top>
         <v-toolbar flat color="white">
-          <v-toolbar-title>{{$t('apiKeys.title')}}</v-toolbar-title>
-          <v-divider
-              class="mx-4"
-              inset
-              vertical
-          ></v-divider>
+          <v-toolbar-title>{{$t('home.apiKeysDescription')}}</v-toolbar-title>
           <v-spacer></v-spacer>
         <create-api-key-dialog></create-api-key-dialog>
         </v-toolbar>
