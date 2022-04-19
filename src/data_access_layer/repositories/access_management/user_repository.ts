@@ -122,7 +122,7 @@ export default class UserRepository extends Repository implements RepositoryInte
             if (Config.email_validation_enforced) {
                 void Emailer.Instance.send(u.email, 'Validate Deep Lynx Email Address', ValidateEmailTemplate(u.id!, u.email_validation_token!)).then(
                     (result) => {
-                        if (result.isError) Logger.error(`unable to send email verification email ${result.error?.error}`);
+                        if (result.isError) Logger.debug(`unable to send email verification email ${result.error?.error}`);
                     },
                 );
             }
