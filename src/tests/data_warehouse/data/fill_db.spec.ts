@@ -500,7 +500,7 @@ describe('We can generate test data', async () => {
                 objectMode: true,
             }),
             user,
-            {overrideJsonStream: true, generateShapeHash: true},
+            {overrideJsonStream: true},
         );
     });
 
