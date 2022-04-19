@@ -78,8 +78,6 @@ export default class OAuthRepository extends Repository implements RepositoryInt
     // oauth app for the bundled admin web gui. This allows us to override the auto
     // generated id and instead set our own, configured id instead
     async createDefaultApplication(appID: string): Promise<void> {
-        Logger.debug('creating default oauth application');
-
         const results = await this.where().ownerID('is null').and().name('eq', Config.admin_web_app_name).list();
         if (results.isError) {
             Logger.error(`unable to list potential matches for default oauth application`);
@@ -90,6 +88,8 @@ export default class OAuthRepository extends Repository implements RepositoryInt
             Logger.debug('initial oauth application already created, skipping');
             return Promise.resolve();
         }
+
+        Logger.debug('creating default oauth application');
 
         const app = new OAuthApplication({
             name: Config.admin_web_app_name,
