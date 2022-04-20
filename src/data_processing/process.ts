@@ -37,6 +37,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
 
         await stagingRepo.save(staging);
     }
+
     const mapping = await mappingRepo.findByShapeHash(staging.shape_hash!, staging.data_source_id!, true);
 
     const errors = await staging.validationErrors();

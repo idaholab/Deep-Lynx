@@ -191,19 +191,22 @@ describe('A Node Repository', async () => {
                 original_data_id: originalID,
                 data_source_id: dataSourceID,
             }),
-            // we're adding a second node with the same origianl id to test both update feature in the same batch
-            // and verify that we've nipped the timestamp bug in the bud
+            // we're adding a second node with the same original id to test both update feature in the same batch
+            // and verify that we've nipped the timestamp bug in the bud - note that the created_at portion of the node
+            // will be set by the data_staging record, which take theirs from clock_timestamp so each should have a unique
+            // created_at date
             new Node({
                 container_id: containerID,
                 metatype,
                 properties: payload,
                 original_data_id: originalID,
                 data_source_id: dataSourceID,
+                created_at: new Date(),
             }),
         ];
 
         let saved = await nodeRepo.bulkSave(user, mixed);
-        expect(saved.isError).false;
+        expect(saved.isError, saved.error?.error).false;
         mixed.forEach((node) => {
             expect(node.id).not.undefined;
             expect(node.properties).to.have.deep.property('flower_name', 'Daisy');
