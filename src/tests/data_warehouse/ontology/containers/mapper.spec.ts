@@ -19,7 +19,7 @@ describe('A Container Mapper', async () => {
     });
 
     after(async () => {
-        await PostgresAdapter.Instance.close();
+        return PostgresAdapter.Instance.close();
     });
 
     it('can save to storage', async () => {

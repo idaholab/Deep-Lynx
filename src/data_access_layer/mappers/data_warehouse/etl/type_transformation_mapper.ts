@@ -417,7 +417,8 @@ export default class TypeTransformationMapper extends Mapper {
         const createStatement = format(
             `CREATE TABLE IF NOT EXISTS %I (
                 ${columnStatements.join(',')},
-                _nodes bigint[] DEFAULT NULL
+                _nodes bigint[] DEFAULT NULL,
+                _metadata jsonb DEFAULT NULL
                 )`,
             'z_' + transformation.id!,
         );
