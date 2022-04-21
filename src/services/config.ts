@@ -30,6 +30,8 @@ export class Config {
     private readonly _cache_provider: string;
     private readonly _cache_default_ttl: number;
     private readonly _cache_redis_connection_string: string;
+    private readonly _initial_import_cache_ttl: number;
+    private readonly _import_cache_ttl: number;
 
     private readonly _core_db_connection_string: string;
     private readonly _timescaledb_enabled: boolean = false;
@@ -124,6 +126,9 @@ export class Config {
         this._cache_default_ttl = process.env.CACHE_DEFAULT_TTL ? parseInt(process.env.CACHE_DEFAULT_TTL!, 10) : 300;
         // default to a local, non-password-protected instance of redis
         this._cache_redis_connection_string = process.env.CACHE_REDIS_CONNECTION_STRING || '//localhost:6379';
+        // default to 6 hours for the initial import cache, subsequent should be 30 seconds
+        this._initial_import_cache_ttl = process.env.INITIAL_IMPORT_CACHE_TTL ? parseInt(process.env.INITIAL_IMPORT_CACHE_TTL!, 10) : 21600;
+        this._import_cache_ttl = process.env.IMPORT_CACHE_TTL ? parseInt(process.env.IMPORT_CACHE_TTL!, 10) : 30;
 
         this._core_db_connection_string = process.env.CORE_DB_CONNECTION_STRING || '';
         this._timescaledb_enabled = process.env.TIMESCALEDB_ENABLED === 'true';
@@ -207,15 +212,14 @@ export class Config {
         this._azure_service_bus_connection_string = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING || '';
 
         // generate and save a key if we didn't start with one
-        if(!this._encryption_key_path) {
-            if(!fs.existsSync("./private-key.pem")) {
-                const key = new NodeRSA({b: 512})
-                const buffer = key.exportKey("pkcs1-private-pem")
-                fs.writeFileSync("./private-key.pem", buffer)
+        if (!this._encryption_key_path) {
+            if (!fs.existsSync('./private-key.pem')) {
+                const key = new NodeRSA({b: 512});
+                const buffer = key.exportKey('pkcs1-private-pem');
+                fs.writeFileSync('./private-key.pem', buffer);
             } else {
-                this._encryption_key_path = "./private-key.pem"
+                this._encryption_key_path = './private-key.pem';
             }
-
         }
     }
 
@@ -497,6 +501,14 @@ export class Config {
 
     get emit_events(): boolean {
         return this._emit_events;
+    }
+
+    get initial_import_cache_ttl(): number {
+        return this._initial_import_cache_ttl;
+    }
+
+    get import_cache_ttl(): number {
+        return this._import_cache_ttl;
     }
 
     public static Instance(): Config {
