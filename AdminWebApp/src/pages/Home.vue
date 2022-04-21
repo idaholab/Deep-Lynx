@@ -540,6 +540,7 @@ export default class Home extends Vue {
 
     this.$client.listMetatypes(this.containerID as string, {
       count: true,
+      ontologyVersion: this.$store.getters.selectedOntologyVersionID
     })
         .then(metatypesCount => {
           this.metatypesCount = metatypesCount as number
@@ -547,6 +548,7 @@ export default class Home extends Vue {
 
     this.$client.listMetatypeRelationshipPairs(this.containerID as string, {
       count: true,
+      ontologyVersion: this.$store.getters.selectedOntologyVersionID
     })
         .then(relationshipCount => {
           this.relationshipCount = relationshipCount as number
