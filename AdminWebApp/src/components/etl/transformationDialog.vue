@@ -1755,7 +1755,7 @@ export default class TransformationDialog extends Vue {
 }
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 tbody tr:nth-of-type(odd) {
   background-color: rgba(0, 0, 0, .05);
 }
