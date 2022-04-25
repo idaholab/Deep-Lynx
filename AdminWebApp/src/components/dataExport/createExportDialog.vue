@@ -2,115 +2,112 @@
   <v-dialog v-model="dialog" max-width="500px" @click:outside="errorMessage = ''; dialog = false">
     <template v-slot:activator="{ on }">
       <v-icon
-          v-if="icon"
-          small
-          class="mr-2"
-          v-on="on"
+        v-if="icon"
+        small
+        class="mr-2"
+        v-on="on"
       >mdi-card-plus</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("createExport.createExport")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("createExport.createExport")}}</v-btn>
     </template>
 
-    <v-card>
+    <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline">{{$t("createExport.formTitle")}}</span>
-      </v-card-title>
-
+        <span class="headline text-h3">{{$t("createExport.formTitle")}}</span>
+      </v-card-title>   
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
-        <v-container>
-          <v-row>
-            <v-col :cols="12">
+        <v-row>
+          <v-col :cols="12">
 
-              <v-form
-                  ref="form"
-                  v-model="valid"
+            <v-form
+                ref="form"
+                v-model="valid"
+            >
+              <v-select
+                  :items="destinationTypes"
+                  @input="selectDestinationType"
+                  :label="$t('createExport.destinationType')"
+                  return-object
+                  item-text="name"
+                  required
               >
-                <v-select
-                    :items="destinationTypes"
-                    @input="selectDestinationType"
-                    :label="$t('createExport.destinationType')"
-                    return-object
-                    item-text="name"
+                <template slot="append-outer"><info-tooltip :message="$t('createExport.destinationHelp')"></info-tooltip> </template>
+              </v-select>
+
+              <v-select
+                  v-if="adapters.length > 0"
+                  :items="adapters"
+                  @input="selectAdapter"
+                  :label="$t('createExport.adapter')"
+                  required
+              >
+                <template slot="append-outer"><info-tooltip :message="$t('createExport.adapterHelp')"></info-tooltip> </template>
+              </v-select>
+
+              <div v-if="adapter  === 'gremlin'">
+                <h3>{{$t('createExport.gremlinConfiguration')}}</h3>
+                <v-text-field
+                    v-model="gremlinConfig.traversal_source"
                     required
                 >
-                  <template slot="append-outer"><info-tooltip :message="$t('createExport.destinationHelp')"></info-tooltip> </template>
-                </v-select>
+                  <template v-slot:label>{{$t('createExport.traversalSource')}} <small style="color:red" >*</small></template>
+                  <template slot="append-outer"><info-tooltip :message="$t('createExport.traversalSourceHelp')"></info-tooltip> </template>
+                </v-text-field>
 
-                <v-select
-                    v-if="adapters.length > 0"
-                    :items="adapters"
-                    @input="selectAdapter"
-                    :label="$t('createExport.adapter')"
+                <v-row>
+                  <v-col :cols="6">
+                    <v-text-field
+                        v-model="gremlinConfig.user"
+                        required
+                    >
+                      <template v-slot:label>{{$t('createExport.user')}}</template>
+                      <template slot="append-outer"><info-tooltip :message="$t('createExport.userHelp')"></info-tooltip> </template>
+                    </v-text-field>
+                  </v-col>
+                  <v-col :cols="6">
+                    <v-text-field
+                        v-model="gremlinConfig.key"
+                        required
+                    >
+                      <template v-slot:label>{{$t('createExport.key')}}</template>
+                      <template slot="append-outer"><info-tooltip :message="$t('createExport.keyHelp')"></info-tooltip> </template>
+                    </v-text-field>
+                  </v-col>
+                </v-row>
+                <v-text-field
+                    v-model="gremlinConfig.endpoint"
                     required
                 >
-                  <template slot="append-outer"><info-tooltip :message="$t('createExport.adapterHelp')"></info-tooltip> </template>
-                </v-select>
-
-                <div v-if="adapter  === 'gremlin'">
-                  <h3>{{$t('createExport.gremlinConfiguration')}}</h3>
-                  <v-text-field
-                      v-model="gremlinConfig.traversal_source"
-                      required
-                  >
-                    <template v-slot:label>{{$t('createExport.traversalSource')}} <small style="color:red" >*</small></template>
-                    <template slot="append-outer"><info-tooltip :message="$t('createExport.traversalSourceHelp')"></info-tooltip> </template>
-                  </v-text-field>
-
-                  <v-row>
-                   <v-col :cols="6">
-                     <v-text-field
-                         v-model="gremlinConfig.user"
-                         required
-                     >
-                       <template v-slot:label>{{$t('createExport.user')}}</template>
-                       <template slot="append-outer"><info-tooltip :message="$t('createExport.userHelp')"></info-tooltip> </template>
-                     </v-text-field>
-                   </v-col>
-                    <v-col :cols="6">
-                      <v-text-field
-                          v-model="gremlinConfig.key"
-                          required
-                      >
-                        <template v-slot:label>{{$t('createExport.key')}}</template>
-                        <template slot="append-outer"><info-tooltip :message="$t('createExport.keyHelp')"></info-tooltip> </template>
-                      </v-text-field>
-                    </v-col>
-                  </v-row>
-                  <v-text-field
-                      v-model="gremlinConfig.endpoint"
-                      required
-                  >
-                    <template v-slot:label>{{$t('createExport.endpoint')}} <small style="color:red" >*</small></template>
-                    <template slot="append-outer"><info-tooltip :message="$t('createExport.endpointHelp')"></info-tooltip> </template>
-                  </v-text-field>
-                  <v-text-field
-                      v-model="gremlinConfig.port"
-                      required
-                  >
-                    <template v-slot:label>{{$t('createExport.port')}} <small style="color:red" >*</small></template>
-                    <template slot="append-outer"><info-tooltip :message="$t('createExport.portHelp')"></info-tooltip> </template>
-                  </v-text-field>
-                  <v-text-field
-                      v-model="gremlinConfig.path"
-                      required
-                  >
-                    <template v-slot:label>{{$t('createExport.path')}}</template>
-                    <template slot="append-outer"><info-tooltip :message="$t('createExport.pathHelp')"></info-tooltip> </template>
-                  </v-text-field>
-                  <v-text-field
-                      v-model="gremlinConfig.writes_per_second"
-                      required
-                      type="number"
-                  >
-                    <template v-slot:label>{{$t('createExport.writes')}} <small style="color:red" >*</small></template>
-                    <template slot="append-outer"><info-tooltip :message="$t('createExport.writesHelp')"></info-tooltip> </template>
-                  </v-text-field>
-                </div>
-              </v-form>
-              <p><span style="color:red">*</span> = {{$t('createExport.requiredField')}}</p>
-            </v-col>
-          </v-row>
-        </v-container>
+                  <template v-slot:label>{{$t('createExport.endpoint')}} <small style="color:red" >*</small></template>
+                  <template slot="append-outer"><info-tooltip :message="$t('createExport.endpointHelp')"></info-tooltip> </template>
+                </v-text-field>
+                <v-text-field
+                    v-model="gremlinConfig.port"
+                    required
+                >
+                  <template v-slot:label>{{$t('createExport.port')}} <small style="color:red" >*</small></template>
+                  <template slot="append-outer"><info-tooltip :message="$t('createExport.portHelp')"></info-tooltip> </template>
+                </v-text-field>
+                <v-text-field
+                    v-model="gremlinConfig.path"
+                    required
+                >
+                  <template v-slot:label>{{$t('createExport.path')}}</template>
+                  <template slot="append-outer"><info-tooltip :message="$t('createExport.pathHelp')"></info-tooltip> </template>
+                </v-text-field>
+                <v-text-field
+                    v-model="gremlinConfig.writes_per_second"
+                    required
+                    type="number"
+                >
+                  <template v-slot:label>{{$t('createExport.writes')}} <small style="color:red" >*</small></template>
+                  <template slot="append-outer"><info-tooltip :message="$t('createExport.writesHelp')"></info-tooltip> </template>
+                </v-text-field>
+              </div>
+            </v-form>
+            <p><span style="color:red">*</span> = {{$t('createExport.requiredField')}}</p>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>

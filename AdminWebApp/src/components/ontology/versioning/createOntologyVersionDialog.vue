@@ -9,39 +9,37 @@
       >mdi-plus-circle</v-icon>
       <v-btn v-show="!icon" color="orange accent-4" dark class="mb-2" v-on="on">{{ $t("createChangelist.newChangelistButton") }}</v-btn>
     </template>
-    <v-card>
+
+    <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline">{{ $t("createChangelist.formTitle") }}</span>
-      </v-card-title>
-
+        <span class="headline text-h3">{{ $t("createChangelist.formTitle") }}</span>
+      </v-card-title>   
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>
-        <v-container>
-          <v-row>
-            <v-col :cols="12">
+        <error-banner :message="errorMessage"></error-banner>   
+        <v-row>
+          <v-col :cols="12">
 
-              <v-form
-                  ref="form"
-                  lazy-validation
+            <v-form
+                ref="form"
+                lazy-validation
+            >
+              <v-text-field
+                  v-model="name"
+                  :label="$t('createChangelist.name')"
+                  required
+              ></v-text-field>
+              <v-textarea
+                  v-model="description"
+                  :label="$t('createChangelist.description')"
+                  required
               >
-                <v-text-field
-                    v-model="name"
-                    :label="$t('createChangelist.name')"
-                    required
-                ></v-text-field>
-                <v-textarea
-                    v-model="description"
-                    :label="$t('createChangelist.description')"
-                    required
-                >
-                </v-textarea>
+              </v-textarea>
 
 
-              </v-form>
-              <p><b>Note:</b> {{$t('createChangelist.creationNote')}}</p>
-            </v-col>
-          </v-row>
-        </v-container>
+            </v-form>
+            <p><b>Note:</b> {{$t('createChangelist.creationNote')}}</p>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>

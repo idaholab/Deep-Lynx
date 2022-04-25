@@ -175,6 +175,40 @@ export default class ImportMapper extends Mapper {
         return Promise.resolve(Result.Success(true));
     }
 
+    public async SendToQueue(importID: string): Promise<Result<boolean>> {
+        // now we stream process this part because an import might have a large number of
+        // records, and we really don't want to read that into memory - we also don't wait
+        // for this to complete as it could take a night and a day
+        const queue = await QueueFactory();
+        void PostgresAdapter.Instance.Pool.connect((err, client, done) => {
+            const stream = client.query(new QueryStream(this.listStagingForImportStreaming(importID)));
+            const putPromises: Promise<boolean>[] = [];
+
+            stream.on('data', (data) => {
+                putPromises.push(queue.Put(Config.process_queue, plainToClass(DataStaging, data as object)));
+            });
+
+            stream.on('end', () => {
+                Promise.all(putPromises)
+                    .then(() => {
+                        done();
+                    })
+                    .catch((e) => {
+                        done();
+                        Logger.error(`error reprocessing import ${e}`);
+                    });
+            });
+
+            // we pipe to devnull because we need to trigger the stream and don't
+            // care where the data ultimately ends up
+            stream.pipe(devnull({objectMode: true}));
+        });
+
+        await this.SetStatus(importID, 'processing');
+
+        return Promise.resolve(Result.Success(true));
+    }
+
     private setProcessedNull(importID: string): QueryConfig {
         return {
             text: `UPDATE ${DataStagingMapper.tableName} SET inserted_at = NULL WHERE import_id = $1`,
@@ -238,7 +272,14 @@ export default class ImportMapper extends Mapper {
     // we're only pulling the ID here because that's all we need for the re-queue process, we
     // don't want to read the data in needlessly
     private listStagingForImportStreaming(importID: string): string {
-        return format(`SELECT data_staging.* FROM data_staging WHERE import_id = %L`, importID);
+        return format(
+            `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config 
+                   FROM data_staging
+                            LEFT JOIN type_mappings ON type_mappings.shape_hash = data_staging.shape_hash
+                                                         AND type_mappings.data_source_id = data_staging.data_source_id
+                            LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id WHERE import_id = %L`,
+            importID,
+        );
     }
 
     private retrieveStatement(logID: string): QueryConfig {

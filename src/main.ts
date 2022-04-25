@@ -10,10 +10,15 @@ import 'reflect-metadata';
 import UserRepository from './data_access_layer/repositories/access_management/user_repository';
 import PostgresAdapter from './data_access_layer/mappers/db_adapters/postgres/postgres';
 import OAuthRepository from './data_access_layer/repositories/access_management/oauth_repository';
+import {Migrator} from './data_access_layer/migrate';
 
 const postgresAdapter = PostgresAdapter.Instance;
 
-void postgresAdapter.init().then(() => {
+async function Start(): Promise<any> {
+    await postgresAdapter.init();
+    const migrator = new Migrator();
+    await migrator.Run();
+
     void Cache.flush();
     process.setMaxListeners(0);
 
@@ -51,13 +56,11 @@ void postgresAdapter.init().then(() => {
                 name: 'processing_queue', // will run processing_queue.js
                 interval: '1m',
                 timeout: 0,
-                closeWorkerAfterMs: 300000,
             },
             {
                 name: 'data_source_queue', // will run data_source_queue.js
                 interval: '1m',
                 timeout: 0,
-                closeWorkerAfterMs: 300000,
             },
             {
                 name: 'staging_clean', // will run staging_clean.js
@@ -86,4 +89,8 @@ void postgresAdapter.init().then(() => {
     }
 
     Server.Instance.startServer(BackedLogger);
-});
+
+    return Promise.resolve();
+}
+
+void Start();

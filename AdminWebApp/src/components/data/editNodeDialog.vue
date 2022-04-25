@@ -7,72 +7,73 @@
           class="mr-2"
           v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("editNode.editNode")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("editNode.editNode")}}</v-btn>
     </template>
-    <v-card v-if="selectedNode">
+
+    <v-card class="pt-1 pb-3 px-2" v-if="selectedNode">
+      <v-card-title>
+        <span class="headline text-h3">{{$t('editNode.edit')}} {{selectedNode.metatype.name}}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('editNode.edit')}} {{selectedNode.metatype.name}}</span>
-          <v-row>
-            <v-col :cols="12">
-              <v-form
-                  ref="form"
-                  v-model="valid"
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
+            <v-form
+                ref="form"
+                v-model="valid"
+            >
+              <v-text-field
+                  v-model="selectedNode.metatype.name"
+                  :rules="[v => !!v || $t('editNode.nameRequired')]"
+                  required
               >
-                <v-text-field
-                    v-model="selectedNode.metatype.name"
-                    :rules="[v => !!v || $t('editNode.nameRequired')]"
-                    required
-                >
-                  <template v-slot:label>{{$t("editNode.name")}} <small style="color:red" >*</small></template>
-                </v-text-field>
-                <v-textarea
-                    v-model="selectedNode.metatype.description"
-                    :rules="[v => !!v || $t('editNode.descriptionRequired')]"
-                    required
-                >
-                  <template v-slot:label>{{$t('editNode.description')}} <small style="color:red" >*</small></template>
-                </v-textarea>
-              </v-form>
-              <p><span style="color:red">*</span> = {{$t('editNode.requiredField')}}</p>
-            </v-col>
-            <v-col :cols="12">
-              <v-data-table
-                  :headers="headers()"
-                  :items="nodeProperties"
-                  :disable-pagination="true"
-                  :hide-default-footer="true"
-                  class="elevation-1"
+                <template v-slot:label>{{$t("editNode.name")}} <small style="color:red" >*</small></template>
+              </v-text-field>
+              <v-textarea
+                  v-model="selectedNode.metatype.description"
+                  :rules="[v => !!v || $t('editNode.descriptionRequired')]"
+                  required
               >
-                <template v-slot:top>
-                  <v-toolbar flat color="white">
-                    <v-toolbar-title>{{$t('editNode.formTitle')}}</v-toolbar-title>
-                    <v-divider
-                        class="mx-4"
-                        inset
-                        vertical
-                    ></v-divider>
-                    <v-spacer></v-spacer>
-                  </v-toolbar>
-                </template>
-                <template v-slot:[`item.value`]="value">
-                  <v-edit-dialog
-                     :return-value.sync="value.item.value"
-                  >
-                    {{ value.item.value }}
-                    <template v-slot:input>
-                      <v-text-field
-                        v-model="value.item.value"
-                        label="Edit"
-                      ></v-text-field>
-                    </template>
-                  </v-edit-dialog>
-                </template>
-              </v-data-table>
-            </v-col>
-          </v-row>
-        </v-container>
+                <template v-slot:label>{{$t('editNode.description')}} <small style="color:red" >*</small></template>
+              </v-textarea>
+            </v-form>
+            <p><span style="color:red">*</span> = {{$t('editNode.requiredField')}}</p>
+          </v-col>
+          <v-col :cols="12">
+            <v-data-table
+                :headers="headers()"
+                :items="nodeProperties"
+                :disable-pagination="true"
+                :hide-default-footer="true"
+                class="elevation-1"
+            >
+              <template v-slot:top>
+                <v-toolbar flat color="white">
+                  <v-toolbar-title>{{$t('editNode.formTitle')}}</v-toolbar-title>
+                  <v-divider
+                      class="mx-4"
+                      inset
+                      vertical
+                  ></v-divider>
+                  <v-spacer></v-spacer>
+                </v-toolbar>
+              </template>
+              <template v-slot:[`item.value`]="value">
+                <v-edit-dialog
+                    :return-value.sync="value.item.value"
+                >
+                  {{ value.item.value }}
+                  <template v-slot:input>
+                    <v-text-field
+                      v-model="value.item.value"
+                      label="Edit"
+                    ></v-text-field>
+                  </template>
+                </v-edit-dialog>
+              </template>
+            </v-data-table>
+          </v-col>
+        </v-row>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>

@@ -244,7 +244,7 @@ export default class ContainerImport {
 
             for (const selectedClass of classes) {
                 const classID = selectedClass._attributes['rdf:about'];
-                let classLabel = selectedClass['rdfs:label']._text;
+                let classLabel = selectedClass['rdfs:label']?._text;
                 // if language has not been set, rdfs:label has a single string property rather than an object
                 if (typeof classLabel === 'undefined') {
                     classLabel = selectedClass['rdfs:label'];
@@ -252,9 +252,9 @@ export default class ContainerImport {
 
                 let parentID;
                 const properties: {[key: string]: PropertyT} = {};
-                if (selectedClass['rdf:subClassOf'] && typeof selectedClass['rdfs:subClassOf'][0] === 'undefined') {
+                if (selectedClass['rdfs:subClassOf'] && typeof selectedClass['rdfs:subClassOf'][0] === 'undefined') {
                     parentID = selectedClass['rdfs:subClassOf']._attributes['rdf:resource'];
-                } else if(selectedClass['rdf:subClassOf']) {
+                } else if(selectedClass['rdfs:subClassOf']) {
                     // if no other properties, subClassOf is not an array
                     parentID = selectedClass['rdfs:subClassOf'][0]._attributes['rdf:resource'];
                     // loop through properties
@@ -357,10 +357,10 @@ export default class ContainerImport {
             if(objectProperties) {
                 for (const relationship of objectProperties) {
                     const relationshipID = relationship._attributes['rdf:about'];
-                    const relationshipName = relationship['rdfs:label']._text ? relationship['rdfs:label']._text : relationship['rdfs:label'];
+                    const relationshipName = relationship['rdfs:label']?._text ? relationship['rdfs:label']._text : relationship['rdfs:label'];
                     let relationshipDescription = '';
                     if (typeof relationship['obo:IAO_0000115'] !== 'undefined') {
-                        relationshipDescription = relationship['obo:IAO_0000115']._text ? relationship['obo:IAO_0000115']._text : relationship['obo:IAO_0000115'];
+                        relationshipDescription = relationship['obo:IAO_0000115']?._text ? relationship['obo:IAO_0000115']?._text : relationship['obo:IAO_0000115'];
                     }
                     relationshipMap.set(relationshipName, {
                         id: relationshipID,
@@ -384,10 +384,10 @@ export default class ContainerImport {
             // Datatype Properties
             for (const dataProperty of datatypeProperties) {
                 const dpID = dataProperty._attributes['rdf:about'];
-                const dpName = dataProperty['rdfs:label']._text ? dataProperty['rdfs:label']._text : dataProperty['rdfs:label'];
+                const dpName = dataProperty['rdfs:label']?._text ? dataProperty['rdfs:label']?._text : dataProperty['rdfs:label'];
                 let dpDescription = '';
                 if (typeof dataProperty['obo:IAO_0000115'] !== 'undefined') {
-                    dpDescription = dataProperty['obo:IAO_0000115']._text ? dataProperty['obo:IAO_0000115']._text : dataProperty['obo:IAO_0000115'];
+                    dpDescription = dataProperty['obo:IAO_0000115']?._text ? dataProperty['obo:IAO_0000115']?._text : dataProperty['obo:IAO_0000115'];
                 }
                 let dpEnumRange = null;
                 if (typeof dataProperty['rdfs:range'] !== 'undefined') {

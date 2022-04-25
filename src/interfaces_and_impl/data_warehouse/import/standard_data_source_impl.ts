@@ -118,13 +118,10 @@ export default class StandardDataSourceImpl implements DataSource {
                         data_source_id: this.DataSourceRecord!.id!,
                         import_id: retrievedImport.value.id!,
                         data,
-                        shape_hash:
-                            options && options.generateShapeHash
-                                ? TypeMapping.objectToShapeHash(data, {
-                                      value_nodes: this.DataSourceRecord?.config?.value_nodes,
-                                      stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
-                                  })
-                                : undefined,
+                        shape_hash: TypeMapping.objectToShapeHash(data, {
+                            value_nodes: this.DataSourceRecord?.config?.value_nodes,
+                            stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
+                        }),
                     }),
                 );
 
@@ -159,13 +156,10 @@ export default class StandardDataSourceImpl implements DataSource {
                     data_source_id: this.DataSourceRecord!.id!,
                     import_id: retrievedImport.value.id!,
                     data,
-                    shape_hash:
-                        options && options.generateShapeHash
-                            ? TypeMapping.objectToShapeHash(data, {
-                                  value_nodes: this.DataSourceRecord?.config?.value_nodes,
-                                  stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
-                              })
-                            : undefined,
+                    shape_hash: TypeMapping.objectToShapeHash(data, {
+                        value_nodes: this.DataSourceRecord?.config?.value_nodes,
+                        stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
+                    }),
                 });
 
                 queue.Put(Config.process_queue, staging).catch((err) => Logger.error(`unable to put data staging record on the queue ${err}`));
@@ -209,6 +203,19 @@ export default class StandardDataSourceImpl implements DataSource {
         if (internalTransaction) {
             const commit = await this.#mapper.completeTransaction(transaction);
             if (commit.isError) return Promise.resolve(Result.Pass(commit));
+        }
+
+        // now that we've committed to the database, send the records to the queue for the first time so they can attempt
+        // to be processed if we have data retention enabled - we're doing this so we don't have the emitter constantly
+        // sending records to the queue for processing
+        if (
+            !this.DataSourceRecord.config?.data_retention_days ||
+            (this.DataSourceRecord.config?.data_retention_days && this.DataSourceRecord.config.data_retention_days !== 0)
+        ) {
+            const sent = await ImportMapper.Instance.SendToQueue(retrievedImport.value.id!);
+            if (sent.isError) {
+                Logger.error(`unable to queue new import ${sent}`);
+            }
         }
 
         // return the saved buffer as we haven't wiped it, should contain all records with their updated IDs

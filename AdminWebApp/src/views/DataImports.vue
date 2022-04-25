@@ -1,17 +1,22 @@
 <template>
-  <v-card
-  >
+  <v-card>
     <error-banner :message="errorMessage"></error-banner>
     <success-banner :message="successMessage"></success-banner>
-    <select-data-source
+    <v-toolbar flat color="white">
+      <v-toolbar-title>{{$t('home.dataImportsDescription')}}</v-toolbar-title>
+    </v-toolbar>
+    <div class="mx-2">
+      <select-data-source
         :containerID="containerID"
         :showArchived="true"
         :dataSourceID="argument"
         @selected="setDataSource">
-    </select-data-source>
+      </select-data-source>
+    </div>
 
-    <v-card v-if="(selectedDataSource !== null)">
+    <v-divider v-if="(selectedDataSource !== null)"></v-divider>
 
+    <div v-if="(selectedDataSource !== null)">
       <v-data-table
           :headers="headers()"
           :items="imports"
@@ -22,20 +27,19 @@
           :footer-props="{
                   'items-per-page-options': [25, 50, 100]
                 }"
-          class="elevation-1"
       >
         <template v-slot:top>
-          <v-col v-if="selectedDataSource.adapter_type === 'standard' || selectedDataSource.adapter_type === 'manual'">
-            <import-data-dialog
-                :dataSourceID="selectedDataSource.id"
-                :containerID="containerID"
-                :disabled="!selectedDataSource.active || selectedDataSource.archived"
-                @importUploaded="listImports">
-            </import-data-dialog>
-          </v-col>
-
-          <v-col>
-            <h2>{{$t('dataImports.tableTitle')}}</h2>
+          <v-col class="d-flex flex-row">
+            <h3 class="text-h3">{{$t('dataImports.tableTitle')}}</h3>
+            <v-spacer></v-spacer>
+            <div v-if="selectedDataSource.adapter_type === 'standard' || selectedDataSource.adapter_type === 'manual'">
+              <import-data-dialog
+                  :dataSourceID="selectedDataSource.id"
+                  :containerID="containerID"
+                  :disabled="!selectedDataSource.active || selectedDataSource.archived"
+                  @importUploaded="listImports">
+              </import-data-dialog>
+            </div>
           </v-col>
         </template>
         <template v-slot:item.percentage_processed="{ item }">
@@ -59,7 +63,7 @@
           <reprocess-data-import-dialog :containerID="containerID" :dataImport="item" :icon="true" @dataImportReprocessed="listImports"></reprocess-data-import-dialog>
         </template>
       </v-data-table>
-    </v-card>
+    </div>
 
     <v-dialog
         v-model="dialog"
@@ -72,6 +76,8 @@
         <v-toolbar
             dark
             color="warning"
+            flat
+            tile
         >
           <v-btn
               icon
@@ -120,15 +126,18 @@
     </v-dialog>
     <v-dialog
         v-model="dataDialog"
-        width="500"
+        width="60%"
     >
-      <v-card style="overflow-y: scroll">
-        <v-card-title class="headline grey lighten-2">
-          {{$t('dataImports.viewData')}}
-        </v-card-title>
+      <v-card>
+        <v-card-title class="grey lighten-2">
+          <span class="headline text-h3">{{$t('dataImports.viewData')}}</span>
+        </v-card-title>   
+
         <json-view
-            :data="selectedData"
-            :maxDepth=4
+          class="pt-4 px-4"
+          :data="selectedData"
+          :maxDepth=4
+          style="overflow-x: auto"
         />
 
         <v-card-actions>

@@ -283,7 +283,7 @@ export default class DataStagingMapper extends Mapper {
                    AND EXISTS 
                         (SELECT * from type_mapping_transformations 
                             WHERE type_mapping_transformations.type_mapping_id = type_mappings.id))
-                   OR data_staging.shape_hash IS NULL`;
+                   `;
     }
 
     // this deletes all data staging records older than the attached data sources data retention period, this will

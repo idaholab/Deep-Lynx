@@ -2,47 +2,53 @@
   <v-card>
     <error-banner :message="errorMessage"></error-banner>
     <success-banner :message="successMessage"></success-banner>
-    <select-data-source
+    <v-toolbar flat color="white">
+      <v-toolbar-title>{{$t('home.dataTestDescription')}}</v-toolbar-title>
+    </v-toolbar>
+    <div class="mx-2">
+      <select-data-source
         :containerID="containerID"
         :showArchived="true"
         :dataSourceID="selectedDataSource"
         @selected="setDataSource">
-    </select-data-source>
-    <v-card v-if="(selectedDataSource !== null)">
+      </select-data-source>
+    </div>
+
+    <v-divider v-if="(selectedDataSource !== null)"></v-divider>
+
+    <div v-if="(selectedDataSource !== null)">
       <v-data-table
-          :headers="headersNode()"
-          :items="nodes"
-          :options.sync="listOptions"
-          :loading="nodesLoading"
-          :items-per-page="25"
-          :footer-props="{
-                  'items-per-page-options': [25, 50, 100]
-                }"
-          class="elevation-1"
+        :headers="headersNode()"
+        :items="nodes"
+        :options.sync="listOptions"
+        :loading="nodesLoading"
+        :items-per-page="25"
+        :footer-props="{
+          'items-per-page-options': [25, 50, 100]
+        }"
       >
         <template v-slot:top>
-          <v-col>
+          <v-col class="d-flex flex-row">
+            <h3 class="text-h3">{{$t('dataTestCreation.nodeTableTitle')}}</h3>
+            <v-spacer></v-spacer>
             <create-node-dialog
-                :dataSourceID="selectedDataSource.id" 
-                :containerID="containerID" 
-                :disabled="!selectedDataSource.active || selectedDataSource.archived"
-                @nodeCreated="listNodes() && listEdges()"
-                >
-            </create-node-dialog>
-          </v-col>
-          <v-col>
-            <h2>{{$t('dataTestCreation.nodeTableTitle')}}</h2>
+              :dataSourceID="selectedDataSource.id" 
+              :containerID="containerID" 
+              :disabled="!selectedDataSource.active || selectedDataSource.archived"
+              @nodeCreated="listNodes() && listEdges()"
+            >
+          </create-node-dialog>
           </v-col>
         </template>
         <template v-slot:[`item.actions`]="{ item }">
           <edit-node-dialog 
-              :node="item" 
-              :icon="true"
-              :dataSourceID="selectedDataSource.id" 
-              :containerID="containerID"
-              :disabled="!selectedDataSource.active || selectedDataSource.archived"
-              @nodeUpdated="listNodes() && listEdges()" 
-              >
+            :node="item" 
+            :icon="true"
+            :dataSourceID="selectedDataSource.id" 
+            :containerID="containerID"
+            :disabled="!selectedDataSource.active || selectedDataSource.archived"
+            @nodeUpdated="listNodes() && listEdges()" 
+            >
           </edit-node-dialog>
           <v-icon
               small
@@ -52,43 +58,44 @@
           </v-icon>
         </template>
       </v-data-table>
-    </v-card>
-        <v-card v-if="(selectedDataSource !== null)">
+    </div>
+
+    <v-divider v-if="(selectedDataSource !== null)"></v-divider>
+
+    <div v-if="(selectedDataSource !== null)">
       <v-data-table
-          :headers="headersEdge()"
-          :items="edges"
-          :options.sync="listOptions"
-          :loading="edgesLoading"
-          :items-per-page="25"
-          :footer-props="{
-                  'items-per-page-options': [25, 50, 100]
-                }"
-          class="elevation-1"
+        :headers="headersEdge()"
+        :items="edges"
+        :options.sync="listOptions"
+        :loading="edgesLoading"
+        :items-per-page="25"
+        :footer-props="{
+          'items-per-page-options': [25, 50, 100]
+        }"
       >
         <template v-slot:top>
-          <v-col>
+          <v-col class="d-flex flex-row">
+            <h3 class="text-h3">{{$t('dataTestCreation.edgeTableTitle')}}</h3>
+            <v-spacer></v-spacer>
             <create-edge-dialog
-                :dataSourceID="selectedDataSource.id" 
-                :containerID="containerID" 
-                :disabled="!selectedDataSource.active || selectedDataSource.archived"
-                @edgeCreated="listEdges()"
-                >
+              :dataSourceID="selectedDataSource.id" 
+              :containerID="containerID" 
+              :disabled="!selectedDataSource.active || selectedDataSource.archived"
+              @edgeCreated="listEdges()"
+            >
             </create-edge-dialog>
-          </v-col>
-          <v-col>
-            <h2>{{$t('dataTestCreation.edgeTableTitle')}}</h2>
           </v-col>
         </template>
         <template v-slot:[`item.actions`]="{ item }">
           <v-icon
-              small
-              @click="deleteEdge(item)"
+            small
+            @click="deleteEdge(item)"
           >
             mdi-delete
           </v-icon>
         </template>
       </v-data-table>
-    </v-card>
+    </div>
   </v-card>
 </template>
 

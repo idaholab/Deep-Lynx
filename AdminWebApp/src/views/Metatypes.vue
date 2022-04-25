@@ -31,12 +31,7 @@
           </span>
         </v-alert>
         <v-toolbar flat color="white">
-          <v-toolbar-title>{{$t("metatypes.metatypes")}}</v-toolbar-title>
-          <v-divider
-              class="mx-4"
-              inset
-              vertical
-          ></v-divider>
+          <v-toolbar-title>{{$t("home.metatypesDescription")}}</v-toolbar-title>
           <v-spacer></v-spacer>
           <create-metatype-dialog
               v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled) || !$store.getters.ontologyVersioningEnabled"
@@ -53,9 +48,9 @@
           </v-col>
         </v-row>
         <v-row v-if="$store.getters.isEditMode">
-          <v-col :cols="2"><div class="box created"></div><p> - {{$t('metatypes.created')}}</p></v-col>
-          <v-col :cols="2"><div class="box edited"></div><p> - {{$t('metatypes.edited')}}</p></v-col>
-          <v-col :cols="2"><div class="box removed"></div><p> - {{$t('metatypes.removed')}}</p></v-col>
+          <v-col :cols="2"><div class="box created mr-2"></div><p>{{$t('metatypes.created')}}</p></v-col>
+          <v-col :cols="2"><div class="box edited mr-2"></div><p>{{$t('metatypes.edited')}}</p></v-col>
+          <v-col :cols="2"><div class="box removed mr-2"></div><p>{{$t('metatypes.removed')}}</p></v-col>
         </v-row>
         <v-row>
           <v-col v-if="$store.getters.isEditMode" :cols="12"><p style="margin-left: 15px"><strong>Note: </strong> {{$t('metatypes.legendNote')}}</p></v-col>
@@ -356,7 +351,7 @@ export default class Metatypes extends Vue {
 
 <style lang="scss">
   .edited-item {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white;
 
     &:hover {
@@ -423,7 +418,7 @@ export default class Metatypes extends Vue {
   }
 
   .edited {
-    background-color: #FB8C00;
+    background-color: #CD7F32;
   }
 
   .removed {

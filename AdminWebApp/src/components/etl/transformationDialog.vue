@@ -8,18 +8,33 @@
           v-on="on"
           @click="editReset()"
       >mdi-eye</v-icon>
-      <v-btn v-if="!transformation && !icon" color="primary" dark class="mb-2" v-on="on">{{$t("dataMapping.newTransformationButton")}}</v-btn>
+      <v-btn v-if="!transformation && !icon" color="primary" dark class="mt-2" v-on="on">{{$t("dataMapping.newTransformationButton")}}</v-btn>
     </template>
-    <v-card>
-      <error-banner :message="errorMessage"></error-banner>
-      <v-card-title>
-        <h2 v-if="!transformation">{{$t("dataMapping.createNewTransformation")}}</h2>
-        <h2 v-if="transformation && !transformation.archived">{{$t("dataMapping.editTransformation")}}</h2>
-        <h2 v-if="transformation && transformation.archived">{{$t("dataMapping.viewArchivedTransformation")}}</h2>
-      </v-card-title>
-      <v-card-text>
-        <v-row>
 
+    <v-card class="pt-1 pb-3 px-2">
+      <v-card-title>
+        <span
+          class="headline text-h3"
+          v-if="!transformation"
+        >
+          {{$t("dataMapping.createNewTransformation")}}
+        </span>
+        <span
+          class="headline text-h3"
+          v-if="transformation && !transformation.archived"
+        >
+          {{$t("dataMapping.editTransformation")}}
+        </span>
+        <span
+          class="headline text-h3"
+          v-if="transformation && transformation.archived"
+        >
+          {{$t("dataMapping.viewArchivedTransformation")}}
+        </span>
+      </v-card-title>   
+      <v-card-text>
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>    
           <v-col :cols="12" style="position: sticky; top: 0px; z-index: 99; background: white" >
             <div >
               <h4>{{$t('typeTransformation.currentDataSet')}}<info-tooltip :message="$t('dataMapping.samplePayloadHelp')"></info-tooltip> </h4>
@@ -64,9 +79,9 @@
                     required
                 ></v-select>
 
-                <!-- RECORD -->
+                <!-- node -->
 
-                <div v-if="payloadType === 'record'">
+                <div v-if="payloadType === 'node'">
                   <v-autocomplete
                       :items="metatypes"
                       v-model="selectedMetatype"
@@ -191,8 +206,8 @@
 
                 </div>
 
-                <!-- RELATIONSHIP -->
-                <div v-if="payloadType === 'relationship'">
+                <!-- edge -->
+                <div v-if="payloadType === 'edge'">
 
                   <v-autocomplete
                       :items="relationshipPairs"
@@ -343,7 +358,7 @@
 
                 </div>
 
-                <div v-if="payloadType === 'tabular'">
+                <div v-if="payloadType === 'timeseries'">
                   <h4>{{$t('dataMapping.selectNodeID')}}<info-tooltip :message="$t('dataMapping.nodeIDHelp')"></info-tooltip></h4>
                   <v-row>
                     <v-col style="padding-left: 0px">
@@ -802,10 +817,12 @@ export default class TransformationDialog extends Vue {
   expressions = ["AND", "OR"]
   dataTypes = [
     'number',
+    'number64',
+    'float',
+    'float64',
     'date',
     'string',
     'boolean',
-    'list'
   ]
 
   relationshipPairSearch = ""
@@ -915,12 +932,12 @@ export default class TransformationDialog extends Vue {
   }
 
   editReset() {
-    if(this.transformation?.metatype_id){
+    if(this.transformation?.type === 'node'){
       this.$client.retrieveMetatype(this.containerID, this.transformation?.metatype_id!)
           .then((metatype) => {
             this.rootArray = this.transformation?.root_array
             if(Array.isArray(this.transformation?.conditions)) this.conditions = this.transformation?.conditions as Array<TypeMappingTransformationCondition>
-            this.payloadType = 'record'
+            this.payloadType = 'node'
             this.selectedMetatype = metatype
             this.uniqueIdentifierKey = this.transformation?.unique_identifier_key
 
@@ -929,12 +946,12 @@ export default class TransformationDialog extends Vue {
           .catch(e => this.errorMessage = e)
     }
 
-    if(this.transformation?.metatype_relationship_pair_id) {
+    if(this.transformation?.type === 'edge') {
       this.$client.retrieveMetatypeRelationshipPair(this.containerID, this.transformation?.metatype_relationship_pair_id!)
           .then((pair) => {
             this.rootArray = this.transformation?.root_array
             if(Array.isArray(this.transformation?.conditions)) this.conditions = this.transformation?.conditions as Array<TypeMappingTransformationCondition>
-            this.payloadType = 'relationship'
+            this.payloadType = 'edge'
             this.selectedRelationshipPair = pair
 
             this.uniqueIdentifierKey = this.transformation?.unique_identifier_key
@@ -946,8 +963,8 @@ export default class TransformationDialog extends Vue {
           .catch(e => this.errorMessage = e)
     }
 
-    if(!this.transformation?.metatype_id && !this.transformation?.metatype_relationship_pair_id) {
-      this.payloadType = 'tabular'
+    if(this.transformation?.type === 'timeseries') {
+      this.payloadType = 'timeseries'
       this.tab_data_source_id = this.transformation?.tab_data_source_id
       this.tab_metatype_id = this.transformation?.metatype_id
       this.tab_node_id =  this.transformation?.tab_node_id
@@ -1039,7 +1056,7 @@ export default class TransformationDialog extends Vue {
 
   @Watch('search', {immediate: true})
   onSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: false})
+    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: false, ontologyVersion: this.$store.getters.selectedOntologyVersionID})
         .then((metatypes) => {
           this.metatypes = metatypes as MetatypeT[]
         })
@@ -1056,6 +1073,7 @@ export default class TransformationDialog extends Vue {
       offset,
       originID: undefined,
       destinationID: undefined,
+      ontologyVersion: this.$store.getters.selectedOntologyVersionID
     })
         .then(pairs => {
           this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
@@ -1255,13 +1273,14 @@ export default class TransformationDialog extends Vue {
     // @ts-ignore
     if(!this.$refs.mainForm!.validate()) return;
 
-    if(this.payloadType == 'tabular' && (this.propertyMapping.length === 0 || !this.primaryTimestampSelected)) {
+    if(this.payloadType == 'timeseries' && (this.propertyMapping.length === 0 || !this.primaryTimestampSelected)) {
       this.validationErrorMessage = this.$t('dataMapping.tabularValidationError') as string
       return;
     }
 
     this.loading = true
     const payload: {[key: string]: any} = {}
+    payload.type = this.payloadType
 
     // include either the metatype or metatype relationship pair id, not both
     if(this.selectedMetatype) {
@@ -1305,6 +1324,7 @@ export default class TransformationDialog extends Vue {
     // include either the metatype or metatype relationship pair id, not both
     payload.metatype_id = (this.selectedMetatype?.id) ? this.selectedMetatype.id : ""
     payload.metatype_relationship_pair_id = (this.selectedRelationshipPair?.id) ? this.selectedRelationshipPair.id : ""
+    payload.type = this.payloadType
     payload.origin_id_key = this.origin_key
     payload.origin_data_source_id = this.origin_data_source_id
     payload.origin_metatype_id = this.origin_metatype_id
@@ -1335,13 +1355,13 @@ export default class TransformationDialog extends Vue {
   payloadTypes() {
     return [{
       name: this.$t("dataMapping.record"),
-      value: 'record'
+      value: 'node'
     },{
       name: this.$t("dataMapping.relationship"),
-      value: 'relationship'
+      value: 'edge'
     },/*{
-      name: this.$t("dataMapping.tabularData"), -- enable this when ready to release time series data
-      value: 'tabular'                             or when you need to test the system
+      name: this.$t("dataMapping.tabularData"),
+      value: 'timeseries'
     }*/]
   }
 
@@ -1735,7 +1755,7 @@ export default class TransformationDialog extends Vue {
 }
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 tbody tr:nth-of-type(odd) {
   background-color: rgba(0, 0, 0, .05);
 }

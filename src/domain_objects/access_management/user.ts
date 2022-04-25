@@ -31,10 +31,10 @@ export class User extends BaseDomainClass {
     id?: string;
 
     @IsString()
-    @IsIn(['saml_adfs', 'username_password'])
+    @IsIn(['saml_adfs', 'username_password', 'service'])
     identity_provider = 'username_password';
 
-    @ValidateIf((o) => o.identity_provider !== 'username_password')
+    @ValidateIf((o) => o.identity_provider !== 'username_password' && o.type === 'user')
     @IsString()
     identity_provider_id?: string;
 
@@ -43,6 +43,7 @@ export class User extends BaseDomainClass {
     display_name = '';
 
     @IsEmail()
+    @ValidateIf((o) => o.type === 'user')
     email = '';
 
     @IsString()
@@ -72,6 +73,9 @@ export class User extends BaseDomainClass {
     @Exclude({toPlainOnly: true}) // we never want this to show up in a return
     email_validation_token?: string;
 
+    @IsString()
+    type: 'user' | 'service' = 'user';
+
     @IsArray()
     permissions: string[][] = [];
 
@@ -88,13 +92,14 @@ export class User extends BaseDomainClass {
         identity_provider: string;
         identity_provider_id?: string;
         display_name: string;
-        email: string;
+        email?: string;
         password?: string;
         admin?: boolean;
         active?: boolean;
         permissions?: string[][];
         roles?: string[];
         id?: string;
+        type?: 'user' | 'service';
     }) {
         super();
 
@@ -102,13 +107,14 @@ export class User extends BaseDomainClass {
             this.identity_provider = input.identity_provider;
             if (input.identity_provider_id) this.identity_provider_id = input.identity_provider_id;
             this.display_name = input.display_name;
-            this.email = input.email;
+            if (input.email) this.email = input.email;
             if (input.password) this.password = input.password;
             if (input.admin) this.admin = input.admin;
             if (input.active) this.active = input.active;
             if (input.id) this.id = input.id;
             if (input.permissions) this.permissions = input.permissions;
             if (input.roles) this.roles = input.roles;
+            if (input.type) this.type = input.type;
         }
     }
     get removedKeys() {
