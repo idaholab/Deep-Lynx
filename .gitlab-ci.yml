@@ -37,7 +37,6 @@ build_dl_prd:
   - "/kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile
     --destination $CI_REGISTRY/$CI_REGISTRY_PATH/deep-lynx:$CI_COMMIT_TAG"
   only:
-  - master
   - tags
 build_swagger:
   stage: build
