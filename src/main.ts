@@ -10,14 +10,14 @@ import 'reflect-metadata';
 import UserRepository from './data_access_layer/repositories/access_management/user_repository';
 import PostgresAdapter from './data_access_layer/mappers/db_adapters/postgres/postgres';
 import OAuthRepository from './data_access_layer/repositories/access_management/oauth_repository';
-import {Migrator} from "./data_access_layer/migrate";
+import {Migrator} from './data_access_layer/migrate';
 
 const postgresAdapter = PostgresAdapter.Instance;
 
 async function Start(): Promise<any> {
-    await postgresAdapter.init()
-    const migrator = new Migrator()
-    await migrator.Run()
+    await postgresAdapter.init();
+    const migrator = new Migrator();
+    await migrator.Run();
 
     void Cache.flush();
     process.setMaxListeners(0);
@@ -90,7 +90,7 @@ async function Start(): Promise<any> {
 
     Server.Instance.startServer(BackedLogger);
 
-    return Promise.resolve()
+    return Promise.resolve();
 }
 
 void Start();

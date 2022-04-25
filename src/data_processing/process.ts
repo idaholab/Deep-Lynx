@@ -15,6 +15,8 @@ import {EdgeFile, NodeFile} from '../domain_objects/data_warehouse/data/file';
 import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import TimeseriesEntry, {IsTimeseries} from '../domain_objects/data_warehouse/data/timeseries';
+import Cache from '../services/cache/cache';
+import Config from '../services/config';
 
 // ProcessData accepts a data staging record and inserts nodes and edges based
 // on matching transformation records - this acts on a single record
@@ -26,6 +28,9 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     const edgeRepository = new EdgeRepository();
 
     const transaction = await stagingMapper.startTransaction();
+
+    // first thing we do is set the cache to a lower ttl for this import, indicating that we are currently processing it
+    await Cache.set(`imports_${staging.import_id}`, {}, Config.import_cache_ttl);
 
     // pull the transformations, abort if none
     if (!staging.shape_hash) {

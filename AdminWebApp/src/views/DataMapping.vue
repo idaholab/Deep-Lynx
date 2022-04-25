@@ -510,7 +510,8 @@ export default class DataMapping extends Vue {
   onSearchChange(newVal: string) {
     if(newVal === "") return;
 
-    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: false})
+    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: false, ontologyVersion: this.$store.getters.selectedOntologyVersionID})
+
         .then((metatypes) => {
           this.metatypes = metatypes as MetatypeT[]
         })
@@ -527,6 +528,7 @@ export default class DataMapping extends Vue {
       offset: 0,
       originID: undefined,
       destinationID: undefined,
+      ontologyVersion: this.$store.getters.selectedOntologyVersionID
     })
         .then(pairs => {
           this.relationshipPairs = pairs as MetatypeRelationshipPairT[]

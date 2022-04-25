@@ -136,7 +136,7 @@ export default class CreateRelationshipPairDialog extends Vue {
 
   @Watch('destinationSearch', {immediate: true})
   onDestinationSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.containerID, {name: newVal})
+    this.$client.listMetatypes(this.containerID, {name: newVal, ontologyVersion: this.$store.getters.activeOntologyVersionID})
         .then((metatypes) => {
           this.destinationMetatypes = metatypes as MetatypeT[]
         })
@@ -145,7 +145,7 @@ export default class CreateRelationshipPairDialog extends Vue {
 
   @Watch('originSearch', {immediate: true})
   onOriginSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.containerID, {name: newVal})
+    this.$client.listMetatypes(this.containerID, {name: newVal, ontologyVersion: this.$store.getters.activeOntologyVersionID})
         .then((metatypes) => {
           this.originMetatypes = metatypes as MetatypeT[]
         })
@@ -154,7 +154,7 @@ export default class CreateRelationshipPairDialog extends Vue {
 
   @Watch('relationshipSearch', {immediate: true})
   relationshipSearchChange(newVal: string) {
-    this.$client.listMetatypeRelationships(this.containerID,  {name: newVal})
+    this.$client.listMetatypeRelationships(this.containerID,  {name: newVal, ontologyVersion: this.$store.getters.activeOntologyVersionID})
         .then(metatypeRelationships => {
           this.metatypeRelationships = metatypeRelationships as MetatypeRelationshipT[]
         })

@@ -33,8 +33,8 @@ export default class DataSourceRepository extends Repository implements Reposito
         const hasImports = await ImportMapper.Instance.ExistForDataSource(t.DataSourceRecord.id);
 
         if (options) {
-            if (!hasImports || (options.force && options.removeData)) return this.#mapper.DeleteWithData(t.DataSourceRecord.id);
-            else if (!hasImports || options.force) return this.#mapper.Delete(t.DataSourceRecord.id);
+            if (hasImports.value || (options.force && options.removeData)) return this.#mapper.DeleteWithData(t.DataSourceRecord.id);
+            else if (!hasImports.value || options.force) return this.#mapper.Delete(t.DataSourceRecord.id);
         } else {
             if (!hasImports) return this.#mapper.Delete(t.DataSourceRecord.id);
         }
