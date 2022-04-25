@@ -26,6 +26,7 @@ import TaskRepository from '../data_access_layer/repositories/task_runner/task_r
 import EventActionRepository from '../data_access_layer/repositories/event_system/event_action_repository';
 import EventActionStatusRepository from '../data_access_layer/repositories/event_system/event_action_status_repository';
 import OntologyVersionRepository from '../data_access_layer/repositories/data_warehouse/ontology/versioning/ontology_version_repository';
+import Result from '../common_classes/result';
 
 // authRequest is used to manage user authorization against resources, optional param for declaring domain
 export function authRequest(action: 'read' | 'write', resource: string, domainParam?: string) {
@@ -332,6 +333,56 @@ export function userContext(): any {
             })
             .catch((error) => {
                 resp.status(500).json(error);
+                return;
+            });
+    };
+}
+
+// serviceUserContext will attempt to fetch a user by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "serviceUserID" and "containerID" so that
+// checks can be performed that the user belongs to that container
+export function serviceUserContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have an id , don't fail, just pass without action
+        if (!req.params.serviceUserID || !req.params.containerID) {
+            next();
+            return;
+        }
+
+        const repo = new UserRepository();
+
+        // verify the service user belongs to container
+        repo.listServiceUsersForContainer(req.params.containerID)
+            .then((containerUsers) => {
+                if (containerUsers.isError) {
+                    containerUsers.asResponse(resp);
+                    return;
+                } else {
+                    const found = containerUsers.value.find((user) => user.id === req.params.serviceUserID);
+                    if (!found) {
+                        Result.Failure('service user does not belong to container', 401).asResponse(resp);
+                        return;
+                    }
+
+                    repo.findByID(req.params.serviceUserID)
+                        .then((result) => {
+                            if (result.isError) {
+                                resp.status(result.error?.errorCode!).json(result);
+                                return;
+                            }
+
+                            req.serviceUser = result.value;
+                            next();
+                        })
+                        .catch((error) => {
+                            resp.status(500).json(error);
+                            return;
+                        });
+                }
+            })
+            .catch((e) => {
+                Result.Error(e).asResponse(resp);
                 return;
             });
     };

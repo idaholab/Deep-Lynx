@@ -7,7 +7,7 @@
           class="mr-2"
           v-on="on"
       >mdi-eye</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("viewMetatypeRelationship.editMetatypeRelationship")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("viewMetatypeRelationship.editMetatypeRelationship")}}</v-btn>
     </template>
 
     <v-card v-if="selectedMetatypeRelationship">
@@ -166,27 +166,27 @@ export default class ViewMetatypeRelationshipDialog extends Vue {
 
 .edited-field {
   input {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   textarea {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   .v-select__slot {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   .v-select__selection {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 }
 </style>

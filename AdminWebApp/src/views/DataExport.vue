@@ -1,16 +1,16 @@
 <template>
   <div>
     <v-data-table
-        :headers="headers()"
-        :items="exports"
-        :server-items-length="exportsCount"
-        :options.sync="options"
-        :loading="exportsLoading"
-        :items-per-page="100"
-        :footer-props="{
-          'items-per-page-options': [25, 50, 100]
-        }"
-        class="elevation-1"
+      :headers="headers()"
+      :items="exports"
+      :server-items-length="exportsCount"
+      :options.sync="options"
+      :loading="exportsLoading"
+      :items-per-page="100"
+      :footer-props="{
+        'items-per-page-options': [25, 50, 100]
+      }"
+      class="elevation-1"
     >
       <template v-slot:top>
         <error-banner :message="errorMessage"></error-banner>
@@ -18,11 +18,6 @@
 
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t("exports.title")}}</v-toolbar-title>
-          <v-divider
-              class="mx-4"
-              inset
-              vertical
-          ></v-divider>
           <v-spacer></v-spacer>
           <create-export-dialog :containerID="containerID" @exportCreated="loadExports()"></create-export-dialog>
         </v-toolbar>
@@ -55,17 +50,21 @@
         </v-icon>
       </template>
     </v-data-table>
+
     <v-dialog
         v-model="stopDialog"
         width="500"
     >
-      <v-card>
-        <v-card-title class="headline grey lighten-2">
-          {{$t('exports.warningStopTitle')}}
-        </v-card-title>
-
+      <v-card class="pt-1 pb-3 px-2">
+        <v-card-title class="grey lighten-2">
+          <span class="headline text-h3">{{$t('exports.warningStopTitle')}}</span>
+        </v-card-title>   
         <v-card-text>
-          {{$t('exports.warningStopBody')}}
+          <v-row>
+            <v-col>
+              {{$t('exports.warningStopBody')}}
+            </v-col>
+          </v-row>
         </v-card-text>
 
         <v-divider></v-divider>
@@ -86,13 +85,16 @@
         v-model="resetDialog"
         width="500"
     >
-      <v-card>
-        <v-card-title class="headline grey lighten-2">
-          {{$t('exports.warningResetTitle')}}
-        </v-card-title>
-
+      <v-card class="pt-1 pb-3 px-2">
+        <v-card-title class="grey lighten-2">
+          <span class="headline text-h3">{{$t('exports.warningResetTitle')}}</span>
+        </v-card-title>   
         <v-card-text>
-          {{$t('exports.warningResetBody')}}
+          <v-row>
+            <v-col>
+              {{$t('exports.warningResetBody')}}
+            </v-col>
+          </v-row>
         </v-card-text>
 
         <v-divider></v-divider>
@@ -120,13 +122,16 @@
         v-model="deleteDialog"
         width="500"
     >
-      <v-card>
-        <v-card-title class="headline grey lighten-2">
-          {{$t('exports.warningDeleteTitle')}}
-        </v-card-title>
-
+      <v-card class="pt-1 pb-3 px-2">
+        <v-card-title class="grey lighten-2">
+          <span class="headline text-h3">{{$t('exports.warningDeleteTitle')}}</span>
+        </v-card-title>   
         <v-card-text>
-          {{$t('exports.warningDeleteBody')}}
+          <v-row>
+            <v-col>
+              {{$t('exports.warningDeleteBody')}}
+            </v-col>
+          </v-row>
         </v-card-text>
 
         <v-divider></v-divider>

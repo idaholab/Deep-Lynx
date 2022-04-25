@@ -7,131 +7,131 @@
           class="mr-2"
           v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("createMetatypeKey.newKey")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("createMetatypeKey.newKey")}}</v-btn>
     </template>
 
-    <v-card>
+    <v-card class="pt-1 pb-3 px-2">
+      <v-card-title>
+        <span class="headline text-h3">{{$t('createMetatypeKey.newKey')}}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('createMetatypeKey.newKey')}}</span>
-          <v-row>
-            <v-col :cols="12">
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
 
-              <v-form
-                  ref="form"
-                  v-model="formValid"
+            <v-form
+                ref="form"
+                v-model="formValid"
+            >
+              <v-text-field
+                  v-model="metatypeKey.name"
+                  :rules="[v => !!v || $t('createMetatypeKey.nameRequired')]"
               >
-                <v-text-field
-                    v-model="metatypeKey.name"
-                    :rules="[v => !!v || $t('createMetatypeKey.nameRequired')]"
-                >
-                  <template v-slot:label>{{$t('createMetatypeKey.name')}} <small style="color:red" >*</small></template>
-                </v-text-field>
+                <template v-slot:label>{{$t('createMetatypeKey.name')}} <small style="color:red" >*</small></template>
+              </v-text-field>
 
-                <v-text-field
-                    v-model="metatypeKey.property_name"
-                    :rules="[v => !!v || $t('createMetatypeKey.propertyNameRequired')]"
-                    required
-                >
-                  <template v-slot:label>{{$t('createMetatypeKey.propertyName')}} <small style="color:red" >*</small></template>
-                </v-text-field>
-                <v-select
-                    v-model="metatypeKey.data_type"
-                    :items="dataTypes"
-                    @change="metatypeKey.default_value = undefined"
-                    :rules="[v => !!v || $t('createMetatypeKey.dataTypeRequired')]"
-                    required
-                >
-                  <template v-slot:label>{{$t('createMetatypeKey.dataType')}} <small style="color:red" >*</small></template>
-                </v-select>
-                <v-checkbox
-                    v-model="metatypeKey.required"
-                >
-                  <template v-slot:label>{{$t('createMetatypeKey.required')}} <small style="color:#ff0000" >*</small></template>
-                </v-checkbox>
-                <v-textarea
-                    v-model="metatypeKey.description"
-                    :rows="2"
-                    :rules="[v => !!v || $t('createMetatypeKey.descriptionRequired')]"
-                >
-                  <template v-slot:label>{{$t('createMetatypeKey.description')}} <small style="color:#ff0000" >*</small></template>
-                </v-textarea>
+              <v-text-field
+                  v-model="metatypeKey.property_name"
+                  :rules="[v => !!v || $t('createMetatypeKey.propertyNameRequired')]"
+                  required
+              >
+                <template v-slot:label>{{$t('createMetatypeKey.propertyName')}} <small style="color:red" >*</small></template>
+              </v-text-field>
+              <v-select
+                  v-model="metatypeKey.data_type"
+                  :items="dataTypes"
+                  @change="metatypeKey.default_value = undefined"
+                  :rules="[v => !!v || $t('createMetatypeKey.dataTypeRequired')]"
+                  required
+              >
+                <template v-slot:label>{{$t('createMetatypeKey.dataType')}} <small style="color:red" >*</small></template>
+              </v-select>
+              <v-checkbox
+                  v-model="metatypeKey.required"
+              >
+                <template v-slot:label>{{$t('createMetatypeKey.required')}} <small style="color:#ff0000" >*</small></template>
+              </v-checkbox>
+              <v-textarea
+                  v-model="metatypeKey.description"
+                  :rows="2"
+                  :rules="[v => !!v || $t('createMetatypeKey.descriptionRequired')]"
+              >
+                <template v-slot:label>{{$t('createMetatypeKey.description')}} <small style="color:#ff0000" >*</small></template>
+              </v-textarea>
 
-                <h3>{{$t('createMetatypeKey.validation')}}</h3>
-                <v-text-field
-                    v-model="metatypeKey.validation.regex"
-                    :label="$t('createMetatypeKey.regex')"
-                >
-                  <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeKey.regexHelp')"></info-tooltip></template>
-                </v-text-field>
-                <v-text-field
-                    v-model.number="metatypeKey.validation.max"
-                    :disabled="metatypeKey.validation.regex === ''"
-                    type="number"
-                    :label="$t('createMetatypeKey.max')"
-                >
-                  <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeKey.maxHelp')"></info-tooltip></template>
-                </v-text-field>
-                <v-text-field
-                    v-model.number="metatypeKey.validation.min"
-                    :disabled="metatypeKey.validation.regex === ''"
-                    type="number"
-                    :label="$t('createMetatypeKey.min')"
-                >
-                  <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeKey.minHelp')"></info-tooltip></template>
-                </v-text-field>
+              <h3>{{$t('createMetatypeKey.validation')}}</h3>
+              <v-text-field
+                  v-model="metatypeKey.validation.regex"
+                  :label="$t('createMetatypeKey.regex')"
+              >
+                <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeKey.regexHelp')"></info-tooltip></template>
+              </v-text-field>
+              <v-text-field
+                  v-model.number="metatypeKey.validation.max"
+                  :disabled="metatypeKey.validation.regex === ''"
+                  type="number"
+                  :label="$t('createMetatypeKey.max')"
+              >
+                <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeKey.maxHelp')"></info-tooltip></template>
+              </v-text-field>
+              <v-text-field
+                  v-model.number="metatypeKey.validation.min"
+                  :disabled="metatypeKey.validation.regex === ''"
+                  type="number"
+                  :label="$t('createMetatypeKey.min')"
+              >
+                <template slot="append-outer"> <info-tooltip :message="$t('createMetatypeKey.minHelp')"></info-tooltip></template>
+              </v-text-field>
 
 
 
-                <!-- default value and options should be comboboxes when set to enumeration -->
-                <div v-if="metatypeKey.data_type === 'enumeration'" >
-                  <v-combobox
-                      v-model="metatypeKey.default_value"
-                      multiple
-                      clearable
-                      deletable-chips
-                      chips
-                      :label="$t('createMetatypeKey.defaultValue')"
-                  ></v-combobox>
-                </div>
-
-                <div v-if="metatypeKey.data_type !== 'enumeration'" >
-                  <v-text-field
-                      v-if="metatypeKey.data_type === 'number'"
-                      v-model="metatypeKey.default_value"
-                      type="number"
-                      :label="$t('createMetatypeKey.defaultValue')"
-                  ></v-text-field>
-                  <v-select
-                      v-else-if="metatypeKey.data_type === 'boolean'"
-                      v-model="metatypeKey.default_value"
-                      :label="$t('createMetatypeKey.defaultValue')"
-                      :items="booleanOptions"
-                      required
-                  >
-                  </v-select>
-                  <v-text-field
-                      v-else
-                      v-model="metatypeKey.default_value"
-                      :label="$t('createMetatypeKey.defaultValue')"
-                      :disabled="metatypeKey.data_type === 'file'"
-                  ></v-text-field>
-                </div>
-
+              <!-- default value and options should be comboboxes when set to enumeration -->
+              <div v-if="metatypeKey.data_type === 'enumeration'" >
                 <v-combobox
-                    v-model="metatypeKey.options"
-                    :label="$t('createMetatypeKey.options')"
+                    v-model="metatypeKey.default_value"
                     multiple
                     clearable
                     deletable-chips
                     chips
+                    :label="$t('createMetatypeKey.defaultValue')"
                 ></v-combobox>
-              </v-form>
-              <p><span style="color:red">*</span> = {{$t('createMetatypeKey.requiredField')}}</p>
-            </v-col>
-          </v-row>
-        </v-container>
+              </div>
+
+              <div v-if="metatypeKey.data_type !== 'enumeration'" >
+                <v-text-field
+                    v-if="metatypeKey.data_type === 'number'"
+                    v-model="metatypeKey.default_value"
+                    type="number"
+                    :label="$t('createMetatypeKey.defaultValue')"
+                ></v-text-field>
+                <v-select
+                    v-else-if="metatypeKey.data_type === 'boolean'"
+                    v-model="metatypeKey.default_value"
+                    :label="$t('createMetatypeKey.defaultValue')"
+                    :items="booleanOptions"
+                    required
+                >
+                </v-select>
+                <v-text-field
+                    v-else
+                    v-model="metatypeKey.default_value"
+                    :label="$t('createMetatypeKey.defaultValue')"
+                    :disabled="metatypeKey.data_type === 'file'"
+                ></v-text-field>
+              </div>
+
+              <v-combobox
+                  v-model="metatypeKey.options"
+                  :label="$t('createMetatypeKey.options')"
+                  multiple
+                  clearable
+                  deletable-chips
+                  chips
+              ></v-combobox>
+            </v-form>
+            <p><span style="color:red">*</span> = {{$t('createMetatypeKey.requiredField')}}</p>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>

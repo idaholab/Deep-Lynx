@@ -16,10 +16,10 @@ import {ConnectionOptions} from 'pg-connection-string';
 const pgParse = require('pg-connection-string').parse;
 const format = require('pg-format');
 
-class Migrator {
+export class Migrator {
     private pool!: any;
 
-    constructor() {
+    async Run(): Promise<any> {
         // check to see if production environment, if so we do not want to create
         // the database as we most likely do not have permissions to do so
         if(process.env.NODE_ENV !== 'production') {
@@ -40,43 +40,41 @@ class Migrator {
                 ssl: Config.ssl_enabled
             });
 
-            // first check to see if the database specified by the connection string already exists
-            pool.query(format(`SELECT datname FROM pg_catalog.pg_database WHERE datname = %L`, connectionDetails.database))
-                .then((results: QueryResult<any>) => {
+            try {
+                // first check to see if the database specified by the connection string already exists
+                const results = await pool.query(format(`SELECT datname FROM pg_catalog.pg_database WHERE datname = %L`, connectionDetails.database))
                 // if results are returned, a database matching the name exists, run migrate
-                    if(results.rows.length > 0) {
-                        Logger.info(`${connectionDetails.database} database already exists. Proceeding to migration scripts`);
-                        this.init();
-                        return
-                    }
+                if(results.rows.length > 0) {
+                    Logger.info(`${connectionDetails.database} database already exists. Proceeding to migration scripts`);
+                    return this.init();
+                }
+            } catch (e) {
+                Logger.error(`error fetching database by name ${e}`)
+                process.exit(-1)
+            }
 
-                    pool.query(format(`CREATE DATABASE %s`, connectionDetails.database))
-                        .then(() => {
-                            Logger.info(`successful creation of ${connectionDetails.database} database`);
-                            this.init();
-                        })
-                        .catch((e: any) => {
-                            Logger.error(
-                                `creation of ${connectionDetails.database} database failed -
+
+            try {
+                await pool.query(format(`CREATE DATABASE %s`, connectionDetails.database))
+                Logger.info(`successful creation of ${connectionDetails.database} database`);
+                return this.init();
+            } catch (e) {
+                Logger.error(
+                    `creation of ${connectionDetails.database} database failed -
                          this is frequently caused by an incorrect connection string. 
                          Verify your CORE_DB_CONNECTION string environment variable and try again: ${e}`,
-                            );
-                            process.exit(-1);
-                        })
-                })
-                .catch((e: any) => {
-                    Logger.error(`unable to verify if database specified by connection string exists: ${e}`)
-                })
+                );
+                process.exit(-1);
+            }
         } else {
-            this.init()
+            return this.init()
         }
     }
 
-    init() {
-        const adapter = PostgresAdapter.Instance;
-        void adapter.init();
+    async init() {
+        await PostgresAdapter.Instance.init();
         this.pool = PostgresAdapter.Instance.Pool;
-        void this.migrate();
+        return this.migrate();
     }
 
     async migrate() {
@@ -95,18 +93,15 @@ class Migrator {
 
         // read the migrations directory
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        fs.readdir(path.resolve(__dirname, `../../src/data_access_layer/migrations`), async (err, files) => {
-            if (err) {
-                Logger.error('unable to read migration directory');
-                return;
-            }
+        try {
+            const filenames = await fs.promises.readdir(path.resolve(__dirname, `../../src/data_access_layer/migrations`))
 
             // for each file create a new transaction and run each sql statement
             // contained within
-            for (const file of files) {
+            for(const filename of filenames) {
                 // if this is a timescaledb migration, check first to see if we're in a timescale enabled environment
-                if(file.includes('[ts]') && !Config.timescaledb_enabled) {
-                    Logger.warn(`Skipping ${file}, TimescaleDB is not enabled`)
+                if(filename.includes('[ts]') && !Config.timescaledb_enabled) {
+                    Logger.warn(`Skipping ${filename}, TimescaleDB is not enabled`)
                     continue;
                 }
 
@@ -114,21 +109,21 @@ class Migrator {
 
                 try {
                     // check to see if the migration ran
-                    const results = await this.pool.query(`SELECT * FROM migrations WHERE name = '${file}'`);
+                    const results = await this.pool.query(`SELECT * FROM migrations WHERE name = '${filename}'`);
                     if (results.rows.length !== 0) {
-                        Logger.info(`${file} already migrated, skipping`);
+                        Logger.info(`${filename} already migrated, skipping`);
                         await this.pool.query('COMMIT');
                         continue;
                     }
 
                     // run the file's statements as part of the transaction
-                    Logger.info(`beginning migration of ${file}`);
+                    Logger.info(`beginning migration of ${filename}`);
 
                     await this.pool.query({
                         text: `INSERT INTO migrations(name) VALUES($1)`,
-                        values: [file],
+                        values: [filename],
                     });
-                    const statements = fs.readFileSync(path.resolve(__dirname, `../../src/data_access_layer/migrations/${file}`)).toString();
+                    const statements = fs.readFileSync(path.resolve(__dirname, `../../src/data_access_layer/migrations/${filename}`)).toString();
 
                     await this.pool.query(statements);
 
@@ -139,14 +134,13 @@ class Migrator {
                     return Promise.resolve();
                 }
 
-                Logger.info(`migration of ${file} successful`);
+                Logger.info(`migration of ${filename} successful`);
             }
-
-            return Promise.resolve();
-        });
+        } catch (e) {
+            Logger.error(`unable to read migrations directory ${e}`)
+            process.exit(-1)
+        }
 
         return Promise.resolve();
     }
 }
-
-const migrator = new Migrator();

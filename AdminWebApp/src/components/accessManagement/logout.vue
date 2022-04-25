@@ -5,15 +5,15 @@
 </template>
 
 <script lang="ts">
-   import Config from '@/config'
-   import {Component, Vue} from 'vue-property-decorator'
+  import Config from '@/config'
+  import {Component, Vue} from 'vue-property-decorator'
 
-    @Component
-    export default class Logout extends Vue {
+  @Component
+  export default class Logout extends Vue {
 
-      logout() {
-        this.$auth.Logout()
-        window.location.href = `${Config.deepLynxApiUri}/logout?redirect_uri=${Config.appUrl}`
-      }
+    logout() {
+      this.$auth.Logout()
+      window.location.href = `${Config.deepLynxApiUri}/logout?redirect_uri=${Config.appUrl}`
     }
+  }
 </script>

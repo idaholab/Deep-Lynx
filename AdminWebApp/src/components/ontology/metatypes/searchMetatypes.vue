@@ -75,7 +75,7 @@ export default class SearchMetatypes extends Vue {
 
   @Watch('search', {immediate: true})
   onSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.containerID, {name: newVal, ontologyVersion: this.$store.getters.activeOntologyVersionID})
+    this.$client.listMetatypes(this.containerID, {name: newVal, ontologyVersion: this.$store.getters.selectedOntologyVersionID})
         .then((metatypes) => {
           this.metatypes = metatypes as MetatypeT[]
         })

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@mdi/js": "^5.8.55",
+    "@types/d3": "^7.1.0",
     "@types/jwt-decode": "^2.2.1",
     "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^2.18.0",
@@ -24,6 +25,7 @@
     "build-url": "^6.0.1",
     "cross-env": "^7.0.3",
     "cytoscape-cola": "^2.5.0",
+    "d3": "^7.4.3",
     "deep-diff": "^1.0.2",
     "diff": "^5.0.0",
     "element-ui": "^2.14.1",

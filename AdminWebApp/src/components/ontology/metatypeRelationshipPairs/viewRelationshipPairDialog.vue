@@ -7,90 +7,92 @@
           class="mr-2"
           v-on="on"
       >mdi-eye</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("viewMetatypeRelationshipPair.editMetatypeRelationshipPair")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("viewMetatypeRelationshipPair.editMetatypeRelationshipPair")}}</v-btn>
     </template>
-    <v-card>
-      <v-card-text>
-        <v-container v-if="selectedPair">
-          <v-row>
-            <v-col :cols="12">
 
-              <v-form
-                  ref="form"
+    <v-card class="pt-1 pb-3 px-2">
+      <v-card-title>
+        <span class="headline text-h3">View Metatype Relationship Pair</span>
+      </v-card-title>   
+      <v-card-text v-if="selectedPair">
+        <error-banner :message="errorMessage"></error-banner>
+        <v-row>
+          <v-col :cols="12">
+            <v-form
+                ref="form"
+            >
+              <v-text-field
+                  v-model="selectedPair.name"
+                  disabled
+                  class="disabled"
               >
-                <v-text-field
-                    v-model="selectedPair.name"
-                    disabled
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipPair.name')}}</template>
-                </v-text-field>
-                <v-textarea
-                    v-model="selectedPair.description"
-                    disabled
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipPair.description')}}</template>
-                </v-textarea>
-                <v-autocomplete
-                    v-model="selectedPair.origin_metatype_id"
-                    :rules="[v => !!v || $t('viewMetatypeRelationshipPair.originRequired')]"
-                    :single-line="false"
-                    :items="originMetatypes"
-                    :search-input.sync="originSearch"
-                    item-text="name"
-                    item-value="id"
-                    persistent-hint
-                    required
-                    disabled
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipPair.originMetatype')}}</template>
-                </v-autocomplete>
-                <v-autocomplete
-                    v-model="selectedPair.relationship_id"
-                    :rules="[v => !!v || $t('viewMetatypeRelationshipPair.relationshipRequired')]"
-                    :single-line="false"
-                    :items="metatypeRelationships"
-                    :search-input.sync="relationshipSearch"
-                    item-text="name"
-                    item-value="id"
-                    persistent-hint
-                    required
-                    disabled
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipPair.relationship')}}</template>
-                </v-autocomplete>
-                <v-autocomplete
-                    v-model="selectedPair.destination_metatype_id"
-                    :rules="[v => !!v || $t('viewMetatypeRelationshipPair.destinationRequired')]"
-                    :single-line="false"
-                    :items="destinationMetatypes"
-                    :search-input.sync="destinationSearch"
-                    item-text="name"
-                    item-value="id"
-                    persistent-hint
-                    required
-                    disabled
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipPair.destinationMetatype')}}</template>
-                </v-autocomplete>
-                <v-select
-                    v-model="selectedPair.relationship_type"
-                    :rules="[v => !!v || $t('viewMetatypeRelationshipPair.relationshipTypeRequired')]"
-                    :items="relationshipTypeChoices"
-                    required
-                    disabled
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('viewMetatypeRelationshipPair.relationshipType')}}</template>
-                </v-select>
-              </v-form>
-            </v-col>
-          </v-row>
-        </v-container>
+                <template v-slot:label>{{$t('viewMetatypeRelationshipPair.name')}}</template>
+              </v-text-field>
+              <v-textarea
+                  v-model="selectedPair.description"
+                  disabled
+                  class="disabled"
+              >
+                <template v-slot:label>{{$t('viewMetatypeRelationshipPair.description')}}</template>
+              </v-textarea>
+              <v-autocomplete
+                  v-model="selectedPair.origin_metatype_id"
+                  :rules="[v => !!v || $t('viewMetatypeRelationshipPair.originRequired')]"
+                  :single-line="false"
+                  :items="originMetatypes"
+                  :search-input.sync="originSearch"
+                  item-text="name"
+                  item-value="id"
+                  persistent-hint
+                  required
+                  disabled
+                  class="disabled"
+              >
+                <template v-slot:label>{{$t('viewMetatypeRelationshipPair.originMetatype')}}</template>
+              </v-autocomplete>
+              <v-autocomplete
+                  v-model="selectedPair.relationship_id"
+                  :rules="[v => !!v || $t('viewMetatypeRelationshipPair.relationshipRequired')]"
+                  :single-line="false"
+                  :items="metatypeRelationships"
+                  :search-input.sync="relationshipSearch"
+                  item-text="name"
+                  item-value="id"
+                  persistent-hint
+                  required
+                  disabled
+                  class="disabled"
+              >
+                <template v-slot:label>{{$t('viewMetatypeRelationshipPair.relationship')}}</template>
+              </v-autocomplete>
+              <v-autocomplete
+                  v-model="selectedPair.destination_metatype_id"
+                  :rules="[v => !!v || $t('viewMetatypeRelationshipPair.destinationRequired')]"
+                  :single-line="false"
+                  :items="destinationMetatypes"
+                  :search-input.sync="destinationSearch"
+                  item-text="name"
+                  item-value="id"
+                  persistent-hint
+                  required
+                  disabled
+                  class="disabled"
+              >
+                <template v-slot:label>{{$t('viewMetatypeRelationshipPair.destinationMetatype')}}</template>
+              </v-autocomplete>
+              <v-select
+                  v-model="selectedPair.relationship_type"
+                  :rules="[v => !!v || $t('viewMetatypeRelationshipPair.relationshipTypeRequired')]"
+                  :items="relationshipTypeChoices"
+                  required
+                  disabled
+                  class="disabled"
+              >
+                <template v-slot:label>{{$t('viewMetatypeRelationshipPair.relationshipType')}}</template>
+              </v-select>
+            </v-form>
+          </v-col>
+        </v-row>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -174,27 +176,27 @@ export default class ViewRelationshipPairDialog extends Vue {
 
 .edited-field {
   input {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   textarea {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   .v-select__slot {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   .v-select__selection {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 }
 </style>

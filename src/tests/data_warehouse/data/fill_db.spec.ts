@@ -40,6 +40,7 @@ describe('We can generate test data', async () => {
     let resultMetatypeRelationships: MetatypeRelationship[] = [];
     let user: User;
     let generatedPayload: {[key: string]: any}[] = [];
+    let amountToGenerate: number = 0;
 
     let maintenancePair: MetatypeRelationshipPair | undefined;
 
@@ -366,7 +367,7 @@ describe('We can generate test data', async () => {
         const dfactory = new DataSourceFactory();
         dataSource = dfactory.fromDataSourceRecord(exp.value);
 
-        const amountToGenerate = process.env.TEST_DATA_NODES ? parseInt(process.env.TEST_DATA_NODES, 10) : 1000;
+        amountToGenerate = process.env.TEST_DATA_NODES ? parseInt(process.env.TEST_DATA_NODES, 10) : 1000;
 
         for (let i = 0; i < amountToGenerate; i++) {
             generatedPayload.push({
@@ -499,7 +500,7 @@ describe('We can generate test data', async () => {
                 objectMode: true,
             }),
             user,
-            {overrideJsonStream: true, generateShapeHash: true},
+            {overrideJsonStream: true},
         );
     });
 
@@ -574,7 +575,11 @@ describe('We can generate test data', async () => {
             type_mapping_id: typeMappingID,
             metatype_relationship_pair_id: maintenancePair!.id,
             origin_id_key: 'car_maintenance.id',
+            origin_data_source_id: dataSource!.DataSourceRecord!.id,
+            origin_metatype_id: test_metatypes.find((m) => m.name === 'Maintenance')!.id!,
             destination_id_key: 'car_maintenance.maintenance_entries.[].id',
+            destination_metatype_id: test_metatypes.find((m) => m.name === 'Maintenance Entry')!.id!,
+            destination_data_source_id: dataSource!.DataSourceRecord!.id,
             root_array: 'car_maintenance.maintenance_entries',
             keys: [],
         });
@@ -599,7 +604,7 @@ describe('We can generate test data', async () => {
         const nodes = await nodeRepo.where().containerID('eq', containerID).list();
 
         expect(nodes.isError).false;
-        expect(nodes.value.length).gt(999);
+        expect(nodes.value.length).gt(amountToGenerate - 1);
 
         const edgeRepo = new EdgeRepository();
         const edges = await edgeRepo.where().containerID('eq', containerID).list();

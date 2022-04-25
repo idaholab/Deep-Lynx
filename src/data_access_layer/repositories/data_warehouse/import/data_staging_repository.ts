@@ -197,7 +197,7 @@ export default class DataStagingRepository extends Repository implements Reposit
     }
 
     // sendToQueueForImport will queue up all data staging records for a given import
-    // needed for us to reprocess an import individually, and as part of the receieve
+    // needed for us to reprocess an import individually, and as part of the receive
     // data call
     async sendToQueueForImport(importID: string): Promise<void> {
         const queue = await QueueFactory();

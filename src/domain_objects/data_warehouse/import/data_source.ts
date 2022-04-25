@@ -1,22 +1,9 @@
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
-import {
-    ArrayMinSize,
-    IsArray,
-    IsBoolean,
-    IsDefined,
-    IsIn,
-    IsObject,
-    IsOptional,
-    IsString,
-    IsUrl,
-    ValidateIf,
-    ValidateNested,
-    Validate
-} from 'class-validator';
+import {ArrayMinSize, IsArray, IsBoolean, IsDefined, IsIn, IsObject, IsOptional, IsString, IsUrl, ValidateIf, ValidateNested, Validate} from 'class-validator';
 import {Exclude, Type} from 'class-transformer';
 import {PoolClient} from 'pg';
 import {Transform} from 'stream';
-import {DataRetentionDays} from "../../validators/data_retention_validator";
+import {DataRetentionDays} from '../../validators/data_retention_validator';
 
 // ReceiveDataOptions will allow us to grow the potential options needed by the ReceiveData
 // function of various implementations without having to grow the parameter list
@@ -26,7 +13,6 @@ export class ReceiveDataOptions {
     returnStagingRecords? = false; // needed if you'd rather return the individual staging records over the import, useful if needing to attach files
     overrideJsonStream? = false; // needed if you're passing raw json objects or an object stream
     transformStreams?: Transform[]; // streams to pipe to, prior to piping to the JSONStream
-    generateShapeHash? = false; // whether or not to generate shape hash on ingestion, this is cpu heavy so try to let the job handle it
 }
 
 /*
@@ -58,7 +44,7 @@ export class BaseDataSourceConfig extends NakedDomainClass {
 
     @IsOptional()
     @Validate(DataRetentionDays)
-    data_retention_days = 30
+    data_retention_days = 30;
 }
 
 export class StandardDataSourceConfig extends BaseDataSourceConfig {
@@ -333,7 +319,7 @@ export default class DataSourceRecord extends BaseDomainClass {
         data_format?: string;
         status?: 'ready' | 'polling' | 'error';
         status_message?: string;
-        data_retention_days?: number
+        data_retention_days?: number;
     }) {
         super();
         this.config = new StandardDataSourceConfig();
@@ -347,9 +333,7 @@ export default class DataSourceRecord extends BaseDomainClass {
             if (input.data_format) this.data_format = input.data_format;
             if (input.status) this.status = input.status;
             if (input.status_message) this.status_message = input.status_message;
-            if (input.data_retention_days) this.config.data_retention_days = input.data_retention_days
+            if (input.data_retention_days) this.config.data_retention_days = input.data_retention_days;
         }
     }
 }
-
-

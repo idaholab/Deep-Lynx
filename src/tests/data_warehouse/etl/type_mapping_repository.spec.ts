@@ -1,10 +1,10 @@
-import { User } from '../../../domain_objects/access_management/user';
+import {User} from '../../../domain_objects/access_management/user';
 import Logger from '../../../services/logger';
 import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 import Container from '../../../domain_objects/data_warehouse/ontology/container';
 import faker from 'faker';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
@@ -13,7 +13,7 @@ import MetatypeKey from '../../../domain_objects/data_warehouse/ontology/metatyp
 import Metatype from '../../../domain_objects/data_warehouse/ontology/metatype';
 import MetatypeMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import MetatypeKeyMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
-import TypeTransformation, { Condition, KeyMapping } from '../../../domain_objects/data_warehouse/etl/type_transformation';
+import TypeTransformation, {Condition, KeyMapping} from '../../../domain_objects/data_warehouse/etl/type_transformation';
 import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
 
 describe('A Type Mapping Repository', async () => {
@@ -41,8 +41,8 @@ describe('A Type Mapping Repository', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container.isError).false;
@@ -53,8 +53,8 @@ describe('A Type Mapping Repository', async () => {
             'test suite',
             new Container({
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(container2.isError).false;
@@ -69,8 +69,8 @@ describe('A Type Mapping Repository', async () => {
                 admin: false,
                 display_name: faker.name.findName(),
                 email: faker.internet.email(),
-                roles: ['superuser']
-            })
+                roles: ['superuser'],
+            }),
         );
 
         expect(userResult.isError).false;
@@ -82,8 +82,8 @@ describe('A Type Mapping Repository', async () => {
             new Metatype({
                 container_id: containerID,
                 name: faker.name.findName(),
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(created.isError).false;
@@ -95,7 +95,7 @@ describe('A Type Mapping Repository', async () => {
             required: true,
             property_name: 'flower_name',
             data_type: 'string',
-            metatype_id: metatype.id!
+            metatype_id: metatype.id!,
         });
 
         const keyCreated = await MetatypeKeyMapper.Instance.Create('test suite', test_key);
@@ -108,8 +108,8 @@ describe('A Type Mapping Repository', async () => {
             new Metatype({
                 container_id: container2ID!,
                 name: metatype.name,
-                description: faker.random.alphaNumeric()
-            })
+                description: faker.random.alphaNumeric(),
+            }),
         );
 
         expect(created2.isError).false;
@@ -121,7 +121,7 @@ describe('A Type Mapping Repository', async () => {
             required: true,
             property_name: 'flower_name',
             data_type: 'string',
-            metatype_id: metatype2.id!
+            metatype_id: metatype2.id!,
         });
 
         const keyCreated2 = await MetatypeKeyMapper.Instance.Create('test suite', test_key2);
@@ -135,8 +135,8 @@ describe('A Type Mapping Repository', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp.isError).false;
@@ -150,8 +150,8 @@ describe('A Type Mapping Repository', async () => {
                 name: 'Test Data Source 2',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp2.isError).false;
@@ -166,8 +166,8 @@ describe('A Type Mapping Repository', async () => {
                 name: 'Test Data Source',
                 active: false,
                 adapter_type: 'standard',
-                data_format: 'json'
-            })
+                data_format: 'json',
+            }),
         );
 
         expect(exp3.isError).false;
@@ -188,7 +188,7 @@ describe('A Type Mapping Repository', async () => {
         const mapping = new TypeMapping({
             container_id: containerID,
             data_source_id: dataSourceID,
-            sample_payload: test_raw_payload
+            sample_payload: test_raw_payload,
         });
 
         // verify the hash ran
@@ -214,31 +214,32 @@ describe('A Type Mapping Repository', async () => {
         const mapping = new TypeMapping({
             container_id: containerID,
             data_source_id: dataSourceID,
-            sample_payload: test_raw_payload
+            sample_payload: test_raw_payload,
         });
 
         const transformation = new TypeTransformation({
             type_mapping_id: mapping.id!,
             metatype_id: metatype.id,
+            type: 'node',
             conditions: [
                 new Condition({
                     key: 'RADIUS',
                     operator: '==',
-                    value: 'CIRCLE'
-                })
+                    value: 'CIRCLE',
+                }),
             ],
             keys: [
                 new KeyMapping({
                     key: 'RADIUS',
-                    metatype_key_id: key.id
-                })
-            ]
+                    metatype_key_id: key.id,
+                }),
+            ],
         });
 
         mapping.addTransformation(transformation);
 
         let saved = await repo.save(mapping, user);
-        expect(saved.isError).false;
+        expect(saved.isError, saved.error?.error).false;
         expect(mapping.id).not.undefined;
         expect(mapping.transformations![0]!.id).not.undefined;
 
@@ -258,31 +259,32 @@ describe('A Type Mapping Repository', async () => {
             container_id: containerID,
             data_source_id: dataSourceID,
             sample_payload: test_raw_payload,
-            active: true // we set active true so we can verify that the mapping will be set inactive on export
+            active: true, // we set active true so we can verify that the mapping will be set inactive on export
         });
 
         const transformation = new TypeTransformation({
             type_mapping_id: mapping.id!,
             metatype_id: metatype.id,
+            type: 'node',
             conditions: [
                 new Condition({
                     key: 'RADIUS',
                     operator: '==',
-                    value: 'CIRCLE'
-                })
+                    value: 'CIRCLE',
+                }),
             ],
             keys: [
                 new KeyMapping({
                     key: 'RADIUS',
-                    metatype_key_id: key.id
-                })
-            ]
+                    metatype_key_id: key.id,
+                }),
+            ],
         });
 
         mapping.addTransformation(transformation);
 
         const saved = await repo.save(mapping, user);
-        expect(saved.isError).false;
+        expect(saved.isError, saved.error?.error).false;
         expect(mapping.id).not.undefined;
         expect(mapping.transformations![0]!.id).not.undefined;
 
@@ -331,8 +333,8 @@ const test_raw_payload = {
     TEST: 'TEST',
     ITEM_ID: '123',
     ATTRIBUTES: {
-        WHEELS: 1
-    }
+        WHEELS: 1,
+    },
 };
 
 const updated_payload = {
@@ -340,6 +342,6 @@ const updated_payload = {
     COLOR: 'yellow',
     ITEM_ID: '123',
     ATTRIBUTES: {
-        WHEELS: 1
-    }
+        WHEELS: 1,
+    },
 };

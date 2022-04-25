@@ -7,167 +7,165 @@
           class="mr-2"
           v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("editMetatypeRelationshipPair.editMetatypeRelationshipPair")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("editMetatypeRelationshipPair.editMetatypeRelationshipPair")}}</v-btn>
     </template>
-    <v-card>
+
+    <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
-        <span class="headline">{{$t("editMetatypeRelationshipPair.formTitle")}}</span>
+        <span class="headline text-h3">{{$t("editMetatypeRelationshipPair.formTitle")}}</span>
+      </v-card-title>   
+      <v-card-text v-if="selectedPair">
         <error-banner :message="errorMessage"></error-banner>
-      </v-card-title>
+        <v-row>
+          <v-col v-if="comparisonPair" :cols="6">
 
-      <v-card-text>
-        <v-container v-if="selectedPair">
-          <v-row >
-            <v-col v-if="comparisonPair" :cols="6">
-
-              <v-form
-                  ref="form"
+            <v-form
+                ref="form"
+            >
+              <v-text-field
+                  v-model="comparisonPair.name"
+                  disabled
+                  class="disabled"
               >
-                <v-text-field
-                    v-model="comparisonPair.name"
-                    disabled
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.name')}}</template>
-                </v-text-field>
-                <v-textarea
-                    v-model="comparisonPair.description"
-                    disabled
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.description')}} </template>
-                </v-textarea>
-                <v-autocomplete
-                    v-model="comparisonPair.origin_metatype_id"
-                    :rules="[v => !!v || $t('editMetatypeRelationshipPair.originRequired')]"
-                    :single-line="false"
-                    :items="[comparisonPair.origin_metatype]"
-                    item-text="name"
-                    item-value="id"
-                    persistent-hint
-                    required
-                    disabled
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.originMetatype')}}</template>
-                </v-autocomplete>
-                <v-autocomplete
-                    v-model="comparisonPair.relationship_id"
-                    :rules="[v => !!v || $t('editMetatypeRelationshipPair.relationshipRequired')]"
-                    :single-line="false"
-                    :items="[comparisonPair.relationship]"
-                    item-text="name"
-                    item-value="id"
-                    persistent-hint
-                    disabled
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationship')}}</template>
-                </v-autocomplete>
-                <v-autocomplete
-                    v-model="comparisonPair.destination_metatype_id"
-                    :single-line="false"
-                    :items="[comparisonPair.destination_metatype]"
-                    item-text="name"
-                    item-value="id"
-                    persistent-hint
-                    disabled
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.destinationMetatype')}}</template>
-                </v-autocomplete>
-                <v-select
-                    v-model="comparisonPair.relationship_type"
-                    :items="relationshipTypeChoices"
-                    required
-                    disabled
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationshipType')}}</template>
-                </v-select>
-              </v-form>
-            </v-col>
-
-            <v-col :cols="(comparisonPair) ? 6 : 12">
-
-              <v-form
-                  ref="form"
-                  v-model="valid"
+                <template v-slot:label>{{$t('editMetatypeRelationshipPair.name')}}</template>
+              </v-text-field>
+              <v-textarea
+                  v-model="comparisonPair.description"
+                  disabled
+                  class="disabled"
               >
-                <v-text-field
-                    v-model="selectedPair.name"
-                    :rules="[v => !!v || $t('editMetatypeRelationshipPair.originRequired')]"
-                    required
-                    :class="(comparisonPair && selectedPair.name !== comparisonPair.name) ? 'edited-field' : ''"
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.name')}} <small style="color:red" >*</small></template>
-                </v-text-field>
-                <v-textarea
-                    v-model="selectedPair.description"
-                    :rules="[v => !!v || $t('editMetatypeRelationshipPair.originRequired')]"
-                    :class="(comparisonPair && selectedPair.description !== comparisonPair.description) ? 'edited-field' : ''"
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.description')}} <small style="color:red" >*</small></template>
-                </v-textarea>
-                <v-autocomplete
-                    v-model="selectedPair.origin_metatype_id"
-                    :class="(comparisonPair && selectedPair.origin_metatype_id !== comparisonPair.origin_metatype_id) ? 'edited-field' : ''"
-                    :rules="[v => !!v || $t('editMetatypeRelationshipPair.originRequired')]"
-                    :single-line="false"
-                    :items="originMetatypes"
-                    :search-input.sync="originSearch"
-                    item-text="name"
-                    item-value="id"
-                    persistent-hint
-                    required
-                    clearable
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.originMetatype')}} <small style="color:red" >*</small></template>
-                </v-autocomplete>
-                <v-autocomplete
-                    v-model="selectedPair.relationship_id"
-                    :rules="[v => !!v || $t('editMetatypeRelationshipPair.relationshipRequired')]"
-                    :class="(comparisonPair && selectedPair.relationship_id !== comparisonPair.relationship_id) ? 'edited-field' : ''"
-                    :single-line="false"
-                    :items="metatypeRelationships"
-                    :search-input.sync="relationshipSearch"
-                    item-text="name"
-                    item-value="id"
-                    persistent-hint
-                    required
-                    clearable
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationship')}} <small style="color:red" >*</small></template>
-                </v-autocomplete>
-                <v-autocomplete
-                    v-model="selectedPair.destination_metatype_id"
-                    :rules="[v => !!v || $t('editMetatypeRelationshipPair.destinationRequired')]"
-                    :class="(comparisonPair && selectedPair.destination_metatype_id !== comparisonPair.destination_metatype_id) ? 'edited-field' : ''"
-                    :single-line="false"
-                    :items="destinationMetatypes"
-                    :search-input.sync="destinationSearch"
-                    item-text="name"
-                    item-value="id"
-                    persistent-hint
-                    required
-                    clearable
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.destinationMetatype')}} <small style="color:red" >*</small></template>
-                </v-autocomplete>
-                <v-select
-                    v-model="selectedPair.relationship_type"
-                    :class="(comparisonPair && selectedPair.relationship_type !== comparisonPair.relationship_type) ? 'edited-field' : ''"
-                    :rules="[v => !!v || $t('editMetatypeRelationshipPair.relationshipTypeRequired')]"
-                    :items="relationshipTypeChoices"
-                    required
-                >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationshipType')}} <small style="color:red" >*</small></template>
-                </v-select>
-              </v-form>
-              <p><span style="color:red">*</span> = {{$t('editMetatypeRelationshipPair.requiredField')}}</p>
-            </v-col>
-          </v-row>
-        </v-container>
+                <template v-slot:label>{{$t('editMetatypeRelationshipPair.description')}} </template>
+              </v-textarea>
+              <v-autocomplete
+                  v-model="comparisonPair.origin_metatype_id"
+                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.originRequired')]"
+                  :single-line="false"
+                  :items="[comparisonPair.origin_metatype]"
+                  item-text="name"
+                  item-value="id"
+                  persistent-hint
+                  required
+                  disabled
+                  class="disabled"
+              >
+                <template v-slot:label>{{$t('editMetatypeRelationshipPair.originMetatype')}}</template>
+              </v-autocomplete>
+              <v-autocomplete
+                  v-model="comparisonPair.relationship_id"
+                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.relationshipRequired')]"
+                  :single-line="false"
+                  :items="[comparisonPair.relationship]"
+                  item-text="name"
+                  item-value="id"
+                  persistent-hint
+                  disabled
+                  class="disabled"
+              >
+                <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationship')}}</template>
+              </v-autocomplete>
+              <v-autocomplete
+                  v-model="comparisonPair.destination_metatype_id"
+                  :single-line="false"
+                  :items="[comparisonPair.destination_metatype]"
+                  item-text="name"
+                  item-value="id"
+                  persistent-hint
+                  disabled
+                  class="disabled"
+              >
+                <template v-slot:label>{{$t('editMetatypeRelationshipPair.destinationMetatype')}}</template>
+              </v-autocomplete>
+              <v-select
+                  v-model="comparisonPair.relationship_type"
+                  :items="relationshipTypeChoices"
+                  required
+                  disabled
+                  class="disabled"
+              >
+                <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationshipType')}}</template>
+              </v-select>
+            </v-form>
+          </v-col>
+
+          <v-col :cols="(comparisonPair) ? 6 : 12">
+
+            <v-form
+                ref="form"
+                v-model="valid"
+            >
+              <v-text-field
+                  v-model="selectedPair.name"
+                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.originRequired')]"
+                  required
+                  :class="(comparisonPair && selectedPair.name !== comparisonPair.name) ? 'edited-field' : ''"
+              >
+                <template v-slot:label>{{$t('editMetatypeRelationshipPair.name')}} <small style="color:red" >*</small></template>
+              </v-text-field>
+              <v-textarea
+                  v-model="selectedPair.description"
+                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.originRequired')]"
+                  :class="(comparisonPair && selectedPair.description !== comparisonPair.description) ? 'edited-field' : ''"
+              >
+                <template v-slot:label>{{$t('editMetatypeRelationshipPair.description')}} <small style="color:red" >*</small></template>
+              </v-textarea>
+              <v-autocomplete
+                  v-model="selectedPair.origin_metatype_id"
+                  :class="(comparisonPair && selectedPair.origin_metatype_id !== comparisonPair.origin_metatype_id) ? 'edited-field' : ''"
+                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.originRequired')]"
+                  :single-line="false"
+                  :items="originMetatypes"
+                  :search-input.sync="originSearch"
+                  item-text="name"
+                  item-value="id"
+                  persistent-hint
+                  required
+                  clearable
+              >
+                <template v-slot:label>{{$t('editMetatypeRelationshipPair.originMetatype')}} <small style="color:red" >*</small></template>
+              </v-autocomplete>
+              <v-autocomplete
+                  v-model="selectedPair.relationship_id"
+                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.relationshipRequired')]"
+                  :class="(comparisonPair && selectedPair.relationship_id !== comparisonPair.relationship_id) ? 'edited-field' : ''"
+                  :single-line="false"
+                  :items="metatypeRelationships"
+                  :search-input.sync="relationshipSearch"
+                  item-text="name"
+                  item-value="id"
+                  persistent-hint
+                  required
+                  clearable
+              >
+                <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationship')}} <small style="color:red" >*</small></template>
+              </v-autocomplete>
+              <v-autocomplete
+                  v-model="selectedPair.destination_metatype_id"
+                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.destinationRequired')]"
+                  :class="(comparisonPair && selectedPair.destination_metatype_id !== comparisonPair.destination_metatype_id) ? 'edited-field' : ''"
+                  :single-line="false"
+                  :items="destinationMetatypes"
+                  :search-input.sync="destinationSearch"
+                  item-text="name"
+                  item-value="id"
+                  persistent-hint
+                  required
+                  clearable
+              >
+                <template v-slot:label>{{$t('editMetatypeRelationshipPair.destinationMetatype')}} <small style="color:red" >*</small></template>
+              </v-autocomplete>
+              <v-select
+                  v-model="selectedPair.relationship_type"
+                  :class="(comparisonPair && selectedPair.relationship_type !== comparisonPair.relationship_type) ? 'edited-field' : ''"
+                  :rules="[v => !!v || $t('editMetatypeRelationshipPair.relationshipTypeRequired')]"
+                  :items="relationshipTypeChoices"
+                  required
+              >
+                <template v-slot:label>{{$t('editMetatypeRelationshipPair.relationshipType')}} <small style="color:red" >*</small></template>
+              </v-select>
+            </v-form>
+            <p><span style="color:red">*</span> = {{$t('editMetatypeRelationshipPair.requiredField')}}</p>
+          </v-col>
+        </v-row>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -272,27 +270,27 @@ export default class EditRelationshipPairDialog extends Vue {
 
 .edited-field {
   input {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   textarea {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   .v-select__slot {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 
   .v-select__selection {
-    background: #FB8C00;
+    background: #CD7F32;
     color: white !important;
-    box-shadow: -5px 0 0 #FB8C00;
+    box-shadow: -5px 0 0 #CD7F32;
   }
 }
 </style>

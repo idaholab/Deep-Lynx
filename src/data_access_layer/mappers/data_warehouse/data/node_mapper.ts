@@ -1,7 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import Node, {NodeLeaf} from '../../../../domain_objects/data_warehouse/data/node';
+import Node from '../../../../domain_objects/data_warehouse/data/node';
 import {NodeFile} from '../../../../domain_objects/data_warehouse/data/file';
 
 const format = require('pg-format');
@@ -145,7 +145,7 @@ export default class NodeMapper extends Mapper {
             JSON.stringify(n.metadata),
             userID,
             userID,
-            n.created_at ? n.created_at : new Date(),
+            n.created_at ? n.created_at : new Date().toISOString(),
         ]);
 
         return format(text, values);

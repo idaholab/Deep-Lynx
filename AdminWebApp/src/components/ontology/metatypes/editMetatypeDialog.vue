@@ -7,152 +7,150 @@
           class="mr-2"
           v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mb-2" v-on="on">{{$t("editMetatype.editMetatype")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("editMetatype.editMetatype")}}</v-btn>
     </template>
 
-    <v-card v-if="selectedMetatype">
+    <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatype">
+      <v-card-title>
+        <span class="headline text-h3">{{$t('editMetatype.edit')}} {{selectedMetatype.name}}</span>
+      </v-card-title>   
       <v-card-text>
-        <v-container>
-          <error-banner :message="errorMessage"></error-banner>
-          <span class="headline">{{$t('editMetatype.edit')}} {{selectedMetatype.name}}</span>
-          <v-row>
-            <v-col :cols="6" v-if="comparisonMetatype">
-
-              <v-form
-                  ref="form"
+        <v-row>
+          <v-col :cols="6" v-if="comparisonMetatype">
+            <v-form
+                ref="form"
+            >
+              <v-text-field
+                  v-model="comparisonMetatype.name"
+                  required
+                  :disabled="true"
+                  class="disabled"
               >
-                <v-text-field
-                    v-model="comparisonMetatype.name"
-                    required
-                    :disabled="true"
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
-                </v-text-field>
-                <v-textarea
-                    v-model="comparisonMetatype.description"
-                    required
-                    :disabled="true"
-                    class="disabled"
-                >
-                  <template v-slot:label>{{$t('editMetatype.description')}} <small style="color:red" >*</small></template>
-                </v-textarea>
-              </v-form>
-              <p><span style="color:red">*</span> = {{$t('editMetatype.requiredField')}}</p>
-
-
-              <v-progress-linear v-if="keysLoading" indeterminate></v-progress-linear>
-              <v-data-table
-                  :headers="headers()"
-                  :items="comparisonMetatype.keys"
-                  :items-per-page="100"
-                  :footer-props="{
-                     'items-per-page-options': [25, 50, 100]
-                  }"
-                  class="elevation-1"
-                  sort-by="name"
+                <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
+              </v-text-field>
+              <v-textarea
+                  v-model="comparisonMetatype.description"
+                  required
+                  :disabled="true"
+                  class="disabled"
               >
-                <template v-slot:top>
-                  <v-toolbar flat color="white">
-                    <v-toolbar-title>{{$t("editMetatype.keys")}}</v-toolbar-title>
-                    <v-divider
-                        class="mx-4"
-                        inset
-                        vertical
-                    ></v-divider>
-                    <v-spacer></v-spacer>
-                  </v-toolbar>
-                </template>
-                <template v-slot:[`item.actions`]="{ item }">
-                  <view-metatype-key-dialog :metatypeKey="item" :metatype="metatype" :icon="true" @metatypeKeyEdited="loadKeys()"></view-metatype-key-dialog>
-                </template>
-              </v-data-table>
-            </v-col>
+                <template v-slot:label>{{$t('editMetatype.description')}} <small style="color:red" >*</small></template>
+              </v-textarea>
+            </v-form>
+            <p><span style="color:red">*</span> = {{$t('editMetatype.requiredField')}}</p>
 
 
-            <v-col :cols="(comparisonMetatype) ? 6 : 12">
+            <v-progress-linear v-if="keysLoading" indeterminate></v-progress-linear>
+            <v-data-table
+                :headers="headers()"
+                :items="comparisonMetatype.keys"
+                :items-per-page="100"
+                :footer-props="{
+                    'items-per-page-options': [25, 50, 100]
+                }"
+                class="elevation-1"
+                sort-by="name"
+            >
+              <template v-slot:top>
+                <v-toolbar flat color="white">
+                  <v-toolbar-title>{{$t("editMetatype.keys")}}</v-toolbar-title>
+                  <v-divider
+                      class="mx-4"
+                      inset
+                      vertical
+                  ></v-divider>
+                  <v-spacer></v-spacer>
+                </v-toolbar>
+              </template>
+              <template v-slot:[`item.actions`]="{ item }">
+                <view-metatype-key-dialog :metatypeKey="item" :metatype="metatype" :icon="true" @metatypeKeyEdited="loadKeys()"></view-metatype-key-dialog>
+              </template>
+            </v-data-table>
+          </v-col>
 
-              <v-form
-                  ref="form"
-                  v-model="valid"
+
+          <v-col :cols="(comparisonMetatype) ? 6 : 12">
+
+            <v-form
+                ref="form"
+                v-model="valid"
+            >
+              <v-text-field
+                  v-model="selectedMetatype.name"
+                  :rules="[v => !!v || $t('editMetatype.nameRequired')]"
+                  required
+                  :class="(comparisonMetatype && selectedMetatype.name !== comparisonMetatype.name) ? 'edited-field' : ''"
               >
-                <v-text-field
-                    v-model="selectedMetatype.name"
-                    :rules="[v => !!v || $t('editMetatype.nameRequired')]"
-                    required
-                    :class="(comparisonMetatype && selectedMetatype.name !== comparisonMetatype.name) ? 'edited-field' : ''"
-                >
-                  <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
-                </v-text-field>
-                <v-textarea
-                    v-model="selectedMetatype.description"
-                    :rules="[v => !!v || $t('editMetatype.descriptionRequired')]"
-                    required
-                    :class="(comparisonMetatype && selectedMetatype.description !== comparisonMetatype.description) ? 'edited-field' : ''"
-                >
-                  <template v-slot:label>{{$t('editMetatype.description')}} <small style="color:red" >*</small></template>
-                </v-textarea>
-              </v-form>
-              <p><span style="color:red">*</span> = {{$t('editMetatype.requiredField')}}</p>
-
-              <v-progress-linear v-if="keysLoading" indeterminate></v-progress-linear>
-              <v-data-table
-                  :headers="headers()"
-                  :items="selectedMetatype.keys"
-                  :items-per-page="100"
-                  :footer-props="{
-                     'items-per-page-options': [25, 50, 100]
-                  }"
-                  class="elevation-1"
-                  :item-class="keyItemRowBackground"
-                  sort-by="name"
+                <template v-slot:label>{{$t('editMetatype.name')}} <small style="color:red" >*</small></template>
+              </v-text-field>
+              <v-textarea
+                  v-model="selectedMetatype.description"
+                  :rules="[v => !!v || $t('editMetatype.descriptionRequired')]"
+                  required
+                  :class="(comparisonMetatype && selectedMetatype.description !== comparisonMetatype.description) ? 'edited-field' : ''"
               >
+                <template v-slot:label>{{$t('editMetatype.description')}} <small style="color:red" >*</small></template>
+              </v-textarea>
+            </v-form>
+            <p><span style="color:red">*</span> = {{$t('editMetatype.requiredField')}}</p>
 
-                <template v-slot:top>
-                  <v-toolbar flat color="white">
-                    <v-toolbar-title>{{$t("editMetatype.keys")}}</v-toolbar-title>
-                    <v-divider
-                        class="mx-4"
-                        inset
-                        vertical
-                    ></v-divider>
-                    <v-spacer></v-spacer>
-                    <create-metatype-key-dialog :metatype="metatype" @metatypeKeyCreated="loadKeys()"></create-metatype-key-dialog>
-                  </v-toolbar>
-                </template>
-                <template v-slot:[`item.actions`]="{ item }">
-                  <div v-if="($store.getters.isEditMode && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled">
-                    <edit-metatype-key-dialog
-                        :metatypeKey="item"
-                        :metatype="metatype"
-                        :icon="true"
-                        :comparison-metatype-key="(comparisonMetatype) ? comparisonMetatype.keys.find(k => k.name === item.name) : undefined"
-                        @metatypeKeyEdited="loadKeys()"></edit-metatype-key-dialog>
-                    <v-icon
-                        small
-                        @click="deleteKey(item)"
-                    >
-                      mdi-delete
-                    </v-icon>
-                  </div>
+            <v-progress-linear v-if="keysLoading" indeterminate></v-progress-linear>
+            <v-data-table
+                :headers="headers()"
+                :items="selectedMetatype.keys"
+                :items-per-page="100"
+                :footer-props="{
+                    'items-per-page-options': [25, 50, 100]
+                }"
+                class="elevation-1"
+                :item-class="keyItemRowBackground"
+                sort-by="name"
+            >
 
+              <template v-slot:top>
+                <v-toolbar flat color="white">
+                  <v-toolbar-title>{{$t("editMetatype.keys")}}</v-toolbar-title>
+                  <v-divider
+                      class="mx-4"
+                      inset
+                      vertical
+                  ></v-divider>
+                  <v-spacer></v-spacer>
+                  <create-metatype-key-dialog :metatype="metatype" @metatypeKeyCreated="loadKeys()"></create-metatype-key-dialog>
+                </v-toolbar>
+              </template>
+              <template v-slot:[`item.actions`]="{ item }">
+                <div v-if="($store.getters.isEditMode && !item.deleted_at) || !$store.getters.ontologyVersioningEnabled">
+                  <edit-metatype-key-dialog
+                      :metatypeKey="item"
+                      :metatype="metatype"
+                      :icon="true"
+                      :comparison-metatype-key="(comparisonMetatype) ? comparisonMetatype.keys.find(k => k.name === item.name) : undefined"
+                      @metatypeKeyEdited="loadKeys()"></edit-metatype-key-dialog>
                   <v-icon
-                      v-if="$store.getters.isEditMode && item.deleted_at"
                       small
-                      @click="undeleteKey(item)"
+                      @click="deleteKey(item)"
                   >
-                    mdi-restore
+                    mdi-delete
                   </v-icon>
-                </template>
-              </v-data-table>
-              <v-row v-if="$store.getters.isEditMode" style="margin-top: 15px">
-                <v-col :cols="3"><div class="box created"></div><p> - {{$t('metatypes.created')}}</p></v-col>
-                <v-col :cols="3"><div class="box edited"></div><p> - {{$t('metatypes.edited')}}</p></v-col>
-                <v-col :cols="3"><div class="box removed"></div><p> - {{$t('metatypes.removed')}}</p></v-col>
-              </v-row>
-            </v-col>
-          </v-row>
-        </v-container>
+                </div>
+
+                <v-icon
+                    v-if="$store.getters.isEditMode && item.deleted_at"
+                    small
+                    @click="undeleteKey(item)"
+                >
+                  mdi-restore
+                </v-icon>
+              </template>
+            </v-data-table>
+            <v-row v-if="$store.getters.isEditMode" style="margin-top: 15px">
+              <v-col :cols="3"><div class="box created mr-2"></div><p>{{$t('metatypes.created')}}</p></v-col>
+              <v-col :cols="3"><div class="box edited mr-2"></div><p>{{$t('metatypes.edited')}}</p></v-col>
+              <v-col :cols="3"><div class="box removed mr-2"></div><p>{{$t('metatypes.removed')}}</p></v-col>
+            </v-row>
+          </v-col>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>
@@ -329,20 +327,20 @@ export default class EditMetatypeDialog extends Vue {
 
   .edited-field {
     input {
-      background: #FB8C00;
+      background: #CD7F32;
       color: white !important;
-      box-shadow: -5px 0 0 #FB8C00;
+      box-shadow: -5px 0 0 #CD7F32;
     }
 
     textarea {
-      background: #FB8C00;
+      background: #CD7F32;
       color: white !important;
-      box-shadow: -5px 0 0 #FB8C00;
+      box-shadow: -5px 0 0 #CD7F32;
     }
   }
 
     .edited-item {
-      background: #FB8C00;
+      background: #CD7F32;
       color: white;
 
       &:hover {
@@ -409,7 +407,7 @@ export default class EditMetatypeDialog extends Vue {
     }
 
     .edited {
-      background-color: #FB8C00;
+      background-color: #CD7F32;
     }
 
     .removed {

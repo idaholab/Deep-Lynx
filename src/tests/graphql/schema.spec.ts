@@ -22,8 +22,7 @@ import DataStagingMapper from '../../data_access_layer/mappers/data_warehouse/im
 import DataStagingRepository from '../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import Container from '../../domain_objects/data_warehouse/ontology/container';
 import GraphQLSchemaGenerator from '../../graphql/schema';
-import {GraphQLObjectType, GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLList, GraphQLEnumType} from 'graphql';
-import GraphQLJSON from 'graphql-type-json';
+import {GraphQLObjectType, GraphQLString, GraphQLFloat, GraphQLBoolean, GraphQLList, GraphQLEnumType} from 'graphql';
 import {DataSourceFactory} from '../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import TypeTransformation, {KeyMapping} from '../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeTransformationMapper from '../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper';
@@ -40,6 +39,9 @@ describe('The GraphQL Schema Generator', async () => {
     let user: User;
 
     let maintenancePair: MetatypeRelationshipPair | undefined;
+    let carDriverPair: MetatypeRelationshipPair | undefined;
+    let driverLicensePair: MetatypeRelationshipPair | undefined;
+
     const car_metatype_keys: MetatypeKey[] = [
         new MetatypeKey({
             name: 'id',
@@ -56,13 +58,6 @@ describe('The GraphQL Schema Generator', async () => {
             required: true,
         }),
         new MetatypeKey({
-            name: 'drivers',
-            property_name: 'drivers',
-            description: 'drivers of car',
-            data_type: 'list',
-            required: true,
-        }),
-        new MetatypeKey({
             name: 'trim',
             property_name: 'trim',
             description: 'trim package',
@@ -71,6 +66,48 @@ describe('The GraphQL Schema Generator', async () => {
             required: true,
         }),
     ];
+
+    const driver_metatype_keys: MetatypeKey[] = [
+        new MetatypeKey({
+            name: 'id',
+            property_name: 'id',
+            description: 'id of driver',
+            data_type: 'string',
+            required: true,
+        }),
+        new MetatypeKey({
+            name: 'name',
+            property_name: 'name',
+            description: 'name of driver',
+            data_type: 'string',
+            required: true,
+        }),
+        new MetatypeKey({
+            name: 'age',
+            property_name: 'age',
+            description: 'age of driver',
+            data_type: 'string',
+            required: true,
+        }),
+    ];
+
+    const license_metatype_keys: MetatypeKey[] = [
+        new MetatypeKey({
+            name: 'id',
+            property_name: 'id',
+            description: 'license id',
+            data_type: 'string',
+            required: true,
+        }),
+        new MetatypeKey({
+            name: 'type',
+            property_name: 'type',
+            description: 'type of license',
+            data_type: 'enumeration',
+            options: ['learners_permit', 'drivers_license'],
+            required: true,
+        }),
+    ]
 
     const component_metatype_keys: MetatypeKey[] = [
         new MetatypeKey({
@@ -237,6 +274,16 @@ describe('The GraphQL Schema Generator', async () => {
             keys: car_metatype_keys,
         }),
         new Metatype({
+            name: 'Driver',
+            description: 'Person driving Car',
+            keys: driver_metatype_keys,
+        }),
+        new Metatype({
+            name: 'License',
+            description: 'License of Driver',
+            keys: license_metatype_keys,
+        }),
+        new Metatype({
             name: 'Manufacturer',
             description: 'Creator of Car',
             keys: manufacturer_metatype_keys,
@@ -311,7 +358,6 @@ describe('The GraphQL Schema Generator', async () => {
 
         const metatypeRepo = new MetatypeRepository();
         const created = await metatypeRepo.bulkSave(user, test_metatypes);
-
         expect(created.isError).false;
 
         const test_metatype_relationships: MetatypeRelationship[] = [
@@ -320,17 +366,25 @@ describe('The GraphQL Schema Generator', async () => {
                 name: 'parent',
                 description: 'item has parent',
             }),
+            new MetatypeRelationship({
+                container_id: containerID,
+                name: 'uses',
+                description: 'actor uses item'
+            }),
+            new MetatypeRelationship({
+                container_id: containerID,
+                name: 'has',
+                description: 'item has item'
+            })
         ];
 
         // create the relationships
         const metatypeRelationships = await relationshipMapper.BulkCreate('test suite', test_metatype_relationships);
         expect(metatypeRelationships.isError).false;
         expect(metatypeRelationships.value).not.empty;
-
         resultMetatypeRelationships = metatypeRelationships.value;
 
-        const pairs = await MetatypeRelationshipPairMapper.Instance.Create(
-            'test suite',
+        const test_metatype_relationship_pairs: MetatypeRelationshipPair[] = [
             new MetatypeRelationshipPair({
                 name: 'owns',
                 description: 'owns another entity',
@@ -340,12 +394,44 @@ describe('The GraphQL Schema Generator', async () => {
                 relationship_type: 'one:one',
                 container_id: containerID,
             }),
-        );
+            new MetatypeRelationshipPair({
+                name: 'drives',
+                description: 'actor drives item',
+                origin_metatype: test_metatypes.find((m) => m.name === 'Driver')!.id!,
+                destination_metatype: test_metatypes.find((m) => m.name === 'Car')!.id!,
+                relationship: resultMetatypeRelationships.find((m) => m.name === 'uses')!.id!,
+                relationship_type: 'one:many',
+                container_id: containerID,
+            }),
+            new MetatypeRelationshipPair({
+                name: 'holds',
+                description: 'actor holds item',
+                origin_metatype: test_metatypes.find((m) => m.name === 'Driver')!.id!,
+                destination_metatype: test_metatypes.find((m) => m.name === 'License')!.id!,
+                relationship: resultMetatypeRelationships.find((m) => m.name === 'uses')!.id!,
+                relationship_type: 'one:one',
+                container_id: containerID,
+            }),
+            new MetatypeRelationshipPair({
+                name: 'has',
+                description: 'item has item',
+                origin_metatype: test_metatypes.find((m) => m.name === 'Car')!.id!,
+                destination_metatype: test_metatypes.find((m) => m.name === 'Maintenance')!.id!,
+                relationship: resultMetatypeRelationships.find((m) => m.name === 'has')!.id!,
+                relationship_type: 'one:one',
+                container_id: containerID,
+            }),
+        ];
 
+        const pairs = await MetatypeRelationshipPairMapper.Instance.BulkCreate(
+            'test suite',
+            test_metatype_relationship_pairs
+        );
         expect(pairs.isError).false;
         expect(pairs.value).not.empty;
-
-        maintenancePair = pairs.value;
+        maintenancePair = pairs.value[0];
+        carDriverPair = pairs.value[1];
+        driverLicensePair = pairs.value[2];
 
         const exp = await DataSourceMapper.Instance.Create(
             'test suite',
@@ -357,10 +443,8 @@ describe('The GraphQL Schema Generator', async () => {
                 data_format: 'json',
             }),
         );
-
         expect(exp.isError).false;
         expect(exp.value).not.empty;
-
         dataSourceID = exp.value.id!;
 
         const mapping = new TypeMapping({
@@ -368,11 +452,8 @@ describe('The GraphQL Schema Generator', async () => {
             data_source_id: exp.value.id!,
             sample_payload: test_payload[0],
         });
-
         const saved = await new TypeMappingRepository().save(mapping, user);
-
         expect(saved.isError).false;
-
         typeMappingID = mapping.id!;
         typeMapping = mapping;
 
@@ -398,96 +479,159 @@ describe('The GraphQL Schema Generator', async () => {
         expect(inserted.value.id).not.undefined;
 
         const stagingRepo = new DataStagingRepository();
-
         const insertedData = await stagingRepo.where().importID('eq', newImport.value.id).list({limit: 1});
         expect(insertedData.isError).false;
         expect(insertedData.value).not.empty;
-
         data = insertedData.value[0];
 
         const dataSource = new DataSourceFactory().fromDataSourceRecord(exp.value);
 
         // create the transformations and process
         const carMaintenanceKeys = test_metatypes.find((m) => m.name === 'Maintenance')!.keys;
-        // first generate all transformations for the type mapping, and set active
-        const maintenanceTransformation = new TypeTransformation({
-            container_id: containerID,
-            data_source_id: dataSource!.DataSourceRecord!.id!,
-            type_mapping_id: typeMappingID,
-            keys: [
-                new KeyMapping({
-                    key: 'car_maintenance.id',
-                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'id')?.id,
-                }),
-                new KeyMapping({
-                    key: 'car_maintenance.name',
-                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'name')?.id,
-                }),
-                new KeyMapping({
-                    key: 'car_maintenance.start_date',
-                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'start date')?.id,
-                }),
-                new KeyMapping({
-                    key: 'car_maintenance.average_visits_per_year',
-                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'average visits per year')?.id,
-                }),
-                new KeyMapping({
-                    key: 'car_maintenance.visit_dates',
-                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'visit dates')?.id,
-                }),
-            ],
-            metatype_id: test_metatypes.find((m) => m.name === 'Maintenance')!.id,
-            unique_identifier_key: 'car_maintenance.id',
-        });
-
-        let result = await TypeTransformationMapper.Instance.Create('test suite', maintenanceTransformation);
-        expect(result.isError).false;
-
+        const carDriverKeys = test_metatypes.find((m) => m.name === 'Driver')!.keys;
+        const driverLicenseKeys = test_metatypes.find((m) => m.name === 'License')!.keys;
         const entryKeys = test_metatypes.find((m) => m.name === 'Maintenance Entry')!.keys;
+        // first generate all transformations for the type mapping, and set active
+        const nodeTransformations: TypeTransformation[] = [
+            new TypeTransformation({
+                container_id: containerID,
+                data_source_id: dataSource!.DataSourceRecord!.id!,
+                type_mapping_id: typeMappingID,
+                keys: [
+                    new KeyMapping({
+                        key: 'car_maintenance.id',
+                        metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'id')?.id,
+                    }),
+                    new KeyMapping({
+                        key: 'car_maintenance.name',
+                        metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'name')?.id,
+                    }),
+                    new KeyMapping({
+                        key: 'car_maintenance.start_date',
+                        metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'start date')?.id,
+                    }),
+                    new KeyMapping({
+                        key: 'car_maintenance.average_visits_per_year',
+                        metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'average visits per year')?.id,
+                    }),
+                    new KeyMapping({
+                        key: 'car_maintenance.visit_dates',
+                        metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'visit dates')?.id,
+                    }),
+                ],
+                metatype_id: test_metatypes.find((m) => m.name === 'Maintenance')!.id,
+                unique_identifier_key: 'car_maintenance.id',
+            }),
+            new TypeTransformation({
+                container_id: containerID,
+                data_source_id: dataSource!.DataSourceRecord!.id!,
+                type_mapping_id: typeMappingID,
+                keys: [
+                    new KeyMapping({
+                        key: 'driver.id',
+                        metatype_key_id: carDriverKeys!.find((key) => key.name === 'id')?.id,
+                    }),
+                    new KeyMapping({
+                        key: 'driver.name',
+                        metatype_key_id: carDriverKeys!.find((key) => key.name === 'name')?.id,
+                    }),
+                    new KeyMapping({
+                        key: 'driver.age',
+                        metatype_key_id: carDriverKeys!.find((key) => key.name === 'age')?.id,
+                    }),
+                ],
+                metatype_id: test_metatypes.find((m) => m.name === 'Driver')!.id,
+                unique_identifier_key: 'driver.id'
+            }),
+            new TypeTransformation({
+                container_id: containerID,
+                data_source_id: dataSource!.DataSourceRecord!.id!,
+                type_mapping_id: typeMappingID,
+                keys: [
+                    new KeyMapping({
+                        key: 'license.id',
+                        metatype_key_id: driverLicenseKeys!.find((key) => key.name === 'id')?.id,
+                    }),
+                    new KeyMapping({
+                        key: 'license.type',
+                        metatype_key_id: driverLicenseKeys!.find((key) => key.name === 'type')?.id,
+                    }),
+                ],
+                metatype_id: test_metatypes.find((m) => m.name === 'License')!.id,
+                unique_identifier_key: 'license.id'
+            }),
+            new TypeTransformation({
+                container_id: containerID,
+                data_source_id: dataSource!.DataSourceRecord!.id!,
+                type_mapping_id: typeMappingID,
+                keys: [
+                    new KeyMapping({
+                        key: 'car_maintenance.maintenance_entries.[].id',
+                        metatype_key_id: entryKeys!.find((key) => key.name === 'id')?.id,
+                    }),
+                    new KeyMapping({
+                        key: 'car_maintenance.maintenance_entries.[].type',
+                        metatype_key_id: entryKeys!.find((key) => key.name === 'type')?.id,
+                    }),
+                    new KeyMapping({
+                        key: 'car_maintenance.maintenance_entries.[].check_engine_light_flag',
+                        metatype_key_id: entryKeys!.find((key) => key.name === 'check engine light flag')?.id,
+                    }),
+                ],
+                metatype_id: test_metatypes.find((m) => m.name === 'Maintenance Entry')?.id,
+                unique_identifier_key: 'car_maintenance.maintenance_entries.[].id',
+                root_array: 'car_maintenance.maintenance_entries',
+            }),
+        ];
 
-        const maintenanceEntryTransformation = new TypeTransformation({
-            container_id: containerID,
-            data_source_id: dataSource!.DataSourceRecord!.id!,
-            type_mapping_id: typeMappingID,
-            keys: [
-                new KeyMapping({
-                    key: 'car_maintenance.maintenance_entries.[].id',
-                    metatype_key_id: entryKeys!.find((key) => key.name === 'id')?.id,
-                }),
-                new KeyMapping({
-                    key: 'car_maintenance.maintenance_entries.[].type',
-                    metatype_key_id: entryKeys!.find((key) => key.name === 'type')?.id,
-                }),
-                new KeyMapping({
-                    key: 'car_maintenance.maintenance_entries.[].check_engine_light_flag',
-                    metatype_key_id: entryKeys!.find((key) => key.name === 'check engine light flag')?.id,
-                }),
-            ],
-            metatype_id: test_metatypes.find((m) => m.name === 'Maintenance Entry')?.id,
-            unique_identifier_key: 'car_maintenance.maintenance_entries.[].id',
-            root_array: 'car_maintenance.maintenance_entries',
-        });
+        const nodeResult = await TypeTransformationMapper.Instance.BulkCreate('test suite', nodeTransformations);
+        expect(nodeResult.isError).false;
 
-        result = await TypeTransformationMapper.Instance.Create('test suite', maintenanceEntryTransformation);
-        expect(result.isError).false;
+        const edgeTransformations: TypeTransformation[] = [
+            new TypeTransformation({
+                container_id: containerID,
+                data_source_id: dataSource!.DataSourceRecord!.id!,
+                type_mapping_id: typeMappingID,
+                metatype_relationship_pair_id: maintenancePair!.id,
+                origin_id_key: 'car_maintenance.id',
+                origin_data_source_id: dataSource!.DataSourceRecord!.id!,
+                origin_metatype_id: test_metatypes.find((m) => m.name === 'Maintenance')!.id,
+                destination_id_key: 'car_maintenance.maintenance_entries.[].id',
+                destination_data_source_id: dataSource!.DataSourceRecord!.id!,
+                destination_metatype_id: test_metatypes.find((m) => m.name === 'Maintenance Entry')!.id,
+                root_array: 'car_maintenance.maintenance_entries',
+                keys: [],
+            }),
+            new TypeTransformation({
+                container_id: containerID,
+                data_source_id: dataSource!.DataSourceRecord!.id!,
+                type_mapping_id: typeMappingID,
+                metatype_relationship_pair_id: carDriverPair!.id,
+                origin_id_key: 'driver.id',
+                origin_data_source_id: dataSource!.DataSourceRecord!.id!,
+                origin_metatype_id: test_metatypes.find((m) => m.name === 'Driver')!.id,
+                destination_id_key: 'car.id',
+                destination_data_source_id: dataSource!.DataSourceRecord!.id!,
+                destination_metatype_id: test_metatypes.find((m) => m.name === 'Car')!.id,
+                keys: [],
+            }),
+            new TypeTransformation({
+                container_id: containerID,
+                data_source_id: dataSource!.DataSourceRecord!.id!,
+                type_mapping_id: typeMappingID,
+                metatype_relationship_pair_id: driverLicensePair!.id,
+                origin_id_key: 'driver.id',
+                origin_data_source_id: dataSource!.DataSourceRecord!.id!,
+                origin_metatype_id: test_metatypes.find((m) => m.name === 'Driver')!.id,
+                destination_id_key: 'license.id',
+                destination_data_source_id: dataSource!.DataSourceRecord!.id!,
+                destination_metatype_id: test_metatypes.find((m) => m.name === 'License')!.id,
+                keys: [],
+            }),
+        ];
 
-        const maintenanceEdgeTransformation = new TypeTransformation({
-            container_id: containerID,
-            data_source_id: dataSource!.DataSourceRecord!.id!,
-            type_mapping_id: typeMappingID,
-            metatype_relationship_pair_id: maintenancePair!.id,
-            origin_id_key: 'car_maintenance.id',
-            origin_data_source_id: dataSource!.DataSourceRecord!.id!,
-            origin_metatype_id: test_metatypes.find((m) => m.name === 'Maintenance')!.id,
-            destination_id_key: 'car_maintenance.maintenance_entries.[].id',
-            destination_data_source_id: dataSource!.DataSourceRecord!.id!,
-            destination_metatype_id: test_metatypes.find((m) => m.name === 'Maintenance Entry')!.id,
-            root_array: 'car_maintenance.maintenance_entries',
-            keys: [],
-        });
-
-        result = await TypeTransformationMapper.Instance.Create('test suite', maintenanceEdgeTransformation);
-        expect(result.isError).false;
+        const edgeResult = await TypeTransformationMapper.Instance.BulkCreate('test suite', edgeTransformations);
+        expect(edgeResult.isError).false;
 
         const active = await TypeMappingMapper.Instance.SetActive(typeMappingID);
         expect(active.isError).false;
@@ -521,6 +665,8 @@ describe('The GraphQL Schema Generator', async () => {
         // verify the types exist
         expect(typeMap['Garbage']).undefined;
         expect(typeMap['Car']).not.undefined;
+        expect(typeMap['Driver']).not.undefined;
+        expect(typeMap['License']).not.undefined;
         expect(typeMap['Manufacturer']).not.undefined;
         expect(typeMap['Tire_Pressure']).not.undefined;
         expect(typeMap['Maintenance']).not.undefined;
@@ -531,13 +677,24 @@ describe('The GraphQL Schema Generator', async () => {
         // check the fields now, make sure they're the right type
         expect((typeMap['Car'] as GraphQLObjectType).getFields()['id'].type).eq(GraphQLString);
         expect((typeMap['Car'] as GraphQLObjectType).getFields()['name'].type).eq(GraphQLString);
-        expect((typeMap['Car'] as GraphQLObjectType).getFields()['drivers'].type.toString).eq(GraphQLList(GraphQLJSON).toString);
         expect((typeMap['Car'] as GraphQLObjectType).getFields()['trim'].type.toString()).eq('Car_trim_Enum_TypeA');
         // check the enum values
-        const values = ((typeMap['Car'] as GraphQLObjectType).getFields()['trim'].type as GraphQLEnumType).getValues();
+        const carVals = ((typeMap['Car'] as GraphQLObjectType).getFields()['trim'].type as GraphQLEnumType).getValues();
+        expect(carVals.length).eq(2);
+        expect(carVals[0].name).oneOf(['le', 'lx']);
+        expect(carVals[1].name).oneOf(['le', 'lx']);
+
+        expect((typeMap['Driver'] as GraphQLObjectType).getFields()['id'].type).eq(GraphQLString);
+        expect((typeMap['Driver'] as GraphQLObjectType).getFields()['name'].type).eq(GraphQLString);
+        expect((typeMap['Driver'] as GraphQLObjectType).getFields()['age'].type).eq(GraphQLString);
+
+        expect((typeMap['License'] as GraphQLObjectType).getFields()['id'].type).eq(GraphQLString);
+        expect((typeMap['License'] as GraphQLObjectType).getFields()['type'].type.toString()).eq('License_type_Enum_TypeA');
+        // check the enum values
+        const values = ((typeMap['License'] as GraphQLObjectType).getFields()['type'].type as GraphQLEnumType).getValues();
         expect(values.length).eq(2);
-        expect(values[0].name).oneOf(['le', 'lx']);
-        expect(values[1].name).oneOf(['le', 'lx']);
+        expect(values[0].name).oneOf(['learners_permit', 'drivers_license']);
+        expect(values[1].name).oneOf(['learners_permit', 'drivers_license']);
 
         expect((typeMap['Manufacturer'] as GraphQLObjectType).getFields()['id'].type).eq(GraphQLString);
         expect((typeMap['Manufacturer'] as GraphQLObjectType).getFields()['name'].type).eq(GraphQLString);
@@ -670,6 +827,15 @@ const test_payload = [
                     ],
                 },
             ],
+        },
+        driver: {
+            id: 'UUID',
+            name: faker.name.findName(),
+            age: 14,
+        },
+        license: {
+            id: 'UUID',
+            type: 'learners_permit',
         },
     },
 ];
