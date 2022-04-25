@@ -3,7 +3,7 @@ import Result from '../../../common_classes/result';
 import MetatypeKeyMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
 import MetatypeRelationshipKeyMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper';
 import Logger from '../../../services/logger';
-import Node, {NodeMetadata} from '../data/node';
+import Node, {NodeMetadata, NodeTransformation} from '../data/node';
 import Edge, {EdgeMetadata} from '../data/edge';
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
 import {IsBoolean, IsDefined, IsEnum, IsIn, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
@@ -14,6 +14,9 @@ import MetatypeKey from '../ontology/metatype_key';
 
 import {toDate, parse} from 'date-fns';
 import TimeseriesEntry, {TimeseriesData, TimeseriesMetadata} from '../data/timeseries';
+import NodeRepository from '../../../data_access_layer/repositories/data_warehouse/data/node_repository';
+import {PoolClient} from 'pg';
+import NodeMapper from '../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 
 /*
    Condition represents a logical operation which can determine whether or not
@@ -266,6 +269,9 @@ export default class TypeTransformation extends BaseDomainClass {
     @Type(() => TransformationConfiguration)
     config: TransformationConfiguration = new TransformationConfiguration();
 
+    @IsOptional()
+    transaction?: PoolClient;
+
     constructor(input: {
         type_mapping_id: string;
         conditions?: Condition[];
@@ -318,7 +324,8 @@ export default class TypeTransformation extends BaseDomainClass {
 
     // applyTransformation will take a mapping, a transformation, and a data record
     // in order to generate an array of nodes or edges based on the transformation type
-    async applyTransformation(data: DataStaging): Promise<Result<Node[] | Edge[] | TimeseriesEntry[]>> {
+    async applyTransformation(data: DataStaging, transaction?: PoolClient): Promise<Result<Node[] | Edge[] | TimeseriesEntry[]>> {
+        this.transaction = transaction;
         return this.transform(data);
     }
 
@@ -673,8 +680,48 @@ export default class TypeTransformation extends BaseDomainClass {
         }
 
         if (this.type === 'timeseries') {
+            // we must pull the nodes based on the transformation
+            let nodeID: string = this.tab_node_id!;
+            if (!nodeID) {
+                const conversion = TypeTransformation.convertValue('string', TypeTransformation.getNestedValue(this.tab_node_key!, data.data, index));
+
+                if (conversion && conversion.converted_value) {
+                    nodeID = conversion.converted_value as string;
+                }
+            }
+
+            const matching = await new NodeRepository()
+                .where()
+                .containerID('eq', this.container_id)
+                .and()
+                .dataSourceID('eq', this.tab_data_source_id)
+                .and()
+                .metatypeID('eq', this.tab_metatype_id)
+                .and()
+                .originalDataID('eq', nodeID)
+                .list(false, {}, this.transaction);
+
+            if (matching.isError) {
+                Logger.error(`unable to list matching nodes for timeseries entry ${matching.error?.error}`);
+            } else {
+                // as long as we didn't error, make the transformation/nodes join records
+                const joins = matching.value.map(
+                    (node) =>
+                        new NodeTransformation({
+                            node_id: node.id!,
+                            transformation_id: this.id!,
+                        }),
+                );
+
+                const saved = await NodeMapper.Instance.BulkAddTransformation(joins, this.transaction);
+                if (saved.isError) {
+                    Logger.error(`unable to save node/transformation joins ${saved.error?.error}`);
+                }
+            }
+
             const entry = new TimeseriesEntry({
                 transformation_id: this.id,
+                nodes: matching.value ? matching.value.map((node) => node.id!) : undefined,
                 metadata: new TimeseriesMetadata({
                     conversions,
                     failed_conversions: failedConversions,

@@ -270,7 +270,9 @@ export default class NodeMapper extends Mapper {
     private bulkAddTransformationStatement(nodeTransformations: NodeTransformation[]): string {
         const text = `INSERT INTO node_transformations(
                        node_id,
-                       transformation_id) VALUES %L RETURNING *`;
+                       transformation_id) VALUES %L 
+                       ON CONFLICT(node_id, transformation_id) DO NOTHING
+                       RETURNING *`;
 
         const values = nodeTransformations.map((nt) => [nt.node_id, nt.transformation_id]);
 
