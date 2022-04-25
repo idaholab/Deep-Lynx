@@ -70,8 +70,6 @@ build_swagger:
   only:
     refs:
     - tags
-    except:
-    - branches
     changes:
     - API\ Documentation/Core.swagger_collection.yaml
 deploy_development:
