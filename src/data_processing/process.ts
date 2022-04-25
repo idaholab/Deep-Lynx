@@ -17,6 +17,7 @@ import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_ma
 import TimeseriesEntry, {IsTimeseries} from '../domain_objects/data_warehouse/data/timeseries';
 import Cache from '../services/cache/cache';
 import Config from '../services/config';
+import TimeseriesEntryRepository from '../data_access_layer/repositories/data_warehouse/data/timeseries_entry_repository';
 
 // ProcessData accepts a data staging record and inserts nodes and edges based
 // on matching transformation records - this acts on a single record
@@ -26,6 +27,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     const mappingRepo = new TypeMappingRepository();
     const nodeRepository = new NodeRepository();
     const edgeRepository = new EdgeRepository();
+    const timeseriesRepo = new TimeseriesEntryRepository();
 
     const transaction = await stagingMapper.startTransaction();
 
@@ -185,7 +187,17 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
         }
     }
 
-    // TODO: timeseries data insert - repository save
+    // we can't attach files to timeseries data like we can with nodes and edges currently, so unfortunately we just
+    // ignore any files that may be attached to this transformation
+    if (timeseriesToInsert.length > 0) {
+        const inserted = await timeseriesRepo.bulkSave(timeseriesToInsert, transaction.value);
+        if (inserted.isError) {
+            await stagingMapper.rollbackTransaction(transaction.value);
+
+            await stagingRepo.addError(staging.id!, `unable to create timeseries data entries from data ${inserted.error?.error}`);
+            return Promise.resolve(Result.DebugFailure(`unable to create timeseries data entries from data ${inserted.error?.error}`));
+        }
+    }
 
     const marked = await stagingRepo.setInserted(staging, transaction.value);
     if (marked.isError) {
