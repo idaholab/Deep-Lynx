@@ -29,6 +29,7 @@ build_dl_prd:
     entrypoint:
     - ''
   script:
+  - echo "Attempting build with tag ${CI_COMMIT_TAG}"
   - if [ -z "${CI_COMMIT_TAG}" ]; then echo "CI_COMMIT_TAG not set... Failing build";exit 1; fi;
   - mkdir -p /kaniko/.docker
   - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}"
@@ -37,6 +38,7 @@ build_dl_prd:
     --destination $CI_REGISTRY/$CI_REGISTRY_PATH/deep-lynx:$CI_COMMIT_TAG"
   only:
   - master
+  - tags
 build_swagger:
   stage: build
   image:
@@ -67,6 +69,7 @@ build_swagger:
   only:
     refs:
     - master
+    - tags
     changes:
     - API\ Documentation/Core.swagger_collection.yaml
 deploy_development:
@@ -97,6 +100,7 @@ deploy_acceptance:
     name: acceptance
   only:
   - master
+  - tags
 deploy_production:
   stage: deploy
   image: mcr.microsoft.com/azure-cli:latest
@@ -112,6 +116,7 @@ deploy_production:
   when: manual
   only:
   - master
+  - tags
 sast:
   stage: test
 include:
