@@ -1359,10 +1359,10 @@ export default class TransformationDialog extends Vue {
     },{
       name: this.$t("dataMapping.relationship"),
       value: 'edge'
-    },/*{
+    },{
       name: this.$t("dataMapping.tabularData"),
       value: 'timeseries'
-    }*/]
+    }]
   }
 
   isKeyMapped(key: MetatypeKeyT) {

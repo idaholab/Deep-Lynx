@@ -206,7 +206,7 @@ export default class TypeTransformationMapper extends Mapper {
             destination_data_source_id = u.destination_data_source_id::bigint,
             tab_data_source_id = u.tab_data_source_id::bigint,
             tab_metatype_id = u.tab_metatype_id::bigint,
-            tab_node_id = u.tab_node_id::bigint,
+            tab_node_id = u.tab_node_id::text,
             tab_node_key = u.tab_node_key::text,
             unique_identifier_key = u.unique_identifier_key,
             root_array = u.root_array,

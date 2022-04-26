@@ -53,7 +53,7 @@ export default class TimeseriesEntryMapper extends Mapper {
             ) VALUES %L`;
             const values = [
                 toInsert[transformationID].map((entry) => [
-                    entry.nodes.length > 0 ? entry.nodes : undefined,
+                    entry.nodes.length > 0 ? `{${entry.nodes.join(',')}}` : undefined,
                     entry.metadata,
                     ...entry.data.map((data) => data.value),
                 ]),
