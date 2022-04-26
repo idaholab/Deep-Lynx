@@ -1232,14 +1232,18 @@ export default class TransformationDialog extends Vue {
 
   @Watch('tab_node_id', {immediate: false})
   onTabNodeIDChange() {
-    // @ts-ignore
-    this.$refs.mainForm.validate()
+    if(this.$refs.mainForm){
+      // @ts-ignore
+      this.$refs.mainForm.validate()
+    }
   }
 
   @Watch('tab_node_key', {immediate: false})
   onTabNodeKeyChange() {
-    // @ts-ignore
-    this.$refs.mainForm.validate()
+    if(this.$refs.mainForm){
+      // @ts-ignore
+      this.$refs.mainForm.validate()
+    }
   }
 
   // autoPopulateMetatypeKeys attempts to match a selected metatype key's to payload
