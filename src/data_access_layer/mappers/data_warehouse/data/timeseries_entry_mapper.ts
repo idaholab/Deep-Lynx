@@ -49,7 +49,7 @@ export default class TimeseriesEntryMapper extends Mapper {
             const text = `INSERT INTO z_${transformationID}(
                                   _nodes,
                                   _metadata,
-                                  ${toInsert[transformationID][0].data.map((data) => data.column_name).join(',')}
+                                  ${toInsert[transformationID][0].data.map((data) => `"${data.column_name}"`).join(',')}
             ) VALUES %L`;
             const values = [
                 toInsert[transformationID].map((entry) => [
