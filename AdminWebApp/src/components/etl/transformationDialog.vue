@@ -751,6 +751,7 @@ import {getNestedValue} from "@/utilities";
 import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import SearchMetatypes from "@/components/ontology/metatypes/searchMetatypes.vue";
 import {v4 as uuidv4} from 'uuid'
+import Config from "@/config";
 
 @Component({
   components: {SelectDataSource, SearchMetatypes},
@@ -1374,16 +1375,22 @@ export default class TransformationDialog extends Vue {
   }
 
   payloadTypes() {
-    return [{
+    const types = [{
       name: this.$t("dataMapping.record"),
       value: 'node'
     },{
       name: this.$t("dataMapping.relationship"),
       value: 'edge'
-    },{
-      name: this.$t("dataMapping.tabularData"),
-      value: 'timeseries'
     }]
+
+    if(Config.timeSeriesEnabled) {
+     types.push({
+       name: this.$t("dataMapping.tabularData"),
+       value: 'timeseries'
+     })
+    }
+
+    return types
   }
 
   isKeyMapped(key: MetatypeKeyT) {
