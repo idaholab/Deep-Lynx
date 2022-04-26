@@ -1633,7 +1633,7 @@ export default class TransformationDialog extends Vue {
       return true
     }
 
-    const matches =/^[a-zA-Z][a-zA-Z0-9_]{1,15}(?!\s)$/.exec(value)
+    const matches =/^[a-zA-Z][a-zA-Z0-9_]{1,30}(?!\s)$/.exec(value)
     if(!matches || matches.length === 0) {
       return this.$t('dataMapping.nameRequirements')
     }
@@ -1646,7 +1646,7 @@ export default class TransformationDialog extends Vue {
       return this.$t('dataMapping.columnNameMustBeUnique')
     }
 
-    const matches = /^[a-zA-Z][a-zA-Z0-9_]{1,15}$/.exec(value)
+    const matches = /^[a-zA-Z][a-zA-Z0-9_]{1,30}$/.exec(value)
     if(!matches || matches.length === 0) {
       return this.$t('dataMapping.columnNameRequirements')
     }
