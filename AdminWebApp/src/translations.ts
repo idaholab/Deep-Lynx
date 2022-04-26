@@ -645,6 +645,7 @@ export default {
                 'Data may have already been generated using this Transformation. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Transformation. If you would like to keep this data and orphan it, please uncheck the box below.',
         },
         dataMapping: {
+            nameRequirements: 'Names must start with a letter and contain only letters, numbers and underscores. Spaces are not allowed.',
             isPrimaryTimestamp: 'Primary Timestamp',
             columnNameRequirements:
                 'Column names must start with a letter and must only contain letters, numbers and underscores - must be between 2 and 15 characters in length.',

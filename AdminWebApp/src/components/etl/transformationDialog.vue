@@ -72,6 +72,7 @@
 
                 <v-text-field
                     v-model="name"
+                    :rules="[validName(name)]"
                 >
                   <template v-slot:label>{{$t('dataMapping.name')}} <small>{{$t('dataMapping.optional')}}</small></template>
                 </v-text-field>
@@ -1622,6 +1623,19 @@ export default class TransformationDialog extends Vue {
   tabNodeValid(){
     if((!this.tab_node_key || this.tab_node_key === '') && (!this.tab_node_id || this.tab_node_id ==='')) {
       return this.$t('dataMapping.required')
+    }
+
+    return true
+  }
+
+  validName(value: any) {
+    if(!value) {
+      return true
+    }
+
+    const matches =/^[a-zA-Z][a-zA-Z0-9_]{1,15}(?!\s)$/.exec(value)
+    if(!matches || matches.length === 0) {
+      return this.$t('dataMapping.nameRequirements')
     }
 
     return true
