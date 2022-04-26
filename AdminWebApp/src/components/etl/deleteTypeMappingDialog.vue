@@ -11,7 +11,7 @@
       <v-btn v-if="!displayIcon" color="primary" dark class="mt-2" v-on="on">{{$t("deleteTypeMapping.deleteTypeMapping")}}</v-btn>
     </template>
 
-    <v-card class="pt-1 pb-3 px-2" v-if="isDelete">
+    <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
         <span class="headline text-h3">{{$t('deleteTypeMapping.deleteTitle')}}</span>
       </v-card-title>
