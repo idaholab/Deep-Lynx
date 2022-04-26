@@ -1,10 +1,11 @@
-import {BaseDomainClass} from '../../../common_classes/base_domain_class';
+import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
 import {IsArray, IsObject, IsOptional, IsString, ValidateIf, ValidateNested} from 'class-validator';
 import {Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Metatype, {MetatypeID} from '../ontology/metatype';
 import Container from '../ontology/container';
 import Edge from './edge';
 import {Conversion} from '../etl/type_transformation';
+import TimeseriesEntry from './timeseries';
 
 export class NodeMetadata {
     @IsOptional()
@@ -120,8 +121,25 @@ export default class Node extends BaseDomainClass {
     }
 }
 
+export class NodeTransformation extends NakedDomainClass {
+    @IsString()
+    node_id?: string;
+
+    @IsString()
+    transformation_id?: string;
+
+    constructor(input: {node_id: string; transformation_id: string}) {
+        super();
+
+        if (input) {
+            this.node_id = input.node_id;
+            this.transformation_id = input.transformation_id;
+        }
+    }
+}
+
 // type guard for differentiating an array of nodes from either array of nodes or edges
-export function IsNodes(set: Node[] | Edge[]): set is Node[] {
+export function IsNodes(set: Node[] | Edge[] | TimeseriesEntry[]): set is Node[] {
     // technically an empty array could be a set of NodeT
     if (Array.isArray(set) && set.length === 0) return true;
 

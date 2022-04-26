@@ -143,7 +143,7 @@ export default class TypeTransformationRepository extends Repository implements 
         await new TypeMappingRepository().deleteCached(t.type_mapping_id!);
 
         // now we create the hypertable IF NEEDED, lack of both metatype and pair indicate this is timeseries transformation
-        if(!t.metatype_id && !t.metatype_relationship_pair_id) {
+        if(t.type === 'timeseries' && Config.timescaledb_enabled) {
             const built = await this.#mapper.CreateHypertable(t)
             if(built.isError) Logger.error(`unable to create hypertable for transformation`)
         }

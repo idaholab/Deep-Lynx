@@ -330,6 +330,7 @@ export type TypeMappingTransformationConfiguration = {
 
 export type TypeMappingTransformationT = {
     id: string;
+    name: string;
     root_array: string;
     type_mapping_id: string;
     type: string;

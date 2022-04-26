@@ -556,6 +556,7 @@ export default {
             stopNodes: 'Stop Nodes',
             valueNodes: 'Value Nodes',
             dangerZone: 'Advanced Settings',
+
             dangerZoneWarning:
                 'These settings are either experimental or highly technically and could adversely affect the operation of your Data Source. Modify these settings only if you know what you are doing',
             ifcSettings: {
@@ -644,6 +645,11 @@ export default {
                 'Data may have already been generated using this Transformation. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Transformation. If you would like to keep this data and orphan it, please uncheck the box below.',
         },
         dataMapping: {
+            nameRequirements:
+                'Names must start with a letter and contain only letters, numbers and underscores. Spaces are not allowed and it must be between 2 and 30 characters in length.',
+            isPrimaryTimestamp: 'Primary Timestamp',
+            columnNameRequirements:
+                'Column names must start with a letter and must only contain letters, numbers and underscores - must be between 2 and 30 characters in length.',
             tabularData: 'Time-series Data',
             deprecated: 'Deprecated Transformation',
             deprecatedTooltip:
@@ -666,7 +672,7 @@ export default {
             record: 'Node',
             relationship: 'Relationship',
             typeMapping: 'Type Mapping',
-            resultingTypeName: 'Resulting Metatype/Metatype Relationship',
+            resultingTypeName: 'Metatype/Metatype Relationship/Name',
             applicableToCurrentData: 'Applicable To Sample',
             metatypePropertyMapping: 'Property Mapping',
             expression: 'Expression',
@@ -675,12 +681,15 @@ export default {
             editTransformation: 'Edit Transformation',
             and: 'AND',
             or: 'OR',
+            name: 'Name',
             subexpressions: 'Subexpressions',
             subexpressionsHelp:
                 'Subexpressions allow for more complicated conditions to be created by enabling the use of AND/OR expressions when applying conditions.',
             chooseRelationship: 'Choose Relationship',
             createNewTransformation: 'Create New Transformation',
             optional: 'optional',
+            editingTimeseriesDisabled:
+                'Currently it is not possible for you to edit the table generated as part of this transformation. If you require a different structure, create a new transformation.',
             rootArray: 'Root Array',
             rootArrayHelp: 'Selecting a root array means this transformation will be applied for every object contained in the selected root array.',
             conditions: 'Condition(s)',
@@ -731,7 +740,7 @@ export default {
             typeToSearchRelationship: 'Type to Search Available Metatype Relationship Pairs',
             enabled: 'Enabled',
             createdAt: 'Created At',
-            resultingTypes: 'Resulting Metatype/Metatype Relationship',
+            resultingTypes: 'Metatype/Metatype Relationship/Name',
             requiredField: 'Required Field',
             dateFormatString: 'Date Format String(blank for ISO)',
             dateFormatStringHelp: 'Formatting your date/time',
