@@ -217,6 +217,7 @@
             <div v-for="transformation in item.transformations" :key="transformation.id">
               <span :class="isDeprecated(transformation)">{{transformation.metatype_name}}</span>
               <span :class="isDeprecated(transformation)">{{transformation.metatype_relationship_pair_name}}</span>
+              <span :class="isDeprecated(transformation)">{{transformation.name}}</span>
             </div>
           </template>
 

@@ -164,6 +164,10 @@ export default class TypeTransformation extends BaseDomainClass {
     @IsString()
     id?: string;
 
+    @IsOptional()
+    @IsString()
+    name?: string;
+
     @IsString()
     type_mapping_id?: string;
 
@@ -294,11 +298,13 @@ export default class TypeTransformation extends BaseDomainClass {
         container_id?: string;
         data_source_id?: string;
         config?: TransformationConfiguration;
+        name?: string;
     }) {
         super();
 
         if (input) {
             this.type_mapping_id = input.type_mapping_id;
+            if (input.name) this.name = input.name;
             if (input.conditions) this.conditions = input.conditions;
             if (input.keys) this.keys = input.keys;
             if (input.type) this.type = input.type;

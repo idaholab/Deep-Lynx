@@ -130,6 +130,7 @@ export default class TypeTransformationMapper extends Mapper {
     // queries more easily.
     private createStatement(userID: string, ...t: TypeTransformation[]): string {
         const text = `WITH ins as(INSERT INTO type_mapping_transformations(
+            name, 
             keys,
             type,
             type_mapping_id,
@@ -164,6 +165,7 @@ export default class TypeTransformationMapper extends Mapper {
                  LEFT JOIN metatype_relationship_pairs ON ins.metatype_relationship_pair_id = metatype_relationship_pairs.id
         `;
         const values = t.map((tt) => [
+            tt.name,
             JSON.stringify(tt.keys),
             tt.type,
             tt.type_mapping_id,
@@ -192,6 +194,7 @@ export default class TypeTransformationMapper extends Mapper {
 
     private fullUpdateStatement(userID: string, ...t: TypeTransformation[]): string {
         const text = `WITH ins as(UPDATE type_mapping_transformations as t SET
+            name = u.name::text,
             keys = u.keys::jsonb,
             type = u.type::varchar,
             type_mapping_id = u.type_mapping_id::bigint,
@@ -215,6 +218,7 @@ export default class TypeTransformationMapper extends Mapper {
             modified_at = NOW()
             FROM (VALUES %L) as u(
                             id,
+                            name,
                             keys,
                             type,
                             type_mapping_id,
@@ -249,6 +253,7 @@ export default class TypeTransformationMapper extends Mapper {
                  LEFT JOIN metatype_relationship_pairs ON ins.metatype_relationship_pair_id = metatype_relationship_pairs.id`;
         const values = t.map((tt) => [
             tt.id,
+            tt.name,
             JSON.stringify(tt.keys),
             tt.type,
             tt.type_mapping_id,

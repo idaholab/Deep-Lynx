@@ -5,3 +5,4 @@ CREATE TABLE node_transformations (
 );
 
 ALTER TABLE type_mapping_transformations ALTER COLUMN tab_node_id TYPE text;
+ALTER TABLE type_mapping_transformations ADD COLUMN name text DEFAULT NULL;

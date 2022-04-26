@@ -6,7 +6,7 @@
           small
           class="mr-2"
           v-on="on"
-          @click="isDelete = true; initiate()"
+          @click="initiate()"
       >mdi-delete</v-icon>
       <v-btn v-if="!displayIcon" color="primary" dark class="mt-2" v-on="on">{{$t("deleteTypeMapping.deleteTypeMapping")}}</v-btn>
     </template>
