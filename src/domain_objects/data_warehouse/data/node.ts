@@ -59,6 +59,10 @@ export default class Node extends BaseDomainClass {
         return this.metatype ? this.metatype.id! : '';
     }
 
+    set metatype_id(value: any) {
+        this.metatype ?  this.metatype.id! = value : this.metatype = new Metatype({id: value});
+    }
+
     @IsOptional()
     metatype_name?: string;
 
