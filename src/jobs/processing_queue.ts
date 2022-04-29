@@ -21,7 +21,10 @@ void PostgresAdapter.Instance.init().then(() => {
             write(chunk: any, encoding: string, callback: (error?: Error | null) => void) {
                 const stagingRecord = plainToClass(DataStaging, chunk as object);
                 ProcessData(stagingRecord)
-                    .then(() => {
+                    .then((result) => {
+                        if (result.isError) {
+                            Logger.error(`processing error: ${result.error?.error}`);
+                        }
                         callback();
                     })
                     .catch((e) => {
