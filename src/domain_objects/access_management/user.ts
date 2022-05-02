@@ -164,6 +164,27 @@ export class User extends BaseDomainClass {
     }
 }
 
+// prettier-ignore
+// eslint-disable-next-line max-len
+export type ReturnUser = Omit<User, 'password' | 'permissions' | 'roles' | 'keys' | 'removedKeys' | 'addKey' | 'removeKey' | 'onDecodeError' | 'validationErrors' | 'replaceKeys'>;
+
+export function UserToReturnUser(user: User): ReturnUser {
+    return {
+        id: user.id,
+        identity_provider: user.identity_provider,
+        identity_provider_id: user.identity_provider_id,
+        display_name: user.display_name,
+        email: user.email,
+        admin: user.admin,
+        active: user.active,
+        reset_required: user.reset_required,
+        reset_token: user.reset_token,
+        email_valid: user.email_valid,
+        email_validation_token: user.email_validation_token,
+        type: user.type,
+    };
+}
+
 /*
  KeyPair represents an API Key/Secret combination used by outside services to
  gain an access token for authentication against Deep Lynx
