@@ -31,10 +31,10 @@
         >
           {{$t("dataMapping.viewArchivedTransformation")}}
         </span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
-        <v-row>    
+        <v-row>
           <v-col :cols="12" style="position: sticky; top: 0px; z-index: 99; background: white" >
             <div >
               <h4>{{$t('typeTransformation.currentDataSet')}}<info-tooltip :message="$t('dataMapping.samplePayloadHelp')"></info-tooltip> </h4>
@@ -113,7 +113,6 @@
                             v-if="!rootArray"
                             :items="payloadKeys"
                             v-model="uniqueIdentifierKey"
-                            :rules="[v => !!v || 'Item is required']"
                             clearable
                         >
 
@@ -124,7 +123,6 @@
                             v-if="rootArray"
                             :items="payloadKeys"
                             v-model="uniqueIdentifierKey"
-                            :rules="[v => !!v || 'Item is required']"
                             clearable
                         >
                           <template v-slot:label>{{$t('dataMapping.uniqueIdentifierKey')}}</template>
