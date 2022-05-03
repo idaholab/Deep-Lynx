@@ -16,7 +16,6 @@ import {test_keys} from '../../etl/type_transformation_mapper.spec';
 import TypeTransformationMapper from '../../../../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper';
 import TypeTransformation, {KeyMapping} from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 import TimeseriesEntry, {TimeseriesData} from '../../../../domain_objects/data_warehouse/data/timeseries';
-import TimeseriesEntryMapper from '../../../../data_access_layer/mappers/data_warehouse/data/timeseries_entry_mapper';
 import TimeseriesEntryRepository from '../../../../data_access_layer/repositories/data_warehouse/data/timeseries_entry_repository';
 
 describe('A Timeseries Repository', async () => {
@@ -24,7 +23,7 @@ describe('A Timeseries Repository', async () => {
     let transformationID: string = '';
     let transformation2ID: string = '';
 
-    // this covers testing the hypertable creeation and deletion as well
+    // this covers testing the hypertable creation and deletion as well
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
             Logger.debug('skipping export tests, no storage layer');
@@ -246,6 +245,144 @@ describe('A Timeseries Repository', async () => {
         const repo = new TimeseriesEntryRepository();
         const saved = await repo.bulkSave([entry, entry2]);
         expect(saved.isError, saved.error?.error).false;
+
+        return Promise.resolve();
+    });
+
+    it('can query on fields', async () => {
+        const entries = [
+            new TimeseriesEntry({
+                transformation_id: transformationID,
+                data: [
+                    new TimeseriesData({
+                        column_name: 'radius',
+                        value_type: 'float',
+                        value: 40.1,
+                    }),
+                    new TimeseriesData({
+                        column_name: 'color',
+                        value_type: 'string',
+                        value: 'blue',
+                    }),
+                    new TimeseriesData({
+                        column_name: 'open',
+                        value_type: 'boolean',
+                        value: true,
+                    }),
+                    new TimeseriesData({
+                        column_name: 'at',
+                        value_type: 'timestamp',
+                        value: new Date(),
+                    }),
+                ],
+            }),
+            new TimeseriesEntry({
+                transformation_id: transformationID,
+                data: [
+                    new TimeseriesData({
+                        column_name: 'radius',
+                        value_type: 'float',
+                        value: 0.2,
+                    }),
+                    new TimeseriesData({
+                        column_name: 'color',
+                        value_type: 'string',
+                        value: 'blue',
+                    }),
+                    new TimeseriesData({
+                        column_name: 'open',
+                        value_type: 'boolean',
+                        value: false,
+                    }),
+                    new TimeseriesData({
+                        column_name: 'at',
+                        value_type: 'timestamp',
+                        value: new Date(),
+                    }),
+                ],
+            }),
+        ];
+
+        let repo = new TimeseriesEntryRepository(transformationID);
+
+        const saved = await repo.bulkSave(entries);
+        expect(saved.isError, saved.error?.error).false;
+
+        // now we try to build a histogram
+        let results = await repo.where().query('open', 'eq', true, 'boolean').list();
+        expect(results.isError, results.error?.error).false;
+        expect(results.value.length).eq(1);
+
+        repo = new TimeseriesEntryRepository(transformationID);
+        results = await repo.where().query('at', '<', new Date()).list();
+        expect(results.isError, results.error?.error).false;
+        expect(results.value.length).eq(2);
+
+        return Promise.resolve();
+    });
+
+    it('can generate a histogram', async () => {
+        const entries = [
+            new TimeseriesEntry({
+                transformation_id: transformationID,
+                data: [
+                    new TimeseriesData({
+                        column_name: 'radius',
+                        value_type: 'float',
+                        value: 40.1,
+                    }),
+                    new TimeseriesData({
+                        column_name: 'color',
+                        value_type: 'string',
+                        value: 'blue',
+                    }),
+                    new TimeseriesData({
+                        column_name: 'open',
+                        value_type: 'boolean',
+                        value: true,
+                    }),
+                    new TimeseriesData({
+                        column_name: 'at',
+                        value_type: 'timestamp',
+                        value: new Date(),
+                    }),
+                ],
+            }),
+            new TimeseriesEntry({
+                transformation_id: transformationID,
+                data: [
+                    new TimeseriesData({
+                        column_name: 'radius',
+                        value_type: 'float',
+                        value: 0.2,
+                    }),
+                    new TimeseriesData({
+                        column_name: 'color',
+                        value_type: 'string',
+                        value: 'blue',
+                    }),
+                    new TimeseriesData({
+                        column_name: 'open',
+                        value_type: 'boolean',
+                        value: false,
+                    }),
+                    new TimeseriesData({
+                        column_name: 'at',
+                        value_type: 'timestamp',
+                        value: new Date(),
+                    }),
+                ],
+            }),
+        ];
+
+        const repo = new TimeseriesEntryRepository(transformationID);
+
+        const saved = await repo.bulkSave(entries);
+        expect(saved.isError, saved.error?.error).false;
+
+        // now we try to build a histogram
+        const results = await repo.histogram('radius', 0, 100, 5, ['color', 'open']).list();
+        expect(results.isError, results.error?.error).false;
 
         return Promise.resolve();
     });

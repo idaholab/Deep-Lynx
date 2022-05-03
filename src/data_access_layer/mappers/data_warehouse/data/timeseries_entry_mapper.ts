@@ -52,7 +52,7 @@ export default class TimeseriesEntryMapper extends Mapper {
                                   ${toInsert[transformationID][0].data.map((data) => `"${data.column_name}"`).join(',')}
             ) VALUES %L`;
             const values = [
-                toInsert[transformationID].map((entry) => [
+                ...toInsert[transformationID].map((entry) => [
                     entry.nodes.length > 0 ? `{${entry.nodes.join(',')}}` : undefined,
                     entry.metadata,
                     ...entry.data.map((data) => data.value),

@@ -98,6 +98,12 @@ export default class NodeMapper extends Mapper {
         return super.runStatement(this.removeFile(id, transformationID));
     }
 
+    public ListTransformationsForNode(nodeID: string): Promise<Result<NodeTransformation[]>> {
+        return super.rows<NodeTransformation>(this.listTransformationsStatement(nodeID), {
+            resultClass: NodeTransformation,
+        });
+    }
+
     public async Delete(id: string, transaction?: PoolClient): Promise<Result<boolean>> {
         const edgesDeleted = await super.runStatement(this.deleteEdgesStatement(id), {transaction});
         if (edgesDeleted.isError) return Promise.resolve(Result.Pass(edgesDeleted));
@@ -283,6 +289,13 @@ export default class NodeMapper extends Mapper {
         return {
             text: `DELETE FROM node_transformations WHERE node_id = $1 AND transformation_id = $2`,
             values: [nodeID, transformationID],
+        };
+    }
+
+    private listTransformationsStatement(nodeID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM node_transformations WHERE node_id = $1`,
+            values: [nodeID],
         };
     }
 }
