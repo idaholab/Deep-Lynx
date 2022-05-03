@@ -72,6 +72,10 @@ export default class TypeTransformationMapper extends Mapper {
         return super.rows<TypeTransformation>(this.listByMapping(typeMappingID), {resultClass});
     }
 
+    public async ListFromIDs(ids: string[]): Promise<Result<TypeTransformation[]>> {
+        return super.rows(this.listFromIDsStatement(ids), {resultClass});
+    }
+
     public async BulkDelete(transformations: TypeTransformation[], transaction?: PoolClient): Promise<Result<boolean>> {
         transformations.forEach((t) => {
             void this.DeleteHypertable(t.id!);
@@ -444,6 +448,13 @@ export default class TypeTransformationMapper extends Mapper {
     private deleteHypertableStatement(transformationID: string): string {
         const text = `DROP TABLE IF EXISTS %s`;
         const values = ['z_' + transformationID];
+
+        return format(text, values);
+    }
+
+    private listFromIDsStatement(ids: string[]): string {
+        const text = `SELECT * FROM type_mapping_transformations WHERE id IN(%L)`;
+        const values = ids;
 
         return format(text, values);
     }

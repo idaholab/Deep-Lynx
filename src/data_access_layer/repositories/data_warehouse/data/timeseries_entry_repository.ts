@@ -1,14 +1,19 @@
-import {Repository} from '../../repository';
+import {QueryOptions, Repository} from '../../repository';
 import TimeseriesEntry from '../../../../domain_objects/data_warehouse/data/timeseries';
 import {PoolClient} from 'pg';
 import Result from '../../../../common_classes/result';
 import TimeseriesEntryMapper from '../../../mappers/data_warehouse/data/timeseries_entry_mapper';
 
+const format = require('pg-format');
+
 export default class TimeseriesEntryRepository extends Repository {
     #mapper: TimeseriesEntryMapper = TimeseriesEntryMapper.Instance;
+    #groupBy?: string[];
 
-    constructor() {
-        super('');
+    // transformationID is optional and should only be provided if this repository is going to be used for querying a
+    // timeseries table
+    constructor(transformationID?: string) {
+        super(transformationID ? `z_${transformationID}` : '');
     }
 
     async bulkSave(entries: TimeseriesEntry[], transaction?: PoolClient): Promise<Result<boolean>> {
@@ -45,5 +50,39 @@ export default class TimeseriesEntryRepository extends Repository {
         }
 
         return Promise.resolve(Result.Success(true));
+    }
+
+    histogram(column: string, min: string | number, max: string | number, nbuckets: number, additionalColumns?: string[]) {
+        let text = '';
+        let values: any[] = [];
+
+        if (additionalColumns && additionalColumns.length > 0) {
+            text = `SELECT ${additionalColumns.join(',')}, histogram(%s, %L::numeric, %L::numeric, %L::integer) FROM ${this._tableName} as t`;
+            values = [column, min, max, nbuckets];
+        } else {
+            text = `SELECT histogram(%s, %L::numeric, %L::numeric, %L::integer) FROM ${this._tableName} as t`;
+            values = [column, min, max, nbuckets];
+        }
+
+        this._rawQuery[0] = format(text, ...values);
+        if (this.#groupBy && additionalColumns) {
+            this.#groupBy.push(...additionalColumns);
+        } else if (additionalColumns) {
+            this.#groupBy = additionalColumns;
+        }
+
+        return this;
+    }
+
+    list(queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<any[]>> {
+        if (queryOptions && queryOptions.groupBy && this.#groupBy) {
+            queryOptions.groupBy = [queryOptions.groupBy, ...this.#groupBy].join(',');
+        } else if (queryOptions && this.#groupBy) {
+            queryOptions.groupBy = this.#groupBy.join(',');
+        } else if (this.#groupBy) {
+            queryOptions = {groupBy: this.#groupBy.join(',')};
+        }
+
+        return super.findAll<any>(queryOptions, {transaction});
     }
 }

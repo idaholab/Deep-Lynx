@@ -7,6 +7,8 @@ import Node from '../../../../domain_objects/data_warehouse/data/node';
 import EdgeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import NodeLeafRepository from '../../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
+import GraphQLSchemaGenerator from '../../../../graphql/schema';
+import {graphql} from 'graphql';
 
 const nodeRepo = new NodeRepository();
 const edgeRepo = new EdgeRepository();
@@ -20,6 +22,8 @@ export default class GraphRoutes {
 
         // This should return a node and all connected nodes and connecting edges for n layers.
         app.get('/containers/:containerID/graphs/nodes/:nodeID/graph', ...middleware, authInContainer('read', 'data'), this.retrieveNthNodes);
+
+        app.post('/containers/:containerID/graphs/nodes/:nodeID/timeseries', ...middleware, authInContainer('read', 'data'), this.queryTimeseriesData);
 
         app.get('/containers/:containerID/graphs/nodes/:nodeID/files', ...middleware, authInContainer('read', 'data'), this.listFilesForNode);
         app.put('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.attachFileToNode);
@@ -105,8 +109,7 @@ export default class GraphRoutes {
                 depth = req.query.depth;
             }
             const repo = new NodeLeafRepository(req.node.id!, req.node.container_id!, depth);
-            repo
-                .list({sortBy: "depth"})
+            repo.list({sortBy: 'depth'})
                 .then((result) => {
                     result.asResponse(res);
                 })
@@ -406,5 +409,33 @@ export default class GraphRoutes {
             Result.Failure(`edge or file not found`, 404).asResponse(res);
             next();
         }
+    }
+
+    private static queryTimeseriesData(req: Request, res: Response, next: NextFunction) {
+        const generator = new GraphQLSchemaGenerator();
+
+        generator
+            .ForNode(req.node?.id!)
+            .then((schemaResult) => {
+                if (schemaResult.isError) {
+                    schemaResult.asResponse(res);
+                    return;
+                }
+
+                graphql({
+                    schema: schemaResult.value,
+                    source: req.body.query,
+                    variableValues: req.body.variables,
+                })
+                    .then((response) => {
+                        res.status(200).json(response);
+                    })
+                    .catch((e) => {
+                        res.status(500).json(e.toString());
+                    });
+            })
+            .catch((e) => {
+                res.status(500).json(e.toString());
+            });
     }
 }

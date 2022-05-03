@@ -1,5 +1,5 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import Node from '../../../../domain_objects/data_warehouse/data/node';
+import Node, {NodeTransformation} from '../../../../domain_objects/data_warehouse/data/node';
 import Result from '../../../../common_classes/result';
 import NodeMapper from '../../../mappers/data_warehouse/data/node_mapper';
 import {PoolClient} from 'pg';
@@ -262,6 +262,10 @@ export default class NodeRepository extends Repository implements RepositoryInte
         }
 
         return this.#fileMapper.ListForNode(node.id);
+    }
+
+    listTransformations(nodeID: string): Promise<Result<NodeTransformation[]>> {
+        return this.#mapper.ListTransformationsForNode(nodeID);
     }
 
     id(operator: string, value: any) {
