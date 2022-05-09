@@ -36,7 +36,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
     async findByID(id: string, transaction?: PoolClient): Promise<Result<Node>> {
         const node = await this.#mapper.Retrieve(id, transaction);
         if (!node.isError) {
-            const metatype = await this.#metatypeRepo.findByID(node.value.metatype!.id!);
+            const metatype = await this.#metatypeRepo.findByID(node.value.metatype_id);
             if (metatype.isError) Logger.error(`unable to load node's metatype`);
             else node.value.metatype = metatype.value;
         }
@@ -48,7 +48,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
     async findByCompositeID(id: string, dataSourceID: string, metatypeID: string, transaction?: PoolClient): Promise<Result<Node>> {
         const node = await this.#mapper.RetrieveByCompositeOriginalID(id, dataSourceID, metatypeID, transaction);
         if (!node.isError) {
-            const metatype = await this.#metatypeRepo.findByID(node.value.metatype!.id!);
+            const metatype = await this.#metatypeRepo.findByID(node.value.metatype_id);
             if (metatype.isError) Logger.error(`unable to load node's metatype`);
             else node.value.metatype = metatype.value;
         }

@@ -51,6 +51,7 @@ export default class Node extends BaseDomainClass {
         },
         {toClassOnly: true},
     )
+    @Type(() => Metatype)
     metatype: Metatype | undefined;
 
     // these two getters are to maintain the original api response for nodes
@@ -60,7 +61,7 @@ export default class Node extends BaseDomainClass {
     }
 
     set metatype_id(value: any) {
-        this.metatype ?  this.metatype.id! = value : this.metatype = new Metatype({id: value});
+        this.metatype ? (this.metatype.id = value) : (this.metatype = new Metatype({id: value}));
     }
 
     @IsOptional()
@@ -132,12 +133,17 @@ export class NodeTransformation extends NakedDomainClass {
     @IsString()
     transformation_id?: string;
 
-    constructor(input: {node_id: string; transformation_id: string}) {
+    @IsString()
+    @IsOptional()
+    name?: string;
+
+    constructor(input: {node_id: string; transformation_id: string; name?: string}) {
         super();
 
         if (input) {
             this.node_id = input.node_id;
             this.transformation_id = input.transformation_id;
+            if (input.name) this.name = input.name;
         }
     }
 }

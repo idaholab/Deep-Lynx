@@ -156,6 +156,12 @@ export type NodeT = {
     outgoing_edges: EdgeT[];
 };
 
+export type NodeTransformationT = {
+    node_id: string;
+    transformation_id: string;
+    name: string;
+};
+
 export type EdgeT = {
     id: string;
     container_id: string;

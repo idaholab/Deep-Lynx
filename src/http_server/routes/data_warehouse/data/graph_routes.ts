@@ -9,6 +9,7 @@ import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import NodeLeafRepository from '../../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
 import GraphQLSchemaGenerator from '../../../../graphql/schema';
 import {graphql} from 'graphql';
+import {stringToValidPropertyName} from '../../../../services/utilities';
 
 const nodeRepo = new NodeRepository();
 const edgeRepo = new EdgeRepository();
@@ -24,6 +25,7 @@ export default class GraphRoutes {
         app.get('/containers/:containerID/graphs/nodes/:nodeID/graph', ...middleware, authInContainer('read', 'data'), this.retrieveNthNodes);
 
         app.post('/containers/:containerID/graphs/nodes/:nodeID/timeseries', ...middleware, authInContainer('read', 'data'), this.queryTimeseriesData);
+        app.get('/containers/:containerID/graphs/nodes/:nodeID/timeseries', ...middleware, authInContainer('read', 'data'), this.queryTimeseriesDataTypes);
 
         app.get('/containers/:containerID/graphs/nodes/:nodeID/files', ...middleware, authInContainer('read', 'data'), this.listFilesForNode);
         app.put('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.attachFileToNode);
@@ -418,7 +420,7 @@ export default class GraphRoutes {
             .ForNode(req.node?.id!)
             .then((schemaResult) => {
                 if (schemaResult.isError) {
-                    schemaResult.asResponse(res);
+                    Result.Error(schemaResult.error!).asResponse(res);
                     return;
                 }
 
@@ -437,5 +439,25 @@ export default class GraphRoutes {
             .catch((e) => {
                 res.status(500).json(e.toString());
             });
+    }
+
+    private static queryTimeseriesDataTypes(req: Request, res: Response, next: NextFunction) {
+        const repo = new NodeRepository();
+
+        repo.listTransformations(req.node?.id!)
+            .then((results) => {
+                if (results.isError) {
+                    results.asResponse(res);
+                    return;
+                }
+
+                Result.Success<any>(
+                    results.value.map((t) => {
+                        t.name = stringToValidPropertyName(t.name!);
+                        return t;
+                    }),
+                ).asResponse(res);
+            })
+            .catch((e) => Result.Error(e).asResponse(res));
     }
 }
