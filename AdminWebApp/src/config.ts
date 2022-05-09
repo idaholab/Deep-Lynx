@@ -4,15 +4,15 @@ export class Config {
     private static instance: Config;
 
     get appUrl(): string {
-        return process.env.VUE_APP_APP_URL;
+        return process.env.VUE_APP_APP_URL || 'http://localhost:8090';
     }
 
     get deepLynxAppID(): string {
-        return process.env.VUE_APP_DEEP_LYNX_APP_ID;
+        return process.env.VUE_APP_DEEP_LYNX_APP_ID || 'root';
     }
 
     get deepLynxApiUri(): string {
-        return process.env.VUE_APP_DEEP_LYNX_API_URL;
+        return process.env.VUE_APP_DEEP_LYNX_API_URL || 'http://localhost:8090';
     }
 
     get deepLynxApiAuth(): string | undefined {

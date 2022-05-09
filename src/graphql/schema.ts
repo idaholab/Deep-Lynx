@@ -59,7 +59,9 @@ export default class GraphQLSchemaGenerator {
             name: 'record_input',
             fields: {
                 limit: {type: GraphQLInt, defaultValue: 10000},
-                page: {type: GraphQLInt, defaultValue: 1},
+                page: {type: GraphQLInt},
+                sortBy: {type: GraphQLString},
+                sortDesc: {type: GraphQLBoolean},
             },
         });
 
@@ -286,6 +288,8 @@ export default class GraphQLSchemaGenerator {
                         .list({
                             limit: input._record?.limit ? input._record.limit : 10000,
                             offset: input._record?.page ? input._record.limit * input._record.page : undefined,
+                            sortBy: input._record?.sortBy ? input._record.sortBy : undefined,
+                            sortDesc: input._record?.sortDesc ? input._record.sortDesc : undefined,
                         })
                         .then((results) => {
                             if (results.isError) {

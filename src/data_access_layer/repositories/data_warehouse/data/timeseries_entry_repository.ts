@@ -74,6 +74,10 @@ export default class TimeseriesEntryRepository extends Repository {
         return this;
     }
 
+    query(fieldName: string, operator: string, value?: any, dataType?: string): this {
+        return super.query(`"${fieldName}"`, operator, value, dataType);
+    }
+
     list(queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<any[]>> {
         if (queryOptions && queryOptions.groupBy && this.#groupBy) {
             queryOptions.groupBy = [queryOptions.groupBy, ...this.#groupBy].join(',');

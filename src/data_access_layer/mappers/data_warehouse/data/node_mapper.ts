@@ -294,7 +294,10 @@ export default class NodeMapper extends Mapper {
 
     private listTransformationsStatement(nodeID: string): QueryConfig {
         return {
-            text: `SELECT * FROM node_transformations WHERE node_id = $1`,
+            text: `SELECT node_transformations.*, type_mapping_transformations.name as name
+             FROM node_transformations 
+             LEFT JOIN type_mapping_transformations ON type_mapping_transformations.id = node_transformations.transformation_id
+             WHERE node_id = $1`,
             values: [nodeID],
         };
     }
