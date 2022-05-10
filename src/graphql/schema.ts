@@ -917,7 +917,10 @@ export default class GraphQLSchemaGenerator {
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             return new Promise((resolve) =>
                 repo
-                    .list(true, {limit: input._record.limit, offset: input._record.limit * input._record.page})
+                    .list(true, {
+                        limit: input._record?.limit ? input._record.limit : 10000,
+                        offset: input._record?.page ? input._record.limit * (input._record.page > 0 ? input._record.page - 1 : 0) : undefined,
+                    })
                     .then((results) => {
                         if (results.isError) {
                             Logger.error(`unable to list nodes ${results.error?.error}`);
