@@ -24,6 +24,7 @@ import MetatypeRelationship from '../domain_objects/data_warehouse/ontology/meta
 import {stringToValidPropertyName} from '../services/utilities';
 import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
 import Logger from '../services/logger';
+import Config from '../services/config';
 import MetatypeRelationshipPairRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository';
 import EdgeRepository from '../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import MetatypeRelationshipRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository';
@@ -58,7 +59,7 @@ export default class GraphQLSchemaGenerator {
         const recordInputType = new GraphQLInputObjectType({
             name: 'record_input',
             fields: {
-                limit: {type: GraphQLInt, defaultValue: 10000},
+                limit: {type: GraphQLInt, defaultValue: Config.limit_default},
                 page: {type: GraphQLInt},
                 sortBy: {type: GraphQLString},
                 sortDesc: {type: GraphQLBoolean},
@@ -259,6 +260,7 @@ export default class GraphQLSchemaGenerator {
                 };
             });
 
+            // check the input for a histogram argument - indicating a user wants the return value to contain a histogram
             if (input._histogram) {
                 repo = repo.histogram(input._histogram.column, input._histogram.min, input._histogram.max, input._histogram.nbuckets).where();
             }
@@ -274,6 +276,8 @@ export default class GraphQLSchemaGenerator {
                     input[key].value = input[key].value[0];
                 }
 
+                // same statement but we must add "and" in front of each subsequent call to "query" or else we'll get
+                // sql statement errors
                 if (i === 0) {
                     repo = repo.query(propertyMap[key].column_name, input[key].operator, input[key].value, propertyMap[key].value_type);
                     i++;

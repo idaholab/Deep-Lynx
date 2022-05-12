@@ -453,6 +453,14 @@ describe('A Data Type Mapping Transformation', async () => {
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).eq('1.2');
 
+        conversion = TypeTransformation.convertValue('number64', 1);
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).eq('1');
+
+        conversion = TypeTransformation.convertValue('float64', 1.2);
+        expect(conversion?.errors).undefined;
+        expect(conversion?.converted_value).eq('1.2');
+
         conversion = TypeTransformation.convertValue('string', true);
         expect(conversion?.errors).undefined;
         expect(conversion?.converted_value).eq('true');

@@ -874,7 +874,15 @@ export default class TypeTransformation extends BaseDomainClass {
                     : new Conversion({original_value: value, converted_value: convertedValue});
             }
 
-            case 'number64' || 'float64': {
+            case 'number64': {
+                if (typeof value === 'string') {
+                    return null;
+                }
+
+                return new Conversion({original_value: value, converted_value: String(value)});
+            }
+
+            case 'float64': {
                 if (typeof value === 'string') {
                     return null;
                 }

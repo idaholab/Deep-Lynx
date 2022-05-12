@@ -1642,6 +1642,8 @@ export default class TransformationDialog extends Vue {
       return true
     }
 
+    // this regex should match only if the name starts with a letter, contains only alphanumerics and underscores with
+    // no spaces and is between 1 and 30 characters in length
     const matches =/^[a-zA-Z][a-zA-Z0-9_]{1,30}(?!\s)$/.exec(value)
     if(!matches || matches.length === 0) {
       return this.$t('dataMapping.nameRequirements')
@@ -1655,6 +1657,8 @@ export default class TransformationDialog extends Vue {
       return this.$t('dataMapping.columnNameMustBeUnique')
     }
 
+    // this regex should match only if the name starts with a letter, contains only alphanumerics and underscores with
+    // no spaces and is between 1 and 30 characters in length
     const matches = /^[a-zA-Z][a-zA-Z0-9_]{1,30}$/.exec(value)
     if(!matches || matches.length === 0) {
       return this.$t('dataMapping.columnNameRequirements')
