@@ -3,9 +3,9 @@
     <ontology-version-toolbar
         v-if="$store.getters.ontologyVersioningEnabled"
         :containerID="containerID"
-        @editModeToggl="loadMetatypeRelationshipPairs"
-        @selectedVersion="loadMetatypeRelationshipPairs"
-        @selected="loadMetatypeRelationshipPairs">
+        @editModeToggl="countRelationshipPairs(); loadMetatypeRelationshipPairs()"
+        @selectedVersion="countRelationshipPairs(); loadMetatypeRelationshipPairs()"
+        @selected="countRelationshipPairs(); loadMetatypeRelationshipPairs()">
     </ontology-version-toolbar>
     <v-data-table
         :headers="headers()"
@@ -33,7 +33,7 @@
           <v-toolbar-title>{{$t("home.metatypeRelationshipPairsDescription")}}</v-toolbar-title>
           <v-spacer></v-spacer>
           <create-relationship-pair-dialog
-              v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled) || !$store.getters.ontologyVersioningEnabled"
+              v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && $store.state.selectedChangelist) || !$store.getters.ontologyVersioningEnabled"
               :containerID="containerID"
               @pairCreated="recentlyCreatedPair">
           </create-relationship-pair-dialog>
@@ -153,7 +153,6 @@ export default class MetatypeRelationshipPairs extends Vue {
     itemsPerPage: number;
   } = {sortDesc: [false], sortBy: [], page: 1, itemsPerPage: 100}
 
-
   @Watch('options')
   onOptionChange() {
     this.loadMetatypeRelationshipPairs()
@@ -169,6 +168,19 @@ export default class MetatypeRelationshipPairs extends Vue {
   onDescriptionChange() {
     this.countRelationshipPairs()
     this.loadMetatypeRelationshipPairs()
+  }
+
+  beforeCreate() {
+    this.$store.dispatch('refreshCurrentOntologyVersions')
+        .then(() => {
+          this.$store.dispatch('refreshOwnedCurrentChangelists', this.$auth.CurrentUser()?.id)
+              .then(() => {
+                this.countRelationshipPairs()
+                this.loadMetatypeRelationshipPairs()
+              })
+              .catch(e => this.errorMessage = e)
+        })
+        .catch(e => this.errorMessage = e)
   }
 
   mounted() {
@@ -187,7 +199,7 @@ export default class MetatypeRelationshipPairs extends Vue {
 
   countRelationshipPairs() {
     this.$client.listMetatypeRelationshipPairs(this.containerID, {
-      ontologyVersion: this.ontologyVersionID,
+      ontologyVersion: this.$store.getters.activeOntologyVersionID,
       count: true,
       name: (this.name !== "") ? this.name : undefined,
       description: (this.description !== "") ? this.description : undefined,
@@ -211,7 +223,7 @@ export default class MetatypeRelationshipPairs extends Vue {
     if(sortDesc) sortDescParam = sortDesc[0]
 
     this.$client.listMetatypeRelationshipPairs(this.containerID, {
-      ontologyVersion: this.ontologyVersionID,
+      ontologyVersion: this.$store.getters.activeOntologyVersionID,
       limit: itemsPerPage,
       offset: itemsPerPage * pageNumber,
       sortBy: sortParam,
@@ -233,7 +245,7 @@ export default class MetatypeRelationshipPairs extends Vue {
             })
 
             this.$client.listMetatypeRelationshipPairs(this.containerID, {
-              ontologyVersion: this.$store.getters.selectedOntologyVersionID,
+              ontologyVersion: this.$store.getters.currentOntologyVersionID,
               nameIn,
               loadRelationships: true
             })
@@ -323,16 +335,6 @@ export default class MetatypeRelationshipPairs extends Vue {
       }
     }
     return ''
-  }
-
-  get ontologyVersionID() {
-    if (this.$store.getters.ontologyVersioningEnabled && this.$store.getters.isEditMode) {
-      return this.$store.getters.selectedPendingOntologyVersionID
-    } else if (this.$store.getters.ontologyVersioningEnabled) {
-      return this.$store.getters.selectedOntologyVersionID
-    } else {
-      return undefined
-    }
   }
 }
 </script>

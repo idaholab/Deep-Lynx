@@ -13,7 +13,7 @@
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
         <span class="headline text-h3">{{$t("createEdge.formTitle")}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
         <v-row>
@@ -66,7 +66,7 @@
                 <template v-slot:label>{{$t('createEdge.relationship')}} <small style="color:red" >*</small></template>
               </v-autocomplete>
 
-              
+
             </v-form>
             <p><span style="color:red">*</span> = {{$t('createEdge.requiredField')}}</p>
           </v-col>
@@ -143,15 +143,15 @@ export default class CreateRelationshipPairDialog extends Vue {
        this.$client.listMetatypeRelationshipPairs(this.containerID,  {
         destinationID: this.destinationSelect.metatype.id,
         originID: this.originSelect.metatype.id,
-        ontologyVersion: this.$store.getters.activeOntologyVersionID
+        ontologyVersion: this.$store.getters.currentOntologyVersionID
       })
         .then((metatypeRelationshipPairs) => {
           this.metatypeRelationshipPairs = metatypeRelationshipPairs as MetatypeRelationshipPairT[]
         })
-        .catch(e => this.errorMessage = e) 
+        .catch(e => this.errorMessage = e)
     }
-    
-        
+
+
   }
 
   createEdge() {

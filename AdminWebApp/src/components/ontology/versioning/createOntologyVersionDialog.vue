@@ -13,9 +13,9 @@
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
         <span class="headline text-h3">{{ $t("createChangelist.formTitle") }}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
-        <error-banner :message="errorMessage"></error-banner>   
+        <error-banner :message="errorMessage"></error-banner>
         <v-row>
           <v-col :cols="12">
 
@@ -83,13 +83,12 @@ export default class CreateOntologyVersionDialog extends Vue {
       name: this.name as any,
       description: this.description as any,
       container_id: this.containerID,
-    }, this.$store.getters.selectedOntologyVersionID)
+    }, this.$store.getters.currentOntologyVersionID)
         .then((version) => {
           this.loading = false
           this.clearNew()
           this.$emit("versionCreated", version)
 
-          this.$store.dispatch('changePendingOntologyVersion', version)
           this.dialog = false
           this.errorMessage = ""
         })

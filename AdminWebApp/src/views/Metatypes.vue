@@ -3,9 +3,9 @@
     <ontology-version-toolbar
         v-if="$store.getters.ontologyVersioningEnabled"
         :containerID="containerID"
-        @editModeToggle="loadMetatypes"
-        @selectedVersion="loadMetatypes"
-        @selected="loadMetatypes">
+        @editModeToggle="countMetatypes(); loadMetatypes()"
+        @selectedVersion="countMetatypes(); loadMetatypes()"
+        @selected="countMetatypes(); loadMetatypes()">
     </ontology-version-toolbar>
     <v-data-table
         :headers="headers()"
@@ -34,7 +34,7 @@
           <v-toolbar-title>{{$t("home.metatypesDescription")}}</v-toolbar-title>
           <v-spacer></v-spacer>
           <create-metatype-dialog
-              v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled) || !$store.getters.ontologyVersioningEnabled"
+              v-if="($store.getters.isEditMode && $store.getters.ontologyVersioningEnabled && $store.state.selectedChangelist) || !$store.getters.ontologyVersioningEnabled"
               :containerID="containerID"
               @metatypeCreated="recentlyCreatedMetatype">
           </create-metatype-dialog>
@@ -172,8 +172,17 @@ export default class Metatypes extends Vue {
     this.loadMetatypes()
   }
 
-  mounted() {
-    this.countMetatypes()
+  beforeCreate() {
+    this.$store.dispatch('refreshCurrentOntologyVersions')
+        .then(() => {
+          this.$store.dispatch('refreshOwnedCurrentChangelists', this.$auth.CurrentUser()?.id)
+              .then(() => {
+                this.countMetatypes()
+                this.loadMetatypes()
+              })
+              .catch(e => this.errorMessage = e)
+        })
+        .catch(e => this.errorMessage = e)
   }
 
   headers() {
@@ -188,7 +197,7 @@ export default class Metatypes extends Vue {
 
   countMetatypes() {
     this.$client.listMetatypes(this.containerID, {
-      ontologyVersion: this.ontologyVersionID,
+      ontologyVersion: this.$store.getters.activeOntologyVersionID,
       count: true,
       name: (this.name !== "") ? this.name : undefined,
       description: (this.description !== "") ? this.description : undefined,
@@ -214,7 +223,7 @@ export default class Metatypes extends Vue {
     this.$client.listMetatypes(this.containerID, {
       limit: itemsPerPage,
       offset: itemsPerPage * pageNumber,
-      ontologyVersion: this.ontologyVersionID,
+      ontologyVersion: this.$store.getters.activeOntologyVersionID,
       sortBy: sortParam,
       sortDesc: sortDescParam,
       name: (this.name !== "") ? this.name : undefined,
@@ -234,7 +243,7 @@ export default class Metatypes extends Vue {
             })
 
             this.$client.listMetatypes(this.containerID, {
-              ontologyVersion: this.$store.getters.selectedOntologyVersionID,
+              ontologyVersion: this.$store.getters.currentOntologyVersionID,
               nameIn,
               loadKeys: true
             })
@@ -310,6 +319,7 @@ export default class Metatypes extends Vue {
         if(p.metatype_id) delete p.metatype_id
         if(p.ontology_version) delete  p.ontology_version
       })
+
     }
 
     cleanMetatype(o as MetatypeT)
@@ -335,16 +345,6 @@ export default class Metatypes extends Vue {
       }
     }
     return ''
-  }
-
-  get ontologyVersionID() {
-    if (this.$store.getters.ontologyVersioningEnabled && this.$store.getters.isEditMode) {
-      return this.$store.getters.selectedPendingOntologyVersionID
-    } else if (this.$store.getters.ontologyVersioningEnabled) {
-      return this.$store.getters.selectedOntologyVersionID
-    } else {
-      return undefined
-    }
   }
 }
 </script>

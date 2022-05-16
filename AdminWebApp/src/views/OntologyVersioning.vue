@@ -233,6 +233,8 @@ export default class OntologyVersioning extends Vue {
     this.$client.applyOntologyVersion(this.containerID, version.id!)
     .then(() => {
       this.successMessage = 'Changelist Applied Successfully'
+      this.$store.dispatch('refreshOwnedCurrentChangelists')
+      this.$store.dispatch('refreshCurrentOntologyVersions')
       this.listChangelists()
       this.listOntologyVersions()
     })

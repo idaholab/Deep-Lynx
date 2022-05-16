@@ -887,6 +887,7 @@ export default {
             confirmPassword: 'Confirm New Password',
         },
         ontologyToolbar: {
+            selectChangelist: 'Select or create a changelist in order to use edit mode. Note that newly created changelists may take a few minutes to generate fully before they are able to be selected.',
             viewMode: 'View',
             editMode: 'Edit',
             activeChangelist: 'Active Changelist',

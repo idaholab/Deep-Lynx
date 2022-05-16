@@ -33,7 +33,7 @@
           </div>
         </v-tab>
       </v-tabs>
-    
+
       <v-divider v-if="selectedDataSource !== null"></v-divider>
 
       <div v-if="(selectedDataSource !== null && activeTab ==='currentMappings')">
@@ -76,7 +76,7 @@
             </v-autocomplete>
           </v-col>
         </v-row>
-        <v-row class="mb-3"> 
+        <v-row class="mb-3">
           <v-col :cols="4" class="d-flex justify-center">
             <export-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" :mappings="selectedMappings" @mappingsExported="mappingsExported()"></export-mappings-dialog>
           </v-col>
@@ -304,7 +304,7 @@
       <v-card>
         <v-card-title class="grey lighten-2">
           <span class="headline text-h3">{{$t('dataMapping.viewSamplePayload')}}</span>
-        </v-card-title>   
+        </v-card-title>
 
         <json-view
           class="pt-4 px-4"
@@ -511,7 +511,7 @@ export default class DataMapping extends Vue {
   onSearchChange(newVal: string) {
     if(newVal === "") return;
 
-    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: false, ontologyVersion: this.$store.getters.selectedOntologyVersionID})
+    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: false, ontologyVersion: this.$store.getters.currentOntologyVersionID})
 
         .then((metatypes) => {
           this.metatypes = metatypes as MetatypeT[]
@@ -529,7 +529,7 @@ export default class DataMapping extends Vue {
       offset: 0,
       originID: undefined,
       destinationID: undefined,
-      ontologyVersion: this.$store.getters.selectedOntologyVersionID
+      ontologyVersion: this.$store.getters.currentOntologyVersionID
     })
         .then(pairs => {
           this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
