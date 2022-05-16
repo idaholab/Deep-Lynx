@@ -524,6 +524,8 @@ export default class Home extends Vue {
   relationshipCount = 0
   dataSources: DataSourceT[] = []
 
+
+
   mounted() {
     this.user = this.$auth.CurrentUser();
 
@@ -540,7 +542,7 @@ export default class Home extends Vue {
 
     this.$client.listMetatypes(this.containerID as string, {
       count: true,
-      ontologyVersion: this.$store.getters.selectedOntologyVersionID
+      ontologyVersion: this.$store.getters.currentOntologyVersionID
     })
         .then(metatypesCount => {
           this.metatypesCount = metatypesCount as number
@@ -548,7 +550,7 @@ export default class Home extends Vue {
 
     this.$client.listMetatypeRelationshipPairs(this.containerID as string, {
       count: true,
-      ontologyVersion: this.$store.getters.selectedOntologyVersionID
+      ontologyVersion: this.$store.getters.currentOntologyVersionID
     })
         .then(relationshipCount => {
           this.relationshipCount = relationshipCount as number

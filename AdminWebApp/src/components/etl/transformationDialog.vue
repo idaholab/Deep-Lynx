@@ -1070,7 +1070,7 @@ export default class TransformationDialog extends Vue {
 
   @Watch('search', {immediate: true})
   onSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: false, ontologyVersion: this.$store.getters.selectedOntologyVersionID})
+    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: false, ontologyVersion: this.$store.getters.currentOntologyVersionID})
         .then((metatypes) => {
           this.metatypes = metatypes as MetatypeT[]
         })
@@ -1087,7 +1087,7 @@ export default class TransformationDialog extends Vue {
       offset,
       originID: undefined,
       destinationID: undefined,
-      ontologyVersion: this.$store.getters.selectedOntologyVersionID
+      ontologyVersion: this.$store.getters.currentOntologyVersionID
     })
         .then(pairs => {
           this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
@@ -1115,6 +1115,7 @@ export default class TransformationDialog extends Vue {
       offset: 0,
       originID: undefined,
       destinationID: undefined,
+      ontologyVersion: this.$store.getters.currentOntologyVersionID,
       metatypeID: this.selectedMetatype?.id!
     })
         .then(pairs => {

@@ -1,50 +1,89 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import {ContainerT, OntologyVersionT} from '@/api/types';
+import {ChangelistT, ContainerT, OntologyVersionT} from '@/api/types';
+import Config from '@/config';
+import {Client} from '@/api/client';
+import VuexPersistence from 'vuex-persist';
+import {Authentication} from '@/auth/authentication_service';
 
 Vue.use(Vuex);
 
-export default new Vuex.Store({
+const client = new Client({
+    rootURL: Config.deepLynxApiUri,
+    auth_method: Config.deepLynxApiAuth,
+    username: Config.deepLynxApiAuthBasicUser,
+    password: Config.deepLynxApiAuthBasicPass,
+});
+
+type State = {
+    activeContainer: ContainerT | undefined;
+    inEditMode: boolean;
+
+    // this is the most recent, published ontology. This generally determines which ontology version the various search
+    // components and listing components are using to find results
+    currentOntologyVersion: OntologyVersionT | undefined;
+
+    // all currently published ontology versions
+    publishedOntologyVersions: OntologyVersionT[];
+
+    // this is  the ontology version selected in the ontology versioning toolbar. This determines what shows up when
+    // listing ontology portions when in view mode - this does not affect the various search and listing components however
+    // as those will always default to the currently published ontology version
+    selectedOntologyVersion: OntologyVersionT | undefined;
+
+    // a list of all the changelists that a user created - this might need to be updated or expanded so that an admin
+    // can review all changelists
+    ownedCurrentChangelists: ChangelistT[];
+
+    // selected changelist refers to the current changelist selected by the user
+    selectedChangelist: ChangelistT | undefined;
+};
+
+const vuexLocal = new VuexPersistence<State>({
+    storage: window.localStorage,
+});
+
+export default new Vuex.Store<State>({
     state: {
         activeContainer: undefined,
-        editMode: false,
-        ontologyVersion: {
-            id: '',
-            name: 'Primary',
-        },
-        selectedPendingVersion: {},
+        inEditMode: false,
+        publishedOntologyVersions: [],
+        currentOntologyVersion: undefined,
+        selectedOntologyVersion: undefined,
+        ownedCurrentChangelists: [],
+        selectedChangelist: undefined,
     },
     mutations: {
-        initializeStore(state) {
-            const activeContainer = localStorage.getItem('activeContainer');
-            const ontologyVersion = localStorage.getItem('ontologyVersion');
-            const editMode = localStorage.getItem('editMode');
-            const selectedPendingVersion = localStorage.getItem('selectedPendingVersion');
-
-            if (activeContainer) state.activeContainer = JSON.parse(activeContainer);
-            if (ontologyVersion) state.ontologyVersion = JSON.parse(ontologyVersion);
-            if (editMode) state.editMode = JSON.parse(editMode);
-            if (selectedPendingVersion) state.selectedPendingVersion = JSON.parse(selectedPendingVersion);
-        },
-
         setActiveContainer(state, container) {
             state.activeContainer = container;
-            localStorage.setItem('activeContainer', JSON.stringify(container));
         },
 
-        setOntologyVersion(state, version) {
-            state.ontologyVersion = version;
-            localStorage.setItem('ontologyVersion', JSON.stringify(version));
+        setCurrentOntologyVersion(state, version) {
+            state.currentOntologyVersion = version;
+        },
+
+        setPublishedOntologyVersions(state, versions) {
+            state.publishedOntologyVersions = versions;
+        },
+
+        selectOntologyVersion(state, version) {
+            state.selectedOntologyVersion = version;
+        },
+
+        setOwnedCurrentChangelists(state, changelists) {
+            state.ownedCurrentChangelists = changelists;
+        },
+
+        selectChangelist(state, changelist) {
+            state.selectedChangelist = changelist;
         },
 
         setEditMode(state, mode) {
-            state.editMode = mode;
-            localStorage.setItem('editMode', JSON.stringify(mode));
+            state.inEditMode = mode;
         },
 
-        setPendingOntologyVersion(state, version: OntologyVersionT) {
-            state.selectedPendingVersion = version as any;
-            localStorage.setItem('selectedPendingVersion', JSON.stringify(version));
+        toggleEditMode(state, mode) {
+            state.inEditMode = !state.inEditMode;
         },
     },
     actions: {
@@ -57,9 +96,66 @@ export default new Vuex.Store({
         changePendingOntologyVersion({commit}, version) {
             commit('setPendingOntologyVersion', version);
         },
+
+        refreshCurrentOntologyVersions({commit, getters, state}) {
+            commit('setPublishedOntologyVersions', []);
+            commit('setCurrentOntologyVersion', undefined);
+            commit('selectOntologyVersion', undefined);
+
+            return new Promise((resolve, reject) => {
+                client
+                    .listOntologyVersions(getters.activeContainerID, {status: 'published'})
+                    .then((results) => {
+                        if (results.length > 0) {
+                            commit('setPublishedOntologyVersions', results);
+                            commit('setCurrentOntologyVersion', results[0]);
+                        }
+
+                        if (!state.selectedOntologyVersion) {
+                            commit('selectOntologyVersion', results[0]);
+                        }
+
+                        resolve();
+                    })
+                    .catch((e: any) => reject(e));
+            });
+        },
+
+        refreshOwnedCurrentChangelists({commit, getters, state}, currentUserID) {
+            commit('setOwnedCurrentChangelists', []);
+            commit('selectChangelist', undefined);
+
+            const config: {[key: string]: any} = {createdBy: currentUserID};
+            return new Promise((resolve, reject) => {
+                client
+                    .listOntologyVersions(getters.activeContainerID, config)
+                    .then((results) => {
+                        if (results.length > 0) {
+                            commit(
+                                'setOwnedCurrentChangelists',
+                                results.filter((c) => c.status === 'ready' || c.status === 'generating'),
+                            );
+                        }
+
+                        if (!state.selectedChangelist) {
+                            commit(
+                                'selectChangelist',
+                                results.find((c) => c.status === 'ready'),
+                            );
+                        }
+
+                        resolve();
+                    })
+                    .catch((e: any) => reject(e));
+            });
+        },
     },
     modules: {},
     getters: {
+        isEditMode: (state) => {
+            return state.inEditMode;
+        },
+
         activeContainer: (state) => {
             return state.activeContainer;
         },
@@ -71,7 +167,7 @@ export default new Vuex.Store({
                 return container.id;
             }
 
-            return '';
+            return undefined;
         },
 
         ontologyVersioningEnabled: (state) => {
@@ -84,31 +180,38 @@ export default new Vuex.Store({
             return false;
         },
 
-        selectedOntologyVersionID: (state) => {
-            if (state.ontologyVersion) return (state.ontologyVersion as OntologyVersionT).id;
+        currentOntologyVersionID: (state) => {
+            if (state.currentOntologyVersion) {
+                return state.currentOntologyVersion.id;
+            }
+
             return undefined;
         },
 
-        selectedPendingOntologyVersion: (state) => {
-            if (state.selectedPendingVersion) return state.selectedPendingVersion;
+        selectedChangelistID: (state) => {
+            if (state.selectedChangelist) {
+                return state.selectedChangelist.id;
+            }
+
             return undefined;
         },
 
-        selectedPendingOntologyVersionID: (state) => {
-            if (state.selectedPendingVersion) return (state.selectedPendingVersion as OntologyVersionT).id;
-            return undefined;
-        },
-
-        isEditMode: (state) => {
-            return state.editMode;
-        },
-
+        // this determines whether to return the currently published ontology version, or the selected changelist
+        // depending on if the user is in edit mode. This is used primarily  to ensure that the ontology listing functions
+        // in the various ontology views are returning the right results dependent on mode and current selection
         activeOntologyVersionID: (state) => {
-            if (state.editMode) {
-                return (state.selectedPendingVersion as OntologyVersionT).id;
+            if (state.activeContainer && state.activeContainer.config.ontology_versioning_enabled) {
+                if (state.inEditMode && state.selectedChangelist) {
+                    return state.selectedChangelist.id;
+                } else if (state.inEditMode && !state.selectedChangelist) {
+                    return '0'; // this should ensure we're not loading erroneous ontologies when in edit mode
+                } else {
+                    return state.currentOntologyVersion?.id;
+                }
             } else {
-                state.ontologyVersion ? (state.ontologyVersion as OntologyVersionT).id : undefined;
+                return state.currentOntologyVersion?.id;
             }
         },
     },
+    plugins: [vuexLocal.plugin],
 });
