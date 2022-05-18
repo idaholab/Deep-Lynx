@@ -9,33 +9,56 @@ import Logger from '../services/logger';
 import {Writable} from 'stream';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 import {ProcessData} from '../data_processing/process';
+import {parentPort} from 'worker_threads';
 import {plainToClass} from 'class-transformer';
 import {DataStaging} from '../domain_objects/data_warehouse/import/import';
 
-process.setMaxListeners(0);
+void PostgresAdapter.Instance.init()
+    .then(() => {
+        void QueueFactory()
+            .then((queue) => {
+                const destination = new Writable({
+                    objectMode: true,
+                    write(chunk: any, encoding: string, callback: (error?: Error | null) => void) {
+                        const stagingRecord = plainToClass(DataStaging, chunk as object);
+                        ProcessData(stagingRecord)
+                            .then((result) => {
+                                if (result.isError) {
+                                    Logger.error(`processing error: ${result.error?.error}`);
+                                }
+                                callback();
+                            })
+                            .catch((e) => {
+                                Logger.error(`unable to process data from queue ${e}`);
+                                callback();
+                            });
 
-void PostgresAdapter.Instance.init().then(() => {
-    void QueueFactory().then((queue) => {
-        const destination = new Writable({
-            objectMode: true,
-            write(chunk: any, encoding: string, callback: (error?: Error | null) => void) {
-                const stagingRecord = plainToClass(DataStaging, chunk as object);
-                ProcessData(stagingRecord)
-                    .then((result) => {
-                        if (result.isError) {
-                            Logger.error(`processing error: ${result.error?.error}`);
-                        }
-                        callback();
-                    })
-                    .catch((e) => {
-                        Logger.error(`unable to process data from queue ${e}`);
-                        callback();
-                    });
+                        return true;
+                    },
+                });
 
-                return true;
-            },
-        });
+                destination.on('error', (e: Error) => {
+                    Logger.error(`unexpected error in processing queue thread ${e}`);
+                    if (parentPort) parentPort.postMessage('done');
+                    else {
+                        process.exit(0);
+                    }
+                });
 
-        queue.Consume(Config.process_queue, destination);
+                queue.Consume(Config.process_queue, destination);
+            })
+            .catch((e) => {
+                Logger.error(`unexpected error in processing queue thread ${e}`);
+                if (parentPort) parentPort.postMessage('done');
+                else {
+                    process.exit(0);
+                }
+            });
+    })
+    .catch((e) => {
+        Logger.error(`unexpected error in processing queue thread ${e}`);
+        if (parentPort) parentPort.postMessage('done');
+        else {
+            process.exit(0);
+        }
     });
-});

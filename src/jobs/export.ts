@@ -15,37 +15,46 @@ import Config from '../services/config';
 
 const postgresAdapter = PostgresAdapter.Instance;
 
-void postgresAdapter.init().then(() => {
-    const exporterRepo = new ExporterRepository();
+void postgresAdapter
+    .init()
+    .then(() => {
+        const exporterRepo = new ExporterRepository();
 
-    const queue = new PQueue({concurrency: Config.export_data_concurrency});
+        const queue = new PQueue({concurrency: Config.export_data_concurrency});
 
-    exporterRepo
-        .where()
-        .status('eq', 'processing')
-        .list()
-        .then((exporters) => {
-            if (exporters.isError) Logger.error(`unable to list exporters ${exporters.error?.error}`);
+        exporterRepo
+            .where()
+            .status('eq', 'processing')
+            .list()
+            .then((exporters) => {
+                if (exporters.isError) Logger.error(`unable to list exporters ${exporters.error?.error}`);
 
-            const tasks = [];
+                const tasks = [];
 
-            for (const exporter of exporters.value) {
-                if (exporter) {
-                    tasks.push(queue.add(() => exporter?.Restart(SuperUser)));
-                }
-            }
-
-            Promise.all(tasks)
-                .then(() => {
-                    if (parentPort) parentPort.postMessage('done');
-                    else {
-                        process.exit(0);
+                for (const exporter of exporters.value) {
+                    if (exporter) {
+                        tasks.push(queue.add(() => exporter?.Restart(SuperUser)));
                     }
-                })
-                .catch((e) => {
-                    Logger.error(`unable to process exports ${e}`);
-                    process.exit(1);
-                });
-        })
-        .catch((e) => Logger.error(`unable to restart exports ${e}`));
-});
+                }
+
+                Promise.all(tasks)
+                    .then(() => {
+                        if (parentPort) parentPort.postMessage('done');
+                        else {
+                            process.exit(0);
+                        }
+                    })
+                    .catch((e) => {
+                        Logger.error(`unable to process exports ${e}`);
+                        process.exit(1);
+                    });
+            })
+            .catch((e) => Logger.error(`unable to restart exports ${e}`));
+    })
+    .catch((e) => {
+        Logger.error(`unexpected error in export thread ${e}`);
+        if (parentPort) parentPort.postMessage('done');
+        else {
+            process.exit(0);
+        }
+    });
