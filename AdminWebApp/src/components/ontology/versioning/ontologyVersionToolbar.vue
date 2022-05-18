@@ -1,5 +1,7 @@
 <template>
   <div>
+    <error-banner :message="errorMessage"></error-banner>
+    <error-banner v-if="!$store.getters.selectedChangelistID && $store.state.inEditMode" :message="$t('ontologyToolbar.selectChangelist')"></error-banner>
     <v-toolbar
       :color="backgroundColor"
       style="border-top-left-radius: 5px; border-top-right-radius: 5px;"
@@ -32,27 +34,33 @@
 
       <v-select
           dark
-          v-show="$store.getters.isEditMode"
-          :items="pendingVersions"
-          v-model="selectedPendingVersion"
+          v-show="$store.state.inEditMode"
+          :items="changelists"
+          v-model="selectedChangelist"
           item-value="id"
           item-text="name"
+          :item-disabled="isGenerating"
           hide-details
           return-object
           :label="$t('ontologyToolbar.activeChangelist')">
+
+        <template v-slot:item="{item}">
+          {{item.name}} <span v-if="item.status === 'generating'">- {{item.status}}</span>
+        </template>
       </v-select>
       <create-ontology-version-dialog
-          v-if="$store.getters.isEditMode"
-          @versionCreated="listPendingVersions()"
+          v-if="$store.state.inEditMode"
+          @versionCreated="refresh()"
           :icon="true"
           :containerID="containerID">
       </create-ontology-version-dialog>
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
       <v-select
+          v-if="versions.length > 0"
           dark
           :items="versions"
-          :disabled="$store.getters.isEditMode"
+          :disabled="$store.state.inEditMode"
           v-model="selectedVersion"
           item-value="id"
           item-text="name"
@@ -75,7 +83,7 @@
 
 <script lang="ts">
 import {Component, Prop, Vue} from "vue-property-decorator";
-import {OntologyVersionT} from "@/api/types";
+import {ChangelistT, OntologyVersionT} from "@/api/types";
 import CreateOntologyVersionDialog from "@/components/ontology/versioning/createOntologyVersionDialog.vue";
 
 @Component({components: {CreateOntologyVersionDialog}})
@@ -84,91 +92,89 @@ export default class OntologyVersionToolbar extends Vue {
   containerID!: string;
 
   errorMessage = ""
+
+  beforeCreate() {
+    this.$store.dispatch('refreshCurrentOntologyVersions')
+        .then(() => this.versions = this.$store.state.publishedOntologyVersions)
+        .catch(e => this.errorMessage = e)
+    this.$store.dispatch('refreshOwnedCurrentChangelists', this.$auth.CurrentUser()?.id)
+        .then(() => this.changelists = this.$store.state.ownedCurrentChangelists)
+        .catch(e => this.errorMessage = e)
+  }
+
+  refresh() {
+    this.$store.dispatch('refreshCurrentOntologyVersions')
+        .then(() => this.versions = this.$store.state.publishedOntologyVersions)
+        .catch(e => this.errorMessage = e)
+    this.$store.dispatch('refreshOwnedCurrentChangelists', this.$auth.CurrentUser()?.id)
+        .then(() => this.changelists = this.$store.state.ownedCurrentChangelists)
+        .catch(e => this.errorMessage = e)
+  }
+
+  isGenerating(changelist: ChangelistT) {
+    return changelist.status === 'generating'
+  }
+
   get selectedVersion() {
-    if(this.$store.getters.selectedOntologyVersionID) {
-      return this.$store.getters.selectedOntologyVersionID
+    if(this.$store.state.selectedOntologyVersion) {
+      return this.$store.state.selectedOntologyVersion.id
     }
     return ""
   }
 
   set selectedVersion(version: string) {
-    this.$store.dispatch('changeOntologyVersion', version)
+    this.$store.commit('selectOntologyVersion', version)
     this.$emit('selected', version)
 
     return
   }
 
-  get selectedPendingVersion() {
-    if(this.$store.getters.selectedPendingOntologyVersion) {
-      return this. $store.getters.selectedPendingOntologyVersion
+  get selectedChangelist() {
+    if(this.$store.state.selectedChangelist) {
+      return this. $store.state.selectedChangelist.id
     }
     return ""
   }
 
-  set selectedPendingVersion(version: any) {
-    this.$store.dispatch('changePendingOntologyVersion', version)
+  set selectedChangelist(version: any) {
+    this.$store.commit('selectChangelist', version)
     this.$emit('selectedVersion', version)
     return
   }
 
   get backgroundColor() {
-    if(this.$store.getters.isEditMode) return "warning"
+    if(this.$store.state.inEditMode) return "warning"
     return "primary"
   }
 
-  get isCurrent() {
-    return this.selectedVersion === this.versions[0].id
-  }
-
   get isEditMode() {
-    return this.$store.getters.isEditMode
+    return this.$store.state.inEditMode
   }
 
   set isEditMode(mode: any) {
-    this.$store.commit('setEditMode', mode)
-    this.$emit('editModeToggle')
-    this.listPendingVersions()
+    this.$store.dispatch('refreshCurrentOntologyVersions')
+        .then(() => {
+          this.$store.dispatch('refreshOwnedCurrentChangelists', this.$auth.CurrentUser()?.id)
+              .then(() => {
+                this.$store.commit('setEditMode', mode)
+                this.$emit('editModeToggle')
+              })
+              .catch(e => this.errorMessage = e)
+        })
+        .catch(e => this.errorMessage = e)
+
     return
   }
 
-  versions: OntologyVersionT[] = [{
-    id: "",
-    container_id: this.containerID,
-    name: "Primary"
-  }]
-
-  pendingVersions: OntologyVersionT[] = []
-
-  mounted() {
-    // we want only the published versions for the sidebar's selector
-    this.$client.listOntologyVersions(this.containerID, {status: 'published'})
-    .then((results) => {
-        if(results.length > 0) {
-          this.versions = results
-
-          if(!this.$store.getters.selectedOntologyVersionID) {
-            this.$store.dispatch('changeOntologyVersion', results[0])
-          }
-        }
-    })
-    .catch((e: any) =>  this.errorMessage = e)
-
-    this.listPendingVersions()
+  get isCurrent(){
+    if(this.versions.length <= 0) {
+      return true
+    } else {
+      return this.selectedVersion === this.versions[0]?.id
+    }
   }
 
-  listPendingVersions() {
-    this.pendingVersions = []
-    this.$client.listOntologyVersions(this.containerID, {status: "ready"})
-        .then((results) => {
-          if(results.length > 0) {
-            this.pendingVersions = results
-
-            if(!this.$store.getters.selectedPendingOntologyVersion) {
-              this.$store.dispatch('changePendingOntologyVersion', results[0])
-            }
-          }
-        })
-        .catch((e: any) =>  this.errorMessage = e)
-  }
+  versions: OntologyVersionT[] = this.$store.state.publishedOntologyVersions
+  changelists: OntologyVersionT[] = this.$store.state.ownedCurrentChangelists
 }
 </script>

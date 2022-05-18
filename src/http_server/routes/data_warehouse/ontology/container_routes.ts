@@ -32,7 +32,7 @@ export default class ContainerRoutes {
 
         app.post('/containers/:containerID/permissions', ...middleware, authRequest('write', 'containers'), this.repairPermissions);
 
-        app.get('/containers/:containerID/alerts', ...middleware, authRequest('read', 'ontology'), this.listAlerts);
+        app.get('/containers/:containerID/alerts', ...middleware, authInContainer('read', 'ontology'), this.listAlerts);
         app.post('/containers/:containerID/alerts/:alertID', ...middleware, authInContainer('write', 'containers'), this.acknowledgeAlert);
     }
 

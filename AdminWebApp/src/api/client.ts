@@ -26,6 +26,7 @@ import {
     ChangelistApprovalT,
     ContainerAlertT,
     TypeMappingUpgradePayloadT,
+    NodeTransformationT,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -59,6 +60,14 @@ export class Client {
         }
 
         return this.postRawReturn<any>(`/containers/${containerID}/query`, query);
+    }
+
+    submitNodeGraphQLQuery(containerID: string, nodeID: string, query: any): Promise<any> {
+        if (query.query) {
+            query.query = query.query.replace(/\n/g, '');
+        }
+
+        return this.postRawReturn<any>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`, query);
     }
 
     listContainers(): Promise<ContainerT[]> {
@@ -581,6 +590,14 @@ export class Client {
         return this.get<NodeT[]>(`/containers/${containerID}/graphs/nodes`, query);
     }
 
+    listNodeTransformations(containerID: string, nodeID: string): Promise<NodeTransformationT[]> {
+        return this.get<NodeTransformationT[]>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`);
+    }
+
+    retrieveNode(containerID: string, nodeID: string): Promise<NodeT> {
+        return this.get<NodeT>(`/containers/${containerID}/graphs/nodes/${nodeID}`);
+    }
+
     countNodes(containerID: string, dataSourceID: string): Promise<number> {
         const query: {[key: string]: any} = {};
 
@@ -779,6 +796,10 @@ export class Client {
         return this.get<TypeMappingTransformationT[]>(
             `/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}/transformations`,
         );
+    }
+
+    retrieveTransformation(containerID: string, transformationID: string): Promise<TypeMappingTransformationT> {
+        return this.get<TypeMappingTransformationT>(`/containers/${containerID}/transformations/${transformationID}`);
     }
 
     deleteTransformation(

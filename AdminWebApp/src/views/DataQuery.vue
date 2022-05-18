@@ -1,5 +1,6 @@
 <template>
   <v-card>
+  <!-- <node-timeseries-data-table nodeID="2" containerID="3"></node-timeseries-data-table> -->
     <v-toolbar flat color="white">
       <v-toolbar-title>{{$t('home.dataQueryDescription')}}</v-toolbar-title>
     </v-toolbar>
@@ -119,12 +120,49 @@
                   >
                     <div class="mt-2 pt-3 px-5 pb-5 height-full">
                       <h4 class="primary--text">{{$t('dataQuery.nodeInformation')}}</h4>
-                      <json-view
-                          v-if="currentNodeInfo !== null"
-                          class="json-viewer px-1 py-5 text-wrap"
-                          :data="currentNodeInfo"
-                          :maxDepth=4
-                      />
+                      <div v-if="currentNodeInfo !== null">
+                        <v-row>
+                          <v-col>
+                            <div><span class="text-overline">{{$t('dataQuery.nodeID')}}:</span> {{currentNodeInfo.id}}</div>
+                            <div><span class="text-overline">{{$t('dataQuery.nodeType')}}:</span> {{currentNodeInfo.metatype.name}}</div>
+                            <v-expansion-panels multiple :value="openPanels">
+                              <v-expansion-panel>
+                                <v-expansion-panel-header>
+                                  <div><span class="text-overline">{{$t('dataQuery.nodeProperties')}}:</span></div>
+                                </v-expansion-panel-header>
+                                <v-expansion-panel-content>
+                                  <v-data-table
+                                      :items="currentNodeInfo.properties"
+                                      :headers="propertyHeaders()"
+                                  >
+                                  </v-data-table>
+                                </v-expansion-panel-content>
+                              </v-expansion-panel>
+
+                              <v-expansion-panel>
+                                <v-expansion-panel-header>
+                                  <div><span class="text-overline">{{$t('dataQuery.nodeFiles')}}:</span></div>
+                                </v-expansion-panel-header>
+                                <v-expansion-panel-content>
+                                  <node-files-dialog :icon="true" :node="currentNodeInfo"></node-files-dialog>
+                                </v-expansion-panel-content>
+                              </v-expansion-panel>
+
+                              <v-expansion-panel>
+                                <v-expansion-panel-header>
+                                  <div><span class="text-overline">{{$t('dataQuery.nodeTimeseries')}}:</span></div>
+                                </v-expansion-panel-header>
+                                <v-expansion-panel-content>
+                                  <node-timeseries-data-table :nodeID="currentNodeInfo.id" :containerID="containerID"></node-timeseries-data-table>
+                                </v-expansion-panel-content>
+                              </v-expansion-panel>
+                            </v-expansion-panels>
+                          </v-col>
+
+                        </v-row>
+
+                      </div>
+
                       <p v-if="currentNodeInfo === null">{{$t('dataQuery.selectNode')}}</p>
                     </div>
                   </v-col>
@@ -142,6 +180,7 @@
 import cola from "cytoscape-cola";
 import QueryBuilder from "../components/queryBuilder/queryBuilder.vue"
 import NodeFilesDialog from "@/components/data/nodeFilesDialog.vue";
+import NodeTimeseriesDataTable from "@/components/data/nodeTimeseriesDataTable.vue";
 import {Component, Prop, Vue} from "vue-property-decorator";
 import {NodeT} from "@/api/types";
 
@@ -150,7 +189,7 @@ import {mdiFileDocumentMultiple} from "@mdi/js";
 let resolveCy: any = null
 export const cyPromise = new Promise(resolve => (resolveCy = resolve))
 
-@Component({components: {QueryBuilder, NodeFilesDialog}})
+@Component({components: {QueryBuilder, NodeFilesDialog, NodeTimeseriesDataTable}})
 export default class DataQuery extends Vue {
   @Prop()
   readonly containerID!: string
@@ -161,6 +200,7 @@ export default class DataQuery extends Vue {
   results: ResultSet | null = null
   selectedProperties: any| null = null
   expanded = []
+  openPanels: number[] = []
 
   copy = mdiFileDocumentMultiple
   activeTabName = 'list'
@@ -175,6 +215,12 @@ export default class DataQuery extends Vue {
         selector: "node",
         css: {
           "background-color": "#f68c20"
+        },
+        style: {
+          label: (node: any) => {
+            const name = node.data().properties?.find((a: any) => a.key === 'name').value
+            return `${node.data().metatype?.name} ${(name) ?  "- " + name : ''}`
+            }
         }
       },
       {
@@ -197,6 +243,13 @@ export default class DataQuery extends Vue {
       nodes: [],
       edges: []
     }
+  }
+
+  propertyHeaders() {
+    return [
+      {text: this.$t('dataQuery.name'), value: 'key'},
+      {text: this.$t('dataQuery.value'), value: 'value'}
+    ]
   }
 
   tabs() {
@@ -231,8 +284,9 @@ export default class DataQuery extends Vue {
 
     function extractNodes(originalJSON: any) {
       for (let i = 0; i < originalJSON.length; i++) {
+        originalJSON[i].label = "test"
         const newObject = {
-          data: originalJSON[i]
+          data: originalJSON[i],
         }
         nodes.push(newObject)
       }
@@ -311,11 +365,13 @@ export default class DataQuery extends Vue {
   getInfo(data: NodeT) {
     this.currentNodeInfo = {
       id: data.id,
+      container_id: this.containerID,
+      data_source_id: data.data_source_id,
       metatype: {
         id: data.metatype.id,
         name: data.metatype.name
       },
-      properties:JSON.parse(data.raw_properties)
+      properties: data.properties.filter(prop => prop.value !== "null")
     }
   }
 
@@ -440,11 +496,7 @@ export default class DataQuery extends Vue {
 }
 
 .node-info {
-  // min-width: 300px;
-
-  div:first-child {
     border-left: 1px solid $darkgray;
-  }
 }
 
 </style>

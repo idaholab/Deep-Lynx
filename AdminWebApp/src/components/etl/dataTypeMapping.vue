@@ -25,10 +25,12 @@
             <span v-if="item.archived" class="text--disabled">
               {{item.metatype_name}}
               {{item.metatype_relationship_pair_name}}
+              {{item.name}}
             </span>
             <span v-else>
               {{item.metatype_name}}
               {{item.metatype_relationship_pair_name}}
+              {{item.name}}
             </span>
           </template>
           <template v-slot:item.actions="{ item }">

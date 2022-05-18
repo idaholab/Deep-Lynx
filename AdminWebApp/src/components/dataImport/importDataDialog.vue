@@ -70,7 +70,7 @@
 
                 this.$emit('importUploaded')
             })
-            .catch(e => this.errorMessage = e)
+            .catch(e => this.errorMessage = e.error)
       }
     }
   }

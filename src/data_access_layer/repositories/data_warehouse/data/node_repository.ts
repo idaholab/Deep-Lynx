@@ -1,5 +1,5 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import Node from '../../../../domain_objects/data_warehouse/data/node';
+import Node, {NodeTransformation} from '../../../../domain_objects/data_warehouse/data/node';
 import Result from '../../../../common_classes/result';
 import NodeMapper from '../../../mappers/data_warehouse/data/node_mapper';
 import {PoolClient} from 'pg';
@@ -36,9 +36,9 @@ export default class NodeRepository extends Repository implements RepositoryInte
     async findByID(id: string, transaction?: PoolClient): Promise<Result<Node>> {
         const node = await this.#mapper.Retrieve(id, transaction);
         if (!node.isError) {
-            const metatype = await this.#metatypeRepo.findByID(node.value.metatype!.id!);
+            const metatype = await this.#metatypeRepo.findByID(node.value.metatype_id);
             if (metatype.isError) Logger.error(`unable to load node's metatype`);
-            else Object.assign(node.value.metatype!, metatype.value);
+            else node.value.metatype = metatype.value;
         }
 
         return Promise.resolve(node);
@@ -48,9 +48,9 @@ export default class NodeRepository extends Repository implements RepositoryInte
     async findByCompositeID(id: string, dataSourceID: string, metatypeID: string, transaction?: PoolClient): Promise<Result<Node>> {
         const node = await this.#mapper.RetrieveByCompositeOriginalID(id, dataSourceID, metatypeID, transaction);
         if (!node.isError) {
-            const metatype = await this.#metatypeRepo.findByID(node.value.metatype!.id!);
+            const metatype = await this.#metatypeRepo.findByID(node.value.metatype_id);
             if (metatype.isError) Logger.error(`unable to load node's metatype`);
-            else Object.assign(node.value.metatype!, metatype.value);
+            else node.value.metatype = metatype.value;
         }
 
         return Promise.resolve(node);
@@ -262,6 +262,10 @@ export default class NodeRepository extends Repository implements RepositoryInte
         }
 
         return this.#fileMapper.ListForNode(node.id);
+    }
+
+    listTransformations(nodeID: string): Promise<Result<NodeTransformation[]>> {
+        return this.#mapper.ListTransformationsForNode(nodeID);
     }
 
     id(operator: string, value: any) {

@@ -12,7 +12,7 @@
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
         <span class="headline text-h3">{{$t("createNode.formTitle")}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
         <v-row>
@@ -37,7 +37,7 @@
                 <template v-slot:label>{{$t('createNode.metatype')}} <small style="color:red" >*</small></template>
               </v-autocomplete>
               <v-col :cols="12" v-if="Object.keys(metatype).length !== 0">
-                <v-checkbox 
+                <v-checkbox
                   v-model="optional"
                   :label="'Show Optional Fields'"
                 ></v-checkbox>
@@ -91,9 +91,9 @@ export default class CreateNodeDialog extends Vue {
   originSearch = ""
   metatype: any = {}
   propertyValue = ""
-  
+
   property = {}
-  
+
   properties: PropertyT[] = []
   originMetatypes: MetatypeT[] = []
 
@@ -104,7 +104,7 @@ export default class CreateNodeDialog extends Vue {
 
   @Watch('originSearch', {immediate: true})
   onOriginSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: true, ontologyVersion: this.$store.getters.activeOntologyVersionID})
+    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: true, ontologyVersion: this.$store.getters.currentOntologyVersionID})
         .then((metatypes) => {
           this.originMetatypes = metatypes as MetatypeT[]
           this.metatypesLoading = false
@@ -154,7 +154,7 @@ export default class CreateNodeDialog extends Vue {
         key.default_value = null
       }
       property[key.property_name] = key.default_value
-    }) 
+    })
     this.property = property
   }
 

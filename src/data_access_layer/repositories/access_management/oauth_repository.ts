@@ -11,7 +11,7 @@ import {classToPlain, plainToClass} from 'class-transformer';
 import Config from '../../../services/config';
 import {Request} from 'express';
 import {OAuthApplication, OAuthRequest, OAuthTokenExchangeRequest} from '../../../domain_objects/access_management/oauth/oauth';
-import {SuperUser, User} from '../../../domain_objects/access_management/user';
+import {ReturnUser, SuperUser, User, UserToReturnUser} from '../../../domain_objects/access_management/user';
 import base64url from 'base64url';
 import Logger from '../../../services/logger';
 
@@ -178,10 +178,7 @@ export default class OAuthRepository extends Repository implements RepositoryInt
             if (!valid) return new Promise((resolve) => resolve(Result.Failure('invalid client')));
         }
 
-        // with all verification done generate and return a valid JWT after assigning user permissions
-        await userRepo.retrievePermissions(user.value);
-
-        const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, {expiresIn: '720m'});
+        const token = jwt.sign(classToPlain(UserToReturnUser(user.value)), Config.encryption_key_secret, {expiresIn: '720m'});
 
         return new Promise((resolve) => resolve(Result.Success(token)));
     }

@@ -232,7 +232,7 @@ export default class ImportRoutes {
                         // shouldn't need to do anything special for a valid json file, ReceiveData can handle valid json
                         // files
                         importPromises.push(req.dataSource!.ReceiveData(file as Readable, req.currentUser!));
-                    } else if (mimetype === 'text/csv') {
+                    } else if (mimetype === 'text/csv' || mimetype === 'application/vnd.ms-excel') {
                         importPromises.push(
                             req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
                                 transformStreams: [

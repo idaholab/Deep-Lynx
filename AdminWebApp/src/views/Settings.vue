@@ -65,7 +65,8 @@ export default class Settings extends Vue {
   updateContainer() {
     this.$client.updateContainer(this.container)
         .then((container) => {
-          console.log(container)
+          this.$store.commit('setEditMode', false)
+          this.$store.commit('setActiveContainer', container)
         })
         .catch(e => {
           this.errorMessage = e

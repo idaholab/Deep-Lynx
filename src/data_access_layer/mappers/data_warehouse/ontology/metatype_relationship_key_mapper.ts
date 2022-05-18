@@ -173,7 +173,7 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
 
     private listStatement(relationshipID: string): QueryConfig {
         return {
-            text: `SELECT * FROM get_metatype_relationship_keys($1)`,
+            text: `SELECT * FROM get_metatype_relationship_keys($1) ORDER BY name`,
             values: [relationshipID],
         };
     }

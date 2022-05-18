@@ -13,7 +13,7 @@
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
         <span class="headline text-h3">View Metatype Relationship Pair</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text v-if="selectedPair">
         <error-banner :message="errorMessage"></error-banner>
         <v-row>
@@ -128,7 +128,7 @@ export default class ViewRelationshipPairDialog extends Vue {
 
   @Watch('destinationSearch', {immediate: false})
   onDestinationSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.pair.container_id, {name: newVal})
+    this.$client.listMetatypes(this.pair.container_id, {name: newVal, ontologyVersion: this.$store.getters.activeOntologyVersionID})
         .then((metatypes) => {
           this.destinationMetatypes = metatypes as MetatypeT[]
         })
@@ -137,7 +137,7 @@ export default class ViewRelationshipPairDialog extends Vue {
 
   @Watch('originSearch', {immediate: false})
   onOriginSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.pair.container_id, {name: newVal})
+    this.$client.listMetatypes(this.pair.container_id, {name: newVal, ontologyVersion: this.$store.getters.activeOntologyVersionID})
         .then((metatypes) => {
           this.originMetatypes = metatypes as MetatypeT[]
         })
@@ -146,7 +146,7 @@ export default class ViewRelationshipPairDialog extends Vue {
 
   @Watch('relationshipSearch', {immediate: false})
   relationshipSearchChange(newVal: string) {
-    this.$client.listMetatypeRelationships(this.pair.container_id,  {name: newVal})
+    this.$client.listMetatypeRelationships(this.pair.container_id,  {name: newVal, ontologyVersion: this.$store.getters.activeOntologyVersionID})
         .then(metatypeRelationships => {
           this.metatypeRelationships = metatypeRelationships as MetatypeRelationshipT[]
         })

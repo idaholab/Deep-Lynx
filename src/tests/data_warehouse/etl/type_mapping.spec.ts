@@ -28,6 +28,7 @@ import TypeTransformation, {Condition, KeyMapping} from '../../../domain_objects
 import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data_source';
+import TimeseriesEntry from '../../../domain_objects/data_warehouse/data/timeseries';
 
 describe('A Data Type Mapping can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -291,9 +292,7 @@ describe('A Data Type Mapping can', async () => {
         expect(userResult.value).not.empty;
         user = userResult.value;
 
-        const dstorage = DataSourceMapper.Instance;
         const relationshipMapper = MetatypeRelationshipMapper.Instance;
-        const mappingStorage = TypeMappingMapper.Instance;
 
         const metatypeRepo = new MetatypeRepository();
         const created = await metatypeRepo.bulkSave(user, test_metatypes);
@@ -415,6 +414,7 @@ describe('A Data Type Mapping can', async () => {
             ],
             metatype_id: test_metatypes.find((m) => m.name === 'Car')!.id,
             unique_identifier_key: 'car.id',
+            type: 'node',
             container_id: containerID,
             data_source_id: dataSourceID,
         });
@@ -427,7 +427,7 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].original_data_id).eq('UUID');
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | Edge) => {
+        results.value.forEach((node: Node | Edge | TimeseriesEntry) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = car;
         });
@@ -455,6 +455,7 @@ describe('A Data Type Mapping can', async () => {
                 }),
             ],
             metatype_id: car!.id,
+            type: 'node',
             unique_identifier_key: 'car.id',
         });
 
@@ -469,7 +470,7 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].original_data_id).eq('UUID');
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | Edge) => {
+        results.value.forEach((node: Node | Edge | TimeseriesEntry) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = car;
         });
@@ -502,6 +503,7 @@ describe('A Data Type Mapping can', async () => {
                 }),
             ],
             metatype_id: entry!.id,
+            type: 'node',
             unique_identifier_key: 'car_maintenance.maintenance_entries.[].id',
             root_array: 'car_maintenance.maintenance_entries',
         });
@@ -524,7 +526,7 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[1].original_data_id).eq('2'); // original IDs are strings
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | Edge) => {
+        results.value.forEach((node: Node | Edge | TimeseriesEntry) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = entry;
         });
@@ -561,6 +563,7 @@ describe('A Data Type Mapping can', async () => {
                 }),
             ],
             metatype_id: part!.id,
+            type: 'node',
             unique_identifier_key: 'car_maintenance.maintenance_entries.[].parts_list.[].id',
             root_array: 'car_maintenance.maintenance_entries.[].parts_list',
         });
@@ -606,7 +609,7 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[4].original_data_id).eq('bolts');
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | Edge) => {
+        results.value.forEach((node: Node | Edge | TimeseriesEntry) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = part;
         });
@@ -661,6 +664,7 @@ describe('A Data Type Mapping can', async () => {
                 }),
             ],
             metatype_id: part!.id,
+            type: 'node',
             unique_identifier_key: 'car_maintenance.maintenance_entries.[].parts_list.[].id',
             root_array: 'car_maintenance.maintenance_entries.[].parts_list',
         });
@@ -678,7 +682,7 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].original_data_id).eq('oil');
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | Edge) => {
+        results.value.forEach((node: Node | Edge | TimeseriesEntry) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = part;
         });
@@ -707,6 +711,7 @@ describe('A Data Type Mapping can', async () => {
                 }),
             ],
             metatype_id: component!.id,
+            type: 'node',
             unique_identifier_key: 'car_maintenance.maintenance_entries.[].parts_list.[].components.[].id',
             root_array: 'car_maintenance.maintenance_entries.[].parts_list.[].components',
         });
@@ -722,7 +727,7 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[0].original_data_id).eq('1');
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | Edge) => {
+        results.value.forEach((node: Node | Edge | TimeseriesEntry) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = component;
         });
@@ -759,6 +764,7 @@ describe('A Data Type Mapping can', async () => {
                 }),
             ],
             metatype_id: maintenance!.id,
+            type: 'node',
             unique_identifier_key: 'car_maintenance.id',
         });
 
@@ -775,7 +781,7 @@ describe('A Data Type Mapping can', async () => {
         expect((maintenanceResult.value as Node[])[0].original_data_id).eq('UUID'); // original IDs are strings
 
         // run through and set the right metatype and container
-        maintenanceResult.value.forEach((node: Node | Edge) => {
+        maintenanceResult.value.forEach((node: Node | Edge | TimeseriesEntry) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = maintenance;
         });
@@ -803,6 +809,7 @@ describe('A Data Type Mapping can', async () => {
                 }),
             ],
             metatype_id: entry!.id,
+            type: 'node',
             unique_identifier_key: 'car_maintenance.maintenance_entries.[].id',
             root_array: 'car_maintenance.maintenance_entries',
         });
@@ -825,7 +832,7 @@ describe('A Data Type Mapping can', async () => {
         expect((results.value as Node[])[1].original_data_id).eq('2'); // original IDs are strings
 
         // run through and set the right metatype and container
-        results.value.forEach((node: Node | Edge) => {
+        results.value.forEach((node: Node | Edge | TimeseriesEntry) => {
             (node as Node).container_id = containerID;
             (node as Node).metatype = entry;
         });
@@ -834,6 +841,7 @@ describe('A Data Type Mapping can', async () => {
         expect(inserted.isError).false;
 
         const maintenanceEdgeTransformation = new TypeTransformation({
+            type: 'edge',
             container_id: containerID,
             data_source_id: dataSourceID,
             type_mapping_id: typeMappingID,
@@ -849,7 +857,7 @@ describe('A Data Type Mapping can', async () => {
         expect(maintenanceEdgeResult.value.length).eq(2); // a total of two nodes should be created
 
         // run through and set the right metatype relationship pair and container
-        maintenanceEdgeResult.value.forEach((edge: Node | Edge) => {
+        maintenanceEdgeResult.value.forEach((edge: Node | Edge | TimeseriesEntry) => {
             (edge as Edge).container_id = containerID;
             (edge as Edge).metatypeRelationshipPair = maintenancePair;
         });
@@ -860,6 +868,37 @@ describe('A Data Type Mapping can', async () => {
         await NodeMapper.Instance.Delete(maintenanceInserted.value[0].id!);
         await NodeMapper.Instance.Delete(inserted.value[0].id!);
         return NodeMapper.Instance.Delete(inserted.value[1].id!);
+    });
+
+    it('can generate a car timeseries entry', async () => {
+        const carTransformation = new TypeTransformation({
+            type_mapping_id: typeMappingID,
+            type: 'timeseries',
+            keys: [
+                new KeyMapping({
+                    key: 'car.id',
+                    value_type: 'string',
+                    column_name: 'id',
+                }),
+                new KeyMapping({
+                    key: 'car.name',
+                    value_type: 'string',
+                    column_name: 'name',
+                }),
+            ],
+            container_id: containerID,
+            data_source_id: dataSourceID,
+        });
+
+        const results = await carTransformation.applyTransformation(data!);
+
+        (results.value as TimeseriesEntry[])[0].data.forEach((data) => {
+            expect(data.column_name).oneOf(['id', 'name']);
+            expect(data.value_type).eq('string');
+            expect(data.value).oneOf(['UUID', 'test car']);
+        });
+
+        return Promise.resolve();
     });
 
     it('apply conditions and subexpressions to a payload correctly', async () => {

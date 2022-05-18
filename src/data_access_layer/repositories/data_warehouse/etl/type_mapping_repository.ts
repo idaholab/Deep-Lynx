@@ -219,6 +219,17 @@ export default class TypeMappingRepository extends Repository implements Reposit
                 return Promise.resolve(Result.Pass(results));
             }
 
+            transformationsCreate.forEach((t) => {
+                if (t.type === 'timeseries' && Config.timescaledb_enabled) {
+                    this.#transformationMapper
+                        .CreateHypertable(t)
+                        .then((built) => {
+                            if (built.isError) Logger.error(`unable to create hypertable for transformation`);
+                        })
+                        .catch((e) => Logger.error(`unable to create hypertable for transformation ${e}`));
+                }
+            });
+
             returnTransformations.push(...results.value);
         }
 
