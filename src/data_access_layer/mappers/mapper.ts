@@ -152,6 +152,34 @@ export default class Mapper {
         }
     }
 
+    async runAllStatements(statements: QueryConfig[] | string[], options?: Options<any>): Promise<Result<boolean>> {
+        if (options && options.transaction) {
+            try {
+                for (const j in statements) {
+                    await options.transaction.query(statements[j]);
+                }
+            } catch (e) {
+                return new Promise((resolve) => {
+                    Logger.error(`run all failed - ${(e as Error).message} `);
+                    resolve(Result.Failure(`run all failed ${(e as Error).message}`));
+                });
+            }
+        } else {
+            try {
+                for (const j in statements) {
+                    await PostgresAdapter.Instance.Pool.query(statements[j]);
+                }
+            } catch (e) {
+                return new Promise((resolve) => {
+                    Logger.error(`run all failed - ${(e as Error).message} `);
+                    resolve(Result.Failure(`run all failed ${(e as Error).message}`));
+                });
+            }
+        }
+
+        return Promise.resolve(Result.Success(true));
+    }
+
     // run a query, retrieve first result and cast to T
     retrieve<T>(q: QueryConfig, options?: Options<T>): Promise<Result<T>> {
         return new Promise<Result<any>>((resolve) => {

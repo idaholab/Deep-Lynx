@@ -9,7 +9,7 @@ import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import
 import {PoolClient} from 'pg';
 import Result from '../../../common_classes/result';
 import {User} from '../../../domain_objects/access_management/user';
-import {PassThrough, Readable} from 'stream';
+import {PassThrough, Readable, Writable} from 'stream';
 import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
 import {DataSource} from './data_source';
 import {QueueFactory} from '../../../services/queue/queue';
@@ -167,7 +167,8 @@ export default class StandardDataSourceImpl implements DataSource {
         }
 
         // the JSONStream pipe is simple, parsing a single array of json objects into parts
-        const fromJSON = JSONStream.parse('*');
+        const fromJSON: Writable = JSONStream.parse('*');
+        let errorMessage: any | undefined;
 
         // handle all transform streams, piping each in order
         if (options && options.transformStreams && options.transformStreams.length > 0) {
@@ -178,11 +179,42 @@ export default class StandardDataSourceImpl implements DataSource {
             }
 
             // for the pipe process to work correctly you must wait for the pipe to finish reading all data
-            await new Promise((fulfill) => pipeline.pipe(fromJSON).pipe(pass).on('finish', fulfill));
+            await new Promise((fulfill) =>
+                pipeline
+                    .pipe(fromJSON)
+                    .on('error', (err: any) => {
+                        errorMessage = err;
+                        fulfill(err);
+                    })
+                    .pipe(pass)
+                    .on('finish', fulfill),
+            );
         } else if (options && options.overrideJsonStream) {
-            await new Promise((fulfill) => payloadStream.pipe(pass).on('finish', fulfill));
+            await new Promise((fulfill) =>
+                payloadStream
+                    .pipe(pass)
+                    .on('error', (err: any) => {
+                        errorMessage = err;
+                        fulfill(err);
+                    })
+                    .on('finish', fulfill),
+            );
         } else {
-            await new Promise((fulfill) => payloadStream.pipe(fromJSON).pipe(pass).on('finish', fulfill));
+            await new Promise((fulfill) =>
+                payloadStream
+                    .pipe(fromJSON)
+                    .on('error', (err: any) => {
+                        errorMessage = err;
+                        fulfill(err);
+                    })
+                    .pipe(pass)
+                    .on('finish', fulfill),
+            );
+        }
+
+        if (errorMessage) {
+            if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
+            return Promise.resolve(Result.Failure(`unable to parse JSON: ${errorMessage}`));
         }
 
         // we have to wait until any save operations are complete before we can act on the pipe's results

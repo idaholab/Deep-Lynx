@@ -6,6 +6,7 @@ FROM node:16
 ENV VUE_APP_BUNDLED_BUILD="true"
 ENV VUE_APP_DEEP_LYNX_API_URL="http://localhost:8090"
 ENV VUE_APP_DEEP_LYNX_API_AUTH_METHOD="token"
+ENV VUE_APP_TIME_SERIES_ENABLED="true"
 # you must include the trailing /# - because the bundled admin web app will be in hash mode, not history
 ENV VUE_APP_APP_URL="http://localhost:8090/#"
 # this should be an alphanumeric random string of at least 15 characters

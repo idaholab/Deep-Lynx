@@ -3,6 +3,7 @@ import Result from '../../common_classes/result';
 import Mapper, {Options} from '../mappers/mapper';
 import {User} from '../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
+const format = require('pg-format');
 
 /*
     RepositoryInterface allows us to create an expectation for how the various
@@ -22,7 +23,7 @@ export default interface RepositoryInterface<T> {
  methods together and then terminate with either a count() or list() call
 */
 export class Repository {
-    private readonly _tableName: string;
+    public readonly _tableName: string;
     // TODO: replace with pg_format library
     public _rawQuery: string[] = [];
     public _values: any[] = [];
@@ -222,6 +223,21 @@ export class Repository {
                 });
 
                 this._rawQuery.push(`${fieldName} IN (${output.join(',')})`);
+                break;
+            }
+            case 'between': {
+                let values: any[] = [];
+                if (!Array.isArray(value)) {
+                    values = `${value}`.split(','); // support comma separated lists
+                } else {
+                    values = value;
+                }
+
+                if (values.length !== 2) {
+                    return this;
+                }
+
+                this._rawQuery.push(format(`%s BETWEEN %L::${typeCast} AND %L::${typeCast}`, fieldName, values[0], values[1]));
                 break;
             }
             // is null/is not null completely ignores the value because for some reason the formatting library will

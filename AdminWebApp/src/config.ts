@@ -4,27 +4,31 @@ export class Config {
     private static instance: Config;
 
     get appUrl(): string {
-        return process.env.VUE_APP_APP_URL
+        return process.env.VUE_APP_APP_URL || 'http://localhost:8090';
     }
 
     get deepLynxAppID(): string {
-        return process.env.VUE_APP_DEEP_LYNX_APP_ID;
+        return process.env.VUE_APP_DEEP_LYNX_APP_ID || 'root';
     }
 
     get deepLynxApiUri(): string {
-        return process.env.VUE_APP_DEEP_LYNX_API_URL;
+        return process.env.VUE_APP_DEEP_LYNX_API_URL || 'http://localhost:8090';
     }
 
     get deepLynxApiAuth(): string | undefined {
-        return process.env.VUE_APP_DEEP_LYNX_API_AUTH_METHOD || "token"
+        return process.env.VUE_APP_DEEP_LYNX_API_AUTH_METHOD || 'token';
     }
 
     get deepLynxApiAuthBasicUser(): string | undefined {
-       return process.env.VUE_APP_DEEP_LYNX_API_AUTH_BASIC_USER
+        return process.env.VUE_APP_DEEP_LYNX_API_AUTH_BASIC_USER;
     }
 
     get deepLynxApiAuthBasicPass(): string | undefined {
-        return process.env.VUE_APP_DEEP_LYNX_API_AUTH_BASIC_PASS
+        return process.env.VUE_APP_DEEP_LYNX_API_AUTH_BASIC_PASS;
+    }
+
+    get timeSeriesEnabled(): boolean {
+        return process.env.VUE_APP_TIME_SERIES_ENABLED === 'true';
     }
 
     public static Instance(): Config {

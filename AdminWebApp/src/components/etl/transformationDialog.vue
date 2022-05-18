@@ -31,10 +31,10 @@
         >
           {{$t("dataMapping.viewArchivedTransformation")}}
         </span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
-        <v-row>    
+        <v-row>
           <v-col :cols="12" style="position: sticky; top: 0px; z-index: 99; background: white" >
             <div >
               <h4>{{$t('typeTransformation.currentDataSet')}}<info-tooltip :message="$t('dataMapping.samplePayloadHelp')"></info-tooltip> </h4>
@@ -69,6 +69,14 @@
                   ref="mainForm"
                   v-model="mainFormValid"
               >
+
+                <v-text-field
+                    v-model="name"
+                    :rules="[validName(name)]"
+                >
+                  <template v-slot:label>{{$t('dataMapping.name')}} <small>{{$t('dataMapping.optional')}}</small></template>
+                </v-text-field>
+
                 <h3 style="padding-top: 10px">{{$t("dataMapping.mapping")}} <info-tooltip :message="$t('dataMapping.mappingHelp')"></info-tooltip></h3>
                 <v-select
                     :items="payloadTypes()"
@@ -108,7 +116,7 @@
                             clearable
                         >
 
-                          <template v-slot:label>{{$t('dataMapping.uniqueIdentifierKey')}} <small>{{$t('dataMapping.optional')}}</small></template>
+                          <template v-slot:label>{{$t('dataMapping.uniqueIdentifierKey')}}</template>
                           <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueIdentifierHelp')"></info-tooltip> </template>
                         </v-combobox>
                         <v-combobox
@@ -117,7 +125,7 @@
                             v-model="uniqueIdentifierKey"
                             clearable
                         >
-                          <template v-slot:label>{{$t('dataMapping.uniqueIdentifierKey')}} <small>{{$t('dataMapping.optional')}}</small></template>
+                          <template v-slot:label>{{$t('dataMapping.uniqueIdentifierKey')}}</template>
                           <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueIdentifierHelp')"></info-tooltip> </template>
                         </v-combobox>
                       </v-col>
@@ -426,6 +434,7 @@
                       <v-text-field
                           :label="$t('dataMapping.columnName')"
                           v-model="item.column_name"
+                          :disabled="transformation !== null"
                           :rules="[v => !!v || $t('dataMapping.required'),validColumnName(index, item.column_name)]"
                       >
                       </v-text-field>
@@ -435,7 +444,7 @@
                       <v-select
                           :label="$t('dataMapping.columnDataType')"
                           :items=dataTypes
-                          :disabled="item.is_primary_timestamp"
+                          :disabled="item.is_primary_timestamp || transformation !== null"
                           v-model="item.value_type"
                           :rules="[v => !!v || $t('dataMapping.required')]"
                       />
@@ -478,7 +487,8 @@
 
                   <v-row >
                     <v-col :cols="12" style="padding:25px" align="center" justify="center">
-                      <v-btn @click="addMapping">{{$t('dataMapping.addColumn')}}</v-btn>
+                      <v-btn :disabled="transformation !== null" @click="addMapping">{{$t('dataMapping.addColumn')}}</v-btn>
+                      <p v-if="transformation !== null">{{$t('dataMapping.editingTimeseriesDisabled')}}</p>
                     </v-col>
                   </v-row>
                 </div>
@@ -739,6 +749,7 @@ import {getNestedValue} from "@/utilities";
 import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import SearchMetatypes from "@/components/ontology/metatypes/searchMetatypes.vue";
 import {v4 as uuidv4} from 'uuid'
+import Config from "@/config";
 
 @Component({
   components: {SelectDataSource, SearchMetatypes},
@@ -781,6 +792,7 @@ export default class TransformationDialog extends Vue {
   subexpressionFormValid = false
   mainFormValid = false
   requiredKeysMapped = true
+  name = ""
 
   metatypes: MetatypeT[] = []
 
@@ -966,11 +978,13 @@ export default class TransformationDialog extends Vue {
     if(this.transformation?.type === 'timeseries') {
       this.payloadType = 'timeseries'
       this.tab_data_source_id = this.transformation?.tab_data_source_id
-      this.tab_metatype_id = this.transformation?.metatype_id
+      this.tab_metatype_id = this.transformation?.tab_metatype_id
       this.tab_node_id =  this.transformation?.tab_node_id
       this.tab_node_key =  this.transformation?.tab_node_key
       this.propertyMapping = this.transformation?.keys as any
     }
+
+    this.name = this.transformation?.name!
 
   }
 
@@ -1056,7 +1070,7 @@ export default class TransformationDialog extends Vue {
 
   @Watch('search', {immediate: true})
   onSearchChange(newVal: string) {
-    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: false, ontologyVersion: this.$store.getters.selectedOntologyVersionID})
+    this.$client.listMetatypes(this.containerID, {name: newVal, loadKeys: false, ontologyVersion: this.$store.getters.currentOntologyVersionID})
         .then((metatypes) => {
           this.metatypes = metatypes as MetatypeT[]
         })
@@ -1073,7 +1087,7 @@ export default class TransformationDialog extends Vue {
       offset,
       originID: undefined,
       destinationID: undefined,
-      ontologyVersion: this.$store.getters.selectedOntologyVersionID
+      ontologyVersion: this.$store.getters.currentOntologyVersionID
     })
         .then(pairs => {
           this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
@@ -1101,6 +1115,7 @@ export default class TransformationDialog extends Vue {
       offset: 0,
       originID: undefined,
       destinationID: undefined,
+      ontologyVersion: this.$store.getters.currentOntologyVersionID,
       metatypeID: this.selectedMetatype?.id!
     })
         .then(pairs => {
@@ -1217,14 +1232,18 @@ export default class TransformationDialog extends Vue {
 
   @Watch('tab_node_id', {immediate: false})
   onTabNodeIDChange() {
-    // @ts-ignore
-    this.$refs.mainForm.validate()
+    if(this.$refs.mainForm){
+      // @ts-ignore
+      this.$refs.mainForm.validate()
+    }
   }
 
   @Watch('tab_node_key', {immediate: false})
   onTabNodeKeyChange() {
-    // @ts-ignore
-    this.$refs.mainForm.validate()
+    if(this.$refs.mainForm){
+      // @ts-ignore
+      this.$refs.mainForm.validate()
+    }
   }
 
   // autoPopulateMetatypeKeys attempts to match a selected metatype key's to payload
@@ -1281,6 +1300,7 @@ export default class TransformationDialog extends Vue {
     this.loading = true
     const payload: {[key: string]: any} = {}
     payload.type = this.payloadType
+    payload.name = this.name
 
     // include either the metatype or metatype relationship pair id, not both
     if(this.selectedMetatype) {
@@ -1325,6 +1345,7 @@ export default class TransformationDialog extends Vue {
     payload.metatype_id = (this.selectedMetatype?.id) ? this.selectedMetatype.id : ""
     payload.metatype_relationship_pair_id = (this.selectedRelationshipPair?.id) ? this.selectedRelationshipPair.id : ""
     payload.type = this.payloadType
+    payload.name = this.name
     payload.origin_id_key = this.origin_key
     payload.origin_data_source_id = this.origin_data_source_id
     payload.origin_metatype_id = this.origin_metatype_id
@@ -1353,16 +1374,22 @@ export default class TransformationDialog extends Vue {
   }
 
   payloadTypes() {
-    return [{
+    const types = [{
       name: this.$t("dataMapping.record"),
       value: 'node'
     },{
       name: this.$t("dataMapping.relationship"),
       value: 'edge'
-    },/*{
-      name: this.$t("dataMapping.tabularData"),
-      value: 'timeseries'
-    }*/]
+    }]
+
+    if(Config.timeSeriesEnabled) {
+     types.push({
+       name: this.$t("dataMapping.tabularData"),
+       value: 'timeseries'
+     })
+    }
+
+    return types
   }
 
   isKeyMapped(key: MetatypeKeyT) {
@@ -1611,9 +1638,31 @@ export default class TransformationDialog extends Vue {
     return true
   }
 
+  validName(value: any) {
+    if(!value) {
+      return true
+    }
+
+    // this regex should match only if the name starts with a letter, contains only alphanumerics and underscores with
+    // no spaces and is between 1 and 30 characters in length
+    const matches =/^[a-zA-Z][a-zA-Z0-9_]{1,30}(?!\s)$/.exec(value)
+    if(!matches || matches.length === 0) {
+      return this.$t('dataMapping.nameRequirements')
+    }
+
+    return true
+  }
+
   validColumnName(index: any, value: any) {
     if(this.propertyMapping.filter(p  => value === p.column_name).length > 1){
       return this.$t('dataMapping.columnNameMustBeUnique')
+    }
+
+    // this regex should match only if the name starts with a letter, contains only alphanumerics and underscores with
+    // no spaces and is between 1 and 30 characters in length
+    const matches = /^[a-zA-Z][a-zA-Z0-9_]{1,30}$/.exec(value)
+    if(!matches || matches.length === 0) {
+      return this.$t('dataMapping.columnNameRequirements')
     }
 
     return true

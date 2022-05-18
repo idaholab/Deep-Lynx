@@ -176,7 +176,7 @@ export default class MetatypeKeyMapper extends Mapper {
     // all keys back, both the metatype's own and the inherited keys
     private listStatement(metatypeID: string): QueryConfig {
         return {
-            text: `SELECT * FROM get_metatype_keys($1::bigint)`,
+            text: `SELECT * FROM get_metatype_keys($1::bigint) ORDER BY name`,
             values: [metatypeID],
         };
     }

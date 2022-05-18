@@ -103,24 +103,12 @@ export default class ContainerSelection extends Vue {
     this.selectedContainer = container
     this.$store.commit('setActiveContainer', container)
     this.$store.commit('setEditMode', false)
-    this.$store.commit('setPendingOntologyVersion', undefined)
-
-    if(this.$store.getters.ontologyVersioningEnabled) {
-      this.$client.listOntologyVersions(container.id, {status: 'published'})
-          .then((results) => {
-            if(results.length > 0) {
-              this.$store.dispatch('changeOntologyVersion', results[0])
-            }
-          })
-          .catch((e: any) =>  this.errorMessage = e)
-    }
 
     this.toContainerHome()
   }
 
   toContainerHome() {
     this.$store.commit('setEditMode', false)
-    this.$store.commit('setPendingOntologyVersion', undefined)
 
     // @ts-ignore
     RefreshPermissions()
@@ -132,7 +120,6 @@ export default class ContainerSelection extends Vue {
 
   newContainer(containerID: string) {
     this.$store.commit('setEditMode', false)
-    this.$store.commit('setPendingOntologyVersion', undefined)
 
     RefreshPermissions()
         .then(() => {
@@ -143,7 +130,6 @@ export default class ContainerSelection extends Vue {
 
   acceptInvite(token: string, containerName: string) {
     this.$store.commit('setEditMode', false)
-    this.$store.commit('setPendingOntologyVersion', undefined)
 
     RefreshPermissions()
         .then(() => {

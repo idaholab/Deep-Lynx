@@ -104,6 +104,8 @@ export class Config {
     private readonly _rabbitmq_url: string;
     private readonly _azure_service_bus_connection_string: string;
 
+    private readonly _limit_default: number;
+
     private constructor() {
         // Either assign a sane default of the env var is missing, or create your
         // own checks on process.env. There is most likely a more elegant way but
@@ -210,6 +212,8 @@ export class Config {
 
         this._rabbitmq_url = process.env.RABBITMQ_URL || 'amqp://localhost';
         this._azure_service_bus_connection_string = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING || '';
+
+        this._limit_default = process.env.LIMIT_DEFAULT ? parseInt(process.env.LIMIT_DEFAULT!, 10) : 10000;
 
         // generate and save a key if we didn't start with one
         if (!this._encryption_key_path) {
@@ -509,6 +513,10 @@ export class Config {
 
     get import_cache_ttl(): number {
         return this._import_cache_ttl;
+    }
+
+    get limit_default(): number {
+        return this._limit_default;
     }
 
     public static Instance(): Config {

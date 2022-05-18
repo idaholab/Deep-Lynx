@@ -80,6 +80,8 @@ export default class TypeMappingRoutes {
             authInContainer('write', 'data'),
             this.deleteTypeTransformation,
         );
+
+        app.get('/containers/:containerID/transformations/:transformationID', ...middleware, authInContainer('read', 'data'), this.retrieveTypeTransformation);
     }
 
     private static retrieveTypeMapping(req: Request, res: Response, next: NextFunction) {
@@ -505,6 +507,17 @@ export default class TypeMappingRoutes {
                 });
         } else {
             Result.Failure(`data source not found`).asResponse(res);
+            next();
+        }
+    }
+
+    private static retrieveTypeTransformation(req: Request, res: Response, next: NextFunction) {
+        if (req.typeTransformation) {
+            Result.Success(req.typeTransformation).asResponse(res);
+            next();
+            return;
+        } else {
+            Result.Failure(`type transformation not found`).asResponse(res);
             next();
         }
     }
