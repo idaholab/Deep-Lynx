@@ -6,6 +6,7 @@ import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 import File from '../../../../domain_objects/data_warehouse/data/file';
+import Authorization from '../../../../domain_objects/access_management/authorization/authorization';
 
 /*
     ReportRepository contains methods for persisting and retrieving reports
@@ -58,6 +59,20 @@ export default class ReportRepository extends Repository implements RepositoryIn
             Object.assign(r, created.value);
         }
 
+        return Promise.resolve(Result.Success(true));
+    }
+
+    async addUserToReport(r: Report, user: User): Promise<Result<boolean>> {
+        const e = await Authorization.enforcer();
+        const userAdded = await e.addPolicy(user.id!, r.container_id!, `reports_${r.id!}`, 'read');
+        if (!userAdded) {return Promise.resolve(Result.Failure(`error: could not add user to report ${r.id}`))};
+        return Promise.resolve(Result.Success(true));
+    }
+
+    async removeUserFromReport(r: Report, user: User): Promise<Result<boolean>> {
+        const e = await Authorization.enforcer();
+        const userRemoved = await e.removePolicy(user.id!, r.container_id!, `reports_${r.id!}`, 'read');
+        if (!userRemoved) {return Promise.resolve(Result.Failure(`error: could not remove user from report ${r.id}`))};
         return Promise.resolve(Result.Success(true));
     }
 
