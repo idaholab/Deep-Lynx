@@ -308,7 +308,6 @@ describe('A Timeseries Repository', async () => {
         const saved = await repo.bulkSave(entries);
         expect(saved.isError, saved.error?.error).false;
 
-        // now we try to build a histogram
         let results = await repo.where().query('open', 'eq', true, 'boolean').list();
         expect(results.isError, results.error?.error).false;
         expect(results.value.length).eq(1);
@@ -316,7 +315,7 @@ describe('A Timeseries Repository', async () => {
         repo = new TimeseriesEntryRepository(transformationID);
         results = await repo.where().query('at', '<', new Date()).list();
         expect(results.isError, results.error?.error).false;
-        expect(results.value.length).eq(2);
+        expect(results.value.length).eq(4);
 
         return Promise.resolve();
     });

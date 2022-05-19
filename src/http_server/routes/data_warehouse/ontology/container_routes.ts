@@ -149,28 +149,15 @@ export default class ContainerRoutes {
         if (!req.container) {
             res.status(500).json(Result.Failure(`must provide a container to archive or delete`));
         }
-
-        if (String(req.query.permanent).toLowerCase() === 'true') {
-            repository
-                .delete(req.container!)
-                .then((result) => {
-                    result.asResponse(res);
-                })
-                .catch((err) => {
-                    Result.Error(err).asResponse(res);
-                })
-                .finally(() => next());
-        } else {
-            repository
-                .archive(user, req.container!)
-                .then((result) => {
-                    result.asResponse(res);
-                })
-                .catch((err) => {
-                    Result.Error(err).asResponse(res);
-                })
-                .finally(() => next());
-        }
+        repository
+            .delete(req.container!)
+            .then((result) => {
+                result.asResponse(res);
+            })
+            .catch((err) => {
+                Result.Error(err).asResponse(res);
+            })
+            .finally(() => next());
     }
 
     private static setActive(req: Request, res: Response, next: NextFunction) {

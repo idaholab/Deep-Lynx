@@ -128,7 +128,7 @@ export default class DataSourceMapper extends Mapper {
             const stream = client.query(new QueryStream(this.listStagingForSourceStreaming(dataSourceID)));
 
             stream.on('data', (data) => {
-                void queue.Put(Config.process_queue, plainToClass(DataStaging, data as object).id);
+                void queue.Put(Config.process_queue, plainToClass(DataStaging, data as object));
             });
 
             stream.on('end', () => done());
@@ -306,6 +306,6 @@ export default class DataSourceMapper extends Mapper {
     // we're only pulling the ID here because that's all we need for the re-queue process, we
     // don't want to read the data in needlessly
     private listStagingForSourceStreaming(dataSourceID: string): string {
-        return format(`SELECT data_staging.id FROM data_staging WHERE data_source_id = %L`, dataSourceID);
+        return format(`SELECT data_staging.* FROM data_staging WHERE data_source_id = %L`, dataSourceID);
     }
 }
