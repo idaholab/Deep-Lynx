@@ -130,7 +130,7 @@ export class Client {
         });
     }
 
-    async updateContainerFromImport(containerID: string, owlFile: File | null, owlFilePath: string): Promise<string> {
+    async updateContainerFromImport(containerID: string, owlFile: File | null, owlFilePath: string, name?: string): Promise<string> {
         const config: {[key: string]: any} = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
 
@@ -149,6 +149,10 @@ export class Client {
 
         if (owlFilePath !== '') {
             formData.append('path', owlFilePath);
+        }
+
+        if (name) {
+            formData.append('name', name);
         }
 
         const resp: AxiosResponse = await axios.put(
@@ -463,6 +467,10 @@ export class Client {
 
     createDataSource(containerID: string, dataSource: any): Promise<DataSourceT> {
         return this.post<DataSourceT>(`/containers/${containerID}/import/datasources`, dataSource);
+    }
+
+    updateDataSource(containerID: string, dataSource: DataSourceT): Promise<DataSourceT> {
+        return this.put<DataSourceT>(`/containers/${containerID}/import/datasources/${dataSource.id}`, dataSource);
     }
 
     createTypeMappingTransformation(

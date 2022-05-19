@@ -504,7 +504,7 @@ export default class ContainerImport {
                     if(container.config!.ontology_versioning_enabled) {
                         const ontologyVersion  =  new OntologyVersion({
                             container_id: containerID,
-                            name: `Update from OWL File`,
+                            name: `Update - ${name} ${new Date().toDateString()}`,
                             description: 'Updates created from uploading an .OWL file',
                             status: 'ready'
                         })
