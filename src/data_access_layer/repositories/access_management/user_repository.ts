@@ -1,5 +1,5 @@
 import RepositoryInterface, {QueryOptions, Repository} from '../repository';
-import {AssignUserRolePayload, ContainerUserInvite, KeyPair, ResetUserPasswordPayload, User} from '../../../domain_objects/access_management/user';
+import {AssignUserRolePayload, ContainerUserInvite, DisplayUser, KeyPair, ResetUserPasswordPayload, User} from '../../../domain_objects/access_management/user';
 import Result, {ErrorUnauthorized} from '../../../common_classes/result';
 import bcrypt from 'bcryptjs';
 import UserMapper from '../../mappers/access_management/user_mapper';
@@ -433,6 +433,26 @@ export default class UserRepository extends Repository implements RepositoryInte
         });
 
         return UserMapper.Instance.ListFromIDs(userIDs);
+    }
+
+    // this function is different than "usersForContainer" as it returns only id and display name
+    async displayUsersForContainer(containerID: string): Promise<Result<DisplayUser[]>> {
+        const e = await Authorization.enforcer();
+
+        // using the casbin filtered grouping function, fetch all permission sets for
+        // container. Those permissions sets will contain all users associated with that container.
+        // grouping policies follow the pattern of user id, role, domain id. In this
+        // case we are fetching all grouping policies(permission sets) with a given
+        // domain(container)
+        const permissionSets = await e.getFilteredGroupingPolicy(2, containerID);
+
+        const userIDs: string[] = [];
+
+        permissionSets.map((set) => {
+            if (set[0]) userIDs.push(set[0]);
+        });
+
+        return UserMapper.Instance.ListDisplayFromIDs(userIDs);
     }
 
     addServiceUserToContainer(serviceUserID: string, containerID: string): Promise<Result<boolean>> {

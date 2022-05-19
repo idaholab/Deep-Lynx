@@ -9,6 +9,7 @@ import UserRepository from '../../data_access_layer/repositories/access_manageme
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
 import KeyPairMapper from '../../data_access_layer/mappers/access_management/keypair_mapper';
 import ContainerRepository from "../../data_access_layer/repositories/data_warehouse/ontology/container_respository";
+import Authorization from '../../domain_objects/access_management/authorization/authorization';
 
 describe('A User Repository', async () => {
     let container: Container;
@@ -210,12 +211,11 @@ describe('A User Repository', async () => {
         return repository.delete(u);
     });
 
-
     it('can save a Service User', async () => {
         const repository = new UserRepository();
         const u = testServiceUser();
 
-        let results = await repository.save(u, user);
+        const results = await repository.save(u, user);
         expect(results.isError, results.error?.error).false;
         expect(u.id).not.undefined;
 
@@ -226,7 +226,7 @@ describe('A User Repository', async () => {
         const repository = new UserRepository();
         const u = testServiceUser();
 
-        let results = await repository.save(u, user);
+        const results = await repository.save(u, user);
         expect(results.isError, results.error?.error).false;
         expect(u.id).not.undefined;
 
@@ -234,9 +234,9 @@ describe('A User Repository', async () => {
         expect(added.isError).false
 
         const assigned = await repository.assignRole(user, new AssignUserRolePayload({
-           userID: u.id,
-           containerID: container.id,
-           roleName: 'user'
+            userID: u.id,
+            containerID: container.id,
+            roleName: 'user'
         }))
         expect(assigned.isError, assigned.error?.error).false
 
@@ -256,5 +256,51 @@ describe('A User Repository', async () => {
         expect(filtered).not.empty
 
         return repository.delete(u);
+    });
+
+    it('can list user ids and display names for a container', async () => {
+        const repository = new UserRepository();
+        const u = testUser();
+        const u2 = testUser();
+        const u3 = testUser();
+
+        // create three users
+        let saved = await repository.save(u, user);
+        expect(saved.isError).false;
+        expect(u.id).not.undefined;
+        saved = await repository.save(u2, user);
+        expect(saved.isError).false;
+        expect(u2.id).not.undefined;
+        saved = await repository.save(u3, user);
+        expect(saved.isError).false;
+        expect(u3.id).not.undefined;
+        
+        // used for comparison later
+        const displayNames = [u.display_name, u2.display_name, u3.display_name]
+
+        // add them to the container
+        let assigned = await Authorization.AssignRole(u.id!, 'user', container.id!);
+        expect(assigned).true;
+        assigned = await Authorization.AssignRole(u2.id!, 'user', container.id!);
+        expect(assigned).true;
+        assigned = await Authorization.AssignRole(u3.id!, 'user', container.id!);
+        expect(assigned).true;
+
+        // list all users within the container
+        const users = await repository.displayUsersForContainer(container.id!);
+        expect(users.isError).false;
+        for (const user of users.value) {
+            expect(user.display_name).not.undefined;
+            expect(user.display_name).oneOf(displayNames);
+            expect(user.id).not.undefined;
+        }
+
+        let deleted = await repository.delete(u);
+        expect(deleted.isError).false;
+        deleted = await repository.delete(u2);
+        expect(deleted.isError).false;
+        deleted = await repository.delete(u3);
+        expect(deleted.isError).false;
+        return Promise.resolve();
     });
 });

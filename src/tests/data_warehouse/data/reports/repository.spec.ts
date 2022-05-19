@@ -12,6 +12,7 @@ import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehou
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 import {User} from '../../../../domain_objects/access_management/user';
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
+import Authorization from '../../../../domain_objects/access_management/authorization/authorization';
 
 describe('A Report Reposiory', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -91,6 +92,7 @@ describe('A Report Reposiory', async () => {
     });
 
     after(async () => {
+        await UserMapper.Instance.Delete(user.id!);
         await FileMapper.Instance.Delete(fileID);
         await DataSourceMapper.Instance.Delete(dataSourceID);
         await ContainerMapper.Instance.Delete(containerID);
@@ -235,7 +237,7 @@ describe('A Report Reposiory', async () => {
         expect(retrieved.value.status_message).eq(message);
 
         return repository.delete(report);
-    })
+    });
 
     it('can add/remove a file to/from a Report', async () => {
         const repository = new ReportRepository();
@@ -257,7 +259,7 @@ describe('A Report Reposiory', async () => {
         expect(fileRemoved.isError).false;
 
         return repository.delete(report);
-    })
+    });
 
     it('can list all files on a Report', async () => {
         const file2 = await FileMapper.Instance.Create(
@@ -301,5 +303,60 @@ describe('A Report Reposiory', async () => {
         expect(file1Removed.isError).false;
         const file2Removed = await repository.removeFile(report, file2ID);
         expect(file2Removed.isError).false;
-    })
+    });
+
+    it('can add/remove a user to/from a Report', async () => {
+        const repository = new ReportRepository();
+        const report = new Report({
+            container_id: containerID,
+            status_message: faker.random.alphaNumeric(),
+            notify_users: false
+        });
+
+        const userResult = await UserMapper.Instance.Create(
+            'test suite',
+            new User({
+                identity_provider_id: faker.random.uuid(),
+                identity_provider: 'username_password',
+                admin: false,
+                display_name: faker.name.findName(),
+                email: faker.internet.email(),
+                roles: ['superuser'],
+            }),
+        );
+        expect(userResult.isError).false;
+        expect(userResult.value).not.empty;
+        const repUser = userResult.value;
+        
+        const results = await repository.save(report, user);
+        expect(results.isError).false;
+        expect(report.id).not.undefined;
+
+        const e = await Authorization.enforcer();
+        let permissions = await e.getPermissionsForUser(repUser.id!);
+        let filtered = permissions.filter(set => 
+            (set[0] === repUser.id && set[1] === report.container_id && set[2] === `reports_${report.id}`)
+        );
+        expect(filtered.length).eq(0);
+
+        const userAdded = await repository.addUserToReport(report, repUser);
+        expect(userAdded.isError).false;
+
+        permissions = await e.getPermissionsForUser(repUser.id!);
+        filtered = permissions.filter(set => 
+            (set[0] === repUser.id && set[1] === report.container_id && set[2] === `reports_${report.id}`)
+        );
+        expect(filtered).not.empty;
+
+        const userRemoved = await repository.removeUserFromReport(report, repUser);
+        expect(userRemoved.isError).false;
+
+        permissions = await e.getPermissionsForUser(repUser.id!);
+        filtered = permissions.filter(set => 
+            (set[0] === repUser.id && set[1] === report.container_id && set[2] === `reports_${report.id}`)
+        );
+        expect(filtered.length).eq(0);
+
+        return UserMapper.Instance.Delete(repUser.id!);
+    });
 })
