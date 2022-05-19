@@ -70,17 +70,14 @@ export class BaseDomainClass extends NakedDomainClass {
     modified_by?: string;
 
     @IsOptional()
-    @IsDate()
     @Type(() => Date)
     created_at?: Date;
 
     @IsOptional()
-    @IsDate()
     @Type(() => Date)
     modified_at?: Date;
 
     @IsOptional()
-    @IsDate()
     @Type(() => Date)
     deleted_at?: Date;
 }

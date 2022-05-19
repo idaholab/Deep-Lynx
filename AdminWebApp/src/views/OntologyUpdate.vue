@@ -14,7 +14,7 @@
               ref="form"
               lazy-validation
             >
-              <v-file-input 
+              <v-file-input
                 @change="addFile"
                 :rules="[v => !!v || 'Please select one']">
                 <template v-slot:label>
@@ -71,7 +71,7 @@ export default class OntologyUpdate extends Vue {
     this.loading = true
 
     if(this.owlFile || this.owlFilePath !== "") {
-      this.$client.updateContainerFromImport(this.containerID, this.owlFile, this.owlFilePath)
+      this.$client.updateContainerFromImport(this.containerID, this.owlFile, this.owlFilePath, this.$store.state.activeContainer?.name)
           .then(() => {
             this.loading = false
             this.successMessage = "Container updated successfully"
