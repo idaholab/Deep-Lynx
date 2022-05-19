@@ -494,6 +494,7 @@ describe('The GraphQL Schema Generator', async () => {
         // first generate all transformations for the type mapping, and set active
         const nodeTransformations: TypeTransformation[] = [
             new TypeTransformation({
+                type: "node",
                 container_id: containerID,
                 data_source_id: dataSource!.DataSourceRecord!.id!,
                 type_mapping_id: typeMappingID,
@@ -523,6 +524,7 @@ describe('The GraphQL Schema Generator', async () => {
                 unique_identifier_key: 'car_maintenance.id',
             }),
             new TypeTransformation({
+                type: "node",
                 container_id: containerID,
                 data_source_id: dataSource!.DataSourceRecord!.id!,
                 type_mapping_id: typeMappingID,
@@ -544,6 +546,7 @@ describe('The GraphQL Schema Generator', async () => {
                 unique_identifier_key: 'driver.id'
             }),
             new TypeTransformation({
+                type: "node",
                 container_id: containerID,
                 data_source_id: dataSource!.DataSourceRecord!.id!,
                 type_mapping_id: typeMappingID,
@@ -561,6 +564,7 @@ describe('The GraphQL Schema Generator', async () => {
                 unique_identifier_key: 'license.id'
             }),
             new TypeTransformation({
+                type: "node",
                 container_id: containerID,
                 data_source_id: dataSource!.DataSourceRecord!.id!,
                 type_mapping_id: typeMappingID,
@@ -589,6 +593,7 @@ describe('The GraphQL Schema Generator', async () => {
 
         const edgeTransformations: TypeTransformation[] = [
             new TypeTransformation({
+                type: "edge",
                 container_id: containerID,
                 data_source_id: dataSource!.DataSourceRecord!.id!,
                 type_mapping_id: typeMappingID,
@@ -603,6 +608,7 @@ describe('The GraphQL Schema Generator', async () => {
                 keys: [],
             }),
             new TypeTransformation({
+                type: "edge",
                 container_id: containerID,
                 data_source_id: dataSource!.DataSourceRecord!.id!,
                 type_mapping_id: typeMappingID,
@@ -616,6 +622,7 @@ describe('The GraphQL Schema Generator', async () => {
                 keys: [],
             }),
             new TypeTransformation({
+                type: "edge",
                 container_id: containerID,
                 data_source_id: dataSource!.DataSourceRecord!.id!,
                 type_mapping_id: typeMappingID,

@@ -674,6 +674,14 @@ export default {
             withDataWarning:
                 'Data may have already been ingested for this Data Source. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Data Source. If you would like to keep this data and orphan it, please uncheck the box below.',
         },
+        deleteContainer: {
+            deleteContainer: "Delete Container",
+            deleteTitle: "Permanently Delete Container",
+            warning:"Everything associated with this container - such as data, mappings and ontology versions - will be completely removed. This cannot be undone. Please verify that all users of the container are ready for its deletion",
+            cancel: "Cancel",
+            delete: "Permanently Delete Container",
+            in:"in"
+        },
         deleteDataImport: {
             deleteTitle: 'Delete Import',
             deleteWarning:

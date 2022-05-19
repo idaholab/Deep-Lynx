@@ -411,6 +411,7 @@ describe('A Data Processor', async () => {
         const carMaintenanceKeys = test_metatypes.find((m) => m.name === 'Maintenance')!.keys;
         // first generate all transformations for the type mapping, and set active
         const maintenanceTransformation = new TypeTransformation({
+            type: "node",
             container_id: containerID,
             data_source_id: dataSource!.DataSourceRecord!.id!,
             type_mapping_id: typeMappingID,
@@ -446,6 +447,7 @@ describe('A Data Processor', async () => {
         const entryKeys = test_metatypes.find((m) => m.name === 'Maintenance Entry')!.keys;
 
         const maintenanceEntryTransformation = new TypeTransformation({
+            type: "node",
             container_id: containerID,
             data_source_id: dataSource!.DataSourceRecord!.id!,
             type_mapping_id: typeMappingID,
@@ -472,6 +474,7 @@ describe('A Data Processor', async () => {
         expect(result.isError).false;
 
         const maintenanceEdgeTransformation = new TypeTransformation({
+            type: "edge",
             container_id: containerID,
             data_source_id: dataSource!.DataSourceRecord!.id!,
             type_mapping_id: typeMappingID,
@@ -493,7 +496,7 @@ describe('A Data Processor', async () => {
         expect(active.isError).false;
 
         const processResult = await ProcessData(inserted);
-        expect(processResult.isError).false;
+        expect(processResult.isError, processResult.error?.error).false;
 
         const nodeRepo = new NodeRepository();
         const nodes = await nodeRepo.where().importDataID('eq', dataImportID).list();
