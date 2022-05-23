@@ -308,7 +308,7 @@ export default class OAuthRoutes {
 
                 req.login(result.value, () => {
                     res.redirect(
-                        buildUrl('/oauth/profile', {
+                        buildUrl('/', {
                             queryParams: {
                                 success: 'Successfully created account',
                             },
