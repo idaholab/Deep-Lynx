@@ -298,6 +298,19 @@
               <v-list-item-subtitle >{{$t("home.apiKeysDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
+
+          <v-list-item
+              two-line
+              link
+              @click="setActiveComponent('service-users')"
+              :input-value="currentMainComponent === 'ServiceUsers'"
+              :ripple="{class:'list-ripple'}"
+          >
+            <v-list-item-content>
+              <v-list-item-title>{{$t("home.serviceUsers")}}</v-list-item-title>
+              <v-list-item-subtitle >{{$t("home.serviceUsersDescription")}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
         </v-list-group>
 
         <v-list-item
@@ -482,6 +495,7 @@ import {ContainerT, DataSourceT} from "@/api/types";
 import Config from "@/config";
 import OntologyVersioning from "@/views/OntologyVersioning.vue";
 import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
+import ServiceUsers from "@/views/ServiceUsers.vue";
 
 @Component({components: {
     ContainerSelect,
@@ -504,7 +518,8 @@ import ContainerAlertBanner from "@/components/ontology/containers/containerAler
     Users,
     Containers,
     OntologyVersioning,
-    ContainerAlertBanner
+    ContainerAlertBanner,
+    ServiceUsers
   }})
 export default class Home extends Vue {
   @Prop(String) readonly containerID: string | undefined
@@ -525,7 +540,6 @@ export default class Home extends Vue {
   dataSources: DataSourceT[] = []
 
 
-
   mounted() {
     this.user = this.$auth.CurrentUser();
 
@@ -538,7 +552,8 @@ export default class Home extends Vue {
             this.setActiveComponent(this.view)
           }
         })
-        .catch(e => this.errorMessage = e)
+        .catch(e =>this.$router.push({name: "ContainerSelect"})
+)
 
     this.$client.listMetatypes(this.containerID as string, {
       count: true,
@@ -710,6 +725,13 @@ export default class Home extends Vue {
         this.currentMainComponent = "OntologyVersioning"
         this.componentName = this.$t('home.ontologyVersioning')
         this.$router.replace(`/containers/${this.containerID}/ontology-versioning`)
+        break;
+      }
+
+      case "service-users": {
+        this.currentMainComponent = "ServiceUsers"
+        this.componentName = this.$t('home.serviceUsers')
+        this.$router.replace(`/containers/${this.containerID}/service-users`)
         break;
       }
 

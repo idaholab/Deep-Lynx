@@ -224,8 +224,6 @@ export class ContainerPermissionSet extends NakedDomainClass {
             [userID, containerID, 'users', 'read'],
         ]);
 
-        await e.savePolicy();
-
         if (this.containers && this.containers.length > 0) {
             this.containers.forEach((permission) => {
                 e.addPolicy(userID, containerID, 'containers', permission).catch((e) =>

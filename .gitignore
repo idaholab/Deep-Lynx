@@ -20,3 +20,4 @@ profile-logs
 /private-key.key
 /src/tests/test-data.json
 /src/tests/test-data.csv
+/src/tests/private-key.pem

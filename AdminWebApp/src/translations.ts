@@ -73,6 +73,8 @@ export default {
             inviteUserCardLinkText: 'Manage Users',
             ontologyVersioning: 'Ontology Versioning',
             ontologyVersioningDescription: 'Manage Version and Changelists',
+            serviceUsers: 'External Applications',
+            serviceUsersDescription: 'External Application Access'
         },
         containerAlert: {
             acknowledge: 'Acknowledge Alert',
@@ -162,6 +164,7 @@ export default {
             selectDataSource: 'Select Data Source',
         },
         createApiKey: {
+            close: 'Close',
             formTitle: 'Generate New API Key/Secret',
             description:
                 'The API Key/Secret pair you generate here will have all the same permissions as your user. It is NOT tied to this current container and users of this key/secret pair will have access to all containers and data you have permission for. Please use these keys cautiously.',
@@ -171,6 +174,8 @@ export default {
             create: 'Generate',
             cancel: 'Cancel',
             createApiKey: 'Generate API Key',
+            descriptionService:
+                'The API Key/Secret pair you generate here will have all the permissions you\'ve assigned the application. It is tied to this current container. Please use these keys cautiously.',
         },
         importMapping: {
             importMappings: 'Import Type Mappings',
@@ -262,6 +267,32 @@ export default {
             keyType: 'Data Type',
             keyActions: 'Actions',
             requiredField: 'Required Field',
+        },
+        createServiceUser: {
+            createServiceUser: "Add External Application",
+            createTitle: 'Add External Application',
+            name: 'Name',
+            cancel: 'Cancel',
+            save: 'Save',
+            requiredField: 'Required Field'
+        },
+        deleteServiceUser: {
+            deleteTitle: 'Remove External Application',
+            cancel: 'Cancel',
+            delete: 'Remove',
+            in: 'in',
+            warning: 'Removing this external application will invalidate all generated API Key/Secret pairs, terminating this application\'s access to Deep Lynx. Only remove applications you are sure are no longer in use, or who you wish to terminate their access.'
+        },
+        serviceUserPermissions: {
+            title: 'Manage Permissions',
+            containers: 'Container Permissions',
+            containersDescription: 'These permissions dictate which container level actions an application can perform. Generally administrative tasks such as editing container settings and editing or removing the container entirely.',
+            ontology: 'Ontology Permissions',
+            ontologyDescription: 'These permissions dictate the actions an application can perform regarding the ontology. These permissions allow an application to view and edit the ontology.',
+            data: 'Data Permissions',
+            dataDescription: 'These permissions dictate the actions an application can perform regarding the data and data sources. These permissions allow a user to view and edit the data stored in the graph as well as manage data sources and the type mapping system.',
+            users: 'User Permissions',
+            usersDescription: 'These permissions dictate the actions an application can perform regarding the container\'s users. This allows the application to manage a user\'s permissions inside the container, as well as allowing them to remove and add users to the container.'
         },
         viewMetatypeRelationship: {
             close: 'Close',
@@ -1012,6 +1043,7 @@ export default {
             wikiLink: 'https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/home',
         },
         users: {
+            createdAt: 'Created At',
             title: 'Manage Users',
             newUser: 'New User',
             name: 'Name',
