@@ -3,7 +3,15 @@ import Result from '../../common_classes/result';
 import Mapper, {Options} from '../mappers/mapper';
 import {User} from '../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
+import QueryStream from "pg-query-stream";
+import {PassThrough} from "stream";
+import BlobStorageProvider from "../../services/blob_storage/blob_storage";
+const JSONStream = require('JSONStream');
+import csvStringify from 'csv-stringify';
 const format = require('pg-format');
+const short = require('short-uuid');
+import File from "../../domain_objects/data_warehouse/data/file";
+import FileMapper from "../mappers/data_warehouse/data/file_mapper";
 
 /*
     RepositoryInterface allows us to create an expectation for how the various
@@ -293,6 +301,140 @@ export class Repository {
         return storage.rows<T>(query, options);
     }
 
+    findAllStreaming(queryOptions?: QueryOptions, options?: Options<any>): Promise<QueryStream> {
+        const storage = new Mapper();
+
+        if (queryOptions && queryOptions.groupBy) {
+            this._rawQuery.push(`GROUP BY ${queryOptions.groupBy}`);
+        }
+
+        if (queryOptions && queryOptions.sortBy) {
+            if (queryOptions.sortDesc) {
+                this._rawQuery.push(`ORDER BY "${queryOptions.sortBy}" DESC`);
+            } else {
+                this._rawQuery.push(`ORDER BY "${queryOptions.sortBy}" ASC`);
+            }
+        }
+
+        if (queryOptions && queryOptions.offset) {
+            this._values.push(queryOptions.offset);
+            this._rawQuery.push(`OFFSET $${this._values.length}`);
+        }
+
+        if (queryOptions && queryOptions.limit) {
+            this._values.push(queryOptions.limit);
+            this._rawQuery.push(`LIMIT $${this._values.length}`);
+        }
+
+        const query = {
+            text: this._rawQuery.join(' '),
+            values: this._values,
+        };
+
+        // reset the filter
+        this._rawQuery = [`SELECT * FROM ${this._tableName}`];
+        this._values = [];
+
+        return storage.rowsStreaming(query, options);
+    }
+
+    async findAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, options?: Options<any>): Promise<Result<File>> {
+        const storage = new Mapper();
+
+        if (queryOptions && queryOptions.groupBy) {
+            this._rawQuery.push(`GROUP BY ${queryOptions.groupBy}`);
+        }
+
+        if (queryOptions && queryOptions.sortBy) {
+            if (queryOptions.sortDesc) {
+                this._rawQuery.push(`ORDER BY "${queryOptions.sortBy}" DESC`);
+            } else {
+                this._rawQuery.push(`ORDER BY "${queryOptions.sortBy}" ASC`);
+            }
+        }
+
+        if (queryOptions && queryOptions.offset) {
+            this._values.push(queryOptions.offset);
+            this._rawQuery.push(`OFFSET $${this._values.length}`);
+        }
+
+        if (queryOptions && queryOptions.limit) {
+            this._values.push(queryOptions.limit);
+            this._rawQuery.push(`LIMIT $${this._values.length}`);
+        }
+
+        const query = {
+            text: this._rawQuery.join(' '),
+            values: this._values,
+        };
+
+        // reset the filter
+        this._rawQuery = [`SELECT * FROM ${this._tableName}`];
+        this._values = [];
+
+        try {
+            // blob storage will pick the proper provider based on environment variable, no need to specify here unless
+            // fileOptions contains a provider
+            const fileMapper = new FileMapper();
+            let contentType = ''
+            const blob = BlobStorageProvider(fileOptions.blob_provider);
+            const stream = await storage.rowsStreaming(query, options);
+
+            // pass through stream needed in order to pipe the results through transformative streams prior to piping
+            // them to the blob storage
+            const pass = new PassThrough()
+            const fileName = (fileOptions.file_name) ? fileOptions.file_name : `${short.generate()}-${new Date().toDateString()}`
+
+            switch (fileOptions.file_type) {
+                case "json": {
+                    stream.pipe(JSONStream.stringify()).pipe(pass)
+                    contentType = 'application/json'
+                    break;
+                }
+
+                case "csv": {
+                    stream.pipe(csvStringify({header: true})).pipe(pass)
+                    contentType = 'text/csv'
+                    break
+                }
+
+                default: {
+                    return Promise.resolve(Result.Failure('no file type specified, aborting'))
+                }
+            }
+
+            if(blob) {
+                const result = await blob?.uploadPipe(
+                    `containers/${fileOptions.containerID}/queryResults`,
+                    fileName,
+                    pass,
+                    contentType,
+                    'utf8'
+                )
+
+                const file = new File({
+                    file_name: fileName,
+                    file_size: result.value.size,
+                    md5hash: result.value.md5hash,
+                    adapter_file_path: result.value.filepath,
+                    adapter: blob.name(),
+                    metadata: result.value.metadata,
+                    container_id: fileOptions.containerID
+                })
+
+                return fileMapper.Create(
+                    (fileOptions.userID) ? fileOptions.userID : 'system',
+                    file
+                )
+            } else {
+                return Promise.resolve(Result.Failure('unable to initialize blob storage client'))
+            }
+
+        } catch (e: any) {
+            return Promise.resolve(Result.Error(e))
+        }
+    }
+
     // we accept limited query options here
     count(transaction?: PoolClient, queryOptions?: QueryOptions): Promise<Result<number>> {
         const storage = new Mapper();
@@ -331,6 +473,14 @@ export type QueryOptions = {
     // generally used if we have a complicated set of joins
     groupBy?: string | undefined;
 };
+
+export type FileOptions = {
+    containerID: string,
+    file_type: 'json' | 'csv',
+    blob_provider?: 'azure_blob' | 'filesystem' | 'largeobject',
+    file_name?: string
+    userID?: string,
+}
 
 export type DeleteOptions = {
     force?: boolean;

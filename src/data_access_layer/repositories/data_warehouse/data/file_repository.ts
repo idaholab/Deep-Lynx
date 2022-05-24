@@ -6,6 +6,10 @@ import File from '../../../../domain_objects/data_warehouse/data/file';
 import {PoolClient} from 'pg';
 import {Readable} from 'stream';
 import BlobStorageProvider from '../../../../services/blob_storage/blob_storage';
+// we had to move the event repo into the repo instead of the mapper to avoid a cyclical import problem when dealing
+// with listing results to a file
+import EventRepository from "../../event_system/event_repository";
+import Event from "../../../../domain_objects/event_system/event";
 
 /*
     FileRepository contains methods for persisting and retrieving file records
@@ -15,6 +19,7 @@ import BlobStorageProvider from '../../../../services/blob_storage/blob_storage'
  */
 export default class FileRepository extends Repository implements RepositoryInterface<File> {
     #mapper: FileMapper = FileMapper.Instance;
+    #eventRepo: EventRepository = new EventRepository();
 
     delete(f: File): Promise<Result<boolean>> {
         if (f.id) {
@@ -49,11 +54,31 @@ export default class FileRepository extends Repository implements RepositoryInte
             if (updated.isError) return Promise.resolve(Result.Pass(updated));
 
             Object.assign(f, updated.value);
+
+            this.#eventRepo.emit(
+                new Event({
+                    containerID: f.container_id,
+                    dataSourceID: f.data_source_id,
+                    eventType: 'file_modified',
+                    event: {fileID: f.id},
+                }),
+            );
+
         } else {
             const created = await this.#mapper.Create(user.id!, f);
             if (created.isError) return Promise.resolve(Result.Pass(created));
 
             Object.assign(f, created.value);
+
+            this.#eventRepo.emit(
+                new Event({
+                    containerID: f.container_id,
+                    dataSourceID: f.data_source_id,
+                    eventType: 'file_created',
+                    event: {fileID: f.id},
+                }),
+            );
+
         }
 
         return Promise.resolve(Result.Success(true));

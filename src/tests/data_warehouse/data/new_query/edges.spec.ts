@@ -347,17 +347,6 @@ describe('Using a new GraphQL Query on edges we', async () => {
         expect(relPairs.value).not.empty;
         expect(edgeResults.value.length).eq(7);
 
-        return Promise.resolve();
-    });
-
-    after(async () => {
-        await UserMapper.Instance.Delete(user.id!);
-        await DataSourceMapper.Instance.Delete(dataSourceID);
-        await ContainerMapper.Instance.Delete(containerID);
-        return PostgresAdapter.Instance.close();
-    });
-
-    it('can generate valid schema', async () => {
         const schemaGenerator = new GraphQLSchemaGenerator();
 
         const schemaResults = await schemaGenerator.ForContainer(containerID);
@@ -366,6 +355,13 @@ describe('Using a new GraphQL Query on edges we', async () => {
         schema = schemaResults.value;
 
         return Promise.resolve();
+    });
+
+    after(async () => {
+        await UserMapper.Instance.Delete(user.id!);
+        await DataSourceMapper.Instance.Delete(dataSourceID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can query by relationship', async () => {

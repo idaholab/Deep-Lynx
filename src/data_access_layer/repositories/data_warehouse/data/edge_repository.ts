@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
-import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
+import RepositoryInterface, {FileOptions, QueryOptions, Repository} from '../../repository';
 import Result from '../../../../common_classes/result';
 import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
@@ -11,6 +11,7 @@ import MetatypeRelationshipPairRepository from '../ontology/metatype_relationshi
 import NodeRepository from './node_repository';
 import File, {EdgeFile} from '../../../../domain_objects/data_warehouse/data/file';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
+import QueryStream from "pg-query-stream";
 
 /*
     EdgeRepository contains methods for persisting and retrieving edges
@@ -516,5 +517,17 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         }
 
         return Promise.resolve(Result.Success(results.value));
+    }
+
+    //  listStreaming will not autopopulate the metatype relationship pairs that are referenced, users must do that
+    // and the type casting themselves
+    listStreaming(queryOptions?: QueryOptions, transaction?: PoolClient): Promise<QueryStream> {
+        return super.findAllStreaming(queryOptions, {
+            transaction,
+        });
+    }
+
+    listAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
+        return super.findAllToFile(fileOptions, queryOptions, {transaction})
     }
 }
