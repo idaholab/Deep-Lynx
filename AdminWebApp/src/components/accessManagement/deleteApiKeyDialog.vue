@@ -44,6 +44,12 @@ import {KeyPairT} from "@/api/types";
 
 @Component
 export default class DeleteApiKeyDialog extends Vue {
+  @Prop({required: false})
+  containerID?: string
+
+  @Prop({required: false})
+  serviceUserID?: string
+
   @Prop({required: true})
   readonly keyPair!: KeyPairT
 
@@ -58,12 +64,21 @@ export default class DeleteApiKeyDialog extends Vue {
   }
 
   deleteApiKey() {
-    this.$client.deleteKeyPairForUser(this.keyPair.key)
-    .then(() => {
-      this.dialog = false
-      this.$emit('apiKeyDeleted')
-    })
-    .catch(e => this.errorMessage = e)
+    if(this.serviceUserID) {
+      this.$client.deleteKeyPairForServiceUser(this.containerID!, this.serviceUserID, this.keyPair.key)
+          .then(() => {
+            this.dialog = false
+            this.$emit('apiKeyDeleted')
+          })
+          .catch(e => this.errorMessage = e)
+    } else {
+      this.$client.deleteKeyPairForUser(this.keyPair.key)
+          .then(() => {
+            this.dialog = false
+            this.$emit('apiKeyDeleted')
+          })
+          .catch(e => this.errorMessage = e)
+    }
   }
 
 }

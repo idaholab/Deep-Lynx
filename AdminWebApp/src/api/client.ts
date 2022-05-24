@@ -26,7 +26,7 @@ import {
     ChangelistApprovalT,
     ContainerAlertT,
     TypeMappingUpgradePayloadT,
-    NodeTransformationT,
+    NodeTransformationT, CreateServiceUserPayloadT, ServiceUserPermissionSetT,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -130,7 +130,7 @@ export class Client {
         });
     }
 
-    async updateContainerFromImport(containerID: string, owlFile: File | null, owlFilePath: string): Promise<string> {
+    async updateContainerFromImport(containerID: string, owlFile: File | null, owlFilePath: string, name?: string): Promise<string> {
         const config: {[key: string]: any} = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
 
@@ -149,6 +149,10 @@ export class Client {
 
         if (owlFilePath !== '') {
             formData.append('path', owlFilePath);
+        }
+
+        if (name) {
+            formData.append('name', name);
         }
 
         const resp: AxiosResponse = await axios.put(
@@ -340,6 +344,75 @@ export class Client {
         return this.delete(`/users/keys/${keyID}`);
     }
 
+    listKeyPairsForServiceUser(containerID: string, serviceUserID: string): Promise<KeyPairT[]> {
+        return this.get<KeyPairT[]>(`/containers/${containerID}/service-users/${serviceUserID}/keys`);
+    }
+
+    generateKeyPairForServiceUser(containerID: string, serviceUserID: string): Promise<KeyPairT> {
+        return this.post<KeyPairT>(`/containers/${containerID}/service-users/${serviceUserID}/keys`, undefined);
+    }
+
+    deleteKeyPairForServiceUser(containerID: string, serviceUserID: string, keyID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/service-users/${serviceUserID}/keys/${keyID}`);
+    }
+
+
+    createServiceUser(containerID: string, payload: CreateServiceUserPayloadT): Promise<UserT> {
+        return this.post<UserT>(`/containers/${containerID}/service-users`, payload);
+    }
+
+    listServiceUsers(containerID: string): Promise<UserT[]> {
+        return this.get<UserT[]>(`/containers/${containerID}/service-users`)
+    }
+
+    deleteServiceUser(containerID: string, userID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/service-users/${userID}`);
+    }
+
+    getServiceUsersPermissions(containerID: string, userID: string): Promise<ServiceUserPermissionSetT> {
+       return new Promise((resolve, reject) => {
+           this.getRaw<string[][]>(`/containers/${containerID}/service-users/${userID}/permissions`)
+               .then(results => {
+                   const set: ServiceUserPermissionSetT = {
+                       containers: [],
+                       ontology: [],
+                       users: [],
+                       data: []
+                   }
+
+                   results.forEach(result => {
+                       if(result.length != 3) return
+
+                       switch(result[1]) {
+                           case 'containers': {
+                               set.containers.push(result[2])
+                               break;
+                           }
+                           case 'ontology': {
+                               set.ontology.push(result[2])
+                               break;
+                           }
+                           case 'data': {
+                               set.data.push(result[2])
+                               break;
+                           }
+                           case 'users': {
+                               set.users.push(result[2])
+                               break;
+                           }
+                       }
+                   })
+
+                   resolve(set)
+               })
+               .catch(e => reject(e))
+       })
+    }
+
+    setServiceUsersPermissions(containerID: string, userID: string, set: ServiceUserPermissionSetT): Promise<boolean> {
+        return this.put<boolean>(`/containers/${containerID}/service-users/${userID}/permissions`, set)
+    }
+
     listMetatypeRelationships(
         containerID: string,
         {
@@ -463,6 +536,10 @@ export class Client {
 
     createDataSource(containerID: string, dataSource: any): Promise<DataSourceT> {
         return this.post<DataSourceT>(`/containers/${containerID}/import/datasources`, dataSource);
+    }
+
+    updateDataSource(containerID: string, dataSource: DataSourceT): Promise<DataSourceT> {
+        return this.put<DataSourceT>(`/containers/${containerID}/import/datasources/${dataSource.id}`, dataSource);
     }
 
     createTypeMappingTransformation(
@@ -959,6 +1036,39 @@ export class Client {
             if (resp.data.isError) reject(resp.data.value);
 
             resolve(resp.data.value as T);
+        });
+    }
+
+    private async getRaw<T>(uri: string, queryParams?: {[key: string]: any}): Promise<T> {
+        const config: AxiosRequestConfig = {};
+        config.headers = {'Access-Control-Allow-Origin': '*'};
+        config.validateStatus = () => {
+            return true;
+        };
+
+        if (this.config?.auth_method === 'token') {
+            config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
+        }
+
+        if (this.config?.auth_method === 'basic') {
+            config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials;
+        }
+
+        let url: string;
+
+        if (queryParams) {
+            url = buildURL(this.config?.rootURL!, {path: uri, queryParams: queryParams!});
+        } else {
+            url = buildURL(this.config?.rootURL!, {path: uri});
+        }
+
+        // `${this.config?.rootURL}${uri}
+        const resp: AxiosResponse = await axios.get(url, config);
+
+        return new Promise<T>((resolve, reject) => {
+            if (resp.status < 200 || resp.status > 299) reject(resp.data);
+
+            resolve(resp.data as T);
         });
     }
 

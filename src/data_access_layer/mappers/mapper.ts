@@ -9,7 +9,8 @@ import {v4 as uuidv4} from 'uuid';
 import PostgresAdapter from './db_adapters/postgres/postgres';
 import Logger from '../../services/logger';
 import 'reflect-metadata';
-import {ClassConstructor, plainToClass} from 'class-transformer'; // this is required for the class-transformer package we use
+import {ClassConstructor, plainToClass} from 'class-transformer';
+import QueryStream from "pg-query-stream"; // this is required for the class-transformer package we use
 
 // Mapper contains ORM like CRUD functions, and a few helpers for more complex functionality.
 // This contains things like transaction runners, as well as things like the type decoder
@@ -252,6 +253,29 @@ export default class Mapper {
                     });
             });
         }
+    }
+
+
+    rowsStreaming(q: QueryConfig | string, options?: Options<any>): Promise<QueryStream> {
+        return new Promise((resolve, reject) => {
+            if (options && options.transaction) {
+                if(typeof q !== 'string') {
+                    resolve(options.transaction.query(new QueryStream(q.text, q.values)))
+                } else {
+                    resolve(options.transaction.query(new QueryStream(q)))
+                }
+            } else {
+                PostgresAdapter.Instance.Pool.connect()
+                    .then(client => {
+                        if(typeof q !== 'string') {
+                            resolve(client.query(new QueryStream(q.text, q.values)))
+                        } else {
+                            resolve(client.query(new QueryStream(q)))
+                        }
+                    })
+                    .catch(e => reject(e))
+            }
+        })
     }
 
     // count accepts SELECT COUNT(*) queries only

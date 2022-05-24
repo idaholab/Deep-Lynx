@@ -164,6 +164,26 @@ export class User extends BaseDomainClass {
     }
 }
 
+export class DisplayUser {
+    @IsOptional()
+    @IsString()
+    id?: string;
+
+    @IsString()
+    @MinLength(1)
+    display_name = '';
+
+    constructor(input: {
+        display_name: string;
+        id?: string;
+    }) {
+        if (input) {
+            this.display_name = input.display_name;
+            if (input.id) this.id = input.id;
+        }
+    }
+}
+
 // prettier-ignore
 // eslint-disable-next-line max-len
 export type ReturnUser = Omit<User, 'password' | 'permissions' | 'roles' | 'keys' | 'removedKeys' | 'addKey' | 'removeKey' | 'onDecodeError' | 'validationErrors' | 'replaceKeys'>;

@@ -48,6 +48,12 @@
         />
       </template>
       <template v-slot:[`item.actions`]="{ item }">
+        <edit-data-source-dialog
+            :containerID="containerID"
+            :dataSource="item"
+            @dataSourceUpdated="refreshDataSources"
+        >
+        </edit-data-source-dialog>
         <delete-data-source-dialog
             v-if="!item.archived"
             @dataSourceDeleted="refreshDataSources()"
@@ -80,9 +86,11 @@ import CreateDataSourceDialog from "@/components/dataSources/createDataSourceDia
 import DeleteDataSourceDialog from "@/components/dataSources/deleteDataSourceDialog.vue";
 import {mdiFileDocumentMultiple} from "@mdi/js";
 import ReprocessDataSourceDialog from "@/components/dataImport/reprocessDataSourceDialog.vue";
+import EditDataSourceDialog from "@/components/dataSources/editDataSourceDialog.vue";
 
 @Component({components:{
     CreateDataSourceDialog,
+    EditDataSourceDialog,
     DeleteDataSourceDialog,
     ReprocessDataSourceDialog
   }})

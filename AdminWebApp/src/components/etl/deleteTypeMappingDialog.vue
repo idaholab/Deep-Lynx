@@ -72,7 +72,7 @@ export default class DeleteTypeMappingDialog extends Vue {
   transformationCount = 0
   deleteLoading = false
   timerRunning = false
-  countDown = 5
+  countDown = 1
 
   get displayIcon() {
     return this.icon
@@ -91,7 +91,7 @@ export default class DeleteTypeMappingDialog extends Vue {
   }
 
   startCountdown() {
-    this.countDown = 5
+    this.countDown = 1
 
     if(!this.timerRunning) this.countdown()
   }

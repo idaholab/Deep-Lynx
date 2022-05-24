@@ -277,6 +277,17 @@ export type AssignRolePayloadT = {
     role_name: string;
 };
 
+export type CreateServiceUserPayloadT = {
+    display_name: string;
+}
+
+export type ServiceUserPermissionSetT = {
+    containers: string[];
+    ontology: string[];
+    data: string[];
+    users: string[];
+}
+
 export type ImportDataT = {
     id: number;
     data_source_id: string;

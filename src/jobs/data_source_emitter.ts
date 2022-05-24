@@ -18,35 +18,63 @@ const devnull = require('dev-null');
 const postgresAdapter = PostgresAdapter.Instance;
 const dataSourceMapper = DataSourceMapper.Instance;
 
-void postgresAdapter.init().then(() => {
-    QueueFactory()
-        .then((queue) => {
-            void postgresAdapter.Pool.connect((err, client, done) => {
-                const stream = client.query(new QueryStream(dataSourceMapper.listAllActiveStatement()));
-                const putPromises: Promise<boolean>[] = [];
+void postgresAdapter
+    .init()
+    .then(() => {
+        QueueFactory()
+            .then((queue) => {
+                void postgresAdapter.Pool.connect((err, client, done) => {
+                    const stream = client.query(new QueryStream(dataSourceMapper.listAllActiveStatement()));
+                    const putPromises: Promise<boolean>[] = [];
 
-                stream.on('data', (data) => {
-                    // we're simply putting the id on the queue here
-                    putPromises.push(queue.Put(Config.data_sources_queue, plainToClass(DataSourceRecord, data as object).id));
+                    stream.on('data', (data) => {
+                        // we're simply putting the id on the queue here
+                        putPromises.push(queue.Put(Config.data_sources_queue, plainToClass(DataSourceRecord, data as object).id));
+                    });
+
+                    stream.on('error', (e: Error) => {
+                        Logger.error(`unexpected error in data source emitter thread ${e}`);
+                        if (parentPort) parentPort.postMessage('done');
+                        else {
+                            process.exit(0);
+                        }
+                    });
+
+                    stream.on('end', () => {
+                        done();
+                        client.release();
+
+                        Promise.all(putPromises)
+                            .then(() => {
+                                if (parentPort) parentPort.postMessage('done');
+                                else {
+                                    process.exit(0);
+                                }
+                            })
+                            .catch((e) => {
+                                Logger.error(`unable to put data sources on queue ${e}`);
+                                if (parentPort) parentPort.postMessage('done');
+                                else {
+                                    process.exit(0);
+                                }
+                            });
+                    });
+
+                    stream.pipe(devnull({objectMode: true}));
                 });
-
-                stream.on('end', () => {
-                    done();
-
-                    Promise.all(putPromises)
-                        .then(() => {
-                            if (parentPort) parentPort.postMessage('done');
-                            else {
-                                process.exit(0);
-                            }
-                        })
-                        .catch((e) => Logger.error(`unable to put data sources on queue ${e}`));
-                });
-
-                stream.pipe(devnull({objectMode: true}));
+            })
+            .catch((e) => {
+                Logger.error(`unable to initiate data source emitter: ${e}`);
+                if (parentPort) parentPort.postMessage('done');
+                else {
+                    process.exit(0);
+                }
             });
-        })
-        .catch((e) => {
-            Logger.error(`unable to initiate data source emitter: ${e}`);
-        });
-});
+    })
+    .catch((e) => {
+        Logger.error(`unexpected error in data source emitter thread ${e}`);
+        if (parentPort) parentPort.postMessage('done');
+        else {
+            process.exit(0);
+        }
+    });

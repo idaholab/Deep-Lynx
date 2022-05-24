@@ -34,9 +34,13 @@ describe('Filesystem storage can', async () => {
             expect(false).true;
         }
 
+        const s = fs.createWriteStream('bob.json')
+
         // as long as the stream is open and not undefined, we can count this test as successful
         const stream = await provider.downloadStream(`${result.value.filepath}${result.value.filename}`);
         expect(stream).not.undefined;
+
+        stream?.pipe(s)
 
         return provider.deleteFile(`${result.value.filepath}${result.value.filename}`);
     });

@@ -12,27 +12,44 @@ import {graphql} from 'graphql';
 import {Emailer} from '../services/email/email';
 import {BasicEmailTemplate} from '../services/email/templates/basic';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
+import {parentPort} from 'worker_threads';
 
-void PostgresAdapter.Instance.init().then(() => {
-    void QueueFactory().then((queue) => {
-        const destination = new Writable({
-            objectMode: true,
-            write(chunk: any, encoding: string, callback: (error?: Error | null) => void) {
-                const event = plainToClass(Event, chunk as object);
-                processFunction(event)
-                    .then(() => {
-                        callback();
-                    })
-                    .catch((e) => {
-                        Logger.error(`unable to process event from queue ${e}`);
-                        callback();
-                    });
-            },
+void PostgresAdapter.Instance.init()
+    .then(() => {
+        void QueueFactory().then((queue) => {
+            const destination = new Writable({
+                objectMode: true,
+                write(chunk: any, encoding: string, callback: (error?: Error | null) => void) {
+                    const event = plainToClass(Event, chunk as object);
+                    processFunction(event)
+                        .then(() => {
+                            callback();
+                        })
+                        .catch((e) => {
+                            Logger.error(`unable to process event from queue ${e}`);
+                            callback();
+                        });
+                },
+            });
+
+            destination.on('error', (e: Error) => {
+                Logger.error(`unexpected error in processing queue thread ${e}`);
+                if (parentPort) parentPort.postMessage('done');
+                else {
+                    process.exit(0);
+                }
+            });
+
+            queue.Consume(Config.events_queue, destination);
         });
-
-        queue.Consume(Config.events_queue, destination);
+    })
+    .catch((e) => {
+        Logger.error(`unexpected error in events queue thread ${e}`);
+        if (parentPort) parentPort.postMessage('done');
+        else {
+            process.exit(0);
+        }
     });
-});
 
 async function processFunction(event: Event) {
     // retrieve associated event actions
@@ -90,7 +107,7 @@ async function processFunction(event: Event) {
         const payload: any = {
             id: event.id,
             event: event.event,
-        }
+        };
 
         // determine action type and act accordingly
         switch (action.action_type) {

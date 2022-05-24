@@ -18,37 +18,62 @@
           <p>{{returnedKey.secret_raw}}</p>
         </v-alert>
         <v-row>
-          <v-col :cols="12">
+          <v-col :cols="12" v-if="serviceUserID === null">
           <p>{{$t('createApiKey.description')}}</p>
+          </v-col>
+          <v-col :cols="12" v-else>
+            <p>{{$t('createApiKey.descriptionService')}}</p>
           </v-col>
         </v-row>
       </v-card-text>
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="dialog = false; returnedKey = null" >{{$t("createApiKey.cancel")}}</v-btn>
-        <v-btn  color="blue darken-1" text @click="generateApiKey">{{$t("createApiKey.create")}}</v-btn>
+        <div v-if="returnedKey !== null">
+          <v-btn color="blue darken-1" text @click="dialog = false; returnedKey = null" >{{$t("createApiKey.close")}}</v-btn>
+        </div>
+        <div v-else>
+          <v-btn color="blue darken-1" text @click="dialog = false; returnedKey = null" >{{$t("createApiKey.cancel")}}</v-btn>
+          <v-btn  color="blue darken-1" text @click="generateApiKey">{{$t("createApiKey.create")}}</v-btn>
+        </div>
+
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script lang="ts">
-import {Component, Vue} from "vue-property-decorator";
+import {Component, Prop,  Vue} from "vue-property-decorator";
 import {KeyPairT} from "@/api/types";
 
 @Component
 export default class CreateApiKeyDialog extends Vue {
+  @Prop({required: false})
+  containerID?: string
+
+  @Prop({required: false})
+  serviceUserID?: string
+
   errorMessage = ""
   dialog = false
   returnedKey: KeyPairT | null = null
 
   generateApiKey() {
-    this.$client.generateKeyPairForUser()
-    .then(key => {
-      this.returnedKey = key
-    })
-    .catch((e) => this.errorMessage = e)
+    if(this.serviceUserID) {
+      this.$client.generateKeyPairForServiceUser(this.containerID!, this.serviceUserID)
+          .then(key => {
+            this.returnedKey = key
+            this.$emit('apiKeyCreated')
+          })
+          .catch((e) => this.errorMessage = e)
+    } else {
+      this.$client.generateKeyPairForUser()
+          .then(key => {
+            this.returnedKey = key
+            this.$emit('apiKeyCreated')
+          })
+          .catch((e) => this.errorMessage = e)
+    }
   }
 }
 </script>

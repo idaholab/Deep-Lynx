@@ -73,6 +73,8 @@ export default {
             inviteUserCardLinkText: 'Manage Users',
             ontologyVersioning: 'Ontology Versioning',
             ontologyVersioningDescription: 'Manage Version and Changelists',
+            serviceUsers: 'External Applications',
+            serviceUsersDescription: 'External Application Access'
         },
         containerAlert: {
             acknowledge: 'Acknowledge Alert',
@@ -162,6 +164,7 @@ export default {
             selectDataSource: 'Select Data Source',
         },
         createApiKey: {
+            close: 'Close',
             formTitle: 'Generate New API Key/Secret',
             description:
                 'The API Key/Secret pair you generate here will have all the same permissions as your user. It is NOT tied to this current container and users of this key/secret pair will have access to all containers and data you have permission for. Please use these keys cautiously.',
@@ -171,6 +174,8 @@ export default {
             create: 'Generate',
             cancel: 'Cancel',
             createApiKey: 'Generate API Key',
+            descriptionService:
+                'The API Key/Secret pair you generate here will have all the permissions you\'ve assigned the application. It is tied to this current container. Please use these keys cautiously.',
         },
         importMapping: {
             importMappings: 'Import Type Mappings',
@@ -262,6 +267,32 @@ export default {
             keyType: 'Data Type',
             keyActions: 'Actions',
             requiredField: 'Required Field',
+        },
+        createServiceUser: {
+            createServiceUser: "Add External Application",
+            createTitle: 'Add External Application',
+            name: 'Name',
+            cancel: 'Cancel',
+            save: 'Save',
+            requiredField: 'Required Field'
+        },
+        deleteServiceUser: {
+            deleteTitle: 'Remove External Application',
+            cancel: 'Cancel',
+            delete: 'Remove',
+            in: 'in',
+            warning: 'Removing this external application will invalidate all generated API Key/Secret pairs, terminating this application\'s access to Deep Lynx. Only remove applications you are sure are no longer in use, or who you wish to terminate their access.'
+        },
+        serviceUserPermissions: {
+            title: 'Manage Permissions',
+            containers: 'Container Permissions',
+            containersDescription: 'These permissions dictate which container level actions an application can perform. Generally administrative tasks such as editing container settings and editing or removing the container entirely.',
+            ontology: 'Ontology Permissions',
+            ontologyDescription: 'These permissions dictate the actions an application can perform regarding the ontology. These permissions allow an application to view and edit the ontology.',
+            data: 'Data Permissions',
+            dataDescription: 'These permissions dictate the actions an application can perform regarding the data and data sources. These permissions allow a user to view and edit the data stored in the graph as well as manage data sources and the type mapping system.',
+            users: 'User Permissions',
+            usersDescription: 'These permissions dictate the actions an application can perform regarding the container\'s users. This allows the application to manage a user\'s permissions inside the container, as well as allowing them to remove and add users to the container.'
         },
         viewMetatypeRelationship: {
             close: 'Close',
@@ -601,6 +632,60 @@ export default {
             dataRetentionHelp:
                 'This controls how many days Deep Lynx will retain the raw data you import. A value of 0 will retain no raw data after processing and a value of -1 will retain raw data indefinitely.',
         },
+        editDataSource: {
+            aveva: 'Aveva',
+            jazz: 'Jazz',
+            http: 'HTTP Poller',
+            standard: 'Standard',
+            newDataSource: 'New Data Source',
+            formTitle: 'Create New Data Source',
+            name: 'Name',
+            sourceType: 'Select Data Source Type',
+            dataType: 'Return Data Type',
+            authMethod: 'Authentication Method',
+            pollInterval: 'Poll Interval (in minutes)',
+            create: 'Save',
+            cancel: 'Cancel',
+            enable: 'Enable',
+            username: 'Username (blank for security)',
+            password: 'Password (blank for security)',
+            token: 'Authentication Token (blank for security)',
+            projectName: 'Project Name',
+            secure: 'Use HTTPS',
+            ignoreDBs: 'Ignored Database Types',
+            ignoreElements: 'Ignored Element Types',
+            recordLimit: 'Records Per Call Limit',
+            artifactTypes: 'Artifact Types for Retrieval',
+            endpoint: 'HTTP(S) Endpoint',
+            typeToAdd: 'Type and hit "Enter" to add entry',
+            ifcElementTypes: 'Element Types for IFC Generation',
+            ifcSettingsTitle: 'IFC Settings',
+            stopNodes: 'Stop Nodes',
+            valueNodes: 'Value Nodes',
+            dangerZone: 'Advanced Settings',
+
+            dangerZoneWarning:
+                'These settings are either experimental or highly technically and could adversely affect the operation of your Data Source. Modify these settings only if you know what you are doing',
+            ifcSettings: {
+                format: 'IFC Format',
+                dataLevel: 'Data Level',
+                logLevel: 'Log Level',
+                arcTolerance: 'Arc Tolerance',
+                componentLevel: 'Component Level',
+                tube: 'Tube',
+                cl: 'CL',
+                insuTranslucency: 'Insular Translucency',
+                obstTranslucency: 'Obstruction Translucency',
+                root: 'Root',
+                pipe: 'Pipe',
+                nozzle: 'Nozzle',
+                structure: 'Structure',
+                cable: 'Cable',
+            },
+            dataRetentionDays: 'Raw Data Retention Policy (days)',
+            dataRetentionHelp:
+                'This controls how many days Deep Lynx will retain the raw data you import. A value of 0 will retain no raw data after processing and a value of -1 will retain raw data indefinitely.',
+        },
         deleteDataSource: {
             deleteDataSource: 'Delete Data Source',
             deleteTitle: 'Delete Data Source Permanently',
@@ -619,6 +704,14 @@ export default {
             withData: 'Delete all data ingested by Data Source',
             withDataWarning:
                 'Data may have already been ingested for this Data Source. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Data Source. If you would like to keep this data and orphan it, please uncheck the box below.',
+        },
+        deleteContainer: {
+            deleteContainer: "Delete Container",
+            deleteTitle: "Permanently Delete Container",
+            warning:"Everything associated with this container - such as data, mappings and ontology versions - will be completely removed. This cannot be undone. Please verify that all users of the container are ready for its deletion",
+            cancel: "Cancel",
+            delete: "Permanently Delete Container",
+            in:"in"
         },
         deleteDataImport: {
             deleteTitle: 'Delete Import',
@@ -950,6 +1043,7 @@ export default {
             wikiLink: 'https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/home',
         },
         users: {
+            createdAt: 'Created At',
             title: 'Manage Users',
             newUser: 'New User',
             name: 'Name',

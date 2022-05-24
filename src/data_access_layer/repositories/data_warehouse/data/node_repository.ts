@@ -1,4 +1,4 @@
-import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
+import RepositoryInterface, {FileOptions, QueryOptions, Repository} from '../../repository';
 import Node, {NodeTransformation} from '../../../../domain_objects/data_warehouse/data/node';
 import Result from '../../../../common_classes/result';
 import NodeMapper from '../../../mappers/data_warehouse/data/node_mapper';
@@ -8,6 +8,7 @@ import MetatypeRepository from '../ontology/metatype_repository';
 import Logger from '../../../../services/logger';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 import File, {NodeFile} from '../../../../domain_objects/data_warehouse/data/file';
+import QueryStream from "pg-query-stream";
 
 /*
     NodeRepository contains methods for persisting and retrieving nodes
@@ -363,5 +364,19 @@ export default class NodeRepository extends Repository implements RepositoryInte
         }
 
         return Promise.resolve(Result.Success(results.value));
+    }
+
+    // note that listStreaming and listAllToFile will not automatically fill in the metatype information apart from the
+    // join already happening on the table. Users calling this function are responsible for filling the metatype object
+    // if they require it
+    listStreaming(queryOptions?: QueryOptions, transaction?: PoolClient): Promise<QueryStream> {
+        return super.findAllStreaming(queryOptions, {
+            transaction,
+            resultClass: Node,
+        });
+    }
+
+    listAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
+        return super.findAllToFile(fileOptions, queryOptions, {transaction})
     }
 }

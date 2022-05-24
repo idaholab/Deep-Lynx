@@ -9,23 +9,32 @@ import DataStagingMapper from '../data_access_layer/mappers/data_warehouse/impor
 
 const postgresAdapter = PostgresAdapter.Instance;
 
-void postgresAdapter.init().then(() => {
-    DataStagingMapper.Instance.DeleteOlderThanRetention()
-        .then(() => {
-            DataStagingMapper.Instance.Vacuum()
-                .then(() => {
-                    if (parentPort) parentPort.postMessage('done');
-                    else {
-                        process.exit(0);
-                    }
-                })
-                .catch((e) => {
-                    Logger.error(`unable to run staging cleaning job ${e}`);
-                    process.exit(1);
-                });
-        })
-        .catch((e) => {
-            Logger.error(`unable to run staging cleaning job ${e}`);
-            process.exit(1);
-        });
-});
+void postgresAdapter
+    .init()
+    .then(() => {
+        DataStagingMapper.Instance.DeleteOlderThanRetention()
+            .then(() => {
+                DataStagingMapper.Instance.Vacuum()
+                    .then(() => {
+                        if (parentPort) parentPort.postMessage('done');
+                        else {
+                            process.exit(0);
+                        }
+                    })
+                    .catch((e) => {
+                        Logger.error(`unable to run staging cleaning job ${e}`);
+                        process.exit(1);
+                    });
+            })
+            .catch((e) => {
+                Logger.error(`unable to run staging cleaning job ${e}`);
+                process.exit(1);
+            });
+    })
+    .catch((e) => {
+        Logger.error(`unexpected error in staging clean thread ${e}`);
+        if (parentPort) parentPort.postMessage('done');
+        else {
+            process.exit(0);
+        }
+    });

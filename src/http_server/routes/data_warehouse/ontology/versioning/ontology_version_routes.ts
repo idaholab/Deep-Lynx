@@ -61,6 +61,8 @@ export default class OntologyVersionRoutes {
         );
     }
 
+    // this endpoint is also how you should "rollback" an ontology, by creating a version whose base ontology version
+    // is that of the version you're "rolling back" to
     private static createOntologyVersion(req: Request, res: Response, next: NextFunction) {
         const toCreate = plainToClass(OntologyVersion, req.body as object);
 

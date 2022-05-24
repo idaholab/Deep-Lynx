@@ -67,7 +67,7 @@
     <v-card class="pt-1 pb-3 px-2" v-if="isArchive">
       <v-card-title>
         <span class="headline text-h3">{{$t('deleteTransformation.archiveTitle')}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
         <v-row>
@@ -116,7 +116,7 @@ export default class DeleteTypeTransformationDialog extends Vue {
   archiveLoading = false
   timerRunning = false
   withData = true
-  countDown = 5
+  countDown = 1
 
   get displayIcon() {
     return this.icon
@@ -141,7 +141,7 @@ export default class DeleteTypeTransformationDialog extends Vue {
   }
 
   startCountdown() {
-    this.countDown = 5
+    this.countDown = 1
 
     if(!this.timerRunning) this.countdown()
   }

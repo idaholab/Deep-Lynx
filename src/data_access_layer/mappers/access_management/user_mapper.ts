@@ -1,7 +1,7 @@
 import Result from '../../../common_classes/result';
 import Mapper from '../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import {User} from '../../../domain_objects/access_management/user';
+import {User, DisplayUser} from '../../../domain_objects/access_management/user';
 
 const UIDGenerator = require('uid-generator');
 const uidgen = new UIDGenerator();
@@ -101,6 +101,10 @@ export default class UserMapper extends Mapper {
         } else {
             return super.rows(this.listFromIDsStatement(ids), {resultClass});
         }
+    }
+
+    public async ListDisplayFromIDs(ids: string[]): Promise<Result<DisplayUser[]>> {
+        return super.rows(this.listDisplayFromIDsStatement(ids), {resultClass: DisplayUser});
     }
 
     public ValidateEmail(id: string, validationToken: string): Promise<Result<boolean>> {
@@ -267,6 +271,15 @@ export default class UserMapper extends Mapper {
     private listFromIDsStatement(ids: string[]): string {
         const text = `SELECT * FROM users
                     WHERE id IN(%L)`;
+        const values = ids;
+
+        return format(text, values);
+    }
+
+    private listDisplayFromIDsStatement(ids: string[]): string {
+        const text = `SELECT id, display_name
+                    FROM users
+                    WHERE id IN (%L)`;
         const values = ids;
 
         return format(text, values);

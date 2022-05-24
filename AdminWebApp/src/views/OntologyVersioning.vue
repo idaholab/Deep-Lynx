@@ -279,7 +279,11 @@ export default class OntologyVersioning extends Vue {
 
 
   rollbackOntology(version: OntologyVersionT) {
-    this.$client.rollbackOntology(this.containerID, version.id!)
+    this.$client.createOntologyVersion(this.containerID,{
+      name: `${version.name}-rollback ${new Date().toDateString()}`,
+      description: `Roll back changelist for ${version.name}`,
+      container_id: this.containerID
+    }, version.id! )
         .then(() => {
           this.successMessage = 'Ontology Rollback Started - Check Changelists'
           this.listOntologyVersions()

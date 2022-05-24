@@ -11,16 +11,25 @@ import {parentPort} from 'worker_threads';
 
 const postgresAdapter = PostgresAdapter.Instance;
 
-void postgresAdapter.init().then(() => {
-    EdgeMapper.Instance.RunEdgeLinker()
-        .then(() => {
-            if (parentPort) parentPort.postMessage('done');
-            else {
-                process.exit(0);
-            }
-        })
-        .catch((e) => {
-            Logger.error(`unable to run edge linker job ${e}`);
-            process.exit(1);
-        });
-});
+void postgresAdapter
+    .init()
+    .then(() => {
+        EdgeMapper.Instance.RunEdgeLinker()
+            .then(() => {
+                if (parentPort) parentPort.postMessage('done');
+                else {
+                    process.exit(0);
+                }
+            })
+            .catch((e) => {
+                Logger.error(`unable to run edge linker job ${e}`);
+                process.exit(1);
+            });
+    })
+    .catch((e) => {
+        Logger.error(`unexpected error in orphan edge linker thread ${e}`);
+        if (parentPort) parentPort.postMessage('done');
+        else {
+            process.exit(0);
+        }
+    });
