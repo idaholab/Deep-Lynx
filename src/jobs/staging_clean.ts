@@ -16,25 +16,33 @@ void postgresAdapter
             .then(() => {
                 DataStagingMapper.Instance.Vacuum()
                     .then(() => {
+                        void PostgresAdapter.Instance.close()
+
                         if (parentPort) parentPort.postMessage('done');
                         else {
                             process.exit(0);
                         }
                     })
                     .catch((e) => {
+                        void PostgresAdapter.Instance.close()
+
                         Logger.error(`unable to run staging cleaning job ${e}`);
                         process.exit(1);
                     });
             })
             .catch((e) => {
+                void PostgresAdapter.Instance.close()
+
                 Logger.error(`unable to run staging cleaning job ${e}`);
                 process.exit(1);
             });
     })
     .catch((e) => {
+        void PostgresAdapter.Instance.close()
+
         Logger.error(`unexpected error in staging clean thread ${e}`);
         if (parentPort) parentPort.postMessage('done');
         else {
-            process.exit(0);
+            process.exit(1);
         }
     });

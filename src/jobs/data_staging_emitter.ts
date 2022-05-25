@@ -89,17 +89,21 @@ void postgresAdapter
                 emitter();
             })
             .catch((e) => {
+                void PostgresAdapter.Instance.close()
+
                 Logger.error(`unable to initiate data source emitter: ${e}`);
                 if (parentPort) parentPort.postMessage('done');
                 else {
-                    process.exit(0);
+                    process.exit(1);
                 }
             });
     })
     .catch((e) => {
+        void PostgresAdapter.Instance.close()
+
         Logger.error(`unexpected error in data staging emitter thread ${e}`);
         if (parentPort) parentPort.postMessage('done');
         else {
-            process.exit(0);
+            process.exit(1);
         }
     });

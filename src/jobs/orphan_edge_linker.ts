@@ -15,21 +15,24 @@ void postgresAdapter
     .init()
     .then(() => {
         EdgeMapper.Instance.RunEdgeLinker()
-            .then(() => {
+            .catch((e) => {
+                Logger.error(`unable to run edge linker job ${e}`);
+            })
+            .finally(() => {
+                void PostgresAdapter.Instance.close()
+
                 if (parentPort) parentPort.postMessage('done');
                 else {
                     process.exit(0);
                 }
             })
-            .catch((e) => {
-                Logger.error(`unable to run edge linker job ${e}`);
-                process.exit(1);
-            });
     })
     .catch((e) => {
+        void PostgresAdapter.Instance.close()
+
         Logger.error(`unexpected error in orphan edge linker thread ${e}`);
         if (parentPort) parentPort.postMessage('done');
         else {
-            process.exit(0);
+            process.exit(1);
         }
-    });
+    })

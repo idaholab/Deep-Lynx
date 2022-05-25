@@ -33,10 +33,12 @@ void PostgresAdapter.Instance.init()
             });
 
             destination.on('error', (e: Error) => {
+                void PostgresAdapter.Instance.close()
+
                 Logger.error(`unexpected error in processing queue thread ${e}`);
                 if (parentPort) parentPort.postMessage('done');
                 else {
-                    process.exit(0);
+                    process.exit(1);
                 }
             });
 
@@ -44,10 +46,12 @@ void PostgresAdapter.Instance.init()
         });
     })
     .catch((e) => {
+        void PostgresAdapter.Instance.close()
+
         Logger.error(`unexpected error in events queue thread ${e}`);
         if (parentPort) parentPort.postMessage('done');
         else {
-            process.exit(0);
+            process.exit(1);
         }
     });
 
