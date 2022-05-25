@@ -42,7 +42,6 @@ void postgresAdapter
 
                     stream.on('end', () => {
                         done();
-                        client.release();
 
                         Promise.all(putPromises)
                             .then(() => {
