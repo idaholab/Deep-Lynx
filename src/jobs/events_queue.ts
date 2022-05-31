@@ -33,7 +33,7 @@ void PostgresAdapter.Instance.init()
             });
 
             destination.on('error', (e: Error) => {
-                void PostgresAdapter.Instance.close()
+                void PostgresAdapter.Instance.close();
 
                 Logger.error(`unexpected error in processing queue thread ${e}`);
                 if (parentPort) parentPort.postMessage('done');
@@ -46,7 +46,7 @@ void PostgresAdapter.Instance.init()
         });
     })
     .catch((e) => {
-        void PostgresAdapter.Instance.close()
+        void PostgresAdapter.Instance.close();
 
         Logger.error(`unexpected error in events queue thread ${e}`);
         if (parentPort) parentPort.postMessage('done');
@@ -123,7 +123,7 @@ async function processFunction(event: Event) {
                 // attempt to query the data directly and send out
                 const generator = new GraphQLSchemaGenerator();
                 await generator
-                    .ForContainer(event.container_id!)
+                    .ForContainer(event.container_id!, {})
                     .then(async (schemaResult) => {
                         if (schemaResult.isError) {
                             Logger.error(`Unable to process query from event ${event.id}. Error: ${schemaResult.error}`);

@@ -33,6 +33,10 @@ import OntologyVersionRepository from '../data_access_layer/repositories/data_wa
 import TypeTransformationMapper from '../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper';
 import TypeTransformation from '../domain_objects/data_warehouse/etl/type_transformation';
 import TimeseriesEntryRepository from '../data_access_layer/repositories/data_warehouse/data/timeseries_entry_repository';
+import {plainToClass} from "class-transformer";
+import Node from "../domain_objects/data_warehouse/data/node";
+import {Transform} from "stream";
+import Edge from "../domain_objects/data_warehouse/data/edge";
 
 // GraphQLSchemaGenerator takes a container and generates a valid GraphQL schema for all contained metatypes. This will
 // allow users to query and filter data based on node type, the various properties that type might have, and other bits
@@ -54,7 +58,7 @@ export default class GraphQLSchemaGenerator {
         this.#transformationMapper = TypeTransformationMapper.Instance;
     }
 
-    async ForNode(nodeID: string): Promise<Result<GraphQLSchema>> {
+    async ForNode(nodeID: string, options: ResolverOptions): Promise<Result<GraphQLSchema>> {
         // first we declare the needed,nested graphql types for record info
         const recordInputType = new GraphQLInputObjectType({
             name: 'record_input',
@@ -73,6 +77,19 @@ export default class GraphQLSchemaGenerator {
                 metadata: {type: GraphQLJSON},
                 count: {type: GraphQLInt},
                 page: {type: GraphQLInt},
+            },
+        });
+
+        // needed when a user decides they want the results as a file vs. a raw return
+        const fileInfo = new GraphQLObjectType({
+            name: 'fileInfo',
+            fields: {
+                id: {type: GraphQLString},
+                file_name: {type: GraphQLString},
+                file_size: {type: GraphQLFloat},
+                md5hash: {type: GraphQLString},
+                metadata: {type: GraphQLJSON},
+                url: {type: GraphQLString},
             },
         });
 
@@ -136,7 +153,7 @@ export default class GraphQLSchemaGenerator {
                     ...this.inputFieldsForTransformation(transformation),
                 },
                 description: `Timeseries data from transformation ${name}`,
-                type: new GraphQLList(
+                type:(options.returnFile) ? fileInfo : new GraphQLList(
                     new GraphQLObjectType({
                         name,
                         // needed because the return type accepts an object, but throws a fit about it
@@ -210,7 +227,7 @@ export default class GraphQLSchemaGenerator {
                         },
                     }),
                 ),
-                resolve: this.resolverForNode(transformation),
+                resolve: this.resolverForNode(transformation, options),
             };
         });
 
@@ -229,7 +246,7 @@ export default class GraphQLSchemaGenerator {
     // resolverForNode takes a transformation because it's for querying timeseries data stored
     // in a database associated with the node and transformation. The transformation lets us use
     // the repository for querying timeseries data
-    resolverForNode(transformation: TypeTransformation): (_: any, {input}: {input: any}) => any {
+    resolverForNode(transformation: TypeTransformation, options?: ResolverOptions): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
             let repo: TimeseriesEntryRepository;
 
@@ -286,55 +303,76 @@ export default class GraphQLSchemaGenerator {
                 }
             });
 
-            return new Promise(
-                (resolve) =>
-                    void repo
-                        .list({
-                            limit: input._record?.limit ? input._record.limit : 10000,
-                            offset: input._record?.page ? input._record.limit * input._record.page : undefined,
-                            sortBy: input._record?.sortBy ? input._record.sortBy : undefined,
-                            sortDesc: input._record?.sortDesc ? input._record.sortDesc : undefined,
-                        })
-                        .then((results) => {
-                            if (results.isError) {
-                                Logger.error(`unable to list time series data${results.error?.error}`);
-                                resolve([]);
-                            }
-
-                            const output: {[key: string]: any}[] = [];
-
-                            results.value.forEach((entry) => {
-                                let nodes: any;
-                                let metadata: any;
-
-                                if (entry.nodes) {
-                                    nodes = entry.nodes;
-                                    delete entry.nodes;
+            if(options && options.returnFile) {
+                return new Promise(
+                    (resolve, reject) =>
+                        void repo
+                            .listAllToFile({
+                                file_type: (options && options.returnFileType) ? options.returnFileType : 'json',
+                                file_name: `${transformation.name}-${new Date().toDateString()}`,
+                                containerID: transformation.container_id!})
+                            .then((result) => {
+                                if (result.isError) {
+                                    reject(`unable to list nodes to file ${result.error?.error}`);
                                 }
 
-                                if (entry.metadata) {
-                                    metadata = entry.metadata;
-                                    delete entry.metadata;
+                                resolve(result.value);
+                            })
+                            .catch((e) => {
+                                reject(e);
+                            }),
+                );
+            } else {
+                return new Promise(
+                    (resolve) =>
+                        void repo
+                            .list({
+                                limit: input._record?.limit ? input._record.limit : 10000,
+                                offset: input._record?.page ? input._record.limit * input._record.page : undefined,
+                                sortBy: input._record?.sortBy ? input._record.sortBy : undefined,
+                                sortDesc: input._record?.sortDesc ? input._record.sortDesc : undefined,
+                            })
+                            .then((results) => {
+                                if (results.isError) {
+                                    Logger.error(`unable to list time series data${results.error?.error}`);
+                                    resolve([]);
                                 }
 
-                                output.push({
-                                    ...entry,
-                                    _record: {nodes, metadata},
+                                const output: {[key: string]: any}[] = [];
+
+                                results.value.forEach((entry) => {
+                                    let nodes: any;
+                                    let metadata: any;
+
+                                    if (entry.nodes) {
+                                        nodes = entry.nodes;
+                                        delete entry.nodes;
+                                    }
+
+                                    if (entry.metadata) {
+                                        metadata = entry.metadata;
+                                        delete entry.metadata;
+                                    }
+
+                                    output.push({
+                                        ...entry,
+                                        _record: {nodes, metadata},
+                                    });
                                 });
-                            });
 
-                            resolve(output);
-                        })
-                        .catch((e) => resolve(e)),
-            );
+                                resolve(output);
+                            })
+                            .catch((e) => resolve(e)),
+                );
+            }
         };
     }
 
     // generate requires a containerID because the schema it generates is based on a user's ontology and ontologies are
     // separated by containers
-    async ForContainer(containerID: string, ontologyVersionID?: string): Promise<Result<GraphQLSchema>> {
+    async ForContainer(containerID: string, options: ResolverOptions): Promise<Result<GraphQLSchema>> {
         // fetch the currently published ontology if the versionID wasn't provided
-        if (!ontologyVersionID) {
+        if (!options.ontologyVersionID) {
             const ontResults = await this.#ontologyRepo
                 .where()
                 .containerID('eq', containerID)
@@ -344,18 +382,28 @@ export default class GraphQLSchemaGenerator {
             if (ontResults.isError || ontResults.value.length === 0) {
                 Logger.error('unable to fetch current ontology, or no currently published ontology');
             } else {
-                ontologyVersionID = ontResults.value[0].id;
+                options.ontologyVersionID = ontResults.value[0].id;
             }
         }
 
         // fetch all metatypes for the container, with their keys - the single most expensive call of this function
-        const metatypeResults = await this.#metatypeRepo.where().containerID('eq', containerID).and().ontologyVersion('eq', ontologyVersionID).list(true);
+        const metatypeResults = await this.#metatypeRepo
+            .where()
+            .containerID('eq', containerID)
+            .and()
+            .ontologyVersion('eq', options.ontologyVersionID)
+            .list(true);
         if (metatypeResults.isError) {
             return Promise.resolve(Result.Pass(metatypeResults));
         }
 
         // fetch all metatype relationship pairs - used for _relationship queries.
-        const metatypePairResults = await this.#metatypePairRepo.where().containerID('eq', containerID).and().ontologyVersion('eq', ontologyVersionID).list();
+        const metatypePairResults = await this.#metatypePairRepo
+            .where()
+            .containerID('eq', containerID)
+            .and()
+            .ontologyVersion('eq', options.ontologyVersionID)
+            .list();
         if (metatypePairResults.isError) {
             return Promise.resolve(Result.Pass(metatypePairResults));
         }
@@ -365,7 +413,7 @@ export default class GraphQLSchemaGenerator {
             .where()
             .containerID('eq', containerID)
             .and()
-            .ontologyVersion('eq', ontologyVersionID)
+            .ontologyVersion('eq', options.ontologyVersionID)
             .list(true);
         if (relationshipResults.isError) {
             return Promise.resolve(Result.Pass(relationshipResults));
@@ -421,6 +469,19 @@ export default class GraphQLSchemaGenerator {
                 metadata: {type: GraphQLJSON},
                 count: {type: GraphQLInt},
                 page: {type: GraphQLInt},
+            },
+        });
+
+        // needed when a user decides they want the results as a file vs. a raw return
+        const fileInfo = new GraphQLObjectType({
+            name: 'fileInfo',
+            fields: {
+                id: {type: GraphQLString},
+                file_name: {type: GraphQLString},
+                file_size: {type: GraphQLFloat},
+                md5hash: {type: GraphQLString},
+                metadata: {type: GraphQLJSON},
+                url: {type: GraphQLString},
             },
         });
 
@@ -506,87 +567,90 @@ export default class GraphQLSchemaGenerator {
                     _relationship: {type: relationshipInputType},
                 },
                 description: metatype.description,
-                type: new GraphQLList(
-                    new GraphQLObjectType({
-                        name: stringToValidPropertyName(metatype.name),
-                        // needed because the return type accepts an object, but throws a fit about it
-                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                        // @ts-ignore
-                        fields: () => {
-                            const output: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
-                            output._record = {type: recordInfo};
-                            output._relationship = {type: relationshipInfo};
+                type: options.returnFile
+                    ? fileInfo
+                    : new GraphQLList(
+                        new GraphQLObjectType({
+                            name: stringToValidPropertyName(metatype.name),
+                            // needed because the return type accepts an object, but throws a fit about it
+                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                            // @ts-ignore
+                            fields: () => {
+                                const output: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
+                                output._record = {type: recordInfo};
+                                output._relationship = {type: relationshipInfo};
+                                output._file = {type: fileInfo};
 
-                            metatype.keys?.forEach((metatypeKey) => {
-                                // keys must match the regex format of /^[_a-zA-Z][_a-zA-Z0-9]*$/ in order to be considered
-                                // valid graphql property names. While we force the user to meet these requirements at key
-                                // creation, we can't guarantee that legacy data will conform to these standards
-                                const propertyName = stringToValidPropertyName(metatypeKey.property_name);
+                                metatype.keys?.forEach((metatypeKey) => {
+                                    // keys must match the regex format of /^[_a-zA-Z][_a-zA-Z0-9]*$/ in order to be considered
+                                    // valid graphql property names. While we force the user to meet these requirements at key
+                                    // creation, we can't guarantee that legacy data will conform to these standards
+                                    const propertyName = stringToValidPropertyName(metatypeKey.property_name);
 
-                                switch (metatypeKey.data_type) {
-                                    // because we have no specification on our internal number type, we
-                                    // must set this as a float for now
-                                    case 'number': {
-                                        output[propertyName] = {
-                                            type: GraphQLFloat,
-                                        };
-                                        break;
-                                    }
-
-                                    case 'boolean': {
-                                        output[propertyName] = {
-                                            type: GraphQLBoolean,
-                                        };
-                                        break;
-                                    }
-
-                                    case 'string' || 'date' || 'file': {
-                                        output[propertyName] = {
-                                            type: GraphQLString,
-                                        };
-                                        break;
-                                    }
-
-                                    case 'list': {
-                                        output[propertyName] = {
-                                            type: new GraphQLList(GraphQLJSON),
-                                        };
-                                        break;
-                                    }
-
-                                    case 'enumeration': {
-                                        const enumMap: {[key: string]: GraphQLEnumValueConfig} = {};
-
-                                        if (metatypeKey.options) {
-                                            metatypeKey.options.forEach((option) => {
-                                                enumMap[option] = {
-                                                    value: option,
-                                                };
-                                            });
+                                    switch (metatypeKey.data_type) {
+                                        // because we have no specification on our internal number type, we
+                                        // must set this as a float for now
+                                        case 'number': {
+                                            output[propertyName] = {
+                                                type: GraphQLFloat,
+                                            };
+                                            break;
                                         }
 
-                                        output[propertyName] = {
-                                            type: new GraphQLEnumType({
-                                                name: stringToValidPropertyName(`${metatype.name}_${metatypeKey.name}_Enum_TypeA`),
-                                                values: enumMap,
-                                            }),
-                                        };
-                                        break;
-                                    }
+                                        case 'boolean': {
+                                            output[propertyName] = {
+                                                type: GraphQLBoolean,
+                                            };
+                                            break;
+                                        }
 
-                                    default: {
-                                        output[propertyName] = {
-                                            type: GraphQLString,
-                                        };
-                                    }
-                                }
-                            });
+                                        case 'string' || 'date' || 'file': {
+                                            output[propertyName] = {
+                                                type: GraphQLString,
+                                            };
+                                            break;
+                                        }
 
-                            return output;
-                        },
-                    }),
-                ),
-                resolve: this.resolverForMetatype(containerID, metatype),
+                                        case 'list': {
+                                            output[propertyName] = {
+                                                type: new GraphQLList(GraphQLJSON),
+                                            };
+                                            break;
+                                        }
+
+                                        case 'enumeration': {
+                                            const enumMap: {[key: string]: GraphQLEnumValueConfig} = {};
+
+                                            if (metatypeKey.options) {
+                                                metatypeKey.options.forEach((option) => {
+                                                    enumMap[option] = {
+                                                        value: option,
+                                                    };
+                                                });
+                                            }
+
+                                            output[propertyName] = {
+                                                type: new GraphQLEnumType({
+                                                    name: stringToValidPropertyName(`${metatype.name}_${metatypeKey.name}_Enum_TypeA`),
+                                                    values: enumMap,
+                                                }),
+                                            };
+                                            break;
+                                        }
+
+                                        default: {
+                                            output[propertyName] = {
+                                                type: GraphQLString,
+                                            };
+                                        }
+                                    }
+                                });
+
+                                return output;
+                            },
+                        }),
+                    ),
+                resolve: this.resolverForMetatype(containerID, metatype, options),
             };
         });
 
@@ -636,7 +700,7 @@ export default class GraphQLSchemaGenerator {
                     _record: {type: edgeRecordInputType},
                 },
                 description: relationship.description,
-                type: new GraphQLList(
+                type: (options.returnFile) ? fileInfo : new GraphQLList(
                     new GraphQLObjectType({
                         name: stringToValidPropertyName(relationship.name),
                         // needed because the return type accepts an object, but throws a fit about it
@@ -711,7 +775,7 @@ export default class GraphQLSchemaGenerator {
                         },
                     }),
                 ),
-                resolve: this.resolverForRelationships(containerID, relationship),
+                resolve: this.resolverForRelationships(containerID, relationship, options),
             };
         });
 
@@ -802,37 +866,45 @@ export default class GraphQLSchemaGenerator {
             }),
         );
 
+        const fields: {[key: string]: any} = {};
+
+        if (Object.keys(metatypeGraphQLObjects).length > 0) {
+            fields.metatypes = {
+                type: metatypeObjects,
+                resolve: () => {
+                    return metatypeGraphQLObjects;
+                },
+            };
+        }
+
+        if (Object.keys(relationshipGraphQLObjects).length > 0) {
+            fields.relationships = {
+                type: relationshipObjects,
+                resolve: () => {
+                    return relationshipGraphQLObjects;
+                },
+            };
+        }
+
+        fields.graph = {
+            args: {...graphInput},
+            type: (options.returnFile) ? fileInfo : graphType,
+            resolve: this.resolverForGraph(containerID, options) as any,
+        };
+
         return Promise.resolve(
             Result.Success(
                 new GraphQLSchema({
                     query: new GraphQLObjectType({
                         name: 'Query',
-                        fields: {
-                            metatypes: {
-                                type: metatypeObjects,
-                                resolve: () => {
-                                    return metatypeGraphQLObjects;
-                                },
-                            },
-                            relationships: {
-                                type: relationshipObjects,
-                                resolve: () => {
-                                    return relationshipGraphQLObjects;
-                                },
-                            },
-                            graph: {
-                                args: {...graphInput},
-                                type: graphType,
-                                resolve: this.resolverForGraph(containerID) as any,
-                            },
-                        },
+                        fields,
                     }),
                 }),
             ),
         );
     }
 
-    resolverForMetatype(containerID: string, metatype: Metatype): (_: any, {input}: {input: any}) => any {
+    resolverForMetatype(containerID: string, metatype: Metatype, resolverOptions?: ResolverOptions): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
             let repo = new NodeRepository();
             repo = repo.where().containerID('eq', containerID).and().metatypeID('eq', metatype.id);
@@ -918,55 +990,105 @@ export default class GraphQLSchemaGenerator {
 
             // wrapping the end resolver in a promise ensures that we don't return prior to all results being
             // fetched
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            return new Promise((resolve) =>
-                repo
-                    .list(true, {
-                        limit: input._record?.limit ? input._record.limit : 10000,
-                        offset: input._record?.page ? input._record.limit * (input._record.page > 0 ? input._record.page - 1 : 0) : undefined,
+            if(resolverOptions && resolverOptions.returnFile) {
+                // first we build a transform stream so that the raw node return is formatted correctly
+                // note that we know that originating stream is in object mode so we're able to cast correctly
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                const transform = new Transform({objectMode: true, transform: (chunk: object, _: any, done: (o: any, a: any) => any ) => {
+                    const node = plainToClass(Node, chunk)
+
+
+                    done(null, {
+                        ...node.properties,
+                        _record: {
+                            id: node.id,
+                            data_source_id: node.data_source_id,
+                            original_id: node.original_data_id,
+                            import_id: node.import_data_id,
+                            metatype_id: node.metatype_id,
+                            metatype_name: node.metatype_name,
+                            metadata: node.metadata,
+                            created_at: node.created_at?.toISOString(),
+                            created_by: node.created_by,
+                            modified_at: node.modified_at?.toISOString(),
+                            modified_by: node.modified_by,
+                        },
                     })
-                    .then((results) => {
-                        if (results.isError) {
-                            Logger.error(`unable to list nodes ${results.error?.error}`);
-                            resolve([]);
-                        }
+                }})
 
-                        const nodeOutput: {[key: string]: any}[] = [];
 
-                        results.value.forEach((node) => {
-                            const properties: {[key: string]: any} = {};
-                            if (node.properties) {
-                                Object.keys(node.properties).forEach((key) => {
-                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                                    // @ts-ignore
-                                    properties[stringToValidPropertyName(key)] = node.properties[key];
-                                });
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                return new Promise((resolve, reject) =>
+                    repo
+                        .listAllToFile({
+                            file_type: (resolverOptions && resolverOptions.returnFileType) ? resolverOptions.returnFileType : 'json',
+                            file_name: `${metatype.name}-${new Date().toDateString()}`,
+                            transformStreams: [transform],
+                            containerID})
+                        .then((result) => {
+                            if (result.isError) {
+                                reject(`unable to list nodes to file ${result.error?.error}`);
                             }
 
-                            nodeOutput.push({
-                                ...properties,
-                                _record: {
-                                    id: node.id,
-                                    data_source_id: node.data_source_id,
-                                    original_id: node.original_data_id,
-                                    import_id: node.import_data_id,
-                                    metatype_id: node.metatype_id,
-                                    metatype_name: node.metatype_name,
-                                    metadata: node.metadata,
-                                    created_at: node.created_at?.toISOString(),
-                                    created_by: node.created_by,
-                                    modified_at: node.modified_at?.toISOString(),
-                                    modified_by: node.modified_by,
-                                },
-                            });
-                        });
+                            resolve(result.value);
+                        })
+                        .catch((e) => {
+                            reject(e);
+                        }),
+                );
+            } else {
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                return new Promise((resolve) =>
+                    repo
+                        .list(true, {
+                            limit: input._record?.limit ? input._record.limit : 10000,
+                            offset: input._record?.page ? input._record.limit * (input._record.page > 0 ? input._record.page - 1 : 0) : undefined,
+                        })
+                        .then((results) => {
+                            if (results.isError) {
+                                Logger.error(`unable to list nodes ${results.error?.error}`);
+                                resolve([]);
+                            }
 
-                        resolve(nodeOutput);
-                    })
-                    .catch((e) => {
-                        resolve(e);
-                    }),
-            );
+                            const nodeOutput: {[key: string]: any}[] = [];
+
+                            results.value.forEach((node) => {
+                                const properties: {[key: string]: any} = {};
+                                if (node.properties) {
+                                    Object.keys(node.properties).forEach((key) => {
+                                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                        // @ts-ignore
+                                        properties[stringToValidPropertyName(key)] = node.properties[key];
+                                    });
+                                }
+
+                                nodeOutput.push({
+                                    ...properties,
+                                    _record: {
+                                        id: node.id,
+                                        data_source_id: node.data_source_id,
+                                        original_id: node.original_data_id,
+                                        import_id: node.import_data_id,
+                                        metatype_id: node.metatype_id,
+                                        metatype_name: node.metatype_name,
+                                        metadata: node.metadata,
+                                        created_at: node.created_at?.toISOString(),
+                                        created_by: node.created_by,
+                                        modified_at: node.modified_at?.toISOString(),
+                                        modified_by: node.modified_by,
+                                    },
+                                });
+                            });
+
+                            resolve(nodeOutput);
+                        })
+                        .catch((e) => {
+                            resolve(e);
+                        }),
+                );
+            }
+
         };
     }
 
@@ -1040,7 +1162,7 @@ export default class GraphQLSchemaGenerator {
         return fields;
     }
 
-    resolverForRelationships(containerID: string, relationship: MetatypeRelationship): (_: any, {input}: {input: any}) => any {
+    resolverForRelationships(containerID: string, relationship: MetatypeRelationship, options?: ResolverOptions): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
             let repo = new EdgeRepository();
             repo = repo.where().containerID('eq', containerID).and().relationshipName('eq', relationship.name);
@@ -1104,57 +1226,112 @@ export default class GraphQLSchemaGenerator {
                 repo = repo.and().property(propertyMap[key].name, query[0], query[1], propertyMap[key].data_type);
             });
 
-            // wrapping the end resolver in a promise ensures that we don't return prior to all results being
-            // fetched
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            return new Promise((resolve) =>
-                repo
-                    .list(true, {limit: 10000})
-                    .then((results) => {
-                        if (results.isError) {
-                            Logger.error(`unable to list edges ${results.error?.error}`);
-                            resolve([]);
-                        }
+            if(options && options.returnFile) {
+                // first we build a transform stream so that the raw edge return is formatted correctly
+                // note that we know that originating stream is in object mode, so we're able to cast correctly
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                const transform = new Transform({objectMode: true, transform: (chunk: object, _: any, done: (o: any, a: any) => any ) => {
+                    const edge = plainToClass(Edge, chunk)
 
-                        const edgeOutput: {[key: string]: any}[] = [];
 
-                        results.value.forEach((edge) => {
-                            const properties: {[key: string]: any} = {};
-                            if (edge.properties) {
-                                Object.keys(edge.properties).forEach((key) => {
-                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                                    // @ts-ignore
-                                    properties[stringToValidPropertyName(key)] = edge.properties[key];
-                                });
+                    done(null, {
+                        ...edge.properties,
+                        _record: {
+                            id: edge.id,
+                            pair_id: edge.relationship_pair_id,
+                            data_source_id: edge.data_source_id,
+                            import_id: edge.import_data_id,
+                            origin_id: edge.origin_id,
+                            origin_metatype_id: edge.origin_metatype_id,
+                            destination_id: edge.destination_id,
+                            destination_metatype_id: edge.destination_metatype_id,
+                            relationship_name: edge.metatype_relationship_name,
+                            metadata: edge.metadata,
+                            created_at: edge.created_at?.toISOString(),
+                            created_by: edge.created_by,
+                            modified_at: edge.modified_at?.toISOString(),
+                            modified_by: edge.modified_by,
+                        },
+                    })
+                }})
+
+
+                // wrapping the end resolver in a promise ensures that we don't return prior to all results being
+                // fetched
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                return new Promise((resolve, reject) =>
+                    repo
+                        .listAllToFile({
+                            file_type: (options && options.returnFileType) ? options.returnFileType : 'json',
+                            file_name: `${relationship.name}-${new Date().toDateString()}`,
+                            transformStreams: [transform],
+                            containerID})
+                        .then((result) => {
+                            if (result.isError) {
+                                reject(`unable to list edges to file ${result.error?.error}`);
                             }
 
-                            edgeOutput.push({
-                                ...properties,
-                                _record: {
-                                    id: edge.id,
-                                    pair_id: edge.relationship_pair_id,
-                                    data_source_id: edge.data_source_id,
-                                    import_id: edge.import_data_id,
-                                    origin_id: edge.origin_id,
-                                    origin_metatype_id: edge.origin_metatype_id,
-                                    destination_id: edge.destination_id,
-                                    destination_metatype_id: edge.destination_metatype_id,
-                                    relationship_name: edge.metatype_relationship_name,
-                                    metadata: edge.metadata,
-                                    created_at: edge.created_at?.toISOString(),
-                                    created_by: edge.created_by,
-                                    modified_at: edge.modified_at?.toISOString(),
-                                    modified_by: edge.modified_by,
-                                },
-                            });
-                        });
+                            resolve(result.value);
+                        })
+                        .catch((e) => {
+                            reject(e);
+                        }),
+                );
+            } else {
+                // wrapping the end resolver in a promise ensures that we don't return prior to all results being
+                // fetched
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                return new Promise((resolve) =>
+                    repo
+                        .list(true, {limit: 10000})
+                        .then((results) => {
+                            if (results.isError) {
+                                Logger.error(`unable to list edges ${results.error?.error}`);
+                                resolve([]);
+                            }
 
-                        resolve(edgeOutput);
-                    })
-                    .catch((e) => {
-                        resolve(e);
-                    }),
-            );
+                            const edgeOutput: {[key: string]: any}[] = [];
+
+                            results.value.forEach((edge) => {
+                                const properties: {[key: string]: any} = {};
+                                if (edge.properties) {
+                                    Object.keys(edge.properties).forEach((key) => {
+                                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                        // @ts-ignore
+                                        properties[stringToValidPropertyName(key)] = edge.properties[key];
+                                    });
+                                }
+
+                                edgeOutput.push({
+                                    ...properties,
+                                    _record: {
+                                        id: edge.id,
+                                        pair_id: edge.relationship_pair_id,
+                                        data_source_id: edge.data_source_id,
+                                        import_id: edge.import_data_id,
+                                        origin_id: edge.origin_id,
+                                        origin_metatype_id: edge.origin_metatype_id,
+                                        destination_id: edge.destination_id,
+                                        destination_metatype_id: edge.destination_metatype_id,
+                                        relationship_name: edge.metatype_relationship_name,
+                                        metadata: edge.metadata,
+                                        created_at: edge.created_at?.toISOString(),
+                                        created_by: edge.created_by,
+                                        modified_at: edge.modified_at?.toISOString(),
+                                        modified_by: edge.modified_by,
+                                    },
+                                });
+                            });
+
+                            resolve(edgeOutput);
+                        })
+                        .catch((e) => {
+                            resolve(e);
+                        }),
+                );
+            }
         };
     }
 
@@ -1226,7 +1403,7 @@ export default class GraphQLSchemaGenerator {
         return fields;
     }
 
-    resolverForGraph(containerID: string): (_: any, {input}: {input: any}) => any {
+    resolverForGraph(containerID: string, options?: ResolverOptions): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
             let repo = new NodeLeafRepository(input.root_node, containerID, input.depth);
 
@@ -1266,28 +1443,49 @@ export default class GraphQLSchemaGenerator {
                 }
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            return new Promise((resolve) =>
-                repo
-                    .list({sortBy: 'depth'})
-                    .then((results) => {
-                        if (results.isError) {
-                            Logger.error(`unable to list nodeLeaf objects ${results.error?.error}`);
-                            resolve([]);
-                        }
+            if(options && options.returnFile) {
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                return new Promise((resolve, reject) =>
+                    repo
+                        .listAllToFile({
+                            file_type: (options && options.returnFileType) ? options.returnFileType : 'json',
+                            file_name: `GraphResults-${new Date().toDateString()}`,
+                            containerID})
+                        .then((result) => {
+                            if (result.isError) {
+                                reject(`unable to list graph results to file ${result.error?.error}`);
+                            }
 
-                        const nodeLeafOutput: {[key: string]: any}[] = [];
+                            resolve(result.value);
+                        })
+                        .catch((e) => {
+                            reject(e);
+                        }),
+                );
+            } else {
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                return new Promise((resolve) =>
+                    repo
+                        .list({sortBy: 'depth'})
+                        .then((results) => {
+                            if (results.isError) {
+                                Logger.error(`unable to list nodeLeaf objects ${results.error?.error}`);
+                                resolve([]);
+                            }
 
-                        results.value.forEach((nodeLeaf: any) => {
-                            nodeLeafOutput.push({...nodeLeaf});
-                        });
+                            const nodeLeafOutput: {[key: string]: any}[] = [];
 
-                        resolve(nodeLeafOutput);
-                    })
-                    .catch((e) => {
-                        resolve(e);
-                    }),
-            );
+                            results.value.forEach((nodeLeaf: any) => {
+                                nodeLeafOutput.push({...nodeLeaf});
+                            });
+
+                            resolve(nodeLeafOutput);
+                        })
+                        .catch((e) => {
+                            resolve(e);
+                        }),
+                );
+            }
         };
     }
 
@@ -1398,4 +1596,10 @@ export default class GraphQLSchemaGenerator {
 
         return [operator as string, parts.join(' ')];
     }
+}
+
+export type ResolverOptions = {
+    ontologyVersionID?: string;
+    returnFile?: boolean;
+    returnFileType?: 'json' | 'csv' | string;
 }
