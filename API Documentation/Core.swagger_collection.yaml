@@ -981,6 +981,8 @@ paths:
           description: OK
       description: This is an endpoint that accepts a GraphQL query and returns the results of that query. Primarily used for working with time series data on nodes.
       parameters: []
+      tags:
+        - Graph
   '/containers/{container_id}/graphs/nodes/metatype/{metatype_id}':
     get:
       tags:

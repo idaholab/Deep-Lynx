@@ -1,7 +1,9 @@
-import {QueryOptions, Repository} from '../../repository';
+import {FileOptions, QueryOptions, Repository} from '../../repository';
 import NodeLeaf, {nodeLeafQuery} from '../../../../domain_objects/data_warehouse/data/node_leaf';
 import Result from '../../../../common_classes/result';
 import {PoolClient} from 'pg';
+import File from '../../../../domain_objects/data_warehouse/data/file';
+
 /*
     NodeLeafRepository contains methods for retrieving NodeLeaf objects from
     storage. Users should interact with this repository. Users should
@@ -11,7 +13,7 @@ import {PoolClient} from 'pg';
 */
 
 export default class NodeLeafRepository extends Repository {
-    constructor(id: string, container_id: string, depth: string){
+    constructor(id: string, container_id: string, depth: string) {
         super('');
         // in order to add filters to the base node leaf query we must set it
         // as the raw query here
@@ -75,20 +77,41 @@ export default class NodeLeafRepository extends Repository {
     }
 
     async list(queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<NodeLeaf[]>> {
-
         // store the first three values for re-initialization after list function is complete
-        const resetValues = this._values.slice(0,3)
+        const resetValues = this._values.slice(0, 3);
 
         const results = await super.findAll<NodeLeaf>(queryOptions, {
             transaction,
-            resultClass: NodeLeaf
+            resultClass: NodeLeaf,
         });
         // reset the query
         this._rawQuery = [nodeLeafQuery];
         // reset the values to correspond with reset query
-        this._values = resetValues
+        this._values = resetValues;
 
-        if (results.isError) {return Promise.resolve(Result.Pass(results))};
+        if (results.isError) {
+            return Promise.resolve(Result.Pass(results));
+        }
+
+        return Promise.resolve(results);
+    }
+
+    async listAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
+        // store the first three values for re-initialization after list function is complete
+        const resetValues = this._values.slice(0, 3);
+
+        const results = await super.findAllToFile(fileOptions, queryOptions, {
+            transaction,
+            resultClass: NodeLeaf,
+        });
+        // reset the query
+        this._rawQuery = [nodeLeafQuery];
+        // reset the values to correspond with reset query
+        this._values = resetValues;
+
+        if (results.isError) {
+            return Promise.resolve(Result.Pass(results));
+        }
 
         return Promise.resolve(results);
     }

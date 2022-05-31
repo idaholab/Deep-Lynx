@@ -165,10 +165,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
             }),
         ];
 
-        const saveNodes = await nMapper.BulkCreateOrUpdateByCompositeID(
-            'test suite',
-            nodeList
-        );
+        const saveNodes = await nMapper.BulkCreateOrUpdateByCompositeID('test suite', nodeList);
         expect(saveNodes.isError, metatypes.error?.error).false;
         expect(saveNodes.value.length).eq(4);
 
@@ -217,7 +214,14 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                 destination_id: nodes[3].id,
             }),
         );
-        expect (edge.isError).false;
+        expect(edge.isError).false;
+
+        const schemaGenerator = new GraphQLSchemaGenerator();
+
+        const schemaResults = await schemaGenerator.ForContainer(containerID, {});
+        expect(schemaResults.isError).false;
+        expect(schemaResults.value).not.empty;
+        schema = schemaResults.value;
 
         return Promise.resolve();
     });
@@ -226,19 +230,10 @@ describe('Using a new GraphQL Query on nodes we', async () => {
         await UserMapper.Instance.Delete(user.id!);
         await DataSourceMapper.Instance.Delete(dataSourceID);
         await ContainerMapper.Instance.Delete(containerID);
-        return PostgresAdapter.Instance.close();
-    });
-
-    it('can generate valid schema', async () => {
-        const schemaGenerator = new GraphQLSchemaGenerator();
-
-        const schemaResults = await schemaGenerator.ForContainer(containerID);
-        expect(schemaResults.isError).false;
-        expect(schemaResults.value).not.empty;
-        schema = schemaResults.value;
+        void PostgresAdapter.Instance.close();
 
         return Promise.resolve();
-    })
+    });
 
     it('can query by metatype', async () => {
         const response = await graphql({
@@ -253,7 +248,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                         color
                     }
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
@@ -266,6 +261,34 @@ describe('Using a new GraphQL Query on nodes we', async () => {
             expect(n.color).not.undefined;
             expect(n.invalidAttribute).undefined;
         }
+
+        return Promise.resolve();
+    });
+
+    it('can save a query by metatype to file', async () => {
+        const schemaGenerator = new GraphQLSchemaGenerator();
+
+        const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true});
+        expect(schemaResults.isError).false;
+        expect(schemaResults.value).not.empty;
+
+        const response = await graphql({
+            schema: schemaResults.value,
+            source: `{
+                metatypes{
+                    Multimeta{
+                        id
+                        file_name
+                        file_size
+                        md5hash
+                    }
+                }
+            }`,
+        });
+        expect(response.errors).undefined;
+        expect(response.data).not.undefined;
+        const data = response.data!.metatypes.Multimeta;
+        expect(data.file_size).gt(0);
 
         return Promise.resolve();
     });
@@ -285,7 +308,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                         color
                     }
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
@@ -320,7 +343,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                         color
                     }
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
@@ -354,7 +377,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                         color
                     }
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
@@ -392,7 +415,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                         color
                     }
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
@@ -409,7 +432,43 @@ describe('Using a new GraphQL Query on nodes we', async () => {
 
         return Promise.resolve();
     });
-})
+
+    it('can save to file by relationship', async () => {
+        const schemaGenerator = new GraphQLSchemaGenerator();
+
+        const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true});
+        expect(schemaResults.isError).false;
+        expect(schemaResults.value).not.empty;
+
+        const response = await graphql({
+            schema: schemaResults.value,
+            source: `{
+                metatypes{
+                    Multimeta(
+                        _relationship: {
+                            connected: {
+                                Singleton: true
+                            }
+                        }
+                    ){
+                        id
+                        file_name
+                        file_size
+                        md5hash 
+                    }
+                }
+            }`,
+        });
+
+        expect(response.errors).undefined;
+        expect(response.data).not.undefined;
+        const data = response.data!.metatypes.Multimeta;
+
+        expect(data.file_size).gt(0);
+
+        return Promise.resolve();
+    });
+});
 
 const test_keys: MetatypeKey[] = [
     new MetatypeKey({

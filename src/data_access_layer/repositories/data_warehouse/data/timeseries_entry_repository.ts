@@ -1,8 +1,9 @@
-import {QueryOptions, Repository} from '../../repository';
+import {FileOptions, QueryOptions, Repository} from '../../repository';
 import TimeseriesEntry from '../../../../domain_objects/data_warehouse/data/timeseries';
 import {PoolClient} from 'pg';
 import Result from '../../../../common_classes/result';
 import TimeseriesEntryMapper from '../../../mappers/data_warehouse/data/timeseries_entry_mapper';
+import File from '../../../../domain_objects/data_warehouse/data/file';
 
 const format = require('pg-format');
 
@@ -88,5 +89,17 @@ export default class TimeseriesEntryRepository extends Repository {
         }
 
         return super.findAll<any>(queryOptions, {transaction});
+    }
+
+    listAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
+        if (queryOptions && queryOptions.groupBy && this.#groupBy) {
+            queryOptions.groupBy = [queryOptions.groupBy, ...this.#groupBy].join(',');
+        } else if (queryOptions && this.#groupBy) {
+            queryOptions.groupBy = this.#groupBy.join(',');
+        } else if (this.#groupBy) {
+            queryOptions = {groupBy: this.#groupBy.join(',')};
+        }
+
+        return super.findAllToFile(fileOptions, queryOptions, {transaction});
     }
 }

@@ -75,7 +75,8 @@ export default class LargeObject implements BlobStorage {
                                     // callback to client.query.
                                     client
                                         .query('COMMIT')
-                                        .then(() =>
+                                        .then(() => {
+                                            client.release();
                                             resolve(
                                                 Result.Success({
                                                     filename,
@@ -85,8 +86,8 @@ export default class LargeObject implements BlobStorage {
                                                     adapter_name: name,
                                                     metadata: {},
                                                 }),
-                                            ),
-                                        )
+                                            );
+                                        })
                                         .catch((e) => reject(e));
                                 });
 

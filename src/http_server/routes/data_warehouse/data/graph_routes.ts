@@ -417,7 +417,10 @@ export default class GraphRoutes {
         const generator = new GraphQLSchemaGenerator();
 
         generator
-            .ForNode(req.node?.id!)
+            .ForNode(req.node?.id!, {
+                returnFile: String(req.query.returnFile).toLowerCase() === 'true',
+                returnFileType: String(req.query.returnFileType).toLowerCase(),
+            })
             .then((schemaResult) => {
                 if (schemaResult.isError) {
                     Result.Error(schemaResult.error!).asResponse(res);
