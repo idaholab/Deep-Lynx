@@ -3,7 +3,7 @@
     <ontology-version-toolbar
         v-if="$store.getters.ontologyVersioningEnabled"
         :containerID="containerID"
-        @editModeToggl="countRelationshipPairs(); loadMetatypeRelationshipPairs()"
+        @editModeToggle="countRelationshipPairs(); loadMetatypeRelationshipPairs()"
         @selectedVersion="countRelationshipPairs(); loadMetatypeRelationshipPairs()"
         @selected="countRelationshipPairs(); loadMetatypeRelationshipPairs()">
     </ontology-version-toolbar>
@@ -247,7 +247,6 @@ export default class MetatypeRelationshipPairs extends Vue {
             this.$client.listMetatypeRelationshipPairs(this.containerID, {
               ontologyVersion: this.$store.getters.currentOntologyVersionID,
               nameIn,
-              loadRelationships: true
             })
                 .then((comparison) => {
                   this.loading = false

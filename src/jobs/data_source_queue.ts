@@ -43,27 +43,33 @@ void PostgresAdapter.Instance.init()
                 });
 
                 destination.on('error', (e: Error) => {
+                    void PostgresAdapter.Instance.close()
+
                     Logger.error(`unexpected error in data source queue thread ${e}`);
                     if (parentPort) parentPort.postMessage('done');
                     else {
-                        process.exit(0);
+                        process.exit(1);
                     }
                 });
 
                 queue.Consume(Config.data_sources_queue, destination);
             })
             .catch((e) => {
+                void PostgresAdapter.Instance.close()
+
                 Logger.error(`unexpected error in data source queue thread ${e}`);
                 if (parentPort) parentPort.postMessage('done');
                 else {
-                    process.exit(0);
+                    process.exit(1);
                 }
             });
     })
     .catch((e) => {
+        void PostgresAdapter.Instance.close()
+
         Logger.error(`unexpected error in data source queue thread ${e}`);
         if (parentPort) parentPort.postMessage('done');
         else {
-            process.exit(0);
+            process.exit(1);
         }
     });

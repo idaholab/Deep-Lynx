@@ -3,15 +3,15 @@ import Result from '../../common_classes/result';
 import Mapper, {Options} from '../mappers/mapper';
 import {User} from '../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
-import QueryStream from "pg-query-stream";
-import {PassThrough} from "stream";
-import BlobStorageProvider from "../../services/blob_storage/blob_storage";
+import QueryStream from 'pg-query-stream';
+import {PassThrough, Readable, Transform} from 'stream';
+import BlobStorageProvider from '../../services/blob_storage/blob_storage';
 const JSONStream = require('JSONStream');
 import csvStringify from 'csv-stringify';
 const format = require('pg-format');
 const short = require('short-uuid');
-import File from "../../domain_objects/data_warehouse/data/file";
-import FileMapper from "../mappers/data_warehouse/data/file_mapper";
+import File from '../../domain_objects/data_warehouse/data/file';
+import FileMapper from '../mappers/data_warehouse/data/file_mapper';
 
 /*
     RepositoryInterface allows us to create an expectation for how the various
@@ -376,41 +376,41 @@ export class Repository {
             // blob storage will pick the proper provider based on environment variable, no need to specify here unless
             // fileOptions contains a provider
             const fileMapper = new FileMapper();
-            let contentType = ''
+            let contentType = '';
             const blob = BlobStorageProvider(fileOptions.blob_provider);
-            const stream = await storage.rowsStreaming(query, options);
+            let stream: Readable = await storage.rowsStreaming(query, options);
 
-            // pass through stream needed in order to pipe the results through transformative streams prior to piping
-            // them to the blob storage
-            const pass = new PassThrough()
-            const fileName = (fileOptions.file_name) ? fileOptions.file_name : `${short.generate()}-${new Date().toDateString()}`
-
-            switch (fileOptions.file_type) {
-                case "json": {
-                    stream.pipe(JSONStream.stringify()).pipe(pass)
-                    contentType = 'application/json'
-                    break;
-                }
-
-                case "csv": {
-                    stream.pipe(csvStringify({header: true})).pipe(pass)
-                    contentType = 'text/csv'
-                    break
-                }
-
-                default: {
-                    return Promise.resolve(Result.Failure('no file type specified, aborting'))
+            if (fileOptions.transformStreams && fileOptions.transformStreams.length > 0) {
+                for (const pipe of fileOptions.transformStreams) {
+                    stream = stream.pipe(pipe);
                 }
             }
 
-            if(blob) {
-                const result = await blob?.uploadPipe(
-                    `containers/${fileOptions.containerID}/queryResults`,
-                    fileName,
-                    pass,
-                    contentType,
-                    'utf8'
-                )
+            // pass through stream needed in order to pipe the results through transformative streams prior to piping
+            // them to the blob storage
+            const pass = new PassThrough();
+            const fileName = fileOptions.file_name ? fileOptions.file_name : `${short.generate()}-${new Date().toDateString()}`;
+
+            switch (fileOptions.file_type) {
+                case 'json': {
+                    stream.pipe(JSONStream.stringify()).pipe(pass);
+                    contentType = 'application/json';
+                    break;
+                }
+
+                case 'csv': {
+                    stream.pipe(csvStringify({header: true})).pipe(pass);
+                    contentType = 'text/csv';
+                    break;
+                }
+
+                default: {
+                    return Promise.resolve(Result.Failure('no file type specified, aborting'));
+                }
+            }
+
+            if (blob) {
+                const result = await blob?.uploadPipe(`containers/${fileOptions.containerID}/queryResults`, fileName, pass, contentType, 'utf8');
 
                 const file = new File({
                     file_name: fileName,
@@ -419,19 +419,15 @@ export class Repository {
                     adapter_file_path: result.value.filepath,
                     adapter: blob.name(),
                     metadata: result.value.metadata,
-                    container_id: fileOptions.containerID
-                })
+                    container_id: fileOptions.containerID,
+                });
 
-                return fileMapper.Create(
-                    (fileOptions.userID) ? fileOptions.userID : 'system',
-                    file
-                )
+                return fileMapper.Create(fileOptions.userID ? fileOptions.userID : 'system', file);
             } else {
-                return Promise.resolve(Result.Failure('unable to initialize blob storage client'))
+                return Promise.resolve(Result.Failure('unable to initialize blob storage client'));
             }
-
         } catch (e: any) {
-            return Promise.resolve(Result.Error(e))
+            return Promise.resolve(Result.Error(e));
         }
     }
 
@@ -475,12 +471,13 @@ export type QueryOptions = {
 };
 
 export type FileOptions = {
-    containerID: string,
-    file_type: 'json' | 'csv',
-    blob_provider?: 'azure_blob' | 'filesystem' | 'largeobject',
-    file_name?: string
-    userID?: string,
-}
+    containerID: string;
+    file_type: 'json' | 'csv' | string;
+    blob_provider?: 'azure_blob' | 'filesystem' | 'largeobject';
+    file_name?: string;
+    userID?: string;
+    transformStreams?: Transform[]; // streams to pipe to, prior to piping to the file, allows manipulation of the object
+};
 
 export type DeleteOptions = {
     force?: boolean;

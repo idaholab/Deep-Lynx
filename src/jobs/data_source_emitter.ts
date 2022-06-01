@@ -36,45 +36,46 @@ void postgresAdapter
                         Logger.error(`unexpected error in data source emitter thread ${e}`);
                         if (parentPort) parentPort.postMessage('done');
                         else {
-                            process.exit(0);
+                            process.exit(1);
                         }
                     });
 
                     stream.on('end', () => {
                         done();
-                        client.release();
 
                         Promise.all(putPromises)
-                            .then(() => {
-                                if (parentPort) parentPort.postMessage('done');
-                                else {
-                                    process.exit(0);
-                                }
-                            })
                             .catch((e) => {
                                 Logger.error(`unable to put data sources on queue ${e}`);
+                            })
+                            .finally(() => {
+                                void PostgresAdapter.Instance.close();
+
                                 if (parentPort) parentPort.postMessage('done');
                                 else {
-                                    process.exit(0);
+                                    process.exit(1);
                                 }
-                            });
+                            })
                     });
 
                     stream.pipe(devnull({objectMode: true}));
                 });
             })
             .catch((e) => {
+                void PostgresAdapter.Instance.close();
+
                 Logger.error(`unable to initiate data source emitter: ${e}`);
                 if (parentPort) parentPort.postMessage('done');
                 else {
-                    process.exit(0);
+                    process.exit(1);
                 }
             });
     })
     .catch((e) => {
+        void PostgresAdapter.Instance.close();
+
         Logger.error(`unexpected error in data source emitter thread ${e}`);
         if (parentPort) parentPort.postMessage('done');
         else {
-            process.exit(0);
+            process.exit(1);
         }
     });

@@ -124,7 +124,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         expect(metatypeResults.value.length).eq(4);
         metatypes = metatypeResults.value;
 
-        metatypes.forEach(async(mt) => {
+        metatypes.forEach(async (mt) => {
             const testKeys = [...test_keys];
             testKeys.forEach((key) => (key.metatype_id = mt.id));
             const keys = await mkMapper.BulkCreate('test suite', testKeys);
@@ -132,8 +132,8 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         });
 
         const nodeList = [];
-        const genres = ['country', 'rock', 'pop', 'rap']
-        function getYear(){
+        const genres = ['country', 'rock', 'pop', 'rap'];
+        function getYear() {
             return Math.floor(Math.random() * (2020 - 1950) + 1950);
         }
 
@@ -147,9 +147,9 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 },
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
-            })
+            });
             nodeList.push(node);
-        };
+        }
 
         for (let i = 0; i < 3; i++) {
             const node = new Node({
@@ -162,9 +162,9 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 },
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
-            })
+            });
             nodeList.push(node);
-        };
+        }
 
         for (let i = 0; i < 50; i++) {
             const node = new Node({
@@ -177,9 +177,9 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 },
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
-            })
+            });
             nodeList.push(node);
-        };
+        }
 
         for (let i = 0; i < 6; i++) {
             const node = new Node({
@@ -192,34 +192,31 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 },
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
-            })
+            });
             nodeList.push(node);
-        };
+        }
 
-        const nodeResults = await nMapper.BulkCreateOrUpdateByCompositeID(
-            'test suite',
-            nodeList
-        );
+        const nodeResults = await nMapper.BulkCreateOrUpdateByCompositeID('test suite', nodeList);
         expect(nodeResults.isError, metatypeResults.error?.error).false;
         expect(nodeResults.value.length).eq(75);
         nodes = nodeResults.value;
 
-        const musicians = nodes.slice(0, 16)
+        const musicians = nodes.slice(0, 16);
         expect(musicians.length).eq(16);
         expect(musicians[0].metatype!.id).eq(metatypes[0].id);
         expect(musicians[15].metatype!.id).eq(metatypes[0].id);
 
-        const bands = nodes.slice(16, 19)
+        const bands = nodes.slice(16, 19);
         expect(bands.length).eq(3);
         expect(bands[0].metatype!.id).eq(metatypes[1].id);
         expect(bands[2].metatype!.id).eq(metatypes[1].id);
 
-        songs = nodes.slice(19, 69)
+        songs = nodes.slice(19, 69);
         expect(songs.length).eq(50);
         expect(songs[0].metatype!.id).eq(metatypes[2].id);
         expect(songs[49].metatype!.id).eq(metatypes[2].id);
 
-        const albums = nodes.slice(69, 75)
+        const albums = nodes.slice(69, 75);
         expect(albums.length).eq(6);
         expect(albums[0].metatype!.id).eq(metatypes[3].id);
         expect(albums[5].metatype!.id).eq(metatypes[3].id);
@@ -245,7 +242,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 name: 'features',
                 description: 'song/album features musician/band',
             }),
-        ]
+        ];
 
         const relResults = await mrMapper.BulkCreate('test suite', relList);
         expect(relResults.isError).false;
@@ -253,7 +250,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         expect(relResults.value.length).eq(4);
         relationships = relResults.value;
 
-        relationships.forEach(async(rel) => {
+        relationships.forEach(async (rel) => {
             const testKeys = [...test_rel_keys];
             testKeys.forEach((key) => (key.metatype_relationship_id = rel.id));
             const rKeys = await mrKeyMapper.BulkCreate('test suite', testKeys);
@@ -326,10 +323,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
             }),
         ];
 
-        const relPairs = await mrPairMapper.BulkCreate(
-            'test suite',
-            relPairList
-        );
+        const relPairs = await mrPairMapper.BulkCreate('test suite', relPairList);
         expect(relPairs.isError).false;
         expect(relPairs.value).not.empty;
         expect(relPairs.value.length).eq(7);
@@ -347,7 +341,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: songs[i].id,
             });
             edgeList.push(edge);
-        };
+        }
 
         for (let i = 0; i < 3; i++) {
             const edge = new Edge({
@@ -358,7 +352,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: songs[i + 7].id,
             });
             edgeList.push(edge);
-        };
+        }
 
         for (let i = 0; i < 4; i++) {
             const edge = new Edge({
@@ -369,7 +363,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: songs[i + 10].id,
             });
             edgeList.push(edge);
-        };
+        }
 
         for (let i = 0; i < 5; i++) {
             const edge = new Edge({
@@ -380,7 +374,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: songs[i + 14].id,
             });
             edgeList.push(edge);
-        };
+        }
 
         for (let i = 0; i < 3; i++) {
             const edge = new Edge({
@@ -391,7 +385,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: songs[i + 19].id,
             });
             edgeList.push(edge);
-        };
+        }
         const featAlb1 = edgeList.slice(19, 22);
         featAlb1.push(
             new Edge({
@@ -400,7 +394,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 properties: relPayload,
                 origin_id: albums[4].id,
                 destination_id: songs[8].id,
-            })
+            }),
         );
         expect(featAlb1.length).eq(4);
         expect(featAlb1[0].origin_id).eq(albums[4].id);
@@ -415,7 +409,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: songs[i + 22].id,
             });
             edgeList.push(edge);
-        };
+        }
         const featAlb2 = edgeList.slice(22, 27);
         expect(featAlb2.length).eq(5);
         expect(featAlb2[0].origin_id).eq(albums[5].id);
@@ -431,7 +425,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: bands[0].id,
             });
             edgeList.push(edge);
-        };
+        }
 
         for (let i = 0; i < 3; i++) {
             const edge = new Edge({
@@ -442,7 +436,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: bands[1].id,
             });
             edgeList.push(edge);
-        };
+        }
 
         for (let i = 0; i < 3; i++) {
             const edge = new Edge({
@@ -453,7 +447,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: bands[2].id,
             });
             edgeList.push(edge);
-        };
+        }
 
         edgeList.push(
             new Edge({
@@ -475,7 +469,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: songs[i + 27].id,
             });
             edgeList.push(edge);
-        };
+        }
 
         for (let i = 0; i < 4; i++) {
             const edge = new Edge({
@@ -486,7 +480,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: songs[i + 30].id,
             });
             edgeList.push(edge);
-        };
+        }
 
         for (let i = 0; i < 3; i++) {
             const edge = new Edge({
@@ -497,7 +491,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: songs[i + 34].id,
             });
             edgeList.push(edge);
-        };
+        }
 
         for (let i = 0; i < 7; i++) {
             const edge = new Edge({
@@ -508,7 +502,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: songs[i + 37].id,
             });
             edgeList.push(edge);
-        };
+        }
 
         for (let i = 0; i < 4; i++) {
             const edge = new Edge({
@@ -519,7 +513,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: songs[i + 44].id,
             });
             edgeList.push(edge);
-        };
+        }
 
         // musicians write albums
         edgeList.push(
@@ -621,10 +615,17 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                 destination_id: musicians[0].id,
             }),
         );
-        const edgeResults = await(eMapper.BulkCreate('test suite', edgeList));
+        const edgeResults = await eMapper.BulkCreate('test suite', edgeList);
         expect(edgeResults.isError).false;
         expect(relPairs.value).not.empty;
         expect(edgeResults.value.length).eq(72);
+
+        const schemaGenerator = new GraphQLSchemaGenerator();
+
+        const schemaResults = await schemaGenerator.ForContainer(containerID, {});
+        expect(schemaResults.isError).false;
+        expect(schemaResults.value).not.empty;
+        schema = schemaResults.value;
 
         return Promise.resolve();
     });
@@ -633,16 +634,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         await UserMapper.Instance.Delete(user.id!);
         await DataSourceMapper.Instance.Delete(dataSourceID);
         await ContainerMapper.Instance.Delete(containerID);
-        return PostgresAdapter.Instance.close();
-    });
-
-    it('can generate valid schema', async () => {
-        const schemaGenerator = new GraphQLSchemaGenerator();
-
-        const schemaResults = await schemaGenerator.ForContainer(containerID);
-        expect(schemaResults.isError).false;
-        expect(schemaResults.value).not.empty;
-        schema = schemaResults.value;
+        void PostgresAdapter.Instance.close();
 
         return Promise.resolve();
     });
@@ -665,7 +657,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                     destination_properties
                     destination_metatype_name
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
@@ -681,6 +673,35 @@ describe('Using a new GraphQL Query on graph return we', async () => {
             expect(nL.destination_properties.name).not.undefined;
             expect(nL.edge_data_source).undefined;
         }
+    });
+
+    it('can save a query n layers deep given a root node to file', async () => {
+        const schemaGenerator = new GraphQLSchemaGenerator();
+
+        const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true});
+        expect(schemaResults.isError).false;
+        expect(schemaResults.value).not.empty;
+
+        const response = await graphql({
+            schema: schemaResults.value,
+            source: `{
+                graph(
+                    root_node: "${songs[0].id}"
+                    depth: "5"
+                ){
+                        id
+                        file_name
+                        file_size
+                        md5hash 
+                }
+            }`,
+        });
+        expect(response.errors).undefined;
+        expect(response.data).not.undefined;
+        const data = response.data!.graph;
+        expect(data.file_size).gt(0);
+
+        return Promise.resolve();
     });
 
     it('can filter by metatype name', async () => {
@@ -702,7 +723,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                     destination_properties
                     destination_metatype_name
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
@@ -739,7 +760,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                     destination_properties
                     destination_metatype_name
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
@@ -776,7 +797,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                     destination_properties
                     destination_metatype_name
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
@@ -814,7 +835,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                     destination_properties
                     destination_metatype_name
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
@@ -852,7 +873,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                     destination_properties
                     destination_metatype_name
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
@@ -891,7 +912,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
                     destination_properties
                     destination_metatype_name
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;

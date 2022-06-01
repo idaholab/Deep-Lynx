@@ -64,7 +64,7 @@ export default class DataSourceRoutes {
     }
 
     private static updateDataSource(req: Request, res: Response, next: NextFunction) {
-        if (req.container && req.dataSource) {
+        if (req.container && req.dataSource && req.dataSource.DataSourceRecord) {
             const currentUser = req.currentUser!;
 
             Object.assign(req.dataSource.DataSourceRecord, req.body as object);

@@ -119,7 +119,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
         expect(metatypes.value).not.empty;
         expect(metatypes.value.length).eq(4);
 
-        metatypes.value.forEach(async(mt) => {
+        metatypes.value.forEach(async (mt) => {
             const testKeys = [...test_keys];
             testKeys.forEach((key) => (key.metatype_id = mt.id));
             const keys = await mkMapper.BulkCreate('test suite', testKeys);
@@ -157,10 +157,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
             }),
         ];
 
-        const nodeResults = await nMapper.BulkCreateOrUpdateByCompositeID(
-            'test suite',
-            nodeList
-        );
+        const nodeResults = await nMapper.BulkCreateOrUpdateByCompositeID('test suite', nodeList);
         expect(nodeResults.isError, metatypes.error?.error).false;
         expect(nodeResults.value.length).eq(4);
         nodes = nodeResults.value;
@@ -181,14 +178,14 @@ describe('Using a new GraphQL Query on edges we', async () => {
                 name: 'toSelf',
                 description: faker.random.alphaNumeric(),
             }),
-        ]
+        ];
 
         const relationships = await mrMapper.BulkCreate('test suite', relList);
         expect(relationships.isError).false;
         expect(relationships.value).not.empty;
         expect(relationships.value.length).eq(3);
 
-        relationships.value.forEach(async(rel) => {
+        relationships.value.forEach(async (rel) => {
             const testKeys = [...test_rel_keys];
             testKeys.forEach((key) => (key.metatype_relationship_id = rel.id));
             const rKeys = await mrKeyMapper.BulkCreate('test suite', testKeys);
@@ -261,10 +258,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
             }),
         ];
 
-        const relPairs = await mrPairMapper.BulkCreate(
-            'test suite',
-            relPairList
-        );
+        const relPairs = await mrPairMapper.BulkCreate('test suite', relPairList);
         expect(relPairs.isError).false;
         expect(relPairs.value).not.empty;
         expect(relPairs.value.length).eq(7);
@@ -305,7 +299,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
                 container_id: containerID,
                 metatype_relationship_pair: pairs[3].id!,
                 properties: {
-                    name: "Timbo Crooks Jr.",
+                    name: 'Timbo Crooks Jr.',
                     color: 'blue',
                 },
                 origin_id: nodes[1].id,
@@ -342,14 +336,14 @@ describe('Using a new GraphQL Query on edges we', async () => {
                 destination_id: nodes[1].id,
             }),
         ];
-        const edgeResults = await(eMapper.BulkCreate('test suite', edgeList));
+        const edgeResults = await eMapper.BulkCreate('test suite', edgeList);
         expect(edgeResults.isError).false;
         expect(relPairs.value).not.empty;
         expect(edgeResults.value.length).eq(7);
 
         const schemaGenerator = new GraphQLSchemaGenerator();
 
-        const schemaResults = await schemaGenerator.ForContainer(containerID);
+        const schemaResults = await schemaGenerator.ForContainer(containerID, {});
         expect(schemaResults.isError).false;
         expect(schemaResults.value).not.empty;
         schema = schemaResults.value;
@@ -361,7 +355,9 @@ describe('Using a new GraphQL Query on edges we', async () => {
         await UserMapper.Instance.Delete(user.id!);
         await DataSourceMapper.Instance.Delete(dataSourceID);
         await ContainerMapper.Instance.Delete(containerID);
-        return PostgresAdapter.Instance.close();
+        void PostgresAdapter.Instance.close();
+
+        return Promise.resolve();
     });
 
     it('can query by relationship', async () => {
@@ -377,7 +373,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
                         }
                     }
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
@@ -390,6 +386,31 @@ describe('Using a new GraphQL Query on edges we', async () => {
             expect(e.name).not.undefined;
             expect(e.invalidAttribute).undefined;
         }
+
+        return Promise.resolve();
+    });
+
+    it('can save by relationship to file', async () => {
+        const schemaGenerator = new GraphQLSchemaGenerator();
+
+        const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true});
+        expect(schemaResults.isError).false;
+        expect(schemaResults.value).not.empty;
+
+        const response = await graphql({
+            schema: schemaResults.value,
+            source: `{
+                relationships{
+                    forwards{
+                       file_size 
+                    }
+                }
+            }`,
+        });
+        expect(response.errors, response.errors?.join(',')).undefined;
+        expect(response.data).not.undefined;
+        const data = response.data!.relationships.forwards;
+        expect(data.file_size).gt(0);
 
         return Promise.resolve();
     });
@@ -409,7 +430,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
                         }
                     }
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
@@ -444,7 +465,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
                         }
                     }
                 }
-            }`
+            }`,
         });
         expect(response.errors).undefined;
         expect(response.data).not.undefined;

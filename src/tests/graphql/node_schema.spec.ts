@@ -211,13 +211,16 @@ describe('A Node Schema Generator', async () => {
     after(async () => {
         await TypeTransformationMapper.Instance.DeleteHypertable(transformationID);
         await ContainerMapper.Instance.Delete(containerID);
-        return PostgresAdapter.Instance.close();
+        // for some reason this suite of tests likes to not let go of the db, so this way we don't wait for it
+        void PostgresAdapter.Instance.close();
+
+        return Promise.resolve();
     });
 
     it('can generate the proper schema', async () => {
         const schemaGenerator = new GraphQLSchemaGenerator();
 
-        const schema = await schemaGenerator.ForNode(nodeID);
+        const schema = await schemaGenerator.ForNode(nodeID, {});
         expect(schema.isError).false;
 
         const typeMap = schema.value.getTypeMap();
@@ -234,7 +237,7 @@ describe('A Node Schema Generator', async () => {
     it('can query data correctly', async () => {
         const schemaGenerator = new GraphQLSchemaGenerator();
 
-        const schema = await schemaGenerator.ForNode(nodeID);
+        const schema = await schemaGenerator.ForNode(nodeID, {});
         expect(schema.isError).false;
 
         // double-check the schema
@@ -326,6 +329,28 @@ describe('A Node Schema Generator', async () => {
 
         return Promise.resolve();
     }).timeout(300000);
+
+    it('can save data to file correctly', async () => {
+        const schemaGenerator = new GraphQLSchemaGenerator();
+
+        const schema = await schemaGenerator.ForNode(nodeID, {returnFile: true});
+        expect(schema.isError).false;
+
+        //simple query
+        try {
+            let results = await graphql({
+                schema: schema.value,
+                source: simpleFileQuery,
+            });
+
+            if (results.errors) expect.fail(results.errors.join(','));
+            expect(results.data?.Test.file_size).gt(0);
+        } catch (e: any) {
+            expect.fail(e);
+        }
+
+        return Promise.resolve();
+    });
 });
 
 const test_raw_payload = {
@@ -341,6 +366,15 @@ const simpleQuery = `{
         open
         color
         at
+    }
+}`;
+
+const simpleFileQuery = `{
+    Test {
+        id
+        file_name
+        file_size
+        md5hash
     }
 }`;
 

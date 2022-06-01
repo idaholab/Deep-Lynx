@@ -25,7 +25,7 @@
         "watch": "nodemon",
         "start": "tsc && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"./src/assets/**\" ./dist && node -r dotenv/config ./dist/main.js",
         "test": "cross-env TS_NODE_FILES=true npm run test:raw",
-        "test:raw": " cd src/tests && cross-env-shell nyc mocha --exit -r ts-node/register -r dotenv/config --recursive \"**/*.spec.ts\" \"**/**/*.spec.ts\" \"**/**/**/*.spec.ts\" --prof ",
+        "test:raw": " cd src/tests && cross-env-shell nyc mocha --exit -r ts-node/register -r dotenv/config --recursive \"**/*.spec.ts\" \"**/**/*.spec.ts\" \"**/**/**/*.spec.ts\" --prof --timeout 30000 ",
         "prepare": "husky install"
     },
     "devDependencies": {
@@ -85,7 +85,7 @@
         "run-script-os": "^1.1.5",
         "ts-node": "^8.10.2",
         "tsconfig-paths": "^3.11.0",
-        "typescript": "^4.4.3",
+        "typescript": "^4.7.2",
         "uuid": "^8.3.2",
         "winston": "^3.3.3"
     },
