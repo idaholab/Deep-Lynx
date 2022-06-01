@@ -212,17 +212,20 @@ export class ContainerPermissionSet extends NakedDomainClass {
     async writePermissions(userID: string, containerID: string): Promise<Result<boolean>> {
         const e = await Authorization.enforcer();
 
-        // clear out the old permissions first
-        await e.removePolicies([
-            [userID, containerID, 'containers', 'write'],
-            [userID, containerID, 'containers', 'read'],
-            [userID, containerID, 'ontology', 'write'],
-            [userID, containerID, 'ontology', 'read'],
-            [userID, containerID, 'data', 'write'],
-            [userID, containerID, 'data', 'read'],
-            [userID, containerID, 'users', 'write'],
-            [userID, containerID, 'users', 'read'],
-        ]);
+        await e.removePolicy(userID, containerID, 'containers', 'read');
+        await e.removePolicy(userID, containerID, 'containers', 'write');
+        await e.removePolicy(userID, containerID, 'ontology', 'read');
+        await e.removePolicy(userID, containerID, 'ontology', 'write');
+        await e.removePolicy(userID, containerID, 'data', 'read');
+        await e.removePolicy(userID, containerID, 'data', 'write');
+        await e.removePolicy(userID, containerID, 'users', 'read');
+        await e.removePolicy(userID, containerID, 'users', 'write');
+
+        try {
+            await e.savePolicy();
+        } catch (e) {
+            Logger.debug(`error saving policy ${e}`);
+        }
 
         if (this.containers && this.containers.length > 0) {
             this.containers.forEach((permission) => {
