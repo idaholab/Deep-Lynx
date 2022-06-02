@@ -13,7 +13,7 @@ import MetatypeRelationshipPairRepository from '../../../repositories/data_wareh
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 import MetatypeKeyRepository from '../../../repositories/data_warehouse/ontology/metatype_key_repository';
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
-import {SuperUser, User} from '../../../../domain_objects/access_management/user';
+import {User} from '../../../../domain_objects/access_management/user';
 import NodeRepository from '../../../repositories/data_warehouse/data/node_repository';
 import EdgeRepository from '../../../repositories/data_warehouse/data/edge_repository';
 import {stringToValidPropertyName} from "../../../../services/utilities";
@@ -21,6 +21,8 @@ import OntologyVersionRepository
     from "../../../repositories/data_warehouse/ontology/versioning/ontology_version_repository";
 import OntologyVersion from "../../../../domain_objects/data_warehouse/ontology/versioning/ontology_version";
 const convert = require('xml-js');
+const xmlToJson = require('xml-2-json-streaming');
+const xmlParser = xmlToJson();
 
 const containerRepo = new ContainerRepository();
 const metatypeRelationshipRepo = new MetatypeRelationshipRepository();
@@ -116,6 +118,10 @@ export default class ContainerImport {
         });
     }
 
+    private replaceAll(str: string, find: string, replace: string) {
+        return str.replace(new RegExp(find, 'g'), replace);
+    }
+
     public async ImportOntology(
         user: User,
         input: ContainerImportT,
@@ -162,22 +168,88 @@ export default class ContainerImport {
                 return Promise.reject(Result.Failure(e));
             });
         } else {
-            // ontology file has been supplied, convert to json and parse ontology
-            const jsonData = convert.xml2json(file.toString('utf8'), {
-                compact: true,
-                ignoreComment: true,
-                spaces: 4,
+            // ontology file has been supplied, cleanse XML, convert to json, and parse ontology
+            let xml = file.toString('utf8');
+
+            // subsititue entities if they exist to enable JSON conversion
+            const doctypeRegexTest = new RegExp('<!DOCTYPE', 'gm')
+            const entityRegex = new RegExp('<!ENTITY (\\w*) "(\\S+)"', 'gm')
+
+            const isEntities = doctypeRegexTest.test(xml)
+            if (isEntities) {
+                const matchedEntities = xml.matchAll(entityRegex) || []
+                const entities: {[key: string]: string} = {}
+
+                for (const entity of matchedEntities) {
+                    // the name of the entity will be captured in the group, or second entry of the regex array
+                    // the value for the entity will be captured in the next group
+                    if (entity[1] !== '' && entity[2]) {
+                        entities[entity[1]] = entity[2]
+                    }
+                }
+
+                // grab Doctype within which to replace sub entities
+                const doctypeRegex = new RegExp('<!DOCTYPE(.|\n)*]>', 'gm')
+                const doctype = xml.match(doctypeRegex)
+
+                if (doctype && doctype[0]) {
+                    for (const [key, value] of Object.entries(entities)) {
+                        // find entities that are using substitution and replace them
+                        const entitySubRegex = new RegExp('&(\\w+);', 'gm')
+                        const subMatches = value.matchAll(entitySubRegex)
+                        for (const match of subMatches) {
+                            const regex = `&${match[1]};`
+                            // if there is no entry, we can't complete the substitution. Error and exit
+                            if (typeof entities[match[1]] == 'undefined') {
+                                return Promise.reject(Result.Failure('Unrecognized file content. Please ensure this is a valid rdf/xml document.'));
+                            }
+                            entities[key] = this.replaceAll(value, regex, entities[match[1]])
+                        }
+
+                    }
+
+                    // finally we can update all remaining entity uses throughout the document
+                    for (const [key, value] of Object.entries(entities)) {
+                        // find entities that are using substitution and replace them
+                        const regex = `&${key};`
+                        xml = this.replaceAll(xml, regex, value)
+                    }
+
+                }
+
+                // remove the !DOCTYPE declaration to finalize as valid XML for conversion to JSON
+                const docRegex = '<!DOCTYPE(.|\n)*]>'
+                xml = this.replaceAll(xml, docRegex, '')
+            }
+
+            const json = await xmlParser.xmlToJson(xml, (err: any,json: any)=>{
+                if(err) {
+                    // error handling - most likely invalid XML syntax
+                    // exit and return error
+                    Logger.error(err)
+                    if (err.message) {
+                        return Promise.reject(Result.Failure(err.message));
+                    }
+                    return Promise.reject(Result.Failure(err));
+                }
+
+                return json
             });
+
             return new Promise<Result<string>>((resolve) => {
                 resolve(this.parseOntology(
                     user,
-                    JSON.parse(jsonData),
+                    json,
                     input.name,
                     input.description || '',
                     input.data_versioning_enabled,
                     input.ontology_versioning_enabled,
                     dryrun, update, containerID));
             }).catch((e) => {
+                Logger.error(e)
+                if (e.message) {
+                    return Promise.reject(Result.Failure(e.message));
+                }
                 return Promise.reject(Result.Failure(e));
             });
         }
@@ -196,11 +268,36 @@ export default class ContainerImport {
     ): Promise<Result<string>> {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         return new Promise<Result<string>>(async (resolve) => {
-            json = json['rdf:RDF'];
-            const ontologyHead = json['owl:Ontology'];
-            const objectProperties = json['owl:ObjectProperty'];
-            const datatypeProperties = json['owl:DatatypeProperty'];
-            const classes = json['owl:Class'];
+            let ontologyHead: {[key: string]: any} = {};
+            let objectProperties = [];
+            let datatypeProperties = [];
+            let classes = [];
+
+            // We currently only allow rdf/xml documents
+            // Fail if the xml document does not match specified type
+            if (json['rdf:RDF']) {
+                json = json['rdf:RDF'];
+
+                ontologyHead = json['owl:Ontology'] || {};
+                objectProperties = json['owl:ObjectProperty'] || [];
+                datatypeProperties = json['owl:DatatypeProperty'] || [];
+                classes = json['owl:Class'] || [];
+            } else {
+                resolve(Result.Failure('Unrecognized file content. Please ensure this is a valid rdf/xml document.'));
+            }
+
+            // ensure the property and class variables above are arrays
+            if (!Array.isArray(objectProperties)) {
+                objectProperties = [objectProperties]
+            }
+
+            if (!Array.isArray(datatypeProperties)) {
+                datatypeProperties = [datatypeProperties]
+            }
+
+            if (!Array.isArray(classes)) {
+                classes = [classes]
+            }
 
             // Declare an intersection type to add needed fields to MetatypeT
             type MetatypeExtendT = {
@@ -243,27 +340,42 @@ export default class ContainerImport {
             const dataPropertyMap = new Map();
 
             for (const selectedClass of classes) {
-                const classID = selectedClass._attributes['rdf:about'];
-                let classLabel = selectedClass['rdfs:label']?._text;
-                // if language has not been set, rdfs:label has a single string property rather than an object
+                // skip empty objects (no rdf:about property)
+                if (typeof selectedClass['rdf:about'] === 'undefined') {
+                    continue
+                }
+
+                const classID = selectedClass['rdf:about'];
+                let classLabel = selectedClass['rdfs:label']?.textNode ? selectedClass['rdfs:label']?.textNode : selectedClass['rdfs:label'];
+
+                // if a rdfs:label was not provided, attempt to grab the name via the rdf:about
                 if (typeof classLabel === 'undefined') {
-                    classLabel = selectedClass['rdfs:label'];
+                    const aboutSplit = selectedClass['rdf:about'].split('#')
+
+                    if (aboutSplit.length > 1) {
+                        classLabel = aboutSplit[1]
+                    } else {
+                        // if we still couldn't find a name this way, we can't provide a name for this class
+                        // provide a useful error and return
+                        resolve(Result.Failure(`Unable to find a name for the class with rdf:about ${selectedClass['rdf:about']}.
+                            Please provide a name via the rdfs:label annotation.`));
+                    }
                 }
 
                 let parentID;
                 const properties: {[key: string]: PropertyT} = {};
                 if (selectedClass['rdfs:subClassOf'] && typeof selectedClass['rdfs:subClassOf'][0] === 'undefined') {
-                    parentID = selectedClass['rdfs:subClassOf']._attributes['rdf:resource'];
+                    parentID = selectedClass['rdfs:subClassOf']['rdf:resource'];
                 } else if(selectedClass['rdfs:subClassOf']) {
                     // if no other properties, subClassOf is not an array
-                    parentID = selectedClass['rdfs:subClassOf'][0]._attributes['rdf:resource'];
+                    parentID = selectedClass['rdfs:subClassOf'][0]['rdf:resource'];
                     // loop through properties
                     // if someValuesFrom -> rdf:resource !== "http://www*" then assume its a relationship, otherwise static property
                     let j;
                     // start at 1 since 0 is the parent ID property
                     for (j = 1; j < selectedClass['rdfs:subClassOf'].length; j++) {
                         const property = selectedClass['rdfs:subClassOf'][j]['owl:Restriction'];
-                        const onProperty = property['owl:onProperty']._attributes['rdf:resource'];
+                        const onProperty = property['owl:onProperty']['rdf:resource'];
                         // object or datatype referenced will either be someValuesFrom or qualifiedCardinality and onDataRange
                         let dataRange;
                         let propertyType;
@@ -280,17 +392,17 @@ export default class ContainerImport {
                                         ? 'min'
                                         : 'unknown restriction type';
                             cardinalityQuantity = property['owl:qualifiedCardinality']
-                                ? property['owl:qualifiedCardinality']._text
+                                ? property['owl:qualifiedCardinality'].textNode
                                 : property['owl:maxQualifiedCardinality']
-                                    ? property['owl:maxQualifiedCardinality']._text
+                                    ? property['owl:maxQualifiedCardinality'].textNode
                                     : property['owl:minQualifiedCardinality']
-                                        ? property['owl:minQualifiedCardinality']._text
+                                        ? property['owl:minQualifiedCardinality'].textNode
                                         : 'unknown cardinality value';
                             // Primitive type and class cardinality
                             dataRange = property['owl:onDataRange']
-                                ? property['owl:onDataRange']._attributes['rdf:resource'].split('#')[1]
+                                ? property['owl:onDataRange']['rdf:resource'].split('#')[1]
                                 : property['owl:onClass']
-                                    ? property['owl:onClass']._attributes['rdf:resource']
+                                    ? property['owl:onClass']['rdf:resource']
                                     : 'unknown data range';
 
                             target = dataRange; // This contains the class or datatype with a cardinality
@@ -306,7 +418,7 @@ export default class ContainerImport {
                                 propertyType = 'primitive';
                             }
                         } else {
-                            target = property['owl:someValuesFrom']._attributes['rdf:resource'];
+                            target = property['owl:someValuesFrom']['rdf:resource'];
                             if (/http:\/\/www/.exec(target)) {
                                 propertyType = 'primitive';
                                 target = target.split('#')[1];
@@ -330,7 +442,23 @@ export default class ContainerImport {
 
                 let classDescription = '';
                 if (typeof selectedClass['obo:IAO_0000115'] !== 'undefined') {
-                    classDescription = selectedClass['obo:IAO_0000115']._text ? selectedClass['obo:IAO_0000115']._text : selectedClass['obo:IAO_0000115'];
+                    classDescription = selectedClass['obo:IAO_0000115'].textNode ? selectedClass['obo:IAO_0000115'].textNode : selectedClass['obo:IAO_0000115'];
+                }
+
+                // alternative description elements (in order): rdfs:isDefinedBy, skos:definition, rdfs:comment
+                if (classDescription === '' && typeof selectedClass['rdfs:isDefinedBy'] !== 'undefined') {
+                    classDescription = selectedClass['rdfs:isDefinedBy']?.textNode ?
+                        selectedClass['rdfs:isDefinedBy']?.textNode : selectedClass['rdfs:isDefinedBy'];
+                }
+
+                if (classDescription === '' && typeof selectedClass['skos:definition'] !== 'undefined') {
+                    classDescription = selectedClass['skos:definition']?.textNode ?
+                        selectedClass['skos:definition']?.textNode : selectedClass['skos:definition'];
+                }
+
+                if (classDescription === '' && typeof selectedClass['rdfs:comment'] !== 'undefined') {
+                    classDescription = selectedClass['rdfs:comment']?.textNode ?
+                        selectedClass['rdfs:comment']?.textNode : selectedClass['rdfs:comment'];
                 }
 
                 // Search for and remove troublesome characters from class descriptions
@@ -356,12 +484,45 @@ export default class ContainerImport {
             // Relationships
             if(objectProperties) {
                 for (const relationship of objectProperties) {
-                    const relationshipID = relationship._attributes['rdf:about'];
-                    const relationshipName = relationship['rdfs:label']?._text ? relationship['rdfs:label']._text : relationship['rdfs:label'];
+                    // skip empty objects (no rdf:about property)
+                    if (typeof relationship['rdf:about'] === 'undefined') {
+                        continue
+                    }
+
+                    const relationshipID = relationship['rdf:about'];
+                    let relationshipName = relationship['rdfs:label']?.textNode ? relationship['rdfs:label'].textNode : relationship['rdfs:label'];
+
+                    // if a rdfs:label was not provided, attempt to grab the name via the rdf:about
+                    if (typeof relationshipName === 'undefined') {
+                        const aboutSplit = relationship['rdf:about'].split('#')
+
+                        if (aboutSplit.length > 1) {
+                            relationshipName = aboutSplit[1]
+                        } else {
+                            // if we still couldn't find a name this way, we can't provide a name for this relationship
+                            // provide a useful error and return
+                            resolve(Result.Failure(`Unable to find a name for the relationship with rdf:about ${relationship['rdf:about']}.
+                                Please provide a name via the rdfs:label annotation.`));
+                        }
+                    }
+
                     let relationshipDescription = '';
                     if (typeof relationship['obo:IAO_0000115'] !== 'undefined') {
-                        relationshipDescription = relationship['obo:IAO_0000115']?._text ? relationship['obo:IAO_0000115']?._text : relationship['obo:IAO_0000115'];
+                        relationshipDescription = relationship['obo:IAO_0000115']?.textNode ?
+                            relationship['obo:IAO_0000115']?.textNode : relationship['obo:IAO_0000115'];
                     }
+
+                    // alternative description elements: rdfs:isDefinedBy, rdfs:comment
+                    if (relationshipDescription === '' && typeof relationship['rdfs:isDefinedBy'] !== 'undefined') {
+                        relationshipDescription = relationship['rdfs:isDefinedBy']?.textNode ?
+                            relationship['rdfs:isDefinedBy']?.textNode : relationship['rdfs:isDefinedBy'];
+                    }
+
+                    if (relationshipDescription === '' && typeof relationship['rdfs:comment'] !== 'undefined') {
+                        relationshipDescription = relationship['rdfs:comment']?.textNode ?
+                            relationship['rdfs:comment']?.textNode : relationship['rdfs:comment'];
+                    }
+
                     relationshipMap.set(relationshipName, {
                         id: relationshipID,
                         name: relationshipName,
@@ -383,12 +544,44 @@ export default class ContainerImport {
 
             // Datatype Properties
             for (const dataProperty of datatypeProperties) {
-                const dpID = dataProperty._attributes['rdf:about'];
-                const dpName = dataProperty['rdfs:label']?._text ? dataProperty['rdfs:label']?._text : dataProperty['rdfs:label'];
+                // skip empty objects (no rdf:about property)
+                if (typeof dataProperty['rdf:about'] === 'undefined') {
+                    continue
+                }
+
+                const dpID = dataProperty['rdf:about'];
+                let dpName = dataProperty['rdfs:label']?.textNode ? dataProperty['rdfs:label']?.textNode : dataProperty['rdfs:label'];
+
+                // if a rdfs:label was not provided, attempt to grab the name via the rdf:about
+                if (typeof dpName === 'undefined') {
+                    const aboutSplit = dataProperty['rdf:about'].split('#')
+
+                    if (aboutSplit.length > 1) {
+                        dpName = aboutSplit[1]
+                    } else {
+                        // if we still couldn't find a name this way, we can't provide a name for this relationship
+                        // provide a useful error and return
+                        resolve(Result.Failure(`Unable to find a name for the data property with rdf:about ${dataProperty['rdf:about']}.
+                                Please provide a name via the rdfs:label annotation.`));
+                    }
+                }
+
                 let dpDescription = '';
                 if (typeof dataProperty['obo:IAO_0000115'] !== 'undefined') {
-                    dpDescription = dataProperty['obo:IAO_0000115']?._text ? dataProperty['obo:IAO_0000115']?._text : dataProperty['obo:IAO_0000115'];
+                    dpDescription = dataProperty['obo:IAO_0000115']?.textNode ? dataProperty['obo:IAO_0000115']?.textNode : dataProperty['obo:IAO_0000115'];
                 }
+
+                // alternative description elements: rdfs:isDefinedBy, rdfs:comment
+                if (dpDescription === '' && typeof dataProperty['rdfs:isDefinedBy'] !== 'undefined') {
+                    dpDescription = dataProperty['rdfs:isDefinedBy']?.textNode ?
+                        dataProperty['rdfs:isDefinedBy']?.textNode : dataProperty['rdfs:isDefinedBy'];
+                }
+
+                if (dpDescription === '' && typeof dataProperty['rdfs:comment'] !== 'undefined') {
+                    dpDescription = dataProperty['rdfs:comment']?.textNode ?
+                        dataProperty['rdfs:comment']?.textNode : dataProperty['rdfs:comment'];
+                }
+
                 let dpEnumRange = null;
                 if (typeof dataProperty['rdfs:range'] !== 'undefined') {
                     dpEnumRange = dataProperty['rdfs:range']['rdfs:Datatype'] ? dataProperty['rdfs:range']['rdfs:Datatype'] : null;
@@ -396,11 +589,11 @@ export default class ContainerImport {
                     if (dpEnumRange !== null) {
                         // Add the first enum value
                         let currentOption = dpEnumRange['owl:oneOf']['rdf:Description'];
-                        const options = [currentOption['rdf:first']._text];
+                        const options = [currentOption['rdf:first']?.textNode ? currentOption['rdf:first']?.textNode : currentOption['rdf:first']];
                         // Loop through the remaining enum values
                         while (typeof currentOption['rdf:rest']['rdf:Description'] !== 'undefined') {
                             currentOption = currentOption['rdf:rest']['rdf:Description'];
-                            options.push(currentOption['rdf:first']._text);
+                            options.push(currentOption['rdf:first']?.textNode ? currentOption['rdf:first']?.textNode : currentOption['rdf:first']);
                         }
                         dpEnumRange = options;
                     }
@@ -416,12 +609,17 @@ export default class ContainerImport {
             // grab the ontology description if the provided description matches
             // an attribute of the ontology head
             if (ontologyHead[description]) {
-                ontologyDescription = ontologyHead[description]._text ? ontologyHead[description]._text : description;
+                ontologyDescription = ontologyHead[description].textNode ? ontologyHead[description].textNode : description;
             }
 
             // grab the default ontology description if available and none provided
             if (ontologyDescription === '' || (ontologyDescription === 'null' && ontologyHead['obo:IAO_0000115'])) {
-                ontologyDescription = ontologyHead['obo:IAO_0000115']._text ? ontologyHead['obo:IAO_0000115']._text : description;
+                ontologyDescription = ontologyHead['obo:IAO_0000115'].textNode ? ontologyHead['obo:IAO_0000115'].textNode : ontologyHead['obo:IAO_0000115'];
+            }
+
+            // try rdfs:comment if it still hasn't been found
+            if (ontologyDescription === '' || (ontologyDescription === 'null' && ontologyHead['rdfs:comment'])) {
+                ontologyDescription = ontologyHead['rdfs:comment'].textNode ? ontologyHead['rdfs:comment'].textNode : ontologyHead['rdfs:comment'];
             }
 
             if (dryrun) {
@@ -464,7 +662,7 @@ export default class ContainerImport {
                         // add inherited properties and relationships (flatten ontology)
                         let parent = classIDMap.get(thisClass.parent_id);
                         // loop until root class (below owl#Thing) is reached
-                        while (!parent.parent_id.match(/owl#Thing/)) {
+                        while (typeof parent.parent_id !== 'undefined' && !parent.parent_id.match(/owl#Thing/)) {
                             thisClass.properties = {
                                 ...thisClass.properties,
                                 ...parent.properties,
