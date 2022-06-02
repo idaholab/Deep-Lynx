@@ -7034,7 +7034,7 @@ components:
         data_source_config:
           $ref: '#/components/schemas/DataSourceConfig'
         id:
-          type: number
+          type: string
         data_source_id:
           type: string
           minLength: 1

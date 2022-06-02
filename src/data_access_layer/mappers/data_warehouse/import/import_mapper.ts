@@ -11,6 +11,7 @@ import Config from '../../../../services/config';
 import {plainToClass} from 'class-transformer';
 import Logger from '../../../../services/logger';
 import DataStagingMapper from './data_staging_mapper';
+import DataSourceRepository from '../../../repositories/data_warehouse/import/data_source_repository';
 
 const format = require('pg-format');
 const resultClass = Import;
@@ -46,8 +47,12 @@ export default class ImportMapper extends Mapper {
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
+        const dataSourceRepo = new DataSourceRepository();
+        const datasource = await dataSourceRepo.findByID(importRecord.data_source_id!)
+
         this.eventRepo.emit(
             new Event({
+                containerID: datasource.value.DataSourceRecord?.container_id,
                 dataSourceID: importRecord.data_source_id,
                 eventType: 'data_imported',
                 event: {

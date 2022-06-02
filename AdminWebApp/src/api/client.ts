@@ -94,7 +94,7 @@ export class Client {
     // file upload, taking .owl files and creating a container with all its supporting
     // metatypes etc.
     async containerFromImport(container: ContainerT | any, owlFile: File | null, owlFilePath: string): Promise<string> {
-        const config: {[key: string]: any} = {};
+        const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
 
         if (this.config?.auth_method === 'token') {
@@ -102,7 +102,7 @@ export class Client {
         }
 
         if (this.config?.auth_method === 'basic') {
-            config.auth = {username: this.config.username, password: this.config.password};
+            config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
         }
 
         const formData = new FormData();
@@ -119,15 +119,59 @@ export class Client {
             formData.append('path', owlFilePath);
         }
 
-        const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: `containers/import`}), formData, config as AxiosRequestConfig);
 
-        return new Promise<string>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+        return axios.post(buildURL(this.config?.rootURL!, {path: `containers/import`}), formData, config)
+            .then((resp: AxiosResponse) => {
+                return new Promise<string>((resolve, reject) => {
+                    if (resp.data.isError) {
+                        reject(resp.data.error);
+                    }
+        
+                    resolve(resp.data.value);
+                });
+            })
+            .catch((error: any) => {
+                const resp: AxiosResponse = {data: {}, status: 500, statusText: 'internal server error', headers: '', config: error.config}
+                if (error.response) {
+                    // The request was made and the server responded with a status code
+                    // that falls out of the range of 2xx
 
-            if (resp.data.isError) reject(resp.data.error);
+                    // init resp object
+                    resp.status = error.response.status
+                    resp.headers = error.response.headers
+                    resp.config = error.config
 
-            resolve(resp.data.value);
-        });
+                    if (error.response.data.error.error) {
+
+                        if (error.response.data.error.error.detail) {
+                            const dlError = error.response.data.error.error.detail
+
+                            if (dlError.includes('already exists')) {
+                                resp.data.error = 'This container name is already taken, please choose another.'
+                            } else {
+                                resp.data.error = dlError
+                            }
+
+                        } else {
+                            resp.data.error = error.response.data.error.error
+                        }                        
+                        
+                    }
+
+                  } else if (error.request) {
+                    // The request was made but no response was received
+                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                    // http.ClientRequest in node.js
+                    resp.data.error = error.request
+                  } else {
+                    // Something happened in setting up the request that triggered an Error
+                    resp.data.error = error.message
+                  }
+
+                  return new Promise<string>((resolve, reject) => {
+                      reject(resp.data.error)
+                  });
+            });
     }
 
     async updateContainerFromImport(containerID: string, owlFile: File | null, owlFilePath: string, name?: string): Promise<string> {
@@ -139,7 +183,7 @@ export class Client {
         }
 
         if (this.config?.auth_method === 'basic') {
-            config.auth = {username: this.config.username, password: this.config.password};
+            config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials
         }
 
         const formData = new FormData();
@@ -158,7 +202,7 @@ export class Client {
         const resp: AxiosResponse = await axios.put(
             buildURL(this.config?.rootURL!, {path: `containers/import/${containerID}`}),
             formData,
-            config as AxiosRequestConfig,
+            config,
         );
 
         return new Promise<string>((resolve, reject) => {

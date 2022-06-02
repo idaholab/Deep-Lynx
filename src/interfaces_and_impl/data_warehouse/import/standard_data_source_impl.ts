@@ -174,12 +174,15 @@ export default class StandardDataSourceImpl implements DataSource {
         if (options && options.transformStreams && options.transformStreams.length > 0) {
             let pipeline = payloadStream;
 
-            for (const pipe of options.transformStreams) {
-                pipeline = pipeline.pipe(pipe);
-            }
-
             // for the pipe process to work correctly you must wait for the pipe to finish reading all data
-            await new Promise((fulfill) =>
+            await new Promise((fulfill) => {
+                for (const pipe of options.transformStreams!) {
+                    pipeline = pipeline.pipe(pipe).on('error', (err: any) => {
+                        errorMessage = err;
+                        fulfill(err);
+                    })
+                }
+
                 pipeline
                     .pipe(fromJSON)
                     .on('error', (err: any) => {
@@ -187,8 +190,8 @@ export default class StandardDataSourceImpl implements DataSource {
                         fulfill(err);
                     })
                     .pipe(pass)
-                    .on('finish', fulfill),
-            );
+                    .on('finish', fulfill)
+            });
         } else if (options && options.overrideJsonStream) {
             await new Promise((fulfill) =>
                 payloadStream
