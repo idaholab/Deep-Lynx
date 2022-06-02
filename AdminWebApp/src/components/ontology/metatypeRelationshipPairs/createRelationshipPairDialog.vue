@@ -168,6 +168,7 @@ export default class CreateRelationshipPairDialog extends Vue {
           "origin_metatype_id": this.originSelect,
           "destination_metatype_id": this.destinationSelect,
           "relationship_id": this.relationshipSelect,
+          "ontology_version": this.$store.getters.activeOntologyVersionID,
           "relationship_type": this.relationshipType}
     )
         .then(results => {
