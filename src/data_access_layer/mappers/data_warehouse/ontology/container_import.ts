@@ -317,6 +317,7 @@ export default class ContainerImport {
                 updateKeys: Map<string, any>;
                 updateKeyNames: {[key: string]: any};
                 update: boolean;
+                ontology_version?: string;
             };
 
             type PropertyT = {
@@ -717,6 +718,21 @@ export default class ContainerImport {
                     }
                 }
 
+                // if we're not making the ontology and it's set to null, let's make sure we check for existing ontology
+                // versions to ensure we're assigning these guys to the proper one
+                if(!ontologyVersionID) {
+                    const results = await ontologyRepo
+                        .where()
+                        .containerID('eq', containerID)
+                        .and()
+                        .status('eq', 'published').list({sortBy: 'id', sortDesc: true, limit: 1})
+                    if(results.isError) {
+                        Logger.error(`unable to find published version of ontology ${results.error?.error}`)
+                    } else if(results.value.length > 0){
+                        ontologyVersionID = results.value[0].id
+                    }
+                }
+
                 // only pull and map the old data if we're updating an ontology in place, in a container where versioning
                 // isn't enabled
                 if (update && !container.config!.ontology_versioning_enabled) {
@@ -756,6 +772,7 @@ export default class ContainerImport {
                             const thisMetatype = classListMap.get(metatype.name);
                             thisMetatype.update = true;
                             thisMetatype.container_id = containerID;
+                            thisMetatype.ontology_version = metatype.ontology_version;
                             thisMetatype.db_id = metatype.id;
                             classIDMap.set(thisMetatype.id, thisMetatype);
 
@@ -838,7 +855,7 @@ export default class ContainerImport {
                         container_id: containerID,
                         name: relationship.name,
                         description: relationship.description,
-                        ontology_version: ontologyVersionID
+                        ontology_version: (ontologyVersionID) ? ontologyVersionID : relationship.ontology_version,
                     });
 
                     // if marked for update, assign relationship id
@@ -882,7 +899,7 @@ export default class ContainerImport {
                         container_id: containerID,
                         name: thisClass.name,
                         description: thisClass.description,
-                        ontology_version: ontologyVersionID,
+                        ontology_version: (ontologyVersionID) ? ontologyVersionID : thisClass.ontology_version,
                     });
 
                     // if marked for update, assign metatype id
@@ -940,7 +957,7 @@ export default class ContainerImport {
                             relationship: relationship.db_id,
                             relationship_type: 'many:one',
                             container_id: containerID,
-                            ontology_version: ontologyVersionID
+                            ontology_version: (ontologyVersionID) ? ontologyVersionID : thisClass.ontology_version
                         });
 
                         if (thisClass.updateKeyNames.includes(relationshipName)) {
@@ -1000,7 +1017,7 @@ export default class ContainerImport {
                                     max,
                                 },
                                 options: propertyOptions.length > 0 ? propertyOptions : undefined,
-                                ontology_version: ontologyVersionID
+                                ontology_version: (ontologyVersionID) ? ontologyVersionID : property.ontology_version
                             });
 
                             if (thisClass.updateKeyNames.includes(dataProp.name)) {
@@ -1023,7 +1040,7 @@ export default class ContainerImport {
                                 relationship: relationshipID,
                                 relationship_type: 'many:many',
                                 container_id: containerID,
-                                ontology_version: ontologyVersionID
+                                ontology_version: (ontologyVersionID) ? ontologyVersionID : relationship.ontology_version
                             });
 
                             if (thisClass.updateKeyNames.includes(relationshipName)) {

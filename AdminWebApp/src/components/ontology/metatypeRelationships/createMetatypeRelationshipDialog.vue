@@ -70,7 +70,7 @@ export default class CreateMetatypeRelationshipDialog extends Vue {
   valid = false
 
   createMetatype() {
-    this.$client.createMetatypeRelationship(this.containerID, this.name, this.description)
+    this.$client.createMetatypeRelationship(this.containerID, this.name, this.description, this.$store.getters.activeOntologyVersionID)
         .then(result => {
           if(!result) {
             this.errorMessage = this.$t('createMetatypeRelationship.errorCreatingAPI') as string
