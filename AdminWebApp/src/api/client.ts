@@ -26,7 +26,9 @@ import {
     ChangelistApprovalT,
     ContainerAlertT,
     TypeMappingUpgradePayloadT,
-    NodeTransformationT, CreateServiceUserPayloadT, ServiceUserPermissionSetT,
+    NodeTransformationT,
+    CreateServiceUserPayloadT,
+    ServiceUserPermissionSetT,
 } from '@/api/types';
 import {RetrieveJWT} from '@/auth/authentication_service';
 import {UserT} from '@/auth/types';
@@ -94,7 +96,7 @@ export class Client {
     // file upload, taking .owl files and creating a container with all its supporting
     // metatypes etc.
     async containerFromImport(container: ContainerT | any, owlFile: File | null, owlFilePath: string): Promise<string> {
-        const config: {[key: string]: any} = {};
+        const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
 
         if (this.config?.auth_method === 'token') {
@@ -102,7 +104,7 @@ export class Client {
         }
 
         if (this.config?.auth_method === 'basic') {
-            config.auth = {username: this.config.username, password: this.config.password};
+            config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials;
         }
 
         const formData = new FormData();
@@ -119,15 +121,55 @@ export class Client {
             formData.append('path', owlFilePath);
         }
 
-        const resp: AxiosResponse = await axios.post(buildURL(this.config?.rootURL!, {path: `containers/import`}), formData, config as AxiosRequestConfig);
+        return axios
+            .post(buildURL(this.config?.rootURL!, {path: `containers/import`}), formData, config)
+            .then((resp: AxiosResponse) => {
+                return new Promise<string>((resolve, reject) => {
+                    if (resp.data.isError) {
+                        reject(resp.data.error);
+                    }
 
-        return new Promise<string>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.status);
+                    resolve(resp.data.value);
+                });
+            })
+            .catch((error: any) => {
+                const resp: AxiosResponse = {data: {}, status: 500, statusText: 'internal server error', headers: '', config: error.config};
+                if (error.response) {
+                    // The request was made and the server responded with a status code
+                    // that falls out of the range of 2xx
 
-            if (resp.data.isError) reject(resp.data.error);
+                    // init resp object
+                    resp.status = error.response.status;
+                    resp.headers = error.response.headers;
+                    resp.config = error.config;
 
-            resolve(resp.data.value);
-        });
+                    if (error.response.data.error.error) {
+                        if (error.response.data.error.error.detail) {
+                            const dlError = error.response.data.error.error.detail;
+
+                            if (dlError.includes('already exists')) {
+                                resp.data.error = 'This container name is already taken, please choose another.';
+                            } else {
+                                resp.data.error = dlError;
+                            }
+                        } else {
+                            resp.data.error = error.response.data.error.error;
+                        }
+                    }
+                } else if (error.request) {
+                    // The request was made but no response was received
+                    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                    // http.ClientRequest in node.js
+                    resp.data.error = error.request;
+                } else {
+                    // Something happened in setting up the request that triggered an Error
+                    resp.data.error = error.message;
+                }
+
+                return new Promise<string>((resolve, reject) => {
+                    reject(resp.data.error);
+                });
+            });
     }
 
     async updateContainerFromImport(containerID: string, owlFile: File | null, owlFilePath: string, name?: string): Promise<string> {
@@ -139,7 +181,7 @@ export class Client {
         }
 
         if (this.config?.auth_method === 'basic') {
-            config.auth = {username: this.config.username, password: this.config.password};
+            config.auth = {username: this.config.username, password: this.config.password} as AxiosBasicCredentials;
         }
 
         const formData = new FormData();
@@ -155,11 +197,7 @@ export class Client {
             formData.append('name', name);
         }
 
-        const resp: AxiosResponse = await axios.put(
-            buildURL(this.config?.rootURL!, {path: `containers/import/${containerID}`}),
-            formData,
-            config as AxiosRequestConfig,
-        );
+        const resp: AxiosResponse = await axios.put(buildURL(this.config?.rootURL!, {path: `containers/import/${containerID}`}), formData, config);
 
         return new Promise<string>((resolve, reject) => {
             if (resp.status < 200 || resp.status > 299) reject(resp.status);
@@ -356,13 +394,12 @@ export class Client {
         return this.delete(`/containers/${containerID}/service-users/${serviceUserID}/keys/${keyID}`);
     }
 
-
     createServiceUser(containerID: string, payload: CreateServiceUserPayloadT): Promise<UserT> {
         return this.post<UserT>(`/containers/${containerID}/service-users`, payload);
     }
 
     listServiceUsers(containerID: string): Promise<UserT[]> {
-        return this.get<UserT[]>(`/containers/${containerID}/service-users`)
+        return this.get<UserT[]>(`/containers/${containerID}/service-users`);
     }
 
     deleteServiceUser(containerID: string, userID: string): Promise<boolean> {
@@ -370,47 +407,47 @@ export class Client {
     }
 
     getServiceUsersPermissions(containerID: string, userID: string): Promise<ServiceUserPermissionSetT> {
-       return new Promise((resolve, reject) => {
-           this.getRaw<string[][]>(`/containers/${containerID}/service-users/${userID}/permissions`)
-               .then(results => {
-                   const set: ServiceUserPermissionSetT = {
-                       containers: [],
-                       ontology: [],
-                       users: [],
-                       data: []
-                   }
+        return new Promise((resolve, reject) => {
+            this.getRaw<string[][]>(`/containers/${containerID}/service-users/${userID}/permissions`)
+                .then((results) => {
+                    const set: ServiceUserPermissionSetT = {
+                        containers: [],
+                        ontology: [],
+                        users: [],
+                        data: [],
+                    };
 
-                   results.forEach(result => {
-                       if(result.length != 3) return
+                    results.forEach((result) => {
+                        if (result.length != 3) return;
 
-                       switch(result[1]) {
-                           case 'containers': {
-                               set.containers.push(result[2])
-                               break;
-                           }
-                           case 'ontology': {
-                               set.ontology.push(result[2])
-                               break;
-                           }
-                           case 'data': {
-                               set.data.push(result[2])
-                               break;
-                           }
-                           case 'users': {
-                               set.users.push(result[2])
-                               break;
-                           }
-                       }
-                   })
+                        switch (result[1]) {
+                            case 'containers': {
+                                set.containers.push(result[2]);
+                                break;
+                            }
+                            case 'ontology': {
+                                set.ontology.push(result[2]);
+                                break;
+                            }
+                            case 'data': {
+                                set.data.push(result[2]);
+                                break;
+                            }
+                            case 'users': {
+                                set.users.push(result[2]);
+                                break;
+                            }
+                        }
+                    });
 
-                   resolve(set)
-               })
-               .catch(e => reject(e))
-       })
+                    resolve(set);
+                })
+                .catch((e) => reject(e));
+        });
     }
 
     setServiceUsersPermissions(containerID: string, userID: string, set: ServiceUserPermissionSetT): Promise<boolean> {
-        return this.put<boolean>(`/containers/${containerID}/service-users/${userID}/permissions`, set)
+        return this.put<boolean>(`/containers/${containerID}/service-users/${userID}/permissions`, set);
     }
 
     listMetatypeRelationships(
@@ -462,8 +499,8 @@ export class Client {
         return this.get<MetatypeRelationshipT>(`/containers/${containerID}/metatype_relationships/${metatypeRelationshipID}`);
     }
 
-    createMetatypeRelationship(containerID: string, name: string, description: string): Promise<MetatypeRelationshipT[]> {
-        return this.post<MetatypeRelationshipT[]>(`/containers/${containerID}/metatype_relationships`, {name, description});
+    createMetatypeRelationship(containerID: string, name: string, description: string, ontologyVersion?: string): Promise<MetatypeRelationshipT[]> {
+        return this.post<MetatypeRelationshipT[]>(`/containers/${containerID}/metatype_relationships`, {name, description, ontology_version: ontologyVersion});
     }
 
     retrieveMetatypeRelationshipPair(containerID: string, metatypeRelationshipPairID: string): Promise<MetatypeRelationshipPairT> {

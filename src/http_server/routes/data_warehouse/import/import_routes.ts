@@ -22,7 +22,7 @@ const Busboy = require('busboy');
 const fileRepo = new FileRepository();
 const stagingRepo = new DataStagingRepository();
 const importRepo = new ImportRepository();
-const xmlToJson = require('xml-to-json-stream');
+const xmlToJson = require('xml-2-json-streaming');
 const xmlParser = xmlToJson();
 const JSONStream = require('JSONStream');
 
@@ -249,6 +249,10 @@ export default class ImportRoutes {
                                 transformStreams: [xmlStream],
                             }),
                         );
+                    } else {
+                        Result.Failure(`Please provide a valid json, csv, or xml file`).asResponse(res);
+                        next();
+                        return;
                     }
                 });
 
@@ -262,7 +266,7 @@ export default class ImportRoutes {
                     Promise.all(importPromises)
                         .then((imports) => {
                             if (imports.length <= 0) {
-                                Result.Failure(`no json or csv files included for upload`);
+                                Result.Failure(`no json, csv, or xml files included for upload`);
                             } else if (imports.length === 1) {
                                 imports[0].asResponse(res);
                             } else {
