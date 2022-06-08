@@ -36,6 +36,7 @@ import {
     eventActionStatusContext,
     ontologyVersionContext,
     serviceUserContext,
+    activeOntologyVersionContext,
 } from '../middleware';
 import ContainerRoutes from './data_warehouse/ontology/container_routes';
 import MetatypeRoutes from './data_warehouse/ontology/metatype_routes';
@@ -122,17 +123,37 @@ export class Router {
             dataSourceContext(),
             currentUser(),
         ]);
-        MetatypeRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeContext(), currentUser()]);
-        MetatypeKeyRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeContext(), metatypeKeyContext(), currentUser()]);
-        MetatypeRelationshipRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipContext(), currentUser()]);
+        MetatypeRoutes.mount(this.app, [authenticateRoute(), containerContext(), activeOntologyVersionContext(), metatypeContext(), currentUser()]);
+        MetatypeKeyRoutes.mount(this.app, [
+            authenticateRoute(),
+            containerContext(),
+            activeOntologyVersionContext(),
+            metatypeContext(),
+            metatypeKeyContext(),
+            currentUser(),
+        ]);
+        MetatypeRelationshipRoutes.mount(this.app, [
+            authenticateRoute(),
+            containerContext(),
+            activeOntologyVersionContext(),
+            metatypeRelationshipContext(),
+            currentUser(),
+        ]);
         MetatypeRelationshipKeyRoutes.mount(this.app, [
             authenticateRoute(),
             containerContext(),
+            activeOntologyVersionContext(),
             metatypeRelationshipContext(),
             metatypeRelationshipKeyContext(),
             currentUser(),
         ]);
-        MetatypeRelationshipPairRoutes.mount(this.app, [authenticateRoute(), containerContext(), metatypeRelationshipPairContext(), currentUser()]);
+        MetatypeRelationshipPairRoutes.mount(this.app, [
+            authenticateRoute(),
+            containerContext(),
+            activeOntologyVersionContext(),
+            metatypeRelationshipPairContext(),
+            currentUser(),
+        ]);
         /* This query route is considered deprecated */
         QueryRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         GraphRoutes.mount(this.app, [authenticateRoute(), containerContext(), nodeContext(), edgeContext(), fileContext(), metatypeContext(), currentUser()]);

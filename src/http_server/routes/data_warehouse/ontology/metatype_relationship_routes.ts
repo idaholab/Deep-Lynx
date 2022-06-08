@@ -88,7 +88,11 @@ export default class MetatypeRelationshipRoutes {
         if (typeof req.query.ontologyVersion !== 'undefined' && (req.query.ontologyVersion as string) !== '') {
             repository = repository.and().ontologyVersion('eq', req.query.ontologyVersion);
         } else {
-            repository = repository.and().ontologyVersion('is null')
+            if (req.activeOntologyVersion) {
+                repository = repository.and().ontologyVersion('eq', req.activeOntologyVersion.id);
+            } else {
+                repository = repository.and().ontologyVersion('is null');
+            }
         }
 
         if (typeof req.query.deleted !== 'undefined' && String(req.query.deleted as string).toLowerCase() === 'false') {

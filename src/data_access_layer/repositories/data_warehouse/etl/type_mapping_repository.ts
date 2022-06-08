@@ -383,6 +383,17 @@ export default class TypeMappingRepository extends Repository implements Reposit
                     typeMapping.transformations[i].metatype_relationship_pair_id = undefined;
                 }
 
+                // need infer type if it isn't present so that older type mappings will still function
+                if (!typeMapping.transformations[i].type) {
+                    if (typeMapping.transformations[i].metatype_id || typeMapping.transformations[i].metatype_name) {
+                        typeMapping.transformations[i].type = 'node';
+                    } else if (typeMapping.transformations[i].metatype_relationship_pair_id || typeMapping.transformations[i].metatype_relationship_pair_name) {
+                        typeMapping.transformations[i].type = 'edge';
+                    } else {
+                        typeMapping.transformations[i].type = 'timeseries';
+                    }
+                }
+
                 // now clear all the id's
                 typeMapping.transformations[i].type_mapping_id = undefined;
                 typeMapping.transformations[i].id = undefined;
