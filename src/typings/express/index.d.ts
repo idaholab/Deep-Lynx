@@ -51,6 +51,7 @@ declare global {
             file?: File;
             task?: TaskRecord;
             ontologyVersion?: OntologyVersion;
+            activeOntologyVersion?: OntologyVersion;
             // needed for nth-node request
             nodeLeaf?: NodeLeaf;
         }

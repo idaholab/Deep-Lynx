@@ -158,6 +158,43 @@ export function containerContext(): any {
     };
 }
 
+// activeOntology will attempt to fetch the currently published ontology for the container specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "containerID"
+export function activeOntologyVersionContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have an id, don't fail, just pass without action
+        if (!req.params.containerID) {
+            next();
+            return;
+        }
+
+        const repo = new OntologyVersionRepository();
+
+        repo.where()
+            .containerID('eq', req.params.containerID)
+            .and()
+            .status('eq', 'published')
+            .list({sortDesc: true, sortBy: 'id', limit: 1})
+            .then((result) => {
+                if (result.isError) {
+                    result.asResponse(resp);
+                    return;
+                }
+
+                if (result.value.length > 0) {
+                    req.activeOntologyVersion = result.value[0];
+                }
+
+                next();
+            })
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
+}
+
 // metatypeContext will attempt to fetch a metatype by id specified by the
 // id query parameter. If one is fetched it will pass it on in request context.
 // route must contain the param labeled "metatypeID"
