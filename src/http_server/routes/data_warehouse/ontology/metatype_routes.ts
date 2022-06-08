@@ -74,8 +74,6 @@ export default class MetatypeRoutes {
 
         if (typeof req.query.ontologyVersion !== 'undefined' && (req.query.ontologyVersion as string) !== '') {
             repository = repository.and().ontologyVersion('eq', req.query.ontologyVersion);
-        } else {
-            repository = repository.and().ontologyVersion('is null')
         }
 
         if (typeof req.query.modifiedAfter !== 'undefined' && (req.query.modifiedAfter as string) !== '') {
