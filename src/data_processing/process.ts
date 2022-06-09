@@ -87,7 +87,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
         Logger.error(`unable to fetch files for data staging records ${stagingFiles.error?.error}`);
     }
 
-    const nodesToInsert: Node[] = [];
+    let nodesToInsert: Node[] = [];
     const edgesToInsert: Edge[] = [];
     const timeseriesToInsert: TimeseriesEntry[] = [];
 
@@ -114,6 +114,11 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
             if (IsEdges(results.value)) edgesToInsert.push(...results.value);
             if (IsTimeseries(results.value)) timeseriesToInsert.push(...results.value);
         }
+
+    // we must deduplicate nodes based on original ID in order to avoid a database transaction error. We toss out the
+    // duplicates because even if we inserted them they'd be overwritten, or overwrite, the original. Users should be made
+    // aware that if their import is generating records with the same original ID only one instance is going to be inserted
+    nodesToInsert = nodesToInsert.filter((value, index, self) => index === self.findIndex((t) => t.original_data_id === value.original_data_id));
 
     // insert all nodes and files
     if (nodesToInsert.length > 0) {
