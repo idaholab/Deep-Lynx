@@ -539,6 +539,10 @@ export default class Home extends Vue {
   relationshipCount = 0
   dataSources: DataSourceT[] = []
 
+  beforeMount() {
+    this.$store.dispatch('refreshCurrentOntologyVersions');
+  }
+
 
   mounted() {
     this.user = this.$auth.CurrentUser();
