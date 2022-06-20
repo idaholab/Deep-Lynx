@@ -273,16 +273,17 @@ export default class DataStagingMapper extends Mapper {
     }
 
     public listImportUninsertedActiveMappingStatement(): string {
-        return `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config 
-                   FROM data_staging
-                            LEFT JOIN type_mappings ON type_mappings.shape_hash = data_staging.shape_hash
-                                                         AND type_mappings.data_source_id = data_staging.data_source_id
-                            LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
-                   WHERE (data_staging.inserted_at IS NULL
-                   AND type_mappings.active IS TRUE
-                   AND EXISTS 
-                        (SELECT * from type_mapping_transformations 
-                            WHERE type_mapping_transformations.type_mapping_id = type_mappings.id))
+        return `SELECT data_staging.*, data_sources.container_id, data_sources.config as data_source_config
+                FROM data_staging
+                         LEFT JOIN type_mappings ON type_mappings.shape_hash = data_staging.shape_hash
+                    AND type_mappings.data_source_id = data_staging.data_source_id
+                         LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id
+                WHERE (data_staging.inserted_at IS NULL
+
+                    AND (type_mappings.active IS TRUE
+                        AND EXISTS
+                             (SELECT * from type_mapping_transformations
+                              WHERE type_mapping_transformations.type_mapping_id = type_mappings.id))) OR type_mappings.id IS NULL;
                    `;
     }
 
