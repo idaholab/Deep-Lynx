@@ -321,7 +321,7 @@ export default class OAuthRoutes {
     }
 
     private static loginPage(req: Request, res: Response, next: NextFunction) {
-        req.logout(); // in case a previous user logged into a session
+        req.logout((err:any) => {}); // in case a previous user logged into a session
         const oauthRequest = oauthRepo.authorizationFromRequest(req);
 
         return res.render('login', {
@@ -400,7 +400,7 @@ export default class OAuthRoutes {
     }
 
     private static logout(req: Request, res: Response, next: NextFunction) {
-        req.logout();
+        req.logout((err:any) => {});
 
         if (req.query.redirect_uri) {
             return res.redirect(req.query.redirect_uri as string);
