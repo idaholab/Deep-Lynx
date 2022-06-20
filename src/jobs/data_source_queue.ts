@@ -6,6 +6,7 @@ import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/p
 import DataSourceRepository from '../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {parentPort} from 'worker_threads';
 
+process.setMaxListeners(100);
 void PostgresAdapter.Instance.init()
     .then(() => {
         const dataSourceRepo = new DataSourceRepository();
@@ -43,7 +44,7 @@ void PostgresAdapter.Instance.init()
                 });
 
                 destination.on('error', (e: Error) => {
-                    void PostgresAdapter.Instance.close()
+                    void PostgresAdapter.Instance.close();
 
                     Logger.error(`unexpected error in data source queue thread ${e}`);
                     if (parentPort) parentPort.postMessage('done');
@@ -55,7 +56,7 @@ void PostgresAdapter.Instance.init()
                 queue.Consume(Config.data_sources_queue, destination);
             })
             .catch((e) => {
-                void PostgresAdapter.Instance.close()
+                void PostgresAdapter.Instance.close();
 
                 Logger.error(`unexpected error in data source queue thread ${e}`);
                 if (parentPort) parentPort.postMessage('done');
@@ -65,7 +66,7 @@ void PostgresAdapter.Instance.init()
             });
     })
     .catch((e) => {
-        void PostgresAdapter.Instance.close()
+        void PostgresAdapter.Instance.close();
 
         Logger.error(`unexpected error in data source queue thread ${e}`);
         if (parentPort) parentPort.postMessage('done');

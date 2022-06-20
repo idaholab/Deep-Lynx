@@ -162,7 +162,9 @@ export default class StandardDataSourceImpl implements DataSource {
                     }),
                 });
 
-                queue.Put(Config.process_queue, staging).catch((err) => Logger.error(`unable to put data staging record on the queue ${err}`));
+                if (this.DataSourceRecord && (!this.DataSourceRecord.config?.data_retention_days || this.DataSourceRecord.config?.data_retention_days === 0)) {
+                    queue.Put(Config.process_queue, staging).catch((err) => Logger.error(`unable to put data staging record on the queue ${err}`));
+                }
             });
         }
 
@@ -180,7 +182,7 @@ export default class StandardDataSourceImpl implements DataSource {
                     pipeline = pipeline.pipe(pipe).on('error', (err: any) => {
                         errorMessage = err;
                         fulfill(err);
-                    })
+                    });
                 }
 
                 pipeline
@@ -190,7 +192,7 @@ export default class StandardDataSourceImpl implements DataSource {
                         fulfill(err);
                     })
                     .pipe(pass)
-                    .on('finish', fulfill)
+                    .on('finish', fulfill);
             });
         } else if (options && options.overrideJsonStream) {
             await new Promise((fulfill) =>
@@ -238,19 +240,6 @@ export default class StandardDataSourceImpl implements DataSource {
         if (internalTransaction) {
             const commit = await this.#mapper.completeTransaction(transaction);
             if (commit.isError) return Promise.resolve(Result.Pass(commit));
-        }
-
-        // now that we've committed to the database, send the records to the queue for the first time so they can attempt
-        // to be processed if we have data retention enabled - we're doing this so we don't have the emitter constantly
-        // sending records to the queue for processing
-        if (
-            !this.DataSourceRecord.config?.data_retention_days ||
-            (this.DataSourceRecord.config?.data_retention_days && this.DataSourceRecord.config.data_retention_days !== 0)
-        ) {
-            const sent = await ImportMapper.Instance.SendToQueue(retrievedImport.value.id!);
-            if (sent.isError) {
-                Logger.error(`unable to queue new import ${sent}`);
-            }
         }
 
         // return the saved buffer as we haven't wiped it, should contain all records with their updated IDs
