@@ -4,8 +4,8 @@
       <v-icon
           v-show="icon"
           class="mr-2"
-          color="white"
           v-on="on"
+          style="color:white !important"
       >mdi-plus-circle</v-icon>
       <v-btn v-show="!icon" color="orange accent-4" dark class="mb-2" v-on="on">{{ $t("createChangelist.newChangelistButton") }}</v-btn>
     </template>
