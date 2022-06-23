@@ -617,7 +617,7 @@ export default class DataMapping extends Vue {
 
       this.$client.listTypeMappings(this.containerID, this.selectedDataSource?.id!, {
         resultingMetatypeName: (this.selectedMetatype) ? this.selectedMetatype.name : undefined,
-        resultingMetatypeRelationshipName: (this.selectedRelationshipPair) ? this.selectedRelationshipPair.relationship_pair_name : undefined
+        resultingMetatypeRelationshipName: (this.selectedRelationshipPair) ? this.selectedRelationshipPair.relationship_name : undefined
       })
           .then((results) => {
             this.mappingsLoading = false
