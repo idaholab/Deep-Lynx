@@ -460,7 +460,10 @@ export default class TypeTransformation extends BaseDomainClass {
                 // the type mapping _should_ have easily handled the combination of keys
                 if (k.metatype_key_id) {
                     const fetched = await MetatypeKeyMapper.Instance.Retrieve(k.metatype_key_id);
-                    if (fetched.isError) return Promise.resolve(Result.Failure('unable to fetch keys to map payload'));
+                    if (fetched.isError) {
+                        Logger.error('unable to fetch keys to map payload, metatype key does not exist');
+                        continue;
+                    }
 
                     newPayload[fetched.value.property_name] = k.value;
                     if (k.key) {
