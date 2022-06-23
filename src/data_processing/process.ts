@@ -104,9 +104,11 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
             const results = await transformation.applyTransformation(staging);
             if (results.isError) {
                 await stagingMapper.rollbackTransaction(transaction.value);
-                await stagingRepo.setErrors(staging.id!, [`unable to apply transformation ${transformation.id} to data: ${results.error}`]);
+                await stagingRepo.setErrors(staging.id!, [`unable to apply transformation ${transformation.id} to data: ${results.error?.error}`]);
 
-                return new Promise((resolve) => resolve(Result.DebugFailure(`unable to apply transformation ${transformation.id} to data: ${results.error}`)));
+                return new Promise((resolve) =>
+                    resolve(Result.DebugFailure(`unable to apply transformation ${transformation.id} to data: ${results.error?.error}`)),
+                );
             }
 
             // check to see result type, force into corresponding container
