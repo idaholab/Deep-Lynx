@@ -231,7 +231,7 @@
                     <template slot="append-outer"><info-tooltip :message="$t('dataMapping.relationshipPairSearchHelp')"></info-tooltip></template>
 
                     <template slot="item" slot-scope="data">
-                      {{data.item.origin_metatype_name}} - {{data.item.relationship_pair_name}} - {{data.item.destination_metatype_name}}
+                      {{data.item.origin_metatype_name}} - {{data.item.relationship_name}} - {{data.item.destination_metatype_name}}
                     </template>
 
                   </v-autocomplete>
