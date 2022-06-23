@@ -293,9 +293,9 @@ export default class DataImports extends Vue {
         sortDesc: sortDescParam
       })
           .then(imports => {
+            this.importCount = imports.length
             this.importsLoading = false
             this.imports = imports
-            this.$forceUpdate()
           })
           .catch(e => this.errorMessage = e)
     }
