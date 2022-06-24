@@ -30,7 +30,13 @@ export default class MetatypeRoutes {
 
         // update with the containerID
         if (req.container) {
-            toCreate.forEach((metatype) => (metatype.container_id = req.container!.id!));
+            toCreate.forEach((metatype) => {
+                metatype.container_id = req.container!.id!;
+
+                if (!metatype.ontology_version) {
+                    metatype.ontology_version = req.activeOntologyVersion?.id;
+                }
+            });
         }
 
         repo.bulkSave(req.currentUser!, toCreate)

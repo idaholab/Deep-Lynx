@@ -64,6 +64,10 @@ export default class MetatypeRelationshipKey extends BaseDomainClass {
     @Type(() => Date)
     deleted_at?: Date;
 
+    @IsOptional()
+    @IsString()
+    ontology_version?: string;
+
     constructor(input: {
         metatype_relationship_id?: string;
         container_id?: string;
@@ -73,6 +77,7 @@ export default class MetatypeRelationshipKey extends BaseDomainClass {
         property_name: string;
         data_type: string;
         options?: any[];
+        ontology_version?: string;
         validation?: {
             regex: string;
             min: number;
@@ -93,6 +98,7 @@ export default class MetatypeRelationshipKey extends BaseDomainClass {
             if (input.validation) this.validation = input.validation;
             if (input.metatype_relationship_id) this.metatype_relationship_id = input.metatype_relationship_id;
             if (input.container_id) this.container_id = input.container_id;
+            if (input.ontology_version) this.ontology_version = input.ontology_version;
         }
     }
 }

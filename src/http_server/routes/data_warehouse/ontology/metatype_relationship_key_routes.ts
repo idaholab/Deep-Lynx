@@ -53,7 +53,13 @@ export default class MetatypeRelationshipKeyRoutes {
 
         // update with the metatypeID
         if (req.metatypeRelationship) {
-            toCreate.forEach((key) => (key.metatype_relationship_id = req.metatypeRelationship!.id!));
+            toCreate.forEach((key) => {
+                key.metatype_relationship_id = req.metatypeRelationship!.id!;
+
+                if (!key.ontology_version) {
+                    key.ontology_version = req.activeOntologyVersion?.id;
+                }
+            });
         }
 
         repo.bulkSave(req.currentUser!, toCreate)

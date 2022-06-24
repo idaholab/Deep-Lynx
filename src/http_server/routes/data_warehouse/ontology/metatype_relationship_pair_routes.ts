@@ -53,7 +53,13 @@ export default class MetatypeRelationshipPairRoutes {
 
         // update with the containerID
         if (req.container) {
-            toCreate.forEach((relationship) => (relationship.container_id = req.container!.id!));
+            toCreate.forEach((relationship) => {
+                relationship.container_id = req.container!.id!;
+
+                if (!relationship.ontology_version) {
+                    relationship.ontology_version = req.activeOntologyVersion?.id;
+                }
+            });
         }
 
         repo.bulkSave(req.currentUser!, toCreate)
