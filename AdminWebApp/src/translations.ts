@@ -567,7 +567,7 @@ export default {
             formTitle: 'Update Taxonomy via Ontology File',
         },
         dataSources: {
-            copyID: 'Copy ID to clipboard',
+            copyID: 'Copy ID to clipboard ',
             id: 'ID',
             create: 'Create',
             formTitle: 'New Data Source',
@@ -1105,6 +1105,7 @@ export default {
             viewDeleteData: 'View/Delete',
             successfullyDeleted: 'Data Successfully Deleted',
             completed: 'completed',
+            noData: 'no data',
         },
         containerInvite: {
             button: 'Invite User to Container',

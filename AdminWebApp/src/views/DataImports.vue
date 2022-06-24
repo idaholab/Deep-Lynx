@@ -42,8 +42,9 @@
             </div>
           </v-col>
         </template>
+        
         <template v-slot:item.percentage_processed="{ item }">
-          {{ (Math.round((item.records_inserted / item.total_records) * 100) * 100 / 100).toFixed(2) }}%
+          {{ item.total_records == 0 ? $t('dataImports.noData') : (Math.round((item.records_inserted / item.total_records) * 100) * 100 / 100).toFixed(2) + "%" }}
         </template>
 
         <template v-slot:item.status="{ item }">
@@ -293,9 +294,9 @@ export default class DataImports extends Vue {
         sortDesc: sortDescParam
       })
           .then(imports => {
+            this.importCount = imports.length
             this.importsLoading = false
             this.imports = imports
-            this.$forceUpdate()
           })
           .catch(e => this.errorMessage = e)
     }
