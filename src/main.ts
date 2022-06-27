@@ -48,12 +48,22 @@ async function Start(): Promise<any> {
                 timeout: 0,
             },
             {
+                name: 'edge_queue_emitter', // will run edge_queue_emitter on an infinite loop
+                interval: '1m',
+                timeout: 0,
+            },
+            {
                 name: 'events_queue', // will run events_queue.js - a never ending processing of the events queue
                 interval: '1m',
                 timeout: 0,
             },
             {
                 name: 'processing_queue', // will run processing_queue.js
+                interval: '1m',
+                timeout: 0,
+            },
+            {
+                name: 'edge_item_queue', // will run edge_item_queue.js
                 interval: '1m',
                 timeout: 0,
             },

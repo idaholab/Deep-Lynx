@@ -1,4 +1,4 @@
-import {BaseDomainClass} from '../../../common_classes/base_domain_class';
+import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
 import {IsArray, IsBoolean, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested} from 'class-validator';
 import {Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Container from '../ontology/container';
@@ -172,4 +172,40 @@ export function IsEdges(set: Node[] | Edge[] | TimeseriesEntry[]): set is Edge[]
     if (Array.isArray(set) && set.length === 0) return true;
 
     return set[0] instanceof Edge;
+}
+
+// EdgeQueueItem represents an edge item on the queue, used primarily in the edge insertion queue process as an
+// intermediary storage object
+export class EdgeQueueItem extends NakedDomainClass {
+    @IsString()
+    @IsOptional()
+    id?: string;
+
+    @Type(() => Edge)
+    edge?: object;
+
+    @IsString()
+    import_id?: string;
+
+    @IsNumber()
+    attempts = 0;
+
+    @Type(() => Date)
+    next_attempt_at: Date = new Date();
+
+    @IsString()
+    @IsOptional()
+    error?: string;
+
+    constructor(input: {edge: object; import_id: string; attempts?: number; next_attempt_at?: Date; error?: string}) {
+        super();
+
+        if (input) {
+            this.edge = input.edge;
+            this.import_id = input.import_id;
+            if (input.attempts) this.attempts = input.attempts;
+            if (input.next_attempt_at) this.next_attempt_at = input.next_attempt_at;
+            if (input.error) this.error = input.error;
+        }
+    }
 }
