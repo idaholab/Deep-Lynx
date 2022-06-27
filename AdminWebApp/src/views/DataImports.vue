@@ -57,11 +57,12 @@
               small
               class="mr-2"
               @click="viewItem(item)"
+              v-if="dataUnexpired(item)"
           >
             mdi-eye
           </v-icon>
           <delete-data-import-dialog :containerID="containerID" :dataImport="item" :icon="true" @dataImportDeleted="listImports"></delete-data-import-dialog>
-          <reprocess-data-import-dialog :containerID="containerID" :dataImport="item" :icon="true" @dataImportReprocessed="listImports"></reprocess-data-import-dialog>
+          <reprocess-data-import-dialog :containerID="containerID" :dataImport="item" :icon="true" @dataImportReprocessed="listImports" v-if="dataUnexpired(item)"></reprocess-data-import-dialog>
         </template>
       </v-data-table>
     </div>
@@ -152,7 +153,7 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
-import {DataSourceT, ImportDataT, ImportT} from "@/api/types";
+import {DataSourceT , ImportDataT, ImportT} from "@/api/types";
 import ImportDataDialog from "@/components/dataImport/importDataDialog.vue";
 import DataTypeMapping from "@/components/etl/dataTypeMapping.vue"
 import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
@@ -356,6 +357,19 @@ export default class DataImports extends Vue {
         })
         .catch((e: any) => this.errorMessage = e)
 
+  }
+
+  dataUnexpired(importT: ImportT) {
+    if (this.selectedDataSource!.config?.kind == 'standard' || this.selectedDataSource!.config?.kind == 'manual') {
+      const retentionDays = this.selectedDataSource!.config!.data_retention_days!
+      if (retentionDays != -1) {
+        const expirationDate = new Date(importT.created_at)
+        expirationDate.setDate(expirationDate.getDate() + retentionDays)
+        return new Date() < expirationDate
+      } else {
+        return true
+      }
+    }
   }
 
   viewImportData(importData: ImportDataT) {
