@@ -29,6 +29,8 @@ import DataSourceRecord from '../../../domain_objects/data_warehouse/import/data
 import {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
 import {ProcessData} from '../../../data_processing/process';
+import EdgeQueueItemRepository from '../../../data_access_layer/repositories/data_warehouse/data/edge_queue_item_repository';
+import {InsertEdge} from '../../../data_processing/edge_inserter';
 
 describe('A Data Processor', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -411,7 +413,7 @@ describe('A Data Processor', async () => {
         const carMaintenanceKeys = test_metatypes.find((m) => m.name === 'Maintenance')!.keys;
         // first generate all transformations for the type mapping, and set active
         const maintenanceTransformation = new TypeTransformation({
-            type: "node",
+            type: 'node',
             container_id: containerID,
             data_source_id: dataSource!.DataSourceRecord!.id!,
             type_mapping_id: typeMappingID,
@@ -447,7 +449,7 @@ describe('A Data Processor', async () => {
         const entryKeys = test_metatypes.find((m) => m.name === 'Maintenance Entry')!.keys;
 
         const maintenanceEntryTransformation = new TypeTransformation({
-            type: "node",
+            type: 'node',
             container_id: containerID,
             data_source_id: dataSource!.DataSourceRecord!.id!,
             type_mapping_id: typeMappingID,
@@ -474,7 +476,7 @@ describe('A Data Processor', async () => {
         expect(result.isError).false;
 
         const maintenanceEdgeTransformation = new TypeTransformation({
-            type: "edge",
+            type: 'edge',
             container_id: containerID,
             data_source_id: dataSource!.DataSourceRecord!.id!,
             type_mapping_id: typeMappingID,
@@ -541,11 +543,167 @@ describe('A Data Processor', async () => {
             }
         }
 
+        const edgeQueueRepo = new EdgeQueueItemRepository();
+        const items = await edgeQueueRepo.where().importID('eq', dataImportID).list();
+        expect(items.isError).false;
+
+        for (let item of items.value) {
+            const result = await InsertEdge(item);
+            expect(result.isError).false;
+        }
+
         const edgeRepo = new EdgeRepository();
         const edges = await edgeRepo.where().importDataID('eq', dataImportID).list();
 
         expect(edges.isError).false;
         expect(edges.value.length).eq(2);
+
+        // need to delete this so we don't make edges on the next test
+        await TypeTransformationMapper.Instance.Delete(result.value.id!);
+
+        return Promise.resolve();
+    });
+
+    it('properly process a queue edge', async () => {
+        const carMaintenanceKeys = test_metatypes.find((m) => m.name === 'Maintenance')!.keys;
+        // first generate all transformations for the type mapping, and set active
+        const maintenanceTransformation = new TypeTransformation({
+            type: 'node',
+            container_id: containerID,
+            data_source_id: dataSource!.DataSourceRecord!.id!,
+            type_mapping_id: typeMappingID,
+            keys: [
+                new KeyMapping({
+                    key: 'car_maintenance.id',
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'id')!.id,
+                }),
+                new KeyMapping({
+                    key: 'car_maintenance.name',
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'name')!.id,
+                }),
+                new KeyMapping({
+                    key: 'car_maintenance.start_date',
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'start date')!.id,
+                }),
+                new KeyMapping({
+                    key: 'car_maintenance.average_visits_per_year',
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'average visits per year')!.id,
+                }),
+                new KeyMapping({
+                    key: 'car_maintenance.visit_dates',
+                    metatype_key_id: carMaintenanceKeys!.find((key) => key.name === 'visit dates')!.id,
+                }),
+            ],
+            metatype_id: test_metatypes.find((m) => m.name === 'Maintenance')!.id,
+            unique_identifier_key: 'car_maintenance.id',
+        });
+
+        let result = await TypeTransformationMapper.Instance.Create('test suite', maintenanceTransformation);
+        expect(result.isError).false;
+
+        const entryKeys = test_metatypes.find((m) => m.name === 'Maintenance Entry')!.keys;
+
+        const maintenanceEntryTransformation = new TypeTransformation({
+            type: 'node',
+            container_id: containerID,
+            data_source_id: dataSource!.DataSourceRecord!.id!,
+            type_mapping_id: typeMappingID,
+            keys: [
+                new KeyMapping({
+                    key: 'car_maintenance.maintenance_entries.[].id',
+                    metatype_key_id: entryKeys!.find((key) => key.name === 'id')!.id,
+                }),
+                new KeyMapping({
+                    key: 'car_maintenance.maintenance_entries.[].type',
+                    metatype_key_id: entryKeys!.find((key) => key.name === 'type')!.id,
+                }),
+                new KeyMapping({
+                    key: 'car_maintenance.maintenance_entries.[].check_engine_light_flag',
+                    metatype_key_id: entryKeys!.find((key) => key.name === 'check engine light flag')!.id,
+                }),
+            ],
+            metatype_id: test_metatypes.find((m) => m.name === 'Maintenance Entry')!.id,
+            unique_identifier_key: 'car_maintenance.maintenance_entries.[].id',
+            root_array: 'car_maintenance.maintenance_entries',
+        });
+
+        result = await TypeTransformationMapper.Instance.Create('test suite', maintenanceEntryTransformation);
+        expect(result.isError).false;
+
+        const maintenanceEdgeTransformation = new TypeTransformation({
+            type: 'edge',
+            container_id: containerID,
+            data_source_id: dataSource!.DataSourceRecord!.id!,
+            type_mapping_id: typeMappingID,
+            metatype_relationship_pair_id: maintenancePair!.id,
+            root_array: 'car_maintenance.maintenance_entries',
+            keys: [],
+        });
+
+        result = await TypeTransformationMapper.Instance.Create('test suite', maintenanceEdgeTransformation);
+        expect(result.isError).false;
+
+        const active = await TypeMappingMapper.Instance.SetActive(typeMappingID);
+        expect(active.isError).false;
+
+        const processResult = await ProcessData(inserted);
+        expect(processResult.isError, processResult.error?.error).false;
+
+        const nodeRepo = new NodeRepository();
+        const nodes = await nodeRepo.where().importDataID('eq', dataImportID).list();
+
+        expect(nodes.isError).false;
+        expect(nodes.value.length).eq(3);
+
+        // run through each node, verifying that the transformations were correctly run
+        // I know it's a a double test since we already have tests for the transformations
+        // but I wanted to make sure they work in the larger scope of the process loop
+        for (const node of nodes.value) {
+            switch (node.original_data_id) {
+                case `UUID`: {
+                    expect(node.properties).to.have.property('name', "test car's maintenance");
+                    expect(node.properties).to.have.property('start_date', '2020-01-01T19:00:00.000Z');
+                    expect(node.properties).to.have.property('average_visits', 4);
+                    // because the order of the array may have changed, we must check existence and length only
+                    expect(node.properties).to.have.property('visit_dates');
+                    expect((node.properties as any)['visit_dates'].length).eq(3);
+                    // validate the original and composite ID fields worked correctly
+                    expect(node.original_data_id).eq('UUID'); // original IDs are strings
+                    break;
+                }
+
+                case `1`: {
+                    expect(node.properties).to.have.property('id', 1);
+                    expect(node.properties).to.have.property('type', 'oil change');
+                    expect(node.properties).to.have.property('check_engine_light_flag', true);
+                    // validate the original and composite ID fields worked correctly
+                    expect(node.original_data_id).eq('1'); // original IDs are strings
+                    break;
+                }
+
+                case `2`: {
+                    expect(node.properties).to.have.property('id', 2);
+                    expect(node.properties).to.have.property('type', 'tire rotation');
+                    expect(node.properties).to.have.property('check_engine_light_flag', false);
+                    // validate the original and composite ID fields worked correctly
+                    expect(node.original_data_id).eq('2'); // original IDs are strings
+                    break;
+                }
+            }
+        }
+
+        // double check no nodes were created
+        const edgeRepo = new EdgeRepository();
+        const edges = await edgeRepo.where().importDataID('eq', dataImportID).list();
+
+        expect(edges.isError).false;
+        expect(edges.value.length <= 2).true;
+
+        const queueRepo = new EdgeQueueItemRepository();
+        const items = await queueRepo.where().importID('eq', dataImportID).list();
+
+        expect(items.isError).false;
+        expect(items.value.length >= 2).true;
 
         return Promise.resolve();
     });

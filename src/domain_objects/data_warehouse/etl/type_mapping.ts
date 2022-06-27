@@ -98,7 +98,11 @@ export default class TypeMapping extends BaseDomainClass {
             for (const key of Object.keys(obj)) {
                 if (Array.isArray(obj[key]) && obj[key].length > 0) {
                     if (typeof obj[key][0] === 'object' && obj[key][0] !== null) {
-                        extractPropsAndTypes(obj[key][0], resultArray);
+                        const compositeObject = obj[key][0];
+
+                        obj[key].forEach((o: object) => Object.assign(compositeObject, o));
+
+                        extractPropsAndTypes(compositeObject, resultArray);
                     }
                 }
 

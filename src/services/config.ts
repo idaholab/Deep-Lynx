@@ -100,6 +100,9 @@ export class Config {
     private readonly _process_queue_name: string;
     private readonly _data_sources_queue_name: string;
     private readonly _events_queue_name: string;
+    private readonly _edge_insertion_queue_name: string;
+    private readonly _edge_insertion_backoff_multiplier: number;
+    private readonly _edge_insertion_max_retry: number;
 
     private readonly _rabbitmq_url: string;
     private readonly _azure_service_bus_connection_string: string;
@@ -209,6 +212,12 @@ export class Config {
         this._process_queue_name = process.env.PROCESS_QUEUE_NAME || 'process';
         this._data_sources_queue_name = process.env.DATA_SOURCES_QUEUE_NAME || 'data_sources';
         this._events_queue_name = process.env.EVENTS_QUEUE_NAME || 'events';
+        this._edge_insertion_queue_name = process.env.EDGE_INSERTION_QUEUE_NAME || 'edge_insertion';
+
+        this._edge_insertion_backoff_multiplier = process.env.EDGE_INSERTION_BACKOFF_MULTIPLIER
+            ? parseInt(process.env.EDGE_INSERTION_BACKOFF_MULTIPLIER, 10)
+            : 5;
+        this._edge_insertion_max_retry = process.env.EDGE_INSERTION_MAX_RETRY ? parseInt(process.env.EDGE_INSERTION_MAX_RETRY, 10) : 10;
 
         this._rabbitmq_url = process.env.RABBITMQ_URL || 'amqp://localhost';
         this._azure_service_bus_connection_string = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING || '';
@@ -493,6 +502,18 @@ export class Config {
 
     get data_sources_queue(): string {
         return this._data_sources_queue_name;
+    }
+
+    get edge_insertion_queue(): string {
+        return this._edge_insertion_queue_name;
+    }
+
+    get edge_insertion_backoff_multiplier(): number {
+        return this._edge_insertion_backoff_multiplier;
+    }
+
+    get edge_insertion_max_retries(): number {
+        return this._edge_insertion_max_retry;
     }
 
     get rabbitmq_url(): string {

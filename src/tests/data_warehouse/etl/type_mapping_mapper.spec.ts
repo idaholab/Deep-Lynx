@@ -391,6 +391,22 @@ describe('A Data Type Mapping', async () => {
         expect(arrayHash).eq(normalHash);
     });
 
+    it('create valid shape hash of objects with an empty array, differing from array of values', async () => {
+        const normalHash = TypeMapping.objectToShapeHash(test_payload_single_array);
+        expect(normalHash).not.null;
+
+        const arrayHash = TypeMapping.objectToShapeHash(test_payload_empty_array);
+        expect(arrayHash).not.eq(normalHash);
+    });
+
+    it('create valid shape hash of objects with array of objects with differing fields', async () => {
+        const normalHash = TypeMapping.objectToShapeHash(test_payload_single_array);
+        expect(normalHash).not.null;
+
+        const arrayHash = TypeMapping.objectToShapeHash(test_payload_single_array_differing_objects);
+        expect(arrayHash).not.eq(normalHash);
+    });
+
     it('create valid shape hash of an object while ignoring desired keys', async () => {
         const ignoredFieldHash = TypeMapping.objectToShapeHash(test_payload_single_array, {stop_nodes});
         expect(ignoredFieldHash).not.null;
@@ -451,6 +467,7 @@ const test_raw_payload = {
         WHEELS: 1,
     },
 };
+
 const test_payload = [
     {
         car: {
@@ -556,6 +573,118 @@ const test_payload_single_array = [
             tire_pressures: [
                 {
                     id: 'tire0',
+                    measurement_unit: 'PSI',
+                    measurement: 35.08,
+                    measurement_name: 'tire pressure',
+                },
+            ],
+        },
+        car_maintenance: {
+            id: 'UUID',
+            name: "test car's maintenance",
+            start_date: '1/1/2020 12:00:00',
+            average_visits_per_year: 4,
+            maintenance_entries: [
+                {
+                    id: 1,
+                    check_engine_light_flag: true,
+                    type: 'oil change',
+                    parts_list: [
+                        {
+                            id: 'oil',
+                            name: 'synthetic oil',
+                            price: 45.66,
+                            quantity: 1,
+                        },
+                    ],
+                },
+                {
+                    id: 2,
+                    check_engine_light_flag: false,
+                    type: 'tire rotation',
+                    parts_list: [
+                        {
+                            id: 'tire',
+                            name: 'all terrain tire',
+                            price: 150.99,
+                            quantity: 4,
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+];
+
+const test_payload_empty_array = [
+    {
+        car: {
+            id: 'UUID',
+            name: 'test car',
+            manufacturer: {
+                id: 'UUID',
+                name: 'Test Cars Inc',
+                location: 'Seattle, WA',
+            },
+            tire_pressures: [],
+        },
+        car_maintenance: {
+            id: 'UUID',
+            name: "test car's maintenance",
+            start_date: '1/1/2020 12:00:00',
+            average_visits_per_year: 4,
+            maintenance_entries: [
+                {
+                    id: 1,
+                    check_engine_light_flag: true,
+                    type: 'oil change',
+                    parts_list: [
+                        {
+                            id: 'oil',
+                            name: 'synthetic oil',
+                            price: 45.66,
+                            quantity: 1,
+                        },
+                    ],
+                },
+                {
+                    id: 2,
+                    check_engine_light_flag: false,
+                    type: 'tire rotation',
+                    parts_list: [
+                        {
+                            id: 'tire',
+                            name: 'all terrain tire',
+                            price: 150.99,
+                            quantity: 4,
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+];
+
+const test_payload_single_array_differing_objects = [
+    {
+        car: {
+            id: 'UUID',
+            name: 'test car',
+            manufacturer: {
+                id: 'UUID',
+                name: 'Test Cars Inc',
+                location: 'Seattle, WA',
+            },
+            tire_pressures: [
+                {
+                    id: 'tire0',
+                    measurement_unit: 'PSI',
+                    measurement: 35.08,
+                    measurement_name: 'tire pressure',
+                },
+                {
+                    id: 'tire0',
+                    name: 'test',
                     measurement_unit: 'PSI',
                     measurement: 35.08,
                     measurement_name: 'tire pressure',

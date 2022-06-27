@@ -664,6 +664,10 @@ export default class TypeTransformation extends BaseDomainClass {
         }
 
         if (this.type === 'edge' && this.metatype_relationship_pair_id) {
+            // need to check undefined before we switch to strings
+            const origin_original_id = TypeTransformation.getNestedValue(this.origin_id_key!, data.data, index);
+            const destination_original_id = TypeTransformation.getNestedValue(this.destination_id_key!, data.data, index);
+
             const edge = new Edge({
                 metatype_relationship_pair: this.metatype_relationship_pair_id,
                 properties: newPayloadRelationship,
@@ -672,10 +676,10 @@ export default class TypeTransformation extends BaseDomainClass {
                 container_id: this.container_id!,
                 data_staging_id: data.id,
                 import_data_id: data.import_id,
-                origin_original_id: `${TypeTransformation.getNestedValue(this.origin_id_key!, data.data, index)}`,
+                origin_original_id: origin_original_id ? `${origin_original_id}` : undefined,
                 origin_metatype_id: this.origin_metatype_id,
                 origin_data_source_id: this.origin_data_source_id,
-                destination_original_id: `${TypeTransformation.getNestedValue(this.destination_id_key!, data.data, index)}`,
+                destination_original_id: destination_original_id ? `${destination_original_id}` : undefined,
                 destination_metatype_id: this.destination_metatype_id,
                 destination_data_source_id: this.destination_data_source_id,
                 metadata: new EdgeMetadata({
