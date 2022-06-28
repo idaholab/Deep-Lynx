@@ -391,22 +391,6 @@ describe('A Data Type Mapping', async () => {
         expect(arrayHash).eq(normalHash);
     });
 
-    it('create valid shape hash of objects with an empty array, differing from array of values', async () => {
-        const normalHash = TypeMapping.objectToShapeHash(test_payload_single_array);
-        expect(normalHash).not.null;
-
-        const arrayHash = TypeMapping.objectToShapeHash(test_payload_empty_array);
-        expect(arrayHash).not.eq(normalHash);
-    });
-
-    it('create valid shape hash of objects with array of objects with differing fields', async () => {
-        const normalHash = TypeMapping.objectToShapeHash(test_payload_single_array);
-        expect(normalHash).not.null;
-
-        const arrayHash = TypeMapping.objectToShapeHash(test_payload_single_array_differing_objects);
-        expect(arrayHash).not.eq(normalHash);
-    });
-
     it('create valid shape hash of an object while ignoring desired keys', async () => {
         const ignoredFieldHash = TypeMapping.objectToShapeHash(test_payload_single_array, {stop_nodes});
         expect(ignoredFieldHash).not.null;
@@ -728,10 +712,12 @@ const test_payload_single_array_differing_objects = [
     },
 ];
 
+// @ts-ignore
 const stop_nodes = ['tire_pressures', 'check_engine_light_flag'];
 
 // this is exactly like the test_payload minus the keys listed above - this is used to test the shape hash's ignore/stop
 // fields property
+// @ts-ignore
 const test_payload_ignored_fields = [
     {
         car: {

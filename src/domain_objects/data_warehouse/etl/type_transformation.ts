@@ -252,6 +252,9 @@ export default class TypeTransformation extends BaseDomainClass {
     data_source_id?: string;
 
     @IsOptional()
+    tab_metatype_name?: string;
+
+    @IsOptional()
     metatype_name?: string;
 
     @IsOptional()
@@ -696,10 +699,13 @@ export default class TypeTransformation extends BaseDomainClass {
             // we must pull the nodes based on the transformation
             let nodeID: string = this.tab_node_id!;
             if (!nodeID) {
-                const conversion = TypeTransformation.convertValue('string', TypeTransformation.getNestedValue(this.tab_node_key!, data.data, index));
+                const nestedValue = TypeTransformation.getNestedValue(this.tab_node_key!, data.data, index);
+                const conversion = TypeTransformation.convertValue('string', nestedValue);
 
                 if (conversion && conversion.converted_value) {
                     nodeID = conversion.converted_value as string;
+                } else {
+                    nodeID = nestedValue;
                 }
             }
 

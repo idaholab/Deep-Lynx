@@ -194,7 +194,7 @@ export default class TypeTransformationRepository extends Repository implements 
     // should be used very carefully. This function does not error out of it cannot find the ids specified, the caller
     // must handle the results of this function separately. Note: this function will only run for those transformations
     // which lack either metatype or relationship pair id. Making it safe to call on already populated classes
-    async backfillIDs(containerID: string, ...transformations: TypeTransformation[]): Promise<void> {
+    async backfillIDs(containerID: string, dataSourceID: string,  ...transformations: TypeTransformation[]): Promise<void> {
         // in order to minimize database transactions we will end up looping through the same data multiple times. It's
         // much faster to loop through some in-memory classes than it is to make a very large amount of database transactions
         // especially when you consider this is generally called as part of a very large export of mappings and this function
@@ -220,6 +220,7 @@ export default class TypeTransformationRepository extends Repository implements 
 
         for (const transformation of transformations) {
             if (transformation.metatype_name && !transformation.metatype_id) metatypeNames.push(transformation.metatype_name);
+            if (transformation.tab_metatype_name) metatypeNames.push(transformation.tab_metatype_name);
             if (transformation.metatype_relationship_pair_name && !transformation.metatype_relationship_pair_id)
                 relationshipPairNames.push(transformation.metatype_relationship_pair_name);
         }
@@ -281,6 +282,14 @@ export default class TypeTransformationRepository extends Repository implements 
                 }
             }
 
+            if (transformations[i].tab_metatype_name) {
+                const foundMetatype = metatypes.find((m) => m.name === transformations[i].tab_metatype_name);
+
+                if (foundMetatype) {
+                    transformations[i].tab_metatype_id = foundMetatype.id
+                }
+            }
+
             // set pair id and any attached relationship keys correctly
             if (!transformations[i].metatype_relationship_pair_id && transformations[i].metatype_relationship_pair_name) {
                 const foundPair = relationshipPairs.find((p) => p.name === transformations[i].metatype_relationship_pair_name);
@@ -305,6 +314,11 @@ export default class TypeTransformationRepository extends Repository implements 
                         }
                     }
                 }
+            }
+
+
+            if (transformations[i].type === 'timeseries' || transformations[i].tab_metatype_name) {
+                transformations[i].tab_data_source_id = dataSourceID
             }
         }
 
@@ -347,7 +361,8 @@ export default class TypeTransformationRepository extends Repository implements 
         this._rawQuery = [
             `SELECT type_mapping_transformations.*,
                          metatypes.name as metatype_name,
-                         metatype_relationship_pairs.name as metatype_relationship_pair_name,
+                    m2.name as tab_metatype_name,
+                    metatype_relationship_pairs.name as metatype_relationship_pair_name,
                          metatypes.ontology_version as metatype_ontology_version,
                          metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version,
                          mapping.container_id AS container_id,
@@ -356,6 +371,7 @@ export default class TypeTransformationRepository extends Repository implements 
                   FROM ${TypeTransformationMapper.tableName}`,
             `LEFT JOIN type_mappings as mapping ON type_mapping_transformations.type_mapping_id = mapping.id`,
             `LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id`,
+            `LEFT JOIN metatypes m2 on type_mapping_transformations.tab_metatype_id = m2.id`,
             `LEFT JOIN metatype_relationship_pairs 
                                ON type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id`
         ]
@@ -379,6 +395,7 @@ export default class TypeTransformationRepository extends Repository implements 
         this._rawQuery = [
             `SELECT type_mapping_transformations.*,
                          metatypes.name as metatype_name,
+                         m2.name as tab_metatype_name,
                          metatype_relationship_pairs.name as metatype_relationship_pair_name,
                          metatypes.ontology_version as metatype_ontology_version,
                          metatype_relationship_pairs.ontology_version as metatype_relationship_pair_ontology_version,
@@ -388,6 +405,7 @@ export default class TypeTransformationRepository extends Repository implements 
                   FROM ${TypeTransformationMapper.tableName}`,
             `LEFT JOIN type_mappings as mapping ON type_mapping_transformations.type_mapping_id = mapping.id`,
             `LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id`,
+            `LEFT JOIN metatypes m2 on type_mapping_transformations.tab_metatype_id = m2.id`,
             `LEFT JOIN metatype_relationship_pairs 
                                ON type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id`
         ]
