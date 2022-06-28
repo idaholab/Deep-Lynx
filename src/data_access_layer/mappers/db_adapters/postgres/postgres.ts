@@ -23,9 +23,11 @@ export default class PostgresAdapter {
     public async init() {
         this.pool = new Pool({
             connectionString: Config.core_db_connection_string,
-            ssl: {
-                rejectUnauthorized: false,
-            },
+            ssl: Config.ssl_enabled
+                ? {
+                      rejectUnauthorized: false,
+                  }
+                : undefined,
         });
         // ensures timestamps returned from the db are in UTC strings to match what is in the db
         types.setTypeParser(1114, (stringValue) => {

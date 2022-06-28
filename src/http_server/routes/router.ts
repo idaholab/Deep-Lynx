@@ -68,6 +68,7 @@ import OntologyVersionRoutes from './data_warehouse/ontology/versioning/ontology
 
 const winston = require('winston');
 const expressWinston = require('express-winston');
+const packageJson = require('../../../package.json');
 
 /*
  Router is a self contained set of routes and middleware that the main express.js
@@ -95,8 +96,7 @@ export class Router {
 
         // single, raw endpoint for a health check
         this.app.get('/health', (req: express.Request, res: express.Response, next: express.NextFunction) => {
-            res.sendStatus(200);
-            next();
+            res.status(200).send(packageJson.version);
         });
 
         // Auth middleware is mounted as part of the pre-middleware, making all middleware
