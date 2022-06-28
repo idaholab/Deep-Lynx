@@ -3,7 +3,7 @@
     <error-banner :message="errorMessage"></error-banner>
     <success-banner :message="successMessage"></success-banner>
     <v-toolbar flat color="white">
-      <v-toolbar-title>{{$t('home.dataTestDescription')}}</v-toolbar-title>
+      <v-toolbar-title>{{$t('home.dataManagementDescription')}}</v-toolbar-title>
     </v-toolbar>
     <div class="mx-2">
       <select-data-source
@@ -29,7 +29,7 @@
       >
         <template v-slot:top>
           <v-col class="d-flex flex-row">
-            <h3 class="text-h3">{{$t('dataTestCreation.nodeTableTitle')}}</h3>
+            <h3 class="text-h3">{{$t('dataManagement.nodeTableTitle')}}</h3>
             <v-spacer></v-spacer>
             <create-node-dialog
               :dataSourceID="selectedDataSource.id" 
@@ -75,7 +75,7 @@
       >
         <template v-slot:top>
           <v-col class="d-flex flex-row">
-            <h3 class="text-h3">{{$t('dataTestCreation.edgeTableTitle')}}</h3>
+            <h3 class="text-h3">{{$t('dataManagement.edgeTableTitle')}}</h3>
             <v-spacer></v-spacer>
             <create-edge-dialog
               :dataSourceID="selectedDataSource.id" 
@@ -120,7 +120,7 @@ import EditNodeDialog from "@/components/data/editNodeDialog.vue";
     EditNodeDialog
   }
 })
-export default class DataTestCreation extends Vue {
+export default class DataManagement extends Vue {
   @Prop({required: true})
   readonly containerID!: string;
 
@@ -150,44 +150,44 @@ export default class DataTestCreation extends Vue {
 
   headersNode() {
     return  [{
-      text: this.$t('dataTestCreation.id'),
+      text: this.$t('dataManagement.id'),
       value: "id",
       },
       {
-        text: this.$t('dataTestCreation.metatype'),
+        text: this.$t('dataManagement.metatype'),
         value: "metatype_name"
       },
       {
-        text: this.$t('dataTestCreation.name'),
+        text: this.$t('dataManagement.name'),
         value: "properties.name"
       },
-      { text: this.$t('dataTestCreation.viewDeleteData'),  
+      { text: this.$t('dataManagement.viewDeleteData'),  
         value: 'actions', sortable: false 
       }]
   }
 
     headersEdge() {
     return  [{
-      text: this.$t('dataTestCreation.id'),
+      text: this.$t('dataManagement.id'),
       value: "id",
       },
       {
-        text: this.$t('dataTestCreation.originNode'),
+        text: this.$t('dataManagement.originNode'),
         value: "metatypeRelationshipPair.originMetatype.name"
       },
        {
-        text: this.$t('dataTestCreation.relationship'),
+        text: this.$t('dataManagement.relationship'),
         value: "metatype_relationship_name"
       },
        {
-        text: this.$t('dataTestCreation.destinationNode'),
+        text: this.$t('dataManagement.destinationNode'),
         value: "metatypeRelationshipPair.destinationMetatype.name"
       },
        {
-        text: this.$t('dataTestCreation.relationshipType'),
+        text: this.$t('dataManagement.relationshipType'),
         value: "metatypeRelationshipPair.relationship_type"
       },
-      { text: this.$t('dataTestCreation.viewDeleteData'),  
+      { text: this.$t('dataManagement.viewDeleteData'),  
         value: 'actions', sortable: false 
       }]
   }
@@ -261,7 +261,7 @@ export default class DataTestCreation extends Vue {
     this.$client.deleteNode(this.containerID, nodeT.id)
         .then(()=> {
           this.listNodes()
-          this.successMessage = this.$t('dataTestCreation.successfullyDeleted') as string
+          this.successMessage = this.$t('dataManagement.successfullyDeleted') as string
         })
         .catch((e: any) => this.errorMessage = e)
   }
@@ -270,7 +270,7 @@ export default class DataTestCreation extends Vue {
     this.$client.deleteEdge(this.containerID, edgeT.id)
         .then(()=> {
           this.listEdges()
-          this.successMessage = this.$t('dataTestCreation.successfullyDeleted') as string
+          this.successMessage = this.$t('dataManagement.successfullyDeleted') as string
         })
         .catch((e: any) => this.errorMessage = e)
   }
