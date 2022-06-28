@@ -219,7 +219,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
                 return Promise.resolve(Result.Pass(results));
             }
 
-            transformationsCreate.forEach((t) => {
+            results.value.forEach((t) => {
                 if (t.type === 'timeseries' && Config.timescaledb_enabled) {
                     this.#transformationMapper
                         .CreateHypertable(t)
@@ -343,7 +343,12 @@ export default class TypeMappingRepository extends Repository implements Reposit
                     // ids and key ids if all that are present are the names - note that this will not modify the mapping if
                     // the transformation and keys already have id's present, allows us to skip any checks prior to attempting
                     // the function
-                    if (mapping.transformations) await this.#transformationRepo.backfillIDs(targetDataSource.value.container_id!, ...mapping.transformations);
+                    if (mapping.transformations)
+                        await this.#transformationRepo.backfillIDs(
+                            targetDataSource.value.container_id!,
+                            targetDataSource.value.id!,
+                            ...mapping.transformations,
+                        );
 
                     // now we can save the newly modified mapping
                     const saved = await this.save(mapping, user, true);
@@ -381,6 +386,9 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
                     typeMapping.transformations[i].metatype_id = undefined;
                     typeMapping.transformations[i].metatype_relationship_pair_id = undefined;
+                    typeMapping.transformations[i].tab_data_source_id = undefined;
+                    typeMapping.transformations[i].tab_metatype_id = undefined;
+                    typeMapping.transformations[i].tab_node_id = undefined;
                 }
 
                 // need infer type if it isn't present so that older type mappings will still function
