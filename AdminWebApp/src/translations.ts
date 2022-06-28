@@ -31,8 +31,8 @@ export default {
             dataMappingDescription: 'Manage Data Mappings',
             dataExport: 'Graph Export',
             dataExportDescription: 'Manage Data Export',
-            dataTest: 'Test Data',
-            dataTestDescription: 'Create and Manage Datasets',
+            dataManagement: 'Data Management',
+            dataManagementDescription: 'Create and Manage Datasets',
             settings: 'Settings',
             settingsDescription: 'Container Level Settings',
             dataImports: 'Import Data',
@@ -887,7 +887,7 @@ export default {
             formTitle: 'New Transformation',
             currentDataSet: 'Current Data Set',
         },
-        dataTestCreation: {
+        dataManagement: {
             nodeTableTitle: 'Nodes',
             edgeTableTitle: 'Edges',
             metatype: 'Metatype',
