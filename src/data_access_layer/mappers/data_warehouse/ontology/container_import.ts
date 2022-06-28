@@ -350,16 +350,23 @@ export default class ContainerImport {
                 let classLabel = selectedClass['rdfs:label']?.textNode ? selectedClass['rdfs:label']?.textNode : selectedClass['rdfs:label'];
 
                 // if a rdfs:label was not provided, attempt to grab the name via the rdf:about
+                // for ontology IRIs, the name may be after a # or the last /
                 if (typeof classLabel === 'undefined') {
-                    const aboutSplit = selectedClass['rdf:about'].split('#')
+                    // try # first and then /
+                    const aboutSplit = selectedClass['rdf:about'].split('#');
+                    const aboutSplitSlash = selectedClass['rdf:about'].split('/');
 
                     if (aboutSplit.length > 1) {
-                        classLabel = aboutSplit[1]
+                        classLabel = aboutSplit[1];
+                    } else if (aboutSplitSlash.length > 1) {
+                        classLabel = aboutSplit[aboutSplitSlash.length - 1];
+                    } else if (selectedClass['rdf:about'] != null && selectedClass['rdf:about'] !== '') {
+                        classLabel = selectedClass['rdf:about'];
                     } else {
                         // if we still couldn't find a name this way, we can't provide a name for this class
                         // provide a useful error and return
-                        resolve(Result.Failure(`Unable to find a name for the class with rdf:about ${selectedClass['rdf:about']}.
-                            Please provide a name via the rdfs:label annotation.`));
+                        resolve(Result.Failure(`Unable to find a name for the class with rdf:about "${selectedClass['rdf:about']}".
+                            Please provide a name for classes via the rdfs:label annotation.`));
                     }
                 }
 
@@ -370,6 +377,14 @@ export default class ContainerImport {
                 } else if(selectedClass['rdfs:subClassOf']) {
                     // if no other properties, subClassOf is not an array
                     parentID = selectedClass['rdfs:subClassOf'][0]['rdf:resource'];
+
+                    // ensure that parentID actually points to a class, otherwise return an error that all children of owl:thing
+                    // must have a parent specified
+                    if (!parentID) {
+                        return resolve(Result.Failure(`Class ${classID} does not specify a parent class. 
+                            Please ensure all children of the root "owl:thing" class specify their parent.`));
+                    }
+
                     // loop through properties
                     // if someValuesFrom -> rdf:resource !== "http://www*" then assume its a relationship, otherwise static property
                     let j;
@@ -496,13 +511,18 @@ export default class ContainerImport {
                     // if a rdfs:label was not provided, attempt to grab the name via the rdf:about
                     if (typeof relationshipName === 'undefined') {
                         const aboutSplit = relationship['rdf:about'].split('#')
+                        const aboutSplitSlash = relationship['rdf:about'].split('/');
 
                         if (aboutSplit.length > 1) {
                             relationshipName = aboutSplit[1]
+                        } else if (aboutSplitSlash.length > 1) {
+                            relationshipName = aboutSplit[aboutSplitSlash.length - 1];
+                        } else if (relationship['rdf:about'] != null && relationship['rdf:about'] !== '') {
+                            relationshipName = relationship['rdf:about'];
                         } else {
                             // if we still couldn't find a name this way, we can't provide a name for this relationship
                             // provide a useful error and return
-                            resolve(Result.Failure(`Unable to find a name for the relationship with rdf:about ${relationship['rdf:about']}.
+                            resolve(Result.Failure(`Unable to find a name for the relationship with rdf:about "${relationship['rdf:about']}".
                                 Please provide a name via the rdfs:label annotation.`));
                         }
                     }
@@ -537,9 +557,9 @@ export default class ContainerImport {
                 }
             }
 
-            // Add inheritance relationship to relationship map
-            relationshipMap.set('inheritance', {
-                name: 'inheritance',
+            // Add inherits relationship to relationship map
+            relationshipMap.set('inherits', {
+                name: 'inherits',
                 description: 'Identifies the parent of the entity.',
             });
 
@@ -555,14 +575,19 @@ export default class ContainerImport {
 
                 // if a rdfs:label was not provided, attempt to grab the name via the rdf:about
                 if (typeof dpName === 'undefined') {
-                    const aboutSplit = dataProperty['rdf:about'].split('#')
+                    const aboutSplit = dataProperty['rdf:about'].split('#');
+                    const aboutSplitSlash = dataProperty['rdf:about'].split('/');
 
                     if (aboutSplit.length > 1) {
                         dpName = aboutSplit[1]
+                    } else if (aboutSplitSlash.length > 1) {
+                        dpName = aboutSplit[aboutSplitSlash.length - 1];
+                    } else if (dataProperty['rdf:about'] != null && dataProperty['rdf:about'] !== '') {
+                        dpName = dataProperty['rdf:about'];
                     } else {
-                        // if we still couldn't find a name this way, we can't provide a name for this relationship
+                        // if we still couldn't find a name this way, we can't provide a name for this data property
                         // provide a useful error and return
-                        resolve(Result.Failure(`Unable to find a name for the data property with rdf:about ${dataProperty['rdf:about']}.
+                        resolve(Result.Failure(`Unable to find a name for the data property with rdf:about "${dataProperty['rdf:about']}".
                                 Please provide a name via the rdfs:label annotation.`));
                     }
                 }
@@ -654,7 +679,7 @@ export default class ContainerImport {
 
                 const allRelationshipPairNames: string[] = [];
 
-                // prepare inheritance relationship pairs
+                // prepare inherits relationship pairs
                 classListMap.forEach((thisClass: MetatypeExtendT) => {
                     // don't add parent relationship for root entity
                     if (thisClass.parent_id && !/owl#Thing/.exec(thisClass.parent_id)) {
@@ -939,12 +964,17 @@ export default class ContainerImport {
                 });
 
                 const propertyPromises: Promise<Result<boolean>>[] = [];
+
+                // declare structures to hold metatype keys and relationship pairs for cache invalidation
+                const metatypeKeys: MetatypeKey[] = []
+                const relationshipPairs: MetatypeRelationshipPair[] = []
+
                 // Add metatype keys (properties) and relationship pairs
                 classListMap.forEach((thisClass: MetatypeExtendT) => {
                     const updateRelationships: MetatypeRelationshipPair[] = [];
 
                     // Add relationship to parent class
-                    const relationship = relationshipMap.get('inheritance');
+                    const relationship = relationshipMap.get('inherits');
                     // Don't add parent relationship for root entity
                     if (thisClass.parent_id && !/owl#Thing/.exec(thisClass.parent_id)) {
                         const relationshipName = thisClass.name + ' : child of : ' + classIDMap.get(thisClass.parent_id).name;
@@ -966,6 +996,7 @@ export default class ContainerImport {
                             updateRelationships.push(data);
                         } else {
                             propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, [data]));
+                            relationshipPairs.push(data);
                         }
                     }
 
@@ -1026,6 +1057,7 @@ export default class ContainerImport {
                                 updateKeys.push(data);
                             } else {
                                 propertyPromises.push(metatypeKeyRepo.bulkSave(user, [data]));
+                                metatypeKeys.push(data);
                             }
                         } else if (property.property_type === 'relationship') {
                             const relationship = relationshipIDMap.get(property.value);
@@ -1049,19 +1081,36 @@ export default class ContainerImport {
                                 updateRelationships.push(data);
                             } else {
                                 propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, [data]));
+                                relationshipPairs.push(data);
                             }
                         }
                     }
 
                     if (updateKeys.length > 0) {
                         propertyPromises.push(metatypeKeyRepo.bulkSave(user, updateKeys));
+                        metatypeKeys.concat(updateKeys);
                     }
 
                     if (updateRelationships.length > 0) {
                         propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, updateRelationships));
+                        relationshipPairs.concat(updateRelationships);
                     }
                 });
                 const propertyResults: Result<boolean>[] = await Promise.all(propertyPromises);
+
+                // Invalidate cache for this container as a final step
+                for (const metatype of metatypes) {
+                    // this will also invalidate cached keys for these metatypes
+                    if (metatype.id) void metatypeRepo.deleteCached(metatype.id);
+                }
+                for (const metatypeRelationship of metatypeRelationships) {
+                    if (metatypeRelationship.id) void metatypeRelationshipRepo.deleteCached(metatypeRelationship.id);
+                }
+
+                for (const relationshipPair of relationshipPairs) {
+                    if (relationshipPair.id) void metatypeRelationshipPairRepo.deleteCached(relationshipPair.id);
+                }
+
                 for (const propResult of propertyResults) {
                     if (propResult.isError && !update) {
                         const rollback = await this.rollbackOntology(container)
