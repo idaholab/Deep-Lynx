@@ -34,10 +34,6 @@ async function Start(): Promise<any> {
                 interval: Config.export_data_interval, // exports take longer to process, more time in-between instances is needed
             },
             {
-                name: 'orphan_edge_linker', // will run orphan_edge_linker.js
-                interval: Config.edge_linker_interval,
-            },
-            {
                 name: 'data_source_emitter', // will run data_source_emitter.js - puts data sources on queue to run
                 interval: '1m',
                 timeout: 0,

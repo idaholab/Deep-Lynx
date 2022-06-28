@@ -74,7 +74,6 @@ export class Config {
 
     private readonly _data_source_receive_buffer: number;
     private readonly _data_source_processing_interval: string;
-    private readonly _edge_linker_interval: string;
     private readonly _data_source_processing_concurrency: number;
     private readonly _data_source_processing_batch_size: number;
 
@@ -179,7 +178,6 @@ export class Config {
 
         this._data_source_receive_buffer = process.env.DATA_SOURCE_RECEIVE_BUFFER ? parseInt(process.env.DATA_SOURCE_RECEIVE_BUFFER, 10) : 1000;
         this._data_source_processing_interval = process.env.DATA_SOURCE_PROCESSING_INTERVAL || '1m';
-        this._edge_linker_interval = process.env.EDGE_LINKER_INTERVAL || '1m';
         this._data_source_processing_concurrency = process.env.DATA_SOURCE_PROCESSING_CONCURRENCY
             ? parseInt(process.env.DATA_SOURCE_PROCESSING_CONCURRENCY, 10)
             : 4;
@@ -338,10 +336,6 @@ export class Config {
 
     get data_source_interval(): string {
         return this._data_source_processing_interval;
-    }
-
-    get edge_linker_interval(): string {
-        return this._edge_linker_interval;
     }
 
     get data_source_concurrency(): number {
