@@ -284,7 +284,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return Promise.resolve(set);
     }
 
-    private async deleteCached(id: string): Promise<boolean> {
+    async deleteCached(id: string): Promise<boolean> {
         const deleted = await Cache.del(`${MetatypeRelationshipPairMapper.tableName}:${id}`);
         if (!deleted) Logger.error(`unable to remove metatype relationship pair ${id} from cache`);
 

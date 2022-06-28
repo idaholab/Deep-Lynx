@@ -20,6 +20,7 @@ module.exports = {
     '@typescript-eslint/consistent-type-assertions': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
     'no-mixed-spaces-and-tabs': 'off',
-    'no-console': 'off'
+    'no-console': 'off',
+    '@typescript-eslint/no-this-alias': 'off'
   }
 };

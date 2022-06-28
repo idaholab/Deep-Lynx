@@ -9,4 +9,5 @@ module.exports = {
             poll: true,
         },
     },
+    runtimeCompiler: true
 };
