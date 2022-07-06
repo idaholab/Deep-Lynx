@@ -36,6 +36,8 @@ tags:
     description: 'Metatype Relationship pairs represent the actual connection between two Metatypes. Properties of that relationship are attached to the Metatype Relationship. Again, this only represents the connection between two Metatypes.'
   - name: Data Sources
     description: 'This set of endpoints allows the user to create and manage data sources. As of 3/26/2020 only the HTTP data source type is supported, and that''s still under construction. Each endpoint functions - but there is no guaranteed functionality with regards to data sources beyond this point.'
+  - name: Data Targets
+    description: 'This set of endpoints allows the user to create and manage data targets. As of 6/1/2022 only the HTTP data target type is supported, and that''s still under construction. Each endpoint functions - but there is no guaranteed functionality with regards to data targets beyond this point.'
   - name: Data Export
     description: 'These endpoints have to do with the export functionality. A snapshot of the contained data can be exported to numerous different data sources. However, only Gremlin enabled Graph databases are supported for export.'
   - name: Users
@@ -983,6 +985,7 @@ paths:
       parameters: []
       tags:
         - Graph
+        - TimeSeries
   '/containers/{container_id}/graphs/nodes/metatype/{metatype_id}':
     get:
       tags:
@@ -2247,6 +2250,79 @@ paths:
                 $ref: '#/components/schemas/CreateDataSourcesResponse'
       deprecated: false
       x-codegen-request-body-name: Body
+  '/containers/{container_id}/export/datatargets':
+    get:
+      summary: List Data Targets
+      operationId: ListDatTargets
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListDataTargetsResponse'
+        '301':
+          description: Moved Permanently
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+      deprecated: false
+      description: List the datatargets for the container.
+      tags:
+        - Data Targets
+    post:
+      summary: Create Data Target
+      description: Create new datatarget. Supported data target types are `http` and `standard`.
+      operationId: CreateDataTarget
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateDataTargetsResponse'
+      deprecated: false
+      x-codegen-request-body-name: Body
+      tags:
+        - Data Targets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDataTargetRequest'
+            examples:
+              example-1:
+                value:
+                  name: testing data target
+                  adapter_type: http OR standard
+                  active: true
+                  config:
+                    endpoint: ''
+                    auth_method: basic
+                    username: test
+                    password: test
+                    grapgql_query: '{ __type(name: "Requirement"){ name fields{ name } } }'
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
   '/containers/{container_id}/import/datasources/{data_source_id}':
     get:
       tags:
@@ -2345,6 +2421,111 @@ paths:
               schema:
                 $ref: '#/components/schemas/Generic200Response'
       deprecated: false
+  '/containers/{container_id}/export/datatargets/{data_target_id}':
+    get:
+      summary: Retrieve Data Target
+      description: Retrieve a single data target by ID.
+      operationId: RetrieveDataTarget
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_target_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDataTargetResponse'
+      deprecated: false
+      tags:
+        - Data Targets
+    put:
+      tags:
+        - Data Targets
+      summary: Set Data Target Configuration
+      description: Updates a data target's configuration in storage. Note that this request body's structure must match that of the data target's adapter type.
+      operationId: SetDataTargetConfiguration
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_target_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDataTargetConfig'
+            examples: {}
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateDataTargetResponse'
+      deprecated: false
+      x-codegen-request-body-name: Body
+    delete:
+      summary: Archive Data Target
+      description: 'Archive a data target, with options to permanently remove it.'
+      operationId: ArchiveDataTarget
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_target_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - schema:
+            type: string
+          in: query
+          name: archive
+          description: Set to true to archive the data target.
+        - schema:
+            type: string
+          in: query
+          name: forceDelete
+          description: Set to true to force deletion of the data target.
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      deprecated: false
+      tags:
+        - Data Targets
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: data_target_id
+        in: path
+        required: true
   '/containers/{container_id}/import/datasources/{data_source_id}/active':
     post:
       tags:
@@ -2396,6 +2577,68 @@ paths:
               schema:
                 $ref: '#/components/schemas/Generic200Response'
       deprecated: false
+  '/containers/{container_id}/export/datatargets/{data_target_id}/active':
+    post:
+      summary: Set Data Target Active
+      description: Sets a data target active.
+      operationId: SetDataTargetActive
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_target_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      deprecated: false
+      tags:
+        - Data Targets
+    delete:
+      summary: Set Data Target Inactive
+      description: Sets a data target inactive.
+      operationId: SetDataTargetInactive
+      parameters:
+        - name: container_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data_target_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generic200Response'
+      deprecated: false
+      tags:
+        - Data Targets
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: data_target_id
+        in: path
+        required: true
   '/containers/{container_id}/import/datasources/{data_source_id}/imports':
     get:
       tags:
@@ -4960,6 +5203,16 @@ components:
             $ref: '#/components/schemas/DataSource'
         isError:
           type: boolean
+    ListDataTargetsResponse:
+      title: ListDataTargetsResponse
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataTarget'
+        isError:
+          type: boolean
     CreateDataSourcesResponse:
       title: CreateDataSourcesResponse
       type: object
@@ -4968,6 +5221,35 @@ components:
           $ref: '#/components/schemas/DataSource'
         isError:
           type: boolean
+    CreateDataTargetsResponse:
+      title: CreateDataTargetsResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/DataTarget'
+        isError:
+          type: boolean
+      x-examples:
+        example-1:
+          value:
+            adapter_type: string
+            status: string
+            active: true
+            config:
+              kind: string
+              data_type: string
+              data_format: string
+            id: string
+            container_id: string
+            name: string
+            data_format: string
+            created_at: string
+            modified_at: string
+            created_by: string
+            modified_by: string
+            archived: true
+            status_message: string
+          isError: true
     GetDataSourceResponse:
       title: GetDataSourceResponse
       type: object
@@ -4976,12 +5258,28 @@ components:
           $ref: '#/components/schemas/DataSource'
         isError:
           type: boolean
+    GetDataTargetResponse:
+      title: GetDataTargetResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/DataTarget'
+        isError:
+          type: boolean
     UpdateDataSourceResponse:
       title: UpdateDataSourceResponse
       type: object
       properties:
         value:
           $ref: '#/components/schemas/DataSource'
+        isError:
+          type: boolean
+    UpdateDataTargetResponse:
+      title: UpdateDataTargetResponse
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/DataTarget'
         isError:
           type: boolean
     ListDataSourceImportsResponse:
@@ -5631,6 +5929,41 @@ components:
           $ref: '#/components/schemas/CreateDataSourceConfig'
       required:
         - name
+      x-examples: {}
+    CreateDataTargetRequest:
+      title: CreateDataTargetRequest
+      type: object
+      example:
+        name: testing data source
+        adapter_type: http OR manual
+        active: true
+        config:
+          endpoint: ''
+          auth_method: basic
+          username: test
+          password: test
+      properties:
+        name:
+          type: string
+        adapter_type:
+          type: string
+        active:
+          type: boolean
+        config:
+          $ref: '#/components/schemas/CreateDataTargetConfig'
+      required:
+        - name
+      x-examples:
+        example-1:
+          name: testing data target
+          adapter_type: http OR standard
+          active: true
+          config:
+            endpoint: ''
+            auth_method: basic
+            username: test
+            password: test
+            grapgql_query: '{ __type(name: "Requirement"){ name fields{ name } } }'
     CreateDataSourceConfig:
       title: CreateDataSourceConfig
       type: object
@@ -5648,6 +5981,32 @@ components:
           type: string
         password:
           type: string
+    CreateDataTargetConfig:
+      title: CreateDataTargetConfig
+      type: object
+      example:
+        endpoint: ''
+        auth_method: basic
+        username: test
+        password: test
+      properties:
+        endpoint:
+          type: string
+        auth_method:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+        graphql_query:
+          type: string
+      x-examples:
+        example-1:
+          endpoint: ''
+          auth_method: basic
+          username: test
+          password: test
+          grapgql_query: '{ __type(name: "Requirement"){ name fields{ name } } }'
     CreateDataExportRequest:
       title: CreateDataExportRequest
       required:
@@ -6402,8 +6761,70 @@ components:
         - active
         - container_id
         - name
+    DataTarget:
+      description: ''
+      type: object
+      x-examples: {}
+      properties:
+        adapter_type:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          minLength: 1
+        active:
+          type: boolean
+        config:
+          $ref: '#/components/schemas/DataTargetConfig'
+        id:
+          type: string
+          minLength: 1
+        container_id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        data_format:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          minLength: 1
+        modified_at:
+          type: string
+          minLength: 1
+        created_by:
+          type: string
+          minLength: 1
+        modified_by:
+          type: string
+          minLength: 1
+        archived:
+          type: boolean
+        status_message:
+          type: string
+          nullable: true
+      required:
+        - adapter_type
+        - active
+        - container_id
+        - name
     DataSourceConfig:
       title: DataSourceConfig
+      type: object
+      properties:
+        kind:
+          type: string
+          minLength: 1
+        data_type:
+          type: string
+          minLength: 1
+        data_format:
+          type: string
+          minLength: 1
+    DataTargetConfig:
+      title: DataTargetConfig
       type: object
       properties:
         kind:

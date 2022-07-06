@@ -67,7 +67,7 @@ export default class DataSourceRoutes {
         if (req.container && req.dataSource && req.dataSource.DataSourceRecord) {
             const currentUser = req.currentUser!;
 
-            Object.assign(req.dataSource.DataSourceRecord, req.body as object);
+            Object.assign(req.dataSource.DataSourceRecord!, req.body as object);
 
             dataSourceRepo
                 .save(req.dataSource, currentUser)
@@ -77,7 +77,7 @@ export default class DataSourceRoutes {
                         return;
                     }
 
-                    Result.Success(req.dataSource!.DataSourceRecord).asResponse(res);
+                    Result.Success(req.dataSource?.DataSourceRecord).asResponse(res);
                 })
                 .catch((err) => {
                     Result.Error(err).asResponse(res);

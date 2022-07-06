@@ -98,6 +98,7 @@ export class Config {
     private readonly _emit_events: boolean;
     private readonly _process_queue_name: string;
     private readonly _data_sources_queue_name: string;
+    private readonly _data_targets_queue_name: string;
     private readonly _events_queue_name: string;
     private readonly _edge_insertion_queue_name: string;
     private readonly _edge_insertion_backoff_multiplier: number;
@@ -209,6 +210,7 @@ export class Config {
         this._emit_events = process.env.EMIT_EVENTS === 'true' || false;
         this._process_queue_name = process.env.PROCESS_QUEUE_NAME || 'process';
         this._data_sources_queue_name = process.env.DATA_SOURCES_QUEUE_NAME || 'data_sources';
+        this._data_targets_queue_name = process.env.DATA_TARGETS_QUEUE_NAME || 'data_targets';
         this._events_queue_name = process.env.EVENTS_QUEUE_NAME || 'events';
         this._edge_insertion_queue_name = process.env.EDGE_INSERTION_QUEUE_NAME || 'edge_insertion';
 
@@ -496,6 +498,10 @@ export class Config {
 
     get data_sources_queue(): string {
         return this._data_sources_queue_name;
+    }
+
+    get data_targets_queue(): string {
+        return this._data_targets_queue_name;
     }
 
     get edge_insertion_queue(): string {

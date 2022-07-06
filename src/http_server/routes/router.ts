@@ -35,6 +35,7 @@ import {
     eventActionContext,
     eventActionStatusContext,
     ontologyVersionContext,
+    dataTargetContext,
     serviceUserContext,
     activeOntologyVersionContext,
 } from '../middleware';
@@ -49,6 +50,7 @@ import Config from '../../services/config';
 import {SetSamlAdfs} from '../authentication/saml/saml-adfs';
 import UserRoutes from './access_management/user_routes';
 import DataSourceRoutes from './data_warehouse/import/data_source_routes';
+import DataTargetRoutes from './data_warehouse/export/data_target_routes';
 import {SetJWTAuthMethod} from '../authentication/jwt';
 import {SetLocalAuthMethod} from '../authentication/local';
 import QueryRoutes from './data_warehouse/data/legacy_query/query_routes';
@@ -115,6 +117,7 @@ export class Router {
         ContainerRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         ExportRoutes.mount(this.app, [authenticateRoute(), containerContext(), exporterContext(), currentUser()]);
         DataSourceRoutes.mount(this.app, [authenticateRoute(), containerContext(), dataSourceContext(), currentUser()]);
+        DataTargetRoutes.mount(this.app, [authenticateRoute(), containerContext(), dataTargetContext(), currentUser()]);
         TypeMappingRoutes.mount(this.app, [
             authenticateRoute(),
             containerContext(),
