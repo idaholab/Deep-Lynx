@@ -57,12 +57,11 @@
               small
               class="mr-2"
               @click="viewItem(item)"
-              v-if="dataUnexpired(item)"
           >
             mdi-eye
           </v-icon>
           <delete-data-import-dialog :containerID="containerID" :dataImport="item" :icon="true" @dataImportDeleted="listImports"></delete-data-import-dialog>
-          <reprocess-data-import-dialog :containerID="containerID" :dataImport="item" :icon="true" @dataImportReprocessed="listImports" v-if="dataUnexpired(item)"></reprocess-data-import-dialog>
+          <reprocess-data-import-dialog :containerID="containerID" :dataImport="item" :icon="true" @dataImportReprocessed="listImports"></reprocess-data-import-dialog>
         </template>
       </v-data-table>
     </div>
