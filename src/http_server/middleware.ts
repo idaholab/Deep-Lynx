@@ -21,6 +21,7 @@ import ExporterRepository from '../data_access_layer/repositories/data_warehouse
 import ImportRepository from '../data_access_layer/repositories/data_warehouse/import/import_repository';
 import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import DataSourceRepository from '../data_access_layer/repositories/data_warehouse/import/data_source_repository';
+import DataTargetRepository from '../data_access_layer/repositories/data_warehouse/export/data_target_repository';
 import FileRepository from '../data_access_layer/repositories/data_warehouse/data/file_repository';
 import TaskRepository from '../data_access_layer/repositories/task_runner/task_repository';
 import EventActionRepository from '../data_access_layer/repositories/event_system/event_action_repository';
@@ -762,6 +763,36 @@ export function dataSourceContext(): any {
                 }
 
                 req.dataSource = result.value;
+                next();
+            })
+            .catch((error) => {
+                resp.status(500).json(error);
+                return;
+            });
+    };
+}
+
+// dataTarget context will attempt to fetch a data target interface by id specified by the
+// id query parameter. If one is fetched it will pass it on in request context.
+// route must contain the param labeled "dataTargetID"
+export function dataTargetContext(): any {
+    return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
+        // if we don't have an id , don't fail, just pass without action
+        if (!req.params.dataTargetID) {
+            next();
+            return;
+        }
+
+        const repo = new DataTargetRepository();
+
+        repo.findByID(req.params.dataTargetID)
+            .then((result) => {
+                if (result.isError) {
+                    resp.status(result.error?.errorCode!).json(result);
+                    return;
+                }
+
+                req.dataTarget = result.value;
                 next();
             })
             .catch((error) => {
