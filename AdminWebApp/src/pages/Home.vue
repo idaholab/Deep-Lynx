@@ -556,7 +556,7 @@ export default class Home extends Vue {
             this.setActiveComponent(this.view)
           }
         })
-        .catch(e =>this.$router.push({name: "ContainerSelect"})
+        .catch(() =>this.$router.push({name: "ContainerSelect"})
 )
 
     this.$client.listMetatypes(this.containerID as string, {
