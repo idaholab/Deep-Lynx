@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue, Watch} from "vue-property-decorator";
+import {Component, Prop, Vue } from "vue-property-decorator";
 // @ts-ignore
 import { Plotly } from "vue-plotly"
 

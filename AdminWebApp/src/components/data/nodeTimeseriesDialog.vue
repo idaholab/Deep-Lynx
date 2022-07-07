@@ -282,7 +282,7 @@ export default class NodeTimeseriesDialog extends Vue {
     if(this.transformation && this.transformation.keys) {
       const labels: string[] = []
 
-      this.transformation.keys.forEach((key, i) => {
+      this.transformation.keys.forEach((key) => {
         if(key.is_primary_timestamp) return
 
         labels.push(key.column_name!)
