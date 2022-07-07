@@ -215,19 +215,22 @@ export default class TypeTransformation extends BaseDomainClass {
     destination_data_source_id?: string;
 
     // tabular data specific fields
-    @ValidateIf((o) => typeof o.metatype_relationship_pair_id === 'undefined' && typeof o.metatype_id === 'undefined')
+    @ValidateIf((o) => o.type === 'timeseries')
+    @IsOptional()
     @IsString()
     tab_data_source_id?: string;
 
-    @ValidateIf((o) => typeof o.metatype_relationship_pair_id === 'undefined' && typeof o.metatype_id === 'undefined')
+    @ValidateIf((o) => o.type === 'timeseries')
     @IsString()
     tab_metatype_id?: string;
 
-    @ValidateIf((o) => typeof o.metatype_relationship_pair_id === 'undefined' && typeof o.metatype_id === 'undefined' && typeof o.tab_node_key === 'undefined')
+    @ValidateIf((o) => o.type === 'timeseries')
+    @IsOptional()
     @IsString()
     tab_node_id?: string;
 
-    @ValidateIf((o) => typeof o.metatype_relationship_pair_id === 'undefined' && typeof o.metatype_id === 'undefined' && typeof o.tab_node_id === 'undefined')
+    @ValidateIf((o) => o.type === 'timeseries')
+    @IsOptional()
     @IsString()
     tab_node_key?: string;
 

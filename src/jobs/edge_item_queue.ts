@@ -49,7 +49,7 @@ void PostgresAdapter.Instance.init()
                     }
                 });
 
-                queue.Consume(Config.process_queue, destination);
+                queue.Consume(Config.edge_insertion_queue, destination);
             })
             .catch((e) => {
                 void PostgresAdapter.Instance.close();
