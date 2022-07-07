@@ -1,5 +1,6 @@
 <template>
   <div>
+    <error-banner :message="errorMessage"></error-banner>
     <v-data-table
       :headers="headers"
       :items="users"
@@ -108,6 +109,7 @@
     toEdit: UserT | null = null
     selectedRole = ""
     roles = ["user", "editor", "admin"]
+    errorMessage = ''
 
     get headers() {
       return  [
@@ -126,7 +128,7 @@
         .then(users => {
           this.users = users
         })
-        .catch(e => console.log(e))
+        .catch(e => this.errorMessage = e)
     }
 
     clearNewUser() {
@@ -148,7 +150,7 @@
             this.selectedRole = roles[0]
           }
         })
-        .catch(e => console.log(e))
+        .catch(e => this.errorMessage = e)
       }
     }
 
@@ -165,17 +167,15 @@
           container_id: this.containerID,
           role_name: role
         }
-        console.log("here")
 
         this.$client.assignRoleToUser(this.containerID, assignRolePayload)
         .then(() => {
-          console.log("assigned")
 
           if(this.toEdit){
             this.retrieveUserRoles(this.toEdit)
           }
         })
-        .catch(e => console.log(e))
+        .catch(e => this.errorMessage = e)
       }
 
     }

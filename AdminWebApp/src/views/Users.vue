@@ -1,5 +1,6 @@
 <template>
   <div>
+    <error-banner :message="errorMessage"></error-banner>
     <v-data-table
       :headers="headers"
       :items="users"
@@ -119,6 +120,7 @@
     selectedContainer: ContainerT | null = null
     users: UserT[] = []
     containers: ContainerT[] = []
+    errorMessage = ""
 
     toEdit: UserT | null = null
     selectedRole = ""
@@ -143,7 +145,7 @@
       .then(users => {
         this.users = users
       })
-      .catch(e => console.log(e))
+      .catch(e => this.errorMessage = e)
     }
 
     refreshContainers() {
@@ -151,7 +153,7 @@
       .then(containers => {
         this.containers = containers
       })
-      .catch(e => console.log(e))
+      .catch(e => this.errorMessage = e)
     }
 
     retrieveUserRoles() {
@@ -162,7 +164,7 @@
             this.selectedRole = roles[0]
           }
         })
-        .catch(e => console.log(e))
+        .catch(e => this.errorMessage = e)
       }
     }
 
@@ -200,7 +202,7 @@
         .then(() => {
           this.retrieveUserRoles()
         })
-        .catch(e => console.log(e))
+        .catch(e => this.errorMessage = e)
       }
     }
 

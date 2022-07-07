@@ -1,5 +1,6 @@
 <template>
   <div>
+    <error-banner :message="errorMessage"></error-banner>
     <v-data-table
       :headers="headers"
       :items="users"
@@ -45,6 +46,7 @@
     readonly containerID!: string;
 
     dialog = false
+    errorMessage = ""
     users: UserT[] = []
 
     get headers() {
@@ -64,7 +66,7 @@
       .then(users => {
         this.users = users
       })
-      .catch(e => console.log(e))
+      .catch(e => this.errorMessage = e)
     }
   }
 </script>
