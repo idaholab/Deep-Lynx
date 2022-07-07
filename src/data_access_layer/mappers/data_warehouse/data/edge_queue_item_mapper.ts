@@ -102,6 +102,6 @@ export default class EdgeQueueItemMapper extends Mapper {
     }
 
     public needRetriedStreamingStatement(): string {
-        return `SElECT FROM edge_queue_items WHERE next_attempt_at < NOW()`;
+        return `SElECT * FROM edge_queue_items WHERE next_attempt_at < NOW()`;
     }
 }

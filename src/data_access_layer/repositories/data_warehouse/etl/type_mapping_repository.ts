@@ -407,6 +407,13 @@ export default class TypeMappingRepository extends Repository implements Reposit
                 typeMapping.transformations[i].id = undefined;
                 typeMapping.transformations[i].container_id = undefined;
                 typeMapping.transformations[i].data_source_id = undefined;
+
+                typeMapping.transformations[i].origin_metatype_id = undefined;
+                typeMapping.transformations[i].origin_data_source_id = undefined;
+                typeMapping.transformations[i].destination_metatype_id = undefined;
+                typeMapping.transformations[i].destination_data_source_id = undefined;
+                typeMapping.transformations[i].tab_data_source_id = undefined;
+                typeMapping.transformations[i].tab_metatype_id = undefined;
                 typeMapping.transformations[i].shape_hash = undefined;
 
                 typeMapping.transformations[i].created_by = undefined;

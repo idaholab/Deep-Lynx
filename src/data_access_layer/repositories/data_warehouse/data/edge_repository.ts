@@ -141,10 +141,12 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         // we try to do as much of the initial processing in parallel as we can
         // while it's almost a pyramid of death, this allows us to decrease processing
         // time by a significant amount
-        for (const edge of edges) {
+        // eslint-disable-next-line @typescript-eslint/no-for-in-array
+        for (const i in edges) {
             operations.push(
                 new Promise((resolve) => {
-                    edge.validationErrors()
+                    edges[i]
+                        .validationErrors()
                         .then((errors) => {
                             if (errors) {
                                 resolve(Result.Failure(`validation for one or more edges failed ${errors.join(',')}`));
@@ -153,28 +155,26 @@ export default class EdgeRepository extends Repository implements RepositoryInte
 
                             // find and load the pair along with relationships so we can do property validation
                             this.#pairRepo
-                                .findByID(edge.relationship_pair_id, true)
+                                .findByID(edges[i].relationship_pair_id, true)
                                 .then((pair) => {
                                     if (pair.isError) {
                                         resolve(Result.Failure(`unable fetch relationship pair for edge ${pair.error?.error}`));
                                         return;
                                     }
 
-                                    edge.metatypeRelationshipPair = pair.value;
+                                    edges[i].metatypeRelationshipPair = pair.value;
 
-                                    edge.metatypeRelationshipPair
-                                        .relationship!.validateAndTransformProperties(edge.properties)
+                                    edges[i]
+                                        .metatypeRelationshipPair!.relationship!.validateAndTransformProperties(edges[i].properties)
                                         .then((transformed) => {
                                             if (transformed.isError) {
                                                 resolve(Result.Failure(`unable to validate properties for edge: ${transformed.error?.error}`));
                                                 return;
                                             }
 
-                                            edge.properties = transformed.value;
+                                            edges[i].properties = transformed.value;
 
-                                            resolve(Result.Success(true));
-
-                                            this.validateRelationship(edge, transaction)
+                                            this.validateRelationship(edges[i], transaction)
                                                 .then((valid) => {
                                                     if (valid.isError) {
                                                         resolve(Result.Failure(valid.error?.error!));
@@ -193,7 +193,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                 }),
             );
 
-            edge.id ? toUpdate.push(edge) : toCreate.push(edge);
+            edges[i].id ? toUpdate.push(edges[i]) : toCreate.push(edges[i]);
         }
 
         const completed = await Promise.all(operations);
