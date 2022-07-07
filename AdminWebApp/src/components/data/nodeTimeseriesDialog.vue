@@ -68,6 +68,7 @@
           </v-expansion-panel-content>
         </v-expansion-panel>
 
+        <!--
         <v-expansion-panel v-if="results.length > 0">
           <v-expansion-panel-header style="margin-bottom: 0px"><p class="text-overline" style="margin-bottom: 0px;"><strong>{{$t('timeseries.visualization')}}</strong></p></v-expansion-panel-header>
 
@@ -101,6 +102,7 @@
             <line-chart v-if="renderVisualization && selectedChart === 'line'" :x="d => new Date(parseInt(d.dateTime,10))" :y="getColumns()" :labels="selectedColumns" :data="results"></line-chart>
           </v-expansion-panel-content>
         </v-expansion-panel>
+        -->
 
       </v-expansion-panels>
 
