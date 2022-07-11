@@ -236,13 +236,6 @@ describe('An Edge Repository', async () => {
                 origin_id: nodes[0].id,
                 destination_id: nodes[1].id,
             }),
-            new Edge({
-                container_id: containerID,
-                metatype_relationship_pair: pair.id!,
-                properties: payload,
-                origin_id: nodes[0].id,
-                destination_id: nodes[1].id,
-            }),
         ];
 
         // normal save first
@@ -254,7 +247,6 @@ describe('An Edge Repository', async () => {
         });
 
         edges[0].properties = updatePayload;
-        edges[1].properties = updatePayload;
 
         saved = await edgeRepo.bulkSave(user, edges);
         expect(saved.isError).false;
@@ -267,8 +259,7 @@ describe('An Edge Repository', async () => {
         saved = await edgeRepo.bulkSave(user, edges);
         expect(saved.isError).true;
 
-        await edgeRepo.delete(edges[0]);
-        return edgeRepo.delete(edges[1]);
+        return edgeRepo.delete(edges[0]);
     });
 });
 

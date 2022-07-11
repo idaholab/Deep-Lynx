@@ -1,29 +1,29 @@
-import Logger from '../../../../services/logger';
-import PostgresAdapter from '../../../../data_access_layer/mappers/db_adapters/postgres/postgres';
-import MetatypeKeyMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
-import MetatypeMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
+import Logger from '../../services/logger';
+import PostgresAdapter from '../../data_access_layer/mappers/db_adapters/postgres/postgres';
+import MetatypeKeyMapper from '../../data_access_layer/mappers/data_warehouse/ontology/metatype_key_mapper';
+import MetatypeMapper from '../../data_access_layer/mappers/data_warehouse/ontology/metatype_mapper';
 import faker from 'faker';
 import {expect} from 'chai';
-import NodeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/node_mapper';
+import NodeMapper from '../../data_access_layer/mappers/data_warehouse/data/node_mapper';
 import {graphql, GraphQLSchema} from 'graphql';
-import Container from '../../../../domain_objects/data_warehouse/ontology/container';
-import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
-import ContainerMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
-import Node from '../../../../domain_objects/data_warehouse/data/node';
-import {User} from '../../../../domain_objects/access_management/user';
-import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
-import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
-import MetatypeRelationshipMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
-import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
-import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
-import MetatypeRelationshipKeyMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper';
-import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
-import MetatypeRelationshipPairMapper from '../../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
-import EdgeMapper from '../../../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
-import Edge from '../../../../domain_objects/data_warehouse/data/edge';
-import GraphQLSchemaGenerator from '../../../../graphql/schema';
+import Container from '../../domain_objects/data_warehouse/ontology/container';
+import Metatype from '../../domain_objects/data_warehouse/ontology/metatype';
+import ContainerMapper from '../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
+import MetatypeKey from '../../domain_objects/data_warehouse/ontology/metatype_key';
+import Node from '../../domain_objects/data_warehouse/data/node';
+import {User} from '../../domain_objects/access_management/user';
+import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
+import DataSourceMapper from '../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
+import DataSourceRecord from '../../domain_objects/data_warehouse/import/data_source';
+import MetatypeRelationshipMapper from '../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
+import MetatypeRelationship from '../../domain_objects/data_warehouse/ontology/metatype_relationship';
+import MetatypeRelationshipKey from '../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
+import MetatypeRelationshipKeyMapper from '../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_key_mapper';
+import MetatypeRelationshipPair from '../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
+import MetatypeRelationshipPairMapper from '../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
+import EdgeMapper from '../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
+import Edge from '../../domain_objects/data_warehouse/data/edge';
+import GraphQLSchemaGenerator from '../../graphql/schema';
 
 describe('Using a new GraphQL Query on edges we', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -421,7 +421,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
             source: `{
                 relationships{
                     forwards(
-                        name: "Timbo Crooks Jr."
+                        name: {operator: "eq", value: "Timbo Crooks Jr."}
                     ){
                         name
                         _record{
@@ -455,7 +455,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
                 relationships{
                     forwards(
                         _record: {
-                            destination_id: "${nodes[3].id}"
+                            destination_id: {operator: "eq", value: "${nodes[3].id}"}
                         }
                     ){
                         name
