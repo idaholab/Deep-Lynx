@@ -20,7 +20,7 @@ import DataTargetRepository, {DataTargetFactory} from '../../../data_access_laye
 import ExportRepository from '../../../data_access_layer/repositories/data_warehouse/export/export_repository';
 import MetatypeRelationship from '../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import MetatypeRelationshipMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
-import Cache from "../../../services/cache/cache"
+import Cache from '../../../services/cache/cache';
 import cache from '../../../services/cache/cache';
 
 // some general tests on data targets that aren't specific to the implementation
@@ -38,7 +38,7 @@ describe('An HTTP Data Target can', async () => {
             this.skip();
         }
 
-        if (process.env.HTTP_DATA_TARGET_URL === '') {
+        if (process.env.HTTP_DATA_TARGET_URL === '' || !process.env.HTTP_DATA_TARGET_URL) {
             Logger.debug('skipping HTTP data target tests, no data target URL');
             this.skip();
         }
@@ -94,7 +94,6 @@ describe('An HTTP Data Target can', async () => {
         const mkMapper = MetatypeKeyMapper.Instance;
         const mrMapper = MetatypeRelationshipMapper.Instance;
 
-
         const metatypeResult = await mMapper.Create(
             'test suite',
             new Metatype({
@@ -108,7 +107,6 @@ describe('An HTTP Data Target can', async () => {
         expect(metatypeResult.value).not.empty;
         metatype = metatypeResult.value;
 
-        
         const testKeys = [...test_keys];
         testKeys.forEach((key) => (key.metatype_id = metatype.id));
         const keys = await mkMapper.BulkCreate('test suite', testKeys);
@@ -135,16 +133,16 @@ describe('An HTTP Data Target can', async () => {
                 name: 'features',
                 description: 'song/album features musician/band',
             }),
-        ]
+        ];
 
         const relResults = await mrMapper.BulkCreate('test suite', relList);
         expect(relResults.isError).false;
         expect(relResults.value).not.empty;
         expect(relResults.value.length).eq(4);
-    
+
         const nodeList = [];
-        const genres = ['action', 'comedy', 'romance', 'scifi']
-        function getYear(){
+        const genres = ['action', 'comedy', 'romance', 'scifi'];
+        function getYear() {
             return Math.floor(Math.random() * (2020 - 1950) + 1950);
         }
 
@@ -159,20 +157,17 @@ describe('An HTTP Data Target can', async () => {
                 },
                 data_source_id: dataSourceID,
                 original_data_id: faker.name.findName(),
-            })
+            });
             nodeList.push(node);
-        };
+        }
 
-        const nodeResults = await nMapper.BulkCreateOrUpdateByCompositeID(
-            'test suite',
-            nodeList
-        );
+        const nodeResults = await nMapper.BulkCreateOrUpdateByCompositeID('test suite', nodeList);
 
         expect(nodeResults.isError, metatypeResult.error?.error).false;
         expect(nodeResults.value.length).eq(4);
         nodes = nodeResults.value;
 
-        const movie = nodes.slice(0, 4)
+        const movie = nodes.slice(0, 4);
         expect(movie.length).eq(4);
         expect(movie[0].metatype!.id).eq(metatype.id);
         expect(movie[3].metatype!.id).eq(metatype.id);
@@ -183,15 +178,15 @@ describe('An HTTP Data Target can', async () => {
             username: process.env.HTTP_DATA_TARGET_USERNAME,
             password: process.env.HTTP_DATA_TARGET_PASSWORD,
             token: process.env.HTTP_DATA_TARGET_TOKEN,
-            poll_interval: "1 second", // don't want to have this poll more than once
-            graphql_query: "{metatypes {Movie {name}}}"
+            poll_interval: '1 second', // don't want to have this poll more than once
+            graphql_query: '{metatypes {Movie {name}}}',
         });
 
         return Promise.resolve();
     });
 
     after(async () => {
-        if (process.env.CORE_DB_CONNECTION_STRING !== '' && process.env.HTTP_DATA_TARGET_URL !== '') {
+        if (process.env.CORE_DB_CONNECTION_STRING !== '' && process.env.HTTP_DATA_TARGET_URL !== '' && process.env.HTTP_DATA_TARGET_URL) {
             await UserMapper.Instance.Delete(user.id!);
             await DataSourceMapper.Instance.Delete(dataSourceID);
             await ContainerMapper.Instance.Delete(containerID);
@@ -215,7 +210,7 @@ describe('An HTTP Data Target can', async () => {
                 data_format: 'json',
             }),
         );
-        
+
         let results = await dataTargetRepo.save(target!, user);
         expect(results.isError).false;
         expect(target!.DataTargetRecord?.id).not.undefined;
