@@ -712,6 +712,7 @@ export default class DataMapping extends Vue {
   // allows the user to potentially review imported type mappings
   mappingsImport(results: ResultT<any>[]) {
     this.importedMappingResults = results
+    this.$router.go(0);
     this.loadTypeMappings()
   }
 

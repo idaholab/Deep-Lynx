@@ -4,7 +4,7 @@ import TypeMapping from '../../../../domain_objects/data_warehouse/etl/type_mapp
 import TypeMappingMapper from '../../../mappers/data_warehouse/etl/type_mapping_mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient} from 'pg';
-import {User} from '../../../../domain_objects/access_management/user';
+import {SuperUser, User} from '../../../../domain_objects/access_management/user';
 import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeTransformationMapper from '../../../mappers/data_warehouse/etl/type_transformation_mapper';
 import Cache from '../../../../services/cache/cache';
@@ -16,6 +16,8 @@ import TypeTransformationRepository from './type_transformation_repository';
 import MetatypeRepository from '../ontology/metatype_repository';
 import MetatypeRelationshipPairRepository from '../ontology/metatype_relationship_pair_repository';
 import MetatypeRelationshipRepository from '../ontology/metatype_relationship_repository';
+import {ContainerAlert} from '../../../../domain_objects/data_warehouse/ontology/container';
+import ContainerRepository from '../ontology/container_respository';
 
 /*
     TypeMappingRepository contains methods for persisting and retrieving nodes
@@ -355,7 +357,22 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
                     // on failure we return the original, unmodified mapping for review
                     if (saved.isError) resolve(Result.Failure(saved.error?.error!, 500, mappings[index]));
-                    else resolve(Result.Success(mapping));
+                    else {
+                        // container alert stating they should review their mappings, especially edges
+                        const alert = await new ContainerRepository().createAlert(
+                            new ContainerAlert({
+                                containerID: targetDataSource.value.container_id!,
+                                type: 'warning',
+                                message:
+                                    // eslint-disable-next-line max-len
+                                    'Type Mappings were just imported. It is highly recommended you review all mappings. Relationship mappings must be reviewed so that the proper origin and destination data source can be selected.',
+                            }),
+                            SuperUser,
+                        );
+                        if (alert.isError) Logger.error(`unable create container alert for new ontology ${alert.error?.error}`);
+
+                        resolve(Result.Success(mapping));
+                    }
                 }),
             );
         }

@@ -1,5 +1,6 @@
 export default {
     en: {
+        beta: 'BETA',
         home: {
             id: 'ID',
             dashboard: 'Dashboard',
@@ -74,7 +75,7 @@ export default {
             ontologyVersioning: 'Ontology Versioning',
             ontologyVersioningDescription: 'Manage Version and Changelists',
             serviceUsers: 'External Applications',
-            serviceUsersDescription: 'External Application Access'
+            serviceUsersDescription: 'External Application Access',
         },
         containerAlert: {
             acknowledge: 'Acknowledge Alert',
@@ -175,7 +176,7 @@ export default {
             cancel: 'Cancel',
             createApiKey: 'Generate API Key',
             descriptionService:
-                'The API Key/Secret pair you generate here will have all the permissions you\'ve assigned the application. It is tied to this current container. Please use these keys cautiously.',
+                "The API Key/Secret pair you generate here will have all the permissions you've assigned the application. It is tied to this current container. Please use these keys cautiously.",
         },
         importMapping: {
             importMappings: 'Import Type Mappings',
@@ -269,30 +270,35 @@ export default {
             requiredField: 'Required Field',
         },
         createServiceUser: {
-            createServiceUser: "Add External Application",
+            createServiceUser: 'Add External Application',
             createTitle: 'Add External Application',
             name: 'Name',
             cancel: 'Cancel',
             save: 'Save',
-            requiredField: 'Required Field'
+            requiredField: 'Required Field',
         },
         deleteServiceUser: {
             deleteTitle: 'Remove External Application',
             cancel: 'Cancel',
             delete: 'Remove',
             in: 'in',
-            warning: 'Removing this external application will invalidate all generated API Key/Secret pairs, terminating this application\'s access to Deep Lynx. Only remove applications you are sure are no longer in use, or who you wish to terminate their access.'
+            warning:
+                "Removing this external application will invalidate all generated API Key/Secret pairs, terminating this application's access to Deep Lynx. Only remove applications you are sure are no longer in use, or who you wish to terminate their access.",
         },
         serviceUserPermissions: {
             title: 'Manage Permissions',
             containers: 'Container Permissions',
-            containersDescription: 'These permissions dictate which container level actions an application can perform. Generally administrative tasks such as editing container settings and editing or removing the container entirely.',
+            containersDescription:
+                'These permissions dictate which container level actions an application can perform. Generally administrative tasks such as editing container settings and editing or removing the container entirely.',
             ontology: 'Ontology Permissions',
-            ontologyDescription: 'These permissions dictate the actions an application can perform regarding the ontology. These permissions allow an application to view and edit the ontology.',
+            ontologyDescription:
+                'These permissions dictate the actions an application can perform regarding the ontology. These permissions allow an application to view and edit the ontology.',
             data: 'Data Permissions',
-            dataDescription: 'These permissions dictate the actions an application can perform regarding the data and data sources. These permissions allow a user to view and edit the data stored in the graph as well as manage data sources and the type mapping system.',
+            dataDescription:
+                'These permissions dictate the actions an application can perform regarding the data and data sources. These permissions allow a user to view and edit the data stored in the graph as well as manage data sources and the type mapping system.',
             users: 'User Permissions',
-            usersDescription: 'These permissions dictate the actions an application can perform regarding the container\'s users. This allows the application to manage a user\'s permissions inside the container, as well as allowing them to remove and add users to the container.'
+            usersDescription:
+                "These permissions dictate the actions an application can perform regarding the container's users. This allows the application to manage a user's permissions inside the container, as well as allowing them to remove and add users to the container.",
         },
         viewMetatypeRelationship: {
             close: 'Close',
@@ -329,9 +335,9 @@ export default {
             validation: 'Validation',
             regex: 'Regular Expression',
             regexHelp: 'Enter a valid regular expression for matching against future value',
-            max: 'Max',
+            max: 'Max # of Matches',
             maxHelp: 'Maximum matches',
-            min: 'Min',
+            min: 'Min # of Matches',
             minHelp: 'Minimum matches',
             defaultValue: 'Default Value',
             options: 'Options',
@@ -356,9 +362,9 @@ export default {
             validation: 'Validation',
             regex: 'Regular Expression',
             regexHelp: 'Enter a valid regular expression for matching against future value',
-            max: 'Max',
+            max: 'Max # of Matches',
             maxHelp: 'Maximum matches',
-            min: 'Min',
+            min: 'Min # of Matches',
             minHelp: 'Minimum matches',
             defaultValue: 'Default Value',
             options: 'Options',
@@ -384,9 +390,9 @@ export default {
             validation: 'Validation',
             regex: 'Regular Expression',
             regexHelp: 'Enter a valid regular expression for matching against future value',
-            max: 'Max',
+            max: 'Max # of Matches',
             maxHelp: 'Maximum matches',
-            min: 'Min',
+            min: 'Min # of Matches',
             minHelp: 'Minimum matches',
             defaultValue: 'Default Value',
             options: 'Options',
@@ -412,9 +418,9 @@ export default {
             validation: 'Validation',
             regex: 'Regular Expression',
             regexHelp: 'Enter a valid regular expression for matching against future value',
-            max: 'Max',
+            max: 'Max # of Matches',
             maxHelp: 'Maximum matches',
-            min: 'Min',
+            min: 'Min # of Matches',
             minHelp: 'Minimum matches',
             defaultValue: 'Default Value',
             options: 'Options',
@@ -439,9 +445,9 @@ export default {
             validation: 'Validation',
             regex: 'Regular Expression',
             regexHelp: 'Enter a valid regular expression for matching against future value',
-            max: 'Max',
+            max: 'Max # of Matches',
             maxHelp: 'Maximum matches',
-            min: 'Min',
+            min: 'Min # of Matches',
             minHelp: 'Minimum matches',
             defaultValue: 'Default Value',
             options: 'Options',
@@ -706,12 +712,13 @@ export default {
                 'Data may have already been ingested for this Data Source. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Data Source. If you would like to keep this data and orphan it, please uncheck the box below.',
         },
         deleteContainer: {
-            deleteContainer: "Delete Container",
-            deleteTitle: "Permanently Delete Container",
-            warning:"Everything associated with this container - such as data, mappings and ontology versions - will be completely removed. This cannot be undone. Please verify that all users of the container are ready for its deletion",
-            cancel: "Cancel",
-            delete: "Permanently Delete Container",
-            in:"in"
+            deleteContainer: 'Delete Container',
+            deleteTitle: 'Permanently Delete Container',
+            warning:
+                'Everything associated with this container - such as data, mappings and ontology versions - will be completely removed. This cannot be undone. Please verify that all users of the container are ready for its deletion',
+            cancel: 'Cancel',
+            delete: 'Permanently Delete Container',
+            in: 'in',
         },
         deleteDataImport: {
             deleteTitle: 'Delete Import',
@@ -980,7 +987,8 @@ export default {
             confirmPassword: 'Confirm New Password',
         },
         ontologyToolbar: {
-            selectChangelist: 'Select or create a changelist in order to use edit mode. Note that newly created changelists may take a few minutes to generate fully before they are able to be selected.',
+            selectChangelist:
+                'Select or create a changelist in order to use edit mode. Note that newly created changelists may take a few minutes to generate fully before they are able to be selected.',
             viewMode: 'View',
             editMode: 'Edit',
             activeChangelist: 'Active Changelist',

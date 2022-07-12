@@ -137,7 +137,7 @@ export class ContainerAlert extends NakedDomainClass {
     container_id?: string;
 
     @IsString()
-    @IsIn(['information', 'warning', 'error'])
+    @IsIn(['info', 'warning', 'error'])
     type?: string;
 
     @IsString()
