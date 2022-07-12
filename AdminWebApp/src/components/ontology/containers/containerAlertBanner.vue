@@ -1,9 +1,9 @@
 <template>
-  <div>
+  <div style="margin-top: 1px">
     <div v-for="alert in alerts" :key="alert.id">
-      <v-alert type="error">
+      <v-alert :type="alert.type">
         <p>{{alert.message}}</p>
-        <v-btn color="error" @click="acknowledgeAlert(alert.id)" v-if="$auth.Auth('containers','write', containerID)">{{$t('containerAlert.acknowledge')}}</v-btn>
+        <v-btn :color="alert.type" @click="acknowledgeAlert(alert.id)" v-if="$auth.Auth('containers','write', containerID)">{{$t('containerAlert.acknowledge')}}</v-btn>
         <p v-else>{{$t('containerAlert.containerAdminAcknowledge')}}</p>
       </v-alert>
     </div>

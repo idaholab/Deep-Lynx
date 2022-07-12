@@ -892,7 +892,7 @@ export default class ContainerImport {
                     metatypeRelationships.push(data);
                 });
 
-                const relationshipPromise = await metatypeRelationshipRepo.bulkSave(user, metatypeRelationships);
+                const relationshipPromise = await metatypeRelationshipRepo.bulkSave(user, metatypeRelationships, false);
                 // check for an error and rollback if necessary
                 if (relationshipPromise.isError && !update) {
                     const rollback = await this.rollbackOntology(container)
@@ -936,7 +936,7 @@ export default class ContainerImport {
                     metatypes.push(data);
                 });
 
-                const metatypePromise = await metatypeRepo.bulkSave(user, metatypes);
+                const metatypePromise = await metatypeRepo.bulkSave(user, metatypes, false);
                 // check for an error and rollback if necessary
                 if (metatypePromise.isError && !update) {
                     const rollback = await this.rollbackOntology(container)
@@ -995,7 +995,7 @@ export default class ContainerImport {
                             data.id = originalKeyData.id;
                             updateRelationships.push(data);
                         } else {
-                            propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, [data]));
+                            propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, [data], false));
                             relationshipPairs.push(data);
                         }
                     }
@@ -1003,6 +1003,8 @@ export default class ContainerImport {
                     // Add primitive properties and other relationships
                     // placeholder for keys that will be sent to BatchUpdate()
                     const updateKeys: MetatypeKey[] = [];
+                    let toSaveKeyBuffer: MetatypeKey[] = [];
+                    const toSaveRelationshipBuffer: MetatypeRelationshipPair[] = [];
 
                     for (const propertyName in thisClass.properties) {
                         const property = thisClass.properties[propertyName];
@@ -1056,7 +1058,7 @@ export default class ContainerImport {
                                 data.id = originalKeyData.id;
                                 updateKeys.push(data);
                             } else {
-                                propertyPromises.push(metatypeKeyRepo.bulkSave(user, [data]));
+                                toSaveKeyBuffer.push(data);
                                 metatypeKeys.push(data);
                             }
                         } else if (property.property_type === 'relationship') {
@@ -1080,11 +1082,31 @@ export default class ContainerImport {
                                 data.id = originalKeyData.id;
                                 updateRelationships.push(data);
                             } else {
-                                propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, [data]));
+                                toSaveRelationshipBuffer.push(data)
                                 relationshipPairs.push(data);
                             }
                         }
+
+                        if (toSaveKeyBuffer.length > 500) {
+                            // clone the buffer so we can clear
+                            const buffer = toSaveKeyBuffer.slice(0);
+                            toSaveKeyBuffer = []
+
+                            propertyPromises.push(metatypeKeyRepo.bulkSave(user, buffer))
+                        }
+
+                        if (toSaveRelationshipBuffer.length > 500) {
+                            // clone the buffer so we can clear
+                            const buffer = toSaveRelationshipBuffer.slice(0);
+                            toSaveKeyBuffer = []
+
+                            propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, buffer, false))
+                        }
+
                     }
+
+                    propertyPromises.push(metatypeKeyRepo.bulkSave(user, toSaveKeyBuffer));
+                    propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, toSaveRelationshipBuffer, false));
 
                     if (updateKeys.length > 0) {
                         propertyPromises.push(metatypeKeyRepo.bulkSave(user, updateKeys));
@@ -1092,7 +1114,7 @@ export default class ContainerImport {
                     }
 
                     if (updateRelationships.length > 0) {
-                        propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, updateRelationships));
+                        propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, updateRelationships, false));
                         relationshipPairs.concat(updateRelationships);
                     }
                 });

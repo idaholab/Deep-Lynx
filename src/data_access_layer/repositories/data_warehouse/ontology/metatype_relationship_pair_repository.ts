@@ -223,11 +223,12 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             return Promise.resolve(Result.Failure(`unable to commit changes to database ${committed.error}`));
         }
 
-        await Promise.all(
-            p.map((pair) => {
-                return this.loadRelationships(pair);
-            }),
-        );
+        if (saveRelationships)
+            await Promise.all(
+                p.map((pair) => {
+                    return this.loadRelationships(pair);
+                }),
+            );
 
         return Promise.resolve(Result.Success(true));
     }
