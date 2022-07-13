@@ -9,6 +9,7 @@ import {QueueFactory} from '../services/queue/queue';
 import DataSourceMapper from '../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import QueryStream from 'pg-query-stream';
 import Logger from '../services/logger';
+import Cache from '../services/cache/cache';
 import Config from '../services/config';
 import {parentPort} from 'worker_threads';
 import {plainToClass} from 'class-transformer';
@@ -28,8 +29,18 @@ void postgresAdapter
                     const putPromises: Promise<boolean>[] = [];
 
                     stream.on('data', (data) => {
+                        Cache.get(`data_sources_queue_${data.id}`)
+                            .then((value) => {
+                                if (!value) {
+                                    putPromises.push(queue.Put(Config.data_sources_queue, plainToClass(DataSourceRecord, data as object).id));
+                                    void Cache.set(`data_sources_queue_${data.id}`, {}, 21600);
+                                }
+                            })
+                            .catch(() => {
+                                putPromises.push(queue.Put(Config.data_sources_queue, plainToClass(DataSourceRecord, data as object).id));
+                                void Cache.set(`data_sources_queue_${data.id}`, {}, 21600);
+                            });
                         // we're simply putting the id on the queue here
-                        putPromises.push(queue.Put(Config.data_sources_queue, plainToClass(DataSourceRecord, data as object).id));
                     });
 
                     stream.on('error', (e: Error) => {
@@ -54,7 +65,7 @@ void postgresAdapter
                                 else {
                                     process.exit(1);
                                 }
-                            })
+                            });
                     });
 
                     stream.pipe(devnull({objectMode: true}));
