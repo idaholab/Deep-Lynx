@@ -219,8 +219,7 @@ export default class ImportRoutes {
                     })
                     .catch((err) => {
                         Result.Failure(err, 404).asResponse(res);
-                    })
-                    .finally(() => next());
+                    });
                 // @ts-ignore
             } else {
                 const busboy = new Busboy({headers: req.headers});
@@ -285,7 +284,7 @@ export default class ImportRoutes {
             }
         } else {
             Result.Failure(`unable to find data source`, 404).asResponse(res);
-            next();
+            return;
         }
     }
 
