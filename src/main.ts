@@ -12,6 +12,11 @@ import PostgresAdapter from './data_access_layer/mappers/db_adapters/postgres/po
 import OAuthRepository from './data_access_layer/repositories/access_management/oauth_repository';
 import {Migrator} from './data_access_layer/migrate';
 
+process.on('unhandledRejection', (reason, promise) => {
+    console.log('Unhandled rejection at ', promise, `reason: ${JSON.stringify(reason)}`);
+    process.exit(1);
+});
+
 const postgresAdapter = PostgresAdapter.Instance;
 
 async function Start(): Promise<any> {
