@@ -290,6 +290,35 @@ describe('Using a new GraphQL Query on nodes we', async () => {
         return Promise.resolve();
     });
 
+    it('can query by metatype and filter by properties, returning nodes', async () => {
+        const response = await graphql({
+            schema,
+            source: `{
+                nodes(metatype_name: {operator: "eq", value: "Multimeta"},
+                properties: [ 
+                {key: "color", operator: "eq", value: "red"},
+                {key: "name",operator: "eq",  value: "MultiNode2"}
+                ]){
+                    id
+                    metatype_name
+                    properties
+                }
+            }`,
+        });
+        expect(response.errors).undefined;
+        expect(response.data).not.undefined;
+        const data = response.data!.nodes;
+        expect(data.length).eq(1);
+
+        for (const n of data) {
+            expect(n.id).not.undefined;
+            expect(n.properties).not.undefined;
+            expect(n.invalidAttribute).undefined;
+        }
+
+        return Promise.resolve();
+    });
+
     it('can save a query by metatype to file', async () => {
         const schemaGenerator = new GraphQLSchemaGenerator();
 
