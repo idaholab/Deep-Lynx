@@ -118,10 +118,10 @@ export default class StandardDataSourceImpl implements DataSource {
                         data_source_id: this.DataSourceRecord!.id!,
                         import_id: retrievedImport.value.id!,
                         data,
-                        shape_hash: TypeMapping.objectToShapeHash(data, {
-                            value_nodes: this.DataSourceRecord?.config?.value_nodes,
-                            stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
-                        }),
+                        // shape_hash: TypeMapping.objectToShapeHash(data, {
+                        //     value_nodes: this.DataSourceRecord?.config?.value_nodes,
+                        //     stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
+                        // }),
                     }),
                 );
 
@@ -156,10 +156,10 @@ export default class StandardDataSourceImpl implements DataSource {
                     data_source_id: this.DataSourceRecord!.id!,
                     import_id: retrievedImport.value.id!,
                     data,
-                    shape_hash: TypeMapping.objectToShapeHash(data, {
-                        value_nodes: this.DataSourceRecord?.config?.value_nodes,
-                        stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
-                    }),
+                    // shape_hash: TypeMapping.objectToShapeHash(data, {
+                    //     value_nodes: this.DataSourceRecord?.config?.value_nodes,
+                    //     stop_nodes: this.DataSourceRecord?.config?.stop_nodes,
+                    // }),
                 });
 
                 if (this.DataSourceRecord && (!this.DataSourceRecord.config?.data_retention_days || this.DataSourceRecord.config?.data_retention_days === 0)) {
