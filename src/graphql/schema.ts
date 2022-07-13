@@ -676,7 +676,15 @@ export default class GraphQLSchemaGenerator {
                     operator: {type: GraphQLString},
                     value: {type: new GraphQLList(GraphQLJSON)}
                 }
-            })}, // since the original ID might be a number, treat it as valid JSON
+            })},
+            properties:{type: new GraphQLList( new GraphQLInputObjectType({
+                name: "node_input_properties",
+                fields : {
+                    key: {type: GraphQLString},
+                    operator: {type: GraphQLString},
+                    value: {type: new GraphQLList(GraphQLJSON)}
+                }
+            }))}, // since the original ID might be a number, treat it as valid JSON
             import_id: {type: new GraphQLInputObjectType({
                 name: "node_input_import_id",
                 fields : {
@@ -959,6 +967,16 @@ export default class GraphQLSchemaGenerator {
                 }
 
                 repo = repo.and().importDataID(input.import_id.operator, input.import_id.value);
+            }
+
+            if (input.properties && Array.isArray(input.properties)) {
+                input.properties.forEach((prop) => {
+                    if(Array.isArray(prop.value) && prop.value.length === 1) {
+                        prop.value = prop.value[0];
+                    }
+
+                    repo = repo.and().property(prop.key, prop.operator, prop.value);
+                })
             }
 
             // wrapping the end resolver in a promise ensures that we don't return prior to all results being
