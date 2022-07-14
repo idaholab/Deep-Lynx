@@ -337,6 +337,7 @@ export default class TypeTransformationMapper extends Mapper {
     private listByMapping(typeMappingID: string): QueryConfig {
         return {
             text: `SELECT type_mapping_transformations.*,
+                          m2.name as tab_metatype_name,
                           metatypes.name as metatype_name,
                           metatype_relationship_pairs.name as metatype_relationship_pair_name,
                           metatypes.ontology_version as metatype_ontology_version,
@@ -347,6 +348,7 @@ export default class TypeTransformationMapper extends Mapper {
                    FROM type_mapping_transformations
                             LEFT JOIN type_mappings as mapping ON type_mapping_transformations.type_mapping_id = mapping.id
                             LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id
+                            LEFT JOIN metatypes m2 on type_mapping_transformations.tab_metatype_id = m2.id
                             LEFT JOIN metatype_relationship_pairs 
                                 ON type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id
                    WHERE type_mapping_id = $1`,

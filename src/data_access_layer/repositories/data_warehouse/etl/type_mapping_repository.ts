@@ -405,7 +405,6 @@ export default class TypeMappingRepository extends Repository implements Reposit
                     typeMapping.transformations[i].metatype_relationship_pair_id = undefined;
                     typeMapping.transformations[i].tab_data_source_id = undefined;
                     typeMapping.transformations[i].tab_metatype_id = undefined;
-                    typeMapping.transformations[i].tab_node_id = undefined;
                 }
 
                 // need infer type if it isn't present so that older type mappings will still function
