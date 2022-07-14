@@ -27,7 +27,6 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     const stagingRepo = new DataStagingRepository();
     const mappingRepo = new TypeMappingRepository();
     const nodeRepository = new NodeRepository();
-    const edgeRepository = new EdgeRepository();
     const timeseriesRepo = new TimeseriesEntryRepository();
 
     const transaction = await stagingMapper.startTransaction();
