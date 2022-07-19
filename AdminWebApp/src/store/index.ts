@@ -4,7 +4,6 @@ import {ChangelistT, ContainerT, OntologyVersionT} from '@/api/types';
 import Config from '@/config';
 import {Client} from '@/api/client';
 import VuexPersistence from 'vuex-persist';
-import {Authentication} from '@/auth/authentication_service';
 
 Vue.use(Vuex);
 
@@ -82,7 +81,7 @@ export default new Vuex.Store<State>({
             state.inEditMode = mode;
         },
 
-        toggleEditMode(state, mode) {
+        toggleEditMode(state) {
             state.inEditMode = !state.inEditMode;
         },
     },
@@ -115,6 +114,7 @@ export default new Vuex.Store<State>({
                             commit('selectOntologyVersion', results[0]);
                         }
 
+                        // @ts-ignore
                         resolve();
                     })
                     .catch((e: any) => reject(e));
@@ -144,6 +144,7 @@ export default new Vuex.Store<State>({
                             );
                         }
 
+                        // @ts-ignore
                         resolve();
                     })
                     .catch((e: any) => reject(e));

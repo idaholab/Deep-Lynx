@@ -1,12 +1,14 @@
 module.exports = {
     transpileDependencies: ['vuetify', '@observablehq/plot', 'plot', 'vuex-persist'],
     devServer: {
-        clientLogLevel: 'info',
+        client: {
+            logging: 'info',
+        },
         host: 'localhost',
-        disableHostCheck: true,
-        inline: false,
-        watchOptions: {
-            poll: true,
+        allowedHosts: 'all',
+        static: {
+            watch: true,
         },
     },
+    runtimeCompiler: true,
 };

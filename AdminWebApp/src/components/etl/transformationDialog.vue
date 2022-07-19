@@ -800,8 +800,8 @@ export default class TransformationDialog extends Vue {
   conditionOperator: {text: string; value: any; requiresValue: boolean} | null = null
   conditionValue = ""
   conditions: TypeMappingTransformationCondition[] = []
-  onConversionError: TransformationErrorAction = 'fail on required'
-  onKeyExtractionError: TransformationErrorAction = 'fail on required'
+  onConversionError: TransformationErrorAction | undefined = 'fail on required'
+  onKeyExtractionError: TransformationErrorAction | undefined = 'fail on required'
 
 
   subexpressionExpression = ""
@@ -813,7 +813,6 @@ export default class TransformationDialog extends Vue {
   payloadSelectedArrayKeys: any = []
   payloadArrayKeys: any = []
   rootArray: any = null
-  rootArrayKeys: any = []
 
   operators = [
     {text: "==", value: "==", requiresValue: true},
@@ -985,6 +984,8 @@ export default class TransformationDialog extends Vue {
     }
 
     this.name = this.transformation?.name!
+    this.onConversionError = this.transformation?.config.on_conversion_error as TransformationErrorAction;
+    this.onKeyExtractionError = this.transformation?.config.on_key_extraction_error as TransformationErrorAction;
 
   }
 
@@ -1299,6 +1300,7 @@ export default class TransformationDialog extends Vue {
 
     this.loading = true
     const payload: {[key: string]: any} = {}
+    payload.config = {}
     payload.type = this.payloadType
     payload.name = this.name
 
@@ -1314,6 +1316,9 @@ export default class TransformationDialog extends Vue {
       payload.destination_metatype_id = this.destination_metatype_id
       payload.destination_data_source_id = this.destination_data_source_id
     }
+
+    payload.config.on_conversion_error = this.onConversionError
+    payload.config.on_key_extraction_error = this.onKeyExtractionError
 
     payload.tab_data_source_id = this.tab_data_source_id
     payload.tab_metatype_id = this.tab_metatype_id
@@ -1340,6 +1345,7 @@ export default class TransformationDialog extends Vue {
 
     this.loading = true
     const payload: {[key: string]: any} = {}
+    payload.config = {}
 
     // include either the metatype or metatype relationship pair id, not both
     payload.metatype_id = (this.selectedMetatype?.id) ? this.selectedMetatype.id : ""
@@ -1357,6 +1363,8 @@ export default class TransformationDialog extends Vue {
     payload.tab_node_key = this.tab_node_key
     payload.tab_node_id = this.tab_node_id
 
+    payload.config.on_conversion_error = this.onConversionError
+    payload.config.on_key_extraction_error = this.onKeyExtractionError
     payload.conditions = this.conditions
     payload.keys = this.propertyMapping
     payload.type_mapping_id = this.typeMappingID

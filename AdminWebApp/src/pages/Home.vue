@@ -154,13 +154,13 @@
             two-line
             link
             v-if="$auth.Auth('data', 'write', containerID)"
-            @click="setActiveComponent('data-test-creation')"
-            :input-value="currentMainComponent === 'DataTestCreation'"
+            @click="setActiveComponent('data-management')"
+            :input-value="currentMainComponent === 'DataManagement'"
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.dataTest")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.dataTestDescription")}}</v-list-item-subtitle>
+              <v-list-item-title>{{$t("home.dataManagement")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("home.dataManagementDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
           <v-list-item
@@ -480,7 +480,7 @@ import DataExport from "@/views/DataExport.vue"
 import DataImports from "@/views/DataImports.vue"
 import DataQuery from "@/views/DataQuery.vue"
 import DataSources from "@/views/DataSources.vue"
-import DataTestCreation from "@/views/DataTestCreation.vue"
+import DataManagement from "@/views/DataManagement.vue"
 import DataMapping from "@/views/DataMapping.vue"
 import Settings from "@/views/Settings.vue"
 import Users from "@/views/Users.vue"
@@ -511,7 +511,7 @@ import ServiceUsers from "@/views/ServiceUsers.vue";
     DataExport,
     DataQuery,
     DataSources,
-    DataTestCreation,
+    DataManagement,
     DataMapping,
     Settings,
     ContainerUsers,
@@ -556,7 +556,7 @@ export default class Home extends Vue {
             this.setActiveComponent(this.view)
           }
         })
-        .catch(e =>this.$router.push({name: "ContainerSelect"})
+        .catch(() =>this.$router.push({name: "ContainerSelect"})
 )
 
     this.$client.listMetatypes(this.containerID as string, {
@@ -648,10 +648,10 @@ export default class Home extends Vue {
         break;
       }
 
-       case "data-test-creation": {
-        this.currentMainComponent = "DataTestCreation";
-        this.componentName = "Test Data"
-        this.$router.replace(`/containers/${this.containerID}/data-test-creation`)
+      case "data-management": {
+        this.currentMainComponent = "DataManagement";
+        this.componentName = "Data Management"
+        this.$router.replace(`/containers/${this.containerID}/data-management`)
         break;
       }
 

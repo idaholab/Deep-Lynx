@@ -215,19 +215,22 @@ export default class TypeTransformation extends BaseDomainClass {
     destination_data_source_id?: string;
 
     // tabular data specific fields
-    @ValidateIf((o) => typeof o.metatype_relationship_pair_id === 'undefined' && typeof o.metatype_id === 'undefined')
+    @ValidateIf((o) => o.type === 'timeseries')
+    @IsOptional()
     @IsString()
     tab_data_source_id?: string;
 
-    @ValidateIf((o) => typeof o.metatype_relationship_pair_id === 'undefined' && typeof o.metatype_id === 'undefined')
+    @ValidateIf((o) => o.type === 'timeseries')
     @IsString()
     tab_metatype_id?: string;
 
-    @ValidateIf((o) => typeof o.metatype_relationship_pair_id === 'undefined' && typeof o.metatype_id === 'undefined' && typeof o.tab_node_key === 'undefined')
+    @ValidateIf((o) => o.type === 'timeseries')
+    @IsOptional()
     @IsString()
     tab_node_id?: string;
 
-    @ValidateIf((o) => typeof o.metatype_relationship_pair_id === 'undefined' && typeof o.metatype_id === 'undefined' && typeof o.tab_node_id === 'undefined')
+    @ValidateIf((o) => o.type === 'timeseries')
+    @IsOptional()
     @IsString()
     tab_node_key?: string;
 
@@ -250,6 +253,9 @@ export default class TypeTransformation extends BaseDomainClass {
 
     @IsOptional()
     data_source_id?: string;
+
+    @IsOptional()
+    tab_metatype_name?: string;
 
     @IsOptional()
     metatype_name?: string;
@@ -460,7 +466,10 @@ export default class TypeTransformation extends BaseDomainClass {
                 // the type mapping _should_ have easily handled the combination of keys
                 if (k.metatype_key_id) {
                     const fetched = await MetatypeKeyMapper.Instance.Retrieve(k.metatype_key_id);
-                    if (fetched.isError) return Promise.resolve(Result.Failure('unable to fetch keys to map payload'));
+                    if (fetched.isError) {
+                        Logger.error('unable to fetch keys to map payload, metatype key does not exist');
+                        continue;
+                    }
 
                     newPayload[fetched.value.property_name] = k.value;
                     if (k.key) {
@@ -661,6 +670,10 @@ export default class TypeTransformation extends BaseDomainClass {
         }
 
         if (this.type === 'edge' && this.metatype_relationship_pair_id) {
+            // need to check undefined before we switch to strings
+            const origin_original_id = TypeTransformation.getNestedValue(this.origin_id_key!, data.data, index);
+            const destination_original_id = TypeTransformation.getNestedValue(this.destination_id_key!, data.data, index);
+
             const edge = new Edge({
                 metatype_relationship_pair: this.metatype_relationship_pair_id,
                 properties: newPayloadRelationship,
@@ -669,10 +682,10 @@ export default class TypeTransformation extends BaseDomainClass {
                 container_id: this.container_id!,
                 data_staging_id: data.id,
                 import_data_id: data.import_id,
-                origin_original_id: `${TypeTransformation.getNestedValue(this.origin_id_key!, data.data, index)}`,
+                origin_original_id: origin_original_id ? `${origin_original_id}` : undefined,
                 origin_metatype_id: this.origin_metatype_id,
                 origin_data_source_id: this.origin_data_source_id,
-                destination_original_id: `${TypeTransformation.getNestedValue(this.destination_id_key!, data.data, index)}`,
+                destination_original_id: destination_original_id ? `${destination_original_id}` : undefined,
                 destination_metatype_id: this.destination_metatype_id,
                 destination_data_source_id: this.destination_data_source_id,
                 metadata: new EdgeMetadata({
@@ -689,10 +702,13 @@ export default class TypeTransformation extends BaseDomainClass {
             // we must pull the nodes based on the transformation
             let nodeID: string = this.tab_node_id!;
             if (!nodeID) {
-                const conversion = TypeTransformation.convertValue('string', TypeTransformation.getNestedValue(this.tab_node_key!, data.data, index));
+                const nestedValue = TypeTransformation.getNestedValue(this.tab_node_key!, data.data, index);
+                const conversion = TypeTransformation.convertValue('string', nestedValue);
 
                 if (conversion && conversion.converted_value) {
                     nodeID = conversion.converted_value as string;
+                } else {
+                    nodeID = nestedValue;
                 }
             }
 

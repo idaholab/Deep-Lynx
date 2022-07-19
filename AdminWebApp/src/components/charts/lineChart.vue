@@ -1,13 +1,12 @@
 <template>
-    <Plotly :data="getData()" :layout="layout" :key="change" :autoResize="true"></Plotly>
+  <h1>UNIMPLEMENTED</h1>
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue, Watch} from "vue-property-decorator";
+import {Component, Prop, Vue } from "vue-property-decorator";
 // @ts-ignore
-import { Plotly } from "vue-plotly"
 
-@Component({components: {Plotly}})
+@Component({components: {}})
 export default class LineChart extends Vue {
   @Prop({required: true})
   x!: (d: any) => any

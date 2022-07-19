@@ -35,6 +35,7 @@ import {
     eventActionContext,
     eventActionStatusContext,
     ontologyVersionContext,
+    dataTargetContext,
     serviceUserContext,
     activeOntologyVersionContext,
 } from '../middleware';
@@ -49,6 +50,7 @@ import Config from '../../services/config';
 import {SetSamlAdfs} from '../authentication/saml/saml-adfs';
 import UserRoutes from './access_management/user_routes';
 import DataSourceRoutes from './data_warehouse/import/data_source_routes';
+import DataTargetRoutes from './data_warehouse/export/data_target_routes';
 import {SetJWTAuthMethod} from '../authentication/jwt';
 import {SetLocalAuthMethod} from '../authentication/local';
 import QueryRoutes from './data_warehouse/data/legacy_query/query_routes';
@@ -68,6 +70,7 @@ import OntologyVersionRoutes from './data_warehouse/ontology/versioning/ontology
 
 const winston = require('winston');
 const expressWinston = require('express-winston');
+const packageJson = require('../../../package.json');
 
 /*
  Router is a self contained set of routes and middleware that the main express.js
@@ -95,8 +98,7 @@ export class Router {
 
         // single, raw endpoint for a health check
         this.app.get('/health', (req: express.Request, res: express.Response, next: express.NextFunction) => {
-            res.sendStatus(200);
-            next();
+            res.status(200).send(packageJson.version);
         });
 
         // Auth middleware is mounted as part of the pre-middleware, making all middleware
@@ -115,6 +117,7 @@ export class Router {
         ContainerRoutes.mount(this.app, [authenticateRoute(), containerContext(), currentUser()]);
         ExportRoutes.mount(this.app, [authenticateRoute(), containerContext(), exporterContext(), currentUser()]);
         DataSourceRoutes.mount(this.app, [authenticateRoute(), containerContext(), dataSourceContext(), currentUser()]);
+        DataTargetRoutes.mount(this.app, [authenticateRoute(), containerContext(), dataTargetContext(), currentUser()]);
         TypeMappingRoutes.mount(this.app, [
             authenticateRoute(),
             containerContext(),

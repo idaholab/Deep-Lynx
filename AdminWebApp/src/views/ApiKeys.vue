@@ -10,7 +10,7 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t('home.apiKeysDescription')}}</v-toolbar-title>
           <v-spacer></v-spacer>
-        <create-api-key-dialog></create-api-key-dialog>
+        <create-api-key-dialog @apiKeyCreated="refreshKeys()"></create-api-key-dialog>
         </v-toolbar>
       </template>
 

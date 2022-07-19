@@ -13,8 +13,10 @@ export default class TimeseriesEntryRepository extends Repository {
 
     // transformationID is optional and should only be provided if this repository is going to be used for querying a
     // timeseries table
-    constructor(transformationID?: string) {
-        super(transformationID ? `z_${transformationID}` : '');
+    constructor(transformationID?: string, timestampColumn?: string) {
+        super(transformationID ? `z_${transformationID}` : '', {
+            distinct: true,
+        });
     }
 
     async bulkSave(entries: TimeseriesEntry[], transaction?: PoolClient): Promise<Result<boolean>> {

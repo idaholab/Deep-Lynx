@@ -68,6 +68,7 @@
           </v-expansion-panel-content>
         </v-expansion-panel>
 
+        <!--
         <v-expansion-panel v-if="results.length > 0">
           <v-expansion-panel-header style="margin-bottom: 0px"><p class="text-overline" style="margin-bottom: 0px;"><strong>{{$t('timeseries.visualization')}}</strong></p></v-expansion-panel-header>
 
@@ -101,6 +102,7 @@
             <line-chart v-if="renderVisualization && selectedChart === 'line'" :x="d => new Date(parseInt(d.dateTime,10))" :y="getColumns()" :labels="selectedColumns" :data="results"></line-chart>
           </v-expansion-panel-content>
         </v-expansion-panel>
+        -->
 
       </v-expansion-panels>
 
@@ -282,7 +284,7 @@ export default class NodeTimeseriesDialog extends Vue {
     if(this.transformation && this.transformation.keys) {
       const labels: string[] = []
 
-      this.transformation.keys.forEach((key, i) => {
+      this.transformation.keys.forEach((key) => {
         if(key.is_primary_timestamp) return
 
         labels.push(key.column_name!)

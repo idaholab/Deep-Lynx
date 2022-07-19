@@ -1,5 +1,6 @@
 import {QueueFactory} from '../services/queue/queue';
 import Config from '../services/config';
+import Cache from '../services/cache/cache';
 import Logger from '../services/logger';
 import {Writable} from 'stream';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
@@ -32,7 +33,8 @@ void PostgresAdapter.Instance.init()
                                     .catch((e) => {
                                         Logger.error(`unable to process event from queue ${e}`);
                                         callback();
-                                    });
+                                    })
+                                    .finally(() => void Cache.set(`data_sources_queue_${chunk}`, {}, 30));
                             })
                             .catch((e) => {
                                 Logger.error(`unable to process event from queue ${e}`);

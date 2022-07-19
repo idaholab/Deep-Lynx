@@ -11,7 +11,7 @@ import MetatypeRelationshipPairRepository from '../ontology/metatype_relationshi
 import NodeRepository from './node_repository';
 import File, {EdgeFile} from '../../../../domain_objects/data_warehouse/data/file';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
-import QueryStream from "pg-query-stream";
+import QueryStream from 'pg-query-stream';
 
 /*
     EdgeRepository contains methods for persisting and retrieving edges
@@ -56,11 +56,11 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     async save(e: Edge, user: User, transaction?: PoolClient): Promise<Result<boolean>> {
         let internalTransaction = false;
         const errors = await e.validationErrors();
-        if (errors) return Promise.resolve(Result.Failure(`node does not pass validation ${errors.join(',')}`));
+        if (errors) return Promise.resolve(Result.Failure(`edge does not pass validation ${errors.join(',')}`));
 
         if (!transaction) {
             const newTransaction = await this.#mapper.startTransaction();
-            if (newTransaction.isError) return Promise.resolve(Result.Failure('unable to initiated db transaction'));
+            if (newTransaction.isError) return Promise.resolve(Result.Failure('unable to initiate db transaction'));
 
             transaction = newTransaction.value;
             internalTransaction = true;
@@ -141,10 +141,12 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         // we try to do as much of the initial processing in parallel as we can
         // while it's almost a pyramid of death, this allows us to decrease processing
         // time by a significant amount
-        for (const edge of edges) {
+        // eslint-disable-next-line @typescript-eslint/no-for-in-array
+        for (const i in edges) {
             operations.push(
                 new Promise((resolve) => {
-                    edge.validationErrors()
+                    edges[i]
+                        .validationErrors()
                         .then((errors) => {
                             if (errors) {
                                 resolve(Result.Failure(`validation for one or more edges failed ${errors.join(',')}`));
@@ -153,29 +155,26 @@ export default class EdgeRepository extends Repository implements RepositoryInte
 
                             // find and load the pair along with relationships so we can do property validation
                             this.#pairRepo
-                                .findByID(edge.relationship_pair_id, true)
+                                .findByID(edges[i].relationship_pair_id, true)
                                 .then((pair) => {
                                     if (pair.isError) {
                                         resolve(Result.Failure(`unable fetch relationship pair for edge ${pair.error?.error}`));
                                         return;
                                     }
 
-                                    edge.metatypeRelationshipPair = pair.value;
+                                    edges[i].metatypeRelationshipPair = pair.value;
 
-                                    edge.metatypeRelationshipPair
-                                        .relationship!.validateAndTransformProperties(edge.properties)
+                                    edges[i]
+                                        .metatypeRelationshipPair!.relationship!.validateAndTransformProperties(edges[i].properties)
                                         .then((transformed) => {
                                             if (transformed.isError) {
                                                 resolve(Result.Failure(`unable to validate properties for edge: ${transformed.error?.error}`));
                                                 return;
                                             }
 
-                                            edge.properties = transformed.value;
+                                            edges[i].properties = transformed.value;
 
-                                            resolve(Result.Success(true));
-
-                                            /* TODO: This needs completely rethought as we can possibly create the edge before the nodes
-                                            this.validateRelationship(edge, transaction)
+                                            this.validateRelationship(edges[i], transaction)
                                                 .then((valid) => {
                                                     if (valid.isError) {
                                                         resolve(Result.Failure(valid.error?.error!));
@@ -185,7 +184,6 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                                                     resolve(Result.Success(true));
                                                 })
                                                 .catch((error) => resolve(Result.Failure(`unable to validate relationships for edge ${error}`)));
-                                             */
                                         })
                                         .catch((error) => resolve(Result.Failure(`unable to validate properties for edge ${error}`)));
                                 })
@@ -195,7 +193,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
                 }),
             );
 
-            edge.id ? toUpdate.push(edge) : toCreate.push(edge);
+            edges[i].id ? toUpdate.push(edges[i]) : toCreate.push(edges[i]);
         }
 
         const completed = await Promise.all(operations);
@@ -240,15 +238,12 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     }
 
     /*
-     validateRelationship validates whether or not the edge can be created between two nodes - this checks
+     validateRelationship validates whether the edge can be created between two nodes - this checks
      nodes' metatypes against the proposed relationship type and if existing relationships
      would violate a one:many or one:one clause - because this is validation only, we don't
-     attempt to rollback a transaction if it exists - but we do have to use it
+     attempt to roll back a transaction if it exists - but we do have to use it
      as the nodes we're validating against might have been inserted earlier as part
-     of the transaction - NOTE: if an edge is created using the original data id, the most this
-     function will do is test to make sure all fields required to make a link exist. If those exist
-     and a matching node is not found, this function WILL NOT FAIL - and an edge-linker job will
-     attempt to make the connection later
+     of the transaction
      */
     private async validateRelationship(e: Edge, transaction?: PoolClient): Promise<Result<boolean>> {
         let origin: Node;
@@ -296,97 +291,6 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             e.metatypeRelationshipPair!.destination_metatype_id !== destination.metatype_id
         ) {
             return Promise.resolve(Result.Failure('origin and destination node types do not match relationship pair'));
-        }
-
-        // Note: At one point we also checked to see if the current relationship
-        // between the two proposed nodes existed. We thought that this would help
-        // cut down onA duplicates. However, it turns out that various services might
-        // create the same relationship between two nodes all the time - such as
-        // sensor data - and that attempting to tell apart what is an accidental
-        // edge creation vs. what is purposeful is doomed to fail. We have to put
-        // the burden on the users to ensure they're sending the right data, we can't
-        // have DL make assumptions about the data. However, we can still verify that
-        // we're not making new edges when doing so would violate a clause like one:one
-        // we just have to be careful how we build our query and to ignore something
-        // that already exits if it shares the same ID
-        let destinationQuery = new EdgeRepository() // new repository to avoid corrupting the filter
-            .where()
-            .destination_node_id('eq', destination.id!)
-            .and()
-            .relationshipPairID('eq', e.metatypeRelationshipPair!.id!);
-
-        let originQuery = new EdgeRepository() // new repository to avoid corrupting the filter
-            .where()
-            .origin_node_id('eq', origin.id!)
-            .and()
-            .relationshipPairID('eq', e.metatypeRelationshipPair!.id!);
-
-        if (e.id) {
-            destinationQuery = destinationQuery.and().id('eq', e.id);
-            originQuery = originQuery.and().id('eq', e.id);
-        }
-
-        const destinationRelationships = await destinationQuery.count();
-        const originRelationships = await originQuery.count();
-
-        switch (e.metatypeRelationshipPair!.relationship_type) {
-            // we don't need to check a many:many as we don't have to verify more than whether or not the origin
-            // and destination types match
-            case 'many:many': {
-                break;
-            }
-
-            case 'one:one': {
-                if (!destinationRelationships.isError && destinationRelationships.value > 0) {
-                    return Promise.resolve(
-                        Result.Failure(
-                            `proposed relationship of type: ${e.metatypeRelationshipPair!.relationship_id} between ${origin.id} and ${
-                                destination.id
-                            } violates the one:one relationship constraint`,
-                        ),
-                    );
-                }
-
-                if (!originRelationships.isError && originRelationships.value > 0) {
-                    return Promise.resolve(
-                        Result.Failure(
-                            `proposed relationship of type: ${e.metatypeRelationshipPair!.relationship_id} between ${origin.id} and ${
-                                destination.id
-                            } violates the one:one relationship constraint`,
-                        ),
-                    );
-                }
-
-                break;
-            }
-
-            case 'one:many': {
-                if (!destinationRelationships.isError && destinationRelationships.value > 0) {
-                    return Promise.resolve(
-                        Result.Failure(
-                            `proposed relationship of type: ${e.metatypeRelationshipPair!.relationship_id} between ${origin.id} and ${
-                                destination.id
-                            } violates the one:many relationship constraint`,
-                        ),
-                    );
-                }
-
-                break;
-            }
-
-            case 'many:one': {
-                if (!originRelationships.isError && originRelationships.value > 0) {
-                    return Promise.resolve(
-                        Result.Failure(
-                            `proposed relationship of type: ${e.metatypeRelationshipPair!.relationship_id} between ${origin.id} and ${
-                                destination.id
-                            } violates the many:one relationship constraint`,
-                        ),
-                    );
-                }
-
-                break;
-            }
         }
 
         return Promise.resolve(Result.Success(true));
@@ -528,6 +432,6 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     }
 
     listAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
-        return super.findAllToFile(fileOptions, queryOptions, {transaction})
+        return super.findAllToFile(fileOptions, queryOptions, {transaction});
     }
 }

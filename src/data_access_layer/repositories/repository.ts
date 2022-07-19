@@ -36,10 +36,14 @@ export class Repository {
     public _rawQuery: string[] = [];
     public _values: any[] = [];
 
-    protected constructor(tableName: string) {
+    protected constructor(tableName: string, options?: ConstructorOptions) {
         this._tableName = tableName;
 
-        this._rawQuery.push(`SELECT * FROM ${this._tableName}`);
+        if (options && options.distinct) {
+            this._rawQuery.push(`SELECT DISTINCT * FROM ${this._tableName}`);
+        } else {
+            this._rawQuery.push(`SELECT * FROM ${this._tableName}`);
+        }
     }
 
     where() {
@@ -482,4 +486,8 @@ export type FileOptions = {
 export type DeleteOptions = {
     force?: boolean;
     removeData?: boolean;
+};
+
+export type ConstructorOptions = {
+    distinct?: boolean;
 };

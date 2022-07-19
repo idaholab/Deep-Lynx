@@ -21,6 +21,7 @@ COPY --chown=node:node package*.json ./
 
 RUN apt update && apt upgrade -y
 RUN npm update -g
+RUN npm install pm2 -g
 
 # Bundle app source
 COPY --chown=node:node . .
@@ -37,4 +38,4 @@ ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait
 RUN chmod +x /wait
 
 EXPOSE 8090
-CMD /wait && npm run start
+CMD /wait && cd ./dist && pm2-runtime main.js

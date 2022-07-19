@@ -9,15 +9,16 @@ import Logger from '../services/logger';
 import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
 import EdgeRepository from '../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import Node, {IsNodes} from '../domain_objects/data_warehouse/data/node';
-import Edge, {IsEdges} from '../domain_objects/data_warehouse/data/edge';
+import Edge, {EdgeQueueItem, IsEdges} from '../domain_objects/data_warehouse/data/edge';
 import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
-import {EdgeFile, NodeFile} from '../domain_objects/data_warehouse/data/file';
+import {NodeFile} from '../domain_objects/data_warehouse/data/file';
 import NodeMapper from '../data_access_layer/mappers/data_warehouse/data/node_mapper';
-import EdgeMapper from '../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import TimeseriesEntry, {IsTimeseries} from '../domain_objects/data_warehouse/data/timeseries';
 import Cache from '../services/cache/cache';
 import Config from '../services/config';
 import TimeseriesEntryRepository from '../data_access_layer/repositories/data_warehouse/data/timeseries_entry_repository';
+import EdgeQueueItemMapper from '../data_access_layer/mappers/data_warehouse/data/edge_queue_item_mapper';
+import {classToPlain} from 'class-transformer';
 
 // ProcessData accepts a data staging record and inserts nodes and edges based
 // on matching transformation records - this acts on a single record
@@ -26,7 +27,6 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
     const stagingRepo = new DataStagingRepository();
     const mappingRepo = new TypeMappingRepository();
     const nodeRepository = new NodeRepository();
-    const edgeRepository = new EdgeRepository();
     const timeseriesRepo = new TimeseriesEntryRepository();
 
     const transaction = await stagingMapper.startTransaction();
@@ -158,39 +158,19 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
         }
     }
 
-    // insert all edges and files
-    if (edgesToInsert.length > 0) {
-        const inserted = await edgeRepository.bulkSave(staging.data_source_id!, edgesToInsert, transaction.value);
-        if (inserted.isError) {
+    // we send the edges to the edge queue item table so that they can be processed separately
+    const edgesToQueue: EdgeQueueItem[] = edgesToInsert.map((e) => {
+        return new EdgeQueueItem({edge: classToPlain(e), import_id: staging.import_id!});
+    });
+
+    // send queue edges to queue
+    if (edgesToQueue.length > 0) {
+        const sent = await EdgeQueueItemMapper.Instance.BulkCreate(edgesToQueue, transaction.value);
+        if (sent.isError) {
             await stagingMapper.rollbackTransaction(transaction.value);
 
-            await stagingRepo.setErrors(staging.id!, [`error attempting to insert edges ${inserted.error?.error}`]);
-            return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to insert edges ${inserted.error?.error}`)));
-        }
-
-        // now that the edges are inserted, attempt to attach any files from their original staging records
-        // to them
-        if (!stagingFiles.isError && stagingFiles.value.length > 0) {
-            const edgeFiles: EdgeFile[] = [];
-
-            edgesToInsert.forEach((edge) => {
-                const toAttach = stagingFiles.value.filter((stagingFile) => stagingFile.data_staging_id === edge.data_staging_id);
-                if (toAttach) {
-                    toAttach.forEach((stagingFile) => {
-                        edgeFiles.push(
-                            new EdgeFile({
-                                edge_id: edge.id!,
-                                file_id: stagingFile.file_id!,
-                            }),
-                        );
-                    });
-                }
-            });
-
-            const attached = await EdgeMapper.Instance.BulkAddFile(edgeFiles, transaction.value);
-            if (attached.isError) {
-                await stagingRepo.addError(staging.id!, `unable to attach files to edges during data staging process ${attached.error?.error}`);
-            }
+            await stagingRepo.setErrors(staging.id!, [`error attempting to send edges to queue ${sent.error?.error}`]);
+            return new Promise((resolve) => resolve(Result.DebugFailure(`error attempting to send edges to queue ${sent.error?.error}`)));
         }
     }
 

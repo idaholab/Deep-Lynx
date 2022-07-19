@@ -271,7 +271,7 @@ export default class MetatypeRelationships extends Vue {
         .then(() => {
           this.loadMetatypeRelationships()
         })
-        .catch(e => console.log(e))
+        .catch(e => this.errorMessage = e)
   }
 
   undeleteRelationship(item: any) {
@@ -279,7 +279,7 @@ export default class MetatypeRelationships extends Vue {
         .then(() => {
           this.loadMetatypeRelationships()
         })
-        .catch(e => console.log(e))
+        .catch(e => this.errorMessage = e)
   }
 
   recentlyCreatedRelationship(relationship: MetatypeRelationshipT) {

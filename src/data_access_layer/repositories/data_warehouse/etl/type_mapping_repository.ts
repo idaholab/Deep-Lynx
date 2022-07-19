@@ -4,7 +4,7 @@ import TypeMapping from '../../../../domain_objects/data_warehouse/etl/type_mapp
 import TypeMappingMapper from '../../../mappers/data_warehouse/etl/type_mapping_mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient} from 'pg';
-import {User} from '../../../../domain_objects/access_management/user';
+import {SuperUser, User} from '../../../../domain_objects/access_management/user';
 import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeTransformationMapper from '../../../mappers/data_warehouse/etl/type_transformation_mapper';
 import Cache from '../../../../services/cache/cache';
@@ -16,6 +16,8 @@ import TypeTransformationRepository from './type_transformation_repository';
 import MetatypeRepository from '../ontology/metatype_repository';
 import MetatypeRelationshipPairRepository from '../ontology/metatype_relationship_pair_repository';
 import MetatypeRelationshipRepository from '../ontology/metatype_relationship_repository';
+import {ContainerAlert} from '../../../../domain_objects/data_warehouse/ontology/container';
+import ContainerRepository from '../ontology/container_respository';
 
 /*
     TypeMappingRepository contains methods for persisting and retrieving nodes
@@ -219,7 +221,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
                 return Promise.resolve(Result.Pass(results));
             }
 
-            transformationsCreate.forEach((t) => {
+            results.value.forEach((t) => {
                 if (t.type === 'timeseries' && Config.timescaledb_enabled) {
                     this.#transformationMapper
                         .CreateHypertable(t)
@@ -343,14 +345,34 @@ export default class TypeMappingRepository extends Repository implements Reposit
                     // ids and key ids if all that are present are the names - note that this will not modify the mapping if
                     // the transformation and keys already have id's present, allows us to skip any checks prior to attempting
                     // the function
-                    if (mapping.transformations) await this.#transformationRepo.backfillIDs(targetDataSource.value.container_id!, ...mapping.transformations);
+                    if (mapping.transformations)
+                        await this.#transformationRepo.backfillIDs(
+                            targetDataSource.value.container_id!,
+                            targetDataSource.value.id!,
+                            ...mapping.transformations,
+                        );
 
                     // now we can save the newly modified mapping
                     const saved = await this.save(mapping, user, true);
 
                     // on failure we return the original, unmodified mapping for review
                     if (saved.isError) resolve(Result.Failure(saved.error?.error!, 500, mappings[index]));
-                    else resolve(Result.Success(mapping));
+                    else {
+                        // container alert stating they should review their mappings, especially edges
+                        const alert = await new ContainerRepository().createAlert(
+                            new ContainerAlert({
+                                containerID: targetDataSource.value.container_id!,
+                                type: 'warning',
+                                message:
+                                    // eslint-disable-next-line max-len
+                                    'Type Mappings were just imported. It is highly recommended you review all mappings. Relationship mappings must be reviewed so that the proper origin and destination data source can be selected.',
+                            }),
+                            SuperUser,
+                        );
+                        if (alert.isError) Logger.error(`unable create container alert for new ontology ${alert.error?.error}`);
+
+                        resolve(Result.Success(mapping));
+                    }
                 }),
             );
         }
@@ -381,6 +403,8 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
                     typeMapping.transformations[i].metatype_id = undefined;
                     typeMapping.transformations[i].metatype_relationship_pair_id = undefined;
+                    typeMapping.transformations[i].tab_data_source_id = undefined;
+                    typeMapping.transformations[i].tab_metatype_id = undefined;
                 }
 
                 // need infer type if it isn't present so that older type mappings will still function
@@ -399,6 +423,13 @@ export default class TypeMappingRepository extends Repository implements Reposit
                 typeMapping.transformations[i].id = undefined;
                 typeMapping.transformations[i].container_id = undefined;
                 typeMapping.transformations[i].data_source_id = undefined;
+
+                typeMapping.transformations[i].origin_metatype_id = undefined;
+                typeMapping.transformations[i].origin_data_source_id = undefined;
+                typeMapping.transformations[i].destination_metatype_id = undefined;
+                typeMapping.transformations[i].destination_data_source_id = undefined;
+                typeMapping.transformations[i].tab_data_source_id = undefined;
+                typeMapping.transformations[i].tab_metatype_id = undefined;
                 typeMapping.transformations[i].shape_hash = undefined;
 
                 typeMapping.transformations[i].created_by = undefined;

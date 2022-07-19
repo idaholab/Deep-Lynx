@@ -19,6 +19,7 @@ import EventAction from '../../domain_objects/event_system/event_action';
 import EventActionStatus from '../../domain_objects/event_system/event_action_status';
 import {Exporter} from '../../interfaces_and_impl/data_warehouse/export/exporter';
 import {DataSource} from '../../interfaces_and_impl/data_warehouse/import/data_source';
+import {DataTarget} from '../../interfaces_and_impl/data_warehouse/export/data_target';
 import OntologyVersion from '../../domain_objects/data_warehouse/ontology/versioning/ontology_version';
 
 declare global {
@@ -48,6 +49,7 @@ declare global {
             dataImport?: Import;
             dataStagingRecord?: DataStaging;
             dataSource?: DataSource;
+            dataTarget?: DataTarget;
             file?: File;
             task?: TaskRecord;
             ontologyVersion?: OntologyVersion;

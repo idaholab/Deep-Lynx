@@ -19,9 +19,9 @@ import TimeseriesEntry, {TimeseriesData} from '../../domain_objects/data_warehou
 import TimeseriesEntryRepository from '../../data_access_layer/repositories/data_warehouse/data/timeseries_entry_repository';
 import Node from '../../domain_objects/data_warehouse/data/node';
 import NodeMapper from '../../data_access_layer/mappers/data_warehouse/data/node_mapper';
-import GraphQLSchemaGenerator from '../../graphql/schema';
 import {GraphQLBoolean, GraphQLFloat, GraphQLObjectType, GraphQLString} from 'graphql';
 import {graphql} from 'graphql';
+import NodeGraphQLSchemaGenerator from '../../graphql/node_graph_schema';
 
 describe('A Node Schema Generator', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -218,7 +218,7 @@ describe('A Node Schema Generator', async () => {
     });
 
     it('can generate the proper schema', async () => {
-        const schemaGenerator = new GraphQLSchemaGenerator();
+        const schemaGenerator = new NodeGraphQLSchemaGenerator();
 
         const schema = await schemaGenerator.ForNode(nodeID, {});
         expect(schema.isError).false;
@@ -235,7 +235,7 @@ describe('A Node Schema Generator', async () => {
     });
 
     it('can query data correctly', async () => {
-        const schemaGenerator = new GraphQLSchemaGenerator();
+        const schemaGenerator = new NodeGraphQLSchemaGenerator();
 
         const schema = await schemaGenerator.ForNode(nodeID, {});
         expect(schema.isError).false;
@@ -331,7 +331,7 @@ describe('A Node Schema Generator', async () => {
     }).timeout(300000);
 
     it('can save data to file correctly', async () => {
-        const schemaGenerator = new GraphQLSchemaGenerator();
+        const schemaGenerator = new NodeGraphQLSchemaGenerator();
 
         const schema = await schemaGenerator.ForNode(nodeID, {returnFile: true});
         expect(schema.isError).false;

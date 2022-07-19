@@ -1,5 +1,6 @@
 <template>
   <div>
+    <error-banner :message="errorMessage"></error-banner>
     <v-data-table
       :headers="headers"
       :items="containers"
@@ -93,6 +94,7 @@
       users: UserT[] = []
       containers: ContainerT[] = []
       toEdit: ContainerT | null = null
+      errorMessage = ''
       newContainer = {name: null, description:null}
 
       get headers() {
@@ -112,7 +114,7 @@
          .then(containers => {
             this.containers = containers
          })
-         .catch(e => console.log(e))
+         .catch(e => this.errorMessage = e)
       }
 
       deleteContainer(container: ContainerT) {
@@ -120,7 +122,7 @@
          .then(() => {
             this.refreshContainers()
          })
-         .catch(e => console.log(e))
+         .catch(e => this.errorMessage = e)
       }
 
       editContainer(container: ContainerT) {

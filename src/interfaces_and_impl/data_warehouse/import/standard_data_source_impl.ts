@@ -41,21 +41,8 @@ export default class StandardDataSourceImpl implements DataSource {
             return Promise.resolve(Result.Failure('cannot receive data, no underlying or saved data source record'));
         }
 
-        let internalTransaction = false;
-        let transaction: PoolClient;
-
-        if (options && options.transaction) {
-            transaction = options.transaction;
-        } else {
-            const newTransaction = await this.#mapper.startTransaction();
-            if (newTransaction.isError) return Promise.resolve(Result.Failure('unable to initiated db transaction'));
-
-            transaction = newTransaction.value;
-            internalTransaction = true;
-        }
-
         if (!this.DataSourceRecord || !this.DataSourceRecord.id) {
-            if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
+            if (options?.transaction) await this.#mapper.rollbackTransaction(options?.transaction);
             return Promise.resolve(
                 Result.Failure(
                     `unable to receive data, data source either doesn't have a record present or data source needs to be saved prior to data being received`,
@@ -80,7 +67,7 @@ export default class StandardDataSourceImpl implements DataSource {
             );
 
             if (newImport.isError) {
-                if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
+                if (options?.transaction) await this.#mapper.rollbackTransaction(options?.transaction);
                 return Promise.resolve(Result.Failure(`unable to create import for data ${newImport.error?.error}`));
             }
 
@@ -89,9 +76,9 @@ export default class StandardDataSourceImpl implements DataSource {
 
         // we used to lock this for receiving data, but it makes no sense as this is an additive process which does not
         // modify the import in any way. Locking prevented the mapper from running correctly.
-        const retrievedImport = await this.#importRepo.findByID(importID, transaction);
+        const retrievedImport = await this.#importRepo.findByID(importID, options?.transaction);
         if (retrievedImport.isError) {
-            if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
+            if (options?.transaction) await this.#mapper.rollbackTransaction(options?.transaction);
             Logger.error(`unable to retrieve and lock import ${retrievedImport.error}`);
             return Promise.resolve(Result.Failure(`unable to retrieve ${retrievedImport.error?.error}`));
         }
@@ -135,14 +122,14 @@ export default class StandardDataSourceImpl implements DataSource {
                         const toSave = [...recordBuffer];
                         recordBuffer = [];
 
-                        saveOperations.push(this.#stagingRepo.bulkSave(toSave, transaction));
+                        saveOperations.push(this.#stagingRepo.bulkSave(toSave, options?.transaction));
                     }
                 }
             });
 
             // catch any records remaining in the buffer
             pass.on('end', () => {
-                saveOperations.push(this.#stagingRepo.bulkSave(recordBuffer, transaction));
+                saveOperations.push(this.#stagingRepo.bulkSave(recordBuffer, options?.transaction));
             });
         } else {
             // if data retention isn't configured, or it is 0 - we do not retain the data permanently
@@ -218,7 +205,7 @@ export default class StandardDataSourceImpl implements DataSource {
         }
 
         if (errorMessage) {
-            if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
+            if (options?.transaction) await this.#mapper.rollbackTransaction(options?.transaction);
             return Promise.resolve(Result.Failure(`unable to parse JSON: ${errorMessage}`));
         }
 
@@ -227,7 +214,7 @@ export default class StandardDataSourceImpl implements DataSource {
 
         // if any of the save operations have an error, fail and rollback the transaction etc
         if (saveResults.filter((result) => result.isError || !result.value).length > 0) {
-            if (internalTransaction) await this.#mapper.rollbackTransaction(transaction);
+            if (options?.transaction) await this.#mapper.rollbackTransaction(options?.transaction);
             return Promise.resolve(
                 Result.Failure(
                     `one or more attempts to save data to the database failed, encountered the following errors: ${saveResults
@@ -237,8 +224,8 @@ export default class StandardDataSourceImpl implements DataSource {
             );
         }
 
-        if (internalTransaction) {
-            const commit = await this.#mapper.completeTransaction(transaction);
+        if (options?.transaction) {
+            const commit = await this.#mapper.completeTransaction(options?.transaction);
             if (commit.isError) return Promise.resolve(Result.Pass(commit));
         }
 

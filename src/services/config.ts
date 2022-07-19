@@ -74,7 +74,6 @@ export class Config {
 
     private readonly _data_source_receive_buffer: number;
     private readonly _data_source_processing_interval: string;
-    private readonly _edge_linker_interval: string;
     private readonly _data_source_processing_concurrency: number;
     private readonly _data_source_processing_batch_size: number;
 
@@ -99,7 +98,11 @@ export class Config {
     private readonly _emit_events: boolean;
     private readonly _process_queue_name: string;
     private readonly _data_sources_queue_name: string;
+    private readonly _data_targets_queue_name: string;
     private readonly _events_queue_name: string;
+    private readonly _edge_insertion_queue_name: string;
+    private readonly _edge_insertion_backoff_multiplier: number;
+    private readonly _edge_insertion_max_retry: number;
 
     private readonly _rabbitmq_url: string;
     private readonly _azure_service_bus_connection_string: string;
@@ -176,7 +179,6 @@ export class Config {
 
         this._data_source_receive_buffer = process.env.DATA_SOURCE_RECEIVE_BUFFER ? parseInt(process.env.DATA_SOURCE_RECEIVE_BUFFER, 10) : 1000;
         this._data_source_processing_interval = process.env.DATA_SOURCE_PROCESSING_INTERVAL || '1m';
-        this._edge_linker_interval = process.env.EDGE_LINKER_INTERVAL || '1m';
         this._data_source_processing_concurrency = process.env.DATA_SOURCE_PROCESSING_CONCURRENCY
             ? parseInt(process.env.DATA_SOURCE_PROCESSING_CONCURRENCY, 10)
             : 4;
@@ -208,7 +210,14 @@ export class Config {
         this._emit_events = process.env.EMIT_EVENTS === 'true' || false;
         this._process_queue_name = process.env.PROCESS_QUEUE_NAME || 'process';
         this._data_sources_queue_name = process.env.DATA_SOURCES_QUEUE_NAME || 'data_sources';
+        this._data_targets_queue_name = process.env.DATA_TARGETS_QUEUE_NAME || 'data_targets';
         this._events_queue_name = process.env.EVENTS_QUEUE_NAME || 'events';
+        this._edge_insertion_queue_name = process.env.EDGE_INSERTION_QUEUE_NAME || 'edge_insertion';
+
+        this._edge_insertion_backoff_multiplier = process.env.EDGE_INSERTION_BACKOFF_MULTIPLIER
+            ? parseInt(process.env.EDGE_INSERTION_BACKOFF_MULTIPLIER, 10)
+            : 5;
+        this._edge_insertion_max_retry = process.env.EDGE_INSERTION_MAX_RETRY ? parseInt(process.env.EDGE_INSERTION_MAX_RETRY, 10) : 10;
 
         this._rabbitmq_url = process.env.RABBITMQ_URL || 'amqp://localhost';
         this._azure_service_bus_connection_string = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING || '';
@@ -329,10 +338,6 @@ export class Config {
 
     get data_source_interval(): string {
         return this._data_source_processing_interval;
-    }
-
-    get edge_linker_interval(): string {
-        return this._edge_linker_interval;
     }
 
     get data_source_concurrency(): number {
@@ -493,6 +498,22 @@ export class Config {
 
     get data_sources_queue(): string {
         return this._data_sources_queue_name;
+    }
+
+    get data_targets_queue(): string {
+        return this._data_targets_queue_name;
+    }
+
+    get edge_insertion_queue(): string {
+        return this._edge_insertion_queue_name;
+    }
+
+    get edge_insertion_backoff_multiplier(): number {
+        return this._edge_insertion_backoff_multiplier;
+    }
+
+    get edge_insertion_max_retries(): number {
+        return this._edge_insertion_max_retry;
     }
 
     get rabbitmq_url(): string {

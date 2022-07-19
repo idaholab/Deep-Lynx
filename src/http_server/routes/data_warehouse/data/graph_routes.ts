@@ -10,6 +10,7 @@ import NodeLeafRepository from '../../../../data_access_layer/repositories/data_
 import GraphQLSchemaGenerator from '../../../../graphql/schema';
 import {graphql} from 'graphql';
 import {stringToValidPropertyName} from '../../../../services/utilities';
+import NodeGraphQLSchemaGenerator from '../../../../graphql/node_graph_schema';
 
 const nodeRepo = new NodeRepository();
 const edgeRepo = new EdgeRepository();
@@ -414,7 +415,7 @@ export default class GraphRoutes {
     }
 
     private static queryTimeseriesData(req: Request, res: Response, next: NextFunction) {
-        const generator = new GraphQLSchemaGenerator();
+        const generator = new NodeGraphQLSchemaGenerator();
 
         generator
             .ForNode(req.node?.id!, {

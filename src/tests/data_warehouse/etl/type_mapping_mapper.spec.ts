@@ -451,6 +451,7 @@ const test_raw_payload = {
         WHEELS: 1,
     },
 };
+
 const test_payload = [
     {
         car: {
@@ -599,10 +600,124 @@ const test_payload_single_array = [
     },
 ];
 
+const test_payload_empty_array = [
+    {
+        car: {
+            id: 'UUID',
+            name: 'test car',
+            manufacturer: {
+                id: 'UUID',
+                name: 'Test Cars Inc',
+                location: 'Seattle, WA',
+            },
+            tire_pressures: [],
+        },
+        car_maintenance: {
+            id: 'UUID',
+            name: "test car's maintenance",
+            start_date: '1/1/2020 12:00:00',
+            average_visits_per_year: 4,
+            maintenance_entries: [
+                {
+                    id: 1,
+                    check_engine_light_flag: true,
+                    type: 'oil change',
+                    parts_list: [
+                        {
+                            id: 'oil',
+                            name: 'synthetic oil',
+                            price: 45.66,
+                            quantity: 1,
+                        },
+                    ],
+                },
+                {
+                    id: 2,
+                    check_engine_light_flag: false,
+                    type: 'tire rotation',
+                    parts_list: [
+                        {
+                            id: 'tire',
+                            name: 'all terrain tire',
+                            price: 150.99,
+                            quantity: 4,
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+];
+
+const test_payload_single_array_differing_objects = [
+    {
+        car: {
+            id: 'UUID',
+            name: 'test car',
+            manufacturer: {
+                id: 'UUID',
+                name: 'Test Cars Inc',
+                location: 'Seattle, WA',
+            },
+            tire_pressures: [
+                {
+                    id: 'tire0',
+                    measurement_unit: 'PSI',
+                    measurement: 35.08,
+                    measurement_name: 'tire pressure',
+                },
+                {
+                    id: 'tire0',
+                    name: 'test',
+                    measurement_unit: 'PSI',
+                    measurement: 35.08,
+                    measurement_name: 'tire pressure',
+                },
+            ],
+        },
+        car_maintenance: {
+            id: 'UUID',
+            name: "test car's maintenance",
+            start_date: '1/1/2020 12:00:00',
+            average_visits_per_year: 4,
+            maintenance_entries: [
+                {
+                    id: 1,
+                    check_engine_light_flag: true,
+                    type: 'oil change',
+                    parts_list: [
+                        {
+                            id: 'oil',
+                            name: 'synthetic oil',
+                            price: 45.66,
+                            quantity: 1,
+                        },
+                    ],
+                },
+                {
+                    id: 2,
+                    check_engine_light_flag: false,
+                    type: 'tire rotation',
+                    parts_list: [
+                        {
+                            id: 'tire',
+                            name: 'all terrain tire',
+                            price: 150.99,
+                            quantity: 4,
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+];
+
+// @ts-ignore
 const stop_nodes = ['tire_pressures', 'check_engine_light_flag'];
 
 // this is exactly like the test_payload minus the keys listed above - this is used to test the shape hash's ignore/stop
 // fields property
+// @ts-ignore
 const test_payload_ignored_fields = [
     {
         car: {

@@ -279,14 +279,14 @@ export type AssignRolePayloadT = {
 
 export type CreateServiceUserPayloadT = {
     display_name: string;
-}
+};
 
 export type ServiceUserPermissionSetT = {
     containers: string[];
     ontology: string[];
     data: string[];
     users: string[];
-}
+};
 
 export type ImportDataT = {
     id: number;
@@ -352,6 +352,10 @@ export type TypeMappingTransformationT = {
     type_mapping_id: string;
     type: string;
     conditions?: TypeMappingTransformationCondition[];
+    config: {
+        on_conversion_error: string;
+        on_key_extraction_error: string;
+    };
     metatype_id?: string;
     metatype_relationship_pair_id?: string;
     origin_id_key?: string;
