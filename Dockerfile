@@ -38,4 +38,4 @@ ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait
 RUN chmod +x /wait
 
 EXPOSE 8090
-CMD /wait && cd ./dist && pm2-runtime main.js
+CMD /wait && pm2-runtime ./dist/main.js
