@@ -829,6 +829,7 @@ export default {
             create: 'Create',
             edit: 'Save',
             reset: 'Reset',
+            cancel: 'Cancel',
             viewSamplePayload: 'View Sample Payload',
             samplePayloadHelp: 'This is an example of the data this transformation will be applied to.',
             constantValue: 'constant value',
@@ -877,6 +878,7 @@ export default {
             dataType: 'Data Type',
             addColumn: 'Add Column',
             configurationHelp: 'Transformation configuration options, generally how to deal with errors on key mapping and conversion.',
+            done: 'Done',
         },
         deleteTypeMapping: {
             deleteTypeMapping: 'Delete Type Mapping',
@@ -1114,6 +1116,7 @@ export default {
             successfullyDeleted: 'Data Successfully Deleted',
             completed: 'completed',
             noData: 'no data',
+            done: 'Done',
         },
         containerInvite: {
             button: 'Invite User to Container',

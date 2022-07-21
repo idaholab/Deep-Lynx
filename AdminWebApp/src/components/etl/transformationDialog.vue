@@ -679,54 +679,64 @@
           </v-expansion-panel>
         </v-expansion-panels>
       </v-card-text>
-      <v-card-actions class="fixedContainer">
-        <v-btn
-            v-if="!transformation"
-            @click="createTransformation()"
-            color="success"
-            class="mr-4"
-        >
-          <v-progress-circular
-              indeterminate
-              v-if="loading"
-          ></v-progress-circular>
-          <span v-if="!loading">{{$t("dataMapping.create")}}</span>
-        </v-btn>
+      <v-card-actions class="fixedContainer d-flex flex-row">
+        <p class="ma-0"><span style="color:red">*</span> = {{$t('dataMapping.requiredField')}}</p>
+        <v-spacer />
+        <div>
+          <v-btn
+              v-if="!transformation"
+              @click="createTransformation()"
+              color="success"
+              text
+          >
+            <v-progress-circular
+                indeterminate
+                v-if="loading"
+            ></v-progress-circular>
+            <span v-if="!loading">{{$t("dataMapping.create")}}</span>
+          </v-btn>
 
-        <v-btn
-            v-if="transformation"
-            @click="editTransformation()"
-            color="success"
-            class="mr-4"
-            :disabled="transformation.archived"
-        >
-          <v-progress-circular
-              indeterminate
-              v-if="loading"
-          ></v-progress-circular>
-          <span v-if="!loading">{{$t("dataMapping.edit")}}</span>
-        </v-btn>
+          <v-btn
+              v-if="transformation"
+              @click="editTransformation()"
+              color="success"
+              text
+              :disabled="transformation.archived"
+          >
+            <v-progress-circular
+                indeterminate
+                v-if="loading"
+            ></v-progress-circular>
+            <span v-if="!loading">{{$t("dataMapping.edit")}}</span>
+          </v-btn>
 
-        <v-btn
-            @click="reset()"
+          <v-btn
+              @click="reset()"
+              color="error"
+              text
+              v-if="!loading && !transformation"
+          >
+            {{$t("dataMapping.reset")}}
+          </v-btn>
+
+          <v-btn
+              @click="editReset()"
+              color="error"
+              text
+              v-if="!loading && transformation"
+              :disabled="transformation.archived"
+          >
+            {{$t("dataMapping.reset")}}
+          </v-btn>
+
+          <v-btn
+            @click="dialog = false"
             color="error"
-            class="mr-4"
-            v-if="!loading && !transformation"
-        >
-          {{$t("dataMapping.reset")}}
-        </v-btn>
-
-        <v-btn
-            @click="editReset()"
-            color="error"
-            class="mr-4"
-            v-if="!loading && transformation"
-            :disabled="transformation.archived"
-        >
-          {{$t("dataMapping.reset")}}
-        </v-btn>
-
-        <p><span style="color:red">*</span> = {{$t('dataMapping.requiredField')}}</p>
+            text
+          >
+            {{$t("dataMapping.cancel")}}
+          </v-btn>
+        </div>
       </v-card-actions>
     </v-card>
   </v-dialog>
