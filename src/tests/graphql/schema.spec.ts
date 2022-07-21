@@ -661,6 +661,7 @@ describe('The GraphQL Schema Generator', async () => {
 
     it('can generate a valid schema', async () => {
         const schemaGenerator = new GraphQLSchemaGenerator();
+        GraphQLSchemaGenerator.resetSchema();
 
         const containerSchema = await schemaGenerator.ForContainer(containerID, {});
         expect(containerSchema.isError).false;
@@ -727,6 +728,7 @@ describe('The GraphQL Schema Generator', async () => {
     // the processed data should generate 1 Maintenance record and 2 Maintenance Entry records by this point
     it('can return nodes based on metadata', async () => {
         const schemaGenerator = new GraphQLSchemaGenerator();
+        GraphQLSchemaGenerator.resetSchema();
 
         const containerSchema = await schemaGenerator.ForContainer(containerID, {});
         expect(containerSchema.isError).false;

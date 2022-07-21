@@ -18,7 +18,7 @@ export default class MetatypeRelationshipKeyRepository extends Repository implem
 
     delete(k: MetatypeRelationshipKey): Promise<Result<boolean>> {
         if (k.id) {
-            void this.#relationshipRepo.deleteCached(k.metatype_relationship_id!);
+            void this.#relationshipRepo.deleteCached(k.metatype_relationship_id!, k.container_id);
             return this.#mapper.Delete(k.id);
         }
 
@@ -27,7 +27,7 @@ export default class MetatypeRelationshipKeyRepository extends Repository implem
 
     archive(user: User, k: MetatypeRelationshipKey): Promise<Result<boolean>> {
         if (k.id) {
-            void this.#relationshipRepo.deleteCached(k.metatype_relationship_id!);
+            void this.#relationshipRepo.deleteCached(k.metatype_relationship_id!, k.container_id);
             return this.#mapper.Archive(k.id, user.id!);
         }
 
@@ -36,7 +36,7 @@ export default class MetatypeRelationshipKeyRepository extends Repository implem
 
     unarchive(user: User, k: MetatypeRelationshipKey): Promise<Result<boolean>> {
         if (k.id) {
-            void this.#relationshipRepo.deleteCached(k.metatype_relationship_id!);
+            void this.#relationshipRepo.deleteCached(k.metatype_relationship_id!, k.container_id);
             return this.#mapper.Unarchive(k.id, user.id!);
         }
 
@@ -53,7 +53,7 @@ export default class MetatypeRelationshipKeyRepository extends Repository implem
             return Promise.resolve(Result.Failure(`key does not pass validation ${errors.join(',')}`));
         }
 
-        void this.#relationshipRepo.deleteCached(relationshipKey.metatype_relationship_id!);
+        void this.#relationshipRepo.deleteCached(relationshipKey.metatype_relationship_id!, relationshipKey.container_id);
 
         if (relationshipKey.id) {
             // to allow partial updates we must first fetch the original object
@@ -87,7 +87,7 @@ export default class MetatypeRelationshipKeyRepository extends Repository implem
                 return Promise.resolve(Result.Failure(`some keys do not pass validation ${errors.join(',')}`));
             }
 
-            void this.#relationshipRepo.deleteCached(key.metatype_relationship_id!);
+            void this.#relationshipRepo.deleteCached(key.metatype_relationship_id!, key.container_id);
             key.id ? toUpdate.push(key) : toCreate.push(key);
         }
 

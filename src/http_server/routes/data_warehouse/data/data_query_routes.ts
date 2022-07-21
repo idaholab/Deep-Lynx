@@ -6,13 +6,13 @@ import GraphQLSchemaGenerator from '../../../../graphql/schema';
 export default class DataQueryRoutes {
     public static mount(app: Application, middleware: any[]) {
         app.post('/containers/:containerID/data', ...middleware, authInContainer('read', 'data'), this.query);
+        app.delete('/containers/:containerID/data', ...middleware, authInContainer('read', 'data'), this.resetSchema);
     }
 
     // very simple route that passes the raw body directly to the the graphql query
     // for the complex portions of this endpoint visit the data_query folder and functions
     private static query(req: Request, res: Response, next: NextFunction) {
         const generator = new GraphQLSchemaGenerator();
-
         generator
             .ForContainer(req.container?.id!, {
                 ontologyVersionID: req.query.ontologyVersionID as string,
@@ -24,7 +24,6 @@ export default class DataQueryRoutes {
                     schemaResult.asResponse(res);
                     return;
                 }
-
                 graphql({
                     schema: schemaResult.value,
                     source: req.body.query,
@@ -40,5 +39,11 @@ export default class DataQueryRoutes {
             .catch((e) => {
                 res.status(500).json(e.toString());
             });
+    }
+
+    private static resetSchema(req: Request, res: Response, next: NextFunction) {
+        GraphQLSchemaGenerator.resetSchema(req.container?.id);
+        res.sendStatus(200);
+        return;
     }
 }

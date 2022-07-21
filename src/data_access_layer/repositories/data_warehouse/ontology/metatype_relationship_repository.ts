@@ -10,6 +10,7 @@ import MetatypeRelationshipKeyMapper from '../../../mappers/data_warehouse/ontol
 import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
+import GraphQLSchemaGenerator from '../../../../graphql/schema';
 
 /*
     MetatypeRelationshipRepository contains methods for persisting and retrieving a metatype relationship
@@ -40,7 +41,7 @@ export default class MetatypeRelationshipRepository extends Repository implement
 
             Object.assign(original.value, m);
 
-            void this.deleteCached(m.id);
+            void this.deleteCached(m.id, m.container_id);
 
             const result = await this.#mapper.Update(user.id!, original.value, transaction.value);
             if (result.isError) {
@@ -112,7 +113,7 @@ export default class MetatypeRelationshipRepository extends Repository implement
 
             if (metatype.id) {
                 toUpdate.push(metatype);
-                void this.deleteCached(metatype.id);
+                void this.deleteCached(metatype.id, metatype.container_id);
             } else {
                 toCreate.push(metatype);
             }
@@ -250,7 +251,7 @@ export default class MetatypeRelationshipRepository extends Repository implement
 
     async delete(m: MetatypeRelationship): Promise<Result<boolean>> {
         if (m.id) {
-            void this.deleteCached(m.id);
+            void this.deleteCached(m.id, m.container_id);
 
             return this.#mapper.Delete(m.id);
         }
@@ -260,7 +261,7 @@ export default class MetatypeRelationshipRepository extends Repository implement
 
     archive(user: User, m: MetatypeRelationship): Promise<Result<boolean>> {
         if (m.id) {
-            void this.deleteCached(m.id);
+            void this.deleteCached(m.id, m.container_id);
 
             return this.#mapper.Archive(m.id, user.id!);
         }
@@ -270,7 +271,7 @@ export default class MetatypeRelationshipRepository extends Repository implement
 
     unarchive(user: User, m: MetatypeRelationship): Promise<Result<boolean>> {
         if (m.id) {
-            void this.deleteCached(m.id);
+            void this.deleteCached(m.id, m.container_id);
 
             return this.#mapper.Unarchive(m.id, user.id!);
         }
@@ -315,10 +316,11 @@ export default class MetatypeRelationshipRepository extends Repository implement
         return Promise.resolve(set);
     }
 
-    async deleteCached(id: string): Promise<boolean> {
+    async deleteCached(id: string, containerID?: string): Promise<boolean> {
         const deleted = await Cache.del(`${MetatypeRelationshipMapper.tableName}:${id}`);
         if (!deleted) Logger.error(`unable to remove metatype relationship ${id} from cache`);
 
+        GraphQLSchemaGenerator.resetSchema(containerID);
         return Promise.resolve(deleted);
     }
 

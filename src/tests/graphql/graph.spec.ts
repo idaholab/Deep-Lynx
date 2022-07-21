@@ -24,6 +24,7 @@ import MetatypeRelationshipPairMapper from '../../data_access_layer/mappers/data
 import EdgeMapper from '../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import Edge from '../../domain_objects/data_warehouse/data/edge';
 import GraphQLSchemaGenerator from '../../graphql/schema';
+import {plainToClass} from 'class-transformer';
 
 describe('Using a new GraphQL Query on graph return we', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -199,7 +200,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         const nodeResults = await nMapper.BulkCreateOrUpdateByCompositeID('test suite', nodeList);
         expect(nodeResults.isError, metatypeResults.error?.error).false;
         expect(nodeResults.value.length).eq(75);
-        nodes = nodeResults.value;
+        nodes = plainToClass(Node, nodeResults.value);
 
         const musicians = nodes.slice(0, 16);
         expect(musicians.length).eq(16);
@@ -621,6 +622,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         expect(edgeResults.value.length).eq(72);
 
         const schemaGenerator = new GraphQLSchemaGenerator();
+        GraphQLSchemaGenerator.resetSchema();
 
         const schemaResults = await schemaGenerator.ForContainer(containerID, {});
         expect(schemaResults.isError).false;
@@ -677,6 +679,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
 
     it('can save a query n layers deep given a root node to file', async () => {
         const schemaGenerator = new GraphQLSchemaGenerator();
+        GraphQLSchemaGenerator.resetSchema();
 
         const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true});
         expect(schemaResults.isError).false;

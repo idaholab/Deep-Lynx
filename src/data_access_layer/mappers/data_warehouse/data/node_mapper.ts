@@ -156,7 +156,7 @@ export default class NodeMapper extends Mapper {
 
         const values = nodes.map((n) => [
             n.container_id,
-            n.metatype!.id,
+            n.metatype ? n.metatype.id : n.metatype_id,
             JSON.stringify(n.properties),
             n.original_data_id,
             n.data_source_id,
@@ -190,7 +190,7 @@ export default class NodeMapper extends Mapper {
         const values = nodes.map((n) => [
             n.id,
             n.container_id,
-            n.metatype!.id,
+            n.metatype ? n.metatype.id : n.metatype_id,
             JSON.stringify(n.properties),
             n.original_data_id,
             n.data_source_id,
