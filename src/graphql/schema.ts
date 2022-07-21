@@ -34,6 +34,9 @@ import {plainToClass} from "class-transformer";
 import Node from "../domain_objects/data_warehouse/data/node";
 import {Transform} from "stream";
 import Edge from "../domain_objects/data_warehouse/data/edge";
+import Config from "../services/config";
+
+let GRAPHQLSCHEMA: Map<string, GraphQLSchema> = new Map<string, GraphQLSchema>();
 
 // GraphQLSchemaGenerator takes a container and generates a valid GraphQL schema for all contained metatypes. This will
 // allow users to query and filter data based on node type, the various properties that type might have, and other bits
@@ -58,6 +61,11 @@ export default class GraphQLSchemaGenerator {
     // generate requires a containerID because the schema it generates is based on a user's ontology and ontologies are
     // separated by containers
     async ForContainer(containerID: string, options: ResolverOptions): Promise<Result<GraphQLSchema>> {
+        // check for existence of cached schema, else generate the schema dynamically
+        if (GRAPHQLSCHEMA.has(containerID) && Config.cache_graphql) {
+            return Promise.resolve(Result.Success(GRAPHQLSCHEMA.get(containerID)!));
+        }
+
         // fetch the currently published ontology if the versionID wasn't provided
         if (!options.ontologyVersionID) {
             const ontResults = await this.#ontologyRepo
@@ -73,13 +81,13 @@ export default class GraphQLSchemaGenerator {
             }
         }
 
-        // fetch all metatypes for the container, with their keys - the single most expensive call of this function
+        // fetch all metatypes for the container, with their keys
         const metatypeResults = await this.#metatypeRepo
             .where()
             .containerID('eq', containerID)
             .and()
             .ontologyVersion('eq', options.ontologyVersionID)
-            .list(true);
+            .list(true, {sortBy: 'id'});
         if (metatypeResults.isError) {
             return Promise.resolve(Result.Pass(metatypeResults));
         }
@@ -698,16 +706,14 @@ export default class GraphQLSchemaGenerator {
             resolve: this.resolverForNodes(containerID, options) as any
         };
 
-        return Promise.resolve(
-            Result.Success(
-                new GraphQLSchema({
-                    query: new GraphQLObjectType({
-                        name: 'Query',
-                        fields,
-                    }),
-                }),
-            ),
-        );
+        GRAPHQLSCHEMA.set(containerID, new GraphQLSchema({
+            query: new GraphQLObjectType({
+                name: 'Query',
+                fields,
+            }),
+        }));
+
+        return Promise.resolve(Result.Success(GRAPHQLSCHEMA.get(containerID)!));
     }
 
     resolverForMetatype(containerID: string, metatype: Metatype, resolverOptions?: ResolverOptions): (_: any, {input}: {input: any}) => any {
@@ -1548,6 +1554,15 @@ export default class GraphQLSchemaGenerator {
         const operator = parts.shift();
 
         return [operator as string, parts.join(' ')];
+    }
+
+    public static resetSchema(containerID?: string): void {
+        if(containerID) {
+            GRAPHQLSCHEMA.delete(containerID)
+            return
+        }
+
+        GRAPHQLSCHEMA = new Map<string, GraphQLSchema>()
     }
 }
 

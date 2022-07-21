@@ -375,7 +375,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
                 }
             }`,
         });
-        expect(response.errors).undefined;
+        expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.relationships.forwards;
         expect(data.length).eq(4);
@@ -392,6 +392,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
 
     it('can save by relationship to file', async () => {
         const schemaGenerator = new GraphQLSchemaGenerator();
+        GraphQLSchemaGenerator.resetSchema();
 
         const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true});
         expect(schemaResults.isError).false;
@@ -432,7 +433,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
                 }
             }`,
         });
-        expect(response.errors).undefined;
+        expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.relationships.forwards;
         expect(data.length).eq(1);
@@ -467,7 +468,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
                 }
             }`,
         });
-        expect(response.errors).undefined;
+        expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.relationships.forwards;
         expect(data.length).eq(2);

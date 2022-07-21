@@ -108,6 +108,7 @@ export class Config {
     private readonly _azure_service_bus_connection_string: string;
 
     private readonly _limit_default: number;
+    private readonly _cache_graphql: boolean;
 
     private constructor() {
         // Either assign a sane default of the env var is missing, or create your
@@ -223,6 +224,8 @@ export class Config {
         this._azure_service_bus_connection_string = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING || '';
 
         this._limit_default = process.env.LIMIT_DEFAULT ? parseInt(process.env.LIMIT_DEFAULT!, 10) : 10000;
+
+        this._cache_graphql = process.env.CACHE_GRAPHQL === 'true';
 
         // generate and save a key if we didn't start with one
         if (!this._encryption_key_path) {
@@ -538,6 +541,10 @@ export class Config {
 
     get limit_default(): number {
         return this._limit_default;
+    }
+
+    get cache_graphql(): boolean {
+        return this._cache_graphql;
     }
 
     public static Instance(): Config {

@@ -12,6 +12,7 @@ import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatyp
 import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import {User} from '../../../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
+import GraphQLSchemaGenerator from '../../../../graphql/schema';
 
 /*
     MetatypeRelationshipPair contains methods for persisting and retrieving a metatype relationship pair
@@ -24,7 +25,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
 
     async delete(p: MetatypeRelationshipPair): Promise<Result<boolean>> {
         if (p.id) {
-            void this.deleteCached(p.id);
+            void this.deleteCached(p.id, p.container_id);
 
             return this.#mapper.Delete(p.id);
         }
@@ -34,7 +35,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
 
     archive(user: User, p: MetatypeRelationshipPair): Promise<Result<boolean>> {
         if (p.id) {
-            void this.deleteCached(p.id);
+            void this.deleteCached(p.id, p.container_id);
 
             return this.#mapper.Archive(p.id, user.id!);
         }
@@ -44,7 +45,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
 
     unarchive(user: User, p: MetatypeRelationshipPair): Promise<Result<boolean>> {
         if (p.id) {
-            void this.deleteCached(p.id);
+            void this.deleteCached(p.id, p.container_id);
 
             return this.#mapper.Unarchive(p.id, user.id!);
         }
@@ -120,7 +121,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
 
             Object.assign(original.value, p);
 
-            void this.deleteCached(p.id);
+            void this.deleteCached(p.id, p.container_id);
             const updated = await this.#mapper.Update(user.id!, original.value);
             if (updated.isError) return Promise.resolve(Result.Failure(`failed to update metatype relationship pair ${updated.error?.error}`));
 
@@ -181,7 +182,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
 
             if (pair.id) {
                 toUpdate.push(pair);
-                void this.deleteCached(pair.id);
+                void this.deleteCached(pair.id, pair.container_id);
             } else {
                 toCreate.push(pair);
             }
@@ -285,10 +286,11 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return Promise.resolve(set);
     }
 
-    async deleteCached(id: string): Promise<boolean> {
+    async deleteCached(id: string, containerID?: string): Promise<boolean> {
         const deleted = await Cache.del(`${MetatypeRelationshipPairMapper.tableName}:${id}`);
         if (!deleted) Logger.error(`unable to remove metatype relationship pair ${id} from cache`);
 
+        GraphQLSchemaGenerator.resetSchema(containerID);
         return Promise.resolve(deleted);
     }
 
