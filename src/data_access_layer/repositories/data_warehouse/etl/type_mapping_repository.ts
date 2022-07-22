@@ -60,6 +60,9 @@ export default class TypeMappingRepository extends Repository implements Reposit
     async findByShapeHash(shapeHash: string, dataSourceID: string, loadTransformations = true): Promise<Result<TypeMapping>> {
         const retrieved = await this.#mapper.RetrieveByShapeHash(dataSourceID, shapeHash);
 
+        // This is a temporary fix.
+        retrieved.value = plainToClass(TypeMapping, retrieved.value);
+
         if (!retrieved.isError && loadTransformations) {
             // we do not want to cache this object unless we have the entire object
             const transformations = await this.#transformationMapper.ListForTypeMapping(retrieved.value.id!);
