@@ -5,7 +5,6 @@ import Node, {NodeTransformation} from '../../../../domain_objects/data_warehous
 import {NodeFile} from '../../../../domain_objects/data_warehouse/data/file';
 
 const format = require('pg-format');
-const resultClass = Node;
 
 /*
     NodeMapper extends the Postgres database Mapper class and allows
@@ -17,6 +16,7 @@ const resultClass = Node;
     class/interface as well.
 */
 export default class NodeMapper extends Mapper {
+    public resultClass = Node;
     public static tableName = 'nodes';
     public static viewName = 'current_nodes';
 
@@ -37,7 +37,7 @@ export default class NodeMapper extends Mapper {
     public async CreateOrUpdateByCompositeID(userID: string, node: Node, transaction?: PoolClient): Promise<Result<Node>> {
         const r = await super.run(this.createOrUpdateStatement(userID, node), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -47,14 +47,14 @@ export default class NodeMapper extends Mapper {
     public BulkCreateOrUpdateByCompositeID(userID: string, nodes: Node[], transaction?: PoolClient): Promise<Result<Node[]>> {
         return super.run(this.createOrUpdateStatement(userID, ...nodes), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async Update(userID: string, node: Node, transaction?: PoolClient): Promise<Result<Node>> {
         const r = await super.run(this.fullUpdateStatement(userID, node), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -64,7 +64,7 @@ export default class NodeMapper extends Mapper {
     public BulkUpdate(userID: string, nodes: Node[], transaction?: PoolClient): Promise<Result<Node[]>> {
         return super.run(this.fullUpdateStatement(userID, ...nodes), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
@@ -114,18 +114,18 @@ export default class NodeMapper extends Mapper {
     public async Retrieve(id: string, transaction?: PoolClient): Promise<Result<Node>> {
         return super.retrieve(this.retrieveStatement(id), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async RetrieveByCompositeOriginalID(originalID: string, dataSourceID: string, metatypeID: string, transaction?: PoolClient): Promise<Result<Node>> {
-        return super.retrieve(this.retrieveByCompositeOriginalIDStatement(dataSourceID, metatypeID, originalID), {transaction, resultClass});
+        return super.retrieve(this.retrieveByCompositeOriginalIDStatement(dataSourceID, metatypeID, originalID), {transaction, resultClass: this.resultClass});
     }
 
     public async DomainRetrieve(id: string, containerID: string, transaction?: PoolClient): Promise<Result<Node>> {
         return super.retrieve(this.domainRetrieveStatement(id, containerID), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 

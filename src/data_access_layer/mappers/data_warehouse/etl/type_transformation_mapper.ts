@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 
 const format = require('pg-format');
-const resultClass = TypeTransformation;
 
 /*
     TypeTransformationMapper extends the Postgres database Mapper class and allows
@@ -16,6 +15,7 @@ const resultClass = TypeTransformation;
     class/interface as well.
 */
 export default class TypeTransformationMapper extends Mapper {
+    public resultClass = TypeTransformation;
     public static tableName = 'type_mapping_transformations';
 
     private static instance: TypeTransformationMapper;
@@ -31,7 +31,7 @@ export default class TypeTransformationMapper extends Mapper {
     public async Create(userID: string, t: TypeTransformation, transaction?: PoolClient): Promise<Result<TypeTransformation>> {
         const r = await super.run(this.createStatement(userID, t), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -41,14 +41,14 @@ export default class TypeTransformationMapper extends Mapper {
     public async BulkCreate(userID: string, t: TypeTransformation[], transaction?: PoolClient): Promise<Result<TypeTransformation[]>> {
         return super.run(this.createStatement(userID, ...t), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async Update(userID: string, t: TypeTransformation, transaction?: PoolClient): Promise<Result<TypeTransformation>> {
         const r = await super.run(this.fullUpdateStatement(userID, t), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -58,22 +58,22 @@ export default class TypeTransformationMapper extends Mapper {
     public async BulkUpdate(userID: string, t: TypeTransformation[], transaction?: PoolClient): Promise<Result<TypeTransformation[]>> {
         return super.run(this.fullUpdateStatement(userID, ...t), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async Retrieve(id: string): Promise<Result<TypeTransformation>> {
         return super.retrieve<TypeTransformation>(this.retrieveStatement(id), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async ListForTypeMapping(typeMappingID: string): Promise<Result<TypeTransformation[]>> {
-        return super.rows<TypeTransformation>(this.listByMapping(typeMappingID), {resultClass});
+        return super.rows<TypeTransformation>(this.listByMapping(typeMappingID), {resultClass: this.resultClass});
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<TypeTransformation[]>> {
-        return super.rows(this.listFromIDsStatement(ids), {resultClass});
+        return super.rows(this.listFromIDsStatement(ids), {resultClass: this.resultClass});
     }
 
     public async BulkDelete(transformations: TypeTransformation[], transaction?: PoolClient): Promise<Result<boolean>> {

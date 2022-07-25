@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import {ContainerAlert} from '../../../../domain_objects/data_warehouse/ontology/container';
 
 const format = require('pg-format');
-const resultClass = ContainerAlert;
 
 /*
     ContainerAlertMapper extends the Postgres database Mapper class and allows
@@ -16,6 +15,7 @@ const resultClass = ContainerAlert;
     class/interface as well.
 */
 export default class ContainerAlertMapper extends Mapper {
+    public resultClass = ContainerAlert;
     public static tableName = 'container_alerts';
 
     private static instance: ContainerAlertMapper;
@@ -31,7 +31,7 @@ export default class ContainerAlertMapper extends Mapper {
     public async Create(userID: string, c: ContainerAlert, transaction?: PoolClient): Promise<Result<ContainerAlert>> {
         const r = await super.run(this.createStatement(userID, c), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -43,16 +43,16 @@ export default class ContainerAlertMapper extends Mapper {
 
         return super.run(this.createStatement(userID, ...c), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async ListForContainer(containerID: string): Promise<Result<ContainerAlert[]>> {
-        return super.rows(this.listForContainerStatement(containerID), {resultClass});
+        return super.rows(this.listForContainerStatement(containerID), {resultClass: this.resultClass});
     }
 
     public async ListUnacknowledgedForContainer(containerID: string): Promise<Result<ContainerAlert[]>> {
-        return super.rows(this.listUnacknowledgedForContainerStatement(containerID), {resultClass});
+        return super.rows(this.listUnacknowledgedForContainerStatement(containerID), {resultClass: this.resultClass});
     }
 
     public async SetAcknowledged(id: string, userID: string): Promise<Result<boolean>> {

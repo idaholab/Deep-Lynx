@@ -12,7 +12,6 @@ import {DataStaging} from '../../../../domain_objects/data_warehouse/import/impo
 import Config from '../../../../services/config';
 
 const format = require('pg-format');
-const resultClass = DataSourceRecord;
 const devnull = require('dev-null');
 
 /*
@@ -25,6 +24,7 @@ const devnull = require('dev-null');
     class/interface as well.
 */
 export default class DataSourceMapper extends Mapper {
+    public resultClass = DataSourceRecord;
     public static tableName = 'data_sources';
 
     private static instance: DataSourceMapper;
@@ -42,7 +42,7 @@ export default class DataSourceMapper extends Mapper {
     public async Create(userID: string, input: DataSourceRecord, transaction?: PoolClient): Promise<Result<DataSourceRecord>> {
         const r = await super.run(this.createStatement(userID, input), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -60,7 +60,7 @@ export default class DataSourceMapper extends Mapper {
     public async Update(userID: string, input: DataSourceRecord, transaction?: PoolClient): Promise<Result<DataSourceRecord>> {
         const r = await super.run(this.fullUpdateStatement(userID, input), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -76,7 +76,7 @@ export default class DataSourceMapper extends Mapper {
     }
 
     public Retrieve(id: string): Promise<Result<DataSourceRecord>> {
-        return super.retrieve(this.retrieveStatement(id), {resultClass});
+        return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
     public async IsActive(dataSourceID: string): Promise<Result<boolean>> {

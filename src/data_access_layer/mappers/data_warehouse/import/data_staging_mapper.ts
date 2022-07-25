@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import {DataStaging} from '../../../../domain_objects/data_warehouse/import/import';
 
 const format = require('pg-format');
-const resultClass = DataStaging;
 
 /*
     DataStagingMapper extends the Postgres database Mapper class and allows
@@ -16,6 +15,7 @@ const resultClass = DataStaging;
     class/interface as well.
 */
 export default class DataStagingMapper extends Mapper {
+    public resultClass = DataStaging;
     public static tableName = 'data_staging';
 
     private static instance: DataStagingMapper;
@@ -34,7 +34,7 @@ export default class DataStagingMapper extends Mapper {
 
     public async Create(record: DataStaging, transaction?: PoolClient): Promise<Result<DataStaging>> {
         const r = await super.run(this.createStatement(record), {
-            resultClass,
+            resultClass: this.resultClass,
             transaction,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
@@ -45,13 +45,13 @@ export default class DataStagingMapper extends Mapper {
     public async BulkCreate(record: DataStaging[], transaction?: PoolClient): Promise<Result<DataStaging[]>> {
         return super.run(this.createStatement(...record), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async Update(record: DataStaging, transaction?: PoolClient): Promise<Result<DataStaging>> {
         const r = await super.run(this.fullUpdateStatement(record), {
-            resultClass,
+            resultClass: this.resultClass,
             transaction,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
@@ -62,7 +62,7 @@ export default class DataStagingMapper extends Mapper {
     public async BulkUpdate(record: DataStaging[], transaction?: PoolClient): Promise<Result<DataStaging[]>> {
         return super.run(this.fullUpdateStatement(...record), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
@@ -83,17 +83,17 @@ export default class DataStagingMapper extends Mapper {
     public async Retrieve(id: string, transaction?: PoolClient): Promise<Result<DataStaging>> {
         return super.retrieve(this.retrieveStatement(id), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     // list uninserted records which also have an active type mapping record along with transformations
     public async ListUninsertedActiveMapping(importID: string, offset: number, limit: number, transaction?: PoolClient): Promise<Result<DataStaging[]>> {
-        return super.rows<DataStaging>(this.listUninsertedActiveMappingStatement(importID, offset, limit), {resultClass, transaction});
+        return super.rows<DataStaging>(this.listUninsertedActiveMappingStatement(importID, offset, limit), {resultClass: this.resultClass, transaction});
     }
 
     public async ListIDOnly(importID: string): Promise<Result<DataStaging[]>> {
-        return super.rows<DataStaging>(this.listIDOnly(importID), {resultClass});
+        return super.rows<DataStaging>(this.listIDOnly(importID), {resultClass: this.resultClass});
     }
 
     public async SetInserted(id: string, transaction?: PoolClient): Promise<Result<boolean>> {

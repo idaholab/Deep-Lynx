@@ -15,6 +15,7 @@ const format = require('pg-format');
     class/interface as well.
 */
 export default class EventActionStatusMapper extends Mapper {
+    public resultClass = EventActionStatus;
     public static tableName = 'event_action_statuses';
 
     private static instance: EventActionStatusMapper;
@@ -30,7 +31,7 @@ export default class EventActionStatusMapper extends Mapper {
     public async Create(userID: string, input: EventActionStatus, transaction?: PoolClient): Promise<Result<EventActionStatus>> {
         const r = await super.run(this.createStatement(userID, input), {
             transaction,
-            resultClass: EventActionStatus,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -40,7 +41,7 @@ export default class EventActionStatusMapper extends Mapper {
     public async Update(userID: string, input: EventActionStatus, transaction?: PoolClient): Promise<Result<EventActionStatus>> {
         const r = await super.run(this.fullUpdateStatement(userID, input), {
             transaction,
-            resultClass: EventActionStatus,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -49,7 +50,7 @@ export default class EventActionStatusMapper extends Mapper {
 
     public async Retrieve(id: string): Promise<Result<EventActionStatus>> {
         return super.retrieve(this.retrieveStatement(id), {
-            resultClass: EventActionStatus,
+            resultClass: this.resultClass,
         });
     }
 

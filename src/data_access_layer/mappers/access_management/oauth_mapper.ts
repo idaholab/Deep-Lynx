@@ -17,6 +17,7 @@ const resultClass = OAuthApplication;
     class/interface as well.
 */
 export default class OAuthMapper extends Mapper {
+    public resultClass = OAuthApplication;
     public static tableName = 'oauth_applications';
 
     private static instance: OAuthMapper;
@@ -32,7 +33,7 @@ export default class OAuthMapper extends Mapper {
     public async Create(userID: string, app: OAuthApplication, transaction?: PoolClient): Promise<Result<OAuthApplication>> {
         const r = await super.run(this.createStatement(userID, app), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -44,7 +45,7 @@ export default class OAuthMapper extends Mapper {
     public async Update(userID: string, app: OAuthApplication, transaction?: PoolClient): Promise<Result<OAuthApplication>> {
         const r = await super.run(this.fullUpdateStatement(userID, app), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -61,12 +62,12 @@ export default class OAuthMapper extends Mapper {
 
     public async RetrieveByClientID(clientID: string): Promise<Result<OAuthApplication>> {
         return super.retrieve(this.retrieveByClientIDStatement(clientID), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async ListForUser(userID: string): Promise<Result<OAuthApplication[]>> {
-        return super.rows(this.listForUserStatement(userID), {resultClass});
+        return super.rows(this.listForUserStatement(userID), {resultClass: this.resultClass});
     }
 
     // marks an application approved for user

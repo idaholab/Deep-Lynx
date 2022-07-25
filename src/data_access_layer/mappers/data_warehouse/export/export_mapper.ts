@@ -6,7 +6,6 @@ import ExportRecord from '../../../../domain_objects/data_warehouse/export/expor
 import EventRepository from '../../../repositories/event_system/event_repository';
 
 const format = require('pg-format');
-const resultClass = ExportRecord;
 
 /*
     ExportMapper extends the Postgres database Mapper class and allows
@@ -18,6 +17,7 @@ const resultClass = ExportRecord;
     class/interface as well.
 */
 export default class ExportMapper extends Mapper {
+    public resultClass = ExportRecord;
     public static tableName = 'exports';
 
     private static instance: ExportMapper;
@@ -34,7 +34,7 @@ export default class ExportMapper extends Mapper {
 
     public async Create(userID: string, input: ExportRecord, transaction?: PoolClient): Promise<Result<ExportRecord>> {
         const r = await super.run(this.createStatement(userID, input), {
-            resultClass,
+            resultClass: this.resultClass,
             transaction,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
@@ -44,14 +44,14 @@ export default class ExportMapper extends Mapper {
 
     public async BulkCreate(userID: string, input: ExportRecord[], transaction?: PoolClient): Promise<Result<ExportRecord[]>> {
         return super.run(this.createStatement(userID, ...input), {
-            resultClass,
+            resultClass: this.resultClass,
             transaction,
         });
     }
 
     public async Update(userID: string, input: ExportRecord, transaction?: PoolClient): Promise<Result<ExportRecord>> {
         const r = await super.run(this.fullUpdateStatement(userID, input), {
-            resultClass,
+            resultClass: this.resultClass,
             transaction,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
@@ -61,13 +61,13 @@ export default class ExportMapper extends Mapper {
 
     public async BulkUpdate(userID: string, input: ExportRecord[], transaction?: PoolClient): Promise<Result<ExportRecord[]>> {
         return super.run(this.fullUpdateStatement(userID, ...input), {
-            resultClass,
+            resultClass: this.resultClass,
             transaction,
         });
     }
 
     public Retrieve(id: string): Promise<Result<ExportRecord>> {
-        return super.retrieve(this.retrieveStatement(id), {resultClass});
+        return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
     public Delete(id: string): Promise<Result<boolean>> {
