@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 
 const format = require('pg-format');
-const resultClass = MetatypeKey;
 
 /*
     MetatypeKeyMapper extends the Postgres database Mapper class and allows
@@ -16,6 +15,7 @@ const resultClass = MetatypeKey;
     class/interface as well.
 */
 export default class MetatypeKeyMapper extends Mapper {
+    public resultClass = MetatypeKey;
     public static tableName = 'metatype_keys';
 
     private static instance: MetatypeKeyMapper;
@@ -31,7 +31,7 @@ export default class MetatypeKeyMapper extends Mapper {
     public async Create(userID: string, key: MetatypeKey, transaction?: PoolClient): Promise<Result<MetatypeKey>> {
         const r = await super.run(this.createStatement(userID, key), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -41,16 +41,16 @@ export default class MetatypeKeyMapper extends Mapper {
     public async BulkCreate(userID: string, keys: MetatypeKey[], transaction?: PoolClient): Promise<Result<MetatypeKey[]>> {
         return super.run(this.createStatement(userID, ...keys), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async Retrieve(id: string): Promise<Result<MetatypeKey>> {
-        return super.retrieve(this.retrieveStatement(id), {resultClass});
+        return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
     public async ListForMetatype(metatypeID: string): Promise<Result<MetatypeKey[]>> {
-        return super.rows(this.listStatement(metatypeID), {resultClass});
+        return super.rows(this.listStatement(metatypeID), {resultClass: this.resultClass});
     }
 
     public async ListForMetatypeIDs(metatype_ids: string[]): Promise<Result<MetatypeKey[]>> {
@@ -58,13 +58,13 @@ export default class MetatypeKeyMapper extends Mapper {
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<MetatypeKey[]>> {
-        return super.rows(this.listFromIDsStatement(ids), {resultClass});
+        return super.rows(this.listFromIDsStatement(ids), {resultClass: this.resultClass});
     }
 
     public async Update(userID: string, key: MetatypeKey, transaction?: PoolClient): Promise<Result<MetatypeKey>> {
         const r = await super.run(this.fullUpdateStatement(userID, key), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -74,7 +74,7 @@ export default class MetatypeKeyMapper extends Mapper {
     public async BulkUpdate(userID: string, keys: MetatypeKey[], transaction?: PoolClient): Promise<Result<MetatypeKey[]>> {
         return super.run(this.fullUpdateStatement(userID, ...keys), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 

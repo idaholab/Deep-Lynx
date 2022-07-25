@@ -4,7 +4,6 @@ import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 
 const format = require('pg-format');
-const resultClass = Container;
 
 /*
     ContainerMapper extends the Postgres database Mapper class and allows
@@ -16,6 +15,7 @@ const resultClass = Container;
     class/interface as well.
 */
 export default class ContainerMapper extends Mapper {
+    public resultClass = Container;
     public static tableName = 'containers';
 
     private static instance: ContainerMapper;
@@ -31,7 +31,7 @@ export default class ContainerMapper extends Mapper {
     public async Create(userID: string, c: Container, transaction?: PoolClient): Promise<Result<Container>> {
         const r = await super.run(this.createStatement(userID, c), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -43,20 +43,20 @@ export default class ContainerMapper extends Mapper {
 
         return super.run(this.createStatement(userID, ...c), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async Retrieve(id: string): Promise<Result<Container>> {
         return super.retrieve(this.retrieveStatement(id), {
-            resultClass: Container,
+            resultClass: this.resultClass,
         });
     }
 
     public async Update(userID: string, c: Container, transaction?: PoolClient): Promise<Result<Container>> {
         const r = await super.run(this.fullUpdateStatement(userID, c), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -66,7 +66,7 @@ export default class ContainerMapper extends Mapper {
     public async BulkUpdate(userID: string, c: Container[], transaction?: PoolClient): Promise<Result<Container[]>> {
         return super.run(this.fullUpdateStatement(userID, ...c), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
@@ -75,7 +75,7 @@ export default class ContainerMapper extends Mapper {
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<Container[]>> {
-        return super.rows(this.listFromIDsStatement(ids), {resultClass});
+        return super.rows(this.listFromIDsStatement(ids), {resultClass: this.resultClass});
     }
 
     public async Archive(containerID: string, userID: string): Promise<Result<boolean>> {

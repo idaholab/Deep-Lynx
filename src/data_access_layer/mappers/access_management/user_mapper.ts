@@ -7,7 +7,6 @@ const UIDGenerator = require('uid-generator');
 const uidgen = new UIDGenerator();
 
 const format = require('pg-format');
-const resultClass = User;
 
 /*
     UserMapper extends the Postgres database Mapper class and allows
@@ -19,6 +18,7 @@ const resultClass = User;
     class/interface as well.
 */
 export default class UserMapper extends Mapper {
+    public resultClass = User;
     public static tableName = 'users';
 
     private static instance: UserMapper;
@@ -34,7 +34,7 @@ export default class UserMapper extends Mapper {
     public async Create(userID: string, u: User, transaction?: PoolClient): Promise<Result<User>> {
         const r = await super.run(this.createStatement(userID, u), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -46,18 +46,18 @@ export default class UserMapper extends Mapper {
 
         return super.run(this.createStatement(userID, ...u), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async Retrieve(id: string): Promise<Result<User>> {
-        return super.retrieve(this.retrieveStatement(id), {resultClass});
+        return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
     public async Update(userID: string, c: User, transaction?: PoolClient): Promise<Result<User>> {
         const r = await super.run(this.fullUpdateStatement(userID, c), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -67,7 +67,7 @@ export default class UserMapper extends Mapper {
     public async BulkUpdate(userID: string, c: User[], transaction?: PoolClient): Promise<Result<User[]>> {
         return super.run(this.fullUpdateStatement(userID, ...c), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
@@ -81,25 +81,25 @@ export default class UserMapper extends Mapper {
 
     public async RetrieveByEmail(email: string): Promise<Result<User>> {
         return super.retrieve(this.retrieveByEmailStatement(email), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async RetrieveByIdentityProviderID(id: string): Promise<Result<User>> {
         return super.retrieve(this.retrieveByIdentityProviderStatement(id), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async List(): Promise<Result<User[]>> {
-        return super.rows(this.listStatement(), {resultClass});
+        return super.rows(this.listStatement(), {resultClass: this.resultClass});
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<User[]>> {
         if (ids.length === 0) {
-            return super.rows(this.listStatement(), {resultClass});
+            return super.rows(this.listStatement(), {resultClass: this.resultClass});
         } else {
-            return super.rows(this.listFromIDsStatement(ids), {resultClass});
+            return super.rows(this.listFromIDsStatement(ids), {resultClass: this.resultClass});
         }
     }
 

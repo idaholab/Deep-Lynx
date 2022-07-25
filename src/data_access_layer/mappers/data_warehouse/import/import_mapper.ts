@@ -14,7 +14,6 @@ import DataStagingMapper from './data_staging_mapper';
 import DataSourceRepository from '../../../repositories/data_warehouse/import/data_source_repository';
 
 const format = require('pg-format');
-const resultClass = Import;
 const devnull = require('dev-null');
 
 /*
@@ -27,6 +26,7 @@ const devnull = require('dev-null');
     class/interface as well.
 */
 export default class ImportMapper extends Mapper {
+    public resultClass = Import;
     public static tableName = 'imports';
     private static instance: ImportMapper;
 
@@ -43,12 +43,12 @@ export default class ImportMapper extends Mapper {
     public async CreateImport(userID: string, importRecord: Import, transaction?: PoolClient): Promise<Result<Import>> {
         const r = await super.run(this.createStatement(userID, importRecord), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
         const dataSourceRepo = new DataSourceRepository();
-        const datasource = await dataSourceRepo.findByID(importRecord.data_source_id!)
+        const datasource = await dataSourceRepo.findByID(importRecord.data_source_id!);
 
         this.eventRepo.emit(
             new Event({
@@ -65,7 +65,7 @@ export default class ImportMapper extends Mapper {
     }
 
     public Retrieve(id: string, transaction?: PoolClient): Promise<Result<Import>> {
-        return super.retrieve(this.retrieveStatement(id), {resultClass, transaction});
+        return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass, transaction});
     }
 
     // client is not optional here as the lock only applies if your call is in the
@@ -73,7 +73,7 @@ export default class ImportMapper extends Mapper {
     public RetrieveAndLock(id: string, transaction: PoolClient, wait?: boolean): Promise<Result<Import>> {
         return super.retrieve(this.retrieveLockStatement(id, wait), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
@@ -82,13 +82,13 @@ export default class ImportMapper extends Mapper {
     public RetrieveLastAndLock(dataSourceID: string, transaction: PoolClient): Promise<Result<Import>> {
         return super.retrieve(this.retrieveLastAndLockStatement(dataSourceID), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public RetrieveLast(dataSourceID: string): Promise<Result<Import>> {
         return super.retrieve(this.retrieveLastStatement(dataSourceID), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
@@ -118,7 +118,7 @@ export default class ImportMapper extends Mapper {
     // list all imports which have data with an uninserted status - while we used to check status of the import,
     // checking for uninserted records is a far better method when attempting to gauge if an import still needs processed
     public async ListWithUninsertedData(dataSourceID: string, limit: number): Promise<Result<Import[]>> {
-        return super.rows(this.listWithUninsertedDataStatement(dataSourceID, limit), {resultClass});
+        return super.rows(this.listWithUninsertedDataStatement(dataSourceID, limit), {resultClass: this.resultClass});
     }
 
     public async Count(): Promise<Result<number>> {

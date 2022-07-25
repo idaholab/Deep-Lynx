@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import Report from '../../../../domain_objects/data_warehouse/data/report';
 
 const format = require('pg-format');
-const resultClass = Report;
 
 /*
     ReportMapper extends the Postgres database Mapper class and allows the user
@@ -16,6 +15,7 @@ const resultClass = Report;
     class/interface as well.
 */
 export default class ReportMapper extends Mapper {
+    public resultClass = Report;
     public static tableName = 'reports';
 
     private static instance: ReportMapper;
@@ -31,9 +31,11 @@ export default class ReportMapper extends Mapper {
     public async Create(userID: string, report: Report, transaction?: PoolClient): Promise<Result<Report>> {
         const r = await super.run(this.createStatement(userID, report), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
-        if (r.isError) {return Promise.resolve(Result.Pass(r));}
+        if (r.isError) {
+            return Promise.resolve(Result.Pass(r));
+        }
 
         return Promise.resolve(Result.Success(r.value[0]));
     }
@@ -50,9 +52,11 @@ export default class ReportMapper extends Mapper {
     public async Update(report: Report, transaction?: PoolClient): Promise<Result<Report>> {
         const r = await super.run(this.updateStatement(report), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
-        if (r.isError) {return Promise.resolve(Result.Pass(r));}
+        if (r.isError) {
+            return Promise.resolve(Result.Pass(r));
+        }
 
         return Promise.resolve(Result.Success(r.value[0]));
     }
@@ -60,7 +64,7 @@ export default class ReportMapper extends Mapper {
     public async Retrieve(id: string, transaction?: PoolClient): Promise<Result<Report>> {
         return super.retrieve<Report>(this.retrieveStatement(id), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
@@ -87,13 +91,7 @@ export default class ReportMapper extends Mapper {
                         status_message,
                         notify_users,
                         created_by) VALUES %L RETURNING *`;
-        const values = reports.map((r) => [
-            r.container_id,
-            r.status,
-            r.status_message,
-            r.notify_users,
-            userID,
-        ]);
+        const values = reports.map((r) => [r.container_id, r.status, r.status_message, r.notify_users, userID]);
 
         return format(text, values);
     }
@@ -101,8 +99,8 @@ export default class ReportMapper extends Mapper {
     private setStatusStatement(id: string, status: 'ready' | 'processing' | 'error' | 'completed', message?: string): QueryConfig {
         return {
             text: `UPDATE reports SET status = $2, status_message = $3 WHERE id = $1`,
-            values: [id, status, message]
-        }
+            values: [id, status, message],
+        };
     }
 
     private updateStatement(...reports: Report[]): string {
@@ -118,13 +116,7 @@ export default class ReportMapper extends Mapper {
                     status_message,
                     notify_users)
                     WHERE u.id::bigint = r.id RETURNING r.*`;
-        const values = reports.map((r) => [
-            r.id,
-            r.container_id,
-            r.status,
-            r.status_message,
-            r.notify_users
-        ]);
+        const values = reports.map((r) => [r.id, r.container_id, r.status, r.status_message, r.notify_users]);
 
         return format(text, values);
     }

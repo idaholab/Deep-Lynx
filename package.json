@@ -106,7 +106,7 @@
         "buffer": "^6.0.3",
         "build-url": "^6.0.1",
         "casbin-pg-adapter": "^1.4.0",
-        "class-transformer": "^0.4.0",
+        "class-transformer": "^0.5.1",
         "class-transformer-validator": "^0.9.1",
         "class-validator": "^0.13.1",
         "copyfiles": "^2.4.1",

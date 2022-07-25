@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import MetatypeRelationshipPair from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
 
 const format = require('pg-format');
-const resultClass = MetatypeRelationshipPair;
 
 /*
     MetatypeRelationshipPairMapper extends the Postgres database Mapper class and allows
@@ -16,6 +15,7 @@ const resultClass = MetatypeRelationshipPair;
     class/interface as well.
 */
 export default class MetatypeRelationshipPairMapper extends Mapper {
+    public resultClass = MetatypeRelationshipPair;
     public static tableName = 'metatype_relationship_pairs';
 
     private static instance: MetatypeRelationshipPairMapper;
@@ -31,7 +31,7 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
     public async Create(userID: string, input: MetatypeRelationshipPair, transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair>> {
         const r = await super.run(this.createStatement(userID, input), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -41,18 +41,18 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
     public async BulkCreate(userID: string, input: MetatypeRelationshipPair[], transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair[]>> {
         return super.run(this.createStatement(userID, ...input), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async Retrieve(id: string): Promise<Result<MetatypeRelationshipPair>> {
-        return super.retrieve(this.retrieveStatement(id), {resultClass});
+        return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
     public async Update(userID: string, p: MetatypeRelationshipPair, transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair>> {
         const r = await super.run(this.fullUpdateStatement(userID, p), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -62,7 +62,7 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
     public async BulkUpdate(userID: string, p: MetatypeRelationshipPair[], transaction?: PoolClient): Promise<Result<MetatypeRelationshipPair[]>> {
         return super.run(this.fullUpdateStatement(userID, ...p), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 

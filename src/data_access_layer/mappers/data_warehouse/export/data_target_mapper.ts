@@ -6,8 +6,6 @@ import Event from '../../../../domain_objects/event_system/event';
 import EventRepository from '../../../repositories/event_system/event_repository';
 
 const format = require('pg-format');
-const resultClass = DataTargetRecord;
-const devnull = require('dev-null');
 
 /*
     DataTargetMapper extends the Postgres database Mapper class and allows
@@ -19,6 +17,7 @@ const devnull = require('dev-null');
     class/interface as well.
 */
 export default class DataTargetMapper extends Mapper {
+    public resultClass = DataTargetRecord;
     public static tableName = 'data_targets';
 
     private static instance: DataTargetMapper;
@@ -36,9 +35,11 @@ export default class DataTargetMapper extends Mapper {
     public async Create(userID: string, input: DataTargetRecord, transaction?: PoolClient): Promise<Result<DataTargetRecord>> {
         const r = await super.run(this.createStatement(userID, input), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
-        if (r.isError) {return Promise.resolve(Result.Pass(r))};
+        if (r.isError) {
+            return Promise.resolve(Result.Pass(r));
+        }
 
         this.eventRepo.emit(
             new Event({
@@ -54,9 +55,11 @@ export default class DataTargetMapper extends Mapper {
     public async Update(userID: string, input: DataTargetRecord, transaction?: PoolClient): Promise<Result<DataTargetRecord>> {
         const r = await super.run(this.fullUpdateStatement(userID, input), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
-        if (r.isError) {return Promise.resolve(Result.Pass(r))};
+        if (r.isError) {
+            return Promise.resolve(Result.Pass(r));
+        }
 
         this.eventRepo.emit(
             new Event({
@@ -70,16 +73,20 @@ export default class DataTargetMapper extends Mapper {
     }
 
     public Retrieve(id: string): Promise<Result<DataTargetRecord>> {
-        return super.retrieve(this.retrieveStatement(id), {resultClass});
+        return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
     public async IsActive(dataTargetID: string): Promise<Result<boolean>> {
         const count = await super.count(this.isActive(dataTargetID));
 
         return new Promise((resolve) => {
-            if (count.isError) {resolve(Result.Pass(count))};
+            if (count.isError) {
+                resolve(Result.Pass(count));
+            }
 
-            if (count.value <= 0) {resolve(Result.Success(false))};
+            if (count.value <= 0) {
+                resolve(Result.Success(false));
+            }
 
             resolve(Result.Success(true));
         });
@@ -237,5 +244,4 @@ export default class DataTargetMapper extends Mapper {
     public listAllActiveStatement(): string {
         return `SELECT * FROM data_targets WHERE active IS TRUE`;
     }
-
 }

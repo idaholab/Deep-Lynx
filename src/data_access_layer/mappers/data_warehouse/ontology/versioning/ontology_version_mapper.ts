@@ -4,9 +4,9 @@ import Result from '../../../../../common_classes/result';
 import OntologyVersion from '../../../../../domain_objects/data_warehouse/ontology/versioning/ontology_version';
 
 const format = require('pg-format');
-const resultClass = OntologyVersion;
 
 export default class OntologyVersionMapper extends Mapper {
+    public resultClass = OntologyVersion;
     public static tableName = 'ontology_versions';
 
     private static instance: OntologyVersionMapper;
@@ -22,7 +22,7 @@ export default class OntologyVersionMapper extends Mapper {
     public async Create(userID: string, input: OntologyVersion, transaction?: PoolClient): Promise<Result<OntologyVersion>> {
         const r = await super.run(this.createStatement(userID, input), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -30,13 +30,13 @@ export default class OntologyVersionMapper extends Mapper {
     }
 
     public async Retrieve(id: string): Promise<Result<OntologyVersion>> {
-        return super.retrieve(this.retrieveStatement(id), {resultClass});
+        return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
     public async Update(userID: string, m: OntologyVersion, transaction?: PoolClient): Promise<Result<OntologyVersion>> {
         const r = await super.run(this.fullUpdateStatement(userID, m), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 

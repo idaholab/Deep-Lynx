@@ -4,9 +4,9 @@ import TaskRecord from '../../../domain_objects/task_runner/task';
 import Mapper from '../mapper';
 
 const format = require('pg-format');
-const resultClass = TaskRecord;
 
 export default class TaskMapper extends Mapper {
+    public resultClass = TaskRecord;
     public static tableName = 'tasks';
 
     private static instance: TaskMapper;
@@ -22,7 +22,7 @@ export default class TaskMapper extends Mapper {
     public async Create(userID: string, input: TaskRecord, transaction?: PoolClient): Promise<Result<TaskRecord>> {
         const r = await super.run(this.createStatement(userID, input), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -32,7 +32,7 @@ export default class TaskMapper extends Mapper {
     public async Update(userID: string, input: TaskRecord, transaction?: PoolClient): Promise<Result<TaskRecord>> {
         const r = await super.run(this.fullUpdateStatement(userID, input), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -40,11 +40,11 @@ export default class TaskMapper extends Mapper {
     }
 
     public Retrieve(id: string): Promise<Result<TaskRecord>> {
-        return super.retrieve(this.retrieveStatement(id), {resultClass});
+        return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
     public async List(): Promise<Result<TaskRecord[]>> {
-        return super.rows(this.listStatement(), {resultClass});
+        return super.rows(this.listStatement(), {resultClass: this.resultClass});
     }
 
     public Delete(id: string): Promise<Result<boolean>> {

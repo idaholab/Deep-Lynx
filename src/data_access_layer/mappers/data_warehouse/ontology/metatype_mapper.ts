@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 
 const format = require('pg-format');
-const resultClass = Metatype;
 
 /*
     MetatypeMapper extends the Postgres database Mapper class and allows
@@ -16,6 +15,7 @@ const resultClass = Metatype;
     class/interface as well.
 */
 export default class MetatypeMapper extends Mapper {
+    public resultClass = Metatype;
     public static tableName = 'metatypes';
     public static viewName = 'metatypes_view';
 
@@ -32,7 +32,7 @@ export default class MetatypeMapper extends Mapper {
     public async Create(userID: string, input: Metatype, transaction?: PoolClient): Promise<Result<Metatype>> {
         const r = await super.run(this.createStatement(userID, input), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -42,18 +42,18 @@ export default class MetatypeMapper extends Mapper {
     public async BulkCreate(userID: string, m: Metatype[], transaction?: PoolClient): Promise<Result<Metatype[]>> {
         return super.run(this.createStatement(userID, ...m), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async Retrieve(id: string): Promise<Result<Metatype>> {
-        return super.retrieve(this.retrieveStatement(id), {resultClass});
+        return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
     public async Update(userID: string, m: Metatype, transaction?: PoolClient): Promise<Result<Metatype>> {
         const r = await super.run(this.fullUpdateStatement(userID, m), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -63,7 +63,7 @@ export default class MetatypeMapper extends Mapper {
     public async BulkUpdate(userID: string, m: Metatype[], transaction?: PoolClient): Promise<Result<Metatype[]>> {
         return super.run(this.fullUpdateStatement(userID, ...m), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 

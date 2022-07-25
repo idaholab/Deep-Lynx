@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import {KeyPair, User} from '../../../domain_objects/access_management/user';
 
 const format = require('pg-format');
-const resultClass = KeyPair;
 
 /*
     KeyPairMapper extends the Postgres database Mapper class and allows
@@ -16,6 +15,7 @@ const resultClass = KeyPair;
     class/interface as well.
 */
 export default class KeyPairMapper extends Mapper {
+    public resultClass = KeyPair;
     public static tableName = 'users';
 
     private static instance: KeyPairMapper;
@@ -34,7 +34,7 @@ export default class KeyPairMapper extends Mapper {
     public async Create(key: KeyPair, transaction?: PoolClient): Promise<Result<KeyPair>> {
         const r = await super.run(this.createStatement(key), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
         r.value[0].secret_raw = key.secret_raw;
@@ -45,7 +45,7 @@ export default class KeyPairMapper extends Mapper {
     public async BulkCreate(keys: KeyPair[], transaction?: PoolClient): Promise<Result<KeyPair[]>> {
         const r = await super.run(this.createStatement(...keys), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -61,7 +61,7 @@ export default class KeyPairMapper extends Mapper {
     }
 
     public async Retrieve(id: string): Promise<Result<KeyPair>> {
-        return super.retrieve(this.retrieveStatement(id), {resultClass});
+        return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
     public async UserForKeyPair(key: string): Promise<Result<User>> {
@@ -71,7 +71,7 @@ export default class KeyPairMapper extends Mapper {
     }
 
     public async KeysForUser(userID: string): Promise<Result<KeyPair[]>> {
-        return super.rows(this.keysForUserStatement(userID), {resultClass});
+        return super.rows(this.keysForUserStatement(userID), {resultClass: this.resultClass});
     }
 
     public DeleteForUser(key: string, userID: string): Promise<Result<boolean>> {

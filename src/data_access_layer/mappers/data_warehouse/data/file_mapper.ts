@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import File, {DataStagingFile} from '../../../../domain_objects/data_warehouse/data/file';
 
 const format = require('pg-format');
-const resultClass = File;
 
 /*
     FileMapper extends the Postgres database Mapper class and allows
@@ -16,6 +15,7 @@ const resultClass = File;
     class/interface as well.
 */
 export default class FileMapper extends Mapper {
+    public resultClass = File;
     public static tableName = 'files';
 
     private static instance: FileMapper;
@@ -31,7 +31,7 @@ export default class FileMapper extends Mapper {
     public async Create(userID: string, f: File, transaction?: PoolClient): Promise<Result<File>> {
         const r = await super.run(this.createStatement(userID, f), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -41,7 +41,7 @@ export default class FileMapper extends Mapper {
     public async BulkCreate(userID: string, f: File[], transaction?: PoolClient): Promise<Result<File[]>> {
         const r = await super.run(this.createStatement(userID, ...f), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -51,7 +51,7 @@ export default class FileMapper extends Mapper {
     public async BulkUpdate(userID: string, f: File[], transaction?: PoolClient): Promise<Result<File>> {
         const r = await super.run(this.fullUpdateStatement(userID, ...f), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -61,7 +61,7 @@ export default class FileMapper extends Mapper {
     public async Update(userID: string, f: File, transaction?: PoolClient): Promise<Result<File>> {
         const r = await super.run(this.fullUpdateStatement(userID, f), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -70,47 +70,47 @@ export default class FileMapper extends Mapper {
 
     public async Retrieve(id: string): Promise<Result<File>> {
         return super.retrieve<File>(this.retrieveStatement(id), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async DomainRetrieve(id: string, containerID: string): Promise<Result<File>> {
-        return super.retrieve<File>(this.domainRetrieveStatement(id, containerID), {resultClass});
+        return super.retrieve<File>(this.domainRetrieveStatement(id, containerID), {resultClass: this.resultClass});
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<File[]>> {
         return super.rows<File>(this.listFromIDsStatement(ids), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async ListForNode(nodeID: string): Promise<Result<File[]>> {
         return super.rows<File>(this.filesForNodeStatement(nodeID), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async ListForEdge(edgeID: string): Promise<Result<File[]>> {
         return super.rows<File>(this.filesForEdgeStatement(edgeID), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async ListForReport(reportID: string): Promise<Result<File[]>> {
         return super.rows<File>(this.filesForReportStatement(reportID), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async ListForReportQuery(queryID: string): Promise<Result<File[]>> {
         return super.rows<File>(this.filesForReportQueryStatement(queryID), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async ListForDataStaging(...stagingID: string[]): Promise<Result<File[]>> {
         return super.rows<File>(this.filesForDataStagingStatement(stagingID), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
@@ -257,7 +257,7 @@ export default class FileMapper extends Mapper {
                     LEFT JOIN files f ON f.id = rqf.file_id
                     WHERE rqf.query_id = $1`,
             values: [queryID],
-        }
+        };
     }
 
     private filesForDataStagingStatement(dataStagingID: string[]): QueryConfig {

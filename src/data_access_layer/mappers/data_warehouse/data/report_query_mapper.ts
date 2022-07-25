@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import ReportQuery from '../../../../domain_objects/data_warehouse/data/report_query';
 
 const format = require('pg-format');
-const resultClass = ReportQuery;
 
 /*
     ReportQueryMapper extends the Postgres database Mapper class and allows the
@@ -16,6 +15,7 @@ const resultClass = ReportQuery;
     class/interface as well.
 */
 export default class ReportQueryMapper extends Mapper {
+    public resultClass = ReportQuery;
     public static tableName = 'report_queries';
 
     private static instance: ReportQueryMapper;
@@ -31,9 +31,11 @@ export default class ReportQueryMapper extends Mapper {
     public async Create(query: ReportQuery, transaction?: PoolClient): Promise<Result<ReportQuery>> {
         const r = await super.run(this.createStatement(query), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
-        if (r.isError) {return Promise.resolve(Result.Pass(r));}
+        if (r.isError) {
+            return Promise.resolve(Result.Pass(r));
+        }
 
         return Promise.resolve(Result.Success(r.value[0]));
     }
@@ -50,9 +52,11 @@ export default class ReportQueryMapper extends Mapper {
     public async Update(query: ReportQuery, transaction?: PoolClient): Promise<Result<ReportQuery>> {
         const r = await super.run(this.updateStatement(query), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
-        if (r.isError) {return Promise.resolve(Result.Pass(r));}
+        if (r.isError) {
+            return Promise.resolve(Result.Pass(r));
+        }
 
         return Promise.resolve(Result.Success(r.value[0]));
     }
@@ -60,7 +64,7 @@ export default class ReportQueryMapper extends Mapper {
     public async Retrieve(id: string, transaction?: PoolClient): Promise<Result<ReportQuery>> {
         return super.retrieve<ReportQuery>(this.retrieveStatement(id), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
@@ -86,12 +90,7 @@ export default class ReportQueryMapper extends Mapper {
                         query,
                         status,
                         status_message) VALUES %L RETURNING *`;
-        const values = queries.map((q) => [
-            q.report_id,
-            q.query,
-            q.status,
-            q.status_message,
-        ]);
+        const values = queries.map((q) => [q.report_id, q.query, q.status, q.status_message]);
 
         return format(text, values);
     }
@@ -99,8 +98,8 @@ export default class ReportQueryMapper extends Mapper {
     private setStatusStatement(id: string, status: 'ready' | 'processing' | 'error' | 'completed', message?: string): QueryConfig {
         return {
             text: `UPDATE report_queries SET status = $2, status_message = $3 WHERE id = $1`,
-            values: [id, status, message]
-        }
+            values: [id, status, message],
+        };
     }
 
     private updateStatement(...queries: ReportQuery[]): string {
@@ -116,13 +115,7 @@ export default class ReportQueryMapper extends Mapper {
                     status,
                     status_message)
                     WHERE u.id::bigint = q.id RETURNING q.*`;
-        const values = queries.map((q) => [
-            q.id,
-            q.report_id,
-            q.query,
-            q.status,
-            q.status_message,
-        ]);
+        const values = queries.map((q) => [q.id, q.report_id, q.query, q.status, q.status_message]);
 
         return format(text, values);
     }
@@ -156,6 +149,6 @@ export default class ReportQueryMapper extends Mapper {
                     WHERE report_id = $1
                     AND query_id = $2`,
             values: [queryID, fileID],
-        }
+        };
     }
 }

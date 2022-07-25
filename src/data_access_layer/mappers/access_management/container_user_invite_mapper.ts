@@ -3,8 +3,6 @@ import Mapper from '../mapper';
 import {PoolClient, QueryConfig} from 'pg';
 import {ContainerUserInvite} from '../../../domain_objects/access_management/user';
 
-const resultClass = ContainerUserInvite;
-
 /*
     ContainerUserInviteMapper extends the Postgres database Mapper class and allows
     the user to map a data structure to and from the attached database. The mappers
@@ -15,6 +13,7 @@ const resultClass = ContainerUserInvite;
     class/interface as well.
 */
 export default class ContainerUserInviteMapper extends Mapper {
+    public resultClass = ContainerUserInvite;
     public static tableName = 'user_container_invites';
 
     private static instance: ContainerUserInviteMapper;
@@ -30,7 +29,7 @@ export default class ContainerUserInviteMapper extends Mapper {
     public async Create(input: ContainerUserInvite, transaction?: PoolClient): Promise<Result<ContainerUserInvite>> {
         const r = await super.run(this.createStatement(input), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -39,16 +38,16 @@ export default class ContainerUserInviteMapper extends Mapper {
 
     public async InvitesByUser(userID: string, containerID: string): Promise<Result<ContainerUserInvite[]>> {
         return super.rows(this.listForUserStatement(userID, containerID), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async InvitesForEmail(email: string): Promise<Result<ContainerUserInvite[]>> {
-        return super.rows(this.listForEmailStatement(email), {resultClass});
+        return super.rows(this.listForEmailStatement(email), {resultClass: this.resultClass});
     }
 
     public async RetrieveByTokenAndEmail(token: string, email: string): Promise<Result<ContainerUserInvite>> {
-        return super.retrieve(this.retrieveByTokenAndEmailStatement(token, email), {resultClass});
+        return super.retrieve(this.retrieveByTokenAndEmailStatement(token, email), {resultClass: this.resultClass});
     }
 
     public MarkAccepted(token: string, email: string): Promise<Result<boolean>> {
