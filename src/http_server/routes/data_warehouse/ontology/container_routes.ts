@@ -5,11 +5,11 @@ import ContainerRepository from '../../../../data_access_layer/repositories/data
 import {plainToClass} from 'class-transformer';
 import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
+import {FileInfo} from 'busboy';
 
 const Busboy = require('busboy');
 const Buffer = require('buffer').Buffer;
 const path = require('path');
-const mime = require('mime-types')
 
 const repository = new ContainerRepository();
 const containerImport = ContainerImport.Instance;
@@ -182,11 +182,12 @@ export default class ContainerRoutes {
         const streamChunks: Buffer[] = [];
         let fileBuffer: Buffer = Buffer.alloc(0);
         const input: {[key: string]: any} = {};
-        const busboy = new Busboy({headers: req.headers});
+        const busboy = Busboy({headers: req.headers});
         const user = req.currentUser!;
 
         // if a file has been provided, create a buffer from it
-        busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
+        busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
+            const {filename} = info;
             const ext = path.extname(filename);
             if (ext !== '.owl') {
                 Result.Failure('Unsupported filetype supplied. Please provide an .owl file').asResponse(res);
@@ -202,13 +203,13 @@ export default class ContainerRoutes {
         });
 
         // create a ContainerImportT type from the input fields
-        busboy.on('field', (fieldName: string, value: any, fieldNameTruncated: boolean, encoding: string, mimetype: string) => {
+        busboy.on('field', (fieldName: string, value: any) => {
             input[fieldName] = value;
         });
 
         busboy.on('finish', () => {
             // validate file content, first non-whitespace character must be '<'
-            const stringBuffer = fileBuffer.toString('utf8').trim()[0]
+            const stringBuffer = fileBuffer.toString('utf8').trim()[0];
 
             if (stringBuffer !== '<') {
                 Result.Failure('Unsupported owl type supplied. Please provide a rdf/xml file.').asResponse(res);
@@ -235,11 +236,12 @@ export default class ContainerRoutes {
         const streamChunks: Buffer[] = [];
         let fileBuffer: Buffer = Buffer.alloc(0);
         const input: {[key: string]: any} = {};
-        const busboy = new Busboy({headers: req.headers});
+        const busboy = Busboy({headers: req.headers});
         const user = req.currentUser!;
 
         // if a file has been provided, create a buffer from it
-        busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
+        busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
+            const {filename} = info;
             const ext = path.extname(filename);
             if (ext !== '.owl') {
                 res.status(500).send('Unsupported filetype supplied. Please provide a .owl file');
@@ -255,7 +257,7 @@ export default class ContainerRoutes {
         });
 
         // create a ContainerImportT type from the input fields
-        busboy.on('field', (fieldName: string, value: any, fieldNameTruncated: boolean, encoding: string, mimetype: string) => {
+        busboy.on('field', (fieldName: string, value: any) => {
             input[fieldName] = value;
         });
 

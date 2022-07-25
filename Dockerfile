@@ -20,8 +20,8 @@ WORKDIR /srv/core_api
 COPY --chown=node:node package*.json ./
 
 RUN apt update && apt upgrade -y
-RUN npm update -g
-RUN npm install pm2 -g
+RUN npm update --location=global
+RUN npm install pm2 --location=global
 
 # Bundle app source
 COPY --chown=node:node . .
@@ -34,7 +34,7 @@ RUN cd /srv/core_api/AdminWebApp && npm ci --include=dev && npm run build -- --d
 USER root
 
 # Add docker-compose-wait tool ----------------------
-ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait /wait
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
 RUN chmod +x /wait
 
 EXPOSE 8090
