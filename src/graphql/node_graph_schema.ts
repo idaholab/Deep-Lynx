@@ -463,21 +463,6 @@ export default class NodeGraphQLSchemaGenerator {
 
         return fields;
     }
-
-    // breakQuery takes a string query and breaks off the operator from the rest of the query if present, if not present
-    // defaults to the 'eq' operator
-    private breakQuery(query: string): string[] {
-        const parts = query.split(' ');
-
-        // check to see if we have an operator, if not, return the 'eq' operator and the value
-        if (!['eq', 'neq', 'like', 'in', '<', '>'].includes(parts[0])) {
-            return ['eq', query];
-        }
-
-        const operator = parts.shift();
-
-        return [operator as string, parts.join(' ')];
-    }
 }
 
 export type ResolverOptions = {

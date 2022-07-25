@@ -21,7 +21,7 @@ import Result from '../common_classes/result';
 import GraphQLJSON from 'graphql-type-json';
 import Metatype from '../domain_objects/data_warehouse/ontology/metatype';
 import MetatypeRelationship from '../domain_objects/data_warehouse/ontology/metatype_relationship';
-import {stringToValidPropertyName} from '../services/utilities';
+import {dataTypeToParquetType, stringToValidPropertyName} from '../services/utilities';
 import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
 import Logger from '../services/logger';
 import MetatypeRelationshipPairRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository';
@@ -183,6 +183,7 @@ export default class GraphQLSchemaGenerator {
                 metatype_id: {type: GraphQLString},
                 metatype_name: {type: GraphQLString},
                 created_at: {type: GraphQLString},
+                deleted_at: {type: GraphQLString},
                 created_by: {type: GraphQLString},
                 modified_at: {type: GraphQLString},
                 modified_by: {type: GraphQLString},
@@ -366,6 +367,10 @@ export default class GraphQLSchemaGenerator {
                                         }
                                     }
                                 });
+
+                                output._deep_lynx_id = {
+                                    type: GraphQLString
+                                }
 
                                 return output;
                             },
@@ -785,6 +790,27 @@ export default class GraphQLSchemaGenerator {
                 }
             }
 
+            // build parquet schema as a just in case, so we don't have to iterate keys again, building first the
+            // record portion which is a nested schema
+            const parquet_schema: {[key: string]: any} = {}
+            parquet_schema._deep_lynx_id = {type: 'INT64'}
+            parquet_schema._record = {
+                fields :{
+                    id: {type: 'INT64'},
+                    data_source_id: {type: 'INT64', optional: true},
+                    original_id: {type: 'UTF8', optional: true},
+                    import_id: {type: 'INT64', optional: true},
+                    metatype_id: {type: 'INT64'},
+                    metatype_name: {type: 'UTF8'},
+                    metadata: {type: 'JSON', optional: true},
+                    created_at: {type: 'TIMESTAMP_MILLIS'},
+                    created_by: {type: 'UTF8'},
+                    modified_at: {type: 'TIMESTAMP_MILLIS'},
+                    modified_by: {type: 'UTF8', optional: true},
+                    deleted_at: {type: 'TIMESTAMP_MILLIS', optional: true},
+                }
+            }
+
             // we must map out what the graphql refers to a metatype's keys are vs. what they actually are so
             // that we can map the query properly
             const propertyMap: {
@@ -799,10 +825,12 @@ export default class GraphQLSchemaGenerator {
                     name: key.property_name,
                     data_type: key.data_type,
                 };
+
+                parquet_schema[key.property_name] = {type: dataTypeToParquetType(key.data_type)}
             });
 
             // iterate through the input object, ignoring reserved properties and adding all others to
-            // the query as property queries
+            // the query as property queries,
             Object.keys(input).forEach((key) => {
                 if (key === '_record' || key === '_relationship') {
                     return;
@@ -828,6 +856,7 @@ export default class GraphQLSchemaGenerator {
 
 
                     done(null, {
+                        _deep_lynx_id: node.id,
                         ...node.properties,
                         _record: {
                             id: node.id,
@@ -841,6 +870,7 @@ export default class GraphQLSchemaGenerator {
                             created_by: node.created_by,
                             modified_at: node.modified_at?.toISOString(),
                             modified_by: node.modified_by,
+                            deleted_at: node.deleted_at
                         },
                     })
                 }})
@@ -853,6 +883,7 @@ export default class GraphQLSchemaGenerator {
                             file_type: (resolverOptions && resolverOptions.returnFileType) ? resolverOptions.returnFileType : 'json',
                             file_name: `${metatype.name}-${new Date().toDateString()}`,
                             transformStreams: [transform],
+                            parquet_schema,
                             containerID})
                         .then((result) => {
                             if (result.isError) {
@@ -892,6 +923,7 @@ export default class GraphQLSchemaGenerator {
                                 }
 
                                 nodeOutput.push({
+                                    _deep_lynx_id: node.id,
                                     ...properties,
                                     _record: {
                                         id: node.id,
@@ -1569,5 +1601,5 @@ export default class GraphQLSchemaGenerator {
 export type ResolverOptions = {
     ontologyVersionID?: string;
     returnFile?: boolean;
-    returnFileType?: 'json' | 'csv' | string;
+    returnFileType?: 'json' | 'csv' | 'parquet' | string;
 }

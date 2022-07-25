@@ -33,3 +33,39 @@ export function stringToValidPropertyName(input: string): string {
 
     return output;
 }
+
+export function dataTypeToParquetType(input: string): string {
+    switch (input) {
+        case 'number': {
+            return 'INT32';
+        }
+
+        case 'number64': {
+            return 'INT64';
+        }
+
+        case 'float': {
+            return 'FLOAT';
+        }
+
+        case 'float64': {
+            return 'DOUBLE';
+        }
+
+        case 'date': {
+            return 'TIMESTAMP_MILLIS';
+        }
+
+        case 'boolean': {
+            return 'BOOLEAN';
+        }
+
+        case 'list': {
+            return 'JSON';
+        }
+
+        default: {
+            return 'UTF8';
+        }
+    }
+}

@@ -6,12 +6,16 @@ import {PoolClient} from 'pg';
 import QueryStream from 'pg-query-stream';
 import {PassThrough, Readable, Transform} from 'stream';
 import BlobStorageProvider from '../../services/blob_storage/blob_storage';
-const JSONStream = require('JSONStream');
-import csvStringify from 'csv-stringify';
-const format = require('pg-format');
-const short = require('short-uuid');
 import File from '../../domain_objects/data_warehouse/data/file';
 import FileMapper from '../mappers/data_warehouse/data/file_mapper';
+import csvStringify from 'csv-stringify';
+import Logger from '../../services/logger';
+import fs from 'fs';
+
+const JSONStream = require('JSONStream');
+const format = require('pg-format');
+const short = require('short-uuid');
+const parquet = require('parquetjs');
 
 /*
     RepositoryInterface allows us to create an expectation for how the various
@@ -392,7 +396,7 @@ export class Repository {
 
             // pass through stream needed in order to pipe the results through transformative streams prior to piping
             // them to the blob storage
-            const pass = new PassThrough();
+            const pass = new PassThrough({objectMode: fileOptions.file_type === ('parquet' as 'json' | 'csv' | 'parquet' | string)});
             const fileName = fileOptions.file_name ? fileOptions.file_name : `${short.generate()}-${new Date().toDateString()}`;
 
             switch (fileOptions.file_type) {
@@ -408,13 +412,42 @@ export class Repository {
                     break;
                 }
 
+                case 'parquet': {
+                    if (!fileOptions.parquet_schema) return Promise.resolve(Result.Failure('unable to output to parquet, no schema provided'));
+
+                    const schema = new parquet.ParquetSchema(fileOptions.parquet_schema);
+                    const writer = await parquet.ParquetWriter.openFile(schema, fileName + '.parquet');
+
+                    pass.on('data', (chunk: object) => {
+                        writer.appendRow({...chunk}).catch((e: any) => Logger.error(`unable to write parquet row ${e}`));
+                    });
+
+                    pass.on('end', () => {
+                        writer.close();
+                    });
+
+                    stream.pipe(pass);
+                    break;
+                }
+
                 default: {
                     return Promise.resolve(Result.Failure('no file type specified, aborting'));
                 }
             }
 
             if (blob) {
-                const result = await blob?.uploadPipe(`containers/${fileOptions.containerID}/queryResults`, fileName, pass, contentType, 'utf8');
+                const result = await blob?.uploadPipe(
+                    `containers/${fileOptions.containerID}/queryResults`,
+                    fileName,
+                    fileOptions.file_type === ('parquet' as 'json' | 'csv' | 'parquet' | string) ? fs.createReadStream(fileName + '.parquet') : pass,
+                    contentType,
+                    'utf8',
+                );
+
+                // must delete the interim file
+                if (fileOptions.file_type === 'parquet') {
+                    fs.unlinkSync(fileName + '.parquet');
+                }
 
                 const file = new File({
                     file_name: fileName,
@@ -476,10 +509,11 @@ export type QueryOptions = {
 
 export type FileOptions = {
     containerID: string;
-    file_type: 'json' | 'csv' | string;
+    file_type: 'json' | 'csv' | 'parquet' | string;
     blob_provider?: 'azure_blob' | 'filesystem' | 'largeobject';
     file_name?: string;
     userID?: string;
+    parquet_schema?: {[key: string]: any};
     transformStreams?: Transform[]; // streams to pipe to, prior to piping to the file, allows manipulation of the object
 };
 

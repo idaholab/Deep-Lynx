@@ -14,8 +14,8 @@ import NodeRepository from '../../../../data_access_layer/repositories/data_ware
 import Node from '../../../../domain_objects/data_warehouse/data/node';
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
-import fs from "fs";
-import LargeObject from "../../../../services/blob_storage/pg_large_file_impl";
+import fs from 'fs';
+import LargeObject from '../../../../services/blob_storage/pg_large_file_impl';
 
 describe('A Node Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -321,7 +321,7 @@ describe('A Node Repository', async () => {
                 properties: payload,
                 original_data_id: originalID,
                 data_source_id: dataSourceID,
-            })
+            }),
         ];
 
         let saved = await nodeRepo.bulkSave(user, mixed);
@@ -333,29 +333,37 @@ describe('A Node Repository', async () => {
 
         let result = await nodeRepo.where().containerID('eq', containerID).listAllToFile({
             containerID: containerID,
-            file_type: "json"
-        })
+            file_type: 'json',
+        });
 
         // check that the result's length is greater than 0
-        expect(result.isError).false
-        expect(result.value.file_size).gt(0)
+        expect(result.isError).false;
+        expect(result.value.file_size).gt(0);
 
         // now try a csv
         result = await nodeRepo.where().containerID('eq', containerID).listAllToFile({
             containerID: containerID,
-            file_type: "csv"
-        })
+            file_type: 'csv',
+        });
 
         // check that the result's length is greater than 0
-        expect(result.isError).false
-        expect(result.value.file_size).gt(0)
+        expect(result.isError).false;
+        expect(result.value.file_size).gt(0);
+
+        // now try a parquet
+        result = await nodeRepo.where().containerID('eq', containerID).listAllToFile({
+            containerID: containerID,
+            file_type: 'parquet',
+        });
+
+        // check that the result's length is greater than 0
+        expect(result.isError).false;
+        expect(result.value.file_size).gt(0);
 
         await nodeRepo.delete(mixed[0]);
         return nodeRepo.delete(mixed[1]);
     }).timeout(30000);
 });
-
-
 
 const payload: {[key: string]: any} = {
     flower_name: 'Daisy',
