@@ -8,7 +8,7 @@ import MetatypeRepository from '../ontology/metatype_repository';
 import Logger from '../../../../services/logger';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 import File, {NodeFile} from '../../../../domain_objects/data_warehouse/data/file';
-import QueryStream from "pg-query-stream";
+import QueryStream from 'pg-query-stream';
 
 /*
     NodeRepository contains methods for persisting and retrieving nodes
@@ -377,6 +377,27 @@ export default class NodeRepository extends Repository implements RepositoryInte
     }
 
     listAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
-        return super.findAllToFile(fileOptions, queryOptions, {transaction})
+        if (fileOptions.file_type === 'parquet' && !fileOptions.parquet_schema) {
+            fileOptions.parquet_schema = {
+                id: {type: 'INT64'},
+                container_id: {type: 'INT64'},
+                metatype_id: {type: 'INT64'},
+                metatype_name: {type: 'UTF8'},
+                properties: {type: 'JSON'},
+                original_data_id: {type: 'UTF8', optional: true},
+                import_data_id: {type: 'INT64', optional: true},
+                data_staging_id: {type: 'INT64', optional: true},
+                data_source_id: {type: 'INT64', optional: true},
+                type_mapping_transformation_id: {type: 'INT64', optional: true},
+                metadata: {type: 'JSON', optional: true},
+                created_at: {type: 'TIMESTAMP_MILLIS'},
+                created_by: {type: 'INT64'},
+                modified_at: {type: 'TIMESTAMP_MILLIS'},
+                modified_by: {type: 'INT64', optional: true},
+                deleted_at: {type: 'TIMESTAMP_MILLIS', optional: true},
+            };
+        }
+
+        return super.findAllToFile(fileOptions, queryOptions, {transaction});
     }
 }

@@ -6,7 +6,6 @@ import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/impo
 import Logger from '../../../services/logger';
 import Config from '../../../services/config';
 import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
-import {PoolClient} from 'pg';
 import Result from '../../../common_classes/result';
 import {User} from '../../../domain_objects/access_management/user';
 import {PassThrough, Readable, Writable} from 'stream';

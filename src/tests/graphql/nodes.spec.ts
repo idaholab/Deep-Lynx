@@ -349,6 +349,34 @@ describe('Using a new GraphQL Query on nodes we', async () => {
         return Promise.resolve();
     });
 
+    it('can save a query by metatype to file as parquet', async () => {
+        const schemaGenerator = new GraphQLSchemaGenerator();
+
+        const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true, returnFileType: 'parquet'});
+        expect(schemaResults.isError).false;
+        expect(schemaResults.value).not.empty;
+
+        const response = await graphql({
+            schema: schemaResults.value,
+            source: `{
+                metatypes{
+                    Multimeta{
+                        id
+                        file_name
+                        file_size
+                        md5hash
+                    }
+                }
+            }`,
+        });
+        expect(response.errors).undefined;
+        expect(response.data).not.undefined;
+        const data = response.data!.metatypes.Multimeta;
+        expect(data.file_size).gt(0);
+
+        return Promise.resolve();
+    });
+
     it('can filter by metatype property', async () => {
         const response = await graphql({
             schema,
