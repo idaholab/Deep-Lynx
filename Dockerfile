@@ -1,4 +1,4 @@
-FROM node:16
+FROM node:16-alpine
 
 # these settings are needed for the admin web gui build, these variables are all baked into the Vue application and thus
 # are available to any end user that wants to dig deep enough in the webpage - as such we don't feel it a security risk
@@ -19,7 +19,7 @@ RUN mkdir /srv/core_api && chown node:node /srv/core_api
 WORKDIR /srv/core_api
 COPY --chown=node:node package*.json ./
 
-RUN apt update && apt upgrade -y
+# RUN apt update && apt upgrade -y
 RUN npm update --location=global
 # RUN npm install pm2 --location=global
 
@@ -30,6 +30,7 @@ COPY --chown=node:node . .
 RUN npm ci --include=dev
 RUN npm run build:docker
 RUN cd /srv/core_api/AdminWebApp && npm ci --include=dev && npm run build -- --dest /srv/core_api/dist/http_server/web_gui
+RUN rm -rf /srv/core_api/AdminWebApp/node_modules
 
 USER root
 

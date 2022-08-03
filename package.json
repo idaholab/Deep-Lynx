@@ -89,7 +89,6 @@
         "winston": "^3.3.3"
     },
     "dependencies": {
-        "@vue/cli-service": "~5.0.8",
         "@azure/service-bus": "^7.4.0",
         "@ladjs/graceful": "^1.0.5",
         "@types/amqplib": "^0.8.2",
@@ -98,6 +97,7 @@
         "@types/dompurify": "^2.3.1",
         "@types/graphql-type-json": "^0.3.2",
         "@types/parquetjs": "^0.10.3",
+        "@vue/cli-service": "~5.0.8",
         "amqplib": "^0.8.0",
         "axios": "^0.21.1",
         "base64url": "^3.0.1",
