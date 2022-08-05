@@ -885,6 +885,13 @@ export class Client {
         return this.get<TypeMappingT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`);
     }
 
+    retrieveTypeMappingByShapeHash(containerID: string, dataSourceID: string, shapeHash: string): Promise<TypeMappingT> {
+        const query: {[key: string]: any} = {};
+        query.shapeHash = shapeHash;
+
+        return this.get<TypeMappingT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings`, query);
+    }
+
     deleteTypeMapping(containerID: string, dataSourceID: string, typeMappingID: string): Promise<boolean> {
         return this.delete(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`);
     }

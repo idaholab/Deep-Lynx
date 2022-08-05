@@ -22,7 +22,7 @@
           <div class="mr-3">
             <transformation-dialog
               :payload="unmappedData"
-              :typeMappingID="typeMappingID"
+              :typeMappingID="(typeMappingID) ? typeMappingID: typeMapping.id"
               :containerID="containerID"
               :dataSourceID="dataSourceID"
               @transformationCreated="refreshTransformations()"
@@ -119,8 +119,12 @@ export default class DataTypeMapping extends Vue {
   @Prop({required: true})
   readonly containerID!: string
 
-  @Prop({required: true})
+  @Prop({required: false})
   readonly typeMappingID!: string
+
+  @Prop({required: false})
+  readonly shapeHash!: string
+
 
   @Prop({required: false})
   readonly import!: ImportDataT | null
@@ -131,7 +135,7 @@ export default class DataTypeMapping extends Vue {
   transformations: TypeMappingTransformationT[] = []
 
   updateTypeMapping() {
-    this.$client.updateTypeMapping(this.containerID, this.dataSourceID, this.typeMappingID, this.typeMapping!)
+    this.$client.updateTypeMapping(this.containerID, this.dataSourceID, this.typeMapping?.id!, this.typeMapping!)
         .then(() => {
           this.$emit("updated")
         })
@@ -151,25 +155,45 @@ export default class DataTypeMapping extends Vue {
   unmappedData: {[key: string]: any} = {}
 
   beforeMount() {
-    this.$client.retrieveTypeMapping(this.containerID, this.dataSourceID, this.typeMappingID)
-        .then((typeMapping) =>{
-          this.typeMapping = typeMapping
+    if(this.typeMappingID && this.typeMappingID !== '') {
+      this.$client.retrieveTypeMapping(this.containerID, this.dataSourceID, this.typeMappingID)
+          .then((typeMapping) =>{
+            this.typeMapping = typeMapping
 
-          if(this.import) {
-            if(this.import!.data) {
-              this.unmappedData = this.import!.data
+            if(this.import) {
+              if(this.import!.data) {
+                this.unmappedData = this.import!.data
+              }
+            } else {
+              this.unmappedData = this.typeMapping.sample_payload
             }
-          } else {
-            this.unmappedData = this.typeMapping.sample_payload
-          }
 
-          this.refreshTransformations()
-        })
-        .catch(e => this.errorMessage = e)
+            this.refreshTransformations()
+          })
+          .catch(e => this.errorMessage = e)
+    }
+
+    if(this.shapeHash && this.shapeHash !== '') {
+      this.$client.retrieveTypeMappingByShapeHash(this.containerID, this.dataSourceID, this.shapeHash)
+          .then((typeMapping) =>{
+            this.typeMapping = typeMapping
+
+            if(this.import) {
+              if(this.import!.data) {
+                this.unmappedData = this.import!.data
+              }
+            } else {
+              this.unmappedData = this.typeMapping.sample_payload
+            }
+
+            this.refreshTransformations()
+          })
+          .catch(e => this.errorMessage = e)
+    }
   }
 
   refreshTransformations(){
-    this.$client.retrieveTransformations(this.containerID, this.dataSourceID, this.typeMappingID)
+    this.$client.retrieveTransformations(this.containerID, this.dataSourceID, this.typeMapping?.id!)
         .then((transformations) => {
           this.transformations = transformations
         })
@@ -177,7 +201,7 @@ export default class DataTypeMapping extends Vue {
   }
 
   deleteTransformation(transformation: TypeMappingTransformationT) {
-    this.$client.deleteTransformation(this.containerID, this.dataSourceID, this.typeMappingID, transformation.id, {})
+    this.$client.deleteTransformation(this.containerID, this.dataSourceID, this.typeMapping?.id!, transformation.id, {})
         .then(() => this.refreshTransformations())
         .catch(e => this.errorMessage = e)
   }

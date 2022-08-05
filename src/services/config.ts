@@ -103,6 +103,7 @@ export class Config {
     private readonly _edge_insertion_queue_name: string;
     private readonly _edge_insertion_backoff_multiplier: number;
     private readonly _edge_insertion_max_retry: number;
+    private readonly _data_staging_emitter_interval: number;
 
     private readonly _rabbitmq_url: string;
     private readonly _azure_service_bus_connection_string: string;
@@ -189,6 +190,7 @@ export class Config {
 
         this._export_data_interval = process.env.EXPORT_INTERVAL || '10m';
         this._export_data_concurrency = process.env.EXPORT_DATA_CONCURRENCY ? parseInt(process.env.EXPORT_DATA_CONCURRENCY, 10) : 4;
+        this._data_staging_emitter_interval = process.env.DATA_STAGING_EMITTER_INTERVAL ? parseInt(process.env.DATA_STAGING_EMITTER_INTERVAL, 10) : 1000;
 
         this._queue_system = process.env.QUEUE_SYSTEM || 'database';
 
@@ -545,6 +547,10 @@ export class Config {
 
     get cache_graphql(): boolean {
         return this._cache_graphql;
+    }
+
+    get data_staging_emitter_interval(): number {
+        return this._data_staging_emitter_interval;
     }
 
     public static Instance(): Config {

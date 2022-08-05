@@ -107,6 +107,21 @@
         >
           <template v-slot:top>
           </template>
+
+          <template v-slot:[`item.id`]="{ item }">
+            <v-tooltip top>
+              <template v-slot:activator="{on, attrs}">
+                <v-icon v-bind="attrs" v-on="on" @click="copyID(item.id)">{{copy}}</v-icon>
+              </template>
+              <span>{{$t('dataImports.copyID')}}-</span>
+              <span>{{item.id}}</span>
+            </v-tooltip>
+          </template>
+
+          <template v-slot:item.mapping="{ item }">
+            <v-btn @click="toTypeMapping(item.shape_hash)">{{$t('dataImports.toTypeMapping')}}</v-btn>
+          </template>
+
           <template v-slot:item.actions="{ item }">
             <v-icon
                 small
@@ -149,6 +164,29 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog
+        v-model="mappingDialog"
+        width="90%"
+        scrollable
+    >
+      <v-card class="d-flex flex-column">
+        <v-card-title class="grey lighten-2 flex-shrink-1">
+          <span class="headline text-h3">{{$t('dataImports.editTypeMapping')}}</span>
+          <v-flex class="text-right">
+            <v-icon class="justify-right"  @click="mappingDialog = false">mdi-window-close</v-icon>
+          </v-flex>
+        </v-card-title>
+
+        <div class="flex-grow-1" v-if="selectedDataSource !== null && mappingDialog">
+          <data-type-mapping :dataSourceID="selectedDataSource.id" :containerID="containerID" :shapeHash="selectedDataShapeHash" @mappingCreated="mappingDialog = false"></data-type-mapping>
+        </div>
+        <v-card-actions class="flex-shrink-1">
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="mappingDialog = false" >{{$t("dataMapping.done")}}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -160,6 +198,7 @@ import DataTypeMapping from "@/components/etl/dataTypeMapping.vue"
 import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import DeleteDataImportDialog from "@/components/dataImport/deleteDataImportDialog.vue";
 import ReprocessDataImportDialog from "@/components/dataImport/reprocessDataImportDialog.vue";
+import {mdiFileDocumentMultiple} from "@mdi/js";
 
 
 @Component({filters: {
@@ -183,6 +222,7 @@ export default class DataImports extends Vue {
   readonly argument!: string;
 
 
+  copy = mdiFileDocumentMultiple
   errorMessage = ""
   dataErrorMessage = ""
   dialog = false
@@ -214,6 +254,7 @@ export default class DataImports extends Vue {
   importsLoading = false
   importDataCount = 0
   importLoading = false
+  selectedDataShapeHash = ''
 
   headers() {
     return  [{
@@ -229,6 +270,11 @@ export default class DataImports extends Vue {
         value: "status",
       },
       {
+        text: this.$t('dataImports.totalErrors'),
+        value: "total_errors",
+        sortable: false
+      },
+      {
         text: this.$t('dataImports.message'),
         value: "status_message",
         sortable: false
@@ -242,6 +288,10 @@ export default class DataImports extends Vue {
       value: "id",
     },
       {
+        text: this.$t('dataImports.createdAt'),
+        value: "created_at",
+      },
+      {
         text: this.$t('dataImports.processedAt'),
         value: "inserted_at",
       },
@@ -249,6 +299,7 @@ export default class DataImports extends Vue {
         text: this.$t('dataImports.errors'),
         value: "errors"
       },
+      {  text: this.$t('dataImports.mapping'), value: 'mapping', sortable: false },
       {  text: this.$t('dataImports.viewDeleteData'), value: 'actions', sortable: false },]
   }
 
@@ -394,6 +445,15 @@ export default class DataImports extends Vue {
           this.loadImportData()
         })
         .catch((e: any) => this.dataErrorMessage= e)
+  }
+
+  toTypeMapping(shapeHash: string) {
+    this.selectedDataShapeHash = shapeHash
+    this.mappingDialog = true
+  }
+
+  copyID(id: string) {
+    navigator.clipboard.writeText(id)
   }
 }
 </script>
