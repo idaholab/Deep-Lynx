@@ -75,7 +75,7 @@ void postgresAdapter
                                         cachePromises.push(Cache.set(`imports_${importID}`, {}, Config.initial_import_cache_ttl));
                                     });
 
-                                    Promise.all(cachePromises).finally(() => setTimeout(() => emitter(), 5000));
+                                    Promise.all(cachePromises).finally(() => setTimeout(() => emitter(), Config.data_staging_emitter_interval));
                                 })
                                 .catch((e) => Logger.error(`unable to initiate data source emitter: ${e}`));
                         });
@@ -89,7 +89,7 @@ void postgresAdapter
                 emitter();
             })
             .catch((e) => {
-                void PostgresAdapter.Instance.close()
+                void PostgresAdapter.Instance.close();
 
                 Logger.error(`unable to initiate data source emitter: ${e}`);
                 if (parentPort) parentPort.postMessage('done');
@@ -99,7 +99,7 @@ void postgresAdapter
             });
     })
     .catch((e) => {
-        void PostgresAdapter.Instance.close()
+        void PostgresAdapter.Instance.close();
 
         Logger.error(`unexpected error in data staging emitter thread ${e}`);
         if (parentPort) parentPort.postMessage('done');

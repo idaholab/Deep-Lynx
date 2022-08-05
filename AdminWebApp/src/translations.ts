@@ -1086,6 +1086,8 @@ export default {
             assignRole: 'Assign Role',
             role: 'Role',
             cancel: 'Cancel',
+            close: 'Close',
+            successfullySetRole: 'Role Assigned Successfully',
         },
         settings: {
             accessKeyDescription: 'Generate and remove API access keys for your user.',
@@ -1098,6 +1100,7 @@ export default {
             explanation: "This page allows you to make changes to your currently selected container. Note that you cannot change your container's name",
         },
         dataImports: {
+            copyID: 'Click to copy ID',
             tableTitle: 'Imports',
             dataView: 'Import Data',
             importTableTitle: 'Import Data',
@@ -1117,6 +1120,9 @@ export default {
             completed: 'completed',
             noData: 'no data',
             done: 'Done',
+            mapping: 'Type Mapping',
+            totalErrors: '# of Errors',
+            toTypeMapping: 'Mapping',
         },
         containerInvite: {
             button: 'Invite User to Container',

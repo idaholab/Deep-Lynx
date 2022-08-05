@@ -20,7 +20,7 @@ import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
       onMessageChange() {
          // we do this so the message disappears eventually
          this.internalMessage = this.message
-        setTimeout(() => {this.internalMessage = ""}, 10000)
+        setTimeout(() => {this.internalMessage = ""}, 5000)
       }
     }
 </script>

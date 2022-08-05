@@ -33,6 +33,10 @@ export default class Import extends BaseDomainClass {
     @IsNumber()
     records_inserted?: number;
 
+    @IsOptional()
+    @IsNumber()
+    total_errors?: number;
+
     constructor(input: {data_source_id: string; status_message?: string; reference?: string}) {
         super();
 

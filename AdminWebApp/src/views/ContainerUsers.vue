@@ -38,11 +38,11 @@
       <v-card class="pt-1 pb-3 px-2">
         <v-card-title>
           <span class="headline text-h3">{{$t("containerUsers.editUserTitle")}}</span>
-        </v-card-title>   
+        </v-card-title>
         <v-card-text>
           <v-row>
             <v-col v-if="toEdit !== null" :cols="12">
-
+              <success-banner :message="successMessage"></success-banner>
               <v-form
                 ref="form"
                 lazy-validation
@@ -55,7 +55,6 @@
                       required
                       disabled
                     ></v-text-field>
-                    <!-- TODO: reenable once you can edit basic user -->
                     <v-select @input="assignRole" v-model="selectedRole" :items="roles" :label="$t('users.role')"></v-select>
                   </v-col>
 
@@ -66,7 +65,6 @@
                       required
                       disabled
                     ></v-text-field>
-                    <!-- TODO: reenable once you can edit basic user -->
                   </v-col>
                 </v-row>
               </v-form>
@@ -78,7 +76,7 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="editDialog = false">{{$t("containerUsers.cancel")}}</v-btn>
+          <v-btn color="blue darken-1" text @click="editDialog = false">{{$t("containerUsers.close")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -110,6 +108,7 @@
     selectedRole = ""
     roles = ["user", "editor", "admin"]
     errorMessage = ''
+    successMessage = ''
 
     get headers() {
       return  [
@@ -170,6 +169,11 @@
 
         this.$client.assignRoleToUser(this.containerID, assignRolePayload)
         .then(() => {
+          this.successMessage = this.$t('containerUsers.successfullySetRole') as string
+
+          setTimeout(() => {
+            this.successMessage = ''
+          }, 6000)
 
           if(this.toEdit){
             this.retrieveUserRoles(this.toEdit)
