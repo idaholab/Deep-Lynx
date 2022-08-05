@@ -10,6 +10,7 @@ import Logger from '../../../../services/logger';
 import Config from '../../../../services/config';
 import MetatypeMapper from '../../../mappers/data_warehouse/ontology/metatype_mapper';
 import {plainToClass, serialize} from 'class-transformer';
+import GraphQLSchemaGenerator from '../../../../graphql/schema';
 
 /*
  We have the bare minimum of functions in this repository, and it only exists
@@ -23,7 +24,7 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
 
     delete(k: MetatypeKey): Promise<Result<boolean>> {
         if (k.id) {
-            void this.#metatypeRepo.deleteCached(k.metatype_id!);
+            void this.#metatypeRepo.deleteCached(k.metatype_id!, k.container_id);
             return this.#mapper.Delete(k.id);
         }
 
@@ -32,7 +33,7 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
 
     archive(user: User, k: MetatypeKey): Promise<Result<boolean>> {
         if (k.id) {
-            void this.#metatypeRepo.deleteCached(k.metatype_id!);
+            void this.#metatypeRepo.deleteCached(k.metatype_id!, k.container_id);
             return this.#mapper.Archive(k.id, user.id!);
         }
 
@@ -41,7 +42,7 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
 
     unarchive(user: User, k: MetatypeKey): Promise<Result<boolean>> {
         if (k.id) {
-            void this.#metatypeRepo.deleteCached(k.metatype_id!);
+            void this.#metatypeRepo.deleteCached(k.metatype_id!, k.container_id);
             return this.#mapper.Unarchive(k.id, user.id!);
         }
 
@@ -59,8 +60,8 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         }
 
         // clear the parent metatype's cache
-        void this.#metatypeRepo.deleteCached(m.metatype_id!);
-        void this.deleteCachedForMetatype(m.metatype_id!);
+        void this.#metatypeRepo.deleteCached(m.metatype_id!, m.container_id);
+        void this.deleteCachedForMetatype(m.metatype_id!, m.container_id);
 
         if (m.id) {
             // to allow partial updates we must first fetch the original object
@@ -95,8 +96,8 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
             }
 
             // clear the parent metatype's cache
-            void this.#metatypeRepo.deleteCached(key.metatype_id!);
-            void this.deleteCachedForMetatype(key.metatype_id!);
+            void this.#metatypeRepo.deleteCached(key.metatype_id!, key.container_id);
+            void this.deleteCachedForMetatype(key.metatype_id!, key.container_id);
             key.id ? toUpdate.push(key) : toCreate.push(key);
         }
 
@@ -151,10 +152,15 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         return Promise.resolve(keys);
     }
 
-    async deleteCachedForMetatype(metatypeID: string): Promise<boolean> {
+    async listForMetatypeIDs(metatype_ids: string[]): Promise<Result<MetatypeKey[]>> {
+        return this.#mapper.ListForMetatypeIDs(metatype_ids);
+    }
+
+    async deleteCachedForMetatype(metatypeID: string, containerID?: string): Promise<boolean> {
         const deleted = await Cache.del(`${MetatypeMapper.tableName}:${metatypeID}:keys`);
         if (!deleted) Logger.error(`unable to remove metatype ${metatypeID}'s keys from cache`);
 
+        GraphQLSchemaGenerator.resetSchema(containerID);
         return Promise.resolve(deleted);
     }
 

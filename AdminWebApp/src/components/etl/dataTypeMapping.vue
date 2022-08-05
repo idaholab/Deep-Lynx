@@ -16,7 +16,19 @@
     <v-divider></v-divider>
     <v-row no-gutters>
       <v-col :cols="8" class="pt-2">
-        <h3 class="text-h3 px-6">{{$t('dataMapping.transformationsTableTitle')}}</h3>
+        <div class="d-flex flex-row">
+          <h3 class="text-h3 px-6">{{$t('dataMapping.transformationsTableTitle')}}</h3>
+          <v-spacer></v-spacer>
+          <div class="mr-3">
+            <transformation-dialog
+              :payload="unmappedData"
+              :typeMappingID="typeMappingID"
+              :containerID="containerID"
+              :dataSourceID="dataSourceID"
+              @transformationCreated="refreshTransformations()"
+            />
+          </div>
+        </div>
         <v-data-table
           :headers="headers()"
           :items="transformations"
@@ -50,7 +62,8 @@
                 :containerID="containerID"
                 :dataSourceID="dataSourceID"
                 :transformation="item"
-                icon="both"></delete-type-transformation-dialog>
+                icon="both"
+            />
             <delete-type-transformation-dialog
                 v-else
                 @transformationDeleted="refreshTransformations()"
@@ -58,20 +71,12 @@
                 :containerID="containerID"
                 :dataSourceID="dataSourceID"
                 :transformation="item"
-                icon="trash"></delete-type-transformation-dialog>
+                icon="trash"
+            />
           </template>
         </v-data-table>
-        <v-col>
-          <transformation-dialog
-              :payload="unmappedData"
-              :typeMappingID="typeMappingID"
-              :containerID="containerID"
-              :dataSourceID="dataSourceID"
-              @transformationCreated="refreshTransformations()"
-          />
-        </v-col>
       </v-col>
-      <v-divider vertical></v-divider>
+      <v-divider vertical />
       <v-col :cols="4" class="pt-2 pl-6">
         <h3 class="text-h3 pr-6">{{$t('dataMapping.currentDataSet')}}</h3>
         <v-card
@@ -80,11 +85,12 @@
         >
           <json-view
             :data="unmappedData"
-            :maxDepth=1
+            :maxDepth="1"
           />
         </v-card>
       </v-col>
     </v-row>
+    <v-divider />
   </div>
 </template>
 

@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
 
 const format = require('pg-format');
-const resultClass = MetatypeKey;
 
 /*
     MetatypeKeyMapper extends the Postgres database Mapper class and allows
@@ -16,6 +15,7 @@ const resultClass = MetatypeKey;
     class/interface as well.
 */
 export default class MetatypeKeyMapper extends Mapper {
+    public resultClass = MetatypeKey;
     public static tableName = 'metatype_keys';
 
     private static instance: MetatypeKeyMapper;
@@ -31,7 +31,7 @@ export default class MetatypeKeyMapper extends Mapper {
     public async Create(userID: string, key: MetatypeKey, transaction?: PoolClient): Promise<Result<MetatypeKey>> {
         const r = await super.run(this.createStatement(userID, key), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -41,26 +41,30 @@ export default class MetatypeKeyMapper extends Mapper {
     public async BulkCreate(userID: string, keys: MetatypeKey[], transaction?: PoolClient): Promise<Result<MetatypeKey[]>> {
         return super.run(this.createStatement(userID, ...keys), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async Retrieve(id: string): Promise<Result<MetatypeKey>> {
-        return super.retrieve(this.retrieveStatement(id), {resultClass});
+        return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
     public async ListForMetatype(metatypeID: string): Promise<Result<MetatypeKey[]>> {
-        return super.rows(this.listStatement(metatypeID), {resultClass});
+        return super.rows(this.listStatement(metatypeID), {resultClass: this.resultClass});
+    }
+
+    public async ListForMetatypeIDs(metatype_ids: string[]): Promise<Result<MetatypeKey[]>> {
+        return super.rows(this.listKeysStatement(metatype_ids));
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<MetatypeKey[]>> {
-        return super.rows(this.listFromIDsStatement(ids), {resultClass});
+        return super.rows(this.listFromIDsStatement(ids), {resultClass: this.resultClass});
     }
 
     public async Update(userID: string, key: MetatypeKey, transaction?: PoolClient): Promise<Result<MetatypeKey>> {
         const r = await super.run(this.fullUpdateStatement(userID, key), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -70,7 +74,7 @@ export default class MetatypeKeyMapper extends Mapper {
     public async BulkUpdate(userID: string, keys: MetatypeKey[], transaction?: PoolClient): Promise<Result<MetatypeKey[]>> {
         return super.run(this.fullUpdateStatement(userID, ...keys), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
@@ -179,6 +183,29 @@ export default class MetatypeKeyMapper extends Mapper {
             text: `SELECT * FROM get_metatype_keys($1::bigint) ORDER BY name`,
             values: [metatypeID],
         };
+    }
+
+    private listKeysStatement(metatype_ids: string[]): QueryConfig {
+        const text = `WITH RECURSIVE parents AS (
+                SELECT id, container_id, name, description, created_at, 
+                    modified_at, created_by, modified_by, ontology_version, 
+                    old_id, deleted_at, id AS key_parent, 1 AS lvl
+                FROM metatypes_view
+                    UNION
+                SELECT v.id, v.container_id, v.name, v.description, v.created_at,
+                    v.modified_at, v.created_by, v.modified_by, v.ontology_version,
+                    v.old_id, v.deleted_at, p.key_parent, p.lvl + 1
+                FROM parents p JOIN metatypes_view v ON p.id = v.parent_id
+            ) SELECT mk.id, p.id AS metatype_id, mk.name, mk.description, 
+                mk.required, mk.property_name, mk.data_type, mk.options, 
+                mk.default_value, mk.validation, mk.created_at, mk.modified_at,
+                mk.created_by, mk.modified_by, mk.ontology_version, 
+                mk.container_id, mk.deleted_at
+            FROM parents p JOIN metatype_keys mk ON p.key_parent = mk.metatype_id
+            WHERE p.id IN (%L)
+            ORDER BY metatype_id`;
+        const values = metatype_ids;
+        return format(text, values);
     }
 
     private fullUpdateStatement(userID: string, ...keys: MetatypeKey[]): string {

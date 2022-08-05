@@ -432,6 +432,28 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     }
 
     listAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
+        if (fileOptions.file_type === 'parquet' && !fileOptions.parquet_schema) {
+            fileOptions.parquet_schema = {
+                id: {type: 'INT64'},
+                container_id: {type: 'INT64'},
+                relationship_pair_id: {type: 'INT64'},
+                metatype_relationship_name: {type: 'UTF8'},
+                properties: {type: 'JSON'},
+                import_data_id: {type: 'INT64', optional: true},
+                data_staging_id: {type: 'INT64', optional: true},
+                data_source_id: {type: 'INT64', optional: true},
+                type_mapping_transformation_id: {type: 'INT64', optional: true},
+                origin_id: {type: 'INT64'},
+                destination_id: {type: 'INT64'},
+                metadata: {type: 'JSON', optional: true},
+                created_at: {type: 'TIMESTAMP_MILLIS'},
+                created_by: {type: 'INT64'},
+                modified_at: {type: 'TIMESTAMP_MILLIS'},
+                modified_by: {type: 'INT64', optional: true},
+                deleted_at: {type: 'TIMESTAMP_MILLIS', optional: true},
+            };
+        }
+
         return super.findAllToFile(fileOptions, queryOptions, {transaction});
     }
 }

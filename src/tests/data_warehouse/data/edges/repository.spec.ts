@@ -261,6 +261,53 @@ describe('An Edge Repository', async () => {
 
         return edgeRepo.delete(edges[0]);
     });
+
+    it('can list Edges to file', async () => {
+        const edgeRepo = new EdgeRepository();
+
+        const edges = [
+            new Edge({
+                container_id: containerID,
+                metatype_relationship_pair: pair.id!,
+                properties: payload,
+                origin_id: nodes[0].id,
+                destination_id: nodes[1].id,
+            }),
+        ];
+
+        // normal save first
+        let saved = await edgeRepo.bulkSave(user, edges);
+        expect(saved.isError).false;
+        edges.forEach((edge) => {
+            expect(edge.id).not.undefined;
+            expect(edge.properties).to.have.deep.property('flower_name', 'Daisy');
+        });
+
+        let result = await edgeRepo.where().containerID('eq', containerID).listAllToFile({
+            containerID: containerID,
+            file_type: 'json',
+        });
+
+        expect(result.isError).false;
+        expect(result.value.file_size).gt(0);
+
+        result = await edgeRepo.where().containerID('eq', containerID).listAllToFile({
+            containerID: containerID,
+            file_type: 'csv',
+        });
+
+        expect(result.isError).false;
+        expect(result.value.file_size).gt(0);
+
+        result = await edgeRepo.where().containerID('eq', containerID).listAllToFile({
+            containerID: containerID,
+            file_type: 'parquet',
+        });
+
+        expect(result.isError).false;
+        expect(result.value.file_size).gt(0);
+        return edgeRepo.delete(edges[0]);
+    });
 });
 
 const payload: {[key: string]: any} = {

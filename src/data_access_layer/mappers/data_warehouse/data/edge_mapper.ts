@@ -5,7 +5,6 @@ import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import {EdgeFile} from '../../../../domain_objects/data_warehouse/data/file';
 
 const format = require('pg-format');
-const resultClass = Edge;
 
 /*
     EdgeMapper extends the Postgres database Mapper class and allows
@@ -17,6 +16,7 @@ const resultClass = Edge;
     class/interface as well.
 */
 export default class EdgeMapper extends Mapper {
+    public resultClass = Edge;
     public static tableName = 'edges';
     public static viewName = 'current_edges';
 
@@ -37,7 +37,7 @@ export default class EdgeMapper extends Mapper {
     public async Create(userID: string, edge: Edge, transaction?: PoolClient): Promise<Result<Edge>> {
         const r = await super.run(this.createStatement(userID, edge), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -47,14 +47,14 @@ export default class EdgeMapper extends Mapper {
     public BulkCreate(userID: string, edges: Edge[], transaction?: PoolClient): Promise<Result<Edge[]>> {
         return super.run(this.createStatement(userID, ...edges), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async Update(userID: string, edge: Edge, transaction?: PoolClient): Promise<Result<Edge>> {
         const r = await super.run(this.fullUpdateStatement(userID, edge), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -64,21 +64,21 @@ export default class EdgeMapper extends Mapper {
     public BulkUpdate(userID: string, edges: Edge[], transaction?: PoolClient): Promise<Result<Edge[]>> {
         return super.run(this.fullUpdateStatement(userID, ...edges), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public Retrieve(id: string, transaction?: PoolClient): Promise<Result<Edge>> {
         return super.retrieve<Edge>(this.retrieveStatement(id), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public RetrieveByRelationship(origin: string, relationship: string, destination: string, transaction?: PoolClient): Promise<Result<Edge[]>> {
         return super.rows<Edge>(this.retrieveByRelationshipStatement(origin, relationship, destination), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 

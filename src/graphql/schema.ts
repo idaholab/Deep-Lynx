@@ -21,7 +21,7 @@ import Result from '../common_classes/result';
 import GraphQLJSON from 'graphql-type-json';
 import Metatype from '../domain_objects/data_warehouse/ontology/metatype';
 import MetatypeRelationship from '../domain_objects/data_warehouse/ontology/metatype_relationship';
-import {stringToValidPropertyName} from '../services/utilities';
+import {dataTypeToParquetType, stringToValidPropertyName} from '../services/utilities';
 import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
 import Logger from '../services/logger';
 import MetatypeRelationshipPairRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository';
@@ -34,6 +34,9 @@ import {plainToClass} from "class-transformer";
 import Node from "../domain_objects/data_warehouse/data/node";
 import {Transform} from "stream";
 import Edge from "../domain_objects/data_warehouse/data/edge";
+import Config from "../services/config";
+
+let GRAPHQLSCHEMA: Map<string, GraphQLSchema> = new Map<string, GraphQLSchema>();
 
 // GraphQLSchemaGenerator takes a container and generates a valid GraphQL schema for all contained metatypes. This will
 // allow users to query and filter data based on node type, the various properties that type might have, and other bits
@@ -58,6 +61,11 @@ export default class GraphQLSchemaGenerator {
     // generate requires a containerID because the schema it generates is based on a user's ontology and ontologies are
     // separated by containers
     async ForContainer(containerID: string, options: ResolverOptions): Promise<Result<GraphQLSchema>> {
+        // check for existence of cached schema, else generate the schema dynamically
+        if (GRAPHQLSCHEMA.has(containerID) && Config.cache_graphql) {
+            return Promise.resolve(Result.Success(GRAPHQLSCHEMA.get(containerID)!));
+        }
+
         // fetch the currently published ontology if the versionID wasn't provided
         if (!options.ontologyVersionID) {
             const ontResults = await this.#ontologyRepo
@@ -73,13 +81,13 @@ export default class GraphQLSchemaGenerator {
             }
         }
 
-        // fetch all metatypes for the container, with their keys - the single most expensive call of this function
+        // fetch all metatypes for the container, with their keys
         const metatypeResults = await this.#metatypeRepo
             .where()
             .containerID('eq', containerID)
             .and()
             .ontologyVersion('eq', options.ontologyVersionID)
-            .list(true);
+            .list(true, {sortBy: 'id'});
         if (metatypeResults.isError) {
             return Promise.resolve(Result.Pass(metatypeResults));
         }
@@ -175,6 +183,7 @@ export default class GraphQLSchemaGenerator {
                 metatype_id: {type: GraphQLString},
                 metatype_name: {type: GraphQLString},
                 created_at: {type: GraphQLString},
+                deleted_at: {type: GraphQLString},
                 created_by: {type: GraphQLString},
                 modified_at: {type: GraphQLString},
                 modified_by: {type: GraphQLString},
@@ -358,6 +367,10 @@ export default class GraphQLSchemaGenerator {
                                         }
                                     }
                                 });
+
+                                output._deep_lynx_id = {
+                                    type: GraphQLString
+                                }
 
                                 return output;
                             },
@@ -698,16 +711,14 @@ export default class GraphQLSchemaGenerator {
             resolve: this.resolverForNodes(containerID, options) as any
         };
 
-        return Promise.resolve(
-            Result.Success(
-                new GraphQLSchema({
-                    query: new GraphQLObjectType({
-                        name: 'Query',
-                        fields,
-                    }),
-                }),
-            ),
-        );
+        GRAPHQLSCHEMA.set(containerID, new GraphQLSchema({
+            query: new GraphQLObjectType({
+                name: 'Query',
+                fields,
+            }),
+        }));
+
+        return Promise.resolve(Result.Success(GRAPHQLSCHEMA.get(containerID)!));
     }
 
     resolverForMetatype(containerID: string, metatype: Metatype, resolverOptions?: ResolverOptions): (_: any, {input}: {input: any}) => any {
@@ -779,6 +790,27 @@ export default class GraphQLSchemaGenerator {
                 }
             }
 
+            // build parquet schema as a just in case, so we don't have to iterate keys again, building first the
+            // record portion which is a nested schema
+            const parquet_schema: {[key: string]: any} = {}
+            parquet_schema._deep_lynx_id = {type: 'INT64'}
+            parquet_schema._record = {
+                fields :{
+                    id: {type: 'INT64'},
+                    data_source_id: {type: 'INT64', optional: true},
+                    original_id: {type: 'UTF8', optional: true},
+                    import_id: {type: 'INT64', optional: true},
+                    metatype_id: {type: 'INT64'},
+                    metatype_name: {type: 'UTF8'},
+                    metadata: {type: 'JSON', optional: true},
+                    created_at: {type: 'TIMESTAMP_MILLIS'},
+                    created_by: {type: 'UTF8'},
+                    modified_at: {type: 'TIMESTAMP_MILLIS'},
+                    modified_by: {type: 'UTF8', optional: true},
+                    deleted_at: {type: 'TIMESTAMP_MILLIS', optional: true},
+                }
+            }
+
             // we must map out what the graphql refers to a metatype's keys are vs. what they actually are so
             // that we can map the query properly
             const propertyMap: {
@@ -793,10 +825,12 @@ export default class GraphQLSchemaGenerator {
                     name: key.property_name,
                     data_type: key.data_type,
                 };
+
+                parquet_schema[key.property_name] = {type: dataTypeToParquetType(key.data_type)}
             });
 
             // iterate through the input object, ignoring reserved properties and adding all others to
-            // the query as property queries
+            // the query as property queries,
             Object.keys(input).forEach((key) => {
                 if (key === '_record' || key === '_relationship') {
                     return;
@@ -822,6 +856,7 @@ export default class GraphQLSchemaGenerator {
 
 
                     done(null, {
+                        _deep_lynx_id: node.id,
                         ...node.properties,
                         _record: {
                             id: node.id,
@@ -835,6 +870,7 @@ export default class GraphQLSchemaGenerator {
                             created_by: node.created_by,
                             modified_at: node.modified_at?.toISOString(),
                             modified_by: node.modified_by,
+                            deleted_at: node.deleted_at
                         },
                     })
                 }})
@@ -847,6 +883,7 @@ export default class GraphQLSchemaGenerator {
                             file_type: (resolverOptions && resolverOptions.returnFileType) ? resolverOptions.returnFileType : 'json',
                             file_name: `${metatype.name}-${new Date().toDateString()}`,
                             transformStreams: [transform],
+                            parquet_schema,
                             containerID})
                         .then((result) => {
                             if (result.isError) {
@@ -886,6 +923,7 @@ export default class GraphQLSchemaGenerator {
                                 }
 
                                 nodeOutput.push({
+                                    _deep_lynx_id: node.id,
                                     ...properties,
                                     _record: {
                                         id: node.id,
@@ -1549,10 +1587,19 @@ export default class GraphQLSchemaGenerator {
 
         return [operator as string, parts.join(' ')];
     }
+
+    public static resetSchema(containerID?: string): void {
+        if(containerID) {
+            GRAPHQLSCHEMA.delete(containerID)
+            return
+        }
+
+        GRAPHQLSCHEMA = new Map<string, GraphQLSchema>()
+    }
 }
 
 export type ResolverOptions = {
     ontologyVersionID?: string;
     returnFile?: boolean;
-    returnFileType?: 'json' | 'csv' | string;
+    returnFileType?: 'json' | 'csv' | 'parquet' | string;
 }

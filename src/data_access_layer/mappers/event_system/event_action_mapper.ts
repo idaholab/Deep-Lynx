@@ -15,6 +15,7 @@ const format = require('pg-format');
     class/interface as well.
 */
 export default class EventActionMapper extends Mapper {
+    public resultClass = EventAction;
     public static tableName = 'event_actions';
 
     private static instance: EventActionMapper;
@@ -30,7 +31,7 @@ export default class EventActionMapper extends Mapper {
     public async Create(userID: string, input: EventAction, transaction?: PoolClient): Promise<Result<EventAction>> {
         const r = await super.run(this.createStatement(userID, input), {
             transaction,
-            resultClass: EventAction,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -40,7 +41,7 @@ export default class EventActionMapper extends Mapper {
     public async Update(userID: string, input: EventAction, transaction?: PoolClient): Promise<Result<EventAction>> {
         const r = await super.run(this.fullUpdateStatement(userID, input), {
             transaction,
-            resultClass: EventAction,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -49,7 +50,7 @@ export default class EventActionMapper extends Mapper {
 
     public async Retrieve(id: string): Promise<Result<EventAction>> {
         return super.retrieve(this.retrieveStatement(id), {
-            resultClass: EventAction,
+            resultClass: this.resultClass,
         });
     }
 
@@ -87,7 +88,8 @@ export default class EventActionMapper extends Mapper {
             a.destination_data_source_id,
             a.active,
             userID,
-            userID]);
+            userID,
+        ]);
 
         return format(text, values);
     }
@@ -126,7 +128,8 @@ export default class EventActionMapper extends Mapper {
             a.destination,
             a.destination_data_source_id,
             a.active,
-            userID]);
+            userID,
+        ]);
 
         return format(text, values);
     }

@@ -2,7 +2,7 @@
 import {Application, NextFunction, Request, Response} from 'express';
 import {authInContainer} from '../../../middleware';
 import ImportMapper from '../../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
-import {PassThrough, pipeline, Readable} from 'stream';
+import {Readable} from 'stream';
 import FileDataStorage from '../../../../data_access_layer/mappers/data_warehouse/data/file_mapper';
 import Result from '../../../../common_classes/result';
 import File from '../../../../domain_objects/data_warehouse/data/file';
@@ -12,11 +12,11 @@ import {plainToClass} from 'class-transformer';
 import Import, {DataStaging} from '../../../../domain_objects/data_warehouse/import/import';
 import ImportRepository from '../../../../data_access_layer/repositories/data_warehouse/import/import_repository';
 import {QueryOptions} from '../../../../data_access_layer/repositories/repository';
-import {toStream} from '../../../../services/utilities';
 import Logger from '../../../../services/logger';
 import Config from '../../../../services/config';
 
 import express from 'express';
+import {FileInfo} from 'busboy';
 const csv = require('csvtojson');
 const Busboy = require('busboy');
 const fileRepo = new FileRepository();
@@ -24,7 +24,6 @@ const stagingRepo = new DataStagingRepository();
 const importRepo = new ImportRepository();
 const xmlToJson = require('xml-2-json-streaming');
 const xmlParser = xmlToJson();
-const JSONStream = require('JSONStream');
 
 // This contains all routes pertaining to DataSources.
 export default class ImportRoutes {
@@ -222,16 +221,17 @@ export default class ImportRoutes {
                     });
                 // @ts-ignore
             } else {
-                const busboy = new Busboy({headers: req.headers});
+                const busboy = Busboy({headers: req.headers});
                 const importPromises: Promise<Result<Import | DataStaging[]>>[] = [];
 
-                busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimetype: string) => {
+                busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
+                    const {filename, encoding, mimeType} = info;
                     Logger.debug(`file found at ${fieldname} - ${filename}, attempting upload`);
-                    if (mimetype === 'application/json') {
+                    if (mimeType === 'application/json') {
                         // shouldn't need to do anything special for a valid json file, ReceiveData can handle valid json
                         // files
                         importPromises.push(req.dataSource!.ReceiveData(file as Readable, req.currentUser!));
-                    } else if (mimetype === 'text/csv' || mimetype === 'application/vnd.ms-excel') {
+                    } else if (mimeType === 'text/csv' || mimeType === 'application/vnd.ms-excel') {
                         importPromises.push(
                             req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
                                 transformStreams: [
@@ -241,7 +241,7 @@ export default class ImportRoutes {
                                 ],
                             }),
                         );
-                    } else if (mimetype === 'text/xml' || mimetype === 'application/xml') {
+                    } else if (mimeType === 'text/xml' || mimeType === 'application/xml') {
                         const xmlStream = xmlParser.createStream();
                         importPromises.push(
                             req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
@@ -389,8 +389,7 @@ export default class ImportRoutes {
         const fileNames: string[] = [];
         const files: Promise<Result<File>>[] = [];
         const dataStagingRecords: Promise<Result<Import | DataStaging[]>>[] = [];
-        const dataStagingRepo = new DataStagingRepository();
-        const busboy = new Busboy({headers: req.headers});
+        const busboy = Busboy({headers: req.headers});
         const metadata: {[key: string]: any} = {};
         let metadataFieldCount = 0;
 
@@ -404,7 +403,8 @@ export default class ImportRoutes {
         // we can't actually wait on the full upload to finish, so there is no way we
         // can take information about the upload and pass it later on in the busboy parsing
         // because of this we're treating the file upload as fairly standalone
-        busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
+        busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
+            const {filename, encoding, mimeType} = info;
             // check if this is the metadata file - if it is, attempt to process it
             if (fieldname === 'metadata') {
                 if (mimeType === 'application/json') {
@@ -454,7 +454,7 @@ export default class ImportRoutes {
 
         // hold on to the field data, we consider this metadata and will create
         // a record to be ingested by deep lynx once the busboy finishes parsing
-        busboy.on('field', (fieldName: string, value: any, fieldNameTruncated: boolean, encoding: string, mimetype: string) => {
+        busboy.on('field', (fieldName: string, value: any) => {
             metadata[fieldName] = value;
             metadataFieldCount++;
         });
@@ -538,16 +538,17 @@ export default class ImportRoutes {
                     .finally(() => next());
                 // @ts-ignore
             } else {
-                const busboy = new Busboy({headers: req.headers});
+                const busboy = Busboy({headers: req.headers});
                 const importPromises: Promise<Result<Import | DataStaging[]>>[] = [];
 
-                busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimetype: string) => {
+                busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
+                    const {filename, encoding, mimeType} = info;
                     Logger.debug(`file found at ${fieldname} - ${filename}, attempting upload`);
-                    if (mimetype === 'application/json') {
+                    if (mimeType === 'application/json') {
                         // shouldn't need to do anything special for a valid json file, ReceiveData can handle valid json
                         // files
                         importPromises.push(req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {importID: req.dataImport!.id}));
-                    } else if (mimetype === 'text/csv') {
+                    } else if (mimeType === 'text/csv') {
                         importPromises.push(
                             req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
                                 importID: req.dataImport!.id,
@@ -558,7 +559,7 @@ export default class ImportRoutes {
                                 ],
                             }),
                         );
-                    } else if (mimetype === 'text/xml' || mimetype === 'application/xml') {
+                    } else if (mimeType === 'text/xml' || mimeType === 'application/xml') {
                         const xmlStream = xmlParser.createStream();
                         importPromises.push(
                             req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {

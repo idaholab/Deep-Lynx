@@ -217,6 +217,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
         expect(edge.isError).false;
 
         const schemaGenerator = new GraphQLSchemaGenerator();
+        GraphQLSchemaGenerator.resetSchema();
 
         const schemaResults = await schemaGenerator.ForContainer(containerID, {});
         expect(schemaResults.isError).false;
@@ -250,7 +251,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                 }
             }`,
         });
-        expect(response.errors).undefined;
+        expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.metatypes.Multimeta;
         expect(data.length).eq(3);
@@ -276,7 +277,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                 }
             }`,
         });
-        expect(response.errors).undefined;
+        expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.nodes;
         expect(data.length).eq(3);
@@ -305,7 +306,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                 }
             }`,
         });
-        expect(response.errors).undefined;
+        expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.nodes;
         expect(data.length).eq(1);
@@ -321,8 +322,37 @@ describe('Using a new GraphQL Query on nodes we', async () => {
 
     it('can save a query by metatype to file', async () => {
         const schemaGenerator = new GraphQLSchemaGenerator();
+        GraphQLSchemaGenerator.resetSchema();
 
         const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true});
+        expect(schemaResults.isError).false;
+        expect(schemaResults.value).not.empty;
+
+        const response = await graphql({
+            schema: schemaResults.value,
+            source: `{
+                metatypes{
+                    Multimeta{
+                        id
+                        file_name
+                        file_size
+                        md5hash
+                    }
+                }
+            }`,
+        });
+        expect(response.errors, response.errors?.join(',')).undefined;
+        expect(response.data).not.undefined;
+        const data = response.data!.metatypes.Multimeta;
+        expect(data.file_size).gt(0);
+
+        return Promise.resolve();
+    });
+
+    it('can save a query by metatype to file as parquet', async () => {
+        const schemaGenerator = new GraphQLSchemaGenerator();
+
+        const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true, returnFileType: 'parquet'});
         expect(schemaResults.isError).false;
         expect(schemaResults.value).not.empty;
 
@@ -364,7 +394,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                 }
             }`,
         });
-        expect(response.errors).undefined;
+        expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.metatypes.Multimeta;
         expect(data.length).eq(2);

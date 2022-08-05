@@ -11,6 +11,7 @@ import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/meta
 import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
 import MetatypeKeyRepository from './metatype_key_repository';
+import GraphQLSchemaGenerator from '../../../../graphql/schema';
 
 /*
     MetatypeRepository contains methods for persisting and retrieving a metatype
@@ -41,7 +42,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
             Object.assign(original.value, m);
 
-            void this.deleteCached(m.id);
+            void this.deleteCached(m.id, m.container_id);
 
             const result = await this.#mapper.Update(user.id!, original.value, transaction.value);
             if (result.isError) {
@@ -113,7 +114,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
             if (metatype.id) {
                 toUpdate.push(metatype);
-                void this.deleteCached(metatype.id);
+                void this.deleteCached(metatype.id, metatype.container_id);
             } else {
                 toCreate.push(metatype);
             }
@@ -247,7 +248,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
     async delete(m: Metatype): Promise<Result<boolean>> {
         if (m.id) {
-            void this.deleteCached(m.id);
+            void this.deleteCached(m.id, m.container_id);
 
             return this.#mapper.Delete(m.id);
         }
@@ -257,7 +258,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
     archive(user: User, m: Metatype): Promise<Result<boolean>> {
         if (m.id) {
-            void this.deleteCached(m.id);
+            void this.deleteCached(m.id, m.container_id);
 
             return this.#mapper.Archive(m.id, user.id!);
         }
@@ -267,7 +268,7 @@ export default class MetatypeRepository extends Repository implements Repository
 
     unarchive(user: User, m: Metatype): Promise<Result<boolean>> {
         if (m.id) {
-            void this.deleteCached(m.id);
+            void this.deleteCached(m.id, m.container_id);
 
             return this.#mapper.Unarchive(m.id, user.id!);
         }
@@ -311,13 +312,14 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(set);
     }
 
-    async deleteCached(id: string): Promise<boolean> {
+    async deleteCached(id: string, containerID?: string): Promise<boolean> {
         const deleted = await Cache.del(`${MetatypeMapper.tableName}:${id}`);
         if (!deleted) Logger.error(`unable to remove metatype ${id} from cache`);
 
-        const keyRepo = new MetatypeKeyRepository();
-        const keysDeleted = await keyRepo.deleteCachedForMetatype(id);
+        const keysDeleted = await new MetatypeKeyRepository().deleteCachedForMetatype(id, containerID);
         if (!keysDeleted) Logger.error(`unable to remove keys for metatype ${id} from cache`);
+
+        GraphQLSchemaGenerator.resetSchema(containerID);
 
         return Promise.resolve(deleted);
     }
@@ -385,11 +387,23 @@ export default class MetatypeRepository extends Repository implements Repository
         const keyRepo = new MetatypeKeyRepository();
 
         if (loadKeys) {
-            await Promise.all(
-                results.value.map(async (metatype) => {
-                    const keys = await keyRepo.listForMetatype(metatype.id!);
+            const metatype_ids: string[] = [];
+            results.value.forEach((metatype) => {
+                metatype_ids.push(metatype.id!);
+            });
 
-                    return metatype.addKey(...keys.value);
+            const keys = (await keyRepo.listForMetatypeIDs(metatype_ids)).value;
+
+            await Promise.all(
+                results.value.map((metatype) => {
+                    // find relevant keys
+                    const keyList = keys.filter((key) => {
+                        return key.metatype_id === metatype.id;
+                    });
+                    // remove used keys for faster iteration
+                    keys.splice(0, keyList.length);
+                    // add keys to metatype
+                    return metatype.addKey(...keyList);
                 }),
             );
         }

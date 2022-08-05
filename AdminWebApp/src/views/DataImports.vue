@@ -126,24 +126,26 @@
       </v-card>
     </v-dialog>
     <v-dialog
-        v-model="dataDialog"
-        width="60%"
+      v-model="dataDialog"
+      width="60%"
+      scrollable
     >
-      <v-card>
-        <v-card-title class="grey lighten-2">
+      <v-card class="d-flex flex-column">
+        <v-card-title class="grey lighten-2 flex-shrink-1">
           <span class="headline text-h3">{{$t('dataImports.viewData')}}</span>
         </v-card-title>   
 
         <json-view
-          class="pt-4 px-4"
+          class="pt-4 px-4 flex-grow-1"
           :data="selectedData"
           :maxDepth=4
           style="overflow-x: auto"
         />
 
-        <v-card-actions>
+        <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
           <!-- TODO: Fill with actions like edit and delete -->
+          <v-btn color="blue darken-1" text @click="dataDialog = false" >{{$t("dataImports.done")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

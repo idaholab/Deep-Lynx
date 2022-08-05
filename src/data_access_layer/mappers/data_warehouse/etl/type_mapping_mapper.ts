@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import TypeMapping from '../../../../domain_objects/data_warehouse/etl/type_mapping';
 
 const format = require('pg-format');
-const resultClass = TypeMapping;
 
 /*
     TypeMappingMapper extends the Postgres database Mapper class and allows
@@ -16,6 +15,7 @@ const resultClass = TypeMapping;
     class/interface as well.
 */
 export default class TypeMappingMapper extends Mapper {
+    private resultClass = TypeMapping;
     public static tableName = 'type_mappings';
 
     private static instance: TypeMappingMapper;
@@ -31,7 +31,7 @@ export default class TypeMappingMapper extends Mapper {
     public async CreateOrUpdate(userID: string, t: TypeMapping, transaction?: PoolClient): Promise<Result<TypeMapping>> {
         const r = await super.run(this.createOrUpdateStatement(userID, t), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -41,14 +41,14 @@ export default class TypeMappingMapper extends Mapper {
     public async BulkCreateOrUpdate(userID: string, t: TypeMapping[], transaction?: PoolClient): Promise<Result<TypeMapping[]>> {
         return super.run(this.createOrUpdateStatement(userID, ...t), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async Update(userID: string, t: TypeMapping, transaction?: PoolClient): Promise<Result<TypeMapping>> {
         const r = await super.run(this.fullUpdateStatement(userID, t), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -58,28 +58,28 @@ export default class TypeMappingMapper extends Mapper {
     public async BulkUpdate(userID: string, t: TypeMapping[], transaction?: PoolClient): Promise<Result<TypeMapping[]>> {
         return super.run(this.fullUpdateStatement(userID, ...t), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public async Retrieve(id: string): Promise<Result<TypeMapping>> {
         return super.retrieve<TypeMapping>(this.retrieveStatement(id), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     // since the combination shape hash, data source, and container are a unique set
     // we can confidently request a single object
     public async RetrieveByShapeHash(dataSourceID: string, shapeHash: string): Promise<Result<TypeMapping>> {
-        return super.retrieve<TypeMapping>(this.retrieveByShapeHashStatement(dataSourceID, shapeHash), {resultClass});
+        return super.retrieve<TypeMapping>(this.retrieveByShapeHashStatement(dataSourceID, shapeHash), {resultClass: this.resultClass});
     }
 
     public List(containerID: string, dataSourceID: string, offset: number, limit: number, sortBy?: string, sortDesc?: boolean): Promise<Result<TypeMapping[]>> {
         if (limit === -1) {
-            return super.rows<TypeMapping>(this.listAllStatement(containerID, dataSourceID), {resultClass});
+            return super.rows<TypeMapping>(this.listAllStatement(containerID, dataSourceID), {resultClass: this.resultClass});
         }
 
-        return super.rows<TypeMapping>(this.listStatement(containerID, dataSourceID, offset, limit, sortBy, sortDesc), {resultClass});
+        return super.rows<TypeMapping>(this.listStatement(containerID, dataSourceID, offset, limit, sortBy, sortDesc), {resultClass: this.resultClass});
     }
 
     public ListNoTransformations(
@@ -91,16 +91,16 @@ export default class TypeMappingMapper extends Mapper {
         sortDesc?: boolean,
     ): Promise<Result<TypeMapping[]>> {
         if (limit === -1) {
-            return super.rows<TypeMapping>(this.listAllNoTransformationsStatement(containerID, dataSourceID), {resultClass});
+            return super.rows<TypeMapping>(this.listAllNoTransformationsStatement(containerID, dataSourceID), {resultClass: this.resultClass});
         }
 
         return super.rows<TypeMapping>(this.listNoTransformationsStatement(containerID, dataSourceID, offset, limit, sortBy, sortDesc), {
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 
     public ListByDataSource(dataSourceID: string, offset: number, limit: number): Promise<Result<TypeMapping[]>> {
-        return super.rows<TypeMapping>(this.listByDataSourceStatement(dataSourceID, offset, limit), {resultClass});
+        return super.rows<TypeMapping>(this.listByDataSourceStatement(dataSourceID, offset, limit), {resultClass: this.resultClass});
     }
 
     public async SetActive(id: string): Promise<Result<boolean>> {

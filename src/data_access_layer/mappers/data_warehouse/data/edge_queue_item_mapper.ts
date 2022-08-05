@@ -4,7 +4,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import {EdgeQueueItem} from '../../../../domain_objects/data_warehouse/data/edge';
 
 const format = require('pg-format');
-const resultClass = EdgeQueueItem;
 
 /*
     ContainerAlertMapper extends the Postgres database Mapper class and allows
@@ -16,6 +15,7 @@ const resultClass = EdgeQueueItem;
     class/interface as well.
 */
 export default class EdgeQueueItemMapper extends Mapper {
+    public resultClass = EdgeQueueItem;
     public static tableName = 'edge_queue_items';
 
     private static instance: EdgeQueueItemMapper;
@@ -31,7 +31,7 @@ export default class EdgeQueueItemMapper extends Mapper {
     public async Create(e: EdgeQueueItem, transaction?: PoolClient): Promise<Result<EdgeQueueItem>> {
         const r = await super.run(this.createStatement(e), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
         if (r.isError) return Promise.resolve(Result.Pass(r));
 
@@ -43,7 +43,7 @@ export default class EdgeQueueItemMapper extends Mapper {
 
         return super.run(this.createStatement(...e), {
             transaction,
-            resultClass,
+            resultClass: this.resultClass,
         });
     }
 

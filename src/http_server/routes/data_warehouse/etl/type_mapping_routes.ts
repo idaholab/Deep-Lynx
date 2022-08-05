@@ -8,6 +8,7 @@ import {plainToClass, serialize} from 'class-transformer';
 import TypeTransformation from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 import TypeTransformationRepository from '../../../../data_access_layer/repositories/data_warehouse/etl/type_transformation_repository';
 import TypeMapping, {TypeMappingExportPayload, TypeMappingUpgradePayload} from '../../../../domain_objects/data_warehouse/etl/type_mapping';
+import {FileInfo} from 'busboy';
 
 const JSONStream = require('JSONStream');
 const Busboy = require('busboy');
@@ -431,8 +432,8 @@ export default class TypeMappingRoutes {
                 })
                 .catch((e) => Result.Error(e).asResponse(res));
         } else {
-            const busboy = new Busboy({headers: req.headers});
-            busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimeType: string) => {
+            const busboy = Busboy({headers: req.headers});
+            busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
                 const repo = new TypeMappingRepository();
 
                 // we use JSONStreams so that we can parse a large JSON file completely without hitting the arguably low

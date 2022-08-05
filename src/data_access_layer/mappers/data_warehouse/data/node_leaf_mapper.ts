@@ -3,8 +3,6 @@ import {PoolClient, QueryConfig} from 'pg';
 import Result from '../../../../common_classes/result';
 import NodeLeaf, {nodeLeafQuery} from '../../../../domain_objects/data_warehouse/data/node_leaf';
 
-const resultClass = NodeLeaf;
-
 /*
     NodeLeafMapper extends the Postgres database Mapper class and allows the
     NodeLeaf structure to be fetched from the database. Unlike other mapper
@@ -16,6 +14,7 @@ const resultClass = NodeLeaf;
 */
 
 export default class NodeLeafMapper extends Mapper {
+    public resultClass = NodeLeaf;
     public static tableName = 'nodes';
     public static viewName = 'current_nodes';
 
@@ -36,7 +35,7 @@ export default class NodeLeafMapper extends Mapper {
     public async RetrieveNthNodes(id: string, container_id: string, depth: string, transaction?: PoolClient): Promise<Result<NodeLeaf[]>> {
         return super.rows(this.retrieveNthNodesStatement(id, container_id, depth), {
             transaction,
-            resultClass
+            resultClass: this.resultClass,
         });
     }
 

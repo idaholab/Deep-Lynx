@@ -300,22 +300,24 @@
     <v-dialog
       v-model="dataDialog"
       width="60%"
+      scrollable
     >
-      <v-card>
-        <v-card-title class="grey lighten-2">
+      <v-card class="d-flex flex-column">
+        <v-card-title class="grey lighten-2 flex-shrink-1">
           <span class="headline text-h3">{{$t('dataMapping.viewSamplePayload')}}</span>
         </v-card-title>
 
         <json-view
-          class="pt-4 px-4"
+          class="pt-4 px-4 flex-grow-1"
+          style="overflow-y: auto; overflow-x: auto"
           :data="samplePayload"
           :maxDepth=4
-          style="overflow-x: auto"
         />
 
-        <v-card-actions>
+        <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
           <!-- TODO: Fill with actions like edit and delete -->
+          <v-btn color="blue darken-1" text @click="dataDialog = false" >{{$t("dataMapping.done")}}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -323,18 +325,23 @@
     <v-dialog
       v-model="mappingDialog"
       width="90%"
+      scrollable
     >
-      <v-card>
-        <v-card-title class="grey lighten-2">
+      <v-card class="d-flex flex-column">
+        <v-card-title class="grey lighten-2 flex-shrink-1">
           <span class="headline text-h3">{{$t('dataImports.editTypeMapping')}}</span>
           <v-flex class="text-right">
             <v-icon class="justify-right"  @click="mappingDialog = false">mdi-window-close</v-icon>
           </v-flex>
         </v-card-title>
 
-        <div v-if="selectedDataSource !== null && mappingDialog">
+        <div class="flex-grow-1" v-if="selectedDataSource !== null && mappingDialog">
           <data-type-mapping :dataSourceID="selectedDataSource.id" :containerID="containerID" :typeMappingID="selectedTypeMapping.id" @mappingCreated="mappingDialog = false" @updated="loadTypeMappings"></data-type-mapping>
         </div>
+        <v-card-actions class="flex-shrink-1">
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="mappingDialog = false" >{{$t("dataMapping.done")}}</v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
   </div>
@@ -772,4 +779,10 @@ export default class DataMapping extends Vue {
   background-color: #CD7F32;
 }
 
+.card-actions-fixed {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background-color: white;
+}
 </style>
