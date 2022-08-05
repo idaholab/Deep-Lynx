@@ -1,5 +1,8 @@
 FROM node:16-alpine
 
+RUN apk update && apk add bash
+SHELL ["/bin/bash", "-c"]
+
 # these settings are needed for the admin web gui build, these variables are all baked into the Vue application and thus
 # are available to any end user that wants to dig deep enough in the webpage - as such we don't feel it a security risk
 # to have these env variables available to anyone running the history commmand on the container/image
