@@ -374,8 +374,8 @@ export class Client {
         return this.get<KeyPairT[]>('/users/keys');
     }
 
-    generateKeyPairForUser(): Promise<KeyPairT> {
-        return this.post<KeyPairT>('/users/keys', undefined);
+    generateKeyPairForUser(note?: string): Promise<KeyPairT> {
+        return this.post<KeyPairT>('/users/keys', {note});
     }
 
     deleteKeyPairForUser(keyID: string): Promise<boolean> {
@@ -386,8 +386,8 @@ export class Client {
         return this.get<KeyPairT[]>(`/containers/${containerID}/service-users/${serviceUserID}/keys`);
     }
 
-    generateKeyPairForServiceUser(containerID: string, serviceUserID: string): Promise<KeyPairT> {
-        return this.post<KeyPairT>(`/containers/${containerID}/service-users/${serviceUserID}/keys`, undefined);
+    generateKeyPairForServiceUser(containerID: string, serviceUserID: string, note?: string): Promise<KeyPairT> {
+        return this.post<KeyPairT>(`/containers/${containerID}/service-users/${serviceUserID}/keys`, {note});
     }
 
     deleteKeyPairForServiceUser(containerID: string, serviceUserID: string, keyID: string): Promise<boolean> {

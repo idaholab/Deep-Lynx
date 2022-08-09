@@ -7,6 +7,7 @@
 
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
+        <success-banner :message="successMessage"></success-banner>
         <v-row>
           <v-col :cols="12">
             <p>{{$t('settings.explanation')}}</p>
@@ -58,6 +59,7 @@ import DeleteContainerDialog from "@/components/ontology/containers/deleteContai
 export default class Settings extends Vue {
   container: ContainerT | undefined = undefined
   errorMessage = ""
+  successMessage = ""
   loading = false
 
   beforeMount() {
@@ -69,6 +71,9 @@ export default class Settings extends Vue {
         .then((container) => {
           this.$store.commit('setEditMode', false)
           this.$store.commit('setActiveContainer', container)
+          this.successMessage = this.$t('containers.savedSuccessfully') as string
+
+          setTimeout(() => this.successMessage = "", 5000)
         })
         .catch(e => {
           this.errorMessage = e

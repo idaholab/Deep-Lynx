@@ -82,6 +82,7 @@ export default {
             containerAdminAcknowledge: 'Only Container Administrators can dismiss alerts. Please contact your administrator to remove this alert.',
         },
         apiKeys: {
+            note: 'Note',
             title: 'Current API Keys',
             key: 'Key',
             actions: 'Actions',
@@ -165,6 +166,7 @@ export default {
             selectDataSource: 'Select Data Source',
         },
         createApiKey: {
+            note: 'Note - optional',
             close: 'Close',
             formTitle: 'Generate New API Key/Secret',
             description:
@@ -1024,6 +1026,7 @@ export default {
             rollbackOntology: 'Rollback to this Ontology Version (creates changelist for further approval)',
         },
         containers: {
+            savedSuccessfully: 'Settings saved successfully',
             or: 'Or',
             title: 'Manage Containers',
             name: 'Name',

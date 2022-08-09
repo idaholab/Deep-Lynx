@@ -128,6 +128,7 @@ export type KeyPairT = {
     key: string;
     secret_raw: string;
     user_id: string;
+    note: string;
 };
 
 export type FileT = {

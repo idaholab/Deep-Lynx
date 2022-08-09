@@ -25,6 +25,9 @@
             <p>{{$t('createApiKey.descriptionService')}}</p>
           </v-col>
         </v-row>
+        <v-row v-if="returnedKey === null">
+          <v-text-field :label="$t('createApiKey.note')" v-model="note"></v-text-field>
+        </v-row>
       </v-card-text>
 
       <v-card-actions>
@@ -55,19 +58,20 @@ export default class CreateApiKeyDialog extends Vue {
   serviceUserID?: string
 
   errorMessage = ""
+  note = ""
   dialog = false
   returnedKey: KeyPairT | null = null
 
   generateApiKey() {
     if(this.serviceUserID) {
-      this.$client.generateKeyPairForServiceUser(this.containerID!, this.serviceUserID)
+      this.$client.generateKeyPairForServiceUser(this.containerID!, this.serviceUserID, this.note)
           .then(key => {
             this.returnedKey = key
             this.$emit('apiKeyCreated')
           })
           .catch((e) => this.errorMessage = e)
     } else {
-      this.$client.generateKeyPairForUser()
+      this.$client.generateKeyPairForUser(this.note)
           .then(key => {
             this.returnedKey = key
             this.$emit('apiKeyCreated')

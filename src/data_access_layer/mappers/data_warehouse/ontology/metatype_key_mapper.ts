@@ -203,7 +203,7 @@ export default class MetatypeKeyMapper extends Mapper {
                 mk.container_id, mk.deleted_at
             FROM parents p JOIN metatype_keys mk ON p.key_parent = mk.metatype_id
             WHERE p.id IN (%L)
-            ORDER BY metatype_id`;
+            ORDER BY metatype_id, mk.name`;
         const values = metatype_ids;
         return format(text, values);
     }

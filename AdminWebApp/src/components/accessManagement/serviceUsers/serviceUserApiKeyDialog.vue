@@ -63,6 +63,7 @@ export default class ServiceUserApiKeyDialog extends Vue {
   headers() {
     return [
       { text: this.$t('apiKeys.key'), value: 'key'},
+      { text: this.$t('apiKeys.note'), value: 'note'},
       { text: this.$t('apiKeys.actions'), value: 'actions', sortable: false }
     ]
   }
