@@ -87,8 +87,8 @@ export default class KeyPairMapper extends Mapper {
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
     private createStatement(...keys: KeyPair[]): string {
-        const text = `INSERT INTO keypairs("key", secret, user_id) VALUES %L RETURNING *`;
-        const values = keys.map((key) => [key.key, key.secret, key.user_id]);
+        const text = `INSERT INTO keypairs("key", secret, user_id, note) VALUES %L RETURNING *`;
+        const values = keys.map((key) => [key.key, key.secret, key.user_id, key.note]);
 
         return format(text, values);
     }
@@ -116,7 +116,7 @@ export default class KeyPairMapper extends Mapper {
 
     private keysForUserStatement(userID: string): QueryConfig {
         return {
-            text: `SELECT key, user_id FROM keypairs WHERE user_id = $1`,
+            text: `SELECT key, user_id, note FROM keypairs WHERE user_id = $1`,
             values: [userID],
         };
     }

@@ -228,6 +228,7 @@ export default class Metatypes extends Vue {
       sortDesc: sortDescParam,
       name: (this.name !== "") ? this.name : undefined,
       description: (this.description !== "") ? this.description : undefined,
+      loadKeys: true,
       deleted: this.$store.getters.isEditMode
     })
         .then((results) => {
@@ -315,6 +316,7 @@ export default class Metatypes extends Vue {
         if(p.created_by) delete p.created_by
         if(p.modified_at) delete p.modified_at
         if(p.modified_by) delete p.modified_by
+        if(p.deleted_at) delete p.deleted_at
         if(p.id) delete p.id
         if(p.metatype_id) delete p.metatype_id
         if(p.ontology_version) delete  p.ontology_version

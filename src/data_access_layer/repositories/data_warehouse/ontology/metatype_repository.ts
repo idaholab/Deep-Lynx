@@ -400,8 +400,6 @@ export default class MetatypeRepository extends Repository implements Repository
                     const keyList = keys.filter((key) => {
                         return key.metatype_id === metatype.id;
                     });
-                    // remove used keys for faster iteration
-                    keys.splice(0, keyList.length);
                     // add keys to metatype
                     return metatype.addKey(...keyList);
                 }),

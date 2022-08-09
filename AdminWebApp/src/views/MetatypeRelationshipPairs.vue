@@ -306,6 +306,9 @@ export default class MetatypeRelationshipPairs extends Vue {
       if(m.ontology_version) delete m.ontology_version
       if(m.id) delete m.id
       if(m.origin_metatype) delete m.origin_metatype
+      if(m.origin_metatype_id) delete m.origin_metatype_id
+      if(m.destination_metatype_id) delete m.destination_metatype_id
+      if(m.relationship_id) delete m.relationship_id
       if(m.destination_metatype) delete m.destination_metatype
       if(m.relationship) delete m.relationship
       delete m.old_id

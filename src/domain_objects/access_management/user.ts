@@ -173,10 +173,7 @@ export class DisplayUser {
     @MinLength(1)
     display_name = '';
 
-    constructor(input: {
-        display_name: string;
-        id?: string;
-    }) {
+    constructor(input: {display_name: string; id?: string}) {
         if (input) {
             this.display_name = input.display_name;
             if (input.id) this.id = input.id;
@@ -225,9 +222,14 @@ export class KeyPair extends BaseDomainClass {
     @Exclude({toPlainOnly: true}) // we never want to show the secret when this is serialized to an object
     secret?: string;
 
-    constructor(userID?: string) {
+    @IsOptional()
+    @IsString()
+    note?: string;
+
+    constructor(userID?: string, note?: string) {
         super();
         if (userID) this.user_id = userID;
+        if (note) this.note = note;
     }
 
     async setSecret(): Promise<Result<boolean>> {
