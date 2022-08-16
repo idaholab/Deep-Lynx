@@ -136,7 +136,7 @@ export default class DataSourceRepository extends Repository implements Reposito
         const imports = await this.#importRepo.where().dataSourceID('eq', dataSourceID).list();
         if (!imports.isError) {
             imports.value.forEach((i) => {
-                void this.#importRepo.setStatus(i.id!, 'processing', 'reprocessing initiated');
+                void this.#importRepo.setStatus(i.id!, 'processing', 'reprocessing completed');
             });
         }
 

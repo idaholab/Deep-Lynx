@@ -1,0 +1,1 @@
+ALTER TABLE keypairs ADD COLUMN note text DEFAULT NULL;

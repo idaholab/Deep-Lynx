@@ -176,7 +176,7 @@ export default class TypeMappingRoutes {
                         const prepared = [];
 
                         for (const mapping of results.value) {
-                            prepared.push(mappingRepo.prepareForImport(mapping, true));
+                            prepared.push(mappingRepo.prepareForImport(mapping, req.dataSource?.DataSourceRecord!, true));
                         }
 
                         Promise.all(prepared)
@@ -316,7 +316,15 @@ export default class TypeMappingRoutes {
     }
 
     private static listTypeMappings(req: Request, res: Response, next: NextFunction) {
-        if (req.query.count && req.query.needsTransformations) {
+        if (req.query.shapeHash) {
+            mappingRepo
+                .findByShapeHash(req.query.shapeHash as string, req.dataSource!.DataSourceRecord!.id!, true)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => Result.Failure(err, 404).asResponse(res))
+                .finally(() => next());
+        } else if (req.query.count && req.query.needsTransformations) {
             mappingRepo
                 .countForDataSourceNoTransformations(req.params.sourceID)
                 .then((result) => {

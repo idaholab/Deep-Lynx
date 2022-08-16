@@ -71,6 +71,7 @@ export default class ImportRepository extends Repository implements RepositoryIn
         // in order to select the composite fields we must redo the initial query
         this._rawQuery = [
             `SELECT imports.*,
+            SUM(CASE WHEN (data_staging.errors IS NOT NULL AND data_staging.errors != '{}') AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS total_errors,
             SUM(CASE WHEN data_staging.inserted_at IS NOT NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
             SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
             FROM imports

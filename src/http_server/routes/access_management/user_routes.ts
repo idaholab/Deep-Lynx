@@ -210,7 +210,7 @@ export default class UserRoutes {
     private static generateKeyPair(req: Request, res: Response, next: NextFunction) {
         const keyRepo = new KeyPairRepository();
         if (req.currentUser) {
-            const keyPair = new KeyPair(req.currentUser.id);
+            const keyPair = new KeyPair(req.currentUser.id, req.body.note);
 
             keyRepo
                 .save(keyPair, req.currentUser)
@@ -426,7 +426,7 @@ export default class UserRoutes {
     private static generateKeyPairForServiceUser(req: Request, res: Response, next: NextFunction) {
         const keyRepo = new KeyPairRepository();
         if (req.serviceUser) {
-            const keyPair = new KeyPair(req.serviceUser.id);
+            const keyPair = new KeyPair(req.serviceUser.id, req.body.note);
 
             keyRepo
                 .save(keyPair, req.serviceUser)

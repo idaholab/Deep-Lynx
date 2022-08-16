@@ -144,6 +144,7 @@ export default class ImportMapper extends Mapper {
     // from it by setting the deleted_at tag of any nodes or edges that have been created. Then
     // it will attempt to re-queue all data staging records for that import
     public async ReprocessImport(importID: string): Promise<Result<boolean>> {
+        await this.SetStatus(importID, 'processing', 'reprocessing initiated');
         await super.runAsTransaction(...this.deleteDataStatement(importID));
         await super.runStatement(this.setProcessedNull(importID));
 
@@ -162,6 +163,7 @@ export default class ImportMapper extends Mapper {
             stream.on('end', () => {
                 Promise.all(putPromises)
                     .then(() => {
+                        void this.SetStatus(importID, 'processing', 'reprocessing completed');
                         done();
                     })
                     .catch((e) => {
@@ -174,8 +176,6 @@ export default class ImportMapper extends Mapper {
             // care where the data ultimately ends up
             stream.pipe(devnull({objectMode: true}));
         });
-
-        await this.SetStatus(importID, 'processing', 'reprocessing initiated');
 
         return Promise.resolve(Result.Success(true));
     }

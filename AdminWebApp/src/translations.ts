@@ -82,6 +82,7 @@ export default {
             containerAdminAcknowledge: 'Only Container Administrators can dismiss alerts. Please contact your administrator to remove this alert.',
         },
         apiKeys: {
+            note: 'Note',
             title: 'Current API Keys',
             key: 'Key',
             actions: 'Actions',
@@ -165,6 +166,7 @@ export default {
             selectDataSource: 'Select Data Source',
         },
         createApiKey: {
+            note: 'Note - optional',
             close: 'Close',
             formTitle: 'Generate New API Key/Secret',
             description:
@@ -1024,6 +1026,7 @@ export default {
             rollbackOntology: 'Rollback to this Ontology Version (creates changelist for further approval)',
         },
         containers: {
+            savedSuccessfully: 'Settings saved successfully',
             or: 'Or',
             title: 'Manage Containers',
             name: 'Name',
@@ -1086,6 +1089,8 @@ export default {
             assignRole: 'Assign Role',
             role: 'Role',
             cancel: 'Cancel',
+            close: 'Close',
+            successfullySetRole: 'Role Assigned Successfully',
         },
         settings: {
             accessKeyDescription: 'Generate and remove API access keys for your user.',
@@ -1098,6 +1103,7 @@ export default {
             explanation: "This page allows you to make changes to your currently selected container. Note that you cannot change your container's name",
         },
         dataImports: {
+            copyID: 'Click to copy ID',
             tableTitle: 'Imports',
             dataView: 'Import Data',
             importTableTitle: 'Import Data',
@@ -1117,6 +1123,9 @@ export default {
             completed: 'completed',
             noData: 'no data',
             done: 'Done',
+            mapping: 'Type Mapping',
+            totalErrors: '# of Errors',
+            toTypeMapping: 'Mapping',
         },
         containerInvite: {
             button: 'Invite User to Container',
