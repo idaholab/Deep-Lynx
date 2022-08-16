@@ -385,6 +385,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
     // can be imported into a separate container or instance later on. We would include this on the domain object, were
     // it not for the populateKeys call that needs to be made to back-fill information from the database
     async prepareForImport(typeMapping: TypeMapping, separateContainer = true): Promise<TypeMapping> {
+        typeMapping.shape_hash = TypeMapping.objectToShapeHash(typeMapping.sample_payload);
         // run transformation work prior to manipulating any data on the mapping itself
         if (typeMapping.transformations)
             for (const i in typeMapping.transformations) {
