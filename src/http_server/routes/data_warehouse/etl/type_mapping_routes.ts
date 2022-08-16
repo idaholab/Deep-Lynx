@@ -176,7 +176,7 @@ export default class TypeMappingRoutes {
                         const prepared = [];
 
                         for (const mapping of results.value) {
-                            prepared.push(mappingRepo.prepareForImport(mapping, true));
+                            prepared.push(mappingRepo.prepareForImport(mapping, req.dataSource?.DataSourceRecord!, true));
                         }
 
                         Promise.all(prepared)
