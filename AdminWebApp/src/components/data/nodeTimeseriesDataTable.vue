@@ -11,7 +11,7 @@
         </template>
 
         <template v-slot:item.actions="{ item }">
-          <node-timeseries-dialog :nodeID="nodeID" :containerID="containerID" :transformationID="item.transformation_id"></node-timeseries-dialog>
+          <node-timeseries-dialog :nodeID="nodeID" :containerID="containerID" :dataSourceID="item.value[1]" :legacy="item.value[0]"></node-timeseries-dialog>
         </template>
       </v-data-table>
     </v-col>
@@ -32,7 +32,8 @@ export default class NodeTimeseriesDataTable extends Vue {
   readonly containerID!: string
 
   errorMessage = ''
-  timeseriesTables: NodeTransformationT[] = []
+  // the tuple here is [legacy, id]
+  timeseriesTables: object[] = []
 
   headers() {
     return [
@@ -51,11 +52,12 @@ export default class NodeTimeseriesDataTable extends Vue {
   }
 
   loadTimeseriesTables() {
-      this.$client.listNodeTransformations(this.containerID, this.nodeID)
-    .then((results) => {
-        this.timeseriesTables = results
-    })
-    .catch(e => this.errorMessage = e)
+    this.$client.listTimeseriesTables(this.containerID, this.nodeID)
+        .then((results) => {
+          const map = new Map<string, [boolean, string]>(Object.entries(results))
+          this.timeseriesTables = Array.from(map, ([name, value]) => ({ name, value }));
+        })
+        .catch(e => this.errorMessage = e)
   }
 
 }

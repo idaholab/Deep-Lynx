@@ -33,26 +33,50 @@ export default class TimeseriesEntryMapper extends Mapper {
         // first we need to get these sorted by transformationID - each different transformation represents a different
         // timescale table structure, we need to handle that. Note that validation should have happened in an earlier step
         // in the repository that matches this mapper
-        const toInsert: {[key: string]: TimeseriesEntry[]} = {};
+        const toInsertTransformations: {[key: string]: TimeseriesEntry[]} = {};
+        const toInsertSources: {[key: string]: TimeseriesEntry[]} = {};
 
         entries.forEach((entry) => {
-            if (toInsert[entry.transformation_id!]) {
-                toInsert[entry.transformation_id!].push(entry);
-            } else {
-                toInsert[entry.transformation_id!] = [entry];
+            if (toInsertTransformations[entry.transformation_id!] && entry.transformation_id) {
+                toInsertTransformations[entry.transformation_id].push(entry);
+            } else if (entry.transformation_id) {
+                toInsertTransformations[entry.transformation_id] = [entry];
+            }
+
+            if (toInsertSources[entry.data_source_id!] && entry.data_source_id) {
+                toInsertSources[entry.data_source_id].push(entry);
+            } else if (entry.data_source_id) {
+                toInsertSources[entry.data_source_id] = [entry];
             }
         });
 
         const insertStatements: string[] = [];
 
-        Object.keys(toInsert).forEach((transformationID) => {
+        Object.keys(toInsertTransformations).forEach((transformationID) => {
             const text = `INSERT INTO z_${transformationID}(
                                   _nodes,
                                   _metadata,
-                                  ${toInsert[transformationID][0].data.map((data) => `"${data.column_name}"`).join(',')}
+                                  ${toInsertTransformations[transformationID][0].data.map((data) => `"${data.column_name}"`).join(',')}
             ) VALUES %L`;
             const values = [
-                ...toInsert[transformationID].map((entry) => [
+                ...toInsertTransformations[transformationID].map((entry) => [
+                    entry.nodes.length > 0 ? `{${entry.nodes.join(',')}}` : undefined,
+                    entry.metadata,
+                    ...entry.data.map((data) => data.value),
+                ]),
+            ];
+
+            insertStatements.push(format(text, values));
+        });
+
+        Object.keys(toInsertSources).forEach((dataSourceID) => {
+            const text = `INSERT INTO z_${dataSourceID}(
+                                  _nodes,
+                                  _metadata,
+                                  ${toInsertSources[dataSourceID][0].data.map((data) => `"${data.column_name}"`).join(',')}
+            ) VALUES %L`;
+            const values = [
+                ...toInsertSources[dataSourceID].map((entry) => [
                     entry.nodes.length > 0 ? `{${entry.nodes.join(',')}}` : undefined,
                     entry.metadata,
                     ...entry.data.map((data) => data.value),

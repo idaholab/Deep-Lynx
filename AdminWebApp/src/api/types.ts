@@ -185,7 +185,7 @@ export type DataSourceT = {
     adapter_type: string | undefined;
     active: boolean;
     archived?: boolean;
-    config: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | JazzDataSourceConfig | undefined;
+    config: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | JazzDataSourceConfig | TimeseriesDataSourceConfig | undefined;
     created_at?: string;
     modified_at?: string;
     created_by?: string;
@@ -198,6 +198,34 @@ export type DataSourceT = {
 export type StandardDataSourceConfig = {
     kind: 'standard' | 'manual';
     data_type: 'json' | 'csv';
+    stop_nodes?: string[];
+    value_nodes?: string[];
+    data_retention_days?: number;
+};
+
+export type TimeseriesColumn = {
+    id?: string;
+    column_name?: string;
+    property_name?: string;
+    is_primary_timestamp: boolean;
+    unique: boolean;
+    type?: string;
+    date_conversion_format_string?: string;
+};
+
+export type TimeseriesNodeParameter = {
+    type?: string;
+    operator?: string;
+    key?: any;
+    value?: any;
+};
+
+// we extend so the class-transformer can work properly, even though we don't actually need it
+export type TimeseriesDataSourceConfig = {
+    kind: 'timeseries';
+    columns: TimeseriesColumn[];
+    chunk_interval?: string; // only required if they are using a bigint as a primary timestamp
+    attachment_parameters: TimeseriesNodeParameter[];
     stop_nodes?: string[];
     value_nodes?: string[];
     data_retention_days?: number;
@@ -605,5 +633,13 @@ export function DefaultStandardDataSourceConfig(): StandardDataSourceConfig {
         kind: 'standard',
         data_type: 'json',
         data_retention_days: 30,
+    };
+}
+
+export function DefaultTimeseriesDataSourceConfig(): TimeseriesDataSourceConfig {
+    return {
+        kind: 'timeseries',
+        columns: [],
+        attachment_parameters: [],
     };
 }

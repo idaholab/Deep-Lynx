@@ -20,7 +20,7 @@ export interface DataSource {
     // import that already exists in case you are adding data to it. This is not best practice
     // because you might be adding records to an import which isn't the latest, potentially overwriting
     // newer data when the data source attempts to process it
-    ReceiveData(payload: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | DataStaging[]>>;
+    ReceiveData(payload: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | DataStaging[] | boolean>>;
 
     // Run will initiate any data source specific operations such as polling - this
     // should fire a one time function, not a perpetual function

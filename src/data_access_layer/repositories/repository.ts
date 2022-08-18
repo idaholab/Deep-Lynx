@@ -505,6 +505,7 @@ export type QueryOptions = {
     sortDesc?: boolean | undefined;
     // generally used if we have a complicated set of joins
     groupBy?: string | undefined;
+    distinct?: boolean | undefined;
 };
 
 export type FileOptions = {

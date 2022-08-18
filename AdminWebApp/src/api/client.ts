@@ -638,9 +638,14 @@ export class Client {
         return this.get<FileT[]>(`/containers/${containerID}/graphs/nodes/${nodeID}/files`);
     }
 
-    listDataSources(containerID: string, archived = false): Promise<DataSourceT[]> {
+    listDataSources(containerID: string, archived = false, timeseries = false): Promise<DataSourceT[]> {
         // we hardcoded the sortBy to insure we're always getting archived data sources at the bottom of the list
-        return this.get<DataSourceT[]>(`/containers/${containerID}/import/datasources`, {archived, sortBy: 'archived'});
+        return this.get<DataSourceT[]>(`/containers/${containerID}/import/datasources`, {archived, sortBy: 'archived', timeseries});
+    }
+
+    retrieveDataSource(containerID: string, dataSourceID: string): Promise<DataSourceT> {
+        // we hardcoded the sortBy to insure we're always getting archived data sources at the bottom of the list
+        return this.get<DataSourceT>(`/containers/${containerID}/import/datasources/${dataSourceID}`);
     }
 
     deleteDataSources(
@@ -704,8 +709,8 @@ export class Client {
         return this.get<NodeT[]>(`/containers/${containerID}/graphs/nodes`, query);
     }
 
-    listNodeTransformations(containerID: string, nodeID: string): Promise<NodeTransformationT[]> {
-        return this.get<NodeTransformationT[]>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`);
+    listTimeseriesTables(containerID: string, nodeID: string): Promise<Map<string, [boolean, string]>> {
+        return this.get<Map<string, [boolean, string]>>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`);
     }
 
     retrieveNode(containerID: string, nodeID: string): Promise<NodeT> {

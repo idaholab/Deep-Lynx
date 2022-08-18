@@ -9,6 +9,9 @@ import Logger from '../../../../services/logger';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 import File, {NodeFile} from '../../../../domain_objects/data_warehouse/data/file';
 import QueryStream from 'pg-query-stream';
+import {stringToValidPropertyName, valueCompare} from '../../../../services/utilities';
+import DataSourceRepository from '../import/data_source_repository';
+import {TimeseriesDataSourceConfig} from '../../../../domain_objects/data_warehouse/import/data_source';
 
 /*
     NodeRepository contains methods for persisting and retrieving nodes
@@ -265,8 +268,112 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return this.#fileMapper.ListForNode(node.id);
     }
 
-    listTransformations(nodeID: string): Promise<Result<NodeTransformation[]>> {
-        return this.#mapper.ListTransformationsForNode(nodeID);
+    // listTimeseriesTables returns a list of all the GraphQL friendly names of the data sources and transformations
+    // that exist - the tuple is [legacy, id]
+    async listTimeseriesTables(node: Node, containerID: string): Promise<Result<Map<string, [boolean, string]>>> {
+        const out = new Map<string, [boolean, string]>();
+
+        const nodeTransformations = await this.#mapper.ListTransformationsForNode(node.id!);
+        if (!nodeTransformations.isError) {
+            // we need to follow the same naming scheme as the graphQL layer, legacy on the transformations so there
+            // are no clashes
+            nodeTransformations.value.map((t, index) => {
+                if (out.get(stringToValidPropertyName(t.name!) + '_legacy')) {
+                    out.set(`${stringToValidPropertyName(t.name!)}_legacy_${index}`, [true, t.transformation_id!]);
+                } else {
+                    out.set(`${stringToValidPropertyName(t.name!)}_legacy`, [true, t.transformation_id!]);
+                }
+            });
+        } else {
+            Logger.error(`unable to list node transformations ${nodeTransformations.error?.error}`);
+        }
+
+        // now fetch the data sources, we fail here because this isn't the legacy method for fetching data
+        const dataSources = await new DataSourceRepository().where().containerID('eq', containerID).and().adapter_type('eq', 'timeseries').list();
+        if (dataSources.isError) {
+            return Promise.resolve(Result.Failure(`unable to list datasources for timeseries for node ${dataSources.error?.error}`));
+        }
+
+        // there might be a better, and closer to the sql way of doing this - but for now there won't be so many data sources
+        // that pulling and looping through them is going to cause issues
+        const matchedDataSources = dataSources.value.filter((source) => {
+            if (!source) return false;
+
+            const config = source.DataSourceRecord!.config as TimeseriesDataSourceConfig;
+            for (const parameter of config.attachment_parameters) {
+                // if we don't match this filter then we can assume we fail the rest as it's only AND conjunction at
+                // this time
+                switch (parameter.type) {
+                    case 'data_source': {
+                        try {
+                            return valueCompare(parameter.operator!, node.data_source_id, parameter.value);
+                        } catch (e) {
+                            Logger.error(`error comparing values for data source attachment parameters`);
+                            return false;
+                        }
+                    }
+                    case 'metatype_id': {
+                        try {
+                            return valueCompare(parameter.operator!, node.metatype_id, parameter.value);
+                        } catch (e) {
+                            Logger.error(`error comparing values for metatype id attachment parameters`);
+                            return false;
+                        }
+                    }
+
+                    case 'metatype_name': {
+                        try {
+                            return valueCompare(parameter.operator!, node.metatype_name, parameter.value);
+                        } catch (e) {
+                            Logger.error(`error comparing values for metatype name attachment parameters`);
+                            return false;
+                        }
+                    }
+
+                    case 'original_id': {
+                        try {
+                            return valueCompare(parameter.operator!, node.original_data_id, parameter.value);
+                        } catch (e) {
+                            Logger.error(`error comparing values for original id attachment parameters`);
+                            return false;
+                        }
+                    }
+
+                    case 'property': {
+                        try {
+                            type ObjectKey = keyof typeof node.properties;
+                            return valueCompare(parameter.operator!, node.properties[parameter.key as ObjectKey], parameter.value);
+                        } catch (e) {
+                            Logger.error(`error comparing values for property attachment parameters`);
+                            return false;
+                        }
+                    }
+
+                    case 'id': {
+                        try {
+                            return valueCompare(parameter.operator!, node.id, parameter.value);
+                        } catch (e) {
+                            Logger.error(`error comparing values for id attachment parameters`);
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        });
+
+        // we need to follow the same naming scheme as the graphQL layer, legacy on the transformations so there
+        // are no clashes
+        matchedDataSources.map((d, index) => {
+            if (out.get(stringToValidPropertyName(d?.DataSourceRecord?.name!))) {
+                out.set(`${stringToValidPropertyName(d?.DataSourceRecord?.name!)}_${index}`, [false, d?.DataSourceRecord?.id!]);
+            } else {
+                out.set(stringToValidPropertyName(d?.DataSourceRecord?.name!), [false, d?.DataSourceRecord?.id!]);
+            }
+        });
+
+        return Promise.resolve(Result.Success(out));
     }
 
     id(operator: string, value: any) {
