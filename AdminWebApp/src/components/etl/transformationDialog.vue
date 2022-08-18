@@ -1400,7 +1400,9 @@ export default class TransformationDialog extends Vue {
       value: 'edge'
     }]
 
-    if(Config.timeSeriesEnabled) {
+    // only show if timeseries is enabled and it's existing transformation
+    // we don't want users to use this old method  of doing timeseries data
+    if(Config.timeSeriesEnabled && this.transformation) {
      types.push({
        name: this.$t("dataMapping.tabularData"),
        value: 'timeseries'

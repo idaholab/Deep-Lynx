@@ -10,3 +10,4 @@ src/data_warehouse/data/node.ts
 src/data_access_layer/repositories/data_warehouse/etl/type_transformation_repository.ts
 src/data_access_layer/migrate.ts
 src/graphql/schema.ts
+src/graphql/node_graph_schema.ts

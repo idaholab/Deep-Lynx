@@ -14,12 +14,13 @@ import StandardDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/
 import HttpDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/http_data_source_impl';
 import {toStream} from '../../../services/utilities';
 import Import from '../../../domain_objects/data_warehouse/import/import';
+import TimeseriesDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/timeseries_data_source';
 
 // some general tests on data sources that aren't specific to the implementation
 describe('A Datasource Repository can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
-    let dataSource: StandardDataSourceImpl | HttpDataSourceImpl | undefined;
+    let dataSource: StandardDataSourceImpl | HttpDataSourceImpl | TimeseriesDataSourceImpl | undefined;
     let mappingID: string;
 
     before(async function () {

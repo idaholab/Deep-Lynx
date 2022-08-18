@@ -418,7 +418,7 @@ export default class GraphRoutes {
         const generator = new NodeGraphQLSchemaGenerator();
 
         generator
-            .ForNode(req.node?.id!, {
+            .ForNode(req.container?.id!, req.node?.id!, {
                 returnFile: String(req.query.returnFile).toLowerCase() === 'true',
                 returnFileType: String(req.query.returnFileType).toLowerCase(),
             })
@@ -448,19 +448,9 @@ export default class GraphRoutes {
     private static queryTimeseriesDataTypes(req: Request, res: Response, next: NextFunction) {
         const repo = new NodeRepository();
 
-        repo.listTransformations(req.node?.id!)
+        repo.listTimeseriesTables(req.node!, req.container?.id!)
             .then((results) => {
-                if (results.isError) {
-                    results.asResponse(res);
-                    return;
-                }
-
-                Result.Success<any>(
-                    results.value.map((t) => {
-                        t.name = stringToValidPropertyName(t.name!);
-                        return t;
-                    }),
-                ).asResponse(res);
+                results.asResponse(res);
             })
             .catch((e) => Result.Error(e).asResponse(res));
     }

@@ -67,7 +67,7 @@ export default class DataSourceRoutes {
         if (req.container && req.dataSource && req.dataSource.DataSourceRecord) {
             const currentUser = req.currentUser!;
 
-            Object.assign(req.dataSource.DataSourceRecord!, req.body as object);
+            Object.assign(req.dataSource.DataSourceRecord, req.body as object);
 
             dataSourceRepo
                 .save(req.dataSource, currentUser)
@@ -173,8 +173,12 @@ export default class DataSourceRoutes {
         } else {
             repository
                 .and()
+                .timeseries(String(req.query.timeseries).toLowerCase() === 'true')
+                .and()
                 .archived(String(req.query.archived).toLowerCase() === 'true')
                 .or()
+                .timeseries(String(req.query.timeseries).toLowerCase() === 'true')
+                .and()
                 .containerID('eq', req.container!.id) // we have to specify the container again in an OR statement
                 .and()
                 .archived(false) // we always want to at least list all unarchived ones

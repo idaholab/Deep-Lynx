@@ -69,3 +69,45 @@ export function dataTypeToParquetType(input: string): string {
         }
     }
 }
+
+export function valueCompare(operator: string, v1: any, v2: any): boolean {
+    switch (operator) {
+        case 'eq': {
+            return v1 === v2;
+        }
+        case '==': {
+            return v1 === v2;
+        }
+        case 'neq': {
+            return v1 !== v2;
+        }
+        case '!=': {
+            return v1 !== v2;
+        }
+        case '<>': {
+            return v1 !== v2;
+        }
+        case '<': {
+            return v1 < v2;
+        }
+        case '>': {
+            return v1 > v2;
+        }
+        case '<=': {
+            return v1 <= v2;
+        }
+        case '>=': {
+            return v1 >= v2;
+        }
+        case 'like': {
+            return v1.includes(v2);
+        }
+        case 'in': {
+            if (Array.isArray(v2)) {
+                return v2.includes(v1);
+            }
+        }
+    }
+
+    return false;
+}

@@ -1,4 +1,4 @@
-import RepositoryInterface, {DeleteOptions, QueryOptions, Repository} from '../../repository';
+import RepositoryInterface, {DeleteOptions, FileOptions, QueryOptions, Repository} from '../../repository';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
 import DataSourceMapper from '../../../mappers/data_warehouse/import/data_source_mapper';
 import HttpDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/http_data_source_impl';
@@ -11,6 +11,8 @@ import JazzDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/i
 import AvevaDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/aveva_data_source';
 import {DataSource} from '../../../../interfaces_and_impl/data_warehouse/import/data_source';
 import ImportRepository from './import_repository';
+import TimeseriesDataSourceImpl from '../../../../interfaces_and_impl/data_warehouse/import/timeseries_data_source';
+import File from '../../../../domain_objects/data_warehouse/data/file';
 
 /*
     DataSourceRepository contains methods for persisting and retrieving data sources
@@ -25,6 +27,7 @@ export default class DataSourceRepository extends Repository implements Reposito
     #mapper = DataSourceMapper.Instance;
     #importRepo = new ImportRepository();
     #factory = new DataSourceFactory();
+    #groupBy?: string[];
 
     async delete(t: DataSource, options?: DeleteOptions): Promise<Result<boolean>> {
         if (!t.DataSourceRecord || !t.DataSourceRecord.id)
@@ -36,7 +39,7 @@ export default class DataSourceRepository extends Repository implements Reposito
             if (hasImports.value || (options.force && options.removeData)) return this.#mapper.DeleteWithData(t.DataSourceRecord.id);
             else if (!hasImports.value || options.force) return this.#mapper.Delete(t.DataSourceRecord.id);
         } else {
-            if (!hasImports) return this.#mapper.Delete(t.DataSourceRecord.id);
+            if (!hasImports.value) return this.#mapper.Delete(t.DataSourceRecord.id);
         }
 
         return Promise.resolve(Result.Failure(`Data Source has data associated with it, this data must be removed or user must force delete.`));
@@ -85,8 +88,21 @@ export default class DataSourceRepository extends Repository implements Reposito
 
             savedRecord = updated.value;
         } else {
-            const created = await this.#mapper.Create(user.id!, toSave);
+            // we need a transaction so that a hypertable failure can delete data source as well
+            const transaction = await this.#mapper.startTransaction();
+
+            const created = await this.#mapper.Create(user.id!, toSave, transaction.value);
             if (created.isError) return Promise.resolve(Result.Pass(created));
+
+            if (created.value.adapter_type === 'timeseries') {
+                const hypertable_created = await this.#mapper.CreateHypertable(created.value);
+                if (hypertable_created.isError) {
+                    await this.#mapper.rollbackTransaction(transaction.value);
+                    return Promise.resolve(Result.Failure(`unable to create hypertable for timeseries data source ${hypertable_created.error?.error}`));
+                }
+            }
+
+            await this.#mapper.completeTransaction(transaction.value);
 
             savedRecord = created.value;
         }
@@ -158,6 +174,11 @@ export default class DataSourceRepository extends Repository implements Reposito
         return this;
     }
 
+    adapter_type(operator: string, value: any) {
+        super.query('adapter_type', operator, value);
+        return this;
+    }
+
     active() {
         super.query('active', 'eq', true);
         return this;
@@ -168,9 +189,18 @@ export default class DataSourceRepository extends Repository implements Reposito
         return this;
     }
 
+    timeseries(value: boolean) {
+        super.query('adapter_type', value ? 'eq' : 'neq', 'timeseries');
+        return this;
+    }
+
     inactive() {
         super.query('active', 'eq', false);
         return this;
+    }
+
+    timeseriesQuery(fieldName: string, operator: string, value?: any, dataType?: string): this {
+        return super.query(`"${fieldName}"`, operator, value, dataType);
     }
 
     async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<(DataSource | undefined)[]>> {
@@ -182,13 +212,51 @@ export default class DataSourceRepository extends Repository implements Reposito
 
         return Promise.resolve(Result.Success(results.value.map((record) => this.#factory.fromDataSourceRecord(record))));
     }
+
+    // you will see errors chaining this method with any of the query functions except timeseries query. I debated throwing
+    // this into its own repository like last time, but it didn't make sense
+    async listTimeseries(dataSourceID: string, options?: QueryOptions, transaction?: PoolClient): Promise<Result<any[]>> {
+        // we have to hijack the top of the query to point to the proper table
+        this._rawQuery[0] = options?.distinct ? `SELECT DISTINCT * FROM y_${dataSourceID}` : `SELECT * FROM y_${dataSourceID}`;
+
+        if (options && options.groupBy && this.#groupBy) {
+            options.groupBy = [options.groupBy, ...this.#groupBy].join(',');
+        } else if (options && this.#groupBy) {
+            options.groupBy = this.#groupBy.join(',');
+        } else if (this.#groupBy) {
+            options = {groupBy: this.#groupBy.join(',')};
+        }
+
+        return super.findAll<any>(options, {
+            transaction,
+        });
+    }
+
+    async listTimeseriesToFile(dataSourceID: string, fileOptions: FileOptions, options?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
+        // we have to hijack the top of the query to point to the proper table
+        this._rawQuery[0] = options?.distinct ? `SELECT DISTINCT * FROM y_${dataSourceID}` : `SELECT * FROM y_${dataSourceID}`;
+
+        if (options && options.groupBy && this.#groupBy) {
+            options.groupBy = [options.groupBy, ...this.#groupBy].join(',');
+        } else if (options && this.#groupBy) {
+            options.groupBy = this.#groupBy.join(',');
+        } else if (this.#groupBy) {
+            options = {groupBy: this.#groupBy.join(',')};
+        }
+
+        return super.findAllToFile(fileOptions, options, {
+            transaction,
+        });
+    }
 }
 
 // as part of the data source repository we also include the Data Source factory, used
 // to take data source records and generate data source interfaces from them. Currently
 // the only implementations are the Http and Standard data sources.
 export class DataSourceFactory {
-    fromDataSourceRecord(sourceRecord: DataSourceRecord): StandardDataSourceImpl | HttpDataSourceImpl | JazzDataSourceImpl | AvevaDataSourceImpl | undefined {
+    fromDataSourceRecord(
+        sourceRecord: DataSourceRecord,
+    ): StandardDataSourceImpl | HttpDataSourceImpl | JazzDataSourceImpl | AvevaDataSourceImpl | TimeseriesDataSourceImpl | undefined {
         switch (sourceRecord.adapter_type) {
             case 'http': {
                 return new HttpDataSourceImpl(sourceRecord);
@@ -209,6 +277,10 @@ export class DataSourceFactory {
 
             case 'aveva': {
                 return new AvevaDataSourceImpl(sourceRecord);
+            }
+
+            case 'timeseries': {
+                return new TimeseriesDataSourceImpl(sourceRecord);
             }
 
             default: {

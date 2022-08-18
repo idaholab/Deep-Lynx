@@ -1,7 +1,7 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
 import {PoolClient, QueryConfig} from 'pg';
-import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
+import DataSourceRecord, {TimeseriesDataSourceConfig} from '../../../../domain_objects/data_warehouse/import/data_source';
 import Event from '../../../../domain_objects/event_system/event';
 import EventRepository from '../../../repositories/event_system/event_repository';
 import {QueueFactory} from '../../../../services/queue/queue';
@@ -104,11 +104,26 @@ export default class DataSourceMapper extends Mapper {
     }
 
     public Delete(id: string): Promise<Result<boolean>> {
+        void super.runStatement(this.deleteHypertableStatement(id));
+
         return super.runStatement(this.deleteStatement(id));
     }
 
     public DeleteWithData(id: string): Promise<Result<boolean>> {
+        void super.runStatement(this.deleteHypertableStatement(id));
+
         return super.runAsTransaction(...this.deleteWithDataStatement(id));
+    }
+
+    public CreateHypertable(source: DataSourceRecord): Promise<Result<boolean>> {
+        return super.runAsTransaction(...this.createHypertableStatement(source));
+    }
+
+    // InsertIntoHypertable takes an array of objects and inserts them into the supplied data source's hypertable if
+    // the data source is a timeseries source. Records are parsed as JSON so that we can avoid having to use node
+    // to make the connection between table name and property name included in the data source config
+    public InsertIntoHypertable(source: DataSourceRecord, records: any[]): Promise<Result<boolean>> {
+        return super.runStatement(this.insertIntoHypertableStatement(source, records));
     }
 
     // Reprocess takes a data source and will remove all previous data ingested by it, then attempt
@@ -307,5 +322,195 @@ export default class DataSourceMapper extends Mapper {
     // don't want to read the data in needlessly
     private listStagingForSourceStreaming(dataSourceID: string): string {
         return format(`SELECT data_staging.* FROM data_staging WHERE data_source_id = %L`, dataSourceID);
+    }
+
+    private createHypertableStatement(source: DataSourceRecord): QueryConfig[] {
+        let primaryTimestampColumnName = '';
+        const columns = (source.config as TimeseriesDataSourceConfig).columns;
+        const columnStatements: string[] = columns.map((column) => {
+            if (column.is_primary_timestamp) {
+                primaryTimestampColumnName = column.column_name!;
+            }
+            // this determines the data type of the column to be created
+            let type = 'text';
+
+            switch (column.type) {
+                case undefined: {
+                    type = 'text';
+                    break;
+                }
+
+                case 'number': {
+                    // must be a bigint if primary timestamp
+                    if (column.is_primary_timestamp) {
+                        type = 'bigint';
+                    } else {
+                        type = 'integer';
+                    }
+                    break;
+                }
+
+                case 'number64': {
+                    type = 'bigint';
+                    break;
+                }
+
+                case 'float': {
+                    type = 'numeric';
+                    break;
+                }
+                case 'float64': {
+                    type = 'numeric';
+                    break;
+                }
+
+                case 'date': {
+                    type = 'timestamp';
+                    break;
+                }
+
+                case 'boolean': {
+                    type = 'boolean';
+                    break;
+                }
+            }
+
+            return format('%I %I DEFAULT NULL', column.column_name, type);
+        });
+
+        const createStatement = format(
+            `CREATE TABLE IF NOT EXISTS %I (
+                ${columnStatements.join(',')},
+                _nodes bigint[] DEFAULT NULL,
+                _metadata jsonb DEFAULT NULL
+                )`,
+            'y_' + source.id!,
+        );
+
+        const statements: QueryConfig[] = [
+            {
+                text: format(`DROP TABLE IF EXISTS %s`, 'y_' + source.id!),
+            },
+            {
+                text: createStatement,
+            },
+        ];
+
+        if ((source.config as TimeseriesDataSourceConfig).chunk_interval) {
+            statements.push({
+                text: format(
+                    `SELECT create_hypertable(%L, %L, chunk_time_interval => %L::integer)`,
+                    'y_' + source.id!,
+                    primaryTimestampColumnName,
+                    (source.config as TimeseriesDataSourceConfig).chunk_interval,
+                ),
+            });
+        } else {
+            statements.push({
+                text: format(`SELECT create_hypertable(%L, %L)`, 'y_' + source.id!, primaryTimestampColumnName),
+            });
+        }
+
+        if (columns.filter((c) => c.unique).length > 0) {
+            const unique_names = columns.filter((c) => c.unique).map((c) => c.column_name) as string[];
+            statements.push({
+                text: format(
+                    `CREATE UNIQUE INDEX idx_${source.id!}_${unique_names.join('_')} ON y_${source.id!}(${
+                        columns.find((c) => c.is_primary_timestamp)?.column_name
+                    },${unique_names.join(',')});`,
+                ),
+            });
+        }
+
+        return statements;
+    }
+
+    private deleteHypertableStatement(sourceID: string): string {
+        const text = `DROP TABLE IF EXISTS %s`;
+        const values = ['y_' + sourceID];
+
+        return format(text, values);
+    }
+
+    // this will break an array of objects into a json string and insert it into the statement
+    // this builds a recordset based on the json, doing an INSERT INTO...SELECT into the proper
+    // hypertable, making the connection between the property name and column name which may be different
+    private insertIntoHypertableStatement(source: DataSourceRecord, records: any[]): string {
+        const config = source.config as TimeseriesDataSourceConfig;
+
+        const statements: string[] = [`INSERT INTO y_${source.id}(${config.columns.map((c) => c.column_name).join(',')})`, `SELECT `];
+
+        const columns: string[] = [];
+        config.columns.forEach((c) => {
+            if (c.type === 'date') {
+                if (!c.date_conversion_format_string) c.date_conversion_format_string = 'YYYY-MM-DD HH24:MI:SS.US';
+                columns.push(format(`to_timestamp(i."%s", %L) as %I`, c.property_name, c.date_conversion_format_string, c.column_name));
+            } else {
+                columns.push(format(`i."%s" as %I`, c.property_name, c.column_name));
+            }
+        });
+
+        statements.push(columns.join(','));
+
+        statements.push(`FROM json_to_recordset(%L) AS i(`);
+
+        const recordColumns: string[] = [];
+        config.columns.forEach((c) => {
+            let typeCast = 'text';
+
+            switch (c.type) {
+                case undefined: {
+                    typeCast = 'text';
+                    break;
+                }
+
+                case 'number': {
+                    typeCast = 'integer';
+                    break;
+                }
+
+                case 'number64': {
+                    typeCast = 'bigint';
+                    break;
+                }
+
+                case 'float': {
+                    typeCast = 'numeric';
+                    break;
+                }
+                case 'float64': {
+                    typeCast = 'numeric';
+                    break;
+                }
+
+                case 'date': {
+                    typeCast = 'text'; // must be text, so we can format the timestamp for postgres correctly
+                    break;
+                }
+
+                case 'boolean': {
+                    typeCast = 'boolean';
+                    break;
+                }
+
+                case 'json': {
+                    typeCast = 'json';
+                    break;
+                }
+            }
+
+            recordColumns.push(format(`"%s" %I`, c.property_name, typeCast));
+        });
+
+        statements.push(recordColumns.join(','));
+        statements.push(');');
+
+        const values = JSON.stringify(records, (key, value) => {
+            if (value !== null && value !== '') return value; // handles null values and empty strings from csv
+        });
+
+        const debug = format(statements.join(' '), values);
+
+        return format(statements.join(' '), values);
     }
 }

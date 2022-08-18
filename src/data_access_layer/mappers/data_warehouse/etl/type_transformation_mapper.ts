@@ -73,6 +73,10 @@ export default class TypeTransformationMapper extends Mapper {
     }
 
     public async ListFromIDs(ids: string[]): Promise<Result<TypeTransformation[]>> {
+        if (ids.length <= 0) {
+            return Result.Success([]);
+        }
+
         return super.rows(this.listFromIDsStatement(ids), {resultClass: this.resultClass});
     }
 
@@ -111,7 +115,9 @@ export default class TypeTransformationMapper extends Mapper {
         return super.runAsTransaction(...this.deleteWithDataStatement(id));
     }
 
-    // taking a time series transformation create a hypertable based on its column mapping data
+    /**
+     * @deprecated favor timeseries type data sources
+     */
     public async CreateHypertable(transformation: TypeTransformation): Promise<Result<boolean>> {
         if (!transformation.id || !transformation.keys || transformation.keys.length === 0) {
             return Result.Failure('transformation must have id and mapping keys in order to create time series table');
@@ -124,6 +130,9 @@ export default class TypeTransformationMapper extends Mapper {
         return super.runAsTransaction(...this.createHypertableStatement(transformation));
     }
 
+    /**
+     * @deprecated favor timeseries type data sources
+     */
     public async DeleteHypertable(transformationID: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteHypertableStatement(transformationID));
     }
@@ -376,7 +385,9 @@ export default class TypeTransformationMapper extends Mapper {
             values: [transformationID],
         };
     }
-
+    /**
+     * @deprecated favor timeseries type data sources
+     */
     private createHypertableStatement(transformation: TypeTransformation): QueryConfig[] {
         let primaryTimestampColumnName = '';
         const columnStatements: string[] = transformation.keys.map((key) => {
@@ -447,6 +458,9 @@ export default class TypeTransformationMapper extends Mapper {
         ];
     }
 
+    /**
+     * @deprecated favor timeseries type data sources
+     */
     private deleteHypertableStatement(transformationID: string): string {
         const text = `DROP TABLE IF EXISTS %s`;
         const values = ['z_' + transformationID];

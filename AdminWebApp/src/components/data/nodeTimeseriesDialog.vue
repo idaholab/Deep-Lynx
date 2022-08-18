@@ -36,10 +36,10 @@
             <v-row>
               <v-col :cols="6">
                 <h2>{{$t('timeseries.start')}}:</h2>
-              <v-date-picker
-                  :value="startDate"
-                  @input="setStartDate"
-                  style="padding-right: 30px"></v-date-picker>
+                <v-date-picker
+                    :value="startDate"
+                    @input="setStartDate"
+                    style="padding-right: 30px"></v-date-picker>
                 <v-time-picker
                     v-model="startTime"
                     @input="setStartTime"
@@ -67,48 +67,11 @@
             </v-row>
           </v-expansion-panel-content>
         </v-expansion-panel>
-
-        <!--
-        <v-expansion-panel v-if="results.length > 0">
-          <v-expansion-panel-header style="margin-bottom: 0px"><p class="text-overline" style="margin-bottom: 0px;"><strong>{{$t('timeseries.visualization')}}</strong></p></v-expansion-panel-header>
-
-          <v-expansion-panel-content>
-            <v-container v-if="!renderVisualization">
-              <v-row>
-                <v-col :cols="12">
-                  <v-select
-                    :items="charts"
-                    :label="$t('timeseries.chooseVisualization')"
-                    v-model="selectedChart"></v-select>
-                </v-col>
-                <v-col :cols="12" v-if="selectedChart === 'line'">
-                  <v-combobox
-                      :items="getLabels()"
-                      v-model="selectedColumns"
-                      :label="$t('timeseries.chooseColumns')"
-                      multiple
-                  ></v-combobox>
-                </v-col>
-                <v-col :cols="12">
-                  <v-btn @click="renderVisualization = true">{{$t('timeseries.render')}}</v-btn>
-                </v-col>
-              </v-row>
-            </v-container>
-
-            <v-col v-if="renderVisualization">
-              <v-btn @click="renderVisualization = false">{{$t('timeseries.return')}}</v-btn>
-            </v-col>
-
-            <line-chart v-if="renderVisualization && selectedChart === 'line'" :x="d => new Date(parseInt(d.dateTime,10))" :y="getColumns()" :labels="selectedColumns" :data="results"></line-chart>
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-        -->
-
       </v-expansion-panels>
 
       <v-data-table
-          v-if="transformation"
-          :headers="headers()"
+          v-if="transformation || dataSource"
+          :headers="headers"
           :items="results"
           :items-per-page="1000"
           :footer-props="{
@@ -128,7 +91,7 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
-import {NodeT, TypeMappingTransformationT} from "@/api/types";
+import {DataSourceT, NodeT, TimeseriesDataSourceConfig, TypeMappingTransformationT} from "@/api/types";
 import {stringToValidPropertyName} from "@/utilities";
 import LineChart from "@/components/charts/lineChart.vue";
 
@@ -140,8 +103,14 @@ export default class NodeTimeseriesDialog extends Vue {
   @Prop({required: true})
   readonly containerID!: string
 
-  @Prop({required: true})
-  readonly transformationID!: string
+  @Prop({required: false})
+  readonly transformationID?: string
+
+  @Prop({required: false})
+  readonly dataSourceID?: string
+
+  @Prop({required: false, default: false})
+  readonly legacy!: boolean
 
   @Prop({required: false, default: true})
   readonly icon!: boolean
@@ -149,6 +118,7 @@ export default class NodeTimeseriesDialog extends Vue {
   dialog = false
   errorMessage = ''
   transformation: TypeMappingTransformationT | null = null
+  dataSource: DataSourceT | null = null
   openPanels = 0
   initialStart: Date = new Date(Date.now() - 1000 * 60 * 60)
   initialEnd: Date = new Date()
@@ -171,7 +141,11 @@ export default class NodeTimeseriesDialog extends Vue {
     let found: string | undefined = undefined
 
     if(this.transformation && this.transformation.keys) {
-     found = this.transformation?.keys?.find(k => k.is_primary_timestamp)?.column_name
+      found = this.transformation?.keys?.find(k => k.is_primary_timestamp)?.column_name
+    }
+
+    if(this.dataSource && (this.dataSource?.config as TimeseriesDataSourceConfig).columns) {
+      found = (this.dataSource?.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name
     }
 
     if(found) return found
@@ -181,18 +155,18 @@ export default class NodeTimeseriesDialog extends Vue {
 
   @Watch('nodeID')
   nodeChange() {
-    this.loadTransformation()
+    this.load()
     this.loadNode()
   }
 
   @Watch('transformationID')
   transformationChange() {
-    this.loadTransformation()
+    this.load()
     this.loadNode()
   }
 
   mounted() {
-    this.loadTransformation()
+    this.load()
     this.loadNode()
 
     const isoStart =  this.initialStart.toISOString()
@@ -205,28 +179,43 @@ export default class NodeTimeseriesDialog extends Vue {
   }
 
   // we must pull the transformation in order to build the table correctly
-  loadTransformation() {
-    this.$client.retrieveTransformation(this.containerID, this.transformationID)
-    .then(result => {
-      this.transformation = result
-    })
-    .catch(e => this.errorMessage = e)
+  load() {
+    if(this.legacy) {
+      this.$client.retrieveTransformation(this.containerID, this.transformationID!)
+          .then(result => {
+            this.transformation = result
+          })
+          .catch(e => this.errorMessage = e)
+    } else {
+      this.$client.retrieveDataSource(this.containerID, this.dataSourceID!)
+          .then(result => {
+            this.dataSource = result
+          })
+          .catch(e => this.errorMessage = e)
+    }
   }
 
   loadNode() {
     this.$client.retrieveNode(this.containerID, this.nodeID)
-    .then(result => {
-      this.node = result
-    })
-    .catch(e => this.errorMessage = e)
+        .then(result => {
+          this.node = result
+        })
+        .catch(e => this.errorMessage = e)
   }
 
-  headers() {
-    if(this.transformation?.keys){
+  get headers() {
+    if(this.transformation && this.transformation?.keys){
       return this.transformation.keys.map(key => {
         return {
           text: key.column_name,
           value: key.column_name
+        }
+      })
+    } else {
+      return (this.dataSource?.config as TimeseriesDataSourceConfig).columns.map(c => {
+        return {
+          text: c.column_name,
+          value: c.column_name,
         }
       })
     }
@@ -236,17 +225,29 @@ export default class NodeTimeseriesDialog extends Vue {
     this.openPanels = 2
     this.renderVisualization = false
 
-    this.$client.submitNodeGraphQLQuery(this.containerID, this.nodeID,  this.buildQuery())
+    if(this.legacy) {
+    this.$client.submitNodeGraphQLQuery(this.containerID, this.nodeID,  this.buildQueryLegacy())
         .then((results) => {
           if(results.errors) {
             this.errorMessage = (results.errors as string[]).join(' ')
             return
           }
 
-          this.results = results.data[this.transformation?.name ? stringToValidPropertyName(this.transformation?.name) : 'z_'+this.transformation?.id]
+          this.results = results.data[this.transformation?.name ? stringToValidPropertyName(this.transformation?.name) + "_legacy" : 'z_'+this.transformation?.id + "_legacy"]
         })
         .catch((e) => this.errorMessage = e)
+    } else {
+     this.$client.submitNodeGraphQLQuery(this.containerID, this.nodeID,  this.buildQuery())
+        .then((results) => {
+          if(results.errors) {
+            this.errorMessage = (results.errors as string[]).join(' ')
+            return
+          }
 
+          this.results = results.data[this.dataSource?.name ? stringToValidPropertyName(this.dataSource?.name): 'y_'+this.dataSource?.id]
+        })
+        .catch((e) => this.errorMessage = e)
+    }
   }
 
   setEndDate(value: any) {
@@ -265,48 +266,34 @@ export default class NodeTimeseriesDialog extends Vue {
     this.startTime = value
   }
 
-  getColumns() {
-    if(this.transformation && this.transformation.keys) {
-      const mappingFuncs: any[] = []
-      
-      this.transformation.keys.forEach(key => {
-        if(key.is_primary_timestamp) return
-        if(this.selectedColumns.includes(stringToValidPropertyName(key.column_name!))) {
-          mappingFuncs.push((d: any) =>  d[stringToValidPropertyName(key.column_name!)])
-        }
-      })
-
-      return mappingFuncs
-    }
-  }
-
-  getLabels() {
-    if(this.transformation && this.transformation.keys) {
-      const labels: string[] = []
-
-      this.transformation.keys.forEach((key) => {
-        if(key.is_primary_timestamp) return
-
-        labels.push(key.column_name!)
-      })
-
-      return labels
-    }
-
-    return []
-  }
-
-  buildQuery() {
+  buildQueryLegacy() {
     return {
       query: `
 {
-  ${this.transformation?.name ? stringToValidPropertyName(this.transformation?.name!) : 'z_' + this.transformationID}
+  ${this.transformation?.name ? stringToValidPropertyName(this.transformation?.name!)+'_legacy' : 'z_' + this.transformationID + "_legacy"}
   (_record: {
       sortBy: "${this.transformation?.keys.find(k => k.is_primary_timestamp)?.column_name}",sortDesc: false}
       ${this.transformation?.keys.find(k => k.is_primary_timestamp)?.column_name}: {
       operator: "between", value: ["${this.startDate} ${this.startTime}", "${this.endDate} ${this.endTime}"]
       }){
       ${this.transformation?.keys.map(k => k.column_name).join(' ')}
+  }
+}
+      `
+    }
+  }
+
+  buildQuery() {
+    return {
+      query: `
+{
+  ${this.dataSource?.name ? stringToValidPropertyName(this.dataSource?.name!) : 'y_' + this.dataSourceID}
+  (_record: {
+      sortBy: "${(this.dataSource?.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name}",sortDesc: false}
+      ${(this.dataSource?.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name}: {
+      operator: "between", value: ["${this.startDate} ${this.startTime}", "${this.endDate} ${this.endTime}"]
+      }){
+      ${(this.dataSource?.config as TimeseriesDataSourceConfig).columns.map(c => c.column_name).join(' ')}
   }
 }
       `

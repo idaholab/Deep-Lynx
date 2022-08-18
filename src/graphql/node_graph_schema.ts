@@ -10,33 +10,26 @@ import {
     GraphQLFloat,
     GraphQLBoolean,
     GraphQLList,
-    GraphQLEnumType,
-    GraphQLEnumValueConfig,
     GraphQLInputObjectType,
     GraphQLInt,
-    GraphQLNonNull,
 } from 'graphql';
 import MetatypeRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 import Result from '../common_classes/result';
 import GraphQLJSON from 'graphql-type-json';
-import Metatype from '../domain_objects/data_warehouse/ontology/metatype';
-import MetatypeRelationship from '../domain_objects/data_warehouse/ontology/metatype_relationship';
-import {stringToValidPropertyName} from '../services/utilities';
+import {stringToValidPropertyName, valueCompare} from '../services/utilities';
 import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
 import Logger from '../services/logger';
 import Config from '../services/config';
 import MetatypeRelationshipPairRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository';
-import EdgeRepository from '../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import MetatypeRelationshipRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_repository';
-import NodeLeafRepository from '../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
 import OntologyVersionRepository from '../data_access_layer/repositories/data_warehouse/ontology/versioning/ontology_version_repository';
 import TypeTransformationMapper from '../data_access_layer/mappers/data_warehouse/etl/type_transformation_mapper';
 import TypeTransformation from '../domain_objects/data_warehouse/etl/type_transformation';
 import TimeseriesEntryRepository from '../data_access_layer/repositories/data_warehouse/data/timeseries_entry_repository';
-import {plainToClass} from 'class-transformer';
-import Node from '../domain_objects/data_warehouse/data/node';
-import {Transform} from 'stream';
-import Edge from '../domain_objects/data_warehouse/data/edge';
+import DataSourceRepository from "../data_access_layer/repositories/data_warehouse/import/data_source_repository";
+import {DataSource} from "../interfaces_and_impl/data_warehouse/import/data_source";
+import {TimeseriesDataSourceConfig} from "../domain_objects/data_warehouse/import/data_source";
+import NodeMapper from "../data_access_layer/mappers/data_warehouse/data/node_mapper";
 
 // GraphQLSchemaGenerator takes a container and generates a valid GraphQL schema for all contained metatypes. This will
 // allow users to query and filter data based on node type, the various properties that type might have, and other bits
@@ -48,6 +41,49 @@ export default class NodeGraphQLSchemaGenerator {
     #ontologyRepo: OntologyVersionRepository;
     #nodeRepo: NodeRepository;
     #transformationMapper: TypeTransformationMapper;
+    #nodeMapper: NodeMapper;
+
+    recordInputType = new GraphQLInputObjectType({
+        name: 'record_input',
+        fields: {
+            limit: {type: GraphQLInt, defaultValue: Config.limit_default},
+            page: {type: GraphQLInt},
+            sortBy: {type: GraphQLString},
+            sortDesc: {type: GraphQLBoolean},
+        },
+    });
+
+    recordInfo = new GraphQLObjectType({
+        name: 'recordInfo',
+        fields: {
+            nodes: {type: new GraphQLList(GraphQLString)},
+            metadata: {type: GraphQLJSON},
+            count: {type: GraphQLInt},
+            page: {type: GraphQLInt},
+        },
+    });
+
+    fileInfo = new GraphQLObjectType({
+        name: 'fileInfo',
+        fields: {
+            id: {type: GraphQLString},
+            file_name: {type: GraphQLString},
+            file_size: {type: GraphQLFloat},
+            md5hash: {type: GraphQLString},
+            metadata: {type: GraphQLJSON},
+            url: {type: GraphQLString},
+        },
+    });
+
+    histogramInputType = new GraphQLInputObjectType({
+        name: 'histogram_input',
+        fields: {
+            column: {type: GraphQLString},
+            min: {type: GraphQLInt},
+            max: {type: GraphQLInt},
+            nbuckets: {type: GraphQLInt},
+        },
+    });
 
     constructor() {
         this.#metatypeRepo = new MetatypeRepository();
@@ -56,65 +92,98 @@ export default class NodeGraphQLSchemaGenerator {
         this.#ontologyRepo = new OntologyVersionRepository();
         this.#nodeRepo = new NodeRepository();
         this.#transformationMapper = TypeTransformationMapper.Instance;
+        this.#nodeMapper = NodeMapper.Instance;
     }
 
-    async ForNode(nodeID: string, options: ResolverOptions): Promise<Result<GraphQLSchema>> {
-        // first we declare the needed,nested graphql types for record info
-        const recordInputType = new GraphQLInputObjectType({
-            name: 'record_input',
-            fields: {
-                limit: {type: GraphQLInt, defaultValue: Config.limit_default},
-                page: {type: GraphQLInt},
-                sortBy: {type: GraphQLString},
-                sortDesc: {type: GraphQLBoolean},
-            },
-        });
 
-        const recordInfo = new GraphQLObjectType({
-            name: 'recordInfo',
-            fields: {
-                nodes: {type: new GraphQLList(GraphQLString)},
-                metadata: {type: GraphQLJSON},
-                count: {type: GraphQLInt},
-                page: {type: GraphQLInt},
-            },
-        });
-
-        // needed when a user decides they want the results as a file vs. a raw return
-        const fileInfo = new GraphQLObjectType({
-            name: 'fileInfo',
-            fields: {
-                id: {type: GraphQLString},
-                file_name: {type: GraphQLString},
-                file_size: {type: GraphQLFloat},
-                md5hash: {type: GraphQLString},
-                metadata: {type: GraphQLJSON},
-                url: {type: GraphQLString},
-            },
-        });
-
-        // histogram specific arguments, currently we only allow one histogram
-        const histogramInputType = new GraphQLInputObjectType({
-            name: 'histogram_input',
-            fields: {
-                column: {type: GraphQLString},
-                min: {type: GraphQLInt},
-                max: {type: GraphQLInt},
-                nbuckets: {type: GraphQLInt},
-            },
-        });
-
-        const transformationGraphQLObjects: {[key: string]: any} = {};
-
+    async ForNode(containerID: string, nodeID: string, options: ResolverOptions): Promise<Result<GraphQLSchema>> {
+        const node = await this.#nodeRepo.findByID(nodeID);
+        if (node.isError) {
+            return Promise.resolve(Result.Failure(`error retrieving node ${node.error?.error}`));
+        }
         // fetch all transformations that this node is associated with - these represent all timeseries tables connected
         // to the node and the data contained therein
-        const nodeTransformations = await this.#nodeRepo.listTransformations(nodeID);
+        const nodeTransformations = await this.#nodeMapper.ListTransformationsForNode(nodeID)
         if (nodeTransformations.isError) {
-            return Promise.resolve(Result.Failure(`error retrieving transformations for node`));
+            return Promise.resolve(Result.Failure(`error retrieving transformations for node ${nodeTransformations.error?.error}`));
         }
 
+        const dataSources = await new DataSourceRepository().where().containerID('eq', containerID).and().adapter_type("eq", "timeseries").list();
+        if (dataSources.isError) {
+            return Promise.resolve(Result.Failure(`unable to list datasources for timeseries for node ${dataSources.error?.error}`));
+        }
+
+        // there might be a better, and closer to the sql way of doing this - but for now there won't be so many data sources
+        // that pulling and looping through them is going to cause issues
+        const matchedDataSources = dataSources.value.filter(source => {
+            if(!source) return false
+
+            const config = source.DataSourceRecord!.config as TimeseriesDataSourceConfig
+            for(const parameter of config.attachment_parameters) {
+                // if we don't match this filter then we can assume we fail the rest as it's only AND conjunction at
+                // this time
+                switch(parameter.type) {
+                    case 'data_source' : {
+                        try {
+                            return valueCompare(parameter.operator!, node.value.data_source_id, parameter.value)
+                        } catch(e) {
+                            Logger.error(`error comparing values for data source attachment parameters`)
+                            return false
+                        }
+                    }
+                    case 'metatype_id' : {
+                        try {
+                            return valueCompare(parameter.operator!, node.value.metatype_id, parameter.value)
+                        } catch(e) {
+                            Logger.error(`error comparing values for metatype id attachment parameters`)
+                            return false
+                        }
+                    }
+
+                    case 'metatype_name' : {
+                        try {
+                            return valueCompare(parameter.operator!, node.value.metatype_name, parameter.value)
+                        } catch(e) {
+                            Logger.error(`error comparing values for metatype name attachment parameters`)
+                            return false
+                        }
+                    }
+
+                    case 'original_id' : {
+                        try {
+                            return valueCompare(parameter.operator!, node.value.original_data_id, parameter.value)
+                        } catch(e) {
+                            Logger.error(`error comparing values for original id attachment parameters`)
+                            return false
+                        }
+                    }
+
+                    case 'property' : {
+                        try {
+                            type ObjectKey = keyof typeof node.value.properties;
+                            return valueCompare(parameter.operator!, node.value.properties[parameter.key as ObjectKey], parameter.value)
+                        } catch(e) {
+                            Logger.error(`error comparing values for property attachment parameters`)
+                            return false
+                        }
+                    }
+
+                    case 'id' : {
+                        try {
+                            return valueCompare(parameter.operator!, node.value.id, parameter.value)
+                        } catch(e) {
+                            Logger.error(`error comparing values for id attachment parameters`)
+                            return false
+                        }
+                    }
+                }
+            }
+
+            return true;
+        })
+
         // we don't want to fail if no tables are attached,but we can't return anything more than a blank schema basically
-        if (nodeTransformations.value.length === 0) {
+        if (nodeTransformations.value.length === 0 && matchedDataSources.length === 0) {
             return Promise.resolve(
                 Result.Success(
                     new GraphQLSchema({
@@ -134,111 +203,17 @@ export default class NodeGraphQLSchemaGenerator {
             return Promise.resolve(Result.Failure(`unable to list transformations for node ${transformations.error?.error}`));
         }
 
-        transformations.value.forEach((transformation, index) => {
-            let name = transformation.name;
-            if (!name) {
-                name = `z_${transformation.id}`;
-            }
-
-            // if this object already exists, we need to append a counter onto the name, make it the index so we don't
-            // have to do a recursive check
-            if (transformationGraphQLObjects[stringToValidPropertyName(name)]) {
-                name = `${name}_${index}`;
-            }
-
-            transformationGraphQLObjects[stringToValidPropertyName(name)] = {
-                args: {
-                    _record: {type: recordInputType},
-                    _histogram: {type: histogramInputType},
-                    ...this.inputFieldsForTransformation(transformation),
-                },
-                description: `Timeseries data from transformation ${name}`,
-                type: options.returnFile
-                    ? fileInfo
-                    : new GraphQLList(
-                          new GraphQLObjectType({
-                              name,
-                              // needed because the return type accepts an object, but throws a fit about it
-                              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                              // @ts-ignore
-                              fields: () => {
-                                  const output: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
-                                  output._record = {type: recordInfo};
-
-                                  transformation.keys.forEach((keyMapping) => {
-                                      // if we're not a column mapping we need to skip to so we don't pollute the object
-                                      if (!keyMapping.column_name || !keyMapping.value_type) {
-                                          return;
-                                      }
-
-                                      const propertyName = stringToValidPropertyName(keyMapping.column_name);
-                                      switch (keyMapping.value_type) {
-                                          // because we have no specification on our internal number type, we
-                                          // must set this as a float for now
-                                          case 'number': {
-                                              output[propertyName] = {
-                                                  type: GraphQLInt,
-                                              };
-                                              break;
-                                          }
-
-                                          case 'float': {
-                                              output[propertyName] = {
-                                                  type: GraphQLFloat,
-                                              };
-                                              break;
-                                          }
-
-                                          case 'number64' || 'float64': {
-                                              output[propertyName] = {
-                                                  type: GraphQLString,
-                                              };
-                                              break;
-                                          }
-
-                                          case 'boolean': {
-                                              output[propertyName] = {
-                                                  type: GraphQLBoolean,
-                                              };
-                                              break;
-                                          }
-
-                                          case 'string' || 'date' || 'file': {
-                                              output[propertyName] = {
-                                                  type: GraphQLString,
-                                              };
-                                              break;
-                                          }
-
-                                          case 'list': {
-                                              output[propertyName] = {
-                                                  type: new GraphQLList(GraphQLJSON),
-                                              };
-                                              break;
-                                          }
-
-                                          default: {
-                                              output[propertyName] = {
-                                                  type: GraphQLString,
-                                              };
-                                          }
-                                      }
-                                  });
-
-                                  return output;
-                              },
-                          }),
-                      ),
-                resolve: this.resolverForNode(transformation, options),
-            };
-        });
+        const transformationGraphQLObjects = this.graphQLObjectsForTransformations(transformations.value, options)
+        const dataSourceGraphQLObjects = this.graphQLObjectsForDataSources(matchedDataSources, options)
 
         return Promise.resolve(
             Result.Success(
                 new GraphQLSchema({
                     query: new GraphQLObjectType({
                         name: 'Query',
-                        fields: transformationGraphQLObjects,
+                        // we want same names to be overwritten with data sources taken precedence - though no overlap
+                        // should happen due to the legacy naming scheme of the transformations
+                        fields: Object.assign(transformationGraphQLObjects, dataSourceGraphQLObjects)
                     }),
                 }),
             ),
@@ -248,7 +223,10 @@ export default class NodeGraphQLSchemaGenerator {
     // resolverForNode takes a transformation because it's for querying timeseries data stored
     // in a database associated with the node and transformation. The transformation lets us use
     // the repository for querying timeseries data
-    resolverForNode(transformation: TypeTransformation, options?: ResolverOptions): (_: any, {input}: {input: any}) => any {
+    /**
+     * @deprecated The method should not be used
+     */
+    resolverForNodeLegacy(transformation: TypeTransformation, options?: ResolverOptions): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
             let repo: TimeseriesEntryRepository;
 
@@ -371,6 +349,121 @@ export default class NodeGraphQLSchemaGenerator {
         };
     }
 
+    /**
+     * @deprecated The method should not be used
+     */
+    graphQLObjectsForTransformations(transformations: TypeTransformation[], options: ResolverOptions): {[key:string]: any} {
+        const transformationGraphQLObjects: {[key: string]: any} = {};
+
+        transformations.forEach((transformation, index) => {
+            let name = transformation.name;
+            if (!name) {
+                name = `z_${transformation.id}`;
+            }
+
+            // append legacy so we know that this system of storing timeseries is no longer used
+            name = `${name}_legacy`
+
+            // if this object already exists, we need to append a counter onto the name, make it the index so we don't
+            // have to do a recursive check
+            if (transformationGraphQLObjects[stringToValidPropertyName(name)]) {
+                name = `${name}_${index})`;
+            }
+
+            transformationGraphQLObjects[stringToValidPropertyName(name)] = {
+                args: {
+                    _record: {type: this.recordInputType},
+                    _histogram: {type: this.histogramInputType},
+                    ...this.inputFieldsForTransformation(transformation),
+                },
+                description: `Timeseries data from transformation ${name}`,
+                type: options.returnFile
+                    ? this.fileInfo
+                    : new GraphQLList(
+                        new GraphQLObjectType({
+                            name,
+                            // needed because the return type accepts an object, but throws a fit about it
+                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                            // @ts-ignore
+                            fields: () => {
+                                const output: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
+                                output._record = {type: this.recordInfo};
+
+                                transformation.keys.forEach((keyMapping) => {
+                                    // if we're not a column mapping we need to skip to so we don't pollute the object
+                                    if (!keyMapping.column_name || !keyMapping.value_type) {
+                                        return;
+                                    }
+
+                                    const propertyName = stringToValidPropertyName(keyMapping.column_name);
+                                    switch (keyMapping.value_type) {
+                                        // because we have no specification on our internal number type, we
+                                        // must set this as a float for now
+                                        case 'number': {
+                                            output[propertyName] = {
+                                                type: GraphQLInt,
+                                            };
+                                            break;
+                                        }
+
+                                        case 'float': {
+                                            output[propertyName] = {
+                                                type: GraphQLFloat,
+                                            };
+                                            break;
+                                        }
+
+                                        case 'number64' || 'float64': {
+                                            output[propertyName] = {
+                                                type: GraphQLString,
+                                            };
+                                            break;
+                                        }
+
+                                        case 'boolean': {
+                                            output[propertyName] = {
+                                                type: GraphQLBoolean,
+                                            };
+                                            break;
+                                        }
+
+                                        case 'string' || 'date' || 'file': {
+                                            output[propertyName] = {
+                                                type: GraphQLString,
+                                            };
+                                            break;
+                                        }
+
+                                        case 'list': {
+                                            output[propertyName] = {
+                                                type: new GraphQLList(GraphQLJSON),
+                                            };
+                                            break;
+                                        }
+
+                                        default: {
+                                            output[propertyName] = {
+                                                type: GraphQLString,
+                                            };
+                                        }
+                                    }
+                                });
+
+                                return output;
+                            },
+                        }),
+                    ),
+                resolve: this.resolverForNodeLegacy(transformation, options),
+            };
+        });
+
+
+        return transformationGraphQLObjects
+    }
+
+    /**
+     * @deprecated The method should not be used
+     */
     inputFieldsForTransformation(transformation: TypeTransformation): {[key: string]: any} {
         const fields: {[key: string]: any} = {};
 
@@ -462,6 +555,303 @@ export default class NodeGraphQLSchemaGenerator {
         });
 
         return fields;
+    }
+
+    graphQLObjectsForDataSources(sources: (DataSource |undefined)[], options: ResolverOptions): {[key:string]: any} {
+        const dataSourceGraphQLObjects: {[key: string]: any} = {};
+
+        sources.forEach((source,index) => {
+            if(!source || !source.DataSourceRecord) return;
+
+            let name = source.DataSourceRecord.name
+            if (!name) {
+                name = `y_${source.DataSourceRecord.id}`
+            }
+
+            if(dataSourceGraphQLObjects[stringToValidPropertyName(name)]) {
+                name = `${name}_${index}`
+            }
+
+            dataSourceGraphQLObjects[stringToValidPropertyName(name)] = {
+                args: {
+                    _record:  {type: this.recordInputType},
+                    ...this.inputFieldsForDataSource(source)
+                },
+                description: `Timeseries data from the data source ${name}`,
+                type: options.returnFile
+                    ? this.fileInfo
+                    : new GraphQLList(new GraphQLObjectType({
+                        name: stringToValidPropertyName(name),
+                        // needed because the return type accepts an object, but throws a fit about it
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
+                        fields: () => {
+                            const output: {[key: string]: {[key: string]: GraphQLNamedType | GraphQLList<any>}} = {};
+                            output._record = {type: this.recordInfo};
+
+                            (source.DataSourceRecord!.config as TimeseriesDataSourceConfig).columns.forEach((column) => {
+                                // if we're not a column mapping we need to skip to so we don't pollute the object
+                                if (!column.column_name || !column.type) {
+                                    return;
+                                }
+
+                                const propertyName = stringToValidPropertyName(column.column_name);
+                                switch (column.type) {
+                                    // because we have no specification on our internal number type, we
+                                    // must set this as a float for now
+                                    case 'number': {
+                                        output[propertyName] = {
+                                            type: GraphQLInt,
+                                        };
+                                        break;
+                                    }
+
+                                    case 'float': {
+                                        output[propertyName] = {
+                                            type: GraphQLFloat,
+                                        };
+                                        break;
+                                    }
+
+                                    case 'number64' || 'float64': {
+                                        output[propertyName] = {
+                                            type: GraphQLString,
+                                        };
+                                        break;
+                                    }
+
+                                    case 'boolean': {
+                                        output[propertyName] = {
+                                            type: GraphQLBoolean,
+                                        };
+                                        break;
+                                    }
+
+                                    case 'string' || 'date' || 'file': {
+                                        output[propertyName] = {
+                                            type: GraphQLString,
+                                        };
+                                        break;
+                                    }
+
+                                    default: {
+                                        output[propertyName] = {
+                                            type: GraphQLJSON,
+                                        };
+                                    }
+                                }
+                            });
+
+                            return output;
+                        },
+                    })),
+                resolve: this.resolverForNode(source, options)
+            }
+        })
+
+
+        return dataSourceGraphQLObjects
+    }
+
+    inputFieldsForDataSource(source: DataSource): {[key: string]: any} {
+        const fields: {[key: string]: any} = {};
+        const config = source.DataSourceRecord!.config as TimeseriesDataSourceConfig
+
+        config.columns.forEach((column) => {
+            if (!column.column_name || !column.type) return;
+
+            const propertyName = stringToValidPropertyName(column.column_name);
+
+            switch (column.type) {
+                // because we have no specification on our internal number type, we
+                // must set this as a float for now
+                case 'number': {
+                    fields[propertyName] = {
+                        type: new GraphQLInputObjectType({
+                            name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
+                            fields: {
+                                operator: {type: GraphQLString},
+                                value: {type: new GraphQLList(GraphQLInt)},
+                            },
+                        }),
+                    };
+                    break;
+                }
+
+                case 'float': {
+                    fields[propertyName] = {
+                        type: new GraphQLInputObjectType({
+                            name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
+                            fields: {
+                                operator: {type: GraphQLString},
+                                value: {type: new GraphQLList(GraphQLFloat)},
+                            },
+                        }),
+                    };
+                    break;
+                }
+
+                case 'boolean': {
+                    fields[propertyName] = {
+                        type: new GraphQLInputObjectType({
+                            name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
+                            fields: {
+                                operator: {type: GraphQLString},
+                                value: {type: new GraphQLList(GraphQLBoolean)},
+                            },
+                        }),
+                    };
+                    break;
+                }
+
+                case 'json' : {
+                    fields[propertyName] = {
+                        type: new GraphQLInputObjectType({
+                            name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
+                            fields: {
+                                operator: {type: GraphQLString},
+                                key: {type: GraphQLString},
+                                value: {type: new GraphQLList(GraphQLString)},
+                            },
+                        }),
+                    };
+                }
+
+                default: {
+                    fields[propertyName] = {
+                        type: new GraphQLInputObjectType({
+                            name: stringToValidPropertyName(`y_${source.DataSourceRecord!.id}` + column.column_name),
+                            fields: {
+                                operator: {type: GraphQLString},
+                                value: {type: new GraphQLList(GraphQLString)},
+                            },
+                        }),
+                    };
+                }
+            }
+        });
+
+        return fields;
+    }
+
+    resolverForNode(source: DataSource, options?: ResolverOptions): (_: any, {input}: {input: any}) => any {
+        return async (_, input: {[key: string]: any}) => {
+            let repo: DataSourceRepository;
+            const config = source.DataSourceRecord?.config as TimeseriesDataSourceConfig
+
+            if (
+                Object.keys(input).filter((key) => {
+                    if (key === `_record`) return false;
+                    return true;
+                }).length > 0
+            ) {
+                repo = new DataSourceRepository().where();
+            } else {
+                repo = new DataSourceRepository();
+            }
+
+            const propertyMap: {
+                [key: string]: {
+                    column_name: string;
+                    type: string;
+                };
+            } = {};
+
+            config.columns?.forEach((column) => {
+                if (!column.column_name || !column.type) return;
+
+                propertyMap[stringToValidPropertyName(column.column_name)] = {
+                    column_name: column.column_name,
+                    type: column.type,
+                };
+            });
+
+
+            // iterate through the input object, ignoring reserved properties and adding all others
+            // to the query
+            let i = 0; // iterator to keep track of when to include "and"
+            Object.keys(input).forEach((key) => {
+                if (key === `_record`) return;
+
+                // values will come in as an array, separate them out
+                if (Array.isArray(input[key].value) && input[key].value.length === 1) {
+                    input[key].value = input[key].value[0];
+                }
+
+                // same statement but we must add "and" in front of each subsequent call to "query" or else we'll get
+                // sql statement errors
+                if (i === 0) {
+                    repo = repo.query(propertyMap[key].column_name, input[key].operator, input[key].value, propertyMap[key].type);
+                    i++;
+                } else {
+                    repo = repo.and().query(propertyMap[key].column_name, input[key].operator, input[key].value, propertyMap[key].type);
+                }
+            });
+
+            if (options && options.returnFile) {
+                return new Promise(
+                    (resolve, reject) =>
+                        void repo
+                            .listTimeseriesToFile(source.DataSourceRecord!.id!,{
+                                file_type: options && options.returnFileType ? options.returnFileType : 'json',
+                                file_name: `${source.DataSourceRecord?.name}-${new Date().toDateString()}`,
+                                containerID: source.DataSourceRecord!.container_id!,
+                            })
+                            .then((result) => {
+                                if (result.isError) {
+                                    reject(`unable to list timeseries data to file ${result.error?.error}`);
+                                }
+
+                                resolve(result.value);
+                            })
+                            .catch((e) => {
+                                reject(e);
+                            }),
+                );
+            } else {
+                return new Promise(
+                    (resolve) =>
+                        void repo
+                            .listTimeseries(source.DataSourceRecord!.id!, {
+                                limit: input._record?.limit ? input._record.limit : 10000,
+                                offset: input._record?.page ? input._record.limit * input._record.page : undefined,
+                                sortBy: input._record?.sortBy ? input._record.sortBy : undefined,
+                                sortDesc: input._record?.sortDesc ? input._record.sortDesc : undefined,
+                            })
+                            .then((results) => {
+                                if (results.isError) {
+                                    Logger.error(`unable to list time series data${results.error?.error}`);
+                                    resolve([]);
+                                }
+
+                                const output: {[key: string]: any}[] = [];
+
+                                results.value.forEach((entry) => {
+                                    let nodes: any;
+                                    let metadata: any;
+
+                                    if (entry.nodes) {
+                                        nodes = entry.nodes;
+                                        delete entry.nodes;
+                                    }
+
+                                    if (entry.metadata) {
+                                        metadata = entry.metadata;
+                                        delete entry.metadata;
+                                    }
+
+                                    output.push({
+                                        ...entry,
+                                        _record: {nodes, metadata},
+                                    });
+                                });
+
+                                resolve(output);
+                            })
+                            .catch((e) => resolve(e)),
+                );
+            }
+        };
     }
 }
 
