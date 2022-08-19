@@ -1098,7 +1098,8 @@ export default class TransformationDialog extends Vue {
       offset,
       originID: undefined,
       destinationID: undefined,
-      ontologyVersion: this.$store.getters.currentOntologyVersionID
+      ontologyVersion: this.$store.getters.currentOntologyVersionID,
+      loadRelationships: false,
     })
         .then(pairs => {
           this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
@@ -1127,14 +1128,15 @@ export default class TransformationDialog extends Vue {
       originID: undefined,
       destinationID: undefined,
       ontologyVersion: this.$store.getters.currentOntologyVersionID,
-      metatypeID: this.selectedMetatype?.id!
+      metatypeID: this.selectedMetatype?.id!,
+      loadRelationships: false,
     })
         .then(pairs => {
           this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
         })
         .catch(e => this.errorMessage = e)
 
-    this.$client.listMetatypeKeys(this.containerID, newMetatype.id)
+    this.$client.listMetatypeKeys(this.containerID, newMetatype.id!)
         .then(keys => {
           this.selectedMetatypeKeys = keys
           this.keysLoading = false
@@ -1152,7 +1154,7 @@ export default class TransformationDialog extends Vue {
 
     this.keysLoading = true
 
-    this.$client.listMetatypeRelationshipKeys(this.containerID, newPair.relationship_id)
+    this.$client.listMetatypeRelationshipKeys(this.containerID, newPair.relationship_id!)
         .then(keys => {
           this.selectedMetatypeRelationshipPairKeys = keys
           this.areRequiredKeysMapped()

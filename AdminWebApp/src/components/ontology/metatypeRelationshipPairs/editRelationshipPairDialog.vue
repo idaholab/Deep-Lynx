@@ -237,7 +237,7 @@ export default class EditRelationshipPairDialog extends Vue {
 
   editRelationshipPair() {
     this.$client.updateMetatypeRelationshipPair(this.pair.container_id,
-        this.pair.id,
+        this.pair.id!,
         {"name": this.selectedPair!.name,
           "description": this.selectedPair!.description,
           "origin_metatype_id": this.selectedPair!.origin_metatype_id,

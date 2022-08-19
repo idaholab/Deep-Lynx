@@ -416,6 +416,16 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return this;
     }
 
+    createdAt(operator: string, value: any) {
+        super.query('modified_at', operator, value);
+        return this;
+    }
+
+    modifiedAt(operator: string, value: any) {
+        super.query('created_at', operator, value);
+        return this;
+    }
+
     property(key: string, operator: string, value: any, dataType?: string) {
         super.queryJsonb(key, 'properties', operator, value, dataType);
         return this;

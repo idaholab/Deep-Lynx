@@ -153,7 +153,6 @@ export default class GraphQLSchemaGenerator {
                         value: {type: new GraphQLList(GraphQLString)}
                     }
                 })},
-
                 original_id: {type: new GraphQLInputObjectType({
                     name: "record_input_original_id",
                     fields : {
@@ -168,6 +167,23 @@ export default class GraphQLSchemaGenerator {
                         value: {type: new GraphQLList(GraphQLString)}
                     }
                 })},
+                created_at: {type: new GraphQLInputObjectType({
+                    name: "record_input_created_at",
+                    fields : {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLString)}
+                    }
+                })},
+                modified_at: {type: new GraphQLInputObjectType({
+                    name: "record_input_modified_at",
+                    fields : {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLString)}
+                    }
+                })},
+                sortBy: {type: GraphQLString},
+                sortDesc: {type: GraphQLBoolean},
+                sortProp: {type: GraphQLBoolean},
                 limit: {type: GraphQLInt, defaultValue: 10000},
                 page: {type: GraphQLInt, defaultValue: 1},
             },
@@ -424,6 +440,20 @@ export default class GraphQLSchemaGenerator {
                 destination_id: {type: new GraphQLInputObjectType({
                     name: "edge_record_input_destination_id",
                     fields: {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLString)}
+                    }
+                })},
+                created_at: {type: new GraphQLInputObjectType({
+                    name: "edge_record_input_created_at",
+                    fields : {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLString)}
+                    }
+                })},
+                modified_at: {type: new GraphQLInputObjectType({
+                    name: "edge_record_input_modified_at",
+                    fields : {
                         operator: {type: GraphQLString},
                         value: {type: new GraphQLList(GraphQLString)}
                     }
@@ -705,6 +735,20 @@ export default class GraphQLSchemaGenerator {
                     value: {type: new GraphQLList(GraphQLString)}
                 }
             })},
+            created_at: {type: new GraphQLInputObjectType({
+                name: "node_record_input_created_at",
+                fields : {
+                    operator: {type: GraphQLString},
+                    value: {type: new GraphQLList(GraphQLString)}
+                }
+            })},
+            modified_at: {type: new GraphQLInputObjectType({
+                name: "node_record_input_modified_at",
+                fields : {
+                    operator: {type: GraphQLString},
+                    value: {type: new GraphQLList(GraphQLString)}
+                }
+            })},
             limit: {type: GraphQLInt, defaultValue: 10000},
             page: {type: GraphQLInt, defaultValue: 1},},
             type: (options.returnFile) ? fileInfo : new GraphQLList(recordInfo),
@@ -759,6 +803,22 @@ export default class GraphQLSchemaGenerator {
                     }
 
                     repo = repo.and().importDataID(input._record.import_id.operator, input._record.import_id.value);
+                }
+
+                if (input._record.created_at) {
+                    if(Array.isArray(input._record.created_at.value) && input._record.created_at.value.length === 1) {
+                        input._record.created_at.value = input._record.created_at.value[0];
+                    }
+
+                    repo = repo.and().createdAt(input._record.created_at.operator, input._record.created_at.value);
+                }
+
+                if (input._record.modified_at) {
+                    if(Array.isArray(input._record.modified_at.value) && input._record.modified_at.value.length === 1) {
+                        input._record.modified_at.value = input._record.modified_at.value[0];
+                    }
+
+                    repo = repo.and().modifiedAt(input._record.modified_at.operator, input._record.modified_at.value);
                 }
             }
 
@@ -844,6 +904,11 @@ export default class GraphQLSchemaGenerator {
                 repo = repo.and().property(propertyMap[key].name, input[key].operator, input[key].value, propertyMap[key].data_type);
             })
 
+            let sortBy: string | undefined = input._record?.sortBy
+            if(input._record?.sortProp) {
+                sortBy = `properties->${sortBy}`;
+            }
+
             // wrapping the end resolver in a promise ensures that we don't return prior to all results being
             // fetched
             if(resolverOptions && resolverOptions.returnFile) {
@@ -884,7 +949,10 @@ export default class GraphQLSchemaGenerator {
                             file_name: `${metatype.name}-${new Date().toDateString()}`,
                             transformStreams: [transform],
                             parquet_schema,
-                            containerID})
+                            containerID}, {
+                            sortBy,
+                            sortDesc: input._record?.sortDesc
+                        })
                         .then((result) => {
                             if (result.isError) {
                                 reject(`unable to list nodes to file ${result.error?.error}`);
@@ -903,6 +971,8 @@ export default class GraphQLSchemaGenerator {
                         .list(true, {
                             limit: input._record?.limit ? input._record.limit : 10000,
                             offset: input._record?.page ? input._record.limit * (input._record.page > 0 ? input._record.page - 1 : 0) : undefined,
+                            sortBy,
+                            sortDesc: input._record?.sortDesc
                         })
                         .then((results) => {
                             if (results.isError) {
@@ -1007,6 +1077,22 @@ export default class GraphQLSchemaGenerator {
                 repo = repo.and().importDataID(input.import_id.operator, input.import_id.value);
             }
 
+            if (input.created_at) {
+                if(Array.isArray(input.created_at.value) && input.created_at.value.length === 1) {
+                    input.created_at.value = input.created_at.value[0];
+                }
+
+                repo = repo.and().createdAt(input.created_at.operator, input.created_at.value);
+            }
+
+            if (input.modified_at) {
+                if(Array.isArray(input.modified_at.value) && input.modified_at.value.length === 1) {
+                    input.modified_at.value = input.modified_at.value[0];
+                }
+
+                repo = repo.and().modifiedAt(input.modified_at.operator, input.modified_at.value);
+            }
+
             if (input.properties && Array.isArray(input.properties)) {
                 input.properties.forEach((prop) => {
                     if(Array.isArray(prop.value) && prop.value.length === 1) {
@@ -1016,6 +1102,12 @@ export default class GraphQLSchemaGenerator {
                     repo = repo.and().property(prop.key, prop.operator, prop.value);
                 })
             }
+
+            let sortBy: string | undefined = input._record?.sortBy
+            if(input._record?.sortProp) {
+                sortBy = `properties->${sortBy}`;
+            }
+
 
             // wrapping the end resolver in a promise ensures that we don't return prior to all results being
             // fetched
@@ -1052,7 +1144,10 @@ export default class GraphQLSchemaGenerator {
                             file_type: (resolverOptions && resolverOptions.returnFileType) ? resolverOptions.returnFileType : 'json',
                             file_name: `${new Date().toDateString()}`,
                             transformStreams: [transform],
-                            containerID})
+                            containerID}, {
+                            sortBy,
+                            sortDesc: input._records?.sortDesc
+                        })
                         .then((result) => {
                             if (result.isError) {
                                 reject(`unable to list nodes to file ${result.error?.error}`);
@@ -1069,8 +1164,10 @@ export default class GraphQLSchemaGenerator {
                 return new Promise((resolve) =>
                     repo
                         .list(true, {
-                            limit: input._record?.limit ? input.limit : 10000,
-                            offset: input._record?.page ? input.limit * (input.page > 0 ? input.page - 1 : 0) : undefined,
+                            limit: input._record?.limit ? input._record.limit : 10000,
+                            offset: input._record?.page ? input._record.limit * (input._record.page > 0 ? input._record.page - 1 : 0) : undefined,
+                            sortBy,
+                            sortDesc: input._record?.sortDesc
                         })
                         .then((results) => {
                             if (results.isError) {

@@ -55,19 +55,18 @@
                 'items-per-page-options': [25,50,100]
             }"
         >
-         <template v-slot:[`item.status`]="{item}">
-           <v-chip :color="chipColor(item.status)" :style="textColor(item.status)">
-             {{item.status}}
-           </v-chip>
-         </template>
+          <template v-slot:[`item.status`]="{item}">
+            <v-chip :color="chipColor(item.status)" :style="textColor(item.status)">
+              {{item.status}}
+            </v-chip>
+          </template>
 
           <template v-slot:[`item.actions`]="{item}">
-            <v-tooltip bottom>
+            <v-tooltip bottom v-if="item.status === 'approved'">
               <template v-slot:activator="{on, attrs}">
                 <v-icon
                     @click="applyChangelist(item)"
                     v-bind="attrs" v-on="on"
-                    v-if="item.status === 'approved'"
                     small
                     class="mr-2">
                   mdi-swap-horizontal
@@ -76,12 +75,11 @@
               <span>{{$t('ontologyVersioning.applyChangelist')}}</span>
             </v-tooltip>
 
-            <v-tooltip bottom>
+            <v-tooltip bottom v-if="item.status === 'ready' || item.status === 'rejected'">
               <template v-slot:activator="{on, attrs}">
                 <v-icon
                     @click="sendChangelistForApproval(item)"
                     v-bind="attrs" v-on="on"
-                    v-if="item.status === 'ready' || item.status === 'rejected'"
                     small
                     class="mr-2">
                   mdi-send
@@ -90,12 +88,13 @@
               <span>{{$t('ontologyVersioning.sendApproval')}}</span>
             </v-tooltip>
 
-            <v-tooltip bottom>
+            <v-tooltip bottom
+                       v-if="item.status === 'pending' && $auth.Auth('containers', 'write', containerID)"
+            >
               <template v-slot:activator="{on, attrs}">
                 <v-icon
                     @click="approveChangelist(item)"
                     v-bind="attrs" v-on="on"
-                    v-if="item.status === 'pending' && $auth.Auth('containers', 'write', containerID)"
                     small
                     class="mr-2">
                   mdi-check
@@ -104,12 +103,13 @@
               <span>{{$t('ontologyVersioning.approveChangelist')}}</span>
             </v-tooltip>
 
-            <v-tooltip bottom>
+            <v-tooltip bottom
+                       v-if="item.status === 'approved' && $auth.Auth('containers', 'write', containerID) || item.status === 'pending' && $auth.Auth('containers', 'write', containerID)"
+            >
               <template v-slot:activator="{on, attrs}">
                 <v-icon
                     @click="revokeChangelistApproval(item)"
                     v-bind="attrs" v-on="on"
-                    v-if="item.status === 'approved' && $auth.Auth('containers', 'write', containerID) || item.status === 'pending' && $auth.Auth('containers', 'write', containerID)"
                     small
                     class="mr-2">
                   mdi-close
@@ -118,12 +118,13 @@
               <span>{{$t('ontologyVersioning.revokeApproval')}}</span>
             </v-tooltip>
 
-            <v-tooltip bottom>
+            <v-tooltip bottom
+                       v-if="item.status !== 'published'"
+            >
               <template v-slot:activator="{on, attrs}">
                 <v-icon
                     @click="deleteChangelist(item)"
                     v-bind="attrs" v-on="on"
-                    v-if="item.status !== 'published'"
                     small
                     class="mr-2">
                   mdi-delete
@@ -231,14 +232,14 @@ export default class OntologyVersioning extends Vue {
 
   applyChangelist(version: OntologyVersionT) {
     this.$client.applyOntologyVersion(this.containerID, version.id!)
-    .then(() => {
-      this.successMessage = 'Changelist Applied Successfully'
-      this.$store.dispatch('refreshOwnedCurrentChangelists')
-      this.$store.dispatch('refreshCurrentOntologyVersions')
-      this.listChangelists()
-      this.listOntologyVersions()
-    })
-    .catch(e => this.errorMessage = e)
+        .then(() => {
+          this.successMessage = 'Changelist Applied Successfully'
+          this.$store.dispatch('refreshOwnedCurrentChangelists')
+          this.$store.dispatch('refreshCurrentOntologyVersions')
+          this.listChangelists()
+          this.listOntologyVersions()
+        })
+        .catch(e => this.errorMessage = e)
   }
 
   sendChangelistForApproval(version: OntologyVersionT) {
@@ -287,6 +288,7 @@ export default class OntologyVersioning extends Vue {
         .then(() => {
           this.successMessage = 'Ontology Rollback Started - Check Changelists'
           this.listOntologyVersions()
+          this.$forceUpdate()
         })
         .catch(e => this.errorMessage = e)
   }

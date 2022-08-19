@@ -127,7 +127,7 @@ export default class ViewMetatypeDialog extends Vue {
   loadKeys() {
     if(this.selectedMetatype) {
       this.keysLoading = true
-      this.$client.listMetatypeKeys(this.selectedMetatype.container_id, this.selectedMetatype.id)
+      this.$client.listMetatypeKeys(this.selectedMetatype.container_id, this.selectedMetatype.id!)
           .then(keys => {
             if(this.selectedMetatype) {
               this.selectedMetatype.keys = keys

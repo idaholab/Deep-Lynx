@@ -20,7 +20,6 @@
 
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
-import {NodeTransformationT} from "@/api/types";
 import NodeTimeseriesDialog from "@/components/data/nodeTimeseriesDialog.vue";
 
 @Component({components: {NodeTimeseriesDialog}})

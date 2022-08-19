@@ -152,6 +152,11 @@ export class NodeTransformation extends NakedDomainClass {
     }
 }
 
+export class NodeIDPayload extends NakedDomainClass {
+    @IsArray()
+    node_ids?: string[];
+}
+
 // type guard for differentiating an array of nodes from either array of nodes or edges
 export function IsNodes(set: Node[] | Edge[] | TimeseriesEntry[]): set is Node[] {
     // technically an empty array could be a set of NodeT

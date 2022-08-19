@@ -547,7 +547,7 @@
 import {v4 as uuidv4} from 'uuid'
 import {Component, Prop, Vue} from "vue-property-decorator"
 import {
-  AvevaDataSourceConfig,
+  AvevaDataSourceConfig, ContainerT,
   DataSourceT,
   DefaultAvevaDataSourceConfig,
   DefaultHttpDataSourceConfig,
@@ -619,13 +619,21 @@ export default class CreateDataSourceDialog extends Vue {
   ]
 
   adapterTypes() {
-    return [
+    const types =  [
       {text: this.$t('createDataSource.standard'), value: 'standard', description: this.$t('createDataSource.standardDescription')},
       {text: this.$t('createDataSource.http'), value: 'http', description: this.$t('createDataSource.httpDescription')},
       {text: this.$t('createDataSource.jazz'), value: 'jazz', description: this.$t('createDataSource.jazzDescription')},
       {text: this.$t('createDataSource.aveva'), value: 'aveva', description: this.$t('createDataSource.avevaDescription')},
       {text: this.$t('createDataSource.timeseries'), value: 'timeseries', description: this.$t('createDataSource.timeseriesDescription')},
     ]
+
+    const container: ContainerT = this.$store.getters.activeContainer;
+
+    if(container.config.enabled_data_sources && container.config.enabled_data_sources.length > 0) {
+      return types.filter(t => container.config.enabled_data_sources.find(s => s === t.value))
+    } else {
+      return types
+    }
   }
 
   timeSeriesHeader() {

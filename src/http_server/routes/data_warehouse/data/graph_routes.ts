@@ -2,8 +2,8 @@ import {Application, NextFunction, Request, Response} from 'express';
 import {authInContainer} from '../../../middleware';
 import NodeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/node_repository';
 import Result from '../../../../common_classes/result';
-import {plainToClass} from 'class-transformer';
-import Node from '../../../../domain_objects/data_warehouse/data/node';
+import {plainToClass, plainToInstance} from 'class-transformer';
+import Node, {NodeIDPayload} from '../../../../domain_objects/data_warehouse/data/node';
 import EdgeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import NodeLeafRepository from '../../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
@@ -21,6 +21,9 @@ export default class GraphRoutes {
         app.get('/containers/:containerID/graphs/nodes/metatype/:metatypeID', ...middleware, authInContainer('read', 'data'), this.listNodesByMetatypeID);
         app.get('/containers/:containerID/graphs/nodes/', ...middleware, authInContainer('read', 'data'), this.listNodes);
         app.get('/containers/:containerID/graphs/nodes/:nodeID', ...middleware, authInContainer('read', 'data'), this.retrieveNode);
+
+        // This should return all edges which contain one of the ids in the payload
+        app.post('/containers/:containerID/graphs/nodes/edges', ...middleware, authInContainer('read', 'data'), this.retrieveEdges);
 
         // This should return a node and all connected nodes and connecting edges for n layers.
         app.get('/containers/:containerID/graphs/nodes/:nodeID/graph', ...middleware, authInContainer('read', 'data'), this.retrieveNthNodes);
@@ -100,6 +103,55 @@ export default class GraphRoutes {
             next();
         } else {
             Result.Failure(`node not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static retrieveEdges(req: Request, res: Response, next: NextFunction) {
+        // fresh instance of the repo to avoid filter issues
+        if (req.container) {
+            const payload = plainToInstance(NodeIDPayload, req.body as object);
+
+            let repo = new EdgeRepository();
+            repo = repo
+                .where()
+                .containerID('eq', req.container.id!)
+                .and()
+                .origin_node_id('in', payload.node_ids)
+                .or()
+                .containerID('eq', req.container.id!)
+                .and()
+                .destination_node_id('in', payload.node_ids);
+
+            if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
+                repo.count(undefined, {
+                    limit: req.query.limit ? +req.query.limit : undefined,
+                    offset: req.query.offset ? +req.query.offset : undefined,
+                })
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => {
+                        Result.Failure(err, 404).asResponse(res);
+                    })
+                    .finally(() => next());
+            } else {
+                repo.list(String(req.query.loadMetatypeRelationshipss).toLowerCase() === 'true', {
+                    limit: req.query.limit ? +req.query.limit : undefined,
+                    offset: req.query.offset ? +req.query.offset : undefined,
+                })
+                    .then((result) => {
+                        if (result.isError && result.error) {
+                            result.asResponse(res);
+                            return;
+                        }
+                        res.status(200).json(result);
+                    })
+                    .catch((err) => Result.Failure(err, 404).asResponse(res))
+                    .finally(() => next());
+            }
+        } else {
+            Result.Failure(`container not found`, 404).asResponse(res);
             next();
         }
     }

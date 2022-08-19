@@ -5,6 +5,7 @@ export type ContainerT = {
     config: {
         data_versioning_enabled: boolean;
         ontology_versioning_enabled: boolean;
+        enabled_data_sources: string[];
     };
     created_at: string;
     modified_at: string;
@@ -22,15 +23,15 @@ export type ContainerAlertT = {
 };
 
 export type MetatypeT = {
-    id: string;
+    id?: string;
     container_id: string;
     name: string;
     description: string;
     keys: MetatypeKeyT[];
-    created_at: string;
-    modified_at: string;
-    created_by: string;
-    modified_by: string;
+    created_at?: string;
+    modified_at?: string;
+    created_by?: string;
+    modified_by?: string;
     deleted_at?: string;
     parent_id?: string;
     ontology_version?: string;
@@ -38,34 +39,34 @@ export type MetatypeT = {
 };
 
 export type MetatypeRelationshipT = {
-    id: string;
+    id?: string;
     container_id: string;
     name: string;
     description: string;
     keys: MetatypeRelationshipKeyT[];
-    created_at: string;
-    modified_at: string;
-    created_by: string;
-    modified_by: string;
+    created_at?: string;
+    modified_at?: string;
+    created_by?: string;
+    modified_by?: string;
     parent_id?: string;
     ontology_version?: string;
     old_id?: string;
 };
 
 export type MetatypeRelationshipPairT = {
-    id: string;
+    id?: string;
     container_id: string;
     name: string;
     description: string;
-    origin_metatype_id: string;
-    destination_metatype_id: string;
-    relationship_id: string;
+    origin_metatype_id?: string;
+    destination_metatype_id?: string;
+    relationship_id?: string;
     relationship_type: 'many:many' | 'one:one' | 'one:many' | 'many:one';
     relationship_name?: string;
-    created_at: string;
-    modified_at: string;
-    created_by: string;
-    modified_by: string;
+    created_at?: string;
+    modified_at?: string;
+    created_by?: string;
+    modified_by?: string;
     ontology_version?: string;
     old_id?: string;
     origin_metatype?: MetatypeT;
@@ -74,8 +75,8 @@ export type MetatypeRelationshipPairT = {
 };
 
 export type MetatypeKeyT = {
-    id: string;
-    metatype_id: string;
+    id?: string;
+    metatype_id?: string;
     container_id: string;
     name: string;
     property_name: string;
@@ -92,17 +93,17 @@ export type MetatypeKeyT = {
         | undefined;
     options: string[] | undefined;
     default_value: string | boolean | number | any[] | undefined;
-    created_at: string;
-    modified_at: string;
-    created_by: string;
-    modified_by: string;
+    created_at?: string;
+    modified_at?: string;
+    created_by?: string;
+    modified_by?: string;
     deleted_at?: string;
     ontology_version?: string;
 };
 
 export type MetatypeRelationshipKeyT = {
-    id: string;
-    metatype_relationship_id: string;
+    id?: string;
+    metatype_relationship_id?: string;
     container_id: string;
     name: string;
     property_name: string;
@@ -117,10 +118,10 @@ export type MetatypeRelationshipKeyT = {
     };
     options: string[] | undefined;
     default_value: string | boolean | number | any[] | undefined;
-    created_at: string;
-    modified_at: string;
-    created_by: string;
-    modified_by: string;
+    created_at?: string;
+    modified_at?: string;
+    created_by?: string;
+    modified_by?: string;
     ontology_version?: string;
 };
 
