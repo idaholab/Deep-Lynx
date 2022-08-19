@@ -88,6 +88,7 @@ export class Router {
     }
 
     public mount() {
+        this.app.disable('x-powered-by');
         // DO NOT REMOVE - this is required for some auth methods to work correctly
         this.app.use(
             express.urlencoded({

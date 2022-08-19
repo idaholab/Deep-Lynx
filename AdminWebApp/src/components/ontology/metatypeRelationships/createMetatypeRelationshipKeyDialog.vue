@@ -166,7 +166,7 @@ export default class CreateMetatypeRelationshipKeyDialog extends Vue {
   createMetatypeKey() {
     if(this.metatypeRelationshipKey) {
       this.metatypeRelationshipKey.container_id = this.metatypeRelationship.container_id;
-      this.$client.createMetatypeRelationshipKey(this.metatypeRelationship.container_id, this.metatypeRelationship.id, this.metatypeRelationshipKey)
+      this.$client.createMetatypeRelationshipKey(this.metatypeRelationship.container_id, this.metatypeRelationship.id!, this.metatypeRelationshipKey)
           .then(result => {
             if(!result) {
               this.errorMessage = this.$t('createMetatypeRelationshipKey.errorCreatingAPI') as string

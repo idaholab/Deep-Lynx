@@ -536,7 +536,8 @@ export default class DataMapping extends Vue {
       offset: 0,
       originID: undefined,
       destinationID: undefined,
-      ontologyVersion: this.$store.getters.currentOntologyVersionID
+      ontologyVersion: this.$store.getters.currentOntologyVersionID,
+      loadRelationships: false,
     })
         .then(pairs => {
           this.relationshipPairs = pairs as MetatypeRelationshipPairT[]

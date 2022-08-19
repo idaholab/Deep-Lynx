@@ -119,7 +119,6 @@ export async function LoginFromToken(token: string, state: string): Promise<bool
     );
 
     if (resp.status < 200 || resp.status > 299 || resp.data.isError) {
-        // TODO: Logger
         return new Promise((resolve) => resolve(false));
     }
 
@@ -193,7 +192,6 @@ export async function RefreshPermissions(): Promise<boolean> {
     const resp = await axios.get(buildURL(`${Config.deepLynxApiUri}/users/permissions`), config);
 
     if (resp.status < 200 || resp.status > 299 || resp.data.isError) {
-        // TODO: Logger
         return new Promise((resolve) => resolve(false));
     }
 

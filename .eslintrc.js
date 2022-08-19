@@ -17,7 +17,13 @@ module.exports = {
         es6: true,
         node: true,
     },
-    extends: ['plugin:@typescript-eslint/recommended', 'plugin:@typescript-eslint/recommended-requiring-type-checking', 'prettier', 'plugin:security-node/recommended'],
+    extends: [
+        'plugin:@typescript-eslint/recommended',
+        'plugin:@typescript-eslint/recommended-requiring-type-checking',
+        'prettier',
+        'plugin:security-node/recommended',
+        'plugin:security/recommended',
+    ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
         sourceType: 'module',

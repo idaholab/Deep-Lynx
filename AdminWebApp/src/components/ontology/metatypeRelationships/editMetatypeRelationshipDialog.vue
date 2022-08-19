@@ -240,7 +240,7 @@ export default class EditMetatypeRelationshipDialog extends Vue {
   loadKeys() {
     if(this.selectedMetatypeRelationship) {
       this.keysLoading = true
-      this.$client.listMetatypeRelationshipKeys(this.selectedMetatypeRelationship.container_id, this.selectedMetatypeRelationship.id)
+      this.$client.listMetatypeRelationshipKeys(this.selectedMetatypeRelationship.container_id, this.selectedMetatypeRelationship.id!)
           .then(keys => {
             if(this.selectedMetatypeRelationship) {
               this.selectedMetatypeRelationship.keys = keys
@@ -256,7 +256,7 @@ export default class EditMetatypeRelationshipDialog extends Vue {
   }
 
   deleteKey(key: MetatypeRelationshipKeyT) {
-    this.$client.deleteMetatypeRelationshipKey(this.selectedMetatypeRelationship?.container_id!, this.selectedMetatypeRelationship?.id!, key.id, {permanent: !this.$store.getters.isEditMode})
+    this.$client.deleteMetatypeRelationshipKey(this.selectedMetatypeRelationship?.container_id!, this.selectedMetatypeRelationship?.id!, key.id!, {permanent: !this.$store.getters.isEditMode})
     .then(result => {
       if(!result) this.errorMessage = this.$t('editMetatypeRelationship.errorUpdatingAPI') as string
 
@@ -266,7 +266,7 @@ export default class EditMetatypeRelationshipDialog extends Vue {
   }
 
   undeleteKey(key: MetatypeRelationshipKeyT) {
-    this.$client.deleteMetatypeRelationshipKey(this.selectedMetatypeRelationship?.container_id!, this.selectedMetatypeRelationship?.id!, key.id, {reverse: true})
+    this.$client.deleteMetatypeRelationshipKey(this.selectedMetatypeRelationship?.container_id!, this.selectedMetatypeRelationship?.id!, key.id!, {reverse: true})
         .then(result => {
           if(!result) this.errorMessage = this.$t('editMetatypeRelationship.errorUpdatingAPI') as string
 

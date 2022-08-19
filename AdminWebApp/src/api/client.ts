@@ -26,7 +26,6 @@ import {
     ChangelistApprovalT,
     ContainerAlertT,
     TypeMappingUpgradePayloadT,
-    NodeTransformationT,
     CreateServiceUserPayloadT,
     ServiceUserPermissionSetT,
 } from '@/api/types';
