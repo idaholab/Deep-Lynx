@@ -34,7 +34,7 @@
 
               <div v-if="newDataSource.adapter_type === 'standard'">
                 <p><b>{{$t('createDataSource.description')}}</b></p>
-                <p>{{$t('createDataSource.timeseriesDescription')}}</p>
+                <p>{{$t('createDataSource.standardDescription')}}</p>
               </div>
 
               <div v-if="newDataSource.adapter_type === 'http'">
