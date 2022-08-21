@@ -559,7 +559,7 @@ export default class TypeTransformation extends BaseDomainClass {
 
                         const conversion = TypeTransformation.convertValue(fetched.value.data_type, value);
                         if (conversion === null) {
-                            newPayload[fetched.value.property_name] = value;
+                            newPayloadRelationship[fetched.value.property_name] = value;
                         } else {
                             if (conversion.errors) {
                                 failedConversions.push(conversion);
@@ -584,7 +584,7 @@ export default class TypeTransformation extends BaseDomainClass {
                                     }
                                 }
                             } else {
-                                newPayload[fetched.value.property_name] = conversion.converted_value;
+                                newPayloadRelationship[fetched.value.property_name] = conversion.converted_value;
                                 conversions.push(conversion);
                             }
                         }

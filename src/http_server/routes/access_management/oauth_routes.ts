@@ -24,6 +24,7 @@ const userRepo = new UserRepository();
 const keyRepo = new KeyPairRepository();
 const oauthRepo = new OAuthRepository();
 import DOMPurify from 'isomorphic-dompurify';
+import Result from '../../../common_classes/result';
 
 /*
     OAuthRoutes contain all routes pertaining to oauth application management and
@@ -321,7 +322,7 @@ export default class OAuthRoutes {
     }
 
     private static loginPage(req: Request, res: Response, next: NextFunction) {
-        req.logout((err:any) => {}); // in case a previous user logged into a session
+        req.logout((err: any) => {}); // in case a previous user logged into a session
         const oauthRequest = oauthRepo.authorizationFromRequest(req);
 
         return res.render('login', {
@@ -400,7 +401,7 @@ export default class OAuthRoutes {
     }
 
     private static logout(req: Request, res: Response, next: NextFunction) {
-        req.logout((err:any) => {});
+        req.logout((err: any) => {});
 
         if (req.query.redirect_uri) {
             return res.redirect(req.query.redirect_uri as string);
@@ -626,10 +627,14 @@ export default class OAuthRoutes {
                         return;
                     }
 
-
-                    const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, {expiresIn: expiry});
-                    res.status(200).json(token);
-                    return;
+                    try {
+                        const token = jwt.sign(classToPlain(user.value), Config.encryption_key_secret, {expiresIn: expiry});
+                        res.status(200).json(token);
+                        return;
+                    } catch (e: any) {
+                        Result.Error(e).asResponse(res);
+                        return;
+                    }
                 });
             });
         } else {
