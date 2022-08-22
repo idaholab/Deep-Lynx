@@ -503,14 +503,19 @@ export default class DataSourceMapper extends Mapper {
         });
 
         statements.push(recordColumns.join(','));
-        statements.push(');');
+        statements.push(')');
 
         const values = JSON.stringify(records, (key, value) => {
             if (value !== null && value !== '') return value; // handles null values and empty strings from csv
         });
 
-        const debug = format(statements.join(' '), values);
+        // if this array contains more than the primary timestampe, include the ON CONFLICT clause
+        const uniqueConstraints = config.columns.filter((c) => c.is_primary_timestamp || c.unique).map((c) => c.column_name);
+        if (uniqueConstraints.length > 1) {
+            statements.push(format(`ON CONFLICT (%s) DO NOTHING`, uniqueConstraints));
+        }
 
+        statements.push(';');
         return format(statements.join(' '), values);
     }
 }
