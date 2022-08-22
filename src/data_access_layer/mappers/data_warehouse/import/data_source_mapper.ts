@@ -442,11 +442,36 @@ export default class DataSourceMapper extends Mapper {
 
         const columns: string[] = [];
         config.columns.forEach((c) => {
-            if (c.type === 'date') {
-                if (!c.date_conversion_format_string) c.date_conversion_format_string = 'YYYY-MM-DD HH24:MI:SS.US';
-                columns.push(format(`to_timestamp(i."%s", %L) as %I`, c.property_name, c.date_conversion_format_string, c.column_name));
-            } else {
-                columns.push(format(`i."%s" as %I`, c.property_name, c.column_name));
+            switch (c.type) {
+                case 'date': {
+                    if (!c.date_conversion_format_string) c.date_conversion_format_string = 'YYYY-MM-DD HH24:MI:SS.US';
+                    columns.push(format(`to_timestamp(i."%s", %L) as %I`, c.property_name, c.date_conversion_format_string, c.column_name));
+                    break;
+                }
+
+                case 'number': {
+                    columns.push(format(`replace(i."%s", ',', '')::integer as %I`, c.property_name, c.column_name));
+                    break;
+                }
+
+                case 'number64': {
+                    columns.push(format(`replace(i."%s", ',', '')::bigint as %I`, c.property_name, c.column_name));
+                    break;
+                }
+
+                case 'float': {
+                    columns.push(format(`replace(i."%s", ',', '')::numeric as %I`, c.property_name, c.column_name));
+                    break;
+                }
+                case 'float64': {
+                    columns.push(format(`replace(i."%s", ',', '')::numeric as %I`, c.property_name, c.column_name));
+                    break;
+                }
+
+                default: {
+                    columns.push(format(`i."%s" as %I`, c.property_name, c.column_name));
+                    break;
+                }
             }
         });
 
@@ -464,22 +489,24 @@ export default class DataSourceMapper extends Mapper {
                     break;
                 }
 
+                // all number types must be cast to text so that we can strip out all the commas if they exist on the
+                // number conversion from csv files to json
                 case 'number': {
-                    typeCast = 'integer';
+                    typeCast = 'text';
                     break;
                 }
 
                 case 'number64': {
-                    typeCast = 'bigint';
+                    typeCast = 'text';
                     break;
                 }
 
                 case 'float': {
-                    typeCast = 'numeric';
+                    typeCast = 'text';
                     break;
                 }
                 case 'float64': {
-                    typeCast = 'numeric';
+                    typeCast = 'text';
                     break;
                 }
 
