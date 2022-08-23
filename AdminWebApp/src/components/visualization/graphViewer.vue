@@ -272,7 +272,7 @@ export default class GraphViewer extends Vue {
         this.graph.links.push({
           source: edge.origin_id,
           target: edge.destination_id,
-          name: edge.name,
+          name: edge.metatype_relationship_name,
           id: edge.id,
           collapsed: false // flag for showing/hiding links. set all to visible by default
         })
