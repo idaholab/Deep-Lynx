@@ -193,6 +193,7 @@ export default class GraphQLSchemaGenerator {
             name: 'recordInfo',
             fields: {
                 id: {type: GraphQLString},
+                container_id: {type: GraphQLString},
                 data_source_id: {type: GraphQLString},
                 original_id: {type: GraphQLJSON}, // since the original ID might be a number, treat it as valid JSON
                 import_id: {type: GraphQLString},
@@ -689,28 +690,28 @@ export default class GraphQLSchemaGenerator {
                 name: "node_input_id",
                 fields: {
                     operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLString)}
+                    value: {type: new GraphQLList(GraphQLJSON)}
                 }
             })},
             data_source_id: {type: new GraphQLInputObjectType({
                 name: "node_input_data_source_id",
                 fields : {
                     operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLString)}
+                    value: {type: new GraphQLList(GraphQLJSON)}
                 }
             })},
             metatype_id: {type: new GraphQLInputObjectType({
                 name: "node_input_metatype_id",
                 fields : {
                     operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLString)}
+                    value: {type: new GraphQLList(GraphQLJSON)}
                 }
             })},
             metatype_name: {type: new GraphQLInputObjectType({
                 name: "node_input_metatype_name",
                 fields : {
                     operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLString)}
+                    value: {type: new GraphQLList(GraphQLJSON)}
                 }
             })},
             original_id: {type: new GraphQLInputObjectType({
@@ -732,21 +733,21 @@ export default class GraphQLSchemaGenerator {
                 name: "node_input_import_id",
                 fields : {
                     operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLString)}
+                    value: {type: new GraphQLList(GraphQLJSON)}
                 }
             })},
             created_at: {type: new GraphQLInputObjectType({
                 name: "node_record_input_created_at",
                 fields : {
                     operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLString)}
+                    value: {type: new GraphQLList(GraphQLJSON)}
                 }
             })},
             modified_at: {type: new GraphQLInputObjectType({
                 name: "node_record_input_modified_at",
                 fields : {
                     operator: {type: GraphQLString},
-                    value: {type: new GraphQLList(GraphQLString)}
+                    value: {type: new GraphQLList(GraphQLJSON)}
                 }
             })},
             limit: {type: GraphQLInt, defaultValue: 10000},
@@ -1164,8 +1165,8 @@ export default class GraphQLSchemaGenerator {
                 return new Promise((resolve) =>
                     repo
                         .list(true, {
-                            limit: input._record?.limit ? input._record.limit : 10000,
-                            offset: input._record?.page ? input._record.limit * (input._record.page > 0 ? input._record.page - 1 : 0) : undefined,
+                            limit: input.limit ? input.limit : 10000,
+                            offset: input.page ? input.limit * (input.page > 0 ? input.page - 1 : 0) : undefined,
                             sortBy,
                             sortDesc: input._record?.sortDesc
                         })
@@ -1189,6 +1190,7 @@ export default class GraphQLSchemaGenerator {
 
                                 nodeOutput.push({
                                     id: node.id,
+                                    container_id: node.container_id,
                                     data_source_id: node.data_source_id,
                                     original_id: node.original_data_id,
                                     import_id: node.import_data_id,
