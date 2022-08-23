@@ -80,7 +80,7 @@
                                 <v-toolbar-title>{{$t('dataQuery.viewProperties')}}</v-toolbar-title>
                               </v-toolbar>
 
-                              <json-view :data="JSON.parse(item.raw_properties)"></json-view>
+                              <json-view :data="item.properties"></json-view>
                             </v-col>
                           </v-row>
                           <node-files-dialog :icon="true" :node="item"></node-files-dialog>
@@ -143,7 +143,7 @@ export default class DataQuery extends Vue {
   headers() {
     return [
       {text: this.$t('dataQuery.id'), value: 'id', sortable: false},
-      {text: this.$t('dataQuery.metatypeName'), value: 'metatype.name'},
+      {text: this.$t('dataQuery.metatypeName'), value: 'metatype_name'},
       {text: this.$t('dataQuery.createdAt'), value: 'created_at'},
       {value: 'data-table-expand'}
     ]
