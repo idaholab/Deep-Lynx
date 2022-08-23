@@ -60,7 +60,7 @@ export class Client {
             query.query = query.query.replace(/\n/g, '');
         }
 
-        return this.postRawReturn<any>(`/containers/${containerID}/query`, query);
+        return this.postRawReturn<any>(`/containers/${containerID}/data`, query);
     }
 
     submitNodeGraphQLQuery(containerID: string, nodeID: string, query: any): Promise<any> {
@@ -635,6 +635,10 @@ export class Client {
 
     listNodeFiles(containerID: string, nodeID: string): Promise<FileT[]> {
         return this.get<FileT[]>(`/containers/${containerID}/graphs/nodes/${nodeID}/files`);
+    }
+
+    listEdgesForNodeIDs(containerID: string, nodeIDS: string[]): Promise<EdgeT[]> {
+        return this.post<EdgeT[]>(`/containers/${containerID}/graphs/nodes/edges`, {node_ids: nodeIDS});
     }
 
     listDataSources(containerID: string, archived = false, timeseries = false): Promise<DataSourceT[]> {

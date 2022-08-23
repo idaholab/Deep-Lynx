@@ -146,8 +146,10 @@ export type FileT = {
 
 export type NodeT = {
     id: string;
+    metatype_id: string;
+    metatype_name: string;
     metatype: MetatypeT;
-    properties: PropertyT[];
+    properties: PropertyT[] | object;
     raw_properties: string; // JSON string with the raw properties
     container_id: string;
     original_data_id: string;
@@ -156,12 +158,6 @@ export type NodeT = {
     modified_at: string;
     incoming_edges: EdgeT[];
     outgoing_edges: EdgeT[];
-};
-
-export type NodeTransformationT = {
-    node_id: string;
-    transformation_id: string;
-    name: string;
 };
 
 export type EdgeT = {

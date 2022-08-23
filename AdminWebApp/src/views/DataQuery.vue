@@ -11,11 +11,6 @@
             cols="12"
         >
           <v-container flat class="pa-0">
-            <!-- <v-row v-if="!results">
-              <v-col align="center">
-                <p>{{$t('dataQuery.noResults')}}</p>
-              </v-col>
-            </v-row> -->
             <v-row v-if="results !== null && results.length == 0">
               <v-col align="center">
                 <p>{{$t('dataQuery.noResults')}}</p>

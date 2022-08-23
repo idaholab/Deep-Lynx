@@ -73,7 +73,7 @@
                     </v-select>
                   </div>
                   <div>
-                    <v-btn v-if="!results" :disabled="queryParts.length <= 0" @click="submitQuery" style="margin-top: 15px">
+                    <v-btn v-if="!results" @click="submitQuery" style="margin-top: 15px">
                       <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
                       <span v-if="!loading">{{$t('queryBuilder.runQuery')}}</span>
                     </v-btn>
@@ -125,7 +125,7 @@ export default class QueryBuilder extends Vue {
   previousResults: ResultSet[] = []
   results: ResultSet | null = null
   limit = 100
-  limitOptions = [100, 250, 500, 1000]
+  limitOptions = [100, 500, 1000, 10000]
 
   addQueryPart(componentName: string) {
     this.queryParts.push({
@@ -187,116 +187,82 @@ export default class QueryBuilder extends Vue {
 
   // buildQuery builds a filter argument for the graphQL query based on the query parts
   buildQuery(): any {
-    const AND: string[] = []
+    const args: string[] = []
+    const propertyArgs: string[] = []
 
     this.queryParts.forEach(part => {
       switch(part.componentName) {
         case('MetatypeFilter'): {
-          AND.push(`{metatype_id: "${[part.operator, part.value].join(' ')}"}`)
+          if(part.operator === 'in') {
+            args.push(`metatype_id:{operator: "${part.operator}", value: [${part.value}]} `)
+          } else {
+            args.push(`metatype_id:{operator: "${part.operator}", value: "${part.value}"} `)
+          }
 
-          const parts: string[] = []
           // we make the assumption that this is a property filter
           if(part.nested!.length > 0) {
             part.nested!.forEach(nested => {
-              parts.push(`{key: "${nested.property}", value: "${nested.value}", operator: "${nested.operator}"},`)
+              if(nested.operator === 'in') {
+                propertyArgs.push(`{key: "${nested.property}", value: [${nested.value}], operator: "${nested.operator}"},`)
+              } else {
+                propertyArgs.push(`{key: "${nested.property}", value: "${nested.value}", operator: "${nested.operator}"},`)
+              }
             })
-
-            AND.push(`{properties: ${String(parts)}}`)
           }
           break;
         }
 
         case('DataSourceFilter'): {
-          AND.push(`{data_source_id: "${[part.operator, part.value].join(' ')}"}`)
+          if(part.operator === 'in') {
+            args.push(`data_source_id:{operator: "${part.operator}", value: [${part.value}]} `)
+          } else {
+            args.push(`data_source_id:{operator: "${part.operator}", value: "${part.value}"} `)
+          }
           break;
         }
 
         case('IDFilter'): {
-          AND.push(`{id: "${[part.operator, part.value].join(' ')}"}`)
+          if(part.operator === 'in') {
+            args.push(`id:{operator: "${part.operator}", value: [${part.value}]} `)
+          } else {
+            args.push(`id:{operator: "${part.operator}", value: "${part.value}"} `)
+          }
           break;
         }
 
         case('OriginalIDFilter'): {
-          AND.push(`{original_data_id: "${[part.operator, part.value].join(' ')}"}`)
+          if(part.operator === 'in') {
+            args.push(`original_id:{operator: "${part.operator}", value: [${part.value}]} `)
+          } else {
+            args.push(`original_id:{operator: "${part.operator}", value: "${part.value}"} `)
+          }
           break;
         }
       }
     })
 
-    // combine the filter with the raw query
+    // combine the filter with the raw query - the more fields you return the bigger the return, and when dealing
+    // with thousands of nodes we really don't want to do this - update this with only the fields you need, load
+    // the rest dynamically once they select a node
     return {
       query: `
-      {
-    nodes (limit: ${this.limit}, where: {AND:
-      [${String(AND)}]
-     }) {
+{
+    nodes(
+    limit: ${this.limit}
+    ${(args.length >  0) ? ","+args.join(','): ""}
+    ${(propertyArgs.length > 0) ? ', properties: [' + propertyArgs.join(",") + "]" : ''}
+    ){
         id
-        metatype {id name description}
-        properties {key value type}
-        raw_properties
+        original_id
         container_id
-        original_data_id
         data_source_id
+        metatype_id
+        metatype_name
         created_at
         modified_at
-        incoming_edges {
-            id
-            container_id
-            data_source_id
-            relationship {id name description}
-            origin_node {
-                id
-                metatype {id name description}
-                properties {key value type}
-                raw_properties
-                container_id
-                original_data_id
-                data_source_id
-                created_at
-                modified_at
-            }
-            destination_node {
-              id
-              metatype {id name description}
-              properties {key value type}
-              raw_properties
-              container_id
-              original_data_id
-              data_source_id
-              created_at
-              modified_at
-          }
-        }
-           outgoing_edges {
-            id
-            container_id
-            data_source_id
-            relationship {id name description}
-            origin_node {
-                id
-                metatype {id name description}
-                properties {key value type}
-                raw_properties
-                container_id
-                original_data_id
-                data_source_id
-                created_at
-                modified_at
-            }
-            destination_node {
-              id
-              metatype {id name description}
-              properties {key value type}
-              raw_properties
-              container_id
-              original_data_id
-              data_source_id
-              created_at
-              modified_at
-          }
-        }
-    }
-} `
+        properties
+}
+}`
     }
   }
 }
@@ -307,7 +273,7 @@ export type QueryPart = {
   componentName: string;
   property?: string;
   operator: string;
-  value: string;
+  value: any;
   nested?: QueryPart[];
 }
 
