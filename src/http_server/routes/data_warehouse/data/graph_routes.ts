@@ -11,6 +11,7 @@ import GraphQLSchemaGenerator from '../../../../graphql/schema';
 import {graphql} from 'graphql';
 import {stringToValidPropertyName} from '../../../../services/utilities';
 import NodeGraphQLSchemaGenerator from '../../../../graphql/node_graph_schema';
+import DataSourceGraphQLSchemaGenerator from '../../../../graphql/timeseries_schema';
 
 const nodeRepo = new NodeRepository();
 const edgeRepo = new EdgeRepository();
@@ -31,6 +32,13 @@ export default class GraphRoutes {
         app.post('/containers/:containerID/graphs/nodes/:nodeID/timeseries', ...middleware, authInContainer('read', 'data'), this.queryTimeseriesData);
         app.get('/containers/:containerID/graphs/nodes/:nodeID/timeseries', ...middleware, authInContainer('read', 'data'), this.queryTimeseriesDataTypes);
 
+        app.post(
+            '/containers/:containerID/import/datasources/:dataSourceID/data', 
+            ...middleware, 
+            authInContainer('read', 'data'), 
+            this.queryTimeseriesDataSource
+        );
+        
         app.get('/containers/:containerID/graphs/nodes/:nodeID/files', ...middleware, authInContainer('read', 'data'), this.listFilesForNode);
         app.put('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.attachFileToNode);
         app.delete('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.detachFileFromNode);
@@ -505,5 +513,36 @@ export default class GraphRoutes {
                 results.asResponse(res);
             })
             .catch((e) => Result.Error(e).asResponse(res));
+    }
+
+    private static queryTimeseriesDataSource(req: Request, res: Response, next: NextFunction) {
+        const generator = new DataSourceGraphQLSchemaGenerator();
+
+        generator
+            .ForDataSource(req.params.dataSourceID, {
+                returnFile: String(req.query.returnFile).toLowerCase() === 'true',
+                returnFileType: String(req.query.returnFileType).toLowerCase(),
+            })
+            .then((schemaResult) => {
+                if (schemaResult.isError) {
+                    Result.Error(schemaResult.error!).asResponse(res);
+                    return;
+                }
+
+                graphql({
+                    schema: schemaResult.value,
+                    source: req.body.query,
+                    variableValues: req.body.variables,
+                })
+                    .then((response) => {
+                        res.status(200).json(response);
+                    })
+                    .catch((e) => {
+                        Result.Error(e).asResponse(res);
+                    });
+            })
+            .catch((e) => {
+                Result.Error(e).asResponse(res);
+            });
     }
 }
