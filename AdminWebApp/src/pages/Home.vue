@@ -17,7 +17,7 @@
       v-model="drawer"
       app
       flat
-      mobile-break-point="960"
+      mobile-breakpoint="960"
       width="260"
       class="grey--text text--darken-2"
     >
@@ -803,7 +803,7 @@ export default class Home extends Vue {
     font-size: 0.85rem;
   }
 }
-.nav-drawer-accordion.v-list ::v-deep .theme--light {
+.nav-drawer-accordion.v-list :deep(.theme--light) {
   &.v-list-item:not(.v-list-item--active):not(.v-list-item--disabled) {
     color: darken($darkgray2, 20%);
     background-color: $lightgray;

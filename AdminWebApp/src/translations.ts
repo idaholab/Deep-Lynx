@@ -824,6 +824,7 @@ export default {
             resultingTypeName: 'Metatype/Metatype Relationship/Name',
             applicableToCurrentData: 'Applicable To Sample',
             metatypePropertyMapping: 'Property Mapping',
+            metatypeRelationshipPropertyMapping: 'Relationship Property Mapping',
             expression: 'Expression',
             actions: 'Actions',
             newTransformationButton: 'Create New Transformation',
@@ -919,6 +920,8 @@ export default {
             in: 'in',
         },
         typeTransformation: {
+            existingTransformationTitle: 'Transformation:',
+            newTransformationTitle: 'New Transformation Options',
             newTransformationButton: 'Create New Transformation',
             formTitle: 'New Transformation',
             currentDataSet: 'Current Data Set',
