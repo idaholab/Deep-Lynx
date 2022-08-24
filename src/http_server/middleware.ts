@@ -118,7 +118,7 @@ export function authenticateRoute(): any {
 }
 
 // allows us to set sane defaults on listing functions, and stops us from having to check the existence of the
-// query params. TODO: This could lead to unexpected behavior, perhaps find a better way to accomplish this.
+// query params.
 export function offsetLimitReplacer(): any {
     return (req: express.Request, resp: express.Response, next: express.NextFunction) => {
         // @ts-ignore

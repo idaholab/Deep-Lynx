@@ -102,7 +102,6 @@ export default class TimeseriesEntryRepository extends Repository {
             queryOptions = {groupBy: this.#groupBy.join(',')};
         }
 
-        // TODO: need to add parquet schema for the transformation at some point
         return super.findAllToFile(fileOptions, queryOptions, {transaction});
     }
 }

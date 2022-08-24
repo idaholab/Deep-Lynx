@@ -198,10 +198,9 @@ export class Router {
             }),
         ); // helmet contains a bunch of pre-built http protections
 
-        // TODO: change before attempting to deploy this application to production
         this.app.use(
             cors({
-                origin: '*',
+                origin: Config.cors_origin,
             }),
         );
 

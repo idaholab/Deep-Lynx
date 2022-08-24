@@ -316,7 +316,6 @@
 
         <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
-          <!-- TODO: Fill with actions like edit and delete -->
           <v-btn color="blue darken-1" text @click="dataDialog = false" >{{$t("dataMapping.done")}}</v-btn>
         </v-card-actions>
       </v-card>

@@ -111,6 +111,8 @@ export class Config {
     private readonly _limit_default: number;
     private readonly _cache_graphql: boolean;
 
+    private readonly _cors_origins: string[] | string;
+
     private constructor() {
         // Either assign a sane default of the env var is missing, or create your
         // own checks on process.env. There is most likely a more elegant way but
@@ -228,6 +230,7 @@ export class Config {
         this._limit_default = process.env.LIMIT_DEFAULT ? parseInt(process.env.LIMIT_DEFAULT!, 10) : 10000;
 
         this._cache_graphql = process.env.CACHE_GRAPHQL === 'true';
+        this._cors_origins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*';
 
         // generate and save a key if we didn't start with one
         if (!this._encryption_key_path) {
@@ -551,6 +554,10 @@ export class Config {
 
     get data_staging_emitter_interval(): number {
         return this._data_staging_emitter_interval;
+    }
+
+    get cors_origin(): string[] | string {
+        return this._cors_origins;
     }
 
     public static Instance(): Config {

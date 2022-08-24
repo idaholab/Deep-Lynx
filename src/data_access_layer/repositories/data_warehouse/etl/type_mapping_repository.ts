@@ -43,7 +43,6 @@ export default class TypeMappingRepository extends Repository implements Reposit
         return Promise.resolve(Result.Failure(`type mapping must have id`));
     }
 
-    // TODO: figure out caching, ripped out due to bug
     async findByID(id: string, loadTransformations = true): Promise<Result<TypeMapping>> {
         const retrieved = await this.#mapper.Retrieve(id);
 
@@ -56,7 +55,6 @@ export default class TypeMappingRepository extends Repository implements Reposit
         return Promise.resolve(retrieved);
     }
 
-    // TODO: figure out caching, ripped out due to bug
     // shape hashes are unique only to data sources, so it will need both to find one
     async findByShapeHash(shapeHash: string, dataSourceID: string, loadTransformations = true): Promise<Result<TypeMapping>> {
         const retrieved = await this.#mapper.RetrieveByShapeHash(dataSourceID, shapeHash);
