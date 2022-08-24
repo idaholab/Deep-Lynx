@@ -187,7 +187,7 @@ export default class DataQuery extends Vue {
   .v-data-table {
     margin-bottom: 5px;
 
-    & ::v-deep .v-data-table__wrapper {
+    & :deep(.v-data-table__wrapper ){
       border-top-left-radius: 4px;
 
       @media screen and (max-width: 959px) {
@@ -237,7 +237,7 @@ export default class DataQuery extends Vue {
 .v-window {
   height: calc(100% - 48px);
 
-  & ::v-deep .v-window__container {
+  & :deep(.v-window__container) {
     height: 100% !important;
   }
 }
