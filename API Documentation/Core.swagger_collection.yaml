@@ -986,6 +986,29 @@ paths:
       tags:
         - Graph
         - TimeSeries
+  '/containers/{container_id}/import/datasources/{data_source_id}/data':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: data_source_id
+        in: path
+        required: true
+    post:
+      summary: Timeseries Data Source Query
+      operationId: TimeseriesDataSourceQuery
+      responses:
+        '200':
+          description: OK
+      description: This is an endpoint that accepts a GraphQL query and returns the results of that query. Primarily used for working with time series data without requiring attachment to a node.
+      parameters: []
+      tags:
+        - Graph
+        - TimeSeries
   '/containers/{container_id}/graphs/nodes/metatype/{metatype_id}':
     get:
       tags:
