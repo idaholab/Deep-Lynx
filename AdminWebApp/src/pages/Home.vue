@@ -246,7 +246,7 @@
           :value="false"
           v-if="$auth.IsAdmin()"
           :ripple="{class:'list-ripple'}"
-        >   <!-- TODO: correct to use auth function -->
+        >
           <template v-slot:activator>
             <v-list-item-title >{{$t("home.administration")}}</v-list-item-title>
           </template>

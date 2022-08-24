@@ -14,10 +14,6 @@
           <create-container-dialog @containerCreated="refreshContainers"></create-container-dialog>
         </v-toolbar>
 
-        <!-- TODO: Set search capability
-          <v-text-field v-model="search" label="Search" class="mx-4"></v-text-field>
-        -->
-
       </template>
       <template v-slot:[`item.actions`]="{ item }">
         <v-icon

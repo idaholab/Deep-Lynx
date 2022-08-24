@@ -481,7 +481,6 @@ function buildNodeFilter(f: NodeRepository, fql: NodeFilterQL): NodeRepository {
                 break;
             }
 
-            // TODO: We don't do anything with the 'type' field here,need to convert the value to the desired type so we search the proper type in the db
             case 'properties': {
                 const propertyFilter = fql[k];
                 for (const i in propertyFilter) {

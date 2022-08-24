@@ -200,7 +200,7 @@ export default class CreateExportDialog extends Vue {
     this.$client.createExport(this.containerID, {
       destination_type: this.destination_type,
       adapter: this.adapter,
-      config: this.gremlinConfig // TODO: create a way to manage more adapter config types
+      config: this.gremlinConfig
     } as ExportT)
     .then(result => {
       if(!result) {
