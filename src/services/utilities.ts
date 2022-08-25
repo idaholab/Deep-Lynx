@@ -22,7 +22,7 @@ export function toStream(data: any[]): Readable {
 // regex matching and then removing or converting the results to a valid format - not ideal
 // but we don't have a choice
 export function stringToValidPropertyName(input: string): string {
-    let output = input.replace(/[^_a-zA-Z0-9]/, '_');
+    let output = input.replace(/[^_a-zA-Z0-9]+/g, '_');
 
     output = output.split(' ').join('_');
 
