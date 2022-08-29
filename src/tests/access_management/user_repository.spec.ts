@@ -8,7 +8,7 @@ import {expect} from 'chai';
 import UserRepository from '../../data_access_layer/repositories/access_management/user_repository';
 import UserMapper from '../../data_access_layer/mappers/access_management/user_mapper';
 import KeyPairMapper from '../../data_access_layer/mappers/access_management/keypair_mapper';
-import ContainerRepository from "../../data_access_layer/repositories/data_warehouse/ontology/container_respository";
+import ContainerRepository from '../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 import Authorization from '../../domain_objects/access_management/authorization/authorization';
 
 describe('A User Repository', async () => {
@@ -31,7 +31,7 @@ describe('A User Repository', async () => {
             identity_provider: 'service',
             admin: false,
             display_name: faker.name.findName(),
-            type: 'service'
+            type: 'service',
         });
     };
 
@@ -41,8 +41,7 @@ describe('A User Repository', async () => {
             this.skip();
         }
         await PostgresAdapter.Instance.init();
-        const repo = new ContainerRepository()
-
+        const repo = new ContainerRepository();
 
         const userResult = await UserMapper.Instance.Create(
             'test suite',
@@ -64,11 +63,9 @@ describe('A User Repository', async () => {
         container = new Container({
             name: faker.name.findName(),
             description: faker.random.alphaNumeric(),
-        })
+        });
 
-        const created = await repo.save(
-            container, user
-        );
+        const created = await repo.save(container, user);
 
         expect(created.isError).false;
 
@@ -176,7 +173,7 @@ describe('A User Repository', async () => {
         expect(roles.value[0]).eq('editor');
 
         // remove and retest
-        results = await repository.removeAllRoles(user, container.id!);
+        results = await repository.removeAllRoles(user, user.id!, container.id!);
         expect(results.isError).false;
 
         roles = await repository.rolesInContainer(user, container.id!);
@@ -222,7 +219,7 @@ describe('A User Repository', async () => {
         return repository.delete(u);
     });
 
-    it('can set a Service User\'s container permissions', async () => {
+    it("can set a Service User's container permissions", async () => {
         const repository = new UserRepository();
         const u = testServiceUser();
 
@@ -230,30 +227,37 @@ describe('A User Repository', async () => {
         expect(results.isError, results.error?.error).false;
         expect(u.id).not.undefined;
 
-        const added = await repository.addServiceUserToContainer(u.id!, container.id!)
-        expect(added.isError).false
+        const added = await repository.addServiceUserToContainer(u.id!, container.id!);
+        expect(added.isError).false;
 
-        const assigned = await repository.assignRole(user, new AssignUserRolePayload({
-            userID: u.id,
-            containerID: container.id,
-            roleName: 'user'
-        }))
-        expect(assigned.isError, assigned.error?.error).false
+        const assigned = await repository.assignRole(
+            user,
+            new AssignUserRolePayload({
+                userID: u.id,
+                containerID: container.id,
+                roleName: 'user',
+            }),
+        );
+        expect(assigned.isError, assigned.error?.error).false;
 
         // first check the ones we are about to add don't exist
-        let permissions = await repository.retrievePermissions(u)
-        let filtered = permissions.value.filter(set => (set[1] === 'containers' && set[2] === 'write') || (set[1] === 'users' && set[2] === 'read'))
-        expect(filtered.length).eq(0)
+        let permissions = await repository.retrievePermissions(u);
+        let filtered = permissions.value.filter((set) => (set[1] === 'containers' && set[2] === 'write') || (set[1] === 'users' && set[2] === 'read'));
+        expect(filtered.length).eq(0);
 
-        const set = await repository.setContainerPermissions(u.id!, container.id!, new ContainerPermissionSet({
-            containers: ['write'],
-            users: ['read']
-        }))
-        expect(set.isError, set.error?.error).false
+        const set = await repository.setContainerPermissions(
+            u.id!,
+            container.id!,
+            new ContainerPermissionSet({
+                containers: ['write'],
+                users: ['read'],
+            }),
+        );
+        expect(set.isError, set.error?.error).false;
 
-        permissions = await repository.retrievePermissions(u)
-        filtered = permissions.value.filter(set => (set[1] === 'containers' && set[2] === 'write') || (set[1] === 'users' && set[2] === 'read'))
-        expect(filtered).not.empty
+        permissions = await repository.retrievePermissions(u);
+        filtered = permissions.value.filter((set) => (set[1] === 'containers' && set[2] === 'write') || (set[1] === 'users' && set[2] === 'read'));
+        expect(filtered).not.empty;
 
         return repository.delete(u);
     });
@@ -274,9 +278,9 @@ describe('A User Repository', async () => {
         saved = await repository.save(u3, user);
         expect(saved.isError).false;
         expect(u3.id).not.undefined;
-        
+
         // used for comparison later
-        const displayNames = [u.display_name, u2.display_name, u3.display_name]
+        const displayNames = [u.display_name, u2.display_name, u3.display_name];
 
         // add them to the container
         let assigned = await Authorization.AssignRole(u.id!, 'user', container.id!);

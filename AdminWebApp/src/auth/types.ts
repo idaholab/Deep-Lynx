@@ -1,5 +1,6 @@
 export type UserT = {
     id: string;
+    role: string;
     identity_provider_id: string;
     identity_provider: string;
     display_name: string;
