@@ -33,7 +33,7 @@
                 <p v-if="selected.Description">{{selected.Description.value}}</p>
               </div>
               <h4 style="margin-left: 5px">{{$t('ifcViewer.rawProperties')}}</h4>
-              <json-view v-if="selected" :max-depth="0" :data="selected" style="overflow-y: scroll"></json-view>
+              <json-viewer v-if="selected" :max-depth="0" :value="selected" style="overflow-y: scroll"></json-viewer>
             </v-card>
           </v-col>
         </v-row>

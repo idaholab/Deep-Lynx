@@ -9,7 +9,7 @@ export default {
             dashboard: 'Dashboard',
             relationships: 'Relationships',
             accessManagement: 'Access Management',
-            apiKeys: 'API Keys',
+            apiKeys: 'Personal API Keys',
             apiKeysDescription: 'Generate and Manage API Keys',
             domainSelect: 'Select Domain',
             selectContainer: 'Select Container',
@@ -77,7 +77,7 @@ export default {
             inviteUserCardLinkText: 'Manage Users',
             ontologyVersioning: 'Ontology Versioning',
             ontologyVersioningDescription: 'Manage Version and Changelists',
-            serviceUsers: 'External Applications',
+            serviceUsers: 'Application API Keys',
             serviceUsersDescription: 'External Application Access',
         },
         containerAlert: {
@@ -556,6 +556,8 @@ export default {
             description: 'Description',
             actions: 'Actions',
             searchName: 'Search Name',
+            searchOrigin: 'Search Origin Metatype',
+            searchDestination: 'Search Destination Metatype',
             searchDescription: 'Search Description',
             id: 'ID',
             copyID: 'Click to Copy ',
@@ -568,7 +570,9 @@ export default {
             searchName: 'Search Name',
             searchDescription: 'Search Description',
             originMetatype: 'Search Origin Metatype',
+            originName: 'Origin',
             destinationMetatype: 'Search Destination Metatype',
+            destinationName: 'Destination',
             relationship: 'Search Relationship',
             pairSuccessfullyCreated: 'Successfully Created Metatype Relationship Pair',
             id: 'ID',
@@ -1022,6 +1026,8 @@ export default {
             confirmPassword: 'Confirm New Password',
         },
         ontologyToolbar: {
+            mode: 'Ontology Versioning Mode',
+            beta: 'beta',
             selectChangelist:
                 'Select or create a changelist in order to use edit mode. Note that newly created changelists may take a few minutes to generate fully before they are able to be selected.',
             viewMode: 'View',
@@ -1105,6 +1111,7 @@ export default {
             cancel: 'Cancel',
         },
         containerUsers: {
+            successfullyInvited: 'User successfully  invited',
             title: 'Manage Users',
             newUser: 'New User',
             name: 'Name',

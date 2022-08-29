@@ -7,8 +7,6 @@
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 
-
-
     @Component
     export default class SuccessBanner extends Vue {
        @Prop({required: true})

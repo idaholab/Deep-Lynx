@@ -27,14 +27,12 @@
                     <v-divider></v-divider>
                   </v-row>
                   <p v-if="outstandingInvites.length > 0 ">{{$t('containerSelect.acceptInviteLong')}}</p>
-                  <v-row class="px-11 mt-4">
                     <div v-for="invite in outstandingInvites" v-bind:key="invite.id">
-                      <v-row>
+                      <v-row class="px-11 mt-4">
                         <v-col :cols="8">{{invite.container_name}}</v-col>
                         <v-col :cols="4"><v-btn @click="acceptInvite(invite.token, invite.container_name)">{{$t('containerSelect.acceptInvite')}}</v-btn></v-col>
                       </v-row>
                     </div>
-                  </v-row>
 
                   <v-row class="my-8 mx-0" align="center">
                     <v-divider></v-divider>

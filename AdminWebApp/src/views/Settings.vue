@@ -37,9 +37,14 @@
             <h1 v-else>{{$t('containers.noneSelected')}}</h1>
           </v-col>
         </v-row>
+
+      <v-row>
+        <v-col :cols="12">
+          <select-data-source-types :values="container.config.enabled_data_sources" @selected="setDataSources"></select-data-source-types>
+        </v-col>
+      </v-row>
       </v-card-text>
 
-      <select-data-source-types :values="container.config.enabled_data_sources" @selected="setDataSources"></select-data-source-types>
       <v-card-actions>
         <delete-container-dialog :containerID="container.id"></delete-container-dialog>
         <v-spacer></v-spacer>
