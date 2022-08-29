@@ -16,13 +16,27 @@
           <invite-user-to-container-dialog :containerID="containerID" @userInvited="flashSuccess"></invite-user-to-container-dialog>
         </v-toolbar>
       </template>
+      <template v-slot:[`item.role`]="{ item }">
+        <div v-if="$store.getters.activeContainer.created_by === item.id">Owner</div>
+        <div v-else>{{retrieveUserRole(item)}} {{item.role}}</div>
+      </template>
+
       <template v-slot:[`item.actions`]="{ item }">
         <v-icon
+          v-if="$store.getters.activeContainer.created_by !== item.id || item.id !== $auth.CurrentUser().id"
           small
           class="mr-2"
           @click="editUser(item)"
         >
           mdi-pencil
+        </v-icon>
+        <v-icon
+            v-if="$store.getters.activeContainer.created_by !== item.id || item.id !== $auth.CurrentUser().id"
+            small
+            class="mr-2"
+            @click="deleteUser(item)"
+        >
+          mdi-account-multiple-minus
         </v-icon>
       </template>
     </v-data-table>
@@ -108,12 +122,15 @@
       return  [
         { text: this.$t("containerUsers.name"), value: 'display_name' },
         { text: this.$t("containerUsers.email"), value: 'email'},
+        { text: this.$t("containerUsers.role"), value: 'role'},
         { text: this.$t("containerUsers.actions"), value: 'actions', sortable: false }
       ]
     }
 
     mounted() {
       this.refreshUsers()
+      console.log(this.$store.getters.activeContainer.created_by)
+      console.log(this.$auth.CurrentUser()?.id)
     }
 
     refreshUsers() {
@@ -134,6 +151,16 @@
       }
     }
 
+    retrieveUserRole(user: UserT) {
+        this.$client.retrieveUserRoles(this.containerID, user.id)
+            .then(roles => {
+              if(roles.length > 0) {
+                user.role = roles[0]
+              }
+            })
+            .catch(e => this.errorMessage = e)
+    }
+
 
     retrieveUserRoles(user: UserT) {
       if(this.toEdit) {
@@ -151,6 +178,14 @@
         this.editDialog = true
         this.toEdit = user
         this.retrieveUserRoles(user)
+    }
+
+    deleteUser(user: UserT) {
+      this.$client.removeAllUserRoles(this.containerID, user.id!)
+          .then(() => {
+            this.refreshUsers();
+          })
+          .catch(e => this.errorMessage = e)
     }
 
     flashSuccess(){

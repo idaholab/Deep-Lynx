@@ -895,6 +895,10 @@ export class Client {
         return this.get<string[]>(`/containers/${containerID}/users/${userID}/roles`);
     }
 
+    removeAllUserRoles(containerID: string, userID: string): Promise<boolean> {
+        return this.delete(`/containers/${containerID}/users/${userID}/roles`);
+    }
+
     retrieveTypeMapping(containerID: string, dataSourceID: string, typeMappingID: string): Promise<TypeMappingT> {
         return this.get<TypeMappingT>(`/containers/${containerID}/import/datasources/${dataSourceID}/mappings/${typeMappingID}`);
     }

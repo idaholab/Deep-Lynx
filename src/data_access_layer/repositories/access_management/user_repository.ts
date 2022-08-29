@@ -323,15 +323,15 @@ export default class UserRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(await Authorization.AssignRole(payload.user_id!, payload.role_name!, payload.container_id)));
     }
 
-    async removeAllRoles(user: User, domain: string): Promise<Result<boolean>> {
+    async removeAllRoles(user: User, userID: string, domain: string): Promise<Result<boolean>> {
         // generally the route authorization methods in http_server would handle
         // authentication, but I've found that in a few places we need this additional
         // check as the route might not have all the information needed to make a
         // permissions check when removing roles
-        const authed = await Authorization.AuthUser(user, 'write', 'users');
+        const authed = await Authorization.AuthUser(user, 'write', 'users', domain);
         if (!authed) return Promise.resolve(Result.Error(ErrorUnauthorized));
 
-        const deleted = await Authorization.DeleteAllRoles(user.id!, domain);
+        const deleted = await Authorization.DeleteAllRoles(userID, domain);
 
         return Promise.resolve(Result.Success(deleted));
     }
@@ -471,11 +471,12 @@ export default class UserRepository extends Repository implements RepositoryInte
             );
         }
 
-        const containerUsers = await this.listServiceUsersForContainer(containerID)
-        if(containerUsers.isError) return Promise.resolve(Result.Pass(containerUsers))
+        const containerUsers = await this.listServiceUsersForContainer(containerID);
+        if (containerUsers.isError) return Promise.resolve(Result.Pass(containerUsers));
         else {
-            const found = containerUsers.value.find(user => user.id === userID)
-            if(!found) return Promise.resolve(Result.Failure('unable to set permissions for service user, service user does not belong to proposed container'))
+            const found = containerUsers.value.find((user) => user.id === userID);
+            if (!found)
+                return Promise.resolve(Result.Failure('unable to set permissions for service user, service user does not belong to proposed container'));
         }
 
         return await permissionSet.writePermissions(userID, containerID);
