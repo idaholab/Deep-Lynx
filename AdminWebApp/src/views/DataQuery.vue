@@ -11,11 +11,6 @@
             cols="12"
         >
           <v-container flat class="pa-0">
-            <!-- <v-row v-if="!results">
-              <v-col align="center">
-                <p>{{$t('dataQuery.noResults')}}</p>
-              </v-col>
-            </v-row> -->
             <v-row v-if="results !== null && results.length == 0">
               <v-col align="center">
                 <p>{{$t('dataQuery.noResults')}}</p>
@@ -85,7 +80,7 @@
                                 <v-toolbar-title>{{$t('dataQuery.viewProperties')}}</v-toolbar-title>
                               </v-toolbar>
 
-                              <json-view :data="JSON.parse(item.raw_properties)"></json-view>
+                              <json-view :value="item.properties"></json-view>
                             </v-col>
                           </v-row>
                           <node-files-dialog :icon="true" :node="item"></node-files-dialog>
@@ -98,9 +93,10 @@
               </v-tab-item>
               <v-tab-item>
                 <v-card flat>
-                  <json-view
+                  <json-viewer
                       class="json-viewer px-1 py-5 text-wrap"
-                      :data="results"
+                      :value="results"
+                      copyable
                       :maxDepth=1
                   />
                 </v-card>
@@ -148,7 +144,7 @@ export default class DataQuery extends Vue {
   headers() {
     return [
       {text: this.$t('dataQuery.id'), value: 'id', sortable: false},
-      {text: this.$t('dataQuery.metatypeName'), value: 'metatype.name'},
+      {text: this.$t('dataQuery.metatypeName'), value: 'metatype_name'},
       {text: this.$t('dataQuery.createdAt'), value: 'created_at'},
       {value: 'data-table-expand'}
     ]
@@ -192,7 +188,7 @@ export default class DataQuery extends Vue {
   .v-data-table {
     margin-bottom: 5px;
 
-    & ::v-deep .v-data-table__wrapper {
+    & :deep(.v-data-table__wrapper ){
       border-top-left-radius: 4px;
 
       @media screen and (max-width: 959px) {
@@ -242,7 +238,7 @@ export default class DataQuery extends Vue {
 .v-window {
   height: calc(100% - 48px);
 
-  & ::v-deep .v-window__container {
+  & :deep(.v-window__container) {
     height: 100% !important;
   }
 }

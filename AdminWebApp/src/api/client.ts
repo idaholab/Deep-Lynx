@@ -26,7 +26,6 @@ import {
     ChangelistApprovalT,
     ContainerAlertT,
     TypeMappingUpgradePayloadT,
-    NodeTransformationT,
     CreateServiceUserPayloadT,
     ServiceUserPermissionSetT,
 } from '@/api/types';
@@ -61,7 +60,7 @@ export class Client {
             query.query = query.query.replace(/\n/g, '');
         }
 
-        return this.postRawReturn<any>(`/containers/${containerID}/query`, query);
+        return this.postRawReturn<any>(`/containers/${containerID}/data`, query);
     }
 
     submitNodeGraphQLQuery(containerID: string, nodeID: string, query: any): Promise<any> {
@@ -284,6 +283,8 @@ export class Client {
             deleted = false,
             nameIn,
             loadRelationships,
+            originName,
+            destinationName,
         }: {
             name?: string;
             description?: string;
@@ -299,6 +300,8 @@ export class Client {
             deleted?: boolean;
             nameIn?: string;
             loadRelationships?: boolean;
+            originName?: string;
+            destinationName?: string;
         },
     ): Promise<MetatypeRelationshipPairT[] | number> {
         const query: {[key: string]: any} = {};
@@ -317,6 +320,8 @@ export class Client {
         if (count) query.count = count;
         if (nameIn) query.nameIn = nameIn;
         if (loadRelationships) query.loadRelationships = loadRelationships;
+        if (originName) query.originName = originName;
+        if (destinationName) query.destinationname = destinationName;
         query.deleted = deleted;
 
         return this.get<MetatypeRelationshipPairT[] | number>(`/containers/${containerID}/metatype_relationship_pairs`, query);
@@ -638,9 +643,18 @@ export class Client {
         return this.get<FileT[]>(`/containers/${containerID}/graphs/nodes/${nodeID}/files`);
     }
 
-    listDataSources(containerID: string, archived = false): Promise<DataSourceT[]> {
+    listEdgesForNodeIDs(containerID: string, nodeIDS: string[]): Promise<EdgeT[]> {
+        return this.post<EdgeT[]>(`/containers/${containerID}/graphs/nodes/edges`, {node_ids: nodeIDS});
+    }
+
+    listDataSources(containerID: string, archived = false, timeseries = false): Promise<DataSourceT[]> {
         // we hardcoded the sortBy to insure we're always getting archived data sources at the bottom of the list
-        return this.get<DataSourceT[]>(`/containers/${containerID}/import/datasources`, {archived, sortBy: 'archived'});
+        return this.get<DataSourceT[]>(`/containers/${containerID}/import/datasources`, {archived, sortBy: 'archived', timeseries});
+    }
+
+    retrieveDataSource(containerID: string, dataSourceID: string): Promise<DataSourceT> {
+        // we hardcoded the sortBy to insure we're always getting archived data sources at the bottom of the list
+        return this.get<DataSourceT>(`/containers/${containerID}/import/datasources/${dataSourceID}`);
     }
 
     deleteDataSources(
@@ -704,8 +718,8 @@ export class Client {
         return this.get<NodeT[]>(`/containers/${containerID}/graphs/nodes`, query);
     }
 
-    listNodeTransformations(containerID: string, nodeID: string): Promise<NodeTransformationT[]> {
-        return this.get<NodeTransformationT[]>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`);
+    listTimeseriesTables(containerID: string, nodeID: string): Promise<Map<string, [boolean, string]>> {
+        return this.get<Map<string, [boolean, string]>>(`/containers/${containerID}/graphs/nodes/${nodeID}/timeseries`);
     }
 
     retrieveNode(containerID: string, nodeID: string): Promise<NodeT> {

@@ -288,7 +288,6 @@ export default class TypeMappingRoutes {
     private static updateMapping(req: Request, res: Response, next: NextFunction) {
         const user = req.currentUser!;
 
-        // TODO update with data source ID
         if (req.typeMapping && req.container) {
             const payload = plainToClass(TypeMapping, req.body as object);
             payload.id = req.typeMapping.id!;

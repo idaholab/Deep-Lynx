@@ -1,5 +1,10 @@
 <template>
-  <v-dialog v-model="dialog" @click:outside="reset" width="90%">
+  <v-dialog
+    v-model="dialog"
+    @click:outside="reset"
+    width="90%"
+    scrollable
+  >
     <template v-slot:activator="{ on }">
       <v-icon
           v-if="icon"
@@ -11,675 +16,786 @@
       <v-btn v-if="!transformation && !icon" color="primary" dark class="mt-2" v-on="on">{{$t("dataMapping.newTransformationButton")}}</v-btn>
     </template>
 
-    <v-card class="pt-1 pb-3 px-2">
-      <v-card-title>
-        <span
+    <v-card style="max-height: 90vh;">
+          <!-- <v-card height="90vh"></v-card> -->
+      <v-card-title class="grey lighten-2">
+        <h3
           class="headline text-h3"
           v-if="!transformation"
         >
           {{$t("dataMapping.createNewTransformation")}}
-        </span>
-        <span
+        </h3>
+        <h3
           class="headline text-h3"
           v-if="transformation && !transformation.archived"
         >
           {{$t("dataMapping.editTransformation")}}
-        </span>
-        <span
+        </h3>
+        <h3
           class="headline text-h3"
           v-if="transformation && transformation.archived"
         >
           {{$t("dataMapping.viewArchivedTransformation")}}
-        </span>
+        </h3>
       </v-card-title>
-      <v-card-text>
+      <v-card-text class="d-flex flex-column pb-0" style="overflow-y: hidden;">
         <error-banner :message="errorMessage"></error-banner>
-        <v-row>
+        <v-row class="d-flex flex-grow-0">
           <v-col :cols="12" style="position: sticky; top: 0px; z-index: 99; background: white" >
             <div >
-              <h4>{{$t('typeTransformation.currentDataSet')}}<info-tooltip :message="$t('dataMapping.samplePayloadHelp')"></info-tooltip> </h4>
-              <v-card  style="overflow-y: scroll;" max-height="250px" id="dataCol">
-                <json-view
-                    :data="payload"
-                    :maxDepth=1
+              <div class="d-flex">
+                <h4 class="headline text-h4 d-inline-block">{{$t('typeTransformation.currentDataSet')}}</h4>
+                <info-tooltip class="d-inline-block ml-2" :message="$t('dataMapping.samplePayloadHelp')"></info-tooltip>
+              </div>
+
+              <v-card  style="overflow-y: scroll; max-height: 20vh;" id="dataCol">
+                <json-viewer
+                    :value="payload"
+                    copyable
+                    :maxDepth=4
                 />
               </v-card>
             </div>
+            <v-divider class="mt-5 mx-n6" style="max-width: unset"></v-divider>
           </v-col>
+        </v-row>
+        <v-row class="mb-1 d-flex flex-grow-0">
+          <v-col class="pt-0 pb-0" style="position: sticky; top: 0px; z-index: 99; background: white">
+            <h4 class="headline text-h4" v-if="transformation">{{$t('typeTransformation.existingTransformationTitle')}} {{transformation.id}}</h4>
+            <h4 class="headline text-h4" v-else>{{$t('typeTransformation.newTransformationTitle')}}</h4>
+          </v-col>
+        </v-row>
+        <div class="content-div mx-n4 px-4 d-flex flex-grow-0 flex-column" style="overflow-y: scroll;">
+          <v-row>
+            <v-col :cols="12" class="pt-0">
+              <div id="mappingCol">
+                <v-row v-if="payloadArrayKeys.length > 0">
+                  <v-col cols="12" lg="6">
+                    <v-text-field
+                        v-model="name"
+                        :rules="[validName(name)]"
+                    >
+                      <template v-slot:label>{{$t('dataMapping.name')}} <small>{{$t('dataMapping.optional')}}</small></template>
+                    </v-text-field>
+                  </v-col>
+                </v-row>
 
-          <v-col :cols="12" >
-            <h4 v-if="transformation">{{transformation.id}}</h4>
-            <v-divider></v-divider>
-            <div id="mappingCol">
-              <v-row v-if="payloadArrayKeys.length > 0">
-                <v-col :cols="10">
-                  <v-select
-                      :items="payloadArrayKeys"
-                      v-model="rootArray"
-                      clearable
-                  >
+              </div>
+            </v-col>
+          </v-row>
 
-                    <template v-slot:label>{{$t('dataMapping.rootArray')}} <small>{{$t('dataMapping.optional')}}</small></template>
-                    <template slot="append-outer"><info-tooltip :message="$t('dataMapping.rootArrayHelp')"></info-tooltip> </template>
-                  </v-select>
-                </v-col>
-              </v-row>
-
-              <v-form
+          <v-expansion-panels class="mb-6" v-model="openPanels"  multiple>
+            <v-expansion-panel>
+              <v-expansion-panel-header>
+                <h4
+                  class="text-h4"
+                >
+                  {{$t("dataMapping.mapping")}}
+                  <info-tooltip :message="$t('dataMapping.mappingHelp')"></info-tooltip>
+                </h4>
+              </v-expansion-panel-header>
+              <v-expansion-panel-content eager>
+                <v-form
                   ref="mainForm"
                   v-model="mainFormValid"
-              >
-
-                <v-text-field
-                    v-model="name"
-                    :rules="[validName(name)]"
                 >
-                  <template v-slot:label>{{$t('dataMapping.name')}} <small>{{$t('dataMapping.optional')}}</small></template>
-                </v-text-field>
+                  <v-row>
+                    <v-col cols="12" md="6" lg="4">
+                      <v-select
+                          :items="payloadArrayKeys"
+                          v-model="rootArray"
+                          clearable
+                      >
+                        <template v-slot:label>{{$t('dataMapping.rootArray')}} <small>{{$t('dataMapping.optional')}}</small></template>
+                        <template slot="append-outer"><info-tooltip :message="$t('dataMapping.rootArrayHelp')"></info-tooltip> </template>
+                      </v-select>
+                    </v-col>
+                    <v-col cols="12" md="6" lg="4">
+                      <v-select
+                        :items="payloadTypes()"
+                        v-model="payloadType"
+                        item-text="name"
+                        :rules="[v => !!v || 'Item is required']"
+                        :label="$t('dataMapping.resultingDataType')"
+                        required
+                      ></v-select>
+                    </v-col>
 
-                <h3 style="padding-top: 10px">{{$t("dataMapping.mapping")}} <info-tooltip :message="$t('dataMapping.mappingHelp')"></info-tooltip></h3>
-                <v-select
-                    :items="payloadTypes()"
-                    v-model="payloadType"
-                    item-text="name"
-                    :rules="[v => !!v || 'Item is required']"
-                    :label="$t('dataMapping.resultingDataType')"
-                    required
-                ></v-select>
+                    <!-- node -->
+                    <template v-if="payloadType === 'node'">
+                      <v-col cols="12" md="6" lg="4">
+                        <v-autocomplete
+                          :items="metatypes"
+                          v-model="selectedMetatype"
+                          :search-input.sync="search"
+                          :single-line="false"
+                          item-text="name"
+                          :label="$t('dataMapping.chooseMetatype')"
+                          :placeholder="$t('dataMapping.typeToSearch')"
+                          :rules="[v => !!v || 'Item is required']"
+                          required
+                          return-object
+                          clearable
+                        >
+                          <template slot="append-outer"><info-tooltip :message="$t('dataMapping.metatypeSearchHelp')"></info-tooltip> </template>
+                        </v-autocomplete>
+                      </v-col>
 
-                <!-- node -->
-
-                <div v-if="payloadType === 'node'">
-                  <v-autocomplete
-                      :items="metatypes"
-                      v-model="selectedMetatype"
-                      :search-input.sync="search"
-                      :single-line="false"
-                      item-text="name"
-                      :label="$t('dataMapping.chooseMetatype')"
-                      :placeholder="$t('dataMapping.typeToSearch')"
-                      :rules="[v => !!v || 'Item is required']"
-                      required
-                      return-object
-                      clearable
-                  >
-                    <template slot="append-outer"><info-tooltip :message="$t('dataMapping.metatypeSearchHelp')"></info-tooltip> </template>
-                  </v-autocomplete>
-
-                  <div v-if="selectedMetatype !== null">
-                    <v-row>
-                      <v-col>
-                        <v-combobox
+                      <template v-if="selectedMetatype !== null">
+                        <v-col cols="12" md="6" lg="4">
+                          <v-combobox
                             v-if="!rootArray"
                             :items="payloadKeys"
                             v-model="uniqueIdentifierKey"
                             clearable
-                        >
+                          >
 
-                          <template v-slot:label>{{$t('dataMapping.uniqueIdentifierKey')}}</template>
-                          <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueIdentifierHelp')"></info-tooltip> </template>
-                        </v-combobox>
-                        <v-combobox
+                            <template v-slot:label>{{$t('dataMapping.uniqueIdentifierKey')}}</template>
+                            <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueIdentifierHelp')"></info-tooltip> </template>
+                          </v-combobox>
+                          <v-combobox
                             v-if="rootArray"
                             :items="payloadKeys"
                             v-model="uniqueIdentifierKey"
                             clearable
-                        >
-                          <template v-slot:label>{{$t('dataMapping.uniqueIdentifierKey')}}</template>
-                          <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueIdentifierHelp')"></info-tooltip> </template>
-                        </v-combobox>
-                      </v-col>
-                    </v-row>
-                    <br>
-
-                    <v-row v-if="keysLoading">
-                      <v-col :cols="12">
-                        <v-progress-linear
-                            indeterminate
-                            color="orange"
-                        ></v-progress-linear>
-                      </v-col>
-                    </v-row>
-
-                    <h4 v-if="selectedMetatypeKeys.length > 0">{{$t('dataMapping.metatypePropertyMapping')}}<info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip>  <v-btn
-                        @click="autoPopulateMetatypeKeys()"
-                        class="mr-4"
-                    >
-                      {{$t("dataMapping.autopopulate")}}
-                    </v-btn></h4>
-
-                    <div v-for="key in selectedMetatypeKeys" :key="key.id">
-                      <v-row>
-                        <v-col :cols="6">
-                          <h4>{{key.name}} <info-tooltip v-if="key.description !== ''" :message="key.description"></info-tooltip></h4>
-                          <v-combobox
-                              :items="payloadKeys"
-                              label="map payload key"
-                              @input="selectPropertyKey($event, key)"
-                              clearable
-                              eager
-                              :disabled="isValueMapped(key)"
-                              :value="propertyKey(key)"
                           >
-                            <template v-slot:append-outer>{{$t("dataMapping.or")}}</template>
-                            <template v-slot:label>{{$t('dataMapping.mapPayloadKey')}} <small style="color:red" v-if="key.required">{{$t("dataMapping.required")}}</small></template>
-                            <template v-slot:item="data">
-                              <!-- Display alternate formatting and key use count if key has been selected -->
-                              <span v-if="propertyMapping.find(prop => prop.key === data.item)">
-                                <v-alert
-                                    dense
-                                    text
-                                    type="success"
-                                >
-                                {{ data.item }} ({{ (propertyMapping.reduce((n, prop) => n + (prop.key === data.item), 0)) }})
-                                </v-alert>
-                              </span>
-                              <!-- Otherwise simply display the key name -->
-                              <span v-else>{{ data.item }}</span>
-                            </template>
+                            <template v-slot:label>{{$t('dataMapping.uniqueIdentifierKey')}}</template>
+                            <template slot="append-outer"><info-tooltip :message="$t('dataMapping.uniqueIdentifierHelp')"></info-tooltip> </template>
                           </v-combobox>
                         </v-col>
-                        <v-col :cols="6">
-                          <h4 style="color:white">{{key.name}}</h4>
-                          <v-text-field
-                              v-if="key.data_type !== 'boolean'"
-                              :label="$t('dataMapping.constantValue')"
-                              @input="selectPropertyKey($event, key, true)"
-                              :disabled="isKeyMapped(key, true)"
-                              :value="propertyKeyValue(key)"
-                          />
-                          <v-select
-                              v-if="key.data_type == 'boolean'"
-                              :label="$t('dataMapping.constantValue')"
-                              :items="['true', 'false']"
-                              @input="selectPropertyKey($event, key, true)"
-                              :disabled="isKeyMapped(key, true)"
-                              :value="propertyKeyValue(key)"
-                          />
+                        <v-col cols="12" md="6" lg="4" v-if="keysLoading">
+                          <v-progress-linear
+                            indeterminate
+                            color="orange"
+                          ></v-progress-linear>
                         </v-col>
-                        <v-col :cols="12">
-                          <v-text-field
-                              v-if="key.data_type === 'date'"
-                              :label="$t('dataMapping.dateFormatString')"
-                              @input="setDateConversionFormatStringRecord($event, key)"
-                          >
-
-                            <template slot="append-outer"><a href="https://date-fns.org/v2.28.0/docs/parse" target="_blank">{{$t('dataMapping.dateFormatStringHelp')}}</a></template>
-                          </v-text-field>
-                        </v-col>
-                      </v-row>
-                    </div>
-                  </div>
-
-
-                </div>
-
-                <!-- edge -->
-                <div v-if="payloadType === 'edge'">
-
-                  <v-autocomplete
-                      :items="relationshipPairs"
-                      v-model="selectedRelationshipPair"
-                      :search-input.sync="relationshipPairSearch"
-                      :single-line="false"
-                      item-text="name"
-                      clearable
-                      :label="$t('dataMapping.chooseRelationship')"
-                      :placeholder="$t('dataMapping.typeToSearch')"
-                      return-object
-                  >
-                    <template slot="append-outer"><info-tooltip :message="$t('dataMapping.relationshipPairSearchHelp')"></info-tooltip></template>
-
-                    <template slot="item" slot-scope="data">
-                      {{data.item.origin_metatype_name}} - {{data.item.relationship_name}} - {{data.item.destination_metatype_name}}
+                      </template>
                     </template>
 
-                  </v-autocomplete>
-
-                  <v-row v-if="this.selectedRelationshipPair">
-                      <v-col :cols="12">
-                        <h3>{{$t('dataMapping.parentInformation')}}</h3>
-                      </v-col>
-                      <v-col>
-                        <v-select
-                            :items="payloadKeys"
-                            v-model="origin_key"
-                            :rules="[v => !!v || 'Item is required']"
-                            required
+                    <!-- edge -->
+                    <template v-if="payloadType === 'edge'">
+                      <v-col cols="12" md="6" lg="4">
+                        <v-autocomplete
+                          :items="relationshipPairs"
+                          v-model="selectedRelationshipPair"
+                          :search-input.sync="relationshipPairSearch"
+                          :single-line="false"
+                          item-text="name"
+                          clearable
+                          :label="$t('dataMapping.chooseRelationship')"
+                          :placeholder="$t('dataMapping.typeToSearch')"
+                          return-object
                         >
+                          <template slot="append-outer"><info-tooltip :message="$t('dataMapping.relationshipPairSearchHelp')"></info-tooltip></template>
 
-                          <template v-slot:label>{{$t('dataMapping.originKey')}} <small style="color:red">{{$t('dataMapping.required')}}</small></template>
-                        </v-select>
+                          <template slot="item" slot-scope="data">
+                            {{data.item.origin_metatype_name}} - {{data.item.relationship_name}} - {{data.item.destination_metatype_name}}
+                          </template>
+
+                        </v-autocomplete>
                       </v-col>
 
-                      <v-col>
+                      <template v-if="this.selectedRelationshipPair">
+                        <v-col cols="12">
+                          <h5 class="text-h5">{{$t('dataMapping.parentInformation')}}</h5>
+
+                          <v-row>
+                            <v-col cols="12" md="6" lg="4">
+                              <v-select
+                                :items="payloadKeys"
+                                v-model="origin_key"
+                                :rules="[v => !!v || 'Item is required']"
+                                required
+                              >
+                                <template v-slot:label>{{$t('dataMapping.originKey')}} <small style="color:red">{{$t('dataMapping.required')}}</small></template>
+                              </v-select>
+                            </v-col>
+
+                            <v-col cols="12" md="6" lg="4">
+                              <select-data-source
+                                @selected="setParentDataSource"
+                                :dataSourceID="originDataSourceID"
+                                :containerID="containerID">
+                              </select-data-source>
+                            </v-col>
+
+                            <v-col cols="12" md="6" lg="4">
+                              <search-metatypes
+                                @selected="setParentMetatype"
+                                :metatypeID="originMetatypeID"
+                                :containerID="containerID">
+                              </search-metatypes>
+                            </v-col>
+                          </v-row>
+                        </v-col>
+
+                        <v-col cols="12">
+                          <h5 class="text-h5">{{$t('dataMapping.childInformation')}}</h5>
+
+                          <v-row>
+                            <v-col cols="12" md="6" lg="4">
+                              <v-select
+                                :items="payloadKeys"
+                                v-model="destination_key"
+                                :rules="[v => !!v || 'Item is required']"
+                                required
+                              >
+                                <template v-slot:label>{{$t('dataMapping.destinationKey')}} <small style="color:red">{{$t('dataMapping.required')}}</small></template>
+                                <template slot="append-outer"><info-tooltip :message="$t('dataMapping.originDestinationKeyHelp')"></info-tooltip> </template>
+                              </v-select>
+                            </v-col>
+
+                            <v-col cols="12" md="6" lg="4">
+                              <select-data-source
+                                :tooltip="true"
+                                @selected="setChildDataSource"
+                                :tooltipHelp="$t('dataMapping.dataSourceRelationshipHelp')"
+                                :dataSourceID="destinationDataSourceID"
+                                :containerID="containerID">
+                              </select-data-source>
+                            </v-col>
+
+                            <v-col cols="12" md="6" lg="4">
+                              <search-metatypes
+                                :tooltip="true"
+                                @selected="setChildMetatype"
+                                :tooltipHelp="$t('dataMapping.metatypeRelationshipHelp')"
+                                :metatypeID="destinationMetatypeID"
+                                :containerID="containerID">
+                              </search-metatypes>
+                            </v-col>
+                          </v-row>
+                        </v-col>
+                      </template>
+                    </template>
+
+                    <!-- timeseries -->
+                    <template v-if="payloadType === 'timeseries'">
+                      <h4>{{$t('dataMapping.selectNodeID')}}<info-tooltip :message="$t('dataMapping.nodeIDHelp')"></info-tooltip></h4>
+                      <v-col cols="12" md="6" lg="4">
                         <select-data-source
-                            @selected="setParentDataSource"
-                            :dataSourceID="originDataSourceID"
+                            @selected="setTabDataSource"
+                            :dataSourceID="tab_data_source_id"
+                            :rules="[tabDataSourceValid]"
                             :containerID="containerID">
                         </select-data-source>
                       </v-col>
-
-                      <v-col>
+                      <v-col cols="12" md="6" lg="4">
                         <search-metatypes
-                            @selected="setParentMetatype"
-                            :metatypeID="originMetatypeID"
+                            @selected="setTabMetatype"
+                            :metatypeID="tab_metatype_id"
+                            :rules="[tabMetatypeValid]"
                             :containerID="containerID">
                         </search-metatypes>
                       </v-col>
-
-                      <v-col :cols="12">
-                        <h3>{{$t('dataMapping.childInformation')}}</h3>
-                      </v-col>
-                      <v-col>
-                        <v-select
-                            :items="payloadKeys"
-                            v-model="destination_key"
-                            :rules="[v => !!v || 'Item is required']"
-                            required
-                        >
-
-                          <template v-slot:label>{{$t('dataMapping.destinationKey')}} <small style="color:red">{{$t('dataMapping.required')}}</small></template>
-                          <template slot="append-outer"><info-tooltip :message="$t('dataMapping.originDestinationKeyHelp')"></info-tooltip> </template>
-                        </v-select>
-                      </v-col>
-                      <v-col>
-
-                        <select-data-source
-                            :tooltip="true"
-                            @selected="setChildDataSource"
-                            :tooltipHelp="$t('dataMapping.dataSourceRelationshipHelp')"
-                            :dataSourceID="destinationDataSourceID"
-                            :containerID="containerID">
-                        </select-data-source>
-                      </v-col>
-                      <v-col>
-
-                        <search-metatypes
-                            :tooltip="true"
-                            @selected="setChildMetatype"
-                            :tooltipHelp="$t('dataMapping.metatypeRelationshipHelp')"
-                            :metatypeID="destinationMetatypeID"
-                            :containerID="containerID">
-                        </search-metatypes>
-                      </v-col>
-
-                  </v-row>
-
-                  <br>
-                  <h4 v-if="selectedMetatypeRelationshipPairKeys.length > 0">{{$t('dataMapping.metatypeRelationshipPropertyMapping')}}<info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip>
-                    <v-btn
-                        @click="autoPopulateRelationshipKeys()"
-                        class="mr-4"
-                    >
-                      {{$t("dataMapping.autopopulate")}}
-                    </v-btn>
-                  </h4>
-                  <div v-for="key in selectedMetatypeRelationshipPairKeys" :key="key.id">
-                    <v-row>
-                      <v-col :cols="6">
+                      <v-col cols="12" md="6" lg="4">
                         <v-combobox
-                            :items="payloadKeys"
-                            @input="selectRelationshipPropertyKey($event, key)"
-                            :disabled="isRelationshipValueMapped(key)"
-                            :value="relationshipPropertyKey(key)"
-                        >
-
-                          <template v-slot:append-outer>{{$t('dataMapping.or')}}</template>
-                          <template v-slot:label>{{$t("dataMapping.mapPayloadKey")}} <small style="color:red" v-if="key.required">{{$t('dataMapping.required')}}</small></template>
-                        </v-combobox>
-
-                      </v-col>
-                      <v-col :cols="6">
-                        <h4 style="color:white">{{key.name}} x</h4>
-                        <v-text-field
-                            v-if="key.data_type !== 'boolean'"
-                            :label="$t('dataMapping.constantValue')"
-                            @input="selectRelationshipPropertyKey($event, key, true)"
-                            :disabled="isRelationshipKeyMapped(key, true)"
-                            :value="relationshipPropertyKeyValue(key)"
-                            clearable
-                        />
-                        <v-select
-                            v-if="key.data_type == 'boolean'"
-                            :label="$t('dataMapping.constantValue')"
-                            :items="['true', 'false']"
-                            clearable
-                            @input="selectRelationshipPropertyKey($event, key, true)"
-                            :disabled="isRelationshipKeyMapped(key)"
-                            :value="relationshipPropertyKeyValue(key)"
-                        />
-                      </v-col>
-                    </v-row>
-                    <v-col :cols="12">
-                      <v-text-field
-                          v-if="key.data_type === 'date'"
-                          :label="$t('dataMapping.dateFormatString')"
-                          @input="setDateConversionFormatStringRelationship($event, key)"
-                      >
-
-                        <template slot="append-outer"><a href="https://date-fns.org/v2.28.0/docs/parse" target="_blank">{{$t('dataMapping.dateFormatStringHelp')}}</a></template>
-                      </v-text-field>
-                    </v-col>
-                  </div>
-
-
-                </div>
-
-                <div v-if="payloadType === 'timeseries'">
-                  <h4>{{$t('dataMapping.selectNodeID')}}<info-tooltip :message="$t('dataMapping.nodeIDHelp')"></info-tooltip></h4>
-                  <v-row>
-                    <v-col style="padding-left: 0px">
-                      <select-data-source
-                          @selected="setTabDataSource"
-                          :dataSourceID="tab_data_source_id"
-                          :rules="[tabDataSourceValid]"
-                          :containerID="containerID">
-                      </select-data-source>
-                    </v-col>
-                    <v-col style="padding-left: 0px">
-                      <search-metatypes
-                          @selected="setTabMetatype"
-                          :metatypeID="tab_metatype_id"
-                          :rules="[tabMetatypeValid]"
-                          :containerID="containerID">
-                      </search-metatypes>
-                    </v-col>
-                  </v-row>
-
-
-                  <v-row>
-                    <v-col :cols="6">
-                      <v-combobox
                           :items="payloadKeys"
                           clearable
                           v-model="tab_node_key"
                           :disabled="tab_node_id !== null"
                           :rules="[tabNodeValid]"
-                      >
-
-                        <template v-slot:append-outer>{{$t('dataMapping.or')}}</template>
-                        <template v-slot:label>{{$t('dataMapping.nodeIDKey')}}</template>
-                      </v-combobox>
-                    </v-col>
-                    <v-col :cols="6">
-                      <v-text-field
+                        >
+                          <template v-slot:append-outer>{{$t('dataMapping.or')}}</template>
+                          <template v-slot:label>{{$t('dataMapping.nodeIDKey')}}</template>
+                        </v-combobox>
+                      </v-col>
+                      <v-col cols="12" md="6" lg="4">
+                        <v-text-field
                           :label="$t('dataMapping.nodeID')"
                           clearable
                           v-model="tab_node_id"
                           :disabled="tab_node_key !== null"
                           :rules="[tabNodeValid]"
-                      />
-                    </v-col>
+                        />
+                      </v-col>
+                      <v-col cols="12">
+                        <h4>{{$t('dataMapping.tableDesign')}}<info-tooltip :message="$t('dataMapping.tableDesignHelp')"></info-tooltip></h4>
+                        <v-data-table
+                          :headers="timeSeriesHeader()"
+                          :items="propertyMapping"
+                          :items-per-page="-1"
+                          :expanded.sync="expandedTimeSeries"
+                          mobile-breakpoint="960"
+                          item-key="id"
+                          show-expand
+                          flat
+                          tile
+                          fixed-header
+                          disable-pagination
+                          disable-sort
+                          hide-default-footer
+                        >
+                          <template v-slot:[`item.column_name`]="{ item, index }">
+
+                            <v-text-field
+                              :label="$t('dataMapping.columnName')"
+                              v-model="item.column_name"
+                              :disabled="transformation !== null"
+                              :rules="[v => !!v || $t('dataMapping.required'),validColumnName(index, item.column_name)]"
+                            >
+                            </v-text-field>
+                          </template>
+
+                          <template v-slot:[`item.value_type`]="{ item }">
+                            <v-select
+                              :label="$t('dataMapping.columnDataType')"
+                              :items=dataTypes
+                              :disabled="item.is_primary_timestamp || transformation !== null"
+                              v-model="item.value_type"
+                              :rules="[v => !!v || $t('dataMapping.required')]"
+                            />
+                          </template>
+
+                          <template v-slot:[`item.key`]="{ item }">
+                            <v-combobox
+                              :items="payloadKeys"
+                              v-model="item.key"
+                              :label="$t('dataMapping.mapPayloadKey')"
+                              :rules="[v => !!v || $t('dataMapping.required')]"
+                            >
+                            </v-combobox>
+                          </template>
+                          <template v-slot:[`item.actions`]="{ index }">
+                            <v-icon v-if="index !== 0" @click="removeMapping(index)">mdi-close</v-icon>
+                          </template>
+
+                          <template v-slot:expanded-item="{ item }">
+                            <td :colspan="timeSeriesHeader().length">
+                              <v-col v-if="item.value_type === 'date'" :cols="12">
+                                <v-text-field
+                                  :label="$t('dataMapping.dateFormatString')"
+                                  v-model="item.date_conversion_format_string"
+                                >
+                                  <template slot="append-outer"><a href="https://date-fns.org/v2.28.0/docs/parse" target="_blank">{{$t('dataMapping.dateFormatStringHelp')}}</a></template>
+                                </v-text-field>
+                              </v-col>
+                              <v-col v-if="item.value_type === 'date'" class="text-left">
+                                <v-checkbox
+                                  :label="$t('dataMapping.isPrimaryTimestamp')"
+                                  v-model="item.is_primary_timestamp"
+                                  disabled
+                                >
+                                </v-checkbox>
+                              </v-col>
+                            </td>
+                          </template>
+                        </v-data-table>
+                      </v-col>
+
+                      <v-col :cols="12" style="padding:25px" align="center" justify="center">
+                        <v-btn :disabled="transformation !== null" @click="addMapping">{{$t('dataMapping.addColumn')}}</v-btn>
+                        <p v-if="transformation !== null">{{$t('dataMapping.editingTimeseriesDisabled')}}</p>
+                      </v-col>
+                    </template>
                   </v-row>
+                </v-form>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+            <v-expansion-panel v-if="selectedMetatypeKeys.length > 0 || selectedMetatypeRelationshipPairKeys.length > 0">
+              <v-expansion-panel-header>
 
-                  <h4>{{$t('dataMapping.tableDesign')}}<info-tooltip :message="$t('dataMapping.tableDesignHelp')"></info-tooltip></h4>
-                  <v-data-table
-                      :headers="timeSeriesHeader()"
-                      :items="propertyMapping"
-                      :items-per-page="-1"
-                      :expanded.sync="expandedTimeSeries"
-                      mobile-breakpoint="960"
-                      item-key="id"
-                      show-expand
-                      flat
-                      tile
-                      fixed-header
-                      disable-pagination
-                      disable-sort
-                      hide-default-footer
-                  >
-                    <template v-slot:[`item.column_name`]="{ item, index }">
-
-                      <v-text-field
-                          :label="$t('dataMapping.columnName')"
-                          v-model="item.column_name"
-                          :disabled="transformation !== null"
-                          :rules="[v => !!v || $t('dataMapping.required'),validColumnName(index, item.column_name)]"
-                      >
-                      </v-text-field>
-                    </template>
-
-                    <template v-slot:[`item.value_type`]="{ item }">
-                      <v-select
-                          :label="$t('dataMapping.columnDataType')"
-                          :items=dataTypes
-                          :disabled="item.is_primary_timestamp || transformation !== null"
-                          v-model="item.value_type"
-                          :rules="[v => !!v || $t('dataMapping.required')]"
-                      />
-                    </template>
-
-                    <template v-slot:[`item.key`]="{ item }">
-                      <v-combobox
-                          :items="payloadKeys"
-                          v-model="item.key"
-                          :label="$t('dataMapping.mapPayloadKey')"
-                          :rules="[v => !!v || $t('dataMapping.required')]"
-                      >
-                      </v-combobox>
-                    </template>
-                    <template v-slot:[`item.actions`]="{ index }">
-                      <v-icon v-if="index !== 0" @click="removeMapping(index)">mdi-close</v-icon>
-                    </template>
-
-                    <template v-slot:expanded-item="{ item }">
-                      <td :colspan="timeSeriesHeader().length">
-                        <v-col v-if="item.value_type === 'date'" :cols="12">
-                          <v-text-field
-                              :label="$t('dataMapping.dateFormatString')"
-                              v-model="item.date_conversion_format_string"
-                          >
-                            <template slot="append-outer"><a href="https://date-fns.org/v2.28.0/docs/parse" target="_blank">{{$t('dataMapping.dateFormatStringHelp')}}</a></template>
-                          </v-text-field>
-                        </v-col>
-                        <v-col v-if="item.value_type === 'date'" class="text-left">
-                          <v-checkbox
-                              :label="$t('dataMapping.isPrimaryTimestamp')"
-                              v-model="item.is_primary_timestamp"
-                              disabled
-                          >
-                          </v-checkbox>
-                        </v-col>
-                      </td>
-                    </template>
-                  </v-data-table>
-
-                  <v-row >
-                    <v-col :cols="12" style="padding:25px" align="center" justify="center">
-                      <v-btn :disabled="transformation !== null" @click="addMapping">{{$t('dataMapping.addColumn')}}</v-btn>
-                      <p v-if="transformation !== null">{{$t('dataMapping.editingTimeseriesDisabled')}}</p>
-                    </v-col>
-                  </v-row>
-                </div>
-
-                <div>
-                  <h4 style="padding-bottom: 20px;">
-                    <span v-if="!rootArray">{{propertyMapping.length}} / {{payloadKeys.length}} properties selected</span>
-                    <span v-if="rootArray">{{propertyMapping.length}} / {{payloadSelectedArrayKeys.length}} array properties selected ({{payloadKeys.length}} available)</span>
+                <!-- node -->
+                <template v-if="payloadType === 'node'">
+                  <h4 class="text-h4">
+                    {{$t('dataMapping.metatypePropertyMapping')}} 
+                    <small class="mx-2">
+                      <span v-if="!rootArray">{{propertyMapping.length}} / {{payloadKeys.length}} properties selected</span>
+                      <span v-if="rootArray">{{propertyMapping.length}} / {{payloadSelectedArrayKeys.length}} array properties selected ({{payloadKeys.length}} available)</span>
+                    </small>
+                    <info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip>
                   </h4>
-                </div>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    @click="autoPopulateMetatypeKeys()"
+                    class="ml-auto mr-4"
+                    style="flex: 0 1 auto;"
+                  >
+                    {{$t("dataMapping.autopopulate")}}
+                  </v-btn>
+                </template>
 
+                <!-- edge -->
+                <template v-if="payloadType === 'edge'">
+                  <h4 class="text-h4">
+                    {{$t('dataMapping.metatypeRelationshipPropertyMapping')}}<info-tooltip :message="$t('dataMapping.PropertyMappingHelp')"></info-tooltip>
+                  </h4>
+                  <v-btn
+                    @click="autoPopulateRelationshipKeys()"
+                    class="mr-4"
+                    style="flex: 0 1 auto;"
+                  >
+                    {{$t("dataMapping.autopopulate")}}
+                  </v-btn>
+                </template>
+              </v-expansion-panel-header>
+              <v-expansion-panel-content>
                 <error-banner :message="validationErrorMessage"></error-banner>
 
-              </v-form>
-            </div>
-          </v-col>
-
-        </v-row>
-
-        <v-expansion-panels v-model="openPanels">
-          <v-expansion-panel>
-            <v-expansion-panel-header>
-              <h3 v-if="transformation && transformation.conditions && transformation.conditions.length > 0"
-                  style="padding-top: 10px">{{transformation.conditions.length}} {{$t("dataMapping.conditions")}} <small>{{$t("dataMapping.optional")}}</small> <info-tooltip :message="$t('dataMapping.conditionsHelp')"></info-tooltip></h3>
-              <h3 v-else style="padding-top: 10px">0 {{$t("dataMapping.conditions")}} <small>{{$t("dataMapping.optional")}}</small> <info-tooltip :message="$t('dataMapping.conditionsHelp')"></info-tooltip></h3>
-            </v-expansion-panel-header>
-
-            <v-expansion-panel-content eager>
-              <v-data-table
-                  :single-expand="true"
-                  :expanded.sync="expanded"
-                  :headers="conditionsHeader()"
-                  :items="conditions"
-                  item-key="value"
-                  show-expand
-                  :hide-default-footer="true">
-                <template v-slot:item.actions="{item}" >
-                  <v-icon
-                      small
-                      @click="deleteCondition(item)"
-                  >
-                    mdi-delete
-                  </v-icon>
-                </template>
-                <template v-slot:expanded-item="{headers, item}">
-                  <td :colspan="headers.length">
-                    <h3>{{$t("dataMapping.subexpressions")}} <small>{{$t("dataMapping.optional")}}</small> <info-tooltip :message="$t('dataMapping.subexpressionsHelp')"></info-tooltip></h3>
-                    <v-data-table
-                        :headers="subexpressionHeader()"
-                        :items="item.subexpressions"
-                        :hide-default-footer="true"
-                    >
-                      <template v-slot:item.actions="{item: subexpression}" >
-                        <v-icon
-                            small
-                            @click="deleteSubexpression(item, subexpression)"
+                <!-- node -->
+                <template v-if="payloadType === 'node'">
+                  <v-simple-table>
+                    <template v-slot:default>
+                      <thead>
+                        <tr>
+                          <th class="text-left">
+                            Name
+                          </th>
+                          <th class="text-left">
+                            Keys
+                          </th>
+                          <th
+                            class="text-left"
+                            width="30%"
+                          >
+                            Date
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="key in selectedMetatypeKeys"
+                          :key="key.id"
                         >
-                          mdi-delete
-                        </v-icon>
-                      </template>
-                    </v-data-table>
-                    <v-form ref="subexpressionForm" v-model="subexpressionFormValid">
-                      <v-row>
-                        <v-col :cols="3">
-                          <v-select
-                              :items="expressions"
-                              :rules="[v => !!v || 'Select one']"
-                              v-model="subexpressionExpression"
-                              :label="$t('dataMapping.expression')"
-                              required
-                          >
-
-                            <template slot="append-outer"><info-tooltip :message="$t('dataMapping.expressionHelp')"></info-tooltip> </template>
-                          </v-select>
-                        </v-col>
-                        <v-col :cols="3">
-                          <v-select
-                              :items="payloadKeys"
-                              :rules="[v => !!v || 'Select one']"
-                              v-model="subexpressionKey"
-                              :label="$t('dataMapping.key')"
-                              required
-                          >
-
-                            <template slot="append-outer"><info-tooltip :message="$t('dataMapping.keyHelp')"></info-tooltip> </template>
-                          </v-select>
-                        </v-col>
-                        <v-col :cols="3">
-                          <v-select
-                              :items="operators"
-                              :rules="[v => !!v || 'Select one']"
-                              v-model="subexpressionOperator"
-                              :return-object="true"
-                              :label="$t('dataMapping.operator')"
-                              required
-                          >
-
-                            <template slot="append-outer"><info-tooltip :message="$t('dataMapping.operatorHelp')"></info-tooltip> </template>
-                          </v-select>
-                        </v-col>
-                        <v-col :cols="3">
-                          <v-text-field
-                              v-model="subexpressionValue"
-                              :disabled="subexpressionOperator && !subexpressionOperator.requiresValue"
-                              :label="$t('dataMapping.value')">
-
-                          </v-text-field>
-                          <v-btn :disabled="!subexpressionFormValid" @click="addSubexpression(item)">Add</v-btn>
-                        </v-col>
-                      </v-row>
-                    </v-form>
-
-                  </td>
+                          <td>
+                            {{key.name}}
+                          </td>
+                          <td>
+                            <v-row>
+                              <v-col cols="12" lg="6">
+                                <v-combobox
+                                  :items="payloadKeys"
+                                  label="map payload key"
+                                  @input="selectPropertyKey($event, key)"
+                                  clearable
+                                  eager
+                                  :disabled="isValueMapped(key)"
+                                  :value="propertyKey(key)"
+                                >
+                                  <template v-slot:append-outer>{{$t("dataMapping.or")}}</template>
+                                  <template v-slot:label>{{$t('dataMapping.mapPayloadKey')}} <small style="color:red" v-if="key.required">{{$t("dataMapping.required")}}</small></template>
+                                  <template v-slot:item="data">
+                                    <!-- Display alternate formatting and key use count if key has been selected -->
+                                    <span v-if="propertyMapping.find(prop => prop.key === data.item)">
+                                      <v-alert
+                                        dense
+                                        text
+                                        type="success"
+                                      >
+                                      {{ data.item }} ({{ (propertyMapping.reduce((n, prop) => n + (prop.key === data.item), 0)) }})
+                                      </v-alert>
+                                    </span>
+                                    <!-- Otherwise simply display the key name -->
+                                    <span v-else>{{ data.item }}</span>
+                                  </template>
+                                </v-combobox>
+                              </v-col>
+                              <v-col cols="12" lg="6">
+                                <v-text-field
+                                  v-if="key.data_type !== 'boolean'"
+                                  :label="$t('dataMapping.constantValue')"
+                                  @input="selectPropertyKey($event, key, true)"
+                                  :disabled="isKeyMapped(key, true)"
+                                  :value="propertyKeyValue(key)"
+                                />
+                                <v-select
+                                  v-if="key.data_type == 'boolean'"
+                                  :label="$t('dataMapping.constantValue')"
+                                  :items="['true', 'false']"
+                                  @input="selectPropertyKey($event, key, true)"
+                                  :disabled="isKeyMapped(key, true)"
+                                  :value="propertyKeyValue(key)"
+                                />
+                              </v-col>
+                            </v-row>
+                          </td>
+                          <td>
+                            <v-text-field
+                              v-if="key.data_type === 'date'"
+                              :label="$t('dataMapping.dateFormatString')"
+                              @input="setDateConversionFormatStringRecord($event, key)"
+                            >
+                              <template slot="append-outer">
+                                <a href="https://date-fns.org/v2.28.0/docs/parse" target="_blank">
+                                  {{$t('dataMapping.dateFormatStringHelp')}}
+                                </a>
+                              </template>
+                            </v-text-field>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </template>
+                  </v-simple-table>
                 </template>
+                
+                <!-- edge -->
+                <template v-if="payloadType === 'edge'">
+                  <v-simple-table>
+                    <template v-slot:default>
+                      <thead>
+                        <tr>
+                          <th class="text-left">
+                            Name
+                          </th>
+                          <th class="text-left">
+                            Keys
+                          </th>
+                          <th
+                            class="text-left"
+                            width="30%"
+                          >
+                            Date
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="key in selectedMetatypeRelationshipPairKeys"
+                          :key="key.id"
+                        >
+                          <td>
+                            {{key.name}}
+                          </td>
+                          <td>
+                            <v-row>
+                              <v-col cols="12" lg="6">
+                                <v-combobox
+                                  :items="payloadKeys"
+                                  @input="selectRelationshipPropertyKey($event, key)"
+                                  :disabled="isRelationshipValueMapped(key)"
+                                  :value="relationshipPropertyKey(key)"
+                                >
 
-              </v-data-table>
-              <v-form ref="conditionForm" v-model="conditionFormValid">
+                                  <template v-slot:append-outer>{{$t('dataMapping.or')}}</template>
+                                  <template v-slot:label>{{$t("dataMapping.mapPayloadKey")}} <small style="color:red" v-if="key.required">{{$t('dataMapping.required')}}</small></template>
+                                </v-combobox>
+                              </v-col>
+                              <v-col cols="12" lg="6">
+                                <v-text-field
+                                  v-if="key.data_type !== 'boolean'"
+                                  :label="$t('dataMapping.constantValue')"
+                                  @input="selectRelationshipPropertyKey($event, key, true)"
+                                  :disabled="isRelationshipKeyMapped(key, true)"
+                                  :value="relationshipPropertyKeyValue(key)"
+                                  clearable
+                                />
+                                <v-select
+                                  v-if="key.data_type == 'boolean'"
+                                  :label="$t('dataMapping.constantValue')"
+                                  :items="['true', 'false']"
+                                  clearable
+                                  @input="selectRelationshipPropertyKey($event, key, true)"
+                                  :disabled="isRelationshipKeyMapped(key)"
+                                  :value="relationshipPropertyKeyValue(key)"
+                                />
+                              </v-col>
+                            </v-row>
+                          </td>
+                          <td>
+                            <v-text-field
+                              v-if="key.data_type === 'date'"
+                              :label="$t('dataMapping.dateFormatString')"
+                              @input="setDateConversionFormatStringRelationship($event, key)"
+                            >
+
+                              <template slot="append-outer"><a href="https://date-fns.org/v2.28.0/docs/parse" target="_blank">{{$t('dataMapping.dateFormatStringHelp')}}</a></template>
+                            </v-text-field>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </template>
+                  </v-simple-table>
+                </template>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+            <v-expansion-panel>
+              <v-expansion-panel-header>
+                <h4
+                  class="text-h4"
+                  v-if="transformation && transformation.conditions && transformation.conditions.length > 0"
+                >
+                  {{transformation.conditions.length}} {{$t("dataMapping.conditions")}} <small>{{$t("dataMapping.optional")}}</small> <info-tooltip :message="$t('dataMapping.conditionsHelp')"></info-tooltip>
+                </h4>
+                <h4
+                  class="text-h4"
+                  v-else
+                >
+                  0 {{$t("dataMapping.conditions")}} <small>{{$t("dataMapping.optional")}}</small> <info-tooltip :message="$t('dataMapping.conditionsHelp')"></info-tooltip>
+                </h4>
+              </v-expansion-panel-header>
+
+              <v-expansion-panel-content eager>
+                <v-data-table
+                    :expanded.sync="expanded"
+                    :headers="conditionsHeader()"
+                    :items="conditions"
+                    item-key="key"
+                    show-expand
+                    :hide-default-footer="true">
+                  <template v-slot:item.actions="{item}" >
+                    <v-icon
+                        small
+                        @click="deleteCondition(item)"
+                    >
+                      mdi-delete
+                    </v-icon>
+                  </template>
+                  <template v-slot:expanded-item="{headers, item}">
+                    <td :colspan="headers.length" class="pt-3 px-5 pb-5 grey lighten-4">
+                      <h5 class="text-h5 mb-1">{{$t("dataMapping.subexpressions")}} <small>{{$t("dataMapping.optional")}}</small> <info-tooltip :message="$t('dataMapping.subexpressionsHelp')"></info-tooltip></h5>
+                      <v-data-table
+                          :headers="subexpressionHeader()"
+                          :items="item.subexpressions"
+                          :hide-default-footer="true"
+                      >
+                        <template v-slot:item.actions="{item: subexpression}" >
+                          <v-icon
+                              small
+                              @click="deleteSubexpression(item, subexpression)"
+                          >
+                            mdi-delete
+                          </v-icon>
+                        </template>
+                      </v-data-table>
+                      <v-form ref="subexpressionForm" v-model="subexpressionFormValid">
+                        <v-row class="mt-4">
+                          <v-col cols="12" lg="3">
+                            <v-select
+                                :items="expressions"
+                                :rules="[v => !!v || 'Select one']"
+                                v-model="subexpressionExpression"
+                                :label="$t('dataMapping.expression')"
+                                required
+                            >
+
+                              <template slot="append-outer"><info-tooltip :message="$t('dataMapping.expressionHelp')"></info-tooltip> </template>
+                            </v-select>
+                          </v-col>
+                          <v-col cols="12" lg="3">
+                            <v-select
+                                :items="payloadKeys"
+                                :rules="[v => !!v || 'Select one']"
+                                v-model="subexpressionKey"
+                                :label="$t('dataMapping.key')"
+                                required
+                            >
+
+                              <template slot="append-outer"><info-tooltip :message="$t('dataMapping.keyHelp')"></info-tooltip> </template>
+                            </v-select>
+                          </v-col>
+                          <v-col cols="12" lg="3">
+                            <v-select
+                                :items="operators"
+                                :rules="[v => !!v || 'Select one']"
+                                v-model="subexpressionOperator"
+                                :return-object="true"
+                                :label="$t('dataMapping.operator')"
+                                required
+                            >
+
+                              <template slot="append-outer"><info-tooltip :message="$t('dataMapping.operatorHelp')"></info-tooltip> </template>
+                            </v-select>
+                          </v-col>
+                          <v-col cols="12" lg="3">
+                            <v-text-field
+                                v-model="subexpressionValue"
+                                :disabled="subexpressionOperator && !subexpressionOperator.requiresValue"
+                                :label="$t('dataMapping.value')">
+
+                            </v-text-field>
+                          </v-col>
+                        </v-row>
+                        <v-row class="mt-0">
+                          <v-col class="d-flex">
+                            <v-spacer></v-spacer>
+                            <v-btn color="primary" :disabled="!subexpressionFormValid" @click="addSubexpression(item)">Add</v-btn>
+                          </v-col>
+                        </v-row>
+                      </v-form>
+
+                    </td>
+                  </template>
+
+                </v-data-table>
+                <v-form ref="conditionForm" v-model="conditionFormValid">
+                  <v-row class="mt-4">
+                    <v-col cols="12" md="6" lg="4">
+                      <v-select
+                          :items="payloadKeys"
+                          v-model="conditionKey"
+                          :rules="[v => !!v || 'Select one']"
+                          :label="$t('dataMapping.key')"
+                          required
+                      >
+
+                        <template slot="append-outer"><info-tooltip :message="$t('dataMapping.keyHelp')"></info-tooltip> </template>
+                      </v-select>
+                    </v-col>
+                    <v-col cols="12" md="6" lg="4">
+                      <v-select
+                          :items="operators"
+                          v-model="conditionOperator"
+                          :return-object="true"
+                          :rules="[v => !!v || 'Select one']"
+                          :label="$t('dataMapping.operator')"
+                          required
+                      >
+
+                        <template slot="append-outer"><info-tooltip :message="$t('dataMapping.operatorHelp')"></info-tooltip> </template>
+                      </v-select>
+                    </v-col>
+                    <v-col cols="12" md="6" lg="4">
+                      <v-text-field
+                          v-model="conditionValue"
+                          :disabled="conditionOperator && !conditionOperator.requiresValue"
+                          :label="$t('dataMapping.value')">
+
+                      </v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row class="mt-0">
+                    <v-col class="d-flex">
+                      <v-spacer></v-spacer>
+                      <v-btn color="primary" :disabled="!conditionFormValid" @click="addCondition">{{$t("dataMapping.addCondition")}}</v-btn>
+                    </v-col>
+                  </v-row>
+                </v-form>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+
+            <v-expansion-panel>
+              <v-expansion-panel-header>
+                <h4 class="text-h4" style="">{{$t("dataMapping.configuration")}} <small>{{$t('dataMapping.optional')}}</small> <info-tooltip :message="$t('dataMapping.configurationHelp')"></info-tooltip></h4>
+              </v-expansion-panel-header>
+              <v-expansion-panel-content>
                 <v-row>
-                  <v-col :cols="4">
-                    <v-select
-                        :items="payloadKeys"
-                        v-model="conditionKey"
-                        :rules="[v => !!v || 'Select one']"
-                        :label="$t('dataMapping.key')"
-                        required
-                    >
-
-                      <template slot="append-outer"><info-tooltip :message="$t('dataMapping.keyHelp')"></info-tooltip> </template>
-                    </v-select>
+                  <v-col cols="12" md="6" lg="4">
+                    <v-form>
+                      <v-select
+                          :items="actionErrors()"
+                          v-model="onConversionError"
+                      >
+                        <template v-slot:label>{{$t('dataMapping.onConversionError')}}</template>
+                      </v-select>
+                    </v-form>
                   </v-col>
-                  <v-col :cols="4">
-                    <v-select
-                        :items="operators"
-                        v-model="conditionOperator"
-                        :return-object="true"
-                        :rules="[v => !!v || 'Select one']"
-                        :label="$t('dataMapping.operator')"
-                        required
-                    >
-
-                      <template slot="append-outer"><info-tooltip :message="$t('dataMapping.operatorHelp')"></info-tooltip> </template>
-                    </v-select>
-                  </v-col>
-                  <v-col :cols="4">
-                    <v-text-field
-                        v-model="conditionValue"
-                        :disabled="conditionOperator && !conditionOperator.requiresValue"
-                        :label="$t('dataMapping.value')">
-
-                    </v-text-field>
-                    <v-btn :disabled="!conditionFormValid" @click="addCondition">{{$t("dataMapping.addCondition")}}</v-btn>
+                  <v-col cols="12" md="6" lg="4">
+                    <v-form>
+                      <v-select
+                          :items="actionErrors()"
+                          v-model="onKeyExtractionError"
+                      >
+                        <template v-slot:label>{{$t('dataMapping.onKeyExtractionError')}}</template>
+                      </v-select>
+                    </v-form>
                   </v-col>
                 </v-row>
-
-              </v-form>
-            </v-expansion-panel-content>
-          </v-expansion-panel>
-
-          <v-expansion-panel>
-            <v-expansion-panel-header>
-
-              <h3 style="padding-top: 10px">{{$t("dataMapping.configuration")}} <small>{{$t('dataMapping.optional')}}</small> <info-tooltip :message="$t('dataMapping.configurationHelp')"></info-tooltip></h3>
-            </v-expansion-panel-header>
-            <v-expansion-panel-content>
-              <v-row>
-                <v-col :cols="6">
-                  <v-form>
-                    <v-select
-                        :items="actionErrors()"
-                        v-model="onConversionError"
-                    >
-                      <template v-slot:label>{{$t('dataMapping.onConversionError')}}</template>
-                    </v-select>
-                  </v-form>
-                </v-col>
-                <v-col :cols="6">
-                  <v-form>
-                    <v-select
-                        :items="actionErrors()"
-                        v-model="onKeyExtractionError"
-                    >
-                      <template v-slot:label>{{$t('dataMapping.onKeyExtractionError')}}</template>
-                    </v-select>
-                  </v-form>
-                </v-col>
-              </v-row>
-            </v-expansion-panel-content>
-          </v-expansion-panel>
-        </v-expansion-panels>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+          </v-expansion-panels>
+        </div>
       </v-card-text>
-      <v-card-actions class="fixedContainer d-flex flex-row">
+      <v-card-actions class="pl-6 grey lighten-4">
         <p class="ma-0"><span style="color:red">*</span> = {{$t('dataMapping.requiredField')}}</p>
         <v-spacer />
         <div>
@@ -791,7 +907,7 @@ export default class TransformationDialog extends Vue {
   errorMessage = ""
   validationErrorMessage = ""
   search = ""
-  openPanels: number[] = []
+  openPanels: number[] = [0]
   expanded = []
   expandedTimeSeries = []
   loading = false
@@ -1098,7 +1214,8 @@ export default class TransformationDialog extends Vue {
       offset,
       originID: undefined,
       destinationID: undefined,
-      ontologyVersion: this.$store.getters.currentOntologyVersionID
+      ontologyVersion: this.$store.getters.currentOntologyVersionID,
+      loadRelationships: false,
     })
         .then(pairs => {
           this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
@@ -1127,14 +1244,15 @@ export default class TransformationDialog extends Vue {
       originID: undefined,
       destinationID: undefined,
       ontologyVersion: this.$store.getters.currentOntologyVersionID,
-      metatypeID: this.selectedMetatype?.id!
+      metatypeID: this.selectedMetatype?.id!,
+      loadRelationships: false,
     })
         .then(pairs => {
           this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
         })
         .catch(e => this.errorMessage = e)
 
-    this.$client.listMetatypeKeys(this.containerID, newMetatype.id)
+    this.$client.listMetatypeKeys(this.containerID, newMetatype.id!)
         .then(keys => {
           this.selectedMetatypeKeys = keys
           this.keysLoading = false
@@ -1152,7 +1270,7 @@ export default class TransformationDialog extends Vue {
 
     this.keysLoading = true
 
-    this.$client.listMetatypeRelationshipKeys(this.containerID, newPair.relationship_id)
+    this.$client.listMetatypeRelationshipKeys(this.containerID, newPair.relationship_id!)
         .then(keys => {
           this.selectedMetatypeRelationshipPairKeys = keys
           this.areRequiredKeysMapped()
@@ -1400,7 +1518,9 @@ export default class TransformationDialog extends Vue {
       value: 'edge'
     }]
 
-    if(Config.timeSeriesEnabled) {
+    // only show if timeseries is enabled and it's existing transformation
+    // we don't want users to use this old method  of doing timeseries data
+    if(Config.timeSeriesEnabled && this.transformation) {
      types.push({
        name: this.$t("dataMapping.tabularData"),
        value: 'timeseries'
@@ -1823,7 +1943,21 @@ export default class TransformationDialog extends Vue {
 </script>
 
 <style scoped lang="scss">
-tbody tr:nth-of-type(odd) {
-  background-color: rgba(0, 0, 0, .05);
+/* .v-expansion-panels {
+  max-height: 400px;
+} */
+.v-expansion-panel :deep(.v-expansion-panel-content) .v-expansion-panel-content__wrap {
+  overflow-y: scroll;
 }
+
+.v-expansion-panel :deep(.v-expansion-panel-content) {
+  max-height: 40vh;
+}
+
+.v-data-table :deep(tbody) > {
+  & tr, & tr:hover {
+    background-color: transparent !important;
+  }
+}
+
 </style>

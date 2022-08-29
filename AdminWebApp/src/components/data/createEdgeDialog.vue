@@ -135,7 +135,6 @@ export default class CreateRelationshipPairDialog extends Vue {
   }
 
   // Sort the metatypeRelationshipPairs by the origin and desination selections
-  //TODO check if Select.metatype.id is undefined.... but in a slick way.
   //BUGS: current implementation shows errors in web console about passing in array and can't read undefined
   @Watch('destinationSelect' || 'originSelect')
   onRelationshipSearchChange() {

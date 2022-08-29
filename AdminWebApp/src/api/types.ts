@@ -5,6 +5,7 @@ export type ContainerT = {
     config: {
         data_versioning_enabled: boolean;
         ontology_versioning_enabled: boolean;
+        enabled_data_sources: string[];
     };
     created_at: string;
     modified_at: string;
@@ -22,15 +23,15 @@ export type ContainerAlertT = {
 };
 
 export type MetatypeT = {
-    id: string;
+    id?: string;
     container_id: string;
     name: string;
     description: string;
     keys: MetatypeKeyT[];
-    created_at: string;
-    modified_at: string;
-    created_by: string;
-    modified_by: string;
+    created_at?: string;
+    modified_at?: string;
+    created_by?: string;
+    modified_by?: string;
     deleted_at?: string;
     parent_id?: string;
     ontology_version?: string;
@@ -38,34 +39,36 @@ export type MetatypeT = {
 };
 
 export type MetatypeRelationshipT = {
-    id: string;
+    id?: string;
     container_id: string;
     name: string;
     description: string;
     keys: MetatypeRelationshipKeyT[];
-    created_at: string;
-    modified_at: string;
-    created_by: string;
-    modified_by: string;
+    created_at?: string;
+    modified_at?: string;
+    created_by?: string;
+    modified_by?: string;
     parent_id?: string;
     ontology_version?: string;
     old_id?: string;
 };
 
 export type MetatypeRelationshipPairT = {
-    id: string;
+    id?: string;
     container_id: string;
     name: string;
     description: string;
-    origin_metatype_id: string;
-    destination_metatype_id: string;
-    relationship_id: string;
+    origin_metatype_id?: string;
+    origin_metatype_name: string;
+    destination_metatype_id?: string;
+    destination_metatype_name: string;
+    relationship_id?: string;
     relationship_type: 'many:many' | 'one:one' | 'one:many' | 'many:one';
     relationship_name?: string;
-    created_at: string;
-    modified_at: string;
-    created_by: string;
-    modified_by: string;
+    created_at?: string;
+    modified_at?: string;
+    created_by?: string;
+    modified_by?: string;
     ontology_version?: string;
     old_id?: string;
     origin_metatype?: MetatypeT;
@@ -74,8 +77,8 @@ export type MetatypeRelationshipPairT = {
 };
 
 export type MetatypeKeyT = {
-    id: string;
-    metatype_id: string;
+    id?: string;
+    metatype_id?: string;
     container_id: string;
     name: string;
     property_name: string;
@@ -92,17 +95,17 @@ export type MetatypeKeyT = {
         | undefined;
     options: string[] | undefined;
     default_value: string | boolean | number | any[] | undefined;
-    created_at: string;
-    modified_at: string;
-    created_by: string;
-    modified_by: string;
+    created_at?: string;
+    modified_at?: string;
+    created_by?: string;
+    modified_by?: string;
     deleted_at?: string;
     ontology_version?: string;
 };
 
 export type MetatypeRelationshipKeyT = {
-    id: string;
-    metatype_relationship_id: string;
+    id?: string;
+    metatype_relationship_id?: string;
     container_id: string;
     name: string;
     property_name: string;
@@ -117,10 +120,10 @@ export type MetatypeRelationshipKeyT = {
     };
     options: string[] | undefined;
     default_value: string | boolean | number | any[] | undefined;
-    created_at: string;
-    modified_at: string;
-    created_by: string;
-    modified_by: string;
+    created_at?: string;
+    modified_at?: string;
+    created_by?: string;
+    modified_by?: string;
     ontology_version?: string;
 };
 
@@ -145,8 +148,10 @@ export type FileT = {
 
 export type NodeT = {
     id: string;
+    metatype_id: string;
+    metatype_name: string;
     metatype: MetatypeT;
-    properties: PropertyT[];
+    properties: PropertyT[] | object;
     raw_properties: string; // JSON string with the raw properties
     container_id: string;
     original_data_id: string;
@@ -155,12 +160,6 @@ export type NodeT = {
     modified_at: string;
     incoming_edges: EdgeT[];
     outgoing_edges: EdgeT[];
-};
-
-export type NodeTransformationT = {
-    node_id: string;
-    transformation_id: string;
-    name: string;
 };
 
 export type EdgeT = {
@@ -185,7 +184,7 @@ export type DataSourceT = {
     adapter_type: string | undefined;
     active: boolean;
     archived?: boolean;
-    config: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | JazzDataSourceConfig | undefined;
+    config: StandardDataSourceConfig | HttpDataSourceConfig | AvevaDataSourceConfig | JazzDataSourceConfig | TimeseriesDataSourceConfig | undefined;
     created_at?: string;
     modified_at?: string;
     created_by?: string;
@@ -198,6 +197,34 @@ export type DataSourceT = {
 export type StandardDataSourceConfig = {
     kind: 'standard' | 'manual';
     data_type: 'json' | 'csv';
+    stop_nodes?: string[];
+    value_nodes?: string[];
+    data_retention_days?: number;
+};
+
+export type TimeseriesColumn = {
+    id?: string;
+    column_name?: string;
+    property_name?: string;
+    is_primary_timestamp: boolean;
+    unique: boolean;
+    type?: string;
+    date_conversion_format_string?: string;
+};
+
+export type TimeseriesNodeParameter = {
+    type?: string;
+    operator?: string;
+    key?: any;
+    value?: any;
+};
+
+// we extend so the class-transformer can work properly, even though we don't actually need it
+export type TimeseriesDataSourceConfig = {
+    kind: 'timeseries';
+    columns: TimeseriesColumn[];
+    chunk_interval?: string; // only required if they are using a bigint as a primary timestamp
+    attachment_parameters: TimeseriesNodeParameter[];
     stop_nodes?: string[];
     value_nodes?: string[];
     data_retention_days?: number;
@@ -605,5 +632,13 @@ export function DefaultStandardDataSourceConfig(): StandardDataSourceConfig {
         kind: 'standard',
         data_type: 'json',
         data_retention_days: 30,
+    };
+}
+
+export function DefaultTimeseriesDataSourceConfig(): TimeseriesDataSourceConfig {
+    return {
+        kind: 'timeseries',
+        columns: [],
+        attachment_parameters: [],
     };
 }

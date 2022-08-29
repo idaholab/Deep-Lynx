@@ -1,5 +1,23 @@
 import {BaseDomainClass, NakedDomainClass} from '../../../common_classes/base_domain_class';
-import {ArrayMinSize, IsArray, IsBoolean, IsDefined, IsIn, IsObject, IsOptional, IsString, IsUrl, ValidateIf, ValidateNested, Validate} from 'class-validator';
+import {
+    ArrayMinSize,
+    IsArray,
+    IsBoolean,
+    IsDefined,
+    IsIn,
+    IsObject,
+    IsOptional,
+    IsString,
+    IsUrl,
+    ValidateIf,
+    ValidateNested,
+    Validate,
+    Matches,
+    ValidationOptions,
+    registerDecorator,
+    ValidationArguments,
+    IsNotEmpty,
+} from 'class-validator';
 import {Exclude, Type} from 'class-transformer';
 import {PoolClient} from 'pg';
 import {Transform} from 'stream';
@@ -13,6 +31,7 @@ export class ReceiveDataOptions {
     returnStagingRecords? = false; // needed if you'd rather return the individual staging records over the import, useful if needing to attach files
     overrideJsonStream? = false; // needed if you're passing raw json objects or an object stream
     transformStreams?: Transform[]; // streams to pipe to, prior to piping to the JSONStream
+    bufferSize?: number = 1000; // buffer size for timeseries records to be inserted into the db, modify this at runtime if needed
 }
 
 /*
@@ -23,7 +42,7 @@ export class ReceiveDataOptions {
  validate against
 */
 export class BaseDataSourceConfig extends NakedDomainClass {
-    kind: 'http' | 'standard' | 'manual' | 'jazz' | 'aveva' = 'standard';
+    kind: 'http' | 'standard' | 'manual' | 'jazz' | 'aveva' | 'timeseries' = 'standard';
 
     // advanced configuration, while we allow the user to set these it's generally
     // assumed that only those with technical knowledge or experience would be modifying
@@ -261,6 +280,88 @@ export class AvevaDataSourceConfig extends BaseDataSourceConfig {
     };
 }
 
+export class TimeseriesColumn {
+    // id is completely optional, we include it mainly because we need to be able to differentiate on the gui
+    @IsOptional()
+    @IsString()
+    id?: string;
+
+    @IsOptional()
+    @IsString()
+    @Matches(/^[a-zA-Z]\w{1,30}$/)
+    column_name?: string;
+
+    @IsOptional()
+    @IsString()
+    property_name?: string;
+
+    // this key dictates whether this should be used as the primary timestamp in timescaledb table creation
+    // for tabular data - there can only be one primary timestamp per transformation
+    @IsOptional()
+    @IsBoolean()
+    is_primary_timestamp = false;
+
+    // unique cannot apply to the primary timestamp and uniqueness is unique amid the primary partitioning key (timestamp)
+    @IsOptional()
+    @ValidateIf((o) => !o.is_primary_timestamp)
+    @IsBoolean()
+    unique = false;
+
+    @IsOptional()
+    @IsString()
+    @IsIn(['number', 'number64', 'float', 'float64', 'date', 'string', 'boolean', 'json'])
+    @PrimaryTimestampType()
+    type?: string;
+
+    @IsOptional()
+    @IsString()
+    date_conversion_format_string?: string;
+}
+
+export class TimeseriesNodeParameter {
+    @IsString()
+    @IsIn(['data_source', 'metatype_id', 'metatype_name', 'original_id', 'property', 'id'])
+    type?: string;
+
+    @IsString()
+    @IsOptional()
+    operator?: string;
+
+    @IsOptional()
+    key?: any;
+
+    value?: any;
+}
+
+// we extend so the class-transformer can work properly, even though we don't actually need it
+export class TimeseriesDataSourceConfig extends BaseDataSourceConfig {
+    kind: 'timeseries' = 'timeseries';
+
+    @Type(() => TimeseriesColumn)
+    @IsNotEmpty() // we must have columns if creating a timeseries table
+    @PrimaryTimestampExists({message: 'must contain exactly one primary timestamp column'})
+    @ValidateNested()
+    columns: TimeseriesColumn[] = [];
+
+    @NeedsChunkInterval({message: 'number primary timestamps require a chunk interval'})
+    @IsString()
+    @IsOptional()
+    chunk_interval?: string; // only required if they are using a bigint as a primary timestamp
+
+    @ValidateNested()
+    @Type(() => TimeseriesNodeParameter)
+    @IsOptional()
+    attachment_parameters: TimeseriesNodeParameter[] = [];
+
+    constructor(input: {columns?: TimeseriesColumn[]; attachment_parameters?: TimeseriesNodeParameter[]; chunk_interval?: string}) {
+        super();
+
+        if (input?.columns) this.columns = input.columns;
+        if (input?.attachment_parameters) this.attachment_parameters = input.attachment_parameters;
+        if (input?.chunk_interval) this.chunk_interval = input.chunk_interval;
+    }
+}
+
 /*
     DataSourceRecord represents a data source record in the Deep Lynx database and the various
     validations required for said record to be considered valid.
@@ -276,7 +377,7 @@ export default class DataSourceRecord extends BaseDomainClass {
     name?: string;
 
     @IsString()
-    @IsIn(['http', 'standard', 'manual', 'jazz', 'aveva'])
+    @IsIn(['http', 'standard', 'manual', 'jazz', 'aveva', 'timeseries'])
     adapter_type = 'standard';
 
     @IsString()
@@ -305,17 +406,19 @@ export default class DataSourceRecord extends BaseDomainClass {
                 {value: JazzDataSourceConfig, name: 'jazz'},
                 {value: HttpDataSourceConfig, name: 'http'},
                 {value: AvevaDataSourceConfig, name: 'aveva'},
+                {value: TimeseriesDataSourceConfig, name: 'timeseries'},
             ],
         },
     })
-    config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig | AvevaDataSourceConfig = new StandardDataSourceConfig();
+    config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig =
+        new StandardDataSourceConfig();
 
     constructor(input: {
         container_id: string;
         name: string;
         adapter_type: string;
         active?: boolean;
-        config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig | AvevaDataSourceConfig;
+        config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig | AvevaDataSourceConfig | TimeseriesDataSourceConfig;
         data_format?: string;
         status?: 'ready' | 'polling' | 'error';
         status_message?: string;
@@ -336,4 +439,76 @@ export default class DataSourceRecord extends BaseDomainClass {
             if (input.data_retention_days) this.config.data_retention_days = input.data_retention_days;
         }
     }
+}
+
+export function PrimaryTimestampType(validationOptions?: ValidationOptions) {
+    return (object: object, propertyName: string) => {
+        registerDecorator({
+            name: 'PrimaryTimestampType',
+            target: object.constructor,
+            propertyName,
+            constraints: [],
+            options: validationOptions,
+            validator: {
+                validate(value: any, args: ValidationArguments) {
+                    if ((args.object as TimeseriesColumn)?.is_primary_timestamp) {
+                        return value === 'number' || value === 'number64' || value === 'date';
+                    }
+
+                    return true;
+                },
+            },
+        });
+    };
+}
+
+export function NeedsChunkInterval(validationOptions?: ValidationOptions) {
+    return (object: object, propertyName: string) => {
+        registerDecorator({
+            name: 'NeedsChunkInterval',
+            target: object.constructor,
+            propertyName,
+            constraints: [],
+            options: validationOptions,
+            validator: {
+                validate(value: any, args: ValidationArguments) {
+                    const bigintColumns = (args.object as TimeseriesDataSourceConfig).columns.filter(
+                        (c) => c.is_primary_timestamp && (c.type === 'number' || c.type === 'number64'),
+                    );
+
+                    // if no columns with a bigint, we don't need chunk interval
+                    if (bigintColumns.length === 0) return true;
+
+                    for (const c of bigintColumns) {
+                        if (value) continue;
+                        else return false;
+                    }
+
+                    return true;
+                },
+            },
+        });
+    };
+}
+
+export function PrimaryTimestampExists(validationOptions?: ValidationOptions) {
+    return (object: object, propertyName: string) => {
+        registerDecorator({
+            name: 'PrimaryTimestampExists',
+            target: object.constructor,
+            propertyName,
+            constraints: [],
+            options: validationOptions,
+            validator: {
+                validate(value: TimeseriesColumn[], args: ValidationArguments) {
+                    const timestamp = value.filter((column) => column.is_primary_timestamp);
+
+                    // there can only be one primary timestamp
+                    if (timestamp.length === 1) return true;
+
+                    return false;
+                },
+            },
+        });
+    };
 }

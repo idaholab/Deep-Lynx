@@ -19,12 +19,16 @@ export class ContainerConfig extends NakedDomainClass {
     @IsOptional()
     ontology_versioning_enabled? = false;
 
-    constructor(input?: {data_versioning_enabled: boolean; ontology_versioning_enabled?: boolean}) {
+    @IsOptional()
+    enabled_data_sources?: string[] = [];
+
+    constructor(input?: {data_versioning_enabled: boolean; ontology_versioning_enabled?: boolean; enabled_data_sources?: string[]}) {
         super();
 
         if (input) {
             this.ontology_versioning_enabled = input.ontology_versioning_enabled;
             this.data_versioning_enabled = input.data_versioning_enabled;
+            if (input.enabled_data_sources) this.enabled_data_sources = input.enabled_data_sources;
         }
     }
 }

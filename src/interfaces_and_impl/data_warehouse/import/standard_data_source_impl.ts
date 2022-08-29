@@ -35,7 +35,7 @@ export default class StandardDataSourceImpl implements DataSource {
     }
 
     // see the interface declaration's explanation of ReceiveData
-    async ReceiveData(payloadStream: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | DataStaging[]>> {
+    async ReceiveData(payloadStream: Readable, user: User, options?: ReceiveDataOptions): Promise<Result<Import | DataStaging[] | boolean>> {
         if (!this.DataSourceRecord || !this.DataSourceRecord.id) {
             return Promise.resolve(Result.Failure('cannot receive data, no underlying or saved data source record'));
         }
@@ -218,7 +218,7 @@ export default class StandardDataSourceImpl implements DataSource {
                 Result.Failure(
                     `one or more attempts to save data to the database failed, encountered the following errors: ${saveResults
                         .filter((r) => r.isError)
-                        .map((r) => r.error)}`,
+                        .map((r) => r.error?.error)}`,
                 ),
             );
         }
@@ -248,9 +248,5 @@ export default class StandardDataSourceImpl implements DataSource {
     ToSave(): Promise<DataSourceRecord> {
         // no additional processing is needed on the record prior to storage
         return Promise.resolve(this.DataSourceRecord!);
-    }
-
-    delay(ms: number) {
-        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 }

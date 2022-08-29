@@ -45,6 +45,7 @@
                 </template>
                 <template slot="append-outer"><info-tooltip :message="$t('containers.owlUrlHelp')"></info-tooltip> </template>
               </v-text-field>
+
               <v-checkbox v-model="newContainer.config.ontology_versioning_enabled">
                 <template v-slot:label>
                   {{$t('containers.ontologyVersioningEnabled')}}<p class="text-caption" style="margin-left: 5px"> {{$t('beta')}}</p>
@@ -52,6 +53,8 @@
 
                 <template slot="prepend"><info-tooltip :message="$t('containers.ontologyVersioningHelp')"></info-tooltip> </template>
               </v-checkbox>
+
+              <select-data-source-types @selected="setDataSources"></select-data-source-types>
             </v-form>
           </v-col>
         </v-row>
@@ -70,8 +73,9 @@
 
 <script lang="ts">
    import {Component, Vue} from 'vue-property-decorator'
+   import SelectDataSourceTypes from "@/components/dataSources/selectDataSourceTypes.vue";
 
-    @Component
+    @Component({components: {SelectDataSourceTypes}})
     export default class CreateContainerDialog extends Vue {
         errorMessage = ""
         loading = false
@@ -81,6 +85,7 @@
           description:null, config: {
           data_versioning_enabled: true,
           ontology_versioning_enabled: false,
+          enabled_data_sources: [] as string[]
           }}
       owlFilePath = ""
         owlFile: File | null = null
@@ -95,6 +100,7 @@
               description:null, config: {
                 data_versioning_enabled: true,
                 ontology_versioning_enabled: false,
+                enabled_data_sources: []
               }}
             this.dialog = false
         }
@@ -132,6 +138,10 @@
                   this.errorMessage = e
                 })
           }
+        }
+
+        setDataSources(sources: string[]) {
+          this.newContainer.config.enabled_data_sources = sources
         }
     }
 </script>

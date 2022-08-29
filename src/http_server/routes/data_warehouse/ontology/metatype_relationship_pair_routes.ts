@@ -101,6 +101,14 @@ export default class MetatypeRelationshipPairRoutes {
             repository = repository.and().origin_metatype_id('eq', req.query.originID);
         }
 
+        if (typeof req.query.destinationName !== 'undefined' && (req.query.destinationName as string) !== '') {
+            repository = repository.and().destination_metatype_name('eq', `%${req.query.destinationName}%`);
+        }
+
+        if (typeof req.query.originName !== 'undefined' && (req.query.originName as string) !== '') {
+            repository = repository.and().origin_metatype_name('like', `%${req.query.originName}%`);
+        }
+
         if (typeof req.query.name !== 'undefined' && (req.query.name as string) !== '') {
             repository = repository.and().name('like', `%${req.query.name}%`);
         }

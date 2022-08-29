@@ -222,7 +222,7 @@ export default class ImportRoutes {
                 // @ts-ignore
             } else {
                 const busboy = Busboy({headers: req.headers});
-                const importPromises: Promise<Result<Import | DataStaging[]>>[] = [];
+                const importPromises: Promise<Result<Import | DataStaging[] | boolean>>[] = [];
 
                 busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
                     const {filename, encoding, mimeType} = info;
@@ -388,7 +388,7 @@ export default class ImportRoutes {
     private static uploadFile(req: Request, res: Response, next: NextFunction) {
         const fileNames: string[] = [];
         const files: Promise<Result<File>>[] = [];
-        const dataStagingRecords: Promise<Result<Import | DataStaging[]>>[] = [];
+        const dataStagingRecords: Promise<Result<Import | DataStaging[] | boolean>>[] = [];
         const busboy = Busboy({headers: req.headers});
         const metadata: {[key: string]: any} = {};
         let metadataFieldCount = 0;
@@ -539,7 +539,7 @@ export default class ImportRoutes {
                 // @ts-ignore
             } else {
                 const busboy = Busboy({headers: req.headers});
-                const importPromises: Promise<Result<Import | DataStaging[]>>[] = [];
+                const importPromises: Promise<Result<Import | DataStaging[] | boolean>>[] = [];
 
                 busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
                     const {filename, encoding, mimeType} = info;

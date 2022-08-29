@@ -27,7 +27,7 @@ The initial startup might take a while as the operation must first fetch the pre
 _________
 #### **Requirements**
 
--   node.js 12.x, 14.x, 15.x, 16.x, 17.x
+-   node.js 14.x, 15.x, 16.x, 17.x
 -   Typescript ^4.x.x
 -   npm ^6.x
 -   Docker ^18.x - _optional_ - for ease of use in development

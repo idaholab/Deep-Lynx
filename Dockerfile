@@ -21,7 +21,7 @@ COPY --chown=node:node package*.json ./
 
 # RUN apt update && apt upgrade -y
 RUN npm update --location=global
-# RUN npm install pm2 --location=global
+RUN npm install pm2 --location=global
 
 # Bundle app source
 COPY --chown=node:node . .
@@ -31,6 +31,8 @@ RUN npm ci --include=dev
 RUN npm run build:docker
 RUN cd /srv/core_api/AdminWebApp && npm ci --include=dev && npm run build -- --dest /srv/core_api/dist/http_server/web_gui
 RUN rm -rf /srv/core_api/AdminWebApp/node_modules
+# catch any env file a user might have accidentally built into the container
+RUN rm -rf .env
 
 USER root
 
@@ -39,5 +41,4 @@ ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait
 RUN chmod +x /wait
 
 EXPOSE 8090
-# CMD /wait && pm2-runtime ./dist/main.js
-CMD /wait && npm run start
+CMD /wait && pm2-runtime ./dist/main.js

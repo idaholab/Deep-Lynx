@@ -344,6 +344,16 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return this;
     }
 
+    origin_metatype_name(operator: string, value: any) {
+        super.query('origin.name', operator, value);
+        return this;
+    }
+
+    destination_metatype_name(operator: string, value: any) {
+        super.query('destination.name', operator, value);
+        return this;
+    }
+
     relationship_id(operator: string, value: any) {
         super.query('metatype_relationship_pairs.relationship_id', operator, value);
         return this;

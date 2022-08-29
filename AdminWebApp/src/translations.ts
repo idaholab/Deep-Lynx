@@ -2,11 +2,14 @@ export default {
     en: {
         beta: 'BETA',
         home: {
+            bugs: 'Ran into some bugs?',
+            contactUs: 'Tell Us!',
+            beta: 'beta',
             id: 'ID',
             dashboard: 'Dashboard',
             relationships: 'Relationships',
             accessManagement: 'Access Management',
-            apiKeys: 'API Keys',
+            apiKeys: 'Personal API Keys',
             apiKeysDescription: 'Generate and Manage API Keys',
             domainSelect: 'Select Domain',
             selectContainer: 'Select Container',
@@ -74,7 +77,7 @@ export default {
             inviteUserCardLinkText: 'Manage Users',
             ontologyVersioning: 'Ontology Versioning',
             ontologyVersioningDescription: 'Manage Version and Changelists',
-            serviceUsers: 'External Applications',
+            serviceUsers: 'Application API Keys',
             serviceUsersDescription: 'External Application Access',
         },
         containerAlert: {
@@ -553,6 +556,8 @@ export default {
             description: 'Description',
             actions: 'Actions',
             searchName: 'Search Name',
+            searchOrigin: 'Search Origin Metatype',
+            searchDestination: 'Search Destination Metatype',
             searchDescription: 'Search Description',
             id: 'ID',
             copyID: 'Click to Copy ',
@@ -565,7 +570,9 @@ export default {
             searchName: 'Search Name',
             searchDescription: 'Search Description',
             originMetatype: 'Search Origin Metatype',
+            originName: 'Origin',
             destinationMetatype: 'Search Destination Metatype',
+            destinationName: 'Destination',
             relationship: 'Search Relationship',
             pairSuccessfullyCreated: 'Successfully Created Metatype Relationship Pair',
             id: 'ID',
@@ -575,6 +582,8 @@ export default {
             formTitle: 'Update Taxonomy via Ontology File',
         },
         dataSources: {
+            dataSources: 'Data Sources',
+            timeseriesDatasources: 'Timeseries Data Sources',
             copyID: 'Copy ID to clipboard ',
             id: 'ID',
             create: 'Create',
@@ -587,10 +596,26 @@ export default {
             archived: 'archived',
         },
         createDataSource: {
+            value: 'Value',
+            key: 'Key',
+            chunkInterval: 'Chunk Interval',
+            chunkIntervalHelp: 'Help Deciding Chunk Interval',
+            propertyName: 'Property Name',
+            timeseries: 'Timeseries',
+            unique: 'Unique',
             aveva: 'Aveva',
+            description: 'Description',
             jazz: 'Jazz',
             http: 'HTTP Poller',
             standard: 'Standard',
+            standardDescription:
+                'This is the standard, passive data source for DeepLynx. Data is uploaded to this data source either manually or from external programs.',
+            httpDescription:
+                'This data source is an active poller against a user provided HTTP endpoint. Each poll will take the response and create an import for it, passing a query parameter with the last successful poll time.',
+            jazzDescription: 'This is the Jazz/Doors Next Generation data source. This allows you to pull in artifacts automatically from the Jazz/DNG server.',
+            avevaDescription: 'This is a wrapper over the standard data source, but contains Aveva Everything3D specific configuration values.',
+            timeseriesDescription:
+                'This data source is built specifically for timeseries data. Users must design a timeseries data table and set attachment parameters prior to successful creation. Users upload timeseries data directly to this source, bypassing the standard type mapping system.',
             newDataSource: 'New Data Source',
             formTitle: 'Create New Data Source',
             name: 'Name',
@@ -646,7 +671,7 @@ export default {
             http: 'HTTP Poller',
             standard: 'Standard',
             newDataSource: 'New Data Source',
-            formTitle: 'Create New Data Source',
+            formTitle: 'Edit Data Source',
             name: 'Name',
             sourceType: 'Select Data Source Type',
             dataType: 'Return Data Type',
@@ -769,11 +794,18 @@ export default {
                 'Data may have already been generated using this Transformation. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Transformation. If you would like to keep this data and orphan it, please uncheck the box below.',
         },
         dataMapping: {
+            nodeAttachmentParameters: 'Node Attachment Parameters - optional',
+            nodeAttachmentParametersHelp:
+                'These parameters dictate which nodes should display this timeseries data. More information can be found on the wiki.',
+            type: 'Filter Type',
+            operators: 'Operators',
+            chunkInterval: 'Chunk Interval',
+            chunkIntervalHelp: 'Help Deciding Chunk Interval',
             nameRequirements:
                 'Names must start with a letter and contain only letters, numbers and underscores. Spaces are not allowed and it must be between 2 and 30 characters in length.',
             isPrimaryTimestamp: 'Primary Timestamp',
             columnNameRequirements:
-                'Column names must start with a letter and must only contain letters, numbers and underscores - must be between 2 and 30 characters in length.',
+                'Column names must start with a letter and must contain only lowercase letters, numbers and underscores - must be between 2 and 30 characters in length.',
             tabularData: 'Time-series Data',
             deprecated: 'Deprecated Transformation',
             deprecatedTooltip:
@@ -799,6 +831,7 @@ export default {
             resultingTypeName: 'Metatype/Metatype Relationship/Name',
             applicableToCurrentData: 'Applicable To Sample',
             metatypePropertyMapping: 'Property Mapping',
+            metatypeRelationshipPropertyMapping: 'Relationship Property Mapping',
             expression: 'Expression',
             actions: 'Actions',
             newTransformationButton: 'Create New Transformation',
@@ -894,6 +927,8 @@ export default {
             in: 'in',
         },
         typeTransformation: {
+            existingTransformationTitle: 'Transformation:',
+            newTransformationTitle: 'New Transformation Options',
             newTransformationButton: 'Create New Transformation',
             formTitle: 'New Transformation',
             currentDataSet: 'Current Data Set',
@@ -991,6 +1026,8 @@ export default {
             confirmPassword: 'Confirm New Password',
         },
         ontologyToolbar: {
+            mode: 'Ontology Versioning Mode',
+            beta: 'beta',
             selectChangelist:
                 'Select or create a changelist in order to use edit mode. Note that newly created changelists may take a few minutes to generate fully before they are able to be selected.',
             viewMode: 'View',
@@ -1074,6 +1111,7 @@ export default {
             cancel: 'Cancel',
         },
         containerUsers: {
+            successfullyInvited: 'User successfully  invited',
             title: 'Manage Users',
             newUser: 'New User',
             name: 'Name',

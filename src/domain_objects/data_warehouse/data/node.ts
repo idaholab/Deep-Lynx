@@ -134,18 +134,27 @@ export class NodeTransformation extends NakedDomainClass {
     transformation_id?: string;
 
     @IsString()
+    data_source_id?: string;
+
+    @IsString()
     @IsOptional()
     name?: string;
 
-    constructor(input: {node_id: string; transformation_id: string; name?: string}) {
+    constructor(input: {node_id: string; transformation_id?: string; data_source_id?: string; name?: string}) {
         super();
 
         if (input) {
             this.node_id = input.node_id;
-            this.transformation_id = input.transformation_id;
+            if (input.transformation_id) this.transformation_id = input.transformation_id;
+            if (input.data_source_id) this.data_source_id = input.data_source_id;
             if (input.name) this.name = input.name;
         }
     }
+}
+
+export class NodeIDPayload extends NakedDomainClass {
+    @IsArray()
+    node_ids?: string[];
 }
 
 // type guard for differentiating an array of nodes from either array of nodes or edges

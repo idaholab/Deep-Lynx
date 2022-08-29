@@ -150,16 +150,15 @@
           <span class="headline text-h3">{{$t('dataImports.viewData')}}</span>
         </v-card-title>   
 
-        <json-view
+        <json-viewer
           class="pt-4 px-4 flex-grow-1"
-          :data="selectedData"
+          :value="selectedData"
           :maxDepth=4
           style="overflow-x: auto"
         />
 
         <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
-          <!-- TODO: Fill with actions like edit and delete -->
           <v-btn color="blue darken-1" text @click="dataDialog = false" >{{$t("dataImports.done")}}</v-btn>
         </v-card-actions>
       </v-card>

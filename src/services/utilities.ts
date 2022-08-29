@@ -22,7 +22,7 @@ export function toStream(data: any[]): Readable {
 // regex matching and then removing or converting the results to a valid format - not ideal
 // but we don't have a choice
 export function stringToValidPropertyName(input: string): string {
-    let output = input.replace(/[^_a-zA-Z0-9]/, '_');
+    let output = input.replace(/[^_a-zA-Z0-9]+/g, '_');
 
     output = output.split(' ').join('_');
 
@@ -68,4 +68,46 @@ export function dataTypeToParquetType(input: string): string {
             return 'UTF8';
         }
     }
+}
+
+export function valueCompare(operator: string, v1: any, v2: any): boolean {
+    switch (operator) {
+        case 'eq': {
+            return v1 === v2;
+        }
+        case '==': {
+            return v1 === v2;
+        }
+        case 'neq': {
+            return v1 !== v2;
+        }
+        case '!=': {
+            return v1 !== v2;
+        }
+        case '<>': {
+            return v1 !== v2;
+        }
+        case '<': {
+            return v1 < v2;
+        }
+        case '>': {
+            return v1 > v2;
+        }
+        case '<=': {
+            return v1 <= v2;
+        }
+        case '>=': {
+            return v1 >= v2;
+        }
+        case 'like': {
+            return v1.includes(v2);
+        }
+        case 'in': {
+            if (Array.isArray(v2)) {
+                return v2.includes(v1);
+            }
+        }
+    }
+
+    return false;
 }

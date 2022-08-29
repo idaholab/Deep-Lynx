@@ -307,16 +307,14 @@
           <span class="headline text-h3">{{$t('dataMapping.viewSamplePayload')}}</span>
         </v-card-title>
 
-        <json-view
-          class="pt-4 px-4 flex-grow-1"
-          style="overflow-y: auto; overflow-x: auto"
-          :data="samplePayload"
-          :maxDepth=4
-        />
+        <json-viewer
+            style="overflow-y: auto; overflow-x: auto"
+            class="pt-4 px-4 flex-grow-1"
+            :value="samplePayload"
+            :expand-depth="4"></json-viewer>
 
         <v-card-actions class="flex-shrink-1">
           <v-spacer></v-spacer>
-          <!-- TODO: Fill with actions like edit and delete -->
           <v-btn color="blue darken-1" text @click="dataDialog = false" >{{$t("dataMapping.done")}}</v-btn>
         </v-card-actions>
       </v-card>
@@ -536,7 +534,8 @@ export default class DataMapping extends Vue {
       offset: 0,
       originID: undefined,
       destinationID: undefined,
-      ontologyVersion: this.$store.getters.currentOntologyVersionID
+      ontologyVersion: this.$store.getters.currentOntologyVersionID,
+      loadRelationships: false,
     })
         .then(pairs => {
           this.relationshipPairs = pairs as MetatypeRelationshipPairT[]

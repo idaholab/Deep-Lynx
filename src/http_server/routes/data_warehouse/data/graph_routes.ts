@@ -2,8 +2,8 @@ import {Application, NextFunction, Request, Response} from 'express';
 import {authInContainer} from '../../../middleware';
 import NodeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/node_repository';
 import Result from '../../../../common_classes/result';
-import {plainToClass} from 'class-transformer';
-import Node from '../../../../domain_objects/data_warehouse/data/node';
+import {plainToClass, plainToInstance} from 'class-transformer';
+import Node, {NodeIDPayload} from '../../../../domain_objects/data_warehouse/data/node';
 import EdgeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import NodeLeafRepository from '../../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
@@ -11,6 +11,7 @@ import GraphQLSchemaGenerator from '../../../../graphql/schema';
 import {graphql} from 'graphql';
 import {stringToValidPropertyName} from '../../../../services/utilities';
 import NodeGraphQLSchemaGenerator from '../../../../graphql/node_graph_schema';
+import DataSourceGraphQLSchemaGenerator from '../../../../graphql/timeseries_schema';
 
 const nodeRepo = new NodeRepository();
 const edgeRepo = new EdgeRepository();
@@ -22,12 +23,22 @@ export default class GraphRoutes {
         app.get('/containers/:containerID/graphs/nodes/', ...middleware, authInContainer('read', 'data'), this.listNodes);
         app.get('/containers/:containerID/graphs/nodes/:nodeID', ...middleware, authInContainer('read', 'data'), this.retrieveNode);
 
+        // This should return all edges which contain one of the ids in the payload
+        app.post('/containers/:containerID/graphs/nodes/edges', ...middleware, authInContainer('read', 'data'), this.retrieveEdges);
+
         // This should return a node and all connected nodes and connecting edges for n layers.
         app.get('/containers/:containerID/graphs/nodes/:nodeID/graph', ...middleware, authInContainer('read', 'data'), this.retrieveNthNodes);
 
         app.post('/containers/:containerID/graphs/nodes/:nodeID/timeseries', ...middleware, authInContainer('read', 'data'), this.queryTimeseriesData);
         app.get('/containers/:containerID/graphs/nodes/:nodeID/timeseries', ...middleware, authInContainer('read', 'data'), this.queryTimeseriesDataTypes);
 
+        app.post(
+            '/containers/:containerID/import/datasources/:dataSourceID/data', 
+            ...middleware, 
+            authInContainer('read', 'data'), 
+            this.queryTimeseriesDataSource
+        );
+        
         app.get('/containers/:containerID/graphs/nodes/:nodeID/files', ...middleware, authInContainer('read', 'data'), this.listFilesForNode);
         app.put('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.attachFileToNode);
         app.delete('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.detachFileFromNode);
@@ -100,6 +111,55 @@ export default class GraphRoutes {
             next();
         } else {
             Result.Failure(`node not found`, 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static retrieveEdges(req: Request, res: Response, next: NextFunction) {
+        // fresh instance of the repo to avoid filter issues
+        if (req.container) {
+            const payload = plainToInstance(NodeIDPayload, req.body as object);
+
+            let repo = new EdgeRepository();
+            repo = repo
+                .where()
+                .containerID('eq', req.container.id!)
+                .and()
+                .origin_node_id('in', payload.node_ids)
+                .or()
+                .containerID('eq', req.container.id!)
+                .and()
+                .destination_node_id('in', payload.node_ids);
+
+            if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
+                repo.count(undefined, {
+                    limit: req.query.limit ? +req.query.limit : undefined,
+                    offset: req.query.offset ? +req.query.offset : undefined,
+                })
+                    .then((result) => {
+                        result.asResponse(res);
+                    })
+                    .catch((err) => {
+                        Result.Failure(err, 404).asResponse(res);
+                    })
+                    .finally(() => next());
+            } else {
+                repo.list(String(req.query.loadMetatypeRelationshipss).toLowerCase() === 'true', {
+                    limit: req.query.limit ? +req.query.limit : undefined,
+                    offset: req.query.offset ? +req.query.offset : undefined,
+                })
+                    .then((result) => {
+                        if (result.isError && result.error) {
+                            result.asResponse(res);
+                            return;
+                        }
+                        res.status(200).json(result);
+                    })
+                    .catch((err) => Result.Failure(err, 404).asResponse(res))
+                    .finally(() => next());
+            }
+        } else {
+            Result.Failure(`container not found`, 404).asResponse(res);
             next();
         }
     }
@@ -418,7 +478,7 @@ export default class GraphRoutes {
         const generator = new NodeGraphQLSchemaGenerator();
 
         generator
-            .ForNode(req.node?.id!, {
+            .ForNode(req.container?.id!, req.node?.id!, {
                 returnFile: String(req.query.returnFile).toLowerCase() === 'true',
                 returnFileType: String(req.query.returnFileType).toLowerCase(),
             })
@@ -448,20 +508,41 @@ export default class GraphRoutes {
     private static queryTimeseriesDataTypes(req: Request, res: Response, next: NextFunction) {
         const repo = new NodeRepository();
 
-        repo.listTransformations(req.node?.id!)
+        repo.listTimeseriesTables(req.node!, req.container?.id!)
             .then((results) => {
-                if (results.isError) {
-                    results.asResponse(res);
+                results.asResponse(res);
+            })
+            .catch((e) => Result.Error(e).asResponse(res));
+    }
+
+    private static queryTimeseriesDataSource(req: Request, res: Response, next: NextFunction) {
+        const generator = new DataSourceGraphQLSchemaGenerator();
+
+        generator
+            .ForDataSource(req.params.dataSourceID, {
+                returnFile: String(req.query.returnFile).toLowerCase() === 'true',
+                returnFileType: String(req.query.returnFileType).toLowerCase(),
+            })
+            .then((schemaResult) => {
+                if (schemaResult.isError) {
+                    Result.Error(schemaResult.error!).asResponse(res);
                     return;
                 }
 
-                Result.Success<any>(
-                    results.value.map((t) => {
-                        t.name = stringToValidPropertyName(t.name!);
-                        return t;
-                    }),
-                ).asResponse(res);
+                graphql({
+                    schema: schemaResult.value,
+                    source: req.body.query,
+                    variableValues: req.body.variables,
+                })
+                    .then((response) => {
+                        res.status(200).json(response);
+                    })
+                    .catch((e) => {
+                        Result.Error(e).asResponse(res);
+                    });
             })
-            .catch((e) => Result.Error(e).asResponse(res));
+            .catch((e) => {
+                Result.Error(e).asResponse(res);
+            });
     }
 }

@@ -134,7 +134,7 @@ export default class ViewMetatypeRelationshipDialog extends Vue {
   loadKeys() {
     if(this.selectedMetatypeRelationship) {
       this.keysLoading = true
-      this.$client.listMetatypeRelationshipKeys(this.selectedMetatypeRelationship.container_id, this.selectedMetatypeRelationship.id)
+      this.$client.listMetatypeRelationshipKeys(this.selectedMetatypeRelationship.container_id, this.selectedMetatypeRelationship.id!)
           .then(keys => {
             if(this.selectedMetatypeRelationship) {
               this.selectedMetatypeRelationship.keys = keys

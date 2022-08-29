@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- v-if="graph.nodes.length > 0" -->
     <v-card style="width: 100%; height: 100%; position: relative">
       <v-toolbar flat color="lightgray" > 
         <v-toolbar-title>Graph</v-toolbar-title>
@@ -74,13 +73,7 @@
               <v-card-actions>
                 Graph Help
                 <v-spacer></v-spacer>
-      
-                <!-- <v-btn
-                  icon
-                  @click="showHints = !showHints"
-                >
-                  <v-icon>{{ showHints ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
-                </v-btn> -->
+
               </v-card-actions>
               <v-expand-transition>
               <div v-show="showHints">
@@ -117,16 +110,6 @@
         @mouseleave="opacity = 0.5"
         :style="`opacity: ${opacity}`"
       >
-        <!-- <v-card-title class="grey lighten-2">
-          <span class="headline text-h3">Node Properties</span>
-        </v-card-title> -->
-
-        <!-- <json-view
-          class="pt-4 px-4"
-          :data="selectedNode"
-          :maxDepth=4
-          style="overflow-x: auto"
-        /> -->
 
         <div class="mt-2 pt-3 px-5 pb-5 height-full">
           <h4 class="primary--text">{{$t('dataQuery.nodeInformation')}}</h4>
@@ -134,8 +117,8 @@
             <v-row>
               <v-col>
                 <div><span class="text-overline">{{$t('dataQuery.nodeID')}}:</span> {{currentNodeInfo.id}}</div>
-                <div><span class="text-overline">{{$t('dataQuery.nodeType')}}:</span> {{currentNodeInfo.metatype.name}}</div>
-                <div><span class="text-overline">DataSource:</span> {{datasources[currentNodeInfo.data_source_id].name}} ({{currentNodeInfo.data_source_id}})</div>
+                <div><span class="text-overline">{{$t('dataQuery.nodeType')}}:</span> {{currentNodeInfo.metatype_name}}</div>
+                <div><span class="text-overline">DataSource:</span> {{datasources[currentNodeInfo.data_source_id]?.name}} ({{currentNodeInfo.data_source_id}})</div>
                 <div><span class="text-overline">Created At:</span> {{currentNodeInfo.created_at}}</div>
                 <div><span class="text-overline">Modified At:</span> {{currentNodeInfo.modified_at}}</div>
                 <v-expansion-panels multiple v-model="openPanels">
@@ -145,7 +128,9 @@
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-data-table
-                          :items="currentNodeInfo.properties"
+                          :items="Object.keys(currentNodeInfo.properties).map(k => {
+                            return {key: k, value: currentNodeInfo.properties[k]}
+                          })"
                           :headers="propertyHeaders()"
                       >
                       </v-data-table>
@@ -192,7 +177,6 @@ import {NodeT, DataSourceT} from "@/api/types";
 import ForceGraph, {ForceGraphInstance} from 'force-graph';
 import {forceManyBody} from 'd3-force';
 
-import {ResultSet} from "@/components/queryBuilder/queryBuilder.vue";
 import {mdiInformation} from "@mdi/js";
 
 @Component({components: {NodeFilesDialog, NodeTimeseriesDataTable}})
@@ -201,7 +185,7 @@ export default class GraphViewer extends Vue {
   readonly containerID!: string
 
   @Prop()
-  readonly results!: ResultSet | null
+  readonly results!: NodeT[]
 
   dialog = false
   currentNodeInfo: any = null
@@ -269,107 +253,27 @@ export default class GraphViewer extends Vue {
   }
 
   async loadResults() {
-    const originalJSON = this.results
-    const nodes: any = []
-    const edges: any = []
+    const nodeIDs: string[] =  []
+    let edges: any = []
 
-    function extractNodes(originalJSON: any) {
-      for (let i = 0; i < originalJSON.length; i++) {
-        const newObject = {
-          data: originalJSON[i],
-        }
-        nodes.push(newObject)
-      }
-    }
+    this.graph.nodes = this.results.map((node: any) => {
+      nodeIDs.push(node.id)
 
-    function extractEdges(originalJSON: any) {
-
-      function searchItem(item: any) {
-        Object.keys(item).forEach(key => {
-          if (typeof item[key] === "object" && item[key] != null) {
-            searchItem(item[key])
-          }
-          if (typeof item[key] === "string") {
-            const searchAsRegEx = new RegExp("edges", "gi");
-            if (item[key].match(searchAsRegEx)) {
-              edges.push(item.id)
-            }
-          }
-        })
-      }
-
-      function getEachItem(object: any) {
-        object.forEach((item: any) => {
-          searchItem(item)
-          if (item.incoming_edges.length !== 0) {
-            for (let i = 0; i < item.incoming_edges.length; i++) {
-              const newObject = {
-                data: {
-                  id: item.incoming_edges[i].id,
-                  source: item.incoming_edges[i].origin_node.id,
-                  target: item.id,
-                  name: item.incoming_edges[i].relationship.name
-                }
-              }
-              edges.push(newObject)
-            }
-          } else if (item.outgoing_edges.length !== 0) {
-            for (let i = 0; i < item.outgoing_edges.length; i++) {
-              const newObject = {
-                data: {
-                  id: item.outgoing_edges[i].id,
-                  source: item.id,
-                  target: item.outgoing_edges[i].destination_node.id,
-                  name: item.outgoing_edges[i].relationship.name
-                }
-              }
-              edges.push(newObject)
-            }
-          }
-        })
-      }
-
-      getEachItem(originalJSON)
-    }
-
-    extractNodes(originalJSON)
-
-    this.graph.nodes = nodes.filter((thing: any, index: any) => {
-      return index === nodes.findIndex((obj: any) => {
-        obj.id = obj.data.id; // create id at root level for graph
-        obj.data.obj_properties = JSON.parse(obj.data.raw_properties);
-        obj.collapsed = false; // set nodes to be expanded by default
-        obj.childLinks = []; // create an empty array for storing child links for use in collapsible graph
-        return obj.id === thing.id;
-      });
+      node.collapsed = false
+      node.childLinks = []
+      return node
     });
-    
-    extractEdges(originalJSON)
 
-    // create list of edge IDs in the links array of graph
-    const edgesInGraph: any = {}
+    // fetch the edges
+    edges = await this.$client.listEdgesForNodeIDs(this.containerID, nodeIDs)
 
     if (edges) {
       edges.forEach((edge: any) => {
-        // if both nodes of an edge are not included in graph, skip edge
-        const aIndex = this.graph.nodes.findIndex((node: any) => { return node.id === edge.data.source});
-        const bIndex = this.graph.nodes.findIndex((node: any) => { return node.id === edge.data.target});
-
-        if (aIndex === -1 || bIndex === -1) {
-          return
-        }
-
-        // if edge has already been added to links, skip
-        if (edgesInGraph[edge.data.id]) {
-          return
-        }
-
-        edgesInGraph[edge.data.id] = edge.data.id
         this.graph.links.push({
-          source: edge.data.source,
-          target: edge.data.target,
-          name: edge.data.name,
-          id: edge.data.id,
+          source: edge.origin_id,
+          target: edge.destination_id,
+          name: edge.metatype_relationship_name,
+          id: edge.id,
           collapsed: false // flag for showing/hiding links. set all to visible by default
         })
       });
@@ -456,7 +360,7 @@ export default class GraphViewer extends Vue {
 
     // create a map of datasource IDs and names for reference by nodes
     if (this.graph.nodes.length > 0) {
-      const sources = await this.$client.listDataSources(this.graph.nodes[0].data?.container_id)
+      const sources = await this.$client.listDataSources(this.graph.nodes[0].container_id)
 
       for (const datasource of sources) {
         if (datasource.id != undefined) {
@@ -476,7 +380,7 @@ export default class GraphViewer extends Vue {
         .graphData(this.graph) // graph data
         // .backgroundColor('#101020') // set background color of canvas
         .nodeLabel((node: any) => {
-          return `${node.data.metatype.name} : ${node.data.id}`
+          return `${node.metatype_name} : ${node.id}`
         }) // set node label when hovering
         .onNodeRightClick(node => {
           this.canvas!.centerAt(node.x, node.y, 1000);
@@ -499,7 +403,7 @@ export default class GraphViewer extends Vue {
           ctx.fillStyle = node.color;
           ctx.fill()
 
-          const nodeName = node.data.obj_properties.name ? node.data.obj_properties.name : node.data.id;
+          const nodeName = node.properties.name ? node.properties.name : node.id;
           const label = `${nodeName}` as string;
           const fontSize = 24/globalScale;
           ctx.font = `${fontSize}px Sans-Serif`;
@@ -511,7 +415,7 @@ export default class GraphViewer extends Vue {
 
         }) // add text over nodes
         .nodeCanvasObjectMode(node => highlightNodes.has(node) ? 'after' : 'after') // this format required for correctly displaying styles and text for both highlighted and non-highlighted states
-        .nodeAutoColorBy((node: any) => `${node.data.metatype.name}`) // auto color by metatype
+        .nodeAutoColorBy((node: any) => `${node.metatype_name}`) // auto color by metatype
         .linkColor(() => '#363642') // link color
         .linkCurvature('curvature')
         .linkDirectionalArrowLength(5) // use directional arrows for links and set size of link
@@ -603,7 +507,7 @@ export default class GraphViewer extends Vue {
           if (this.currentClick === 0) {
             this.previousClick = Date.now();
             this.currentClick = Date.now();
-            this.firstClickID = node.data.id;
+            this.firstClickID = node.id;
             void this.showNodeProperties(node);
           } else {
 
@@ -613,15 +517,15 @@ export default class GraphViewer extends Vue {
             if (this.currentClick - this.previousClick < this.doubleClickTimer) {
 
               // handle node ids
-              if (node.data.id !== this.firstClickID) {
+              if (node.id !== this.firstClickID) {
                 // different nodes, go to one click behavior
                 this.previousClick = Date.now();
-                this.firstClickID = node.data.id;
+                this.firstClickID = node.id;
                 void this.showNodeProperties(node);
               } else {
                 // handle double click
                 this.previousClick = Date.now();
-                this.firstClickID = node.data.id;
+                this.firstClickID = node.id;
                 this.doubleClickFlag = true;
 
                 void this.toggleCollapsedNodes(node);
@@ -630,7 +534,7 @@ export default class GraphViewer extends Vue {
             } else {
               // clicks too far apart, reset and perform single click
               this.previousClick = Date.now();
-              this.firstClickID = node.data.id;
+              this.firstClickID = node.id;
               void this.showNodeProperties(node);
             }
 
@@ -675,8 +579,8 @@ export default class GraphViewer extends Vue {
         // ensure properties panel has solid opacity
         this.opacity = 1.0
 
-        this.getInfo(node.data)
-        this.selectedNode = node.data
+        this.getInfo(node)
+        this.selectedNode = node
         this.nodeDialog = true;
       }
     })
@@ -788,10 +692,10 @@ export default class GraphViewer extends Vue {
       container_id: this.containerID,
       data_source_id: data.data_source_id,
       metatype: {
-        id: data.metatype.id,
-        name: data.metatype.name
+        id: data.metatype_id,
+        name: data.metatype_name
       },
-      properties: data.properties.filter(prop => prop.value !== "null"),
+      properties: data.properties,
       created_at: data.created_at.split(' (')[0], // remove timezone text if present
       modified_at: data.modified_at.split(' (')[0] // remove timezone text if present
     }

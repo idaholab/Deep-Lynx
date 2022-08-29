@@ -232,7 +232,7 @@ export default class EditMetatypeDialog extends Vue {
   loadKeys() {
     if(this.selectedMetatype) {
       this.keysLoading = true
-      this.$client.listMetatypeKeys(this.selectedMetatype.container_id, this.selectedMetatype.id, this.$store.getters.isEditMode)
+      this.$client.listMetatypeKeys(this.selectedMetatype.container_id, this.selectedMetatype.id!, this.$store.getters.isEditMode)
           .then(keys => {
             this.keysLoading = false
 
@@ -249,7 +249,7 @@ export default class EditMetatypeDialog extends Vue {
   }
 
   deleteKey(key: MetatypeKeyT) {
-    this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id, {permanent: !this.$store.getters.isEditMode})
+    this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id!, {permanent: !this.$store.getters.isEditMode})
     .then(result => {
       if(!result) this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
 
@@ -259,7 +259,7 @@ export default class EditMetatypeDialog extends Vue {
   }
 
   undeleteKey(key: MetatypeKeyT) {
-    this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id, {reverse: true})
+    this.$client.deleteMetatypeKey(this.selectedMetatype?.container_id!, this.selectedMetatype?.id!, key.id!, {reverse: true})
         .then(result => {
           if(!result) this.errorMessage = this.$t('editMetatype.errorUpdatingAPI') as string
 

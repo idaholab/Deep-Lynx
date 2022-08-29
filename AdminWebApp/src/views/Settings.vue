@@ -37,6 +37,12 @@
             <h1 v-else>{{$t('containers.noneSelected')}}</h1>
           </v-col>
         </v-row>
+
+      <v-row>
+        <v-col :cols="12">
+          <select-data-source-types :values="container.config.enabled_data_sources" @selected="setDataSources"></select-data-source-types>
+        </v-col>
+      </v-row>
       </v-card-text>
 
       <v-card-actions>
@@ -54,8 +60,9 @@
 import {Component, Vue} from 'vue-property-decorator'
 import {ContainerT} from "@/api/types";
 import DeleteContainerDialog from "@/components/ontology/containers/deleteContainerDialog.vue";
+import SelectDataSourceTypes from "@/components/dataSources/selectDataSourceTypes.vue";
 
-@Component({components: {DeleteContainerDialog}})
+@Component({components: {DeleteContainerDialog, SelectDataSourceTypes}})
 export default class Settings extends Vue {
   container: ContainerT | undefined = undefined
   errorMessage = ""
@@ -79,6 +86,10 @@ export default class Settings extends Vue {
           this.errorMessage = e
         })
         .finally(() => this.loading = false)
+  }
+
+  setDataSources(sources: string[]) {
+    this.container!.config!.enabled_data_sources! = sources
   }
 }
 </script>

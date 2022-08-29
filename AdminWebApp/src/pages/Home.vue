@@ -17,7 +17,7 @@
       v-model="drawer"
       app
       flat
-      mobile-break-point="960"
+      mobile-breakpoint="960"
       width="260"
       class="grey--text text--darken-2"
     >
@@ -197,7 +197,7 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.dataExport")}}</v-list-item-title>
+              <v-list-item-title>{{$t("home.dataExport")}}-<small>{{$t("home.beta")}}</small></v-list-item-title>
               <v-list-item-subtitle>{{$t("home.dataExportDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
@@ -246,7 +246,7 @@
           :value="false"
           v-if="$auth.IsAdmin()"
           :ripple="{class:'list-ripple'}"
-        >   <!-- TODO: correct to use auth function -->
+        >
           <template v-slot:activator>
             <v-list-item-title >{{$t("home.administration")}}</v-list-item-title>
           </template>
@@ -349,6 +349,7 @@
           </v-card>
         </v-container>
         <v-container class="justify-end">
+          <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('home.bugs')}} <a href="mailto:GRP-deeplynx-team@inl.gov">{{$t('home.contactUs')}}</a> </span>
           <span class="d-block text-h6">&copy; {{ new Date().getFullYear() }} Idaho National Laboratory</span>
         </v-container>
       </template>
@@ -436,8 +437,7 @@
                       v-for="(dataSource, i) in dataSources"
                       :key="i"
                   >
-                    <h2>{{dataSource.name}}</h2>
-                    <h3>{{$t('home.imported')}}</h3>
+                    <p class="text-h4">{{dataSource.name}} {{$t('home.imported')}}</p>
                     <p>{{dataSource.data_imported}}</p>
                   </v-carousel-item>
                 </v-carousel>
@@ -803,7 +803,7 @@ export default class Home extends Vue {
     font-size: 0.85rem;
   }
 }
-.nav-drawer-accordion.v-list ::v-deep .theme--light {
+.nav-drawer-accordion.v-list :deep(.theme--light) {
   &.v-list-item:not(.v-list-item--active):not(.v-list-item--disabled) {
     color: darken($darkgray2, 20%);
     background-color: $lightgray;

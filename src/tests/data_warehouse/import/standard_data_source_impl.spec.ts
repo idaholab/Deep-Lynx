@@ -18,6 +18,7 @@ import fs from 'fs';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import {toStream} from '../../../services/utilities';
 import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
+import TimeseriesDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/timeseries_data_source';
 
 const csv = require('csvtojson');
 
@@ -26,7 +27,7 @@ const csv = require('csvtojson');
 describe('A Standard DataSource Implementation can', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
-    let dataSource: StandardDataSourceImpl | HttpDataSourceImpl | AvevaDataSourceImpl | JazzDataSourceImpl | undefined;
+    let dataSource: StandardDataSourceImpl | HttpDataSourceImpl | AvevaDataSourceImpl | JazzDataSourceImpl | TimeseriesDataSourceImpl | undefined;
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {

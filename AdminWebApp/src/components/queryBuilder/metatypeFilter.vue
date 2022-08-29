@@ -91,7 +91,7 @@ export default class MetatypeFilter extends Vue {
       metatypes.forEach(source => {
         ids.push(source.id!)
 
-        this.$client.listMetatypeKeys(this.containerID, source.id)
+        this.$client.listMetatypeKeys(this.containerID, source.id!)
             .then(keys => {
               this.metatypeKeys.push(...keys)
               this.loading = false

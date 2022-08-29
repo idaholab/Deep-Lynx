@@ -62,7 +62,12 @@ void postgresAdapter
                         stream.on('end', () => {
                             done();
 
-                            Promise.all(putPromises).finally(() => setTimeout(() => emitter(), 5000));
+                            Promise.all(putPromises).finally(() => {
+                                if (parentPort) parentPort.postMessage('done');
+                                else {
+                                    process.exit(0);
+                                }
+                            });
                         });
 
                         // we pipe to devnull because we need to trigger the stream and don't

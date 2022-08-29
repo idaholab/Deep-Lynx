@@ -1,18 +1,17 @@
 <template>
   <div>
     <error-banner :message="errorMessage"></error-banner>
-    <v-row>
-      <v-col :cols="12" class="pt-9 px-9">
-        <p>{{$t('dataMapping.typeMappingHelp')}}</p>
-        <v-checkbox
-          v-if="typeMapping"
-          v-model="typeMapping.active"
-          @click="updateTypeMapping"
-          :label="$t('dataMapping.active')"
-          class="ml-n1"
-        ></v-checkbox>
-      </v-col>
-    </v-row>
+    <div class="pa-6 pb-0">
+      <p>{{$t('dataMapping.typeMappingHelp')}}</p>
+      <v-checkbox
+        v-if="typeMapping"
+        v-model="typeMapping.active"
+        @click="updateTypeMapping"
+        :label="$t('dataMapping.active')"
+        class="ml-n1"
+      ></v-checkbox>
+    </div>
+
     <v-divider></v-divider>
     <v-row no-gutters>
       <v-col :cols="8" class="pt-2">
@@ -80,12 +79,13 @@
       <v-col :cols="4" class="pt-2 pl-6">
         <h3 class="text-h3 pr-6">{{$t('dataMapping.currentDataSet')}}</h3>
         <v-card
-          max-height="360"
+          max-height="460"
           style="overflow-y: scroll" flat
         >
-          <json-view
-            :data="unmappedData"
-            :maxDepth="1"
+          <json-viewer
+            :value="unmappedData"
+            copyable
+            :maxDepth="4"
           />
         </v-card>
       </v-col>

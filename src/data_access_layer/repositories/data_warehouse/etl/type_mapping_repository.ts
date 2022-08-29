@@ -43,7 +43,6 @@ export default class TypeMappingRepository extends Repository implements Reposit
         return Promise.resolve(Result.Failure(`type mapping must have id`));
     }
 
-    // TODO: figure out caching, ripped out due to bug
     async findByID(id: string, loadTransformations = true): Promise<Result<TypeMapping>> {
         const retrieved = await this.#mapper.Retrieve(id);
 
@@ -56,7 +55,6 @@ export default class TypeMappingRepository extends Repository implements Reposit
         return Promise.resolve(retrieved);
     }
 
-    // TODO: figure out caching, ripped out due to bug
     // shape hashes are unique only to data sources, so it will need both to find one
     async findByShapeHash(shapeHash: string, dataSourceID: string, loadTransformations = true): Promise<Result<TypeMapping>> {
         const retrieved = await this.#mapper.RetrieveByShapeHash(dataSourceID, shapeHash);
@@ -358,27 +356,29 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
                     // on failure we return the original, unmodified mapping for review
                     if (saved.isError) resolve(Result.Failure(saved.error?.error!, 500, mappings[index]));
-                    else {
-                        // container alert stating they should review their mappings, especially edges
-                        const alert = await new ContainerRepository().createAlert(
-                            new ContainerAlert({
-                                containerID: targetDataSource.value.container_id!,
-                                type: 'warning',
-                                message:
-                                    // eslint-disable-next-line max-len
-                                    'Type Mappings were just imported. It is highly recommended you review all mappings. Relationship mappings must be reviewed so that the proper origin and destination data source can be selected.',
-                            }),
-                            SuperUser,
-                        );
-                        if (alert.isError) Logger.error(`unable create container alert for new ontology ${alert.error?.error}`);
 
-                        resolve(Result.Success(mapping));
-                    }
+                    resolve(Result.Success(mapping));
                 }),
             );
         }
 
-        return Promise.all(imported);
+        const results = await Promise.all(imported);
+        if (results.filter((i) => !i.isError).length > 0) {
+            // container alert stating they should review their mappings, especially edges
+            const alert = await new ContainerRepository().createAlert(
+                new ContainerAlert({
+                    containerID: targetDataSource.value.container_id!,
+                    type: 'warning',
+                    message:
+                        // eslint-disable-next-line max-len
+                        'Type Mappings were just imported. It is highly recommended you review all mappings. Relationship mappings must be reviewed so that the proper origin and destination data source can be selected.',
+                }),
+                SuperUser,
+            );
+            if (alert.isError) Logger.error(`unable create container alert for new ontology ${alert.error?.error}`);
+        }
+
+        return Promise.resolve(results);
     }
 
     // prepareForImport takes a single TypeMapping and transformations and transforms it into a "neutral" state for later

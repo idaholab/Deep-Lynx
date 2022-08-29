@@ -1,4 +1,4 @@
-import {IsArray, IsDefined, IsIn, IsNotEmpty, IsOptional, IsString, ValidateNested} from 'class-validator';
+import {IsArray, IsDefined, IsIn, IsNotEmpty, IsOptional, IsString, ValidateIf, ValidateNested} from 'class-validator';
 import {Type} from 'class-transformer';
 import {Conversion} from '../etl/type_transformation';
 import {NakedDomainClass} from '../../../common_classes/base_domain_class';
@@ -47,7 +47,12 @@ export class TimeseriesData extends NakedDomainClass {
 // Timeseries Entry represents a piece of data that will be inserted  into a timescaledb hypertable
 export default class TimeseriesEntry extends NakedDomainClass {
     @IsString()
+    @ValidateIf((o) => !o.data_source_id)
     transformation_id?: string;
+
+    @IsString()
+    @ValidateIf((o) => !o.transformation_id)
+    data_source_id?: string;
 
     @IsOptional()
     nodes: string[] = [];
@@ -60,13 +65,14 @@ export default class TimeseriesEntry extends NakedDomainClass {
     @IsNotEmpty()
     data: TimeseriesData[] = [];
 
-    constructor(input: {transformation_id?: string; nodes?: string[]; metadata?: TimeseriesMetadata; data: TimeseriesData[]}) {
+    constructor(input: {transformation_id?: string; data_source_id?: string; nodes?: string[]; metadata?: TimeseriesMetadata; data: TimeseriesData[]}) {
         super();
 
         if (input) {
             if (input.transformation_id) this.transformation_id = input.transformation_id;
             if (input.nodes) this.nodes = input.nodes;
             if (input.metadata) this.metadata = input.metadata;
+            if (input.data_source_id) this.data_source_id = input.data_source_id;
             this.data = input.data;
         }
     }

@@ -13,7 +13,7 @@ import OAuthRepository from './data_access_layer/repositories/access_management/
 import {Migrator} from './data_access_layer/migrate';
 
 process.on('unhandledRejection', (reason, promise) => {
-    console.log('Unhandled rejection at ', promise, `reason: ${JSON.stringify(reason)}`);
+    BackedLogger.error('Unhandled rejection at ', promise, `reason: ${JSON.stringify(reason)}`);
     process.exit(1);
 });
 
@@ -31,7 +31,7 @@ async function Start(): Promise<any> {
     // We use it primarily for data processing and mapping, as those cpu heavy tasks tend to block the
     // main execution thread frequently
     const bree = new Bree({
-        logger: Config.log_level.toLowerCase() === 'debug' ? BackedLogger.logger : false,
+        logger: Config.log_jobs ? BackedLogger.logger : false,
         root: path.resolve('dist/jobs'),
         jobs: [
             {
@@ -50,12 +50,12 @@ async function Start(): Promise<any> {
             },
             {
                 name: 'data_staging_emitter', // will run data_staging_emitter on an infinite loop
-                interval: '1m',
+                interval: Config.emitter_interval,
                 timeout: 0,
             },
             {
                 name: 'edge_queue_emitter', // will run edge_queue_emitter on an infinite loop
-                interval: '1m',
+                interval: Config.emitter_interval,
                 timeout: 0,
             },
             {
@@ -94,7 +94,7 @@ async function Start(): Promise<any> {
     const graceful = new Graceful({brees: [bree]});
     graceful.listen();
 
-    bree.start();
+    await bree.start();
 
     // if enabled, create an initial SuperUser for easier system management
     // if SAML is configured, the initial SAML user will be assigned admin status
