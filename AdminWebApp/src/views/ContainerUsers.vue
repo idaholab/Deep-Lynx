@@ -1,6 +1,7 @@
 <template>
   <div>
     <error-banner :message="errorMessage"></error-banner>
+    <success-banner :message="inviteSuccess"></success-banner>
     <v-data-table
       :headers="headers"
       :items="users"
@@ -12,7 +13,7 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t("home.containerUsersDescription")}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <invite-user-to-container-dialog :containerID="containerID"></invite-user-to-container-dialog>
+          <invite-user-to-container-dialog :containerID="containerID" @userInvited="flashSuccess"></invite-user-to-container-dialog>
         </v-toolbar>
       </template>
       <template v-slot:[`item.actions`]="{ item }">
@@ -101,6 +102,7 @@
     roles = ["user", "editor", "admin"]
     errorMessage = ''
     successMessage = ''
+    inviteSuccess = ''
 
     get headers() {
       return  [
@@ -149,6 +151,10 @@
         this.editDialog = true
         this.toEdit = user
         this.retrieveUserRoles(user)
+    }
+
+    flashSuccess(){
+      this.inviteSuccess = this.$t('containerUsers.successfullyInvited') as string
     }
 
     assignRole(role: string) {

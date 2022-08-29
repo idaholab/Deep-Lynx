@@ -59,7 +59,9 @@ export type MetatypeRelationshipPairT = {
     name: string;
     description: string;
     origin_metatype_id?: string;
+    origin_metatype_name: string;
     destination_metatype_id?: string;
+    destination_metatype_name: string;
     relationship_id?: string;
     relationship_type: 'many:many' | 'one:one' | 'one:many' | 'many:one';
     relationship_name?: string;

@@ -80,7 +80,7 @@
                                 <v-toolbar-title>{{$t('dataQuery.viewProperties')}}</v-toolbar-title>
                               </v-toolbar>
 
-                              <json-view :data="item.properties"></json-view>
+                              <json-view :value="item.properties"></json-view>
                             </v-col>
                           </v-row>
                           <node-files-dialog :icon="true" :node="item"></node-files-dialog>
@@ -93,9 +93,10 @@
               </v-tab-item>
               <v-tab-item>
                 <v-card flat>
-                  <json-view
+                  <json-viewer
                       class="json-viewer px-1 py-5 text-wrap"
-                      :data="results"
+                      :value="results"
+                      copyable
                       :maxDepth=1
                   />
                 </v-card>

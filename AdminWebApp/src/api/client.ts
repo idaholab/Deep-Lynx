@@ -283,6 +283,8 @@ export class Client {
             deleted = false,
             nameIn,
             loadRelationships,
+            originName,
+            destinationName,
         }: {
             name?: string;
             description?: string;
@@ -298,6 +300,8 @@ export class Client {
             deleted?: boolean;
             nameIn?: string;
             loadRelationships?: boolean;
+            originName?: string;
+            destinationName?: string;
         },
     ): Promise<MetatypeRelationshipPairT[] | number> {
         const query: {[key: string]: any} = {};
@@ -316,6 +320,8 @@ export class Client {
         if (count) query.count = count;
         if (nameIn) query.nameIn = nameIn;
         if (loadRelationships) query.loadRelationships = loadRelationships;
+        if (originName) query.originName = originName;
+        if (destinationName) query.destinationname = destinationName;
         query.deleted = deleted;
 
         return this.get<MetatypeRelationshipPairT[] | number>(`/containers/${containerID}/metatype_relationship_pairs`, query);

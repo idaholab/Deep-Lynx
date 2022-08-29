@@ -49,9 +49,10 @@
               </div>
 
               <v-card  style="overflow-y: scroll; max-height: 20vh;" id="dataCol">
-                <json-view
-                    :data="payload"
-                    :maxDepth=1
+                <json-viewer
+                    :value="payload"
+                    copyable
+                    :maxDepth=4
                 />
               </v-card>
             </div>

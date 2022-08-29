@@ -12,7 +12,7 @@
           class="pr-3 mr-3"
           style="border-right: 1px solid white"
         >
-          Mode
+          {{$t('ontologyToolbar.mode')}} - <small>{{$t('ontologyToolbar.beta')}}</small>
         </div>
         <div class="d-flex flex-row align-center">
           <span class="mr-2">

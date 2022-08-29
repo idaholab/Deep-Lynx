@@ -150,9 +150,9 @@
           <span class="headline text-h3">{{$t('dataImports.viewData')}}</span>
         </v-card-title>   
 
-        <json-view
+        <json-viewer
           class="pt-4 px-4 flex-grow-1"
-          :data="selectedData"
+          :value="selectedData"
           :maxDepth=4
           style="overflow-x: auto"
         />

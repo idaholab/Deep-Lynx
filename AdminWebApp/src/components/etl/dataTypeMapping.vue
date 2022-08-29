@@ -79,12 +79,13 @@
       <v-col :cols="4" class="pt-2 pl-6">
         <h3 class="text-h3 pr-6">{{$t('dataMapping.currentDataSet')}}</h3>
         <v-card
-          max-height="360"
+          max-height="460"
           style="overflow-y: scroll" flat
         >
-          <json-view
-            :data="unmappedData"
-            :maxDepth="1"
+          <json-viewer
+            :value="unmappedData"
+            copyable
+            :maxDepth="4"
           />
         </v-card>
       </v-col>

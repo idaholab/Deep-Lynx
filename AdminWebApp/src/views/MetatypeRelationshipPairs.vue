@@ -45,6 +45,12 @@
           <v-col :cols="6">
             <v-text-field v-model="description" :label="$t('metatypeRelationships.searchDescription')" class="mx-4"></v-text-field>
           </v-col>
+          <v-col :cols="6">
+            <v-text-field v-model="originName" :label="$t('metatypeRelationships.searchOrigin')" class="mx-4"></v-text-field>
+          </v-col>
+          <v-col :cols="6">
+            <v-text-field v-model="destinationName" :label="$t('metatypeRelationships.searchDestination')" class="mx-4"></v-text-field>
+          </v-col>
         </v-row>
         <v-row v-if="$store.getters.isEditMode">
           <v-col :cols="2"><div class="box created mr-2"></div><p>{{$t('metatypes.created')}}</p></v-col>
@@ -145,6 +151,8 @@ export default class MetatypeRelationshipPairs extends Vue {
 
   name = ""
   description =  ""
+  originName = ""
+  destinationName = ""
 
   options: {
     sortDesc: boolean[];
@@ -166,6 +174,18 @@ export default class MetatypeRelationshipPairs extends Vue {
 
   @Watch('description')
   onDescriptionChange() {
+    this.countRelationshipPairs()
+    this.loadMetatypeRelationshipPairs()
+  }
+
+  @Watch('originName')
+  onOriginNameChange() {
+    this.countRelationshipPairs()
+    this.loadMetatypeRelationshipPairs()
+  }
+
+  @Watch('destinationName')
+  onDestinationNameChange() {
     this.countRelationshipPairs()
     this.loadMetatypeRelationshipPairs()
   }
@@ -192,6 +212,8 @@ export default class MetatypeRelationshipPairs extends Vue {
       { text: '', value: 'copy' },
       { text: this.$t('metatypeRelationshipPairs.id'), value: 'id' },
       { text: this.$t('metatypeRelationshipPairs.name'), value: 'name' },
+      { text: this.$t('metatypeRelationshipPairs.originName'), value: 'origin_metatype_name',sortable: false},
+      { text: this.$t('metatypeRelationshipPairs.destinationName'), value: 'destination_metatype_name', sortable: false },
       { text: this.$t('metatypeRelationshipPairs.description'), value: 'description'},
       { text: this.$t('metatypeRelationshipPairs.actions'), value: 'actions', sortable: false }
     ]
@@ -203,6 +225,8 @@ export default class MetatypeRelationshipPairs extends Vue {
       count: true,
       name: (this.name !== "") ? this.name : undefined,
       description: (this.description !== "") ? this.description : undefined,
+      originName: (this.originName !== "") ? this.originName : undefined,
+      destinationName: (this.destinationName !== "") ? this.destinationName : undefined,
     })
         .then(relationshipCount => {
           this.relationshipPairCount= relationshipCount as number
@@ -230,6 +254,8 @@ export default class MetatypeRelationshipPairs extends Vue {
       sortDesc: sortDescParam,
       name: (this.name !== "") ? this.name : undefined,
       description: (this.description !== "") ? this.description : undefined,
+      originName: (this.originName !== "") ? this.originName : undefined,
+      destinationName: (this.destinationName !== "") ? this.destinationName : undefined,
       deleted: this.$store.getters.isEditMode
     })
         .then((results) => {

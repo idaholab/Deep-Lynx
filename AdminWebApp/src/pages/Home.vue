@@ -437,8 +437,7 @@
                       v-for="(dataSource, i) in dataSources"
                       :key="i"
                   >
-                    <h2>{{dataSource.name}}</h2>
-                    <h3>{{$t('home.imported')}}</h3>
+                    <p class="text-h4">{{dataSource.name}} {{$t('home.imported')}}</p>
                     <p>{{dataSource.data_imported}}</p>
                   </v-carousel-item>
                 </v-carousel>
