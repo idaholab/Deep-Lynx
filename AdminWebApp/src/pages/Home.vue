@@ -197,7 +197,7 @@
             :ripple="{class:'list-ripple'}"
           >
             <v-list-item-content>
-              <v-list-item-title>{{$t("home.dataExport")}}</v-list-item-title>
+              <v-list-item-title>{{$t("home.dataExport")}}-<small>{{$t("home.beta")}}</small></v-list-item-title>
               <v-list-item-subtitle>{{$t("home.dataExportDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
@@ -349,6 +349,7 @@
           </v-card>
         </v-container>
         <v-container class="justify-end">
+          <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('home.bugs')}} <a href="mailto:GRP-deeplynx-team@inl.gov">{{$t('home.contactUs')}}</a> </span>
           <span class="d-block text-h6">&copy; {{ new Date().getFullYear() }} Idaho National Laboratory</span>
         </v-container>
       </template>

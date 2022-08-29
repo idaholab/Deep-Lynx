@@ -23,14 +23,6 @@
         >
           mdi-pencil
         </v-icon>
-        <!-- TODO: reimplement when either a delete or archive user function exists
-        <v-icon
-          small
-          @click="deleteItem(item)"
-        >
-          mdi-delete
-        </v-icon>
-        -->
       </template>
     </v-data-table>
     

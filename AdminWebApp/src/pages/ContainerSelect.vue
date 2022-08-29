@@ -49,6 +49,7 @@
 
                   <br>
                     <p>{{$t('containerSelect.needHelp')}} <a :href="helpLink()">{{$t('containerSelect.wiki')}}</a> </p>
+                  <p style="margin-top: 10px">{{$t('home.bugs')}} <a href="mailto:GRP-deeplynx-team@inl.gov">{{$t('home.contactUs')}}</a> </p>
                 </div>
               </v-container>
             </v-col>

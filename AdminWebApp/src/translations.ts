@@ -2,6 +2,9 @@ export default {
     en: {
         beta: 'BETA',
         home: {
+            bugs: 'Ran into some bugs?',
+            contactUs: 'Tell Us!',
+            beta: 'beta',
             id: 'ID',
             dashboard: 'Dashboard',
             relationships: 'Relationships',
