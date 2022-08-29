@@ -129,8 +129,6 @@
 
     mounted() {
       this.refreshUsers()
-      console.log(this.$store.getters.activeContainer.created_by)
-      console.log(this.$auth.CurrentUser()?.id)
     }
 
     refreshUsers() {
