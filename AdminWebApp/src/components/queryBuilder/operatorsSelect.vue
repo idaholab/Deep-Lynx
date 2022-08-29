@@ -25,6 +25,8 @@ export default class OperatorsSelect extends Vue {
     {text: 'not equals', value: 'neq'},
     {text: 'like', value: 'like'},
     {text: 'in', value: 'in'},
+    {text: 'less than', value: '<'},
+    {text: 'greater than', value: '>'},
   ]
 
   selected = ""

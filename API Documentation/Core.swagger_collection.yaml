@@ -400,6 +400,10 @@ paths:
             schema:
               type: string
               example: "{\r\n    nodes {\r\n        id\r\n        metatype{id}\r\n        archived\r\n    }\r\n}"
+          application/xml:
+            schema:
+              type: object
+              properties: {}
         required: true
         description: ''
       responses:
@@ -982,29 +986,6 @@ paths:
         '200':
           description: OK
       description: This is an endpoint that accepts a GraphQL query and returns the results of that query. Primarily used for working with time series data on nodes.
-      parameters: []
-      tags:
-        - Graph
-        - TimeSeries
-  '/containers/{container_id}/import/datasources/{data_source_id}/data':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: data_source_id
-        in: path
-        required: true
-    post:
-      summary: Timeseries Data Source Query
-      operationId: TimeseriesDataSourceQuery
-      responses:
-        '200':
-          description: OK
-      description: This is an endpoint that accepts a GraphQL query and returns the results of that query. Primarily used for working with time series data without requiring attachment to a node.
       parameters: []
       tags:
         - Graph
@@ -4903,11 +4884,7 @@ components:
           isError: false
       properties:
         value:
-          type: array
-          uniqueItems: true
-          minItems: 0
-          items:
-            $ref: '#/components/schemas/Container'
+          $ref: '#/components/schemas/Container'
         isError:
           type: boolean
     UpdateContainerResponse:
