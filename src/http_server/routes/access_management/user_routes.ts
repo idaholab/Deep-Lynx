@@ -40,6 +40,7 @@ export default class UserRoutes {
 
         app.post('/containers/:containerID/users/roles', ...middleware, authInContainer('write', 'users'), this.assignRole);
         app.get('/containers/:containerID/users/:userID/roles', ...middleware, authInContainer('read', 'users'), this.listUserRoles);
+        app.delete('/containers/:containerID/users/:userID/roles', ...middleware, authInContainer('read', 'users'), this.removeAllUserRoles);
 
         app.post('/containers/:containerID/users/invite', ...middleware, authInContainer('write', 'users'), this.inviteUserToContainer);
         app.get('/containers/:containerID/users/invite', ...middleware, authInContainer('read', 'users'), this.listInvitedUsers);
@@ -180,6 +181,21 @@ export default class UserRoutes {
         if (req.routeUser && req.container) {
             userRepo
                 .rolesInContainer(req.routeUser, req.container.id!)
+                .then((result) => {
+                    result.asResponse(res);
+                })
+                .catch((err) => Result.Error(err).asResponse(res))
+                .finally(() => next());
+        } else {
+            Result.Failure('user not found', 404).asResponse(res);
+            next();
+        }
+    }
+
+    private static removeAllUserRoles(req: Request, res: Response, next: NextFunction) {
+        if (req.routeUser && req.container && req.currentUser) {
+            userRepo
+                .removeAllRoles(req.currentUser, req.routeUser.id!, req.container.id!)
                 .then((result) => {
                     result.asResponse(res);
                 })

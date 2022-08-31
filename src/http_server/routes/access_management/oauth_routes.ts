@@ -25,6 +25,7 @@ const keyRepo = new KeyPairRepository();
 const oauthRepo = new OAuthRepository();
 import DOMPurify from 'isomorphic-dompurify';
 import Result from '../../../common_classes/result';
+import Logger from '../../../services/logger';
 
 /*
     OAuthRoutes contain all routes pertaining to oauth application management and
@@ -407,7 +408,7 @@ export default class OAuthRoutes {
             return res.redirect(req.query.redirect_uri as string);
         }
 
-        return res.redirect('/oauth');
+        res.redirect('/oauth');
     }
 
     private static login(req: Request, res: Response, next: NextFunction) {
