@@ -47,7 +47,7 @@ export default class EdgeQueueItemMapper extends Mapper {
         });
     }
 
-    public async SetNextAttemptAt(id: string, nextRunDate: Date, error?: string): Promise<Result<boolean>> {
+    public async SetNextAttemptAt(id: string, nextRunDate: Date | string, error?: string): Promise<Result<boolean>> {
         return super.runStatement(this.setNextRunAtStatement(id, nextRunDate, error));
     }
 
@@ -73,7 +73,7 @@ export default class EdgeQueueItemMapper extends Mapper {
         return format(text, values);
     }
 
-    private setNextRunAtStatement(id: string, nextAttemptDate: Date, error?: string): QueryConfig {
+    private setNextRunAtStatement(id: string, nextAttemptDate: Date | string, error?: string): QueryConfig {
         if (error) {
             return {
                 text: `UPDATE edge_queue_items SET next_attempt_at = $2, attempts = attempts + 1, error = $3 WHERE id = $1`,
@@ -102,6 +102,6 @@ export default class EdgeQueueItemMapper extends Mapper {
     }
 
     public needRetriedStreamingStatement(): string {
-        return `SElECT * FROM edge_queue_items WHERE next_attempt_at < NOW()`;
+        return `SElECT * FROM edge_queue_items WHERE next_attempt_at < NOW() AT TIME ZONE 'utc'`;
     }
 }
