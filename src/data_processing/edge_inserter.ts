@@ -12,7 +12,6 @@ import {plainToClass} from 'class-transformer';
 
 // InsertEdge takes a single EdgeQueueItem and attempts to insert it into the database without making any changes
 export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<boolean>> {
-    console.log('here');
     const mapper = EdgeMapper.Instance;
     const queueMapper = EdgeQueueItemMapper.Instance;
     const repo = new EdgeRepository();
