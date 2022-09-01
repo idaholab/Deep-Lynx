@@ -7,8 +7,7 @@
             <v-col cols="5" class="pr-0">
               <v-container class="pa-0 d-flex">
                 <div class="align-self-center ma-auto">
-                  <h1 class="login-title text-center white--text mb-5">Deep Lynx UI</h1>
-                  <v-img max-height="165" max-width="165" src="../assets/data-white.png"></v-img>
+                  <v-img max-height="250" max-width="250" src="../assets/lynx-white.png"></v-img>
                 </div>
               </v-container>
             </v-col>

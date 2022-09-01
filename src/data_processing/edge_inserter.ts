@@ -31,10 +31,9 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
         // if we failed, need to iterate the attempts and set the next attempt date, so we don't swamp the database - this
         // is an exponential backoff
         const currentTime = new Date().getTime();
+        const check = currentTime + Math.pow(Config.edge_insertion_backoff_multiplier, edgeQueueItem.attempts++) * 1000;
 
-        edgeQueueItem.next_attempt_at = new Date(
-            currentTime + (edgeQueueItem.next_attempt_at.getSeconds() + Math.pow(Config.edge_insertion_backoff_multiplier, edgeQueueItem.attempts++)) * 1000,
-        );
+        edgeQueueItem.next_attempt_at = new Date(check);
 
         const set = await queueMapper.SetNextAttemptAt(edgeQueueItem.id!, edgeQueueItem.next_attempt_at.toISOString(), inserted.error?.error);
         if (set.isError) {
