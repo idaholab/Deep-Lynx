@@ -22,10 +22,9 @@
       class="grey--text text--darken-2"
     >
       <div class="logo-div d-flex align-center pa-1">
-        <v-avatar tile height="25" width="25">
-          <img src="../assets/data-white.png">
-        </v-avatar>
-        <h1 class="text-h1 d-inline white--text">Deep Lynx</h1>
+        <div style="margin-left:15px;" >
+          <v-img max-height="120" max-width="120"  src="../assets/lynx-white.png"></v-img>
+        </div>
       </div>
 
       <v-list dense class="nav-drawer-accordion pa-0">
