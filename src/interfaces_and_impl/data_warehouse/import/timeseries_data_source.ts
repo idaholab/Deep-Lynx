@@ -55,7 +55,7 @@ export default class TimeseriesDataSourceImpl implements DataSource {
             // if we've reached the process record limit, insert into the database and wipe the records array
             // make sure to COPY the array into bulkSave function so that we can push it into the array of promises
             // and not modify the underlying array on save, allowing us to move asynchronously,
-            if (recordBuffer.length >= (options ? options?.bufferSize! : 1000)) {
+            if (recordBuffer.length >= (options ? options?.bufferSize! : 10000)) {
                 const toSave = [...recordBuffer];
                 recordBuffer = [];
 
