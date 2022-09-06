@@ -9,7 +9,7 @@ import {v4 as uuidv4} from 'uuid';
 import PostgresAdapter from './db_adapters/postgres/postgres';
 import Logger from '../../services/logger';
 import 'reflect-metadata';
-import {ClassConstructor, plainToClass} from 'class-transformer';
+import {ClassConstructor, plainToClass, plainToInstance} from 'class-transformer';
 import QueryStream from 'pg-query-stream'; // this is required for the class-transformer package we use
 
 // Mapper contains ORM like CRUD functions, and a few helpers for more complex functionality.
@@ -97,7 +97,7 @@ export default class Mapper {
                     .transaction!.query(statement)
                     .then((results) => {
                         if (options && options.resultClass) {
-                            resolve(Result.Success(plainToClass(options.resultClass, results.rows)));
+                            resolve(Result.Success(plainToInstance(options.resultClass, results.rows)));
                             return;
                         }
 
@@ -113,7 +113,7 @@ export default class Mapper {
                 PostgresAdapter.Instance.Pool.query(statement)
                     .then((results) => {
                         if (options && options.resultClass) {
-                            resolve(Result.Success(plainToClass(options.resultClass, results.rows)));
+                            resolve(Result.Success(plainToInstance(options.resultClass, results.rows)));
                             return;
                         }
 
@@ -188,12 +188,12 @@ export default class Mapper {
         return new Promise<Result<any>>((resolve) => {
             if (options && options.transaction) {
                 options.transaction
-                    .query<T>(q)
+                    .query(q)
                     .then((res) => {
                         if (res.rows.length < 1) resolve(Result.Error(ErrorNotFound));
 
                         if (options && options.resultClass) {
-                            resolve(Result.Success(plainToClass(options.resultClass, res.rows[0])));
+                            resolve(Result.Success(plainToInstance(options.resultClass, res.rows[0])));
                             return;
                         }
 
@@ -203,12 +203,12 @@ export default class Mapper {
                         resolve(Result.Failure(`record retrieval failed - ${(e as Error).message}`));
                     });
             } else {
-                PostgresAdapter.Instance.Pool.query<T>(q)
+                PostgresAdapter.Instance.Pool.query(q)
                     .then((res) => {
                         if (res.rows.length < 1) resolve(Result.Error(ErrorNotFound));
 
                         if (options && options.resultClass) {
-                            resolve(Result.Success(plainToClass(options.resultClass, res.rows[0])));
+                            resolve(Result.Success(plainToInstance(options.resultClass, res.rows[0])));
                             return;
                         }
 
@@ -226,10 +226,10 @@ export default class Mapper {
         if (options && options.transaction) {
             return new Promise<Result<any[]>>((resolve) => {
                 options
-                    .transaction!.query<T>(q)
+                    .transaction!.query(q)
                     .then((results) => {
                         if (options && options.resultClass) {
-                            resolve(Result.Success(plainToClass(options.resultClass, results.rows)));
+                            resolve(Result.Success(plainToInstance(options.resultClass, results.rows)));
                             return;
                         }
 
@@ -241,10 +241,10 @@ export default class Mapper {
             });
         } else {
             return new Promise<Result<any[]>>((resolve) => {
-                PostgresAdapter.Instance.Pool.query<T>(q)
+                PostgresAdapter.Instance.Pool.query(q)
                     .then((results) => {
                         if (options && options.resultClass) {
-                            resolve(Result.Success(plainToClass(options.resultClass, results.rows)));
+                            resolve(Result.Success(plainToInstance(options.resultClass, results.rows)));
                             return;
                         }
 
