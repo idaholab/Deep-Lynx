@@ -1,26 +1,21 @@
 import DataSourceRecord, {ReceiveDataOptions} from '../../../domain_objects/data_warehouse/import/data_source';
 import {DataSource} from './data_source';
 import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
-import ImportRepository from '../../../data_access_layer/repositories/data_warehouse/import/import_repository';
-import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import {PassThrough, Readable, Writable} from 'stream';
 import {User} from '../../../domain_objects/access_management/user';
 import Result from '../../../common_classes/result';
 import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
-import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
-import TypeMapping from '../../../domain_objects/data_warehouse/etl/type_mapping';
-import {QueueFactory} from '../../../services/queue/queue';
-import Logger from '../../../services/logger';
-import Config from '../../../services/config';
 const JSONStream = require('JSONStream');
+
+import pLimit from 'p-limit';
+
+const limit = pLimit(50);
 
 export default class TimeseriesDataSourceImpl implements DataSource {
     DataSourceRecord?: DataSourceRecord;
     // we're dealing with mappers directly because we don't need any validation
     // or the additional processing overhead the repository could cause
     #mapper = DataSourceMapper.Instance;
-    #importRepo = new ImportRepository();
-    #stagingRepo = new DataStagingRepository();
 
     constructor(record: DataSourceRecord) {
         // again we have to check for param existence because we might potentially be using class-transformer
@@ -55,17 +50,17 @@ export default class TimeseriesDataSourceImpl implements DataSource {
             // if we've reached the process record limit, insert into the database and wipe the records array
             // make sure to COPY the array into bulkSave function so that we can push it into the array of promises
             // and not modify the underlying array on save, allowing us to move asynchronously,
-            if (recordBuffer.length >= (options ? options?.bufferSize! : 10000)) {
+            if (recordBuffer.length >= 1000) {
                 const toSave = [...recordBuffer];
                 recordBuffer = [];
 
-                saveOperations.push(this.#mapper.InsertIntoHypertable(this.DataSourceRecord!, toSave));
+                saveOperations.push(limit(() => this.#mapper.InsertIntoHypertable(this.DataSourceRecord!, toSave)));
             }
         });
 
         // catch any records remaining in the buffer
         pass.on('end', () => {
-            saveOperations.push(this.#mapper.InsertIntoHypertable(this.DataSourceRecord!, recordBuffer));
+            saveOperations.push(limit(() => this.#mapper.InsertIntoHypertable(this.DataSourceRecord!, recordBuffer)));
         });
 
         // the JSONStream pipe is simple, parsing a single array of json objects into parts
