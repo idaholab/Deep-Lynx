@@ -18,25 +18,9 @@ export default class NodeLeaf extends BaseDomainClass {
     // origin (root node) properties
     origin_id?: string;
 
-    // use metatype id to retrieve information on the origin node's metatype.
-    // Retrieves the whole class, not just the id.
-    @MetatypeID({message: 'Metatype must have valid ID'})
-    @Expose({name: 'metatype_id', toClassOnly: true})
-    @Transform(
-        ({value}) => {
-            const metatype = plainToClass(Metatype, {});
-            metatype.id = value;
-            return metatype;
-        },
-        {toClassOnly: true},
-    )
-    origin_metatype: Metatype | undefined;
-
-    // get orig metatype id from Metatype class
-    @Expose({toPlainOnly: true})
-    get origin_metatype_id(): string {
-        return this.origin_metatype ? this.origin_metatype.id! : '';
-    }
+    // while other domain objects perform transformation here,
+    // we only need to return the id
+    origin_metatype_id?: string;
 
     origin_metatype_name?: string;
 
@@ -58,27 +42,9 @@ export default class NodeLeaf extends BaseDomainClass {
 
     edge_properties: object = {};
 
-    // use metatype relationship pair id to get info on the edge's
-    // relationship type. Gets the whole class, not just the id.
-    @MetatypeRelationshipPairID({
-        message: 'Metatype relationship pair must have valid ID',
-    })
-    @Expose({name: 'relationship_pair_id', toClassOnly: true})
-    @Transform(
-        ({value}) => {
-            const p = plainToClass(MetatypeRelationshipPair, {})
-            p.id = value;
-            return p;
-        },
-        {toClassOnly: true},
-    )
-    relationship_pair: MetatypeRelationshipPair | undefined;
-
-    // get relationship pair id from Metatype Relationship Pair class
-    @Expose({toPlainOnly: true})
-    get relationship_pair_id(): string {
-        return this.relationship_pair ? this.relationship_pair.id! : '';
-    }
+    // while other domain objects perform transformation here,
+    // we only need to return the id
+    relationship_pair_id?: string;
 
     relationship_id?: string;
 
@@ -92,25 +58,9 @@ export default class NodeLeaf extends BaseDomainClass {
     // destination (root node) properties
     destination_id?: string;
 
-    // use metatype id to retrieve information on the destination node's metatype.
-    // Retrieves the whole class, not just the id.
-    @MetatypeID({message: 'Metatype must have valid ID'})
-    @Expose({name: 'metatype_id', toClassOnly: true})
-    @Transform(
-        ({value}) => {
-            const metatype = plainToClass(Metatype, {});
-            metatype.id = value;
-            return metatype;
-        },
-        {toClassOnly: true},
-    )
-    destination_metatype: Metatype | undefined;
-
-    // get orig metatype id from Metatype class
-    @Expose({toPlainOnly: true})
-    get destination_metatype_id(): string {
-        return this.destination_metatype ? this.destination_metatype.id! : '';
-    }
+    // while other domain objects perform transformation here,
+    // we only need to return the id
+    destination_metatype_id?: string;
 
     destination_metatype_name?: string;
 
@@ -132,7 +82,7 @@ export default class NodeLeaf extends BaseDomainClass {
 
     constructor(input: {
         origin_id: string;
-        origin_metatype: Metatype | string;
+        origin_metatype_id: string;
         origin_metatype_name?: string;
         origin_properties: object;
         origin_data_source?: string;
@@ -140,11 +90,11 @@ export default class NodeLeaf extends BaseDomainClass {
         edge_id: string;
         relationship_name?: string
         edge_properties: object;
-        relationship_pair: MetatypeRelationshipPair | string;
+        relationship_pair_id: string;
         relationship_id?: string;
         edge_metadata?: EdgeMetadata;
         destination_id?: string;
-        destination_metatype: Metatype | string;
+        destination_metatype_id: string;
         destination_metatype_name?: string;
         destination_properties: object;
         destination_data_source?: string;
@@ -156,9 +106,7 @@ export default class NodeLeaf extends BaseDomainClass {
 
         if (input) {
             this.origin_id = input.origin_id;
-            input.origin_metatype instanceof Metatype
-                ? (this.origin_metatype = input.origin_metatype)
-                : (this.origin_metatype = plainToClass(Metatype, {id: input.origin_metatype_name}));
+            this.origin_metatype_id = input.origin_metatype_id;
             if (input.origin_metatype_name) {this.origin_metatype_name = input.origin_metatype_name};
             this.origin_properties = input.origin_properties;
             if (input.origin_data_source) {this.origin_data_source = input.origin_data_source};
@@ -166,15 +114,11 @@ export default class NodeLeaf extends BaseDomainClass {
             this.edge_id = input.edge_id;
             if (input.relationship_name) {this.relationship_name = input.relationship_name};
             this.edge_properties = input.edge_properties;
-            input.relationship_pair instanceof MetatypeRelationshipPair
-                ? (this.relationship_pair = input.relationship_pair)
-                : (this.relationship_pair = plainToClass(MetatypeRelationshipPair, {id: input.relationship_pair}));
+            this.relationship_pair_id = input.relationship_pair_id;
             if (input.relationship_id) {this.relationship_id = input.relationship_id};
             if (input.edge_metadata) {this.edge_metadata = input.edge_metadata};
             this.destination_id = input.destination_id;
-            input.destination_metatype instanceof Metatype
-                ? (this.destination_metatype = input.destination_metatype)
-                : (this.destination_metatype = plainToClass(Metatype, {id: input.destination_metatype_name}));
+            this.destination_metatype_id = input.destination_metatype_id;
             if (input.destination_metatype_name) {this.destination_metatype_name = input.destination_metatype_name};
             this.destination_properties = input.destination_properties;
             if (input.destination_data_source) {this.destination_data_source = input.destination_data_source};
