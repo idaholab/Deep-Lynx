@@ -349,6 +349,7 @@
         </v-container>
         <v-container class="justify-end">
           <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('home.bugs')}} <a href="mailto:GRP-deeplynx-team@inl.gov">{{$t('home.contactUs')}}</a> </span>
+          <span class="d-block text-h6" style="margin-bottom: 10px">{{$t('containerSelect.needHelp')}} <a :href="helpLink()">{{$t('containerSelect.wiki')}}</a> </span>
           <span class="d-block text-h6">&copy; {{ new Date().getFullYear() }} Idaho National Laboratory</span>
         </v-container>
       </template>
@@ -764,6 +765,10 @@ export default class Home extends Vue {
 
   get ontologyPopulated(): boolean {
     return this.metatypesCount > 0 && this.relationshipCount > 0
+  }
+
+  helpLink() {
+    return this.$t('containerSelect.wikiLink')
   }
 }
 </script>

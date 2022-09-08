@@ -78,7 +78,14 @@
         </v-row>
         <v-row class="mb-3">
           <v-col :cols="4" class="d-flex justify-center">
-            <export-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" :mappings="selectedMappings" @mappingsExported="mappingsExported()"></export-mappings-dialog>
+            <export-mappings-dialog
+                v-if="selectedDataSource && !reviewMappings"
+                :containerID="containerID"
+                :dataSourceID="selectedDataSource.id"
+                :mappings="selectedMappings"
+                :containerName="$store.getters.activeContainer?.name"
+                :dataSourceName="selectedDataSource?.name"
+                @mappingsExported="mappingsExported()"></export-mappings-dialog>
           </v-col>
           <v-col :cols="4" class="d-flex justify-center">
             <import-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" @mappingsImported="mappingsImport"></import-mappings-dialog>
@@ -104,6 +111,10 @@
 
           <template v-slot:[`item.active`]="{ item }">
             <v-checkbox v-model="item.active" :disabled="true"></v-checkbox>
+          </template>
+
+          <template v-slot:[`item.created_at`]="{ item }">
+            {{new Date(parseInt(item.created_at, 10)).toUTCString()}}
           </template>
 
           <template v-slot:[`item.resulting_types`]="{ item }">
@@ -211,6 +222,10 @@
         >
           <template v-slot:[`item.active`]="{ item }">
             <v-checkbox v-model="item.active" :disabled="true"></v-checkbox>
+          </template>
+
+          <template v-slot:[`item.created_at`]="{ item }">
+            {{new Date(item.created_at).toUTCString()}}
           </template>
 
           <template v-slot:[`item.resulting_types`]="{ item }">
@@ -718,8 +733,14 @@ export default class DataMapping extends Vue {
   // allows the user to potentially review imported type mappings
   mappingsImport(results: ResultT<any>[]) {
     this.importedMappingResults = results
-    this.$router.go(0);
-    this.loadTypeMappings()
+    const errors = results.filter(r => r.isError)
+    if(errors.length > 0){
+      this.errorMessage = `Errors importing type mappings: check type mapping file or logs for more information`
+      this.loadTypeMappings()
+    } else {
+      this.$router.go(0);
+    }
+
   }
 
   isDeprecated(transformation: TypeMappingTransformationT) {

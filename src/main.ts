@@ -13,7 +13,7 @@ import OAuthRepository from './data_access_layer/repositories/access_management/
 import {Migrator} from './data_access_layer/migrate';
 
 process.on('unhandledRejection', (reason, promise) => {
-    BackedLogger.error('Unhandled rejection at ', promise, `reason: ${JSON.stringify(reason)}`);
+    BackedLogger.error(`Unhandled rejection at ${promise} reason: ${reason}`);
     process.exit(1);
 });
 

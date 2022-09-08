@@ -441,6 +441,11 @@ export default class TypeMappingRoutes {
         } else {
             const busboy = Busboy({headers: req.headers});
             busboy.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: FileInfo) => {
+                if (info.mimeType !== 'application/json') {
+                    Result.Failure('type mappings must be in a .json file').asResponse(res);
+                    return;
+                }
+
                 const repo = new TypeMappingRepository();
 
                 // we use JSONStreams so that we can parse a large JSON file completely without hitting the arguably low
@@ -453,13 +458,23 @@ export default class TypeMappingRoutes {
                     objects.push(data);
                 });
 
+                stream.on('error', (e: any) => {
+                    Result.Failure(e).asResponse(res);
+                    return;
+                });
+
                 // once the file has been read, convert to mappings and then attempt the import
                 stream.on('end', () => {
                     const mappings = plainToClass(TypeMapping, objects);
                     importResults.push(repo.importToDataSource(req.dataSource?.DataSourceRecord?.id!, user, ...mappings));
                 });
 
-                file.pipe(stream);
+                try {
+                    file.pipe(stream);
+                } catch (e: any) {
+                    Result.Failure('unable to load type mappings from file').asResponse(res);
+                    return;
+                }
             });
 
             busboy.on('finish', () => {
@@ -471,12 +486,22 @@ export default class TypeMappingRoutes {
                             finalResults.push(...result);
                         }
 
-                        res.status(201).json(finalResults);
+                        res.status(200).json(finalResults);
                     })
                     .catch((e) => Result.Error(e).asResponse(res));
             });
 
-            return req.pipe(busboy);
+            busboy.on('error', (e: any) => {
+                Result.Failure(e).asResponse(res);
+                return;
+            });
+
+            try {
+                return req.pipe(busboy);
+            } catch (e: any) {
+                Result.Error(e).asResponse(res);
+                return;
+            }
         }
     }
 
