@@ -275,6 +275,7 @@ export default {
             requiredField: 'Required Field',
         },
         createServiceUser: {
+            nameMissing: 'Name required',
             createServiceUser: 'Add External Application',
             createTitle: 'Add External Application',
             name: 'Name',

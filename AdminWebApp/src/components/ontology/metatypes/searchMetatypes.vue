@@ -15,6 +15,7 @@
         :clearable="multiple"
         :disabled="disabled"
         :rules="rules"
+        :loading="loading"
     >
       <template v-if="tooltip" slot="append-outer"><info-tooltip :message="tooltipHelp"></info-tooltip> </template>
     </v-combobox>
@@ -50,6 +51,7 @@ export default class SearchMetatypes extends Vue {
 
   search = ""
   errorMessage = ""
+  loading = true
 
   selectedMetatype: MetatypeT | null | MetatypeT[] = null
   metatypes: MetatypeT[] = []
@@ -62,14 +64,18 @@ export default class SearchMetatypes extends Vue {
         this.metatypeID.forEach(id => {
           this.$client.retrieveMetatype(this.containerID, id as string)
               .then((result: MetatypeT) => (this.selectedMetatype as MetatypeT[]).push(result))
+              .finally(() => this.loading = false)
         })
       }
 
       this.$client.retrieveMetatype(this.containerID, this.metatypeID as string)
-      .then((result: MetatypeT) => {
-        this.selectedMetatype = result
-        this.emitSelected(this.selectedMetatype)
-      })
+          .then((result: MetatypeT) => {
+            this.selectedMetatype = result
+            this.emitSelected(this.selectedMetatype)
+          })
+          .finally(() => this.loading = false)
+    } else {
+      this.loading = false
     }
   }
 

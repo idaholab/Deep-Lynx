@@ -7,7 +7,7 @@
           class="mr-2"
           v-on="on"
       >mdi-pencil</v-icon>
-      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on">{{$t("editMetatypeRelationship.editMetatypeRelationship")}}</v-btn>
+      <v-btn v-if="!icon" color="primary" dark class="mt-2" v-on="on" style="margin-top: 0px !important;">{{$t("editMetatypeRelationship.editMetatypeRelationship")}}</v-btn>
     </template>
 
     <v-card class="pt-1 pb-3 px-2" v-if="selectedMetatypeRelationship">

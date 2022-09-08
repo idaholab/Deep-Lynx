@@ -827,3 +827,9 @@ export default class CreateDataSourceDialog extends Vue {
 
 }
 </script>
+
+<style lang="scss">
+.v-expansion-panel-header__icon .v-icon__svg {
+  color: white;
+}
+</style>

@@ -26,12 +26,14 @@
                     <v-divider></v-divider>
                   </v-row>
                   <p v-if="outstandingInvites.length > 0 ">{{$t('containerSelect.acceptInviteLong')}}</p>
-                    <div v-for="invite in outstandingInvites" v-bind:key="invite.id">
-                      <v-row class="px-11 mt-4">
-                        <v-col :cols="8">{{invite.container_name}}</v-col>
-                        <v-col :cols="4"><v-btn @click="acceptInvite(invite.token, invite.container_name)">{{$t('containerSelect.acceptInvite')}}</v-btn></v-col>
-                      </v-row>
-                    </div>
+                  <div v-for="invite in outstandingInvites" v-bind:key="invite.id">
+                    <v-row class="px-11 mt-4">
+                      <v-col :cols="8">{{invite.container_name}}</v-col>
+                      <v-col :cols="4"><v-btn @click="acceptInvite(invite.token, invite.container_name)">{{$t('containerSelect.acceptInvite')}}</v-btn></v-col>
+                    </v-row>
+                  </div>
+
+
 
                   <v-row class="my-8 mx-0" align="center">
                     <v-divider></v-divider>
@@ -42,12 +44,18 @@
                     <create-container-dialog @containerCreated="newContainer"></create-container-dialog>
                   </v-row>
 
-                  <logout></logout>
 
                   <br>
-                    <p>{{$t('containerSelect.needHelp')}} <a :href="helpLink()">{{$t('containerSelect.wiki')}}</a> </p>
+                  <p>{{$t('containerSelect.needHelp')}} <a :href="helpLink()">{{$t('containerSelect.wiki')}}</a> </p>
                   <p style="margin-top: 10px">{{$t('home.bugs')}} <a href="mailto:GRP-deeplynx-team@inl.gov">{{$t('home.contactUs')}}</a> </p>
+
+                  <v-row>
+                    <logout></logout>
+                  </v-row>
+
                 </div>
+
+
               </v-container>
             </v-col>
           </v-row>
@@ -110,10 +118,10 @@ export default class ContainerSelection extends Vue {
 
     // @ts-ignore
     RefreshPermissions()
-    .then(() => {
-      this.$router.push({name: 'Home', params: {containerID: this.selectedContainer?.id!}})
-    })
-    .catch(e => this.errorMessage = e)
+        .then(() => {
+          this.$router.push({name: 'Home', params: {containerID: this.selectedContainer?.id!}})
+        })
+        .catch(e => this.errorMessage = e)
   }
 
   newContainer(containerID: string) {
