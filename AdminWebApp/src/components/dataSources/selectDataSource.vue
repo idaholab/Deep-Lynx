@@ -12,6 +12,7 @@
         :disabled="disabled"
         v-model="selected"
         :rules="rules"
+        :loading="loading"
     >
       <template slot="item" slot-scope="data">
         <span v-if="data.item.archived" class="text--disabled">{{data.item.name}} - <i class="text-caption">{{$t('dataSources.archived')}}</i></span>
@@ -55,6 +56,7 @@ export default class SelectDataSource extends Vue {
   rules?: any
 
   errorMessage = ""
+  loading = true
   dataSources: DataSourceT[] = []
   selected: DataSourceT | DataSourceT[] | null = null
 
@@ -82,6 +84,8 @@ export default class SelectDataSource extends Vue {
           if(this.selected) {
             this.$emit('selected', this.selected)
           }
+
+          this.loading = false
         })
   }
 
