@@ -36,6 +36,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
     let metatypes: Metatype[] = [];
     let relationships: MetatypeRelationship[] = [];
     let schema: GraphQLSchema;
+    let metatypeIDs: string[] = [];
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
@@ -130,6 +131,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
             testKeys.forEach((key) => (key.metatype_id = mt.id));
             const keys = await mkMapper.BulkCreate('test suite', testKeys);
             expect(keys.isError).false;
+            metatypeIDs.push(mt.id!);
         });
 
         const nodeList = [];
@@ -931,6 +933,34 @@ describe('Using a new GraphQL Query on graph return we', async () => {
             expect(nL.relationship_id).eq(relationships[1].id);
             expect(nL.destination_properties.name).not.undefined;
             expect(nL.edge_data_source).undefined;
+        }
+    });
+
+    it('can return metatype ids', async () => {
+        const response = await graphql({
+            schema,
+            source: `{
+                graph(
+                    root_node: "${songs[0].id}"
+                    depth: "5"
+                ){
+                    origin_metatype_id
+                    origin_metatype_name
+                    destination_metatype_id
+                    destination_metatype_name
+                }
+            }`,
+        });
+        expect(response.errors).undefined;
+        expect(response.data).not.undefined;
+        const data = response.data!.graph;
+        expect(data.length).eq(17);
+
+        for (const nL of data) {
+            expect(nL.origin_metatype_id).not.undefined;
+            expect(nL.origin_metatype_id).to.be.oneOf(metatypeIDs);
+            expect(nL.destination_metatype_id).not.undefined;
+            expect(nL.destination_metatype_id).to.be.oneOf(metatypeIDs);
         }
     });
 });
