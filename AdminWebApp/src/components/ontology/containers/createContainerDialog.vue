@@ -119,7 +119,6 @@
                   this.errorMessage = ""
                 })
                 .catch(e => {
-                  console.log(e)
                   this.loading = false
                   this.errorMessage = 'Unable to load ontology from OWL file or OWL file URL'
                 })
