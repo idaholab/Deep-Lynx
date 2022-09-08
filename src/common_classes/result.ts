@@ -1,6 +1,6 @@
 import Logger from '../services/logger';
 import express from 'express';
-import {serialize} from 'class-transformer';
+import {instanceToPlain, serialize, Type} from 'class-transformer';
 
 /*
  Result was created to solve the problem of constantly throwing and catching
@@ -10,7 +10,7 @@ import {serialize} from 'class-transformer';
 */
 export default class Result<TSuccess> {
     value: TSuccess;
-    error?: Error;
+    error?: Error | any;
     isError: boolean;
 
     public static Success<T>(success: T) {
@@ -49,7 +49,8 @@ export default class Result<TSuccess> {
         }
 
         resp.setHeader('Content-Type', 'application/json');
-        resp.send(serialize(this));
+        this.error = JSON.stringify(this.error);
+        resp.send(instanceToPlain(this));
     }
 
     constructor(value: TSuccess, isError: boolean, error?: Error) {

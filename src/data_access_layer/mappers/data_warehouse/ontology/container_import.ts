@@ -138,36 +138,48 @@ export default class ContainerImport {
                 },
                 responseType: 'text',
             };
-            const resp = await axios.get(input.path!, axiosConfig);
-            return new Promise<Result<string>>((resolve, reject) => {
-                if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
-                if (resp.data.isError) reject(resp.data.value);
+            try{
+                const resp = await axios.get(input.path!, axiosConfig);
+                return new Promise<Result<string>>((resolve, reject) => {
+                    if (resp.status < 200 || resp.status > 299) reject(resp.status);
 
-                const jsonData = convert.xml2json(resp.data, {
-                    compact: true,
-                    ignoreComment: true,
-                    spaces: 4,
-                });
+                    if (resp.data.isError) reject(resp.data.value);
 
-                this.parseOntology(
-                    user,
-                    JSON.parse(jsonData),
-                    input.name,
-                    input.description || '',
-                    input.data_versioning_enabled,
-                    input.ontology_versioning_enabled,
-                    dryrun, update, containerID)
-                    .then((result) => {
-                        resolve(result);
-                    })
-                    .catch((e) => {
-                        reject(e);
+                    const jsonData = convert.xml2json(resp.data, {
+                        compact: true,
+                        ignoreComment: true,
+                        spaces: 4,
                     });
-            }).catch((e) => {
-                return Promise.reject(Result.Failure(e));
-            });
+
+                    this.parseOntology(
+                        user,
+                        JSON.parse(jsonData),
+                        input.name,
+                        input.description || '',
+                        input.data_versioning_enabled,
+                        input.ontology_versioning_enabled,
+                        dryrun, update, containerID)
+                        .then((result) => {
+                            resolve(result);
+                        })
+                        .catch((e) => {
+                            reject(e);
+                        });
+                }).catch((e) => {
+                    return Promise.reject(Result.Failure(e));
+                });
+            } catch(e: any) {
+                return Promise.resolve(Result.Error(e))
+            }
+
         } else {
+            // validate file content, first non-whitespace character must be '<'
+            const stringBuffer = file.toString('utf8').trim()[0];
+
+            if (stringBuffer !== '<') {
+                return Promise.resolve(Result.Failure('Unsupported owl type supplied. Please provide a rdf/xml file.'));
+            }
             // ontology file has been supplied, cleanse XML, convert to json, and parse ontology
             let xml = file.toString('utf8');
 
@@ -668,7 +680,7 @@ export default class ContainerImport {
                     });
 
                     const saved = await containerRepo.save(container, user);
-                    if (saved.isError) return resolve(Result.DebugFailure(saved.error!.error));
+                    if (saved.isError) return resolve(Result.DebugFailure(saved.error.error));
                     containerID = container.id!;
                 } else {
                     const containerResult = await containerRepo.findByID(containerID);

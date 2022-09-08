@@ -119,8 +119,9 @@
                   this.errorMessage = ""
                 })
                 .catch(e => {
+                  console.log(e)
                   this.loading = false
-                  this.errorMessage = e
+                  this.errorMessage = 'Unable to load ontology from OWL file or OWL file URL'
                 })
           } else {
             this.$client.createContainer(this.newContainer)

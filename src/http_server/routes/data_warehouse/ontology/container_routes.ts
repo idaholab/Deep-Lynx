@@ -208,14 +208,6 @@ export default class ContainerRoutes {
         });
 
         busboy.on('finish', () => {
-            // validate file content, first non-whitespace character must be '<'
-            const stringBuffer = fileBuffer.toString('utf8').trim()[0];
-
-            if (stringBuffer !== '<') {
-                Result.Failure('Unsupported owl type supplied. Please provide a rdf/xml file.').asResponse(res);
-                return;
-            }
-
             // we have to force the data_versioning to boolean here
             if (input.data_versioning_enabled) input.data_versioning_enabled = String(input.data_versioning_enabled).toLowerCase() === 'true';
             if (input.ontology_versioning_enabled) input.ontology_versioning_enabled = String(input.ontology_versioning_enabled).toLowerCase() === 'true';
@@ -225,8 +217,7 @@ export default class ContainerRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => Result.Error(err).asResponse(res))
-                .finally(() => next());
+                .catch((err) => Result.Error(err).asResponse(res));
         });
 
         return req.pipe(busboy);
