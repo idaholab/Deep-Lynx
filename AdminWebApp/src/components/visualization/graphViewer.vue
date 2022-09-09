@@ -4,14 +4,16 @@
       <v-toolbar flat color="lightgray" > 
         <v-toolbar-title>Graph</v-toolbar-title>
         <v-spacer></v-spacer>
+        <v-progress-circular indeterminate v-if="loading"  style="margin-right: 16px"></v-progress-circular>
         <div class="mr-5">
           <v-btn
-            @click="centerGraph"
+            @click="resetGraph"
             :disabled="graph.nodes.length < 1"
           >
             Reset Graph
           </v-btn>
         </div>
+
           <v-menu
             v-model="showHelp"
             :close-on-content-click="false"
@@ -83,19 +85,74 @@
                   Controls <br>
                   - Pan : Left click drag on open area of graph <br>
                   - Zoom : Mousewheel scroll <br>
-                  - Center on node: Right click node <br>
-                  - Focus on node and connections/Return to full graph: Double click node (only nodes with outgoing edges)<br>
+                  - Center on node: Double click node <br>
+                  - New graph with node and connections: Right click node<br>
                   - View node information: Left click node (hover to see metatype & ID)<br>
-                  - Move node: Left click and drag node. Note that this will recenter the graph after a short period <br>
+                  - Move node: Left click and drag node<br>
                   - Highlight node/edge and related nodes/edges: Hover over node or edge <br><br>
                   Node labels show the "name" property (if present) or else the node ID.<br>
-                  Node color is automatically set based on metatype name.
+                  Node color is automatically set based on metatype name or data source.
                 </v-card-text>
               </div>
             </v-expand-transition>
             </v-card>
           </v-menu>
       </v-toolbar>
+
+      <!-- Color Legend and Filter -->
+      <v-navigation-drawer
+        v-model="showColorLegend"
+        absolute
+        right
+        permanent
+        :mini-variant.sync="mini"
+        style="margin-top: 64px"
+      >
+        <v-list-item class="px-2">
+
+          <v-btn
+            icon
+            @click.stop="mini = !mini"
+          >
+            <v-icon v-if="!mini">mdi-chevron-right</v-icon>
+            <v-icon v-else>mdi-chevron-left</v-icon>
+          </v-btn>
+  
+          <v-list-item-title>Node Legend</v-list-item-title>
+        </v-list-item>
+        <v-list-item>
+          <v-select
+              v-model="colorGroup"
+              :items="colorGroupOptions"
+              @input="updateColorGroup"
+              hide-selected
+              hint="Choose how to group node color"
+              persistent-hint
+              v-if="!mini"
+            >
+            </v-select>
+        </v-list-item>
+        <v-list dense style="width: fit-content">
+          <v-list-item-group
+            color="primary"
+            multiple
+            v-model="selectedFilters"
+          >
+            <v-list-item
+              v-for="(item, i) in nodeColorsArray"
+              :key="i"
+              @click="filterOnGroupItem(i)"
+            >
+              <v-list-item-icon style="margin-right: 12px">
+                <v-icon color="#b2df8a" :style='`color: ` + item.key + `!important`'>mdi-circle</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>{{item.value}}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-item-group>
+        </v-list>
+      </v-navigation-drawer>
       <div id="forcegraph" ref="forcegraph" ></div>
     </v-card>
     <!-- End Graph Component -->
@@ -117,7 +174,7 @@
             <v-row>
               <v-col>
                 <div><span class="text-overline">{{$t('dataQuery.nodeID')}}:</span> {{currentNodeInfo.id}}</div>
-                <div><span class="text-overline">{{$t('dataQuery.nodeType')}}:</span> {{currentNodeInfo.metatype_name}}</div>
+                <div><span class="text-overline">{{$t('dataQuery.nodeType')}}:</span> {{currentNodeInfo.metatype.name}}</div>
                 <div><span class="text-overline">DataSource:</span> {{datasources[currentNodeInfo.data_source_id]?.name}} ({{currentNodeInfo.data_source_id}})</div>
                 <div><span class="text-overline">Created At:</span> {{currentNodeInfo.created_at}}</div>
                 <div><span class="text-overline">Modified At:</span> {{currentNodeInfo.modified_at}}</div>
@@ -175,7 +232,7 @@ import NodeTimeseriesDataTable from "@/components/data/nodeTimeseriesDataTable.v
 import {Component, Prop, Watch, Vue} from "vue-property-decorator";
 import {NodeT, DataSourceT} from "@/api/types";
 import ForceGraph, {ForceGraphInstance} from 'force-graph';
-import {forceManyBody} from 'd3-force';
+import {forceX, forceY} from 'd3-force';
 
 import {mdiInformation} from "@mdi/js";
 
@@ -189,20 +246,27 @@ export default class GraphViewer extends Vue {
 
   dialog = false
   currentNodeInfo: any = null
-  expanded = []
   openPanels: number[] = [0]
+  loading = false
 
-  forceGraph = ForceGraph();
+  forceGraph: ForceGraphInstance | null = ForceGraph();
   canvas: ForceGraphInstance | null = null;
 
-  chargeForce = forceManyBody();
+  forceX = forceX()
+  forceY = forceY()
 
-  graph: any = {
+  graph: any | null = {
     nodes: [],
     links: []
   }
 
   nodesById: any = {}
+  nodeColorsArray: any = []
+
+  colorGroup = 'metatype'
+  colorGroupOptions = ['metatype', 'data source']
+  colorGroupFilter: any = []
+  selectedFilters: any = []
 
   datasources: {[key: string]: DataSourceT} = {}
 
@@ -220,17 +284,16 @@ export default class GraphViewer extends Vue {
   showHelp = false
   showHints = true
 
-  minZoom = 0.5
+  showColorLegend = true
+  mini = false
+
+  minZoom = 0.2
   maxMinZoom = 100
   minMinZoom = 0.01
 
   maxZoom = 125
   maxMaxZoom = 1000
   minMaxZoom = 10
-
-  // mounted() {
-  //   this.loadResults();
-  // }
 
   @Watch('results', {immediate: true})
   graphUpdate() {
@@ -239,10 +302,68 @@ export default class GraphViewer extends Vue {
       nodes: [],
       links: []
     }
-    // this.canvas = null
     this.forceGraph = ForceGraph()
 
     this.loadResults();
+  }
+
+  filterOnGroupItem(index: number | null) {
+    if (index != null) {
+
+      const filterIndex = this.colorGroupFilter.indexOf(index)
+
+      if (filterIndex !== -1) { // if the index provided is already in the array, remove
+        this.colorGroupFilter.splice(filterIndex, 1)
+      } else { // else add the index to the array
+        this.colorGroupFilter.push(index)
+      }
+    }
+    
+    // apply filter to graph
+    const filterList: any = []
+
+    // create array of data source IDs or metatype names from the given index(es)
+    this.colorGroupFilter.forEach((i: number) => {
+      // if the nodeColorsArray value is a string with multiple values separated by commas, separate out the values
+      const colorValues = this.nodeColorsArray[i].value.split(',')
+
+      colorValues.forEach((value: string) => {
+        if (this.colorGroup === 'data source') {
+          const match = value.trim().match(/\((\d*)\)/) ?? []
+          filterList.push(match[1]) // retrieves the string data source id from the value property, finding the matched digit within parentheses
+          // leave as a string for matching against node.data_source_id
+        } else {
+          // default to behavior for metatype filtering
+          filterList.push(value.trim())
+        }
+      });
+      
+    });
+    
+    this.graph.nodes.forEach((node: NodeT) => {
+      // use a nodes "collapsed" property to determine whether to hide it
+      if (this.colorGroup === 'data source') {
+
+        if (filterList.indexOf(node.data_source_id) === -1) {
+          node.collapsed = true
+        } else {
+          node.collapsed = false
+        }
+      } else { // default filter on metatype
+        if (filterList.indexOf(node.metatype_name) === -1) {
+          node.collapsed = true
+        } else {
+          node.collapsed = false
+        }
+      }
+    });
+
+    // if no filters are selected, show all nodes
+    if (this.colorGroupFilter.length === 0) {
+      this.graph.nodes.forEach((node: NodeT) => {
+        node.collapsed = false
+      })
+    }
   }
 
   propertyHeaders() {
@@ -252,32 +373,54 @@ export default class GraphViewer extends Vue {
     ]
   }
 
-  async loadResults() {
+  async loadResults(graphResults: NodeT[] | null = null) {
+    this.loading = true
+    
     const nodeIDs: string[] =  []
     let edges: any = []
 
-    this.graph.nodes = this.results.map((node: any) => {
-      nodeIDs.push(node.id)
+    if (graphResults != null) {
+      // if custom results are provided, use those
 
-      node.collapsed = false
-      node.childLinks = []
-      return node
-    });
+      this.graph.nodes = graphResults.map((node: any) => {
+        nodeIDs.push(node.id)
+
+        node.collapsed = false
+        node.childLinks = []
+        return node
+      });
+
+    } else {
+
+      this.graph.nodes = this.results.map((node: any) => {
+        nodeIDs.push(node.id)
+
+        node.collapsed = false
+        node.childLinks = []
+        return node
+      });
+
+    }
 
     // fetch the edges
+    // returns all edges in the container where either the origin or destination id is in the provided list of node IDs
     edges = await this.$client.listEdgesForNodeIDs(this.containerID, nodeIDs)
 
     if (edges) {
       edges.forEach((edge: any) => {
-        this.graph.links.push({
-          source: edge.origin_id,
-          target: edge.destination_id,
-          name: edge.metatype_relationship_name,
-          id: edge.id,
-          collapsed: false // flag for showing/hiding links. set all to visible by default
-        })
+        // only push links where both source and target IDs are present in the graph
+        if (nodeIDs.indexOf(edge.origin_id) != -1 && nodeIDs.indexOf(edge.destination_id) != -1) {
+          this.graph.links.push({
+            source: edge.origin_id,
+            target: edge.destination_id,
+            name: edge.metatype_relationship_name,
+            id: edge.id,
+            collapsed: false // flag for showing/hiding links. set all to visible by default
+          })
+        }
       });
     }
+
 
     const highlightNodes = new Set();
     const highlightLinks = new Set();
@@ -292,17 +435,17 @@ export default class GraphViewer extends Vue {
       const b = this.graph.nodes[bIndex];
 
       // need to handle links where the source or target node may not be in the graph
-      if (aIndex !== -1) {
+      if (aIndex !== -1 && b) {
         !a.neighbors && (a.neighbors = []);
-        if (b !== undefined) a.neighbors.push(b);
+        a.neighbors.push(b);
 
         !a.links && (a.links = []);
         a.links.push(link);
       }
 
-      if (bIndex !== -1) {
+      if (bIndex !== -1 && a) {
         !b.neighbors && (b.neighbors = []);
-        if (a !== undefined) b.neighbors.push(a);
+        b.neighbors.push(a);
 
         !b.links && (b.links = []);
         b.links.push(link);
@@ -383,112 +526,59 @@ export default class GraphViewer extends Vue {
           return `${node.metatype_name} : ${node.id}`
         }) // set node label when hovering
         .onNodeRightClick(node => {
-          this.canvas!.centerAt(node.x, node.y, 1000);
-          this.canvas!.zoom(4, 2000)
-        }) // center on node on click
+          // double clicks can be difficult to do dragging a node and custom timing to determine single or double click
+          // right clicks will open up a new graph around the selected node, while double clicks will center and zoom
+          this.openNodeGraph(node)
+        }) // open node properties on right click
         .nodeCanvasObject((node: any, ctx, globalScale) => {
 
-          if (highlightNodes.has(node)) {
-            // add ring just for highlighted nodes
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
-            ctx.fillStyle = node === hoverNode ? 'red' : 'orange';
-            ctx.fill();
+          // don't draw the full node if it is marked as collapsed
+          if (!node.collapsed) {
+
+            if (highlightNodes.has(node)) {
+              // add ring just for highlighted nodes
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
+              ctx.fillStyle = node === hoverNode ? 'red' : 'orange';
+              ctx.fill();
+            }
+
+            // then apply normal colors and labels (must happen after highlight styles have been created)
+
+            ctx.beginPath()
+            ctx.arc(node.x, node.y, 10, 0, 2 * Math.PI)
+            ctx.fillStyle = node.color;
+            ctx.fill()
+
+            const nodeName = node.properties.name ? node.properties.name : node.id;
+            const label = `${nodeName}` as string;
+            const fontSize = Math.min(24/globalScale, NODE_R * 1.4);
+
+            ctx.font = `${fontSize}px Sans-Serif`;
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#101020';
+            ctx.fillText(label, node.x!, node.y!);
           }
-
-          // then apply normal colors and labels (must happen after highlight styles have been created)
-
-          ctx.beginPath()
-          ctx.arc(node.x, node.y, 10, 0, 2 * Math.PI)
-          ctx.fillStyle = node.color;
-          ctx.fill()
-
-          const nodeName = node.properties.name ? node.properties.name : node.id;
-          const label = `${nodeName}` as string;
-          const fontSize = 24/globalScale;
-          ctx.font = `${fontSize}px Sans-Serif`;
-
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = '#101020';
-          ctx.fillText(label, node.x!, node.y!);
 
         }) // add text over nodes
         .nodeCanvasObjectMode(node => highlightNodes.has(node) ? 'after' : 'after') // this format required for correctly displaying styles and text for both highlighted and non-highlighted states
-        .nodeAutoColorBy((node: any) => `${node.metatype_name}`) // auto color by metatype
+        .nodeAutoColorBy((node: any) => {
+          if (this.colorGroup === 'metatype') {
+            return `${node.metatype_name}`
+          } else if (this.colorGroup === 'data source') {
+            return `${node.data_source_id}`
+          } else {
+            return `${node.metatype_name}` // default to metatype
+          }
+        }) // auto color node
         .linkColor(() => '#363642') // link color
         .linkCurvature('curvature')
         .linkDirectionalArrowLength(5) // use directional arrows for links and set size of link
         .linkDirectionalArrowRelPos(1) // size of directional arrow
         .linkCanvasObjectMode(() => 'after')
-        .linkCanvasObject((link: any, ctx, globalScale) => {
-          const MAX_FONT_SIZE = 24/globalScale;
-          const LABEL_NODE_MARGIN = this.canvas!.nodeRelSize() * 2;
-
-          const start = link.source;
-          const end = link.target;
-
-          // ignore unbound links
-          if (typeof start !== 'object' || typeof end !== 'object') return;
-
-          // calculate label positioning
-          let coordinates = {x: 0, y: 0};
-          coordinates.x = start.x + (end.x - start.x) / 2;
-          coordinates.y = start.y + (end.y - start.y) / 2;
-
-          // handle curved links
-          if (+link.curvature > 0) {
-            coordinates = this.getQuadraticXY(
-              0.5,
-              start.x,
-              start.y,
-              link.__controlPoints[0],
-              link.__controlPoints[1],
-              end.x,
-              end.y
-            );
-          }
-
-          const relLink = { x: end.x - start.x, y: end.y - start.y };
-
-          let maxTextLength = Math.sqrt(Math.pow(relLink.x, 2) + Math.pow(relLink.y, 2)) - LABEL_NODE_MARGIN * 2;
-
-          let textAngle = Math.atan2(relLink.y, relLink.x);
-          // maintain label vertical orientation for legibility
-          if (textAngle > Math.PI / 2) textAngle = -(Math.PI - textAngle);
-          if (textAngle < -Math.PI / 2) textAngle = -(-Math.PI - textAngle);
-
-          const label = `${link.name}`; // link label
-
-          // need to make maxTextLength positive for self-referencing links
-          if (link.source.id === link.target.id) {
-            if (maxTextLength < 0) {
-              maxTextLength = maxTextLength * -1;
-            }
-          }
-
-          // estimate fontSize to fit in link length
-          ctx.font = '1px Sans-Serif';
-          const fontSize = Math.min(MAX_FONT_SIZE, maxTextLength / ctx.measureText(label).width);
-          ctx.font = `${fontSize}px Sans-Serif`;
-          const textWidth = ctx.measureText(label).width;
-          const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
-
-          // draw text label (with background rect)
-          ctx.save();
-          ctx.translate(coordinates.x, coordinates.y);
-          ctx.rotate(textAngle);
-
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-          ctx.fillRect(- bckgDimensions[0] / 2, - bckgDimensions[1] / 2, bckgDimensions[0], bckgDimensions[1]);
-
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = 'darkgrey';
-          ctx.fillText(label, 0, 0);
-          ctx.restore();
-        }) // add labels to links/edges
-        .linkLabel((link: any) => `${link.id}`)
+        .linkLabel((link: any) => `${link.name} : ${link.id}`)
         .onNodeHover((node: any) => {
           highlightNodes.clear();
           highlightLinks.clear();
@@ -502,6 +592,8 @@ export default class GraphViewer extends Vue {
           hoverNode = node || null;
         })
         .onNodeClick((node: any) => {
+
+          this.loading = true
           
           // base case, first click on a node ever
           if (this.currentClick === 0) {
@@ -527,8 +619,6 @@ export default class GraphViewer extends Vue {
                 this.previousClick = Date.now();
                 this.firstClickID = node.id;
                 this.doubleClickFlag = true;
-
-                void this.toggleCollapsedNodes(node);
               }
               
             } else {
@@ -541,7 +631,10 @@ export default class GraphViewer extends Vue {
           }
 
         })
-        .onNodeDrag(() => this.canvas?.d3Force('charge', this.chargeForce.strength(0)))
+        .onNodeDrag(() => {
+          // overwrite the default behavior of resetting the graph zoom
+          this.canvas?.onEngineStop(() => true)
+        })
         .nodeRelSize(NODE_R)
         .onLinkHover(link => {
           highlightNodes.clear();
@@ -553,26 +646,119 @@ export default class GraphViewer extends Vue {
             highlightNodes.add(link.target);
           }
         })
-        // .autoPauseRedraw(false) // keep redrawing after engine has stopped // not sure why this would be necessary
         .linkWidth(link => highlightLinks.has(link) ? 5 : 1) // bold highlighted links
-        .linkDirectionalParticles(4) // number of particles to display on highlighted links
-        .linkDirectionalParticleWidth(link => highlightLinks.has(link) ? 4 : 0); // show particles only when link is highlighted
+        .linkDirectionalParticles(3) // number of particles to display on highlighted links
+        .linkDirectionalParticleWidth(link => highlightLinks.has(link) ? 6 : 0) // show particles only when link is highlighted
+        .linkDirectionalParticleColor(() => 'cyan') // set link particle color
+        .linkDirectionalParticleSpeed(.015) // set link particle speed
 
     
       this.canvas.graphData(this.graph) // this call is necessary to force the canvas to reheat
-      this.canvas.d3Force('charge', this.chargeForce.strength(-15))
-      this.canvas.cooldownTime(1000) // set to a small render time
-      this.canvas.d3Force('link')!.distance(60) // manually set length of links
-      this.canvas.onEngineStop(() => this.canvas!.zoomToFit(1000, 10, () => true));
+
+      this.canvas.d3Force('charge') // applies some distance between nodes
+      this.canvas.d3Force('link') // apply link force for spacing
+      this.canvas.d3Force('x', this.forceX) // apply forces to keep nodes centered
+      this.canvas.d3Force('y', this.forceY)
+
+
+      this.canvas.cooldownTime(2000) // set to a small render time
+      this.canvas.onEngineStop(() => {
+        this.buildNodeColorLegend()
+        this.canvas!.zoomToFit(1000, 10, () => {
+          this.loading = false
+          return true
+        })
+      }) // zoom to fit all nodes (if possible) in screen and determine the node color legend
+
     }
 
+  }
+
+  async openNodeGraph(node: any) {
+    this.loading = true
+
+    this.colorGroupFilter = []
+    this.selectedFilters = []
+    this.filterOnGroupItem(null)
+    // make new graph call for the selected node
+    // retrieve a graph of depth 1 around the selected node
+    const newGraph = await this.$client.submitGraphQLQuery(this.containerID, { query: 
+      `{
+          graph(
+              root_node: "${node.id}"
+              depth: "1"
+          ){
+              destination_id
+              destination_metatype_id
+              destination_metatype_name
+              destination_data_source
+              destination_created_at
+              destination_modified_at
+              destination_properties
+          }
+      }`
+    })
+
+    // if an error is found, skip remainder of function
+    if (newGraph.error || !newGraph.data) {
+      return
+    }
+
+    // add the origin node, selecting only the base properties
+    const graphResults: NodeT[] = [{
+      id: node.id,
+      original_id: node.original_id,
+      container_id: node.container_id,
+      data_source_id: node.data_source_id,
+      metatype_id: node.metatype_id,
+      metatype_name: node.metatype_name,
+      created_at: node.created_at,
+      modified_at: node.modified_at,
+      properties: node.properties
+    }]
+
+    // deduplicate the return (e.g. remove any nodes returned more than once)
+    const uniqueResults = Array.from(new Map(newGraph.data.graph.map((node: any) => [node.destination_id, node])).values());
+
+    // map returned results to the format expected by loadResults
+    uniqueResults.forEach((node: any) => {
+      const newNode: NodeT = {
+        id: node.destination_id,
+        original_id: node.destination_properties.id ? node.destination_properties.id : null,
+        container_id: this.containerID,
+        data_source_id: node.destination_data_source,
+        metatype_id: node.destination_metatype_id,
+        metatype_name: node.destination_metatype_name,
+        created_at: node.destination_created_at,
+        modified_at: node.destination_modified_at,
+        properties: node.destination_properties
+      }
+
+      // add destination nodes to the origin node
+      graphResults.push(newNode)
+    });
+
+    // reset graph structure
+    this.graph = {
+      nodes: [],
+      links: []
+    }
+
+    // load newly created graph
+    this.loadResults(graphResults)
+    // Reset Graph may be used to return to original results
   }
 
   showNodeProperties(node: any) {
     // only take sigle click action if the gap between previous and current clicks sufficiently far apart
     this.delay(this.doubleClickTimer).then(() => {
       if (this.doubleClickFlag) {
+
+        // on double click, center and zoom
+        this.canvas!.centerAt(node.x, node.y, 1000);
+        this.canvas!.zoom(4, 2000)
         this.doubleClickFlag = false
+        
       } else {
         // ensure properties panel is already expanded (and only properties)
         this.openPanels = [0]
@@ -583,60 +769,79 @@ export default class GraphViewer extends Vue {
         this.selectedNode = node
         this.nodeDialog = true;
       }
+
+      this.loading = false
     })
   }
 
-  toggleCollapsedNodes(node: any) {
-    // expand/collapse nodes
-    if (node.childLinks.length) {
-      node.collapsed = !node.collapsed; // toggle collapse state
-      this.canvas!.graphData(this.getPrunedTree(node));
-    }
-  }
+  buildNodeColorLegend() {
+    const nodeColorsMap = new Map();
 
-  // since we don't work in a structure with one root node, we can only update around the node selected
-  getPrunedTree(rootNode: any) {
-    const parentThis = this;
-    const rootNodeId = rootNode.id;
+    this.graph.nodes.forEach((node: NodeT) => {
+      // check if color has already been set, and then append name if so
+      const colorEntry = nodeColorsMap.get(node.color)
+      const dataSourceName = `${this.datasources[node.data_source_id]?.name} (${node.data_source_id})`
 
-    const visibleNodes: any = [];
-    const visibleLinks: any = [];
+      if (colorEntry) {
 
-    // if node is collapsed, return only it and all connected links and nodes
-    // otherwise return the full graph
-    if (rootNode.collapsed) {
-      visibleNodes.push(rootNode);
+        if (this.colorGroup === 'data source') {
+          // if the data source name is not already part of colorEntry, add it
+          const match = colorEntry.search(`${this.datasources[node.data_source_id]?.name} \\(${node.data_source_id}\\)`)
 
-      (function traverseTree(node: any = rootNode) {
-
-        for (const childNode of node.childLinks) {
-
-          let target;
-          if (typeof(childNode) === 'object') {
-            target = childNode.target;
-          } else {
-            target = parentThis.nodesById[childNode.target];
+          if (match === -1) {
+            nodeColorsMap.set(node.color, `${colorEntry}, ${dataSourceName}`);
           }
 
-          // add link
-          visibleLinks.push(childNode);
+        } else { // default to 'metatype'
+          // if the metatype name is not already part of colorEntry, add it
+          const match = colorEntry.search(node.metatype_name)
 
-          // ensure we don't follow links to the rootNode or self-referencing links
-          if (target.id !== rootNodeId && target.id !== node.id) {
-
-            // add node
-            visibleNodes.push(target);
-          
-            traverseTree(target);
+          if (match === -1) {
+            nodeColorsMap.set(node.color, `${colorEntry}, ${node.metatype_name}`);
           }
         }
+        
+        
+      } else {
+         if (this.colorGroup === 'data source') {
+          nodeColorsMap.set(node.color, dataSourceName);
+         } else {
+          nodeColorsMap.set(node.color, node.metatype_name);
+         }
+        
+      }
+    });
 
-      })();
-    } else {
-      return this.graph;
+    // reset the array for new queries
+    this.nodeColorsArray = [];
+
+    // convert to an array so that Vue2 can iterate over it reactively
+    nodeColorsMap.forEach((value: string, key: string) => {
+      this.nodeColorsArray.push({'key': key, 'value': value});
+    });
+  }
+
+  updateColorGroup(groupSelection: string) {
+    this.colorGroupFilter = []
+    this.selectedFilters = []
+    this.filterOnGroupItem(null)
+
+    this.loading = true
+    
+    // delete the node color to force recoloring the node
+    this.graph.nodes.forEach((node: any) => {
+      delete node.color
+    });
+
+    if (groupSelection === 'metatype') {
+      this.canvas!.nodeAutoColorBy((node: any) => `${node.metatype_name}`) // auto color by metatype
+    } else if (groupSelection === 'data source') {
+      this.canvas!.nodeAutoColorBy((node: any) => `${node.data_source_id}`) // auto color by data source
     }
 
-    return { nodes: visibleNodes, links: visibleLinks };
+    this.colorGroupFilter = []
+    this.filterOnGroupItem(null)
+    
   }
 
   // used for calculating where to place a link label on curved links
@@ -652,15 +857,22 @@ export default class GraphViewer extends Vue {
     return new Promise(resolve => setTimeout(resolve, time));
   }
 
-  centerGraph() {
+  resetGraph() {
     if (this.graph.nodes.length > 0) {
 
       if (this.canvas != null) {
 
-        this.canvas.graphData(this.graph) // this call is necessary to force the canvas to reheat
-        this.canvas.d3Force('charge', this.chargeForce.strength(0))
-        this.canvas.cooldownTime(1000) // set to a small render time
-        this.canvas.onEngineStop(() => this.canvas!.zoomToFit(1000, 10, () => true)); // after 1 s, zoom to the center in 1s showing all nodes on the canvas
+        this.graph = {
+          nodes: [],
+          links: []
+        }
+
+        this.loadResults()
+        this.updateColorGroup(this.colorGroup)
+        
+        this.colorGroupFilter = []
+        this.selectedFilters = []
+        this.filterOnGroupItem(null)
       }
     }
   }
@@ -708,5 +920,7 @@ export default class GraphViewer extends Vue {
 .height-full {
   height: 100% !important;
 }
+
+$list-item-icon-margin: 0 px;
 
 </style>
