@@ -98,7 +98,7 @@
         "@types/graphql-type-json": "^0.3.2",
         "@types/parquetjs": "^0.10.3",
         "@vue/cli-service": "~5.0.8",
-        "amqplib": "^0.8.0",
+        "amqplib": "^0.10.2",
         "axios": "^0.21.1",
         "base64url": "^3.0.1",
         "bcryptjs": "^2.4.3",
