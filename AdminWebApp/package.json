@@ -30,7 +30,7 @@
     "element-ui": "^2.14.1",
     "eslint": "^7.5.0",
     "eslint-plugin-vue": "^9.2.0",
-    "force-graph": "^1.42.9",
+    "force-graph": "^1.42.13",
     "highlight.js": "^10.4.1",
     "is-svg": "^4.3.1",
     "jwt-decode": "^2.2.0",
