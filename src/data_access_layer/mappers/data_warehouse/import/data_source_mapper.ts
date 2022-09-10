@@ -438,7 +438,7 @@ export default class DataSourceMapper extends Mapper {
     private insertIntoHypertableStatement(source: DataSourceRecord, records: any[]): string {
         const config = source.config as TimeseriesDataSourceConfig;
 
-        const statements: string[] = [`INSERT INTO y_${source.id}(${config.columns.map((c) => c.column_name).join(',')})`, `SELECT `];
+        const statements: string[] = [`INSERT INTO y_${source.id}(${config.columns.map((c) => format('%s', `"${c.column_name}"`)).join(',')})`, `SELECT `];
 
         const columns: string[] = [];
         config.columns.forEach((c) => {
@@ -536,7 +536,7 @@ export default class DataSourceMapper extends Mapper {
             if (value !== null && value !== '') return value; // handles null values and empty strings from csv
         });
 
-        // if this array contains more than the primary timestampe, include the ON CONFLICT clause
+        // if this array contains more than the primary timestamp, include the ON CONFLICT clause
         const uniqueConstraints = config.columns.filter((c) => c.is_primary_timestamp || c.unique).map((c) => c.column_name);
         if (uniqueConstraints.length > 1) {
             statements.push(format(`ON CONFLICT (%s) DO NOTHING`, uniqueConstraints));
