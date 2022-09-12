@@ -91,7 +91,7 @@
             <import-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" @mappingsImported="mappingsImport"></import-mappings-dialog>
           </v-col>
           <v-col :cols="4" class="d-flex justify-center">
-            <v-btn color="primary" @click="upgradeMappings">Upgrade All Mappings</v-btn>
+            <v-btn color="primary" @click="upgradeDialog = true">Upgrade All Mappings</v-btn>
           </v-col>
         </v-row>
 
@@ -357,6 +357,32 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog
+        v-model="upgradeDialog"
+        width="60%"
+        scrollable
+    >
+      <v-card class="d-flex flex-column">
+        <v-card-title class="grey lighten-2 flex-shrink-1">
+          <span class="headline text-h3">{{$t('dataImports.editTypeMapping')}}</span>
+          <v-flex class="text-right">
+            <v-icon class="justify-right"  @click="mappingDialog = false">mdi-window-close</v-icon>
+          </v-flex>
+        </v-card-title>
+
+        <v-card-text>
+          <v-alert type="warning">
+            {{$t('dataImports.upgradeMappingsWarning')}}
+          </v-alert>
+        </v-card-text>
+
+        <v-card-actions class="flex-shrink-1">
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="upgradeMappings">Upgrade All Mappings</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -397,6 +423,7 @@ export default class DataMapping extends Vue {
 
   errorMessage = ""
   dataDialog = false
+  upgradeDialog = false
   mappingDialog = false
   samplePayload: object | null = null
   successMessage = ""
@@ -751,6 +778,7 @@ export default class DataMapping extends Vue {
   }
 
   upgradeMappings() {
+    this.upgradeDialog = false
     const payload: TypeMappingUpgradePayloadT = {
       ontology_version: this.currentOntologyVersion?.id!,
       mapping_ids: (this.selectedMappings.length > 0) ? this.selectedMappings.map((m: TypeMappingT) => m.id) : this.typeMappings.map(m => m.id)
