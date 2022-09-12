@@ -537,7 +537,15 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="clearNewAdapter" >{{$t("home.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="createDataSource" >{{$t("home.create")}}</v-btn>
+        <v-btn
+            v-if="newDataSource.adapter_type === 'timeseries'"
+            color="blue darken-1"
+            text
+            :disabled="timeseriesConfig.columns.length === 0"
+            @click="createDataSource" >
+          {{$t("home.create")}}
+        </v-btn>
+        <v-btn v-else color="blue darken-1" text @click="createDataSource" >{{$t("home.create")}}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

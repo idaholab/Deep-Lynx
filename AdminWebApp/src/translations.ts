@@ -275,7 +275,10 @@ export default {
             requiredField: 'Required Field',
         },
         createServiceUser: {
+            description:
+                'Creating an external application will give you the ability to generate API key/secret pairs and manage permissions for external applications which communicate with DeepLynx. Please keep in mind that newly created applications have no permissions by default, you should attempt to assign permissions as you see fit. Permissions can be edited after creation.',
             nameMissing: 'Name required',
+            permissions: 'Permissions',
             createServiceUser: 'Add External Application',
             createTitle: 'Add External Application',
             name: 'Name',
@@ -1142,6 +1145,8 @@ export default {
             explanation: "This page allows you to make changes to your currently selected container. Note that you cannot change your container's name",
         },
         dataImports: {
+            upgradeMappingsWarning:
+                'Upgrading type mappings will automatically attempt to convert all mappings and their transformations to use metatypes and metatype relationships from the current ontology vs. the one under which they were originally created. Please make sure this is what you want before you attempt to upgrade.',
             copyID: 'Click to copy ID',
             tableTitle: 'Imports',
             dataView: 'Import Data',
