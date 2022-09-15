@@ -18,6 +18,7 @@
         <error-banner :message="errorMessage"></error-banner>
         <v-row>
           <v-col :cols="12">
+            <p>{{$t('createServiceUser.description')}}</p>
 
             <v-form
                 ref="form"
@@ -30,6 +31,48 @@
               >
                 <template v-slot:label>{{$t('createServiceUser.name')}} <small style="color:red" >*</small></template>
               </v-text-field>
+
+
+              <span class="headline text-h4">{{$t('createServiceUser.permissions')}}</span>
+              <p style="margin-bottom: 0px">{{$t('serviceUserPermissions.containersDescription')}}</p>
+              <v-select
+                  :items="options"
+                  v-model="permissionSet.containers"
+                  multiple
+                  style="margin-top: 0px"
+              >
+                <template v-slot:label>{{$t('serviceUserPermissions.containers')}}</template>
+              </v-select>
+
+              <p style="margin-bottom: 0px">{{$t('serviceUserPermissions.ontologyDescription')}}</p>
+              <v-select
+                  :items="options"
+                  v-model="permissionSet.ontology"
+                  multiple
+                  style="margin-top: 0px"
+              >
+                <template v-slot:label>{{$t('serviceUserPermissions.ontology')}}</template>
+              </v-select>
+
+              <p style="margin-bottom: 0px">{{$t('serviceUserPermissions.dataDescription')}}</p>
+              <v-select
+                  :items="options"
+                  v-model="permissionSet.data"
+                  multiple
+                  style="margin-top: 0px"
+              >
+                <template v-slot:label>{{$t('serviceUserPermissions.data')}}</template>
+              </v-select>
+
+              <p style="margin-bottom: 0px">{{$t('serviceUserPermissions.usersDescription')}}</p>
+              <v-select
+                  :items="options"
+                  v-model="permissionSet.users"
+                  multiple
+                  style="margin-top: 0px"
+              >
+                <template v-slot:label>{{$t('serviceUserPermissions.users')}}</template>
+              </v-select>
             </v-form>
             <p><span style="color:red">*</span> = {{$t('createServiceUser.requiredField')}}</p>
           </v-col>
@@ -47,6 +90,7 @@
 
 <script lang="ts">
 import {Component, Prop, Vue} from 'vue-property-decorator'
+import {ServiceUserPermissionSetT} from "@/api/types";
 
 @Component
 export default class CreateServiceUser extends Vue {
@@ -60,6 +104,13 @@ export default class CreateServiceUser extends Vue {
   dialog = false
   name = ""
   valid = false
+  options = ['read', 'write']
+  permissionSet: ServiceUserPermissionSetT = {
+    containers: [],
+    ontology: [],
+    users: [],
+    data: []
+  }
 
   createServiceUser() {
     this.$client.createServiceUser(this.containerID, {display_name: this.name})
@@ -67,9 +118,18 @@ export default class CreateServiceUser extends Vue {
           if(!result) {
             this.errorMessage = this.$t('createServiceUser.errorCreatingAPI') as string
           } else {
-            this.dialog = false
-            this.$emit('serviceUserCreated', result)
-            this.reset()
+            this.$client.setServiceUsersPermissions(this.containerID, result.id, this.permissionSet)
+                .then(()=> {
+                  this.dialog = false
+                })
+                .catch(e => {
+                  this.errorMessage = e
+                })
+                .finally(() => {
+                  this.dialog = false
+                  this.$emit('serviceUserCreated', result)
+                  this.reset()
+                })
           }
         })
         .catch(e => this.errorMessage = this.$t('createServiceUser.errorCreatingAPI') as string + e)

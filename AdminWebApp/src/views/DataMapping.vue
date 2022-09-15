@@ -78,13 +78,20 @@
         </v-row>
         <v-row class="mb-3">
           <v-col :cols="4" class="d-flex justify-center">
-            <export-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" :mappings="selectedMappings" @mappingsExported="mappingsExported()"></export-mappings-dialog>
+            <export-mappings-dialog
+                v-if="selectedDataSource && !reviewMappings"
+                :containerID="containerID"
+                :dataSourceID="selectedDataSource.id"
+                :mappings="selectedMappings"
+                :containerName="$store.getters.activeContainer?.name"
+                :dataSourceName="selectedDataSource?.name"
+                @mappingsExported="mappingsExported()"></export-mappings-dialog>
           </v-col>
           <v-col :cols="4" class="d-flex justify-center">
             <import-mappings-dialog v-if="selectedDataSource && !reviewMappings" :containerID="containerID" :dataSourceID="selectedDataSource.id" @mappingsImported="mappingsImport"></import-mappings-dialog>
           </v-col>
           <v-col :cols="4" class="d-flex justify-center">
-            <v-btn color="primary" @click="upgradeMappings">Upgrade All Mappings</v-btn>
+            <v-btn color="primary" @click="upgradeDialog = true">Upgrade All Mappings</v-btn>
           </v-col>
         </v-row>
 
@@ -104,6 +111,10 @@
 
           <template v-slot:[`item.active`]="{ item }">
             <v-checkbox v-model="item.active" :disabled="true"></v-checkbox>
+          </template>
+
+          <template v-slot:[`item.created_at`]="{ item }">
+            {{new Date(parseInt(item.created_at, 10)).toUTCString()}}
           </template>
 
           <template v-slot:[`item.resulting_types`]="{ item }">
@@ -211,6 +222,10 @@
         >
           <template v-slot:[`item.active`]="{ item }">
             <v-checkbox v-model="item.active" :disabled="true"></v-checkbox>
+          </template>
+
+          <template v-slot:[`item.created_at`]="{ item }">
+            {{new Date(item.created_at).toUTCString()}}
           </template>
 
           <template v-slot:[`item.resulting_types`]="{ item }">
@@ -342,6 +357,32 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog
+        v-model="upgradeDialog"
+        width="60%"
+        scrollable
+    >
+      <v-card class="d-flex flex-column">
+        <v-card-title class="grey lighten-2 flex-shrink-1">
+          <span class="headline text-h3">{{$t('dataImports.editTypeMapping')}}</span>
+          <v-flex class="text-right">
+            <v-icon class="justify-right"  @click="mappingDialog = false">mdi-window-close</v-icon>
+          </v-flex>
+        </v-card-title>
+
+        <v-card-text>
+          <v-alert type="warning">
+            {{$t('dataImports.upgradeMappingsWarning')}}
+          </v-alert>
+        </v-card-text>
+
+        <v-card-actions class="flex-shrink-1">
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="upgradeMappings">Upgrade All Mappings</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -382,6 +423,7 @@ export default class DataMapping extends Vue {
 
   errorMessage = ""
   dataDialog = false
+  upgradeDialog = false
   mappingDialog = false
   samplePayload: object | null = null
   successMessage = ""
@@ -718,8 +760,14 @@ export default class DataMapping extends Vue {
   // allows the user to potentially review imported type mappings
   mappingsImport(results: ResultT<any>[]) {
     this.importedMappingResults = results
-    this.$router.go(0);
-    this.loadTypeMappings()
+    const errors = results.filter(r => r.isError)
+    if(errors.length > 0){
+      this.errorMessage = `Errors importing type mappings: check type mapping file or logs for more information`
+      this.loadTypeMappings()
+    } else {
+      this.$router.go(0);
+    }
+
   }
 
   isDeprecated(transformation: TypeMappingTransformationT) {
@@ -730,6 +778,7 @@ export default class DataMapping extends Vue {
   }
 
   upgradeMappings() {
+    this.upgradeDialog = false
     const payload: TypeMappingUpgradePayloadT = {
       ontology_version: this.currentOntologyVersion?.id!,
       mapping_ids: (this.selectedMappings.length > 0) ? this.selectedMappings.map((m: TypeMappingT) => m.id) : this.typeMappings.map(m => m.id)

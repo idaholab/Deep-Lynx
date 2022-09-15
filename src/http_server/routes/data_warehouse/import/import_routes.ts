@@ -452,6 +452,11 @@ export default class ImportRoutes {
             }
         });
 
+        busboy.on('error', (e: any) => {
+            Result.Error(e).asResponse(res);
+            return;
+        });
+
         // hold on to the field data, we consider this metadata and will create
         // a record to be ingested by deep lynx once the busboy finishes parsing
         busboy.on('field', (fieldName: string, value: any) => {
@@ -463,63 +468,78 @@ export default class ImportRoutes {
             // if there is no additional metadata we do not not create information
             // to be processed by Deep Lynx, simply store the file and make it available
             // via the normal file querying channels
-            void Promise.all(files).then((results) => {
-                if (dataStagingRecords.length > 0) {
-                    void Promise.all(dataStagingRecords).then((stagingResults) => {
-                        stagingResults.forEach((stagingResult) => {
-                            (stagingResult.value as DataStaging[]).forEach((stagingResult) => {
-                                results.forEach((fileResult) => {
-                                    void stagingRepo
-                                        .addFile(stagingResult, fileResult.value.id!)
-                                        .then((addFileResult) => {
-                                            if (addFileResult.isError) {
-                                                Logger.error(`error adding file to staging record ${addFileResult.error?.error}`);
-                                            } else {
-                                                Logger.debug(`file added to staging record successfully`);
-                                            }
-                                        })
-                                        .catch((e) => {
-                                            Logger.error(`error adding file to staging record ${e}`);
+            void Promise.all(files)
+                .then((results) => {
+                    if (dataStagingRecords.length > 0) {
+                        void Promise.all(dataStagingRecords)
+                            .then((stagingResults) => {
+                                stagingResults.forEach((stagingResult) => {
+                                    if (stagingResult.isError) {
+                                        stagingResult.asResponse(res);
+                                        return;
+                                    }
+
+                                    (stagingResult.value as DataStaging[]).forEach((stagingResult) => {
+                                        results.forEach((fileResult) => {
+                                            void stagingRepo
+                                                .addFile(stagingResult, fileResult.value.id!)
+                                                .then((addFileResult) => {
+                                                    if (addFileResult.isError) {
+                                                        Logger.error(`error adding file to staging record ${addFileResult.error?.error}`);
+                                                    } else {
+                                                        Logger.debug(`file added to staging record successfully`);
+                                                    }
+                                                })
+                                                .catch((e) => {
+                                                    Logger.error(`error adding file to staging record ${e}`);
+                                                });
                                         });
+                                    });
                                 });
+                            })
+                            .catch((e) => {
+                                Result.Error(e).asResponse(res);
+                                return;
                             });
-                        });
-                    });
-                }
-
-                if (metadataFieldCount === 0) {
-                    Result.Success(results).asResponse(res);
-                    next();
-                    return;
-                } else {
-                    const updatePromises: Promise<Result<boolean>>[] = [];
-                    // eslint-disable-next-line @typescript-eslint/no-for-in-array
-                    for (const i in results) {
-                        if (results[i].isError) {
-                            continue;
-                        }
-
-                        results[i].value.metadata = metadata;
-                        updatePromises.push(new FileRepository().save(results[i].value, req.currentUser!));
                     }
 
-                    void Promise.all(updatePromises)
-                        .then(() => {
-                            if (results.length === 1) {
-                                results[0].asResponse(res);
-                                next();
-                                return;
+                    if (metadataFieldCount === 0) {
+                        Result.Success(results).asResponse(res);
+                        next();
+                        return;
+                    } else {
+                        const updatePromises: Promise<Result<boolean>>[] = [];
+                        // eslint-disable-next-line @typescript-eslint/no-for-in-array
+                        for (const i in results) {
+                            if (results[i].isError) {
+                                continue;
                             }
 
-                            Result.Success(results).asResponse(res);
-                            next();
-                            return;
-                        })
-                        .catch((err) => {
-                            Result.Error(err).asResponse(res);
-                        });
-                }
-            });
+                            results[i].value.metadata = metadata;
+                            updatePromises.push(new FileRepository().save(results[i].value, req.currentUser!));
+                        }
+
+                        void Promise.all(updatePromises)
+                            .then(() => {
+                                if (results.length === 1) {
+                                    results[0].asResponse(res);
+                                    next();
+                                    return;
+                                }
+
+                                Result.Success(results).asResponse(res);
+                                next();
+                                return;
+                            })
+                            .catch((err) => {
+                                Result.Error(err).asResponse(res);
+                            });
+                    }
+                })
+                .catch((e) => {
+                    Result.Error(e).asResponse(res);
+                    return;
+                });
         });
 
         return req.pipe(busboy);

@@ -63,6 +63,12 @@ export default class ExportMappingsDialog extends Vue {
   @Prop({required: false, default: []})
   mappings?: TypeMappingT[]
 
+  @Prop({required: false})
+  containerName?: string;
+
+  @Prop({required: false})
+  dataSourceName?: string;
+
   errorMessage = ""
   dialog = false
   containers: ContainerT[] = []
@@ -133,7 +139,7 @@ export default class ExportMappingsDialog extends Vue {
         const link = document.createElement('a')
 
         link.href = fetchedURL
-        link.setAttribute('download', 'typeMappings.json')
+        link.setAttribute('download', `${this.containerName} ${this.dataSourceName} Type Mappings.json`)
         document.body.append(link)
         link.click()
         this.dialog = false

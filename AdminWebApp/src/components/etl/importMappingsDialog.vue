@@ -16,7 +16,7 @@
               ref="form"
               lazy-validation
             >
-              <v-file-input label=".json File" @change="addFile"></v-file-input>
+              <v-file-input accept="application/json" label=".json File" @change="addFile"></v-file-input>
             </v-form>
           </v-col>
         </v-row>

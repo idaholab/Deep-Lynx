@@ -11,7 +11,7 @@
         <v-row>
           <v-col :cols="12">
             <p>{{$t('settings.explanation')}}</p>
-            <v-form v-if="container">
+            <v-form ref="form" v-model="valid" lazy-validation v-if="container">
               <v-text-field
                   v-model="container.name"
                   :label="$t('containers.name')"
@@ -23,7 +23,7 @@
                   :rows="2"
                   v-model="container.description"
                   :label="$t('containers.description')"
-                  required
+                  :rules="[v => !!v || $t('dataMapping.required')]"
               ></v-textarea>
 
               <v-checkbox v-model="container.config.ontology_versioning_enabled">
@@ -68,12 +68,16 @@ export default class Settings extends Vue {
   errorMessage = ""
   successMessage = ""
   loading = false
+  valid = true
 
   beforeMount() {
     this.container = this.$store.getters.activeContainer
   }
 
   updateContainer() {
+    // @ts-ignore
+    if(!this.$refs.form!.validate()) return;
+
     this.$client.updateContainer(this.container)
         .then((container) => {
           this.$store.commit('setEditMode', false)

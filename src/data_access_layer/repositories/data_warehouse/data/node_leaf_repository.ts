@@ -84,6 +84,7 @@ export default class NodeLeafRepository extends Repository {
             transaction,
             resultClass: NodeLeaf,
         });
+
         // reset the query
         this._rawQuery = [nodeLeafQuery];
         // reset the values to correspond with reset query
