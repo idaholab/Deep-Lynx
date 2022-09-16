@@ -34,6 +34,9 @@
                 </template>
                 <template slot="append-outer"><info-tooltip :message="$t('containers.owlUrlHelp')"></info-tooltip> </template>
               </v-text-field>
+
+              <br>
+              <p>{{$t('containers.importHelp')}} <a :href="importHelpLink()">{{$t('containerSelect.wiki')}}</a> </p>
             </v-form>
           </v-col>
         </v-row>
@@ -85,6 +88,10 @@ export default class OntologyUpdate extends Vue {
       this.errorMessage = "Please select either an ontology file or valid URL to an ontology file"
       this.loading = false
     }
+  }
+
+  importHelpLink() {
+    return this.$t('containers.importWikiLink')
   }
 }
 </script>
