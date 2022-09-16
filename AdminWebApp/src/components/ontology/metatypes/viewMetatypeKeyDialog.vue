@@ -31,6 +31,7 @@
                 class="disabled"
             >
               <template v-slot:label>{{$t('viewMetatypeKey.propertyName')}}</template>
+              <template slot="append-outer"><info-tooltip :message="$t('ontology.propertyName')"></info-tooltip> </template>
             </v-text-field>
             <v-select
                 v-model="selectedMetatypeKey.data_type"

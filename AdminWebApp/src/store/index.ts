@@ -122,8 +122,8 @@ export default new Vuex.Store<State>({
         },
 
         refreshOwnedCurrentChangelists({commit, getters, state}, currentUserID) {
+            const oldSelectedChangelistID = state.selectedChangelist?.id;
             commit('setOwnedCurrentChangelists', []);
-            commit('selectChangelist', undefined);
 
             const config: {[key: string]: any} = {createdBy: currentUserID};
             return new Promise((resolve, reject) => {
@@ -137,7 +137,7 @@ export default new Vuex.Store<State>({
                             );
                         }
 
-                        if (!state.selectedChangelist) {
+                        if (!oldSelectedChangelistID || results.filter((v) => v.id === oldSelectedChangelistID).length <= 0) {
                             commit(
                                 'selectChangelist',
                                 results.find((c) => c.status === 'ready'),

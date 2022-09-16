@@ -155,6 +155,9 @@
               if(roles.length > 0) {
                 user.role = roles[0]
               }
+
+              // needed in order to get the user object to update with the roles
+              this.$forceUpdate()
             })
             .catch(e => this.errorMessage = e)
     }
@@ -167,6 +170,7 @@
           if(roles.length > 0) {
             this.selectedRole = roles[0]
           }
+
         })
         .catch(e => this.errorMessage = e)
       }
