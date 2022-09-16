@@ -55,6 +55,9 @@
               </v-checkbox>
 
               <select-data-source-types @selected="setDataSources"></select-data-source-types>
+
+              <br>
+              <p>{{$t('containers.importHelp')}} <a :href="importHelpLink()">{{$t('containerSelect.wiki')}}</a> </p>
             </v-form>
           </v-col>
         </v-row>
@@ -142,6 +145,10 @@
 
         setDataSources(sources: string[]) {
           this.newContainer.config.enabled_data_sources = sources
+        }
+
+        importHelpLink() {
+          return this.$t('containers.importWikiLink')
         }
     }
 </script>

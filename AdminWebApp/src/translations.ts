@@ -1089,6 +1089,8 @@ export default {
             urlOwlFile: 'URL to .owl File',
             optional: 'optional',
             owlFile: '.owl File',
+            importHelp: 'Need Help? Details on creating or updating a container via an ontology file can be found on our',
+            importWikiLink: 'https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Creating-an-Ontology#importing-an-ontology',
             ontologyVersioningEnabled: 'Ontology Versioning Enabled',
             ontologyVersioningHelp: 'Toggle whether or not this container will maintain historical versions of the ontology.',
         },
