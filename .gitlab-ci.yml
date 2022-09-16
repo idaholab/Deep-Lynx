@@ -118,6 +118,23 @@ deploy_acceptance:
   - tags
   except:
   - branches
+deploy_production_int:
+  stage: deploy
+  image: mcr.microsoft.com/azure-cli:latest
+  script:
+  - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+  - mkdir -p $HOME/.kube
+  - echo -n $KUBE_CONFIG | base64 -d > $HOME/.kube/config
+  - echo "Starting production deployment with tag $CI_COMMIT_REF_NAME"
+  - kubectl apply -f $DEEPLYNX_INT_PRD_KUBERNETES
+  environment:
+    name: production_int
+  when: manual
+  only:
+  - tags
+  except:
+  - branches
 deploy_production:
   stage: deploy
   image: mcr.microsoft.com/azure-cli:latest
