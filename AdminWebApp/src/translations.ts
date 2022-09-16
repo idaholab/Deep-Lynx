@@ -1,6 +1,9 @@
 export default {
     en: {
         beta: 'BETA',
+        ontology: {
+            propertyName: 'This is the JSON compliant property name your data will be stored under inside the database schema.',
+        },
         home: {
             bugs: 'Ran into some bugs?',
             contactUs: 'Tell Us!',
@@ -235,6 +238,9 @@ export default {
             defaultValue: 'Default Value',
         },
         viewMetatypeKey: {
+            name: 'Name',
+            propertyName: 'Property Name',
+            dataType: 'Data Type',
             close: 'Close',
         },
         editMetatype: {
@@ -798,6 +804,8 @@ export default {
                 'Data may have already been generated using this Transformation. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Transformation. If you would like to keep this data and orphan it, please uncheck the box below.',
         },
         dataMapping: {
+            mappingHelp:
+                'Mapping allows you to specify what kind of record this transformation should produce. Each transformation can produce either a relationship or node. Further information will be requested as you work through the form.',
             nodeAttachmentParameters: 'Node Attachment Parameters - optional',
             nodeAttachmentParametersHelp:
                 'These parameters dictate which nodes should display this timeseries data. More information can be found on the wiki.',

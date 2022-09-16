@@ -386,7 +386,7 @@
                             :label="$t('createDataSource.chunkInterval')"
                             v-model="timeseriesConfig.chunk_interval"
                         >
-                          <template slot="append-outer"><a href="https://docs.timescale.com/timescaledb/latest/how-to-guides/hypertables/about-hypertables#hypertable-partitioning" target="_blank">{{$t('createDataSource.chunkIntervalHelp')}}</a></template>
+                          <template slot="append-outer"><a href="https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Timeseries-Data-Sources#table-design" target="_blank">{{$t('createDataSource.chunkIntervalHelp')}}</a></template>
                         </v-text-field>
                       </v-col>
 

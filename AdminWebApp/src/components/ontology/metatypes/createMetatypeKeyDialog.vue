@@ -36,6 +36,7 @@
                   required
               >
                 <template v-slot:label>{{$t('createMetatypeKey.propertyName')}} <small style="color:red" >*</small></template>
+                <template slot="append-outer"><info-tooltip :message="$t('ontology.propertyName')"></info-tooltip> </template>
               </v-text-field>
               <v-select
                   v-model="metatypeKey.data_type"
