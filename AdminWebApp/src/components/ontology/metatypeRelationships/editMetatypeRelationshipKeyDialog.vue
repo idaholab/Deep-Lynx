@@ -31,6 +31,7 @@
                     disabled
                 >
                   <template v-slot:label>{{$t('editMetatypeKey.propertyName')}} <small style="color:red" >*</small></template>
+                  <template slot="append-outer"><info-tooltip :message="$t('ontology.propertyName')"></info-tooltip> </template>
                 </v-text-field>
                 <v-select
                     v-model="comparisonRelationshipKey.data_type"
