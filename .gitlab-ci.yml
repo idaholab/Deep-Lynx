@@ -48,7 +48,7 @@ build_swagger:
     - ''
   script:
   - mkdir /opt/swagger && cd /opt/swagger
-  - wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.29/swagger-codegen-cli-3.0.29.jar
+  - wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.35/swagger-codegen-cli-3.0.35.jar
     -O swagger-codegen-cli.jar
   - git clone $DL_JS_SDK
   - git clone $DL_PY_SDK
