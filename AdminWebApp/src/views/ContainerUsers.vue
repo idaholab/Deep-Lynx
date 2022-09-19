@@ -22,22 +22,38 @@
       </template>
 
       <template v-slot:[`item.actions`]="{ item }">
-        <v-icon
-          v-if="$store.getters.activeContainer.created_by !== item.id || item.id !== $auth.CurrentUser().id"
-          small
-          class="mr-2"
-          @click="editUser(item)"
-        >
-          mdi-pencil
-        </v-icon>
-        <v-icon
-            v-if="$store.getters.activeContainer.created_by !== item.id || item.id !== $auth.CurrentUser().id"
-            small
-            class="mr-2"
-            @click="deleteUser(item)"
-        >
-          mdi-account-multiple-minus
-        </v-icon>
+        <v-tooltip top>
+          <template v-slot:activator="{on, attrs}">
+            <v-icon
+                v-if="$store.getters.activeContainer.created_by !== item.id || item.id !== $auth.CurrentUser().id"
+                small
+                class="mr-2"
+                @click="editUser(item)"
+                v-bind="attrs"
+                v-on="on"
+            >
+              mdi-pencil
+            </v-icon>
+          </template>
+          <span>{{$t('home.editUser')}}</span>
+        </v-tooltip>
+
+        <v-tooltip top>
+          <template v-slot:activator="{on, attrs}">
+            <v-icon
+                v-if="$store.getters.activeContainer.created_by !== item.id || item.id !== $auth.CurrentUser().id"
+                small
+                class="mr-2"
+                @click="deleteUser(item)"
+                v-bind="attrs"
+                v-on="on"
+            >
+              mdi-account-multiple-minus
+            </v-icon>
+          </template>
+          <span>{{$t('home.deleteUser')}}</span>
+        </v-tooltip>
+
       </template>
     </v-data-table>
     

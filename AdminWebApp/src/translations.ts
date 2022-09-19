@@ -5,6 +5,8 @@ export default {
             propertyName: 'This is the JSON compliant property name your data will be stored under inside the database schema.',
         },
         home: {
+            deleteUser: 'Remove User From Container',
+            editUser: 'Edit User Roles In Container',
             bugs: 'Ran into some bugs?',
             contactUs: 'Tell Us!',
             beta: 'beta',
@@ -80,6 +82,8 @@ export default {
             inviteUserCardLinkText: 'Manage Users',
             ontologyVersioning: 'Ontology Versioning',
             ontologyVersioningDescription: 'Manage Version and Changelists',
+            ontologyVersioningLongDescription:
+                "Use this page to manage your Ontology's versioning and changelist system. You can browse your published versions, as well as manage pending and approved changelists for publishing.",
             serviceUsers: 'Application API Keys',
             serviceUsersDescription: 'External Application Access',
         },

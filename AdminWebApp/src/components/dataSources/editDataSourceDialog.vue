@@ -324,7 +324,8 @@
                     disable-sort
                     hide-default-footer
                 >
-                  <template v-slot:[`item.column_name`]="{ item }">
+                  <template v-slot:[`item.column_name`]="{ item , index }">
+                    <span style="visibility: hidden" :id="`timeseries_column_${index}`"></span>
 
                     <v-text-field
                         :label="$t('dataMapping.columnName')"
@@ -409,7 +410,8 @@
                     hide-default-footer
                 >
 
-                  <template v-slot:[`item.type`]="{ item }">
+                  <template v-slot:[`item.type`]="{ item, index}">
+                    <span style="visibility: hidden" :id="`node_attachment_${index}`"></span>
                     <v-select
                         :label="$t('dataMapping.type')"
                         :items=parameterFilterTypes
