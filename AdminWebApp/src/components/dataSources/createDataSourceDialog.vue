@@ -337,7 +337,7 @@
                     hide-default-footer
                 >
                   <template v-slot:[`item.column_name`]="{ item, index }">
-
+                    <span style="visibility: hidden" :id="`timeseries_column_${index}`"></span>
                     <v-text-field
                         :label="$t('dataMapping.columnName')"
                         v-model="item.column_name"

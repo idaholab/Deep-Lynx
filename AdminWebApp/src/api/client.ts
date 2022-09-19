@@ -97,6 +97,9 @@ export class Client {
     async containerFromImport(container: ContainerT | any, owlFile: File | null, owlFilePath: string): Promise<string> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
+        config.validateStatus = () => {
+            return true;
+        };
 
         if (this.config?.auth_method === 'token') {
             config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
@@ -131,7 +134,8 @@ export class Client {
                     resolve(resp.data.value);
                 });
             })
-            .catch((error: any) => {
+            .catch((e: any) => {
+                const error = JSON.parse(e);
                 const resp: AxiosResponse = {data: {}, status: 500, statusText: 'internal server error', headers: '', config: error.config};
                 if (error.response) {
                     // The request was made and the server responded with a status code
@@ -162,7 +166,7 @@ export class Client {
                     resp.data.error = error.request;
                 } else {
                     // Something happened in setting up the request that triggered an Error
-                    resp.data.error = error.message;
+                    resp.data.error = error.error;
                 }
 
                 return new Promise<string>((resolve, reject) => {

@@ -123,7 +123,7 @@
                 })
                 .catch(e => {
                   this.loading = false
-                  this.errorMessage = 'Unable to load ontology from OWL file or OWL file URL'
+                  this.errorMessage = `Unable to load ontology from OWL file or OWL file URL: ${e}`
                 })
           } else {
             this.$client.createContainer(this.newContainer)

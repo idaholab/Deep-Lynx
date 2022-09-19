@@ -262,7 +262,7 @@ export default class ContainerImport {
                 if (e.message) {
                     return Promise.reject(Result.Failure(e.message));
                 }
-                return Promise.reject(Result.Failure(e));
+                return Promise.reject(Result.Error(e));
             });
         }
     }
@@ -1045,6 +1045,11 @@ export default class ContainerImport {
                                 case 'max':
                                     max = cardinalityQuantity;
                                     break;
+                            }
+
+                            if(!dataProp?.name) {
+                                resolve(Result.Failure('unable to load .owl file, data property missing label or name'))
+                                return
                             }
 
                             const propName = dataProp.name.split(' ').join('_');
