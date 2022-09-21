@@ -67,6 +67,10 @@ export default class MetatypeKey extends BaseDomainClass {
     @IsString()
     ontology_version?: string;
 
+    @IsOptional()
+    @IsString()
+    uuid?: string;
+
     constructor(input: {
         metatype_id?: string;
         container_id?: string;

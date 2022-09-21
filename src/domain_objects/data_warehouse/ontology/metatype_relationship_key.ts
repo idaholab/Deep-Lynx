@@ -68,6 +68,10 @@ export default class MetatypeRelationshipKey extends BaseDomainClass {
     @IsString()
     ontology_version?: string;
 
+    @IsOptional()
+    @IsString()
+    uuid?: string;
+
     constructor(input: {
         metatype_relationship_id?: string;
         container_id?: string;

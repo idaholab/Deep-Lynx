@@ -9,6 +9,9 @@ import OntologyVersion from '../../../../../domain_objects/data_warehouse/ontolo
 import OntologyVersionRepository from '../../../../../data_access_layer/repositories/data_warehouse/ontology/versioning/ontology_version_repository';
 import {User} from '../../../../../domain_objects/access_management/user';
 import UserMapper from '../../../../../data_access_layer/mappers/access_management/user_mapper';
+import MetatypeRepository from '../../../../../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
+import Metatype from '../../../../../domain_objects/data_warehouse/ontology/metatype';
+import OntologyVersionMapper from '../../../../../data_access_layer/mappers/data_warehouse/ontology/versioning/ontology_version_mapper';
 
 describe('An Ontology Version Repo', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -72,6 +75,56 @@ describe('An Ontology Version Repo', async () => {
         expect(version.id).not.empty;
 
         return repo.delete(version);
+    });
+
+    it('can update an ontology', async () => {
+        const repo = new OntologyVersionRepository();
+        const metatypeRepo = new MetatypeRepository();
+        const mapper = new OntologyVersionMapper();
+
+        const version1 = new OntologyVersion({
+            container_id: containerID,
+            name: 'Test Version',
+        });
+        const v1saved = await repo.save(version1, user);
+        expect(v1saved.isError).false;
+        expect(version1.id).not.empty;
+
+        const metatype = new Metatype({
+            container_id: containerID,
+            name: 'bob',
+            description: 'bob',
+            ontology_version: version1.id
+        });
+        const saved = await metatypeRepo.save(metatype, user);
+        expect(saved.isError).false;
+        
+        let resultList = await metatypeRepo.where().ontologyVersion('eq', version1.id).list();
+        const metatypeV1 = resultList.value[0];
+        expect(metatypeV1.ontology_version).eq(version1.id);
+        const mtV1_id = metatypeV1.id;
+        const mtV1_uuid = metatypeV1.uuid;
+
+        const version2 = new OntologyVersion({
+            container_id: containerID,
+            name: 'Test Version 2',
+        });
+        const gotID = await mapper.Create(user.id!, version2);
+        expect(gotID.isError).false;
+        const v2id = gotID.value.id!;
+
+        const cloned = await repo.cloneOntology(user, version1.id, v2id, containerID);
+        expect(cloned.isError).false;
+
+        resultList = await metatypeRepo.where().ontologyVersion('eq', v2id).list();
+        const metatypeV2 = resultList.value[0];
+        expect(metatypeV2.id).not.eq(mtV1_id);
+        expect(metatypeV2.ontology_version).eq(v2id);
+        expect(metatypeV2.uuid).eq(mtV1_uuid);
+
+        const v2deleted = await mapper.Delete(v2id);
+        expect(v2deleted.isError).false;
+        return repo.delete(version1);
     });
 
     it('can retrieve a record', async () => {

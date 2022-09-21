@@ -190,6 +190,11 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         return this;
     }
 
+    uuid(operator: string, value: any) {
+        super.query('uuid', operator, value);
+        return this;
+    }
+
     async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<MetatypeKey[]>> {
         return super.findAll<MetatypeKey>(options, {
             transaction,

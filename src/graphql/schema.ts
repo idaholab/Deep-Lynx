@@ -769,7 +769,7 @@ export default class GraphQLSchemaGenerator {
     resolverForMetatype(containerID: string, metatype: Metatype, resolverOptions?: ResolverOptions): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
             let repo = new NodeRepository();
-            repo = repo.where().containerID('eq', containerID).and().metatypeID('eq', metatype.id);
+            repo = repo.where().containerID('eq', containerID).and().metatypeUUID('eq', metatype.uuid);
 
             // you might notice that metatype_id and metatype_name are missing as filters - these are not
             // needed as we've already dictated what metatype to look for based on the query itself

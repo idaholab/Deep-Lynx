@@ -38,6 +38,10 @@ export default class MetatypeRelationship extends BaseDomainClass {
     @IsString()
     ontology_version?: string;
 
+    @IsOptional()
+    @IsString()
+    uuid?: string;
+
     // because we need to track removed keys in case of update, keys is made private
     // and only accessible through a getter.
     @Type(() => MetatypeRelationshipKey)

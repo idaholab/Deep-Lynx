@@ -373,6 +373,11 @@ export default class MetatypeRepository extends Repository implements Repository
         return this;
     }
 
+    uuid(operator: string, value: any) {
+        super.query('uuid', operator, value);
+        return this;
+    }
+
     count(): Promise<Result<number>> {
         return super.count();
     }

@@ -120,6 +120,18 @@ export default class Edge extends BaseDomainClass {
     @Type(() => EdgeMetadata)
     metadata?: EdgeMetadata;
 
+    @IsOptional()
+    @IsString()
+    metatype_relationship_uuid?: string;
+
+    @IsOptional()
+    @IsString()
+    origin_metatype_uuid?: string;
+
+    @IsOptional()
+    @IsString()
+    destination_metatype_uuid?: string;
+
     constructor(input: {
         container_id: Container | string;
         metatype_relationship_pair: MetatypeRelationshipPair | string;
