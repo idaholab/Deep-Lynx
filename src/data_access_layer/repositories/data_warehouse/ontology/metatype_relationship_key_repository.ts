@@ -137,6 +137,11 @@ export default class MetatypeRelationshipKeyRepository extends Repository implem
         return this;
     }
 
+    uuid(operator: string, value: any) {
+        super.query('uuid', operator, value);
+        return this;
+    }
+
     async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<MetatypeRelationshipKey[]>> {
         return super.findAll<MetatypeRelationshipKey>(options, {
             transaction,

@@ -95,6 +95,10 @@ export default class Node extends BaseDomainClass {
     @Type(() => NodeMetadata)
     metadata?: NodeMetadata;
 
+    @IsOptional()
+    @IsString()
+    metatype_uuid?: string;
+
     constructor(input: {
         container_id: Container | string;
         metatype: Metatype | string;

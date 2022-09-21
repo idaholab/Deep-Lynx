@@ -447,6 +447,11 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return this;
     }
 
+    metatypeUUID(operator: string, value: any) {
+        super.query('metatype_uuid', operator, value);
+        return this;
+    }
+
     async count(transaction?: PoolClient, queryOptions?: QueryOptions): Promise<Result<number>> {
         const results = await super.count(transaction, queryOptions);
 

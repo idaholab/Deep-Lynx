@@ -387,6 +387,21 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         return this;
     }
 
+    metatypeRelationshipUUID(operator: string, value: any) {
+        super.query('metatype_relationship_uuid', operator, value);
+        return this;
+    }
+
+    originMetatypeUUID(operator: string, value: any) {
+        super.query('origin_metatype_uuid', operator, value);
+        return this;
+    }
+
+    destinationMetatypeUUID(operator: string, value: any) {
+        super.query('destination_metatype_uuid', operator, value);
+        return this;
+    }
+
     async count(transaction?: PoolClient, queryOptions?: QueryOptions): Promise<Result<number>> {
         const results = await super.count(transaction, queryOptions);
 

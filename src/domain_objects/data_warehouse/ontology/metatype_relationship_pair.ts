@@ -132,6 +132,10 @@ export default class MetatypeRelationshipPair extends BaseDomainClass {
     @IsString()
     relationship_name?: string;
 
+    @IsOptional()
+    @IsString()
+    uuid?: string;
+
     constructor(input: {
         name: string;
         description: string;

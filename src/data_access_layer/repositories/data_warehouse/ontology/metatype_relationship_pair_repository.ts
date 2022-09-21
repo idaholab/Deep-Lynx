@@ -378,6 +378,11 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         return this;
     }
 
+    uuid(operator: string, value: any) {
+        super.query('metatype_relationship_pairs.uuid', operator, value);
+        return this;
+    }
+
     async count(): Promise<Result<number>> {
         const results = await super.count();
 
