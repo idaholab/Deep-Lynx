@@ -128,7 +128,9 @@
                   clearable
                   deletable-chips
                   chips
-              ></v-combobox>
+              >
+                <template slot="append-outer"><info-tooltip :message="$t('ontology.optionsHelp')"></info-tooltip> </template>
+              </v-combobox>
             </v-form>
             <p><span style="color:red">*</span> = {{$t('createMetatypeKey.requiredField')}}</p>
           </v-col>

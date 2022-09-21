@@ -2,6 +2,7 @@ export default {
     en: {
         beta: 'BETA',
         ontology: {
+            optionsHelp: 'This value represents the valid options if the enumeration data type is choosen. This is not required on any other data type.',
             propertyName: 'This is the JSON compliant property name your data will be stored under inside the database schema.',
         },
         home: {
@@ -653,8 +654,12 @@ export default {
             typeToAdd: 'Type and hit "Enter" to add entry',
             ifcElementTypes: 'Element Types for IFC Generation',
             ifcSettingsTitle: 'IFC Settings',
-            stopNodes: 'Stop Nodes',
-            valueNodes: 'Value Nodes',
+            stopNodes: 'Ignored Properties',
+            stopNodesHelp:
+                'Ignored Properties tell DeepLynx what JSON properties, CSV columns, or XML types to ignore when creating the type mapping. For example if you have a two identical payloads, but one has an additional field, you could tell DeepLynx to ignore than additional field and the resulting type mapping would continue to match.',
+            valueNodes: 'Property Value vs. Type',
+            valueNodesHelp:
+                "Property Value vs. Type tells DeepLynx that a JSON property, CSV column, or XML type should have it's value examined as well as examining its type. This allows you to send in identical payload structures but create a different type mapping depending on the value of a property. ",
             dangerZone: 'Advanced Settings',
 
             dangerZoneWarning:

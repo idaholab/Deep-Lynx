@@ -512,7 +512,9 @@
                           v-model="stopNodes"
                           :label="$t('createDataSource.stopNodes')"
                           :placeholder="$t('createDataSource.typeToAdd')"
-                      ></v-combobox>
+                      >
+                        <template slot="append-outer"><info-tooltip :message="$t('createDataSource.stopNodesHelp')"></info-tooltip></template>
+                      </v-combobox>
 
                       <v-combobox
                           style="margin-top: 10px"
@@ -523,7 +525,9 @@
                           v-model="valueNodes"
                           :label="$t('createDataSource.valueNodes')"
                           :placeholder="$t('createDataSource.typeToAdd')"
-                      ></v-combobox>
+                      >
+                        <template slot="append-outer"><info-tooltip :message="$t('createDataSource.valueNodesHelp')"></info-tooltip> </template>
+                      </v-combobox>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                 </v-expansion-panels>
