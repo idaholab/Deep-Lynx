@@ -25,10 +25,10 @@
       <v-tabs v-if="selectedDataSource !== null" grow class="mt-4">
         <v-tab @click="activeTab = 'currentMappings'">{{$t('dataMapping.currentMappings')}}</v-tab>
         <v-tab @click="activeTab = 'pendingTransformations'" :disabled="noTransformationsCount === 0">
-          <v-badge v-if="noTransformationsCount !== 0" color="green" :content="noTransformationsCount">
+          <v-badge class="transformation-badge" v-if="noTransformationsCount !== 0" color="green" :content="noTransformationsCount">
             {{$t('dataMapping.needsTransformations')}}
           </v-badge>
-          <div v-if="noTransformationsCount === 0" >
+          <div v-if="noTransformationsCount === 0">
             {{$t('dataMapping.needsTransformations')}}
           </div>
         </v-tab>
@@ -832,5 +832,12 @@ export default class DataMapping extends Vue {
   bottom: 0;
   width: 100%;
   background-color: white;
+}
+
+.transformation-badge {
+  .v-badge__badge {
+    outline: 1px solid white;
+    inset: auto auto calc(100% - 9px) calc(100% + 4px) !important;
+  }
 }
 </style>

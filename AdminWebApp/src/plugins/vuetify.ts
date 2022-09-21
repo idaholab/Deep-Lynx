@@ -17,7 +17,9 @@ export default new Vuetify({
         error: '#CF1E4C',
         text: '#333333',
         lightgray: '#DCDDDE',
-        darkgray: '#AFAFAF'
+        lightgray2: '#DADADA',
+        darkgray: '#AFAFAF',
+        darkgray2: '#888888'
       }
     }
   }
