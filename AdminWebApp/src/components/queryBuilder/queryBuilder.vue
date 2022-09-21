@@ -29,7 +29,7 @@
         <v-snackbar :message="errorMessage"></v-snackbar>
         <!-- <error-banner :message="errorMessage"></error-banner> -->
         <v-card>
-          <v-tabs v-model="activeTab" background-color="lightgray" slider-color="darkgray">
+          <v-tabs v-model="activeTab" background-color="lightgray" class="data-query-tabs">
             <v-tab @click="activeTab = 'queryBuilder'">{{$t('queryBuilder.queryBuilder')}}</v-tab>
             <v-tab @click="activeTab = 'rawEditor'" disabled>{{$t('queryBuilder.rawEditor')}}</v-tab>
             <v-spacer />
@@ -291,4 +291,13 @@ export type ResultSet = {
     padding: 17px;
     font-size: .85rem;
   }
+
+  .data-query-tabs .v-tab {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+
+    &:nth-child(2) {
+      border-top-left-radius: 6px;
+    }
+  }  
 </style>

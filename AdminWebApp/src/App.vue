@@ -25,6 +25,32 @@ export default class App extends Vue {
   letter-spacing: normal !important
 }
 
+.v-tab {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  background-color: lighten($primary, 35%);
+  transition: all .3s;
+  border: 2px solid white;
+  color: $darkgray2 !important;
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+
+  &:last-of-type {
+    border-right: none;
+  }
+
+  &.v-tab--active {
+    background-color: $primary;
+    color: white !important;
+    transition: all .3s;
+  }
+}
+
+.v-tabs-slider-wrapper {
+  display: none;
+}
+
 .theme--light.v-icon {
     color: $primary !important;
 }
