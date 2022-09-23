@@ -178,6 +178,18 @@ export class TypeMappingUpgradePayload extends NakedDomainClass {
     ontology_version?: string;
 }
 
+// for when we eventually run the comparison for mappings
+export class TypeMappingComparison extends NakedDomainClass {
+    @IsOptional()
+    data_source_id?: string;
+
+    @IsOptional()
+    number_of_transformations = 0;
+
+    @IsOptional()
+    percentage_match = 0;
+}
+
 export class ShapeHashOptions {
     stop_nodes?: string[];
     value_nodes?: string[];
