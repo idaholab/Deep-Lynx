@@ -127,6 +127,10 @@ export default class TypeMappingMapper extends Mapper {
         return super.count(this.countNoTransformationStatement(dataSourceID));
     }
 
+    public CopyTransformations(userID: string, sourceMappingID: string, targetMappingID: string): Promise<Result<boolean>> {
+        return super.runAsTransaction(this.copyTransformations(userID, sourceMappingID, targetMappingID));
+    }
+
     // Below are a set of query building functions. So far they're very simple
     // and the return value is something that the postgres-node driver can understand
     // My hope is that this method will allow us to be flexible and create more complicated
@@ -330,6 +334,61 @@ export default class TypeMappingMapper extends Mapper {
                      AND NOT EXISTS (SELECT 1 FROM type_mapping_transformations 
                      WHERE type_mapping_transformations.type_mapping_id = type_mappings.id )`,
             values: [dataSourceID],
+        };
+    }
+
+    private copyTransformations(userID: string, sourceMappingID: string, targetMappingID: string): QueryConfig {
+        return {
+            text: `INSERT INTO type_mapping_transformations(type_mapping_id,
+                                                            metatype_id,
+                                                            metatype_relationship_pair_id,
+                                                            conditions,
+                                                            keys,
+                                                            origin_id_key,
+                                                            origin_metatype_id,
+                                                            origin_data_source_id,
+                                                            destination_id_key,
+                                                            destination_metatype_id,
+                                                            destination_data_source_id,
+                                                            unique_identifier_key,
+                                                            root_array,
+                                                            created_by,
+                                                            modified_by,
+                                                            archived,
+                                                            config,
+                                                            tab_data_source_id,
+                                                            tab_metatype_id,
+                                                            tab_node_id,
+                                                            tab_node_key,
+                                                            type,
+                                                            name)
+                   SELECT $3,
+                          t.metatype_id,
+                          t.metatype_relationship_pair_id,
+                          t.conditions,
+                          t.keys,
+                          t.origin_id_key,
+                          t.origin_metatype_id,
+                          t.origin_data_source_id,
+                          t.destination_id_key,
+                          t.destination_metatype_id,
+                          t.destination_data_source_id,
+                          t.unique_identifier_key,
+                          t.root_array,
+                          $1,
+                          $1,
+                          t.archived,
+                          t.config,
+                          t.tab_data_source_id,
+                          t.tab_metatype_id,
+                          t.tab_node_id,
+                          t.tab_node_key,
+                          t.type,
+                          t.name
+                   FROM type_mapping_transformations t
+                   WHERE type_mapping_id = $2
+            `,
+            values: [userID, sourceMappingID, targetMappingID],
         };
     }
 }

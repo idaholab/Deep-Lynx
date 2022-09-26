@@ -39,6 +39,12 @@ export default class TypeMappingRoutes {
             authInContainer('write', 'data'),
             this.importTypeMappings,
         );
+        app.post(
+            '/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID/copy/:originalMappingID',
+            ...middleware,
+            authInContainer('write', 'data'),
+            this.copyTransformationsFromMapping,
+        );
         app.get(
             '/containers/:containerID/import/datasources/:sourceID/mappings/:mappingID',
             ...middleware,
@@ -551,6 +557,21 @@ export default class TypeMappingRoutes {
             return;
         } else {
             Result.Failure(`type transformation not found`).asResponse(res);
+            next();
+        }
+    }
+
+    private static copyTransformationsFromMapping(req: Request, res: Response, next: NextFunction) {
+        if (req.typeMapping) {
+            mappingRepo
+                .copyTransformations(req.currentUser!, req.typeMapping.id!, req.params.originalMappingID)
+                .then((results) => {
+                    results.asResponse(res);
+                })
+                .catch((e) => Result.Error(e).asResponse(res))
+                .finally(() => next());
+        } else {
+            Result.Failure(`target type transformation not found`).asResponse(res);
             next();
         }
     }
