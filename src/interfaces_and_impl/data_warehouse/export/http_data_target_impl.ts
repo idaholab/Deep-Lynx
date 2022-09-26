@@ -155,8 +155,6 @@ export default class HttpDataTargetImpl implements DataTarget {
             Logger.error(`Schema generation failed for data target ${this.DataTargetRecord?.id}`, error)
         }
 
-        console.log(data);
-
         // create http request
         const endpoint = buildUrl(config.endpoint);
 
