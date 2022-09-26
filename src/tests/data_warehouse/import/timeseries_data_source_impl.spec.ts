@@ -7,21 +7,13 @@ import faker from 'faker';
 import {expect} from 'chai';
 import UserMapper from '../../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
-import DataSourceMapper from '../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import DataSourceRecord, {TimeseriesColumn, TimeseriesDataSourceConfig} from '../../../domain_objects/data_warehouse/import/data_source';
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
-import StandardDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/standard_data_source_impl';
-import HttpDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/http_data_source_impl';
-import AvevaDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/aveva_data_source';
-import JazzDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/jazz_data_source_impl';
 import fs from 'fs';
-import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
-import {toStream} from '../../../services/utilities';
-import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import/import';
-import TimeseriesDataSourceImpl from '../../../interfaces_and_impl/data_warehouse/import/timeseries_data_source';
-import {plainToClass, plainToInstance} from 'class-transformer';
+import {plainToInstance} from 'class-transformer';
 
 const csv = require('csvtojson');
+const fastLoad = require('dl-fast-load');
 
 // Generally testing the standard implementation to verify that the ReceiveData and other underlying functions that most
 // other implementations rely on function ok.
@@ -371,6 +363,12 @@ describe('A Standard DataSource Implementation can', async () => {
         fs.writeFileSync('./test-timeseries-data.json', sampleJSON);
 
         // now we create an import through the datasource
+
+        let stream = fs.createReadStream('./test-timeseries-data.json');
+        stream.on('readable', () => {
+            fastLoad.ingest(stream);
+        });
+
         let received = await source!.ReceiveData(fs.createReadStream('./test-timeseries-data.json'), user);
         expect(received.isError, received.error?.error).false;
 
