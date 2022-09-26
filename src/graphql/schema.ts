@@ -181,6 +181,13 @@ export default class GraphQLSchemaGenerator {
                         value: {type: new GraphQLList(GraphQLString)}
                     }
                 })},
+                metatype_uuid: {type: new GraphQLInputObjectType({
+                    name: "record_input_metatype_uuid",
+                    fields: {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLString)}
+                    }
+                })},
                 sortBy: {type: GraphQLString},
                 sortDesc: {type: GraphQLBoolean},
                 sortProp: {type: GraphQLBoolean},
@@ -199,6 +206,7 @@ export default class GraphQLSchemaGenerator {
                 import_id: {type: GraphQLString},
                 metatype_id: {type: GraphQLString},
                 metatype_name: {type: GraphQLString},
+                metatype_uuid: {type: GraphQLString},
                 created_at: {type: GraphQLString},
                 deleted_at: {type: GraphQLString},
                 created_by: {type: GraphQLString},
@@ -459,6 +467,27 @@ export default class GraphQLSchemaGenerator {
                         value: {type: new GraphQLList(GraphQLString)}
                     }
                 })},
+                relationship_pair_uuid: {type: new GraphQLInputObjectType({
+                    name: "edge_record_relationship_pair_uuid",
+                    fields: {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLString)}
+                    }
+                })},
+                origin_metatype_uuid: {type: new GraphQLInputObjectType({
+                    name: "edge_record_origin_metatype_uuid",
+                    fields: {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLString)}
+                    }
+                })},
+                destination_metatype_uuid: {type: new GraphQLInputObjectType({
+                    name: "edge_record_destination_metatype_uuid",
+                    fields: {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLString)}
+                    }
+                })},
                 limit: {type: GraphQLInt, defaultValue: 10000},
                 page: {type: GraphQLInt, defaultValue: 1},
             },
@@ -473,9 +502,12 @@ export default class GraphQLSchemaGenerator {
                 import_id: {type: GraphQLString},
                 origin_id: {type: GraphQLString},
                 origin_metatype_id: {type: GraphQLString},
+                origin_metatype_uuid: {type: GraphQLString},
                 destination_id: {type: GraphQLString},
                 destination_metatype_id: {type: GraphQLString},
+                destination_metatype_uuid: {type: GraphQLString},
                 relationship_name: {type: GraphQLString},
+                relationship_pair_uuid: {type: GraphQLString},
                 created_at: {type: GraphQLString},
                 created_by: {type: GraphQLString},
                 modified_at: {type: GraphQLString},
@@ -588,10 +620,13 @@ export default class GraphQLSchemaGenerator {
             fields: {
                 name: {type: GraphQLString},
                 id: {type: GraphQLString},
+                uuid: {type: GraphQLString},
                 origin_name: {type: GraphQLString},
                 origin_id: {type: GraphQLString},
+                origin_uuid: {type: GraphQLString},
                 destination_name: {type: GraphQLString},
                 destination_id: {type: GraphQLString},
+                destination_uuid: {type: GraphQLString},
             },
         });
 
@@ -600,6 +635,7 @@ export default class GraphQLSchemaGenerator {
             fields: {
                 name: {type: GraphQLString},
                 id: {type: GraphQLString},
+                uuid: {type: GraphQLString},
             },
         });
 
@@ -625,6 +661,7 @@ export default class GraphQLSchemaGenerator {
                     origin_id: {type: GraphQLString},
                     origin_metatype_name: {type: GraphQLString},
                     origin_metatype_id: {type: GraphQLString},
+                    origin_metatype_uuid: {type: GraphQLString},
                     origin_data_source: {type: GraphQLString},
                     origin_metadata: {type: GraphQLJSON},
                     origin_created_by: {type: GraphQLString},
@@ -635,7 +672,9 @@ export default class GraphQLSchemaGenerator {
                     edge_id: {type: GraphQLString},
                     relationship_name: {type: GraphQLString},
                     relationship_pair_id: {type: GraphQLString},
+                    relationship_pair_uuid: {type: GraphQLString},
                     relationship_id: {type: GraphQLString},
+                    relationship_uuid: {type: GraphQLString},
                     edge_data_source: {type: GraphQLString},
                     edge_metadata: {type: GraphQLJSON},
                     edge_created_by: {type: GraphQLString},
@@ -646,6 +685,7 @@ export default class GraphQLSchemaGenerator {
                     destination_id: {type: GraphQLString},
                     destination_metatype_name: {type: GraphQLString},
                     destination_metatype_id: {type: GraphQLString},
+                    destination_metatype_uuid: {type: GraphQLString},
                     destination_data_source: {type: GraphQLString},
                     destination_metadata: {type: GraphQLJSON},
                     destination_created_by: {type: GraphQLString},
@@ -702,6 +742,13 @@ export default class GraphQLSchemaGenerator {
             })},
             metatype_id: {type: new GraphQLInputObjectType({
                 name: "node_input_metatype_id",
+                fields : {
+                    operator: {type: GraphQLString},
+                    value: {type: new GraphQLList(GraphQLJSON)}
+                }
+            })},
+            metatype_uuid: {type: new GraphQLInputObjectType({
+                name: "node_input_metatype_uuid",
                 fields : {
                     operator: {type: GraphQLString},
                     value: {type: new GraphQLList(GraphQLJSON)}
@@ -821,6 +868,15 @@ export default class GraphQLSchemaGenerator {
 
                     repo = repo.and().modifiedAt(input._record.modified_at.operator, input._record.modified_at.value);
                 }
+
+                // metatype_id can be used to filter on a specific ontolgy version's metatype ID instead of global metatype UUID
+                if (input._record.metatype_id) {
+                    if(Array.isArray(input._record.metatype_id.value) && input._record.metatype_id.value.length === 1) {
+                        input._record.metatype_id.value = input._record.metatype_id.value[0];
+                    }
+
+                    repo = repo.and().metatypeID(input._record.metatype_id.operator, input._record.metatype_id.value);
+                }
             }
 
             // variable to store results of edge DB call if _relationship input
@@ -863,6 +919,7 @@ export default class GraphQLSchemaGenerator {
                     import_id: {type: 'INT64', optional: true},
                     metatype_id: {type: 'INT64'},
                     metatype_name: {type: 'UTF8'},
+                    metatype_uuid: {type: 'UTF8'},
                     metadata: {type: 'JSON', optional: true},
                     created_at: {type: 'TIMESTAMP_MILLIS'},
                     created_by: {type: 'UTF8'},
@@ -930,6 +987,7 @@ export default class GraphQLSchemaGenerator {
                             original_id: node.original_data_id,
                             import_id: node.import_data_id,
                             metatype_id: node.metatype_id,
+                            metatype_uuid: node.metatype_uuid,
                             metatype_name: node.metatype_name,
                             metadata: node.metadata,
                             created_at: node.created_at?.toISOString(),
@@ -1002,6 +1060,7 @@ export default class GraphQLSchemaGenerator {
                                         original_id: node.original_data_id,
                                         import_id: node.import_data_id,
                                         metatype_id: node.metatype_id,
+                                        metatype_uuid: node.metatype_uuid,
                                         metatype_name: node.metatype_name,
                                         metadata: node.metadata,
                                         created_at: node.created_at?.toISOString(),
@@ -1052,6 +1111,14 @@ export default class GraphQLSchemaGenerator {
                 }
 
                 repo = repo.and().metatypeID(input.metatype_id.operator, input.metatype_id.value);
+            }
+
+            if (input.metatype_uuid) {
+                if(Array.isArray(input.metatype_uuid.value) && input.metatype_uuid.value.length === 1) {
+                    input.metatype_uuid.value = input.metatype_uuid.value[0];
+                }
+
+                repo = repo.and().metatypeUUID(input.metatype_uuid.operator, input.metatype_uuid.value);
             }
 
             if (input.metatype_name) {
@@ -1128,6 +1195,7 @@ export default class GraphQLSchemaGenerator {
                         import_id: node.import_data_id,
                         metatype_id: node.metatype_id,
                         metatype_name: node.metatype_name,
+                        metatype_uuid: node.metatype_uuid,
                         metadata: node.metadata,
                         created_at: node.created_at?.toISOString(),
                         created_by: node.created_by,
@@ -1196,6 +1264,7 @@ export default class GraphQLSchemaGenerator {
                                     import_id: node.import_data_id,
                                     metatype_id: node.metatype_id,
                                     metatype_name: node.metatype_name,
+                                    metatype_uuid: node.metatype_uuid,
                                     metadata: node.metadata,
                                     created_at: node.created_at?.toISOString(),
                                     created_by: node.created_by,
@@ -1360,6 +1429,30 @@ export default class GraphQLSchemaGenerator {
 
                     repo = repo.and().destination_node_id(input._record.destination_id.operator, input._record.destination_id.value);
                 }
+
+                if (input._record.relationship_pair_uuid) {
+                    if(Array.isArray(input._record.relationship_pair_uuid.value) && input._record.relationship_pair_uuid.value.length === 1) {
+                        input._record.relationship_pair_uuid.value = input._record.relationship_pair_uuid.value[0];
+                    }
+
+                    repo = repo.and().metatypeRelationshipUUID(input._record.relationship_pair_uuid.operator, input._record.relationship_pair_uuid.value);
+                }
+
+                if (input._record.destination_metatype_uuid) {
+                    if(Array.isArray(input._record.destination_metatype_uuid.value) && input._record.destination_metatype_uuid.value.length === 1) {
+                        input._record.destination_metatype_uuid.value = input._record.destination_metatype_uuid.value[0];
+                    }
+
+                    repo = repo.and().destinationMetatypeUUID(input._record.destination_metatype_uuid.operator, input._record.destination_metatype_uuid.value);
+                }
+
+                if (input._record.origin_metatype_uuid) {
+                    if(Array.isArray(input._record.origin_metatype_uuid.value) && input._record.origin_metatype_uuid.value.length === 1) {
+                        input._record.origin_metatype_uuid.value = input._record.origin_metatype_uuid.value[0];
+                    }
+
+                    repo = repo.and().originMetatypeUUID(input._record.origin_metatype_uuid.operator, input._record.origin_metatype_uuid.value);
+                }
             }
 
             // we must map out what the graphql refers to a relationship's keys are
@@ -1411,9 +1504,12 @@ export default class GraphQLSchemaGenerator {
                             import_id: edge.import_data_id,
                             origin_id: edge.origin_id,
                             origin_metatype_id: edge.origin_metatype_id,
+                            origin_metatype_uuid: edge.origin_metatype_uuid,
                             destination_id: edge.destination_id,
                             destination_metatype_id: edge.destination_metatype_id,
+                            destination_metatype_uuid: edge.destination_metatype_uuid,
                             relationship_name: edge.metatype_relationship_name,
+                            relationship_pair_uuid: edge.metatype_relationship_uuid,
                             metadata: edge.metadata,
                             created_at: edge.created_at?.toISOString(),
                             created_by: edge.created_by,
@@ -1480,9 +1576,12 @@ export default class GraphQLSchemaGenerator {
                                         import_id: edge.import_data_id,
                                         origin_id: edge.origin_id,
                                         origin_metatype_id: edge.origin_metatype_id,
+                                        origin_metatype_uuid: edge.origin_metatype_uuid,
                                         destination_id: edge.destination_id,
                                         destination_metatype_id: edge.destination_metatype_id,
+                                        destination_metatype_uuid: edge.destination_metatype_uuid,
                                         relationship_name: edge.metatype_relationship_name,
+                                        relationship_pair_uuid: edge.metatype_relationship_uuid,
                                         metadata: edge.metadata,
                                         created_at: edge.created_at?.toISOString(),
                                         created_by: edge.created_by,
@@ -1597,6 +1696,9 @@ export default class GraphQLSchemaGenerator {
                 } else if (input.edge_type.id) {
                     const query = this.breakQuery(input.edge_type.id);
                     repo = repo.and().relationshipId(query[0], query[1]);
+                } else if (input.edge_type.uuid) {
+                    const query = this.breakQuery(input.edge_type.uuid);
+                    repo = repo.and().relationshipUUID(query[0], query[1]);
                 }
             }
 
@@ -1607,6 +1709,9 @@ export default class GraphQLSchemaGenerator {
                 } else if (input.node_type.name) {
                     const query = this.breakQuery(input.node_type.name);
                     repo = repo.and().metatypeName(query[0], query[1]);
+                } else if (input.node_type.uuid) {
+                    const query = this.breakQuery(input.node_type.uuid);
+                    repo = repo.and().metatypeUUID(query[0], query[1]);
                 }
 
                 if (input.node_type.origin_id) {
@@ -1615,6 +1720,9 @@ export default class GraphQLSchemaGenerator {
                 } else if (input.node_type.origin_name) {
                     const query = this.breakQuery(input.node_type.origin_name);
                     repo = repo.and().originMetatypeName(query[0], query[1]);
+                } else if (input.node_type.origin_uuid) {
+                    const query = this.breakQuery(input.node_type.origin_uuid);
+                    repo = repo.and().originMetatypeUUID(query[0], query[1]);
                 }
 
                 if (input.node_type.destination_id) {
@@ -1623,6 +1731,9 @@ export default class GraphQLSchemaGenerator {
                 } else if (input.node_type.destination_name) {
                     const query = this.breakQuery(input.node_type.destination_name);
                     repo = repo.and().destinationMetatypeName(query[0], query[1]);
+                } else if (input.node_type.destination_uuid) {
+                    const query = this.breakQuery(input.node_type.destination_uuid);
+                    repo = repo.and().destinationMetatypeUUID(query[0], query[1]);
                 }
             }
 
