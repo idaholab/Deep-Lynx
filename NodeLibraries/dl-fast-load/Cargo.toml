@@ -13,8 +13,9 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+csv = "1.1.6"
 
 [dependencies.neon]
 version = "0.10"
 default-features = false
-features = ["napi-6"]
+features = ["napi-6", "channel-api", "promise-api", "try-catch-api", "task-api"]

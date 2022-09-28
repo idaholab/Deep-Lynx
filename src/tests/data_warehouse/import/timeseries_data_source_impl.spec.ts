@@ -364,10 +364,8 @@ describe('A Standard DataSource Implementation can', async () => {
 
         // now we create an import through the datasource
 
-        let stream = fs.createReadStream('./test-timeseries-data.json');
-        stream.on('readable', () => {
-            fastLoad.ingest(stream);
-        });
+        let stream = fs.createReadStream('./test-timeseries-data.json').pause();
+        fastLoad.ingest(stream);
 
         let received = await source!.ReceiveData(fs.createReadStream('./test-timeseries-data.json'), user);
         expect(received.isError, received.error?.error).false;

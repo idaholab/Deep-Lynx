@@ -1,10 +1,9 @@
 extern crate core;
 
 use neon::prelude::*;
-use std::borrow::BorrowMut;
-use std::io::Read;
-use neon::handle::Managed;
 use neon::types::buffer::TypedArray;
+use std::io::{BufReader, Read};
+use std::thread;
 
 pub struct NodeStream<'a> {
     stream: Handle<'a, JsObject>,
@@ -30,40 +29,49 @@ impl<'a> NodeStream<'a> {
 
 impl<'a> Read for NodeStream<'a> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        // pull the read func from the stream object
+        // since we're handling backpressure manually we need to wait until the stream is readable
+        while !(self.stream.get(&mut self.cx, "readable").unwrap() as Handle<JsBoolean>)
+            .value(&mut self.cx)
+        {
+            println!("Not readable")
+        }
 
+        if !(self.stream.get(&mut self.cx, "readableEnded").unwrap() as Handle<JsBoolean>)
+            .value(&mut self.cx)
+            && (self.stream.get(&mut self.cx, "readableLength").unwrap() as Handle<JsNumber>)
+                .value(&mut self.cx) == 0 as f64
+        {
+            println!("ended");
+            return Ok(0);
+        }
 
-        let values: JsResult<JsBuffer> = self.read_func.call_with(&self.cx).this(self.stream).arg(self.cx.number(100)).apply(&mut self.cx);
-        let bob = values.unwrap();
-        let check = bob.as_slice(&mut self.cx);
-        dbg!(check);
+        println!("reading");
+        let values: JsResult<JsBuffer> = self
+            .read_func
+            .call_with(&self.cx)
+            .this(self.stream)
+            .arg(self.cx.number(buf.len() as i32))
+            .apply(&mut self.cx);
 
+        let bytes = values.unwrap();
+        let bytes = bytes.as_slice(&mut self.cx);
+        buf.copy_from_slice(bytes);
 
-        /*
-        let values :Handle<JsValue>= self.read_func.call(&mut self.cx, self.stream, vec![]).unwrap();
-        println!("{:?}", values.to_raw());
-
-
-        let array: JsResult<JsObject> = values
-            .downcast_or_throw(&mut self.cx);
-        println!("{:?}", array);
-
-         */
-
-
-        return Ok(buf.len());
+        return Ok(bytes.len());
     }
 }
 
 fn ingest<'a>(mut cx: FunctionContext) -> JsResult<JsNull> {
-    let stream: Handle<JsObject> = cx.argument(0).unwrap();
     let null = cx.null();
-
-    let mut node_stream = NodeStream::new(stream, cx);
-    let mut buf: Vec<u8> = vec![];
-
-
-    node_stream.read(&mut buf);
+    let stream: Handle<JsObject> = cx.argument(0).unwrap();
+    let mut reader = BufReader::with_capacity(4096, NodeStream::new(stream, cx));
+    let mut rdr = csv::Reader::from_reader(reader);
+    for result in rdr.records() {
+        // The iterator yields Result<StringRecord, Error>, so we check the
+        // error here..
+        let record = result;
+        println!("{:?}", record);
+    }
 
     return Ok(null);
 }
