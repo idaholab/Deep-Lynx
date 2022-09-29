@@ -1264,9 +1264,9 @@ export class Client {
         const resp: AxiosResponse = await axios.post(url, data, config);
 
         return new Promise<T>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.data.error.error);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
 
-            if (resp.data.isError) reject(resp.data.value);
+            if (resp.data.isError) reject(resp.data.error);
 
             resolve(resp.data.value as T);
         });

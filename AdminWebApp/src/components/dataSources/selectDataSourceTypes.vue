@@ -50,10 +50,11 @@ export default class SelectDataSourceTypes extends Vue {
   },{
     text: "HTTP",
     value: "http"
-  },{
-    text: "Jazz/DNG",
-    value: "jazz"
-  },{
+  },//{
+  //   text: "Jazz/DNG", // DISABLED UNTIL REMOVED
+  //   value: "jazz"
+  //},
+    {
     text: "Aveva",
     value: "aveva"
   },{

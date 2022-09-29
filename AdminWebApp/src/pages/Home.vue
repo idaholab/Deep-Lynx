@@ -122,7 +122,6 @@
           <template v-slot:activator>
             <v-list-item-title>{{$t("home.data")}}</v-list-item-title>
           </template>
-
           <v-list-item
             two-line
             link
@@ -152,19 +151,6 @@
           <v-list-item
             two-line
             link
-            v-if="$auth.Auth('data', 'write', containerID)"
-            @click="setActiveComponent('data-management')"
-            :input-value="currentMainComponent === 'DataManagement'"
-            :ripple="{class:'list-ripple'}"
-          >
-            <v-list-item-content>
-              <v-list-item-title>{{$t("home.dataManagement")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.dataManagementDescription")}}</v-list-item-subtitle>
-            </v-list-item-content>
-          </v-list-item>
-          <v-list-item
-            two-line
-            link
             v-if="$auth.Auth('data', 'read', containerID)"
             @click="setActiveComponent('data-imports')"
             :input-value="currentMainComponent === 'DataImports'"
@@ -188,6 +174,19 @@
               <v-list-item-subtitle>{{$t("home.dataMappingDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
+               <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('data', 'write', containerID)"
+            @click="setActiveComponent('data-management')"
+            :input-value="currentMainComponent === 'DataManagement'"
+            :ripple="{class:'list-ripple'}"
+          >
+            <v-list-item-content>
+              <v-list-item-title>{{$t("home.dataManagement")}}-<small>{{$t("home.beta")}}</small></v-list-item-title>
+              <v-list-item-subtitle>{{$t("home.dataManagementDescription")}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
           <v-list-item
             two-line link
             v-if="$auth.Auth('data', 'write', containerID)"
@@ -200,7 +199,6 @@
               <v-list-item-subtitle>{{$t("home.dataExportDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-
         </v-list-group>
 
         <v-list-group

@@ -7,26 +7,29 @@
     <v-card class="pt-1 pb-3 px-2">
       <v-card-title>
         <span class="headline text-h3">{{$t("containers.formTitle")}}</span>
-      </v-card-title>   
+      </v-card-title>
       <v-card-text>
         <error-banner :message="errorMessage"></error-banner>
-        <v-row>  
+        <v-row>
           <v-col :cols="12">
 
             <v-form
-              ref="form"
-              lazy-validation
+                ref="form"
+                lazy-validation
+                v-model="valid"
             >
               <v-text-field
-                v-model="newContainer.name"
-                :label="$t('containers.name')"
-                required
+                  v-model="newContainer.name"
+                  :label="$t('containers.name')"
+                  :rules="[v => !!v || $t('dataMapping.required')]"
+                  required
               ></v-text-field>
               <v-textarea
-                :rows="2"
-                v-model="newContainer.description"
-                :label="$t('containers.description')"
-                required
+                  :rows="2"
+                  v-model="newContainer.description"
+                  :label="$t('containers.description')"
+                  :rules="[v => !!v || $t('dataMapping.required')]"
+                  required
               ></v-textarea>
               <v-file-input @change="addFile">
                 <template v-slot:label>
@@ -34,6 +37,8 @@
                 </template>
                 <template v-slot:append-outer><info-tooltip :message="$t('containers.owlFileHelp')"></info-tooltip> </template>
               </v-file-input>
+
+              <p>{{$t('containers.importHelp')}} <a :href="importHelpLink()">{{$t('containerSelect.wiki')}}</a> </p>
               <v-row class="my-8 mx-0" align="center">
                 <v-divider></v-divider>
                 <span class="px-2">{{$t('containers.or')}}</span>
@@ -46,6 +51,7 @@
                 <template slot="append-outer"><info-tooltip :message="$t('containers.owlUrlHelp')"></info-tooltip> </template>
               </v-text-field>
 
+
               <v-checkbox v-model="newContainer.config.ontology_versioning_enabled">
                 <template v-slot:label>
                   {{$t('containers.ontologyVersioningEnabled')}}<p class="text-caption" style="margin-left: 5px"> {{$t('beta')}}</p>
@@ -57,7 +63,6 @@
               <select-data-source-types @selected="setDataSources"></select-data-source-types>
 
               <br>
-              <p>{{$t('containers.importHelp')}} <a :href="importHelpLink()">{{$t('containerSelect.wiki')}}</a> </p>
             </v-form>
           </v-col>
         </v-row>
@@ -75,80 +80,85 @@
 </template>
 
 <script lang="ts">
-   import {Component, Vue} from 'vue-property-decorator'
-   import SelectDataSourceTypes from "@/components/dataSources/selectDataSourceTypes.vue";
+import {Component, Vue} from 'vue-property-decorator'
+import SelectDataSourceTypes from "@/components/dataSources/selectDataSourceTypes.vue";
 
-    @Component({components: {SelectDataSourceTypes}})
-    export default class CreateContainerDialog extends Vue {
-        errorMessage = ""
-        loading = false
-        dialog = false
-        newContainer = {
-          name: null,
-          description:null, config: {
-          data_versioning_enabled: true,
-          ontology_versioning_enabled: false,
-          enabled_data_sources: [] as string[]
-          }}
-      owlFilePath = ""
-        owlFile: File | null = null
+@Component({components: {SelectDataSourceTypes}})
+export default class CreateContainerDialog extends Vue {
+  valid = false
+  errorMessage = ""
+  loading = false
+  dialog = false
+  newContainer = {
+    name: null,
+    description:null, config: {
+      data_versioning_enabled: true,
+      ontology_versioning_enabled: false,
+      enabled_data_sources: [] as string[]
+    }}
+  owlFilePath = ""
+  owlFile: File | null = null
 
-        addFile(file: File) {
-          this.owlFile = file
-        }
+  addFile(file: File) {
+    this.owlFile = file
+  }
 
-        clearNew() {
-            this.newContainer = {
-              name: null,
-              description:null, config: {
-                data_versioning_enabled: true,
-                ontology_versioning_enabled: false,
-                enabled_data_sources: []
-              }}
+  clearNew() {
+    this.newContainer = {
+      name: null,
+      description:null, config: {
+        data_versioning_enabled: true,
+        ontology_versioning_enabled: false,
+        enabled_data_sources: []
+      }}
+    this.dialog = false
+  }
+
+  createContainer() {
+    // @ts-ignore
+    if(!this.$refs.form!.validate()) return;
+
+    this.loading = true
+
+    if(this.owlFile || this.owlFilePath !== "") {
+      this.$client.containerFromImport(this.newContainer, this.owlFile, this.owlFilePath)
+          .then((container) => {
+            this.loading = false
+            this.clearNew()
+            this.$emit("containerCreated", container)
+
             this.dialog = false
-        }
+            this.errorMessage = ""
+          })
+          .catch(e => {
+            this.loading = false
+            this.dialog = false
+            this.$emit("error", `Container created successfully but unable to load ontology from OWL file or OWL file URL. Navigate to your container and attempt to upload the ontology again, or delete the newly created container and use this dialog again. Error: : ${e}` )
+          })
+    } else {
+      this.$client.createContainer(this.newContainer)
+          .then((container) => {
+            this.loading = false
+            this.clearNew()
+            this.$emit("containerCreated", container[0].id)
 
-        createContainer() {
-          this.loading = true
-
-          if(this.owlFile || this.owlFilePath !== "") {
-            this.$client.containerFromImport(this.newContainer, this.owlFile, this.owlFilePath)
-                .then((container) => {
-                  this.loading = false
-                  this.clearNew()
-                  this.$emit("containerCreated", container)
-
-                  this.dialog = false
-                  this.errorMessage = ""
-                })
-                .catch(e => {
-                  this.loading = false
-                  this.errorMessage = `Unable to load ontology from OWL file or OWL file URL: ${e}`
-                })
-          } else {
-            this.$client.createContainer(this.newContainer)
-                .then((container) => {
-                  this.loading = false
-                  this.clearNew()
-                  this.$emit("containerCreated", container[0].id)
-
-                  this.$store.commit('setActiveContainer', container[0])
-                  this.dialog = false
-                  this.errorMessage = ""
-                })
-                .catch(e => {
-                  this.loading = false
-                  this.errorMessage = e
-                })
-          }
-        }
-
-        setDataSources(sources: string[]) {
-          this.newContainer.config.enabled_data_sources = sources
-        }
-
-        importHelpLink() {
-          return this.$t('containers.importWikiLink')
-        }
+            this.$store.commit('setActiveContainer', container[0])
+            this.dialog = false
+            this.errorMessage = ""
+          })
+          .catch(e => {
+            this.loading = false
+            this.errorMessage = e
+          })
     }
+  }
+
+  setDataSources(sources: string[]) {
+    this.newContainer.config.enabled_data_sources = sources
+  }
+
+  importHelpLink() {
+    return this.$t('containers.importWikiLink')
+  }
+}
 </script>
