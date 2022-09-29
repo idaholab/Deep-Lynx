@@ -31,6 +31,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     let dataSourceID = '';
     let nodes: Node[] = [];
     let schema: GraphQLSchema;
+    let metatypeList: Metatype[] = [];
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
@@ -107,6 +108,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
 
         expect(metatypes.isError).false;
         expect(metatypes.value).not.empty;
+        metatypeList = metatypes.value;
 
         const testKeys1 = [...test_keys];
         testKeys1.forEach((key) => (key.metatype_id = metatypes.value[0].id!));
@@ -244,6 +246,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     Multimeta{
                         _record{
                             id
+                            metatype_uuid
                         }
                         name
                         color
@@ -270,9 +273,10 @@ describe('Using a new GraphQL Query on nodes we', async () => {
         const response = await graphql({
             schema,
             source: `{
-                nodes(metatype_name: {operator: "eq", value: "Multimeta"}){
+                nodes(metatype_uuid: {operator: "eq", value: "${metatypeList[0].uuid}"}){
                     id
                     metatype_name
+                    metatype_uuid
                     properties
                 }
             }`,
@@ -285,6 +289,8 @@ describe('Using a new GraphQL Query on nodes we', async () => {
         for (const n of data) {
             expect(n.id).not.undefined;
             expect(n.properties).not.undefined;
+            expect(n.metatype_uuid).not.undefined;
+            expect(n.metatype_name).eq('Multimeta');
             expect(n.invalidAttribute).undefined;
         }
 
@@ -295,13 +301,14 @@ describe('Using a new GraphQL Query on nodes we', async () => {
         const response = await graphql({
             schema,
             source: `{
-                nodes(metatype_name: {operator: "eq", value: "Multimeta"},
+                nodes(metatype_uuid: {operator: "eq", value: "${metatypeList[0].uuid}"},
                 properties: [ 
                 {key: "color", operator: "eq", value: "red"},
                 {key: "name",operator: "eq",  value: "MultiNode2"}
                 ]){
                     id
                     metatype_name
+                    metatype_uuid
                     properties
                 }
             }`,
@@ -314,6 +321,9 @@ describe('Using a new GraphQL Query on nodes we', async () => {
         for (const n of data) {
             expect(n.id).not.undefined;
             expect(n.properties).not.undefined;
+            expect(n.properties.color).eq('red');
+            expect(n.metatype_uuid).not.undefined;
+            expect(n.metatype_name).eq('Multimeta');
             expect(n.invalidAttribute).undefined;
         }
 
@@ -387,6 +397,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     ){
                         _record{
                             id
+                            metatype_uuid
                         }
                         name
                         color
@@ -403,6 +414,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
             expect(n._record.id).not.undefined;
             expect(n.name).not.undefined;
             expect(n.color).not.undefined;
+            expect(n._record.metatype_uuid).not.undefined;
             expect(n.color).eq('red');
             expect(n.invalidAttribute).undefined;
         }
@@ -422,6 +434,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     ){
                         _record{
                             id
+                            metatype_uuid
                         }
                         name
                         color
@@ -439,6 +452,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
             expect(n._record.id).eq(nodes[0].id);
             expect(n.name).not.undefined;
             expect(n.color).not.undefined;
+            expect(n._record.metatype_uuid).not.undefined;
             expect(n.invalidAttribute).undefined;
         }
 
@@ -456,6 +470,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     ){
                         _record{
                             id
+                            metatype_uuid
                         }
                         name
                         color
@@ -474,6 +489,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
             expect(n.name).eq('MultiNode2');
             expect(n.color).not.undefined;
             expect(n.color).eq('red');
+            expect(n._record.metatype_uuid).eq(metatypeList[0].uuid);
             expect(n.invalidAttribute).undefined;
         }
 
@@ -494,6 +510,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     ){
                         _record{
                             id
+                            metatype_uuid
                         }
                         name
                         color
@@ -512,6 +529,7 @@ describe('Using a new GraphQL Query on nodes we', async () => {
             expect(n.name).not.undefined;
             expect(n.color).not.undefined;
             expect(n.invalidAttribute).undefined;
+            expect(n._record.metatype_uuid).eq(metatypeList[0].uuid);
         }
 
         return Promise.resolve();

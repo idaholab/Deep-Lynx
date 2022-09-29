@@ -4,7 +4,10 @@
       <v-toolbar flat color="white">
         <v-toolbar-title>{{$t('home.dataQueryDescription')}}</v-toolbar-title>
       </v-toolbar>
-      <query-builder :containerID="containerID" @results="loadResults"></query-builder>
+      <query-builder
+          :initialQuery="true"
+          :containerID="containerID"
+          @results="loadResults"></query-builder>
 
       <v-row>
         <v-col
@@ -35,7 +38,7 @@
                 <v-card flat>
                   <v-row>
                     <v-col
-                        cols="12"
+                        :cols="12"
                         class="graph"
                     >
                       <graph-viewer :containerID="containerID" :results="results"></graph-viewer>
@@ -269,5 +272,4 @@ export default class DataQuery extends Vue {
 .node-info {
     border-left: 1px solid $darkgray;
 }
-
 </style>

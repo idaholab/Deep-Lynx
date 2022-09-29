@@ -19,6 +19,7 @@ import MetatypeRelationship from '../../../domain_objects/data_warehouse/ontolog
 import MetatypeRelationshipMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_mapper';
 import MetatypeRelationshipPairMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
 import MetatypeRelationshipPair from '../../../domain_objects/data_warehouse/ontology/metatype_relationship_pair';
+import {SuperUser} from '../../../domain_objects/access_management/user';
 
 describe('A Data Type Mapping Transformation', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -422,6 +423,92 @@ describe('A Data Type Mapping Transformation', async () => {
         expect(updatedRelationshipTransformation.isError).false;
     });
 
+    it('can be copied to another mapping', async () => {
+        const storage = DataSourceMapper.Instance;
+        const mMapper = MetatypeMapper.Instance;
+        const keyStorage = MetatypeKeyMapper.Instance;
+        const mappingStorage = TypeMappingMapper.Instance;
+
+        const metatype = await mMapper.Create(
+            'test suite',
+            new Metatype({
+                container_id: containerID,
+                name: faker.name.findName(),
+                description: faker.random.alphaNumeric(),
+            }),
+        );
+
+        expect(metatype.isError).false;
+        expect(metatype.value).not.empty;
+
+        const testKeys = [...test_keys];
+        testKeys.forEach((key) => (key.metatype_id = metatype.value.id!));
+
+        const keys = await keyStorage.BulkCreate('test suite', testKeys);
+        expect(keys.isError).false;
+
+        const exp = await DataSourceMapper.Instance.Create(
+            'test suite',
+            new DataSourceRecord({
+                container_id: containerID,
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'standard',
+                data_format: 'json',
+            }),
+        );
+
+        expect(exp.isError).false;
+        expect(exp.value).not.empty;
+
+        const mapping = await mappingStorage.CreateOrUpdate(
+            'test suite',
+            new TypeMapping({
+                container_id: containerID,
+                data_source_id: exp.value.id!,
+                sample_payload: test_raw_payload,
+            }),
+        );
+
+        const mapping2 = await mappingStorage.CreateOrUpdate(
+            'test suite',
+            new TypeMapping({
+                container_id: containerID,
+                data_source_id: exp.value.id!,
+                sample_payload: test_raw_payload2,
+            }),
+        );
+
+        const transformation = await TypeTransformationMapper.Instance.Create(
+            'test suite',
+            new TypeTransformation({
+                type_mapping_id: mapping.value.id!,
+                metatype_id: metatype.value.id,
+                keys: [
+                    new KeyMapping({
+                        key: 'RADIUS',
+                        metatype_key_id: keys.value[0].id,
+                    }),
+                ],
+            }),
+        );
+
+        expect(transformation.isError).false;
+
+        let retrieved = await TypeTransformationMapper.Instance.ListForTypeMapping(mapping.value.id!);
+        expect(retrieved.isError).false;
+        expect(retrieved.value).not.empty;
+
+        let copied = await TypeMappingMapper.Instance.CopyTransformations(SuperUser.id!, mapping.value.id!, mapping2.value.id!);
+        expect(copied.isError).false;
+
+        let retrieved2 = await TypeTransformationMapper.Instance.ListForTypeMapping(mapping2.value.id!);
+        expect(retrieved2.isError).false;
+        expect(retrieved2.value).not.empty;
+
+        return storage.Delete(exp.value.id!);
+    });
+
     it('can fetch keys from payload using dot notation', async () => {
         let value = TypeTransformation.getNestedValue('car.id', test_payload[0]);
         expect(value).eq('UUID');
@@ -555,6 +642,18 @@ export const test_keys: MetatypeKey[] = [
 
 const test_raw_payload = {
     RAD: 0.1,
+    COLOR: 'blue',
+    TYPE: 'EQUIP',
+    TEST: 'TEST',
+    ITEM_ID: '123',
+    ATTRIBUTES: {
+        WHEELS: 1,
+    },
+};
+
+const test_raw_payload2 = {
+    RAD: 0.1,
+    TEST2: 'testing',
     COLOR: 'blue',
     TYPE: 'EQUIP',
     TEST: 'TEST',

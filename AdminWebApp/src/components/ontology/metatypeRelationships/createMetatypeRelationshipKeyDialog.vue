@@ -50,7 +50,7 @@
               <v-checkbox
                   v-model="metatypeRelationshipKey.required"
               >
-                <template v-slot:label>{{$t('createMetatypeRelationshipKey.required')}} <small style="color:red" >*</small></template>
+                <template v-slot:label>{{$t('createMetatypeRelationshipKey.required')}}</template>
               </v-checkbox>
               <v-textarea
                   v-model="metatypeRelationshipKey.description"
@@ -93,6 +93,17 @@
                     deletable-chips
                     chips
                 ></v-combobox>
+
+                <v-combobox
+                    v-model="metatypeRelationshipKey.options"
+                    :label="$t('createMetatypeRelationshipKey.options')"
+                    multiple
+                    clearable
+                    deletable-chips
+                    chips
+                >
+                  <template slot="append-outer"><info-tooltip :message="$t('ontology.optionsHelp')"></info-tooltip> </template>
+                </v-combobox>
               </div>
 
               <div v-if="metatypeRelationshipKey.data_type !== 'enumeration'" >
@@ -117,16 +128,6 @@
                 ></v-text-field>
               </div>
 
-              <v-combobox
-                  v-model="metatypeRelationshipKey.options"
-                  :label="$t('createMetatypeRelationshipKey.options')"
-                  multiple
-                  clearable
-                  deletable-chips
-                  chips
-              >
-                <template slot="append-outer"><info-tooltip :message="$t('ontology.optionsHelp')"></info-tooltip> </template>
-              </v-combobox>
             </v-form>
             <p><span style="color:red">*</span> = {{$t('createMetatypeRelationshipKey.requiredField')}}</p>
           </v-col>

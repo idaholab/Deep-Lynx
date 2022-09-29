@@ -730,6 +730,10 @@ export class Client {
         return this.get<NodeT>(`/containers/${containerID}/graphs/nodes/${nodeID}`);
     }
 
+    retrieveEdge(containerID: string, edgeID: string): Promise<EdgeT> {
+        return this.get<EdgeT>(`/containers/${containerID}/graphs/edges/${edgeID}`);
+    }
+
     countNodes(containerID: string, dataSourceID: string): Promise<number> {
         const query: {[key: string]: any} = {};
 
@@ -1264,9 +1268,9 @@ export class Client {
         const resp: AxiosResponse = await axios.post(url, data, config);
 
         return new Promise<T>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.data.error.error);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
 
-            if (resp.data.isError) reject(resp.data.value);
+            if (resp.data.isError) reject(resp.data.error);
 
             resolve(resp.data.value as T);
         });

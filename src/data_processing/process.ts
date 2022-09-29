@@ -67,7 +67,7 @@ export async function ProcessData(staging: DataStaging): Promise<Result<boolean>
             SuperUser,
         );
 
-        await stagingRepo.setErrors(staging.id!, ['no transformations for type mapping']);
+        await stagingRepo.setErrors(staging.id!, ['no active transformations for type mapping']);
 
         if (inserted.isError) return Promise.resolve(Result.Pass(inserted));
         return Promise.resolve(Result.Success(true));

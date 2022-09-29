@@ -318,7 +318,7 @@
 
               <div v-if="newDataSource.adapter_type === 'timeseries'">
                 <p><b>{{$t('createDataSource.description')}}</b></p>
-                <p>{{$t('createDataSource.timeseriesDescription')}}</p>
+                <p>{{$t('createDataSource.timeseriesDescription')}} <a :href="$t('dataMapping.tableDesignHelpLink')" target="_blank">{{$t('dataMapping.here')}}.</a></p>
 
                 <h4>{{$t('dataMapping.tableDesign')}}<info-tooltip :message="$t('dataMapping.tableDesignHelp')"></info-tooltip></h4>
                 <v-data-table
@@ -756,6 +756,10 @@ export default class CreateDataSourceDialog extends Vue {
         .then((dataSource)=> {
           this.clearNewAdapter()
           this.$emit("dataSourceCreated", dataSource)
+
+          if(dataSource.adapter_type === 'timeseries') {
+            this.$emit("timeseriesSourceCreated")
+          }
 
           this.dialog = false
           this.errorMessage = ""

@@ -68,7 +68,7 @@
                       :items="limitOptions"
                       v-model="limit"
                       :label="$t('queryBuilder.recordLimit')"
-                      style="max-width: 60px;"
+                      style="max-width: 90px;"
                     >
                     </v-select>
                   </div>
@@ -118,14 +118,23 @@ export default class QueryBuilder extends Vue {
   @Prop({required: true})
   readonly containerID!: string
 
+  @Prop({required: false, default: false})
+  readonly initialQuery!: boolean
+
   activeTab = 'queryBuilder'
   loading = false
   errorMessage = ""
   queryParts: QueryPart[] = []
   previousResults: ResultSet[] = []
   results: ResultSet | null = null
-  limit = 100
+  limit = 10000
   limitOptions = [100, 500, 1000, 10000]
+
+  mounted() {
+    if(this.initialQuery) {
+      this.submitQuery()
+    }
+  }
 
   addQueryPart(componentName: string) {
     this.queryParts.push({
@@ -194,9 +203,17 @@ export default class QueryBuilder extends Vue {
       switch(part.componentName) {
         case('MetatypeFilter'): {
           if(part.operator === 'in') {
-            args.push(`metatype_id:{operator: "${part.operator}", value: [${part.value}]} `)
+            if(part.options?.limitOntology) {
+              args.push(`metatype_id:{operator: "${part.operator}", value: [${part.value}]} `)
+            } else{
+              args.push(`metatype_uuid:{operator: "${part.operator}", value: [${part.options?.uuids}]} `)
+            }
           } else {
-            args.push(`metatype_id:{operator: "${part.operator}", value: "${part.value}"} `)
+            if(part.options?.limitOntology) {
+              args.push(`metatype_id:{operator: "${part.operator}", value: "${part.value}"} `)
+            } else {
+              args.push(`metatype_uuid:{operator: "${part.operator}", value: "${part.options?.uuids}"} `)
+            }
           }
 
           // we make the assumption that this is a property filter
@@ -275,6 +292,7 @@ export type QueryPart = {
   operator: string;
   value: any;
   nested?: QueryPart[];
+  options?: {[key: string]: any}
 }
 
 export type ResultSet = {

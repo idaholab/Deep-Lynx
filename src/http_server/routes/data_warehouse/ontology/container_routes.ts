@@ -217,7 +217,9 @@ export default class ContainerRoutes {
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => Result.Error(err).asResponse(res));
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                });
         });
 
         return req.pipe(busboy);

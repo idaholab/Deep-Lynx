@@ -33,7 +33,7 @@
               <v-textarea
                   v-model="description"
                   required
-                  :rules="[v => !!v || $t('createMetatype.nameRequired')]"
+                  :rules="[v => !!v || $t('createMetatype.descriptionRequired')]"
               >
                 <template v-slot:label>{{$t('createMetatype.description')}} <small style="color:red" >*</small></template>
               </v-textarea>
