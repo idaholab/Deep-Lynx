@@ -43,11 +43,11 @@ async function Start(): Promise<any> {
                 interval: '1m',
                 timeout: 0,
             },
-            {
+            /*      {
                 name: 'data_target_emitter', // will run data_target_emitter.ts - puts data targets on queue to run
                 interval: '30s',
                 timeout: 0,
-            },
+            },*/
             {
                 name: 'data_staging_emitter', // will run data_staging_emitter on an infinite loop
                 interval: Config.emitter_interval,
@@ -73,11 +73,11 @@ async function Start(): Promise<any> {
                 interval: '1m',
                 timeout: 0,
             },
-            {
+            /*      {
                 name: 'data_target_queue', // will run data_target_queue.ts
                 interval: '1m',
                 timeout: 0,
-            },
+            },*/
             {
                 name: 'edge_item_queue', // will run edge_item_queue.js
                 interval: '1m',
