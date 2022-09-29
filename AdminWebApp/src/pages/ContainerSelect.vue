@@ -41,7 +41,7 @@
                     <v-divider></v-divider>
                   </v-row>
                   <v-row class="px-11 mt-4" align="center" justify="center">
-                    <create-container-dialog @containerCreated="newContainer"></create-container-dialog>
+                    <create-container-dialog @containerCreated="newContainer" @error="onError"></create-container-dialog>
                   </v-row>
 
 
@@ -132,6 +132,10 @@ export default class ContainerSelection extends Vue {
           this.$router.push({name: 'Home', params: {containerID: containerID}})
         })
         .catch(e => this.errorMessage = e)
+  }
+
+  onError(error: string) {
+    this.errorMessage = error
   }
 
   acceptInvite(token: string, containerName: string) {

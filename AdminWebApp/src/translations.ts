@@ -6,6 +6,7 @@ export default {
             propertyName: 'This is the JSON compliant property name your data will be stored under inside the database schema.',
         },
         home: {
+            upload: 'Upload',
             deleteUser: 'Remove User From Container',
             editUser: 'Edit User Roles In Container',
             bugs: 'Ran into some bugs?',
@@ -630,7 +631,9 @@ export default {
             jazzDescription: 'This is the Jazz/Doors Next Generation data source. This allows you to pull in artifacts automatically from the Jazz/DNG server.',
             avevaDescription: 'This is a wrapper over the standard data source, but contains Aveva Everything3D specific configuration values.',
             timeseriesDescription:
-                'This data source is built specifically for timeseries data. Users must design a timeseries data table and set attachment parameters prior to successful creation. Users upload timeseries data directly to this source, bypassing the standard type mapping system.',
+                'This data source is built specifically for timeseries data. Users must design a timeseries data table and set attachment parameters prior to successful creation. Users upload timeseries data directly to this source, bypassing the standard type mapping system. You can find more information and help ',
+            here: 'here',
+            tableDesignHelpLink: 'https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Timeseries-Data-Sources',
             newDataSource: 'New Data Source',
             formTitle: 'Create New Data Source',
             name: 'Name',
@@ -813,6 +816,7 @@ export default {
                 'Data may have already been generated using this Transformation. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Transformation. If you would like to keep this data and orphan it, please uncheck the box below.',
         },
         dataMapping: {
+            here: 'here',
             mappingHelp:
                 'Mapping allows you to specify what kind of record this transformation should produce. Each transformation can produce either a relationship or node. Further information will be requested as you work through the form.',
             nodeAttachmentParameters: 'Node Attachment Parameters - optional',

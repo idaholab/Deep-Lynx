@@ -97,7 +97,7 @@
         <v-toolbar flat color="white">
           <v-toolbar-title>{{$t('home.dataSourcesDescription')}}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <create-data-source-dialog :containerID="containerID" @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()"></create-data-source-dialog>
+          <create-data-source-dialog :containerID="containerID" @dataSourceCreated="refreshDataSources(); refreshTimeseriesDataSources()" @timeseriesSourceCreated="activeTab === 'timeseriesDatasources'"></create-data-source-dialog>
         </v-toolbar>
       </template>
       <template v-slot:[`item.copy`]="{ item }">

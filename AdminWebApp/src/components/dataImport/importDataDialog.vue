@@ -28,7 +28,9 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="clear" >{{$t("home.cancel")}}</v-btn>
-        <v-btn color="blue darken-1" text @click="uploadImport" >{{$t("home.create")}}</v-btn>
+        <v-btn color="blue darken-1" text @click="uploadImport" ><div v-if="!loading">{{$t("home.upload")}}</div><div v-else>
+          <v-progress-circular indeterminate></v-progress-circular>
+        </div></v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -49,6 +51,7 @@
     disabled!: boolean
 
     errorMessage = ""
+    loading = false
     dialog = false
     filesToUpload: File | null = null
 
@@ -62,6 +65,7 @@
     }
 
     uploadImport() {
+      this.loading = true
       if(this.filesToUpload) {
         this.$client.dataSourceJSONFileImport(this.containerID, this.dataSourceID, this.filesToUpload)
             .then(() => {
@@ -71,6 +75,7 @@
                 this.$emit('importUploaded')
             })
             .catch(e => this.errorMessage = e.error)
+            .finally(() => this.loading = false)
       }
     }
   }

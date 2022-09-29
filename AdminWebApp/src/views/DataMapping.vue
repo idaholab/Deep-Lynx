@@ -221,7 +221,8 @@
             }"
         >
           <template v-slot:[`item.active`]="{ item }">
-            <v-checkbox v-model="item.active" :disabled="true"></v-checkbox>
+            <v-icon v-if="item.active">mdi-checkbox-marked-circle</v-icon>
+            <v-icon v-else>mdi-checkbox-blank-circle-outline</v-icon>
           </template>
 
           <template v-slot:[`item.created_at`]="{ item }">
@@ -280,6 +281,7 @@
 
           <template v-slot:[`item.active`]="{ item }">
             <v-checkbox v-model="item.active" :disabled="true"></v-checkbox>
+
           </template>
 
           <template v-slot:[`item.sample_payload`]="{ item }">
