@@ -15,6 +15,7 @@
             :metatypeID="metatype"
             :multiple="operator === 'in'"
             @selected="setMetatype"></search-metatypes>
+        <v-checkbox v-model="limitOntologyVersion" :label="$t('queryBuilder.limitOntology')"></v-checkbox>
       </v-col>
     </v-row>
     <v-row v-if="metatype !== ''">
@@ -66,9 +67,11 @@ export default class MetatypeFilter extends Vue {
 
   operator = ""
   metatype: string | string[] = ""
+  uuid: string | string[] = ""
   metatypeKeys: MetatypeKeyT[] = []
   loading = false
   keyQueryParts: QueryPart[] = []
+  limitOntologyVersion = false
 
   beforeMount() {
     if(this.queryPart) {
@@ -85,11 +88,13 @@ export default class MetatypeFilter extends Vue {
   setMetatype(metatypes: MetatypeT | MetatypeT[]) {
     if(Array.isArray(metatypes)) {
       const ids: string[] = []
+      const uuids: string[] = []
       this.metatypeKeys = []
       this.loading = true
 
       metatypes.forEach(source => {
         ids.push(source.id!)
+        uuids.push(source.uuid!)
 
         this.$client.listMetatypeKeys(this.containerID, source.id!)
             .then(keys => {
@@ -99,8 +104,10 @@ export default class MetatypeFilter extends Vue {
       })
 
       this.metatype = ids
+      this.uuid = uuids
     } else {
       this.metatype = metatypes.id!
+      this.uuid = metatypes.uuid!
 
       this.$client.listMetatypeKeys(this.containerID, metatypes.id!)
           .then(keys => {
@@ -115,7 +122,8 @@ export default class MetatypeFilter extends Vue {
       componentName: 'MetatypeFilter',
       operator: this.operator,
       value: this.metatype,
-      nested: this.keyQueryParts
+      nested: this.keyQueryParts,
+      options: {limitOntology: this.limitOntologyVersion, uuids: this.uuid}
     }
   }
 
@@ -153,5 +161,6 @@ type QueryPart = {
   operator: string;
   value: any;
   nested?: QueryPart[];
+  options?: {[key: string]: any}
 }
 </script>

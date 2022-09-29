@@ -64,7 +64,7 @@ export default class TypeMapping extends BaseDomainClass {
     // of its keys and the type of data those keys are in - this method is static so users
     // can access it to create type mapping shape hash without having to actually build
     // a mapping
-    static objectToShapeHash(data: any, options?: ShapeHashOptions) {
+    static objectToShapeHash(data: any, options?: MappingShapeHashOptions) {
         // because we might be removing items from the object we need to make sure to copy it instead of manipulate
         // the parent
         const toHash = JSON.parse(JSON.stringify(data));
@@ -190,7 +190,7 @@ export class TypeMappingComparison extends NakedDomainClass {
     percentage_match = 0;
 }
 
-export class ShapeHashOptions {
+export class MappingShapeHashOptions {
     stop_nodes?: string[];
     value_nodes?: string[];
 }
