@@ -36,6 +36,7 @@ export type MetatypeT = {
     parent_id?: string;
     ontology_version?: string;
     old_id?: string;
+    uuid?: string;
 };
 
 export type MetatypeRelationshipT = {
@@ -84,7 +85,7 @@ export type MetatypeKeyT = {
     property_name: string;
     required: boolean;
     description: string;
-    data_type: 'number' | 'date' | 'string' | 'boolean' | 'enumeration' | 'file';
+    data_type: 'number' | 'number64' | 'float' | 'float64' | 'date' | 'string' | 'boolean' | 'enumeration' | 'file';
     archived: boolean;
     validation:
         | {
@@ -111,7 +112,7 @@ export type MetatypeRelationshipKeyT = {
     property_name: string;
     required: boolean;
     description: string;
-    data_type: 'number' | 'date' | 'string' | 'boolean' | 'enumeration' | 'file';
+    data_type: 'number' | 'number64' | 'float' | 'float64' | 'date' | 'string' | 'boolean' | 'enumeration' | 'file';
     archived: boolean;
     validation: {
         regex: string;
@@ -169,6 +170,13 @@ export type EdgeT = {
     relationship: MetatypeRelationshipT;
     destination_node?: NodeT;
     origin_node?: NodeT;
+    origin_id?: string;
+    destination_id?: string;
+    metatype_relationship_name?: string;
+    relationship_id?: string;
+    properties: PropertyT[] | object;
+    created_at: string;
+    modified_at: string;
 };
 
 export type PropertyT = {

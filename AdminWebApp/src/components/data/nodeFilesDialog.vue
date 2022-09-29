@@ -23,11 +23,11 @@
             >
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
-                  color="primary"
-                  dark
-                  class="mb-2"
-                  v-bind="attrs"
-                  v-on="on"
+                    color="primary"
+                    dark
+                    class="mb-2"
+                    v-bind="attrs"
+                    v-on="on"
                 >
                   {{$t('nodeFiles.addFile')}}
                 </v-btn>
@@ -36,7 +36,7 @@
               <v-card class="pt-1 pb-3 px-2">
                 <v-card-title>
                   <!-- <span class="headline text-h3"></span> -->
-                </v-card-title>   
+                </v-card-title>
                 <v-card-text>
                   <v-progress-linear indeterminate v-if="fileLoading"></v-progress-linear>
                   <v-file-input v-if="!fileLoading" :label="$t('nodeFiles.selectFile')" @change="addFile"></v-file-input>
@@ -74,7 +74,7 @@
 </template>
 
 <script lang="ts">
-import {Component, Prop, Vue} from "vue-property-decorator";
+import {Component, Prop, Vue, Watch} from "vue-property-decorator";
 import {FileT, NodeT} from "@/api/types";
 import {mdiFileDocumentMultiple} from "@mdi/js";
 import IfcViewer from "@/components/general/ifcViewer.vue";
@@ -90,6 +90,12 @@ export default class NodeFilesDialog extends Vue {
   errorMessage = ''
   files: FileT[] = []
   copy = mdiFileDocumentMultiple
+
+  @Watch('node', {immediate: true})
+  onNodeChange() {
+    this.loadFiles()
+  }
+
 
   mounted() {
     this.loadFiles()
@@ -108,31 +114,31 @@ export default class NodeFilesDialog extends Vue {
     this.fileLoading = true
 
     this.$client.uploadFile(this.node.container_id, this.node.data_source_id, file)
-    .then((uploadedFile) => {
-      this.$client.attachFileToNode(this.node.container_id, this.node.id, uploadedFile.id)
-      .then(() => {
-        this.loadFiles()
-      })
-      .catch(e => this.errorMessage = e)
-      .finally(() => {
-        this.addFileDialog = false
-        this.fileLoading = false
-      })
-    })
+        .then((uploadedFile) => {
+          this.$client.attachFileToNode(this.node.container_id, this.node.id, uploadedFile.id)
+              .then(() => {
+                this.loadFiles()
+              })
+              .catch(e => this.errorMessage = e)
+              .finally(() => {
+                this.addFileDialog = false
+                this.fileLoading = false
+              })
+        })
   }
 
   removeFile(file: FileT) {
     this.$client.detachFileFromNode(this.node.container_id, this.node.id, file.id)
-    .then(() => this.loadFiles())
-    .catch(e => this.errorMessage = e)
+        .then(() => this.loadFiles())
+        .catch(e => this.errorMessage = e)
   }
 
   loadFiles() {
     this.$client.listNodeFiles(this.node.container_id, this.node.id)
-    .then((files) => {
-      this.files = files
-    })
-    .catch(e => this.errorMessage = e)
+        .then((files) => {
+          this.files = files
+        })
+        .catch(e => this.errorMessage = e)
   }
 
   copyID(id: string) {

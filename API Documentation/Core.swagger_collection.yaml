@@ -496,7 +496,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200Response'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Node'
       deprecated: false
       x-codegen-request-body-name: Body
   '/containers/{container_id}/graphs/nodes/{node_id}':
@@ -1117,7 +1119,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200Response'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Edge'
       description: 'This endpoint will attempt to create a connection between two nodes. You can either pass in the node''s Deep Lynx IDs, or the node''s original id, metatype id, and data source id to create these edges.'
       requestBody:
         content:

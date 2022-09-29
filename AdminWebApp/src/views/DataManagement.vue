@@ -31,13 +31,13 @@
           <v-col class="d-flex flex-row">
             <h3 class="text-h3">{{$t('dataManagement.nodeTableTitle')}}</h3>
             <v-spacer></v-spacer>
-            <create-node-dialog
+            <create-node-button
               :dataSourceID="selectedDataSource.id" 
               :containerID="containerID" 
               :disabled="!selectedDataSource.active || selectedDataSource.archived"
               @nodeCreated="listNodes() && listEdges()"
             >
-          </create-node-dialog>
+          </create-node-button>
           </v-col>
         </template>
         <template v-slot:[`item.actions`]="{ item }">
@@ -103,7 +103,7 @@
 import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
 import {DataSourceT, NodeT, EdgeT} from "@/api/types";
 import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
-import CreateNodeDialog from "@/components/data/createNodeDialog.vue";
+import CreateNodeButton from "@/components/data/createNodeButton.vue";
 import CreateEdgeDialog from "@/components/data/createEdgeDialog.vue";
 import EditNodeDialog from "@/components/data/editNodeDialog.vue";
 
@@ -115,7 +115,7 @@ import EditNodeDialog from "@/components/data/editNodeDialog.vue";
   },
   components: {
     SelectDataSource,
-    CreateNodeDialog,
+    CreateNodeButton,
     CreateEdgeDialog,
     EditNodeDialog
   }
@@ -206,7 +206,7 @@ export default class DataManagement extends Vue {
 
   setDataSource(dataSource: any) {
     this.selectedDataSource = dataSource
-    this.$router.replace(`/containers/${this.containerID}/test-data/${this.selectedDataSource?.id}`)
+    this.$router.replace(`/containers/${this.containerID}/data-management/${this.selectedDataSource?.id}`)
     this.listNodes()
     this.listEdges()
   }
