@@ -127,7 +127,7 @@ export default class QueryBuilder extends Vue {
   queryParts: QueryPart[] = []
   previousResults: ResultSet[] = []
   results: ResultSet | null = null
-  limit = 10000
+  limit = 1000
   limitOptions = [100, 500, 1000, 10000]
 
   mounted() {
