@@ -32,6 +32,7 @@ export class Config {
     private readonly _cache_redis_connection_string: string;
     private readonly _initial_import_cache_ttl: number;
     private readonly _import_cache_ttl: number;
+    private readonly _log_db: boolean;
 
     private readonly _core_db_connection_string: string;
     private readonly _timescaledb_enabled: boolean = false;
@@ -212,6 +213,8 @@ export class Config {
         this._rsa_client_id = process.env.RSA_CLIENT_ID || 'DeepLynx';
 
         this._hpc_email = process.env.HPC_EMAIL || '';
+
+        this._log_db = process.env.LOG_DB === 'true' || false;
 
         this._emit_events = process.env.EMIT_EVENTS === 'true' || false;
         this._process_queue_name = process.env.PROCESS_QUEUE_NAME || 'process';
@@ -564,6 +567,10 @@ export class Config {
 
     get log_jobs(): boolean {
         return this._log_jobs;
+    }
+
+    get log_db(): boolean {
+        return this._log_db;
     }
 
     public static Instance(): Config {

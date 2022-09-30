@@ -11,6 +11,7 @@ import Logger from '../../services/logger';
 import 'reflect-metadata';
 import {ClassConstructor, plainToClass, plainToInstance} from 'class-transformer';
 import QueryStream from 'pg-query-stream'; // this is required for the class-transformer package we use
+import Config from '../../services/config';
 
 // Mapper contains ORM like CRUD functions, and a few helpers for more complex functionality.
 // This contains things like transaction runners, as well as things like the type decoder
@@ -91,6 +92,7 @@ export default class Mapper {
 
     // run simple query with typed return
     async run<T>(statement: QueryConfig | string, options?: Options<T>): Promise<Result<T[]>> {
+        if (Config.log_db) console.time('db run');
         if (options && options.transaction) {
             return new Promise((resolve) => {
                 options
@@ -106,6 +108,9 @@ export default class Mapper {
                     .catch((e) => {
                         Logger.error(`query failed - ${(e as Error).message}`);
                         resolve(Result.Failure(e));
+                    })
+                    .finally(() => {
+                        if (Config.log_db) console.timeEnd('db run');
                     });
             });
         } else {
@@ -122,6 +127,9 @@ export default class Mapper {
                     .catch((e) => {
                         Logger.error(`query failed - ${(e as Error).message}`);
                         resolve(Result.Failure(e));
+                    })
+                    .finally(() => {
+                        if (Config.log_db) console.timeEnd('db run');
                     });
             });
         }
@@ -129,6 +137,7 @@ export default class Mapper {
 
     // run the query, but return only true/false depending on execution
     async runStatement(statement: QueryConfig | string, options?: Options<any>): Promise<Result<boolean>> {
+        if (Config.log_db) console.time('db run statement');
         if (options && options.transaction) {
             return new Promise((resolve) => {
                 options
@@ -139,6 +148,9 @@ export default class Mapper {
                     .catch((e) => {
                         Logger.error(`query failed - ${(e as Error).message}`);
                         resolve(Result.Failure(e));
+                    })
+                    .finally(() => {
+                        if (Config.log_db) console.timeEnd('db run statement');
                     });
             });
         } else {
@@ -150,18 +162,23 @@ export default class Mapper {
                     .catch((e) => {
                         Logger.error(`query failed - ${(e as Error).message}`);
                         resolve(Result.Failure(e));
+                    })
+                    .finally(() => {
+                        if (Config.log_db) console.timeEnd('db run statement');
                     });
             });
         }
     }
 
     async runAllStatements(statements: QueryConfig[] | string[], options?: Options<any>): Promise<Result<boolean>> {
+        if (Config.log_db) console.time('db run all statements');
         if (options && options.transaction) {
             try {
                 for (const j in statements) {
                     await options.transaction.query(statements[j]);
                 }
             } catch (e) {
+                if (Config.log_db) console.timeEnd('db run all statements');
                 return new Promise((resolve) => {
                     Logger.error(`run all failed - ${(e as Error).message} `);
                     resolve(Result.Failure(`run all failed ${(e as Error).message}`));
@@ -173,6 +190,7 @@ export default class Mapper {
                     await PostgresAdapter.Instance.Pool.query(statements[j]);
                 }
             } catch (e) {
+                if (Config.log_db) console.timeEnd('db run all statements');
                 return new Promise((resolve) => {
                     Logger.error(`run all failed - ${(e as Error).message} `);
                     resolve(Result.Failure(`run all failed ${(e as Error).message}`));
@@ -180,11 +198,13 @@ export default class Mapper {
             }
         }
 
+        if (Config.log_db) console.timeEnd('db run all statements');
         return Promise.resolve(Result.Success(true));
     }
 
     // run a query, retrieve first result and cast to T
     retrieve<T>(q: QueryConfig, options?: Options<T>): Promise<Result<T>> {
+        if (Config.log_db) console.time('db retrieve');
         return new Promise<Result<any>>((resolve) => {
             if (options && options.transaction) {
                 options.transaction
@@ -201,6 +221,9 @@ export default class Mapper {
                     })
                     .catch((e) => {
                         resolve(Result.Failure(`record retrieval failed - ${(e as Error).message}`));
+                    })
+                    .finally(() => {
+                        if (Config.log_db) console.timeEnd('db retrieve');
                     });
             } else {
                 PostgresAdapter.Instance.Pool.query(q)
@@ -216,6 +239,9 @@ export default class Mapper {
                     })
                     .catch((e) => {
                         resolve(Result.Failure(`record retrieval failed - ${(e as Error).message}`));
+                    })
+                    .finally(() => {
+                        if (Config.log_db) console.timeEnd('db retrieve');
                     });
             }
         });
@@ -223,6 +249,7 @@ export default class Mapper {
 
     // run query and return all rows, cast to T
     rows<T>(q: QueryConfig | string, options?: Options<T>): Promise<Result<T[]>> {
+        if (Config.log_db) console.time('db rows');
         if (options && options.transaction) {
             return new Promise<Result<any[]>>((resolve) => {
                 options
@@ -237,6 +264,9 @@ export default class Mapper {
                     })
                     .catch((e) => {
                         resolve(Result.Failure(`row retrieval failed - ${(e as Error).message}`));
+                    })
+                    .finally(() => {
+                        if (Config.log_db) console.timeEnd('db rows');
                     });
             });
         } else {
@@ -252,6 +282,9 @@ export default class Mapper {
                     })
                     .catch((e) => {
                         resolve(Result.Failure(`row retrieval failed - ${(e as Error).message}`));
+                    })
+                    .finally(() => {
+                        if (Config.log_db) console.timeEnd('db rows');
                     });
             });
         }
