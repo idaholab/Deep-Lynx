@@ -83,6 +83,13 @@
                       required
                   ></v-text-field>
 
+                  <v-text-field
+                      v-model="httpConfig.timeout"
+                      :label="$t('createDataSource.timeout')"
+                      type="number"
+                      required
+                  ></v-text-field>
+
                   <v-checkbox
                       v-model="httpConfig.secure"
                       :label="$t('createDataSource.secure')"
@@ -125,6 +132,13 @@
                   <v-text-field
                       v-model="jazzConfig.poll_interval"
                       :label="$t('createDataSource.pollInterval')"
+                      type="number"
+                      required
+                  ></v-text-field>
+
+                  <v-text-field
+                      v-model="jazzConfig.timeout"
+                      :label="$t('createDataSource.timeout')"
                       type="number"
                       required
                   ></v-text-field>

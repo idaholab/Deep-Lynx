@@ -80,6 +80,13 @@
                       :rules="[v => !!v || 'Item is required']"
                   ></v-text-field>
 
+                  <v-text-field
+                      v-model="dataSource.config.timeout"
+                      :label="$t('editDataSource.timeout')"
+                      type="number"
+                      :rules="[v => !!v || 'Item is required']"
+                  ></v-text-field>
+
                   <v-checkbox
                       v-model="dataSource.config.secure"
                       :label="$t('editDataSource.secure')"
@@ -120,6 +127,13 @@
                   <v-text-field
                       v-model="dataSource.config.poll_interval"
                       :label="$t('editDataSource.pollInterval')"
+                      type="number"
+                       :rules="[v => !!v || 'Item is required']"
+                  ></v-text-field>
+
+                  <v-text-field
+                      v-model="dataSource.config.timeout"
+                      :label="$t('editDataSource.timeout')"
                       type="number"
                        :rules="[v => !!v || 'Item is required']"
                   ></v-text-field>

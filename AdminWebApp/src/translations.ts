@@ -618,6 +618,7 @@ export default {
             archived: 'archived',
         },
         createDataSource: {
+            timeout: 'Timeout (ms)',
             value: 'Value',
             key: 'Key',
             chunkInterval: 'Chunk Interval',
@@ -694,6 +695,7 @@ export default {
                 'This controls how many days Deep Lynx will retain the raw data you import. A value of 0 will retain no raw data after processing and a value of -1 will retain raw data indefinitely.',
         },
         editDataSource: {
+            timeout: 'Timeout (ms)',
             aveva: 'Aveva',
             jazz: 'Jazz',
             http: 'HTTP Poller',
