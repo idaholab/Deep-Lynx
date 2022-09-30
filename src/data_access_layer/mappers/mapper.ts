@@ -92,9 +92,9 @@ export default class Mapper {
 
     // run simple query with typed return
     async run<T>(statement: QueryConfig | string, options?: Options<T>): Promise<Result<T[]>> {
-        if (Config.log_db) console.time('db run');
         if (options && options.transaction) {
             return new Promise((resolve) => {
+                if (Config.log_db) console.time('db run');
                 options
                     .transaction!.query(statement)
                     .then((results) => {
@@ -115,6 +115,7 @@ export default class Mapper {
             });
         } else {
             return new Promise((resolve) => {
+                if (Config.log_db) console.time('db run');
                 PostgresAdapter.Instance.Pool.query(statement)
                     .then((results) => {
                         if (options && options.resultClass) {
@@ -137,9 +138,9 @@ export default class Mapper {
 
     // run the query, but return only true/false depending on execution
     async runStatement(statement: QueryConfig | string, options?: Options<any>): Promise<Result<boolean>> {
-        if (Config.log_db) console.time('db run statement');
         if (options && options.transaction) {
             return new Promise((resolve) => {
+                if (Config.log_db) console.time('db run statement');
                 options
                     .transaction!.query(statement)
                     .then(() => {
@@ -155,6 +156,7 @@ export default class Mapper {
             });
         } else {
             return new Promise((resolve) => {
+                if (Config.log_db) console.time('db run statement');
                 PostgresAdapter.Instance.Pool.query(statement)
                     .then(() => {
                         resolve(Result.Success(true));
