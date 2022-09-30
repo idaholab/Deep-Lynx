@@ -32,7 +32,7 @@ void PostgresAdapter.Instance.init()
                                     .catch((e) => {
                                         Logger.error(`unable to process event from queue ${e}`);
                                     })
-                                    .finally(() => void Cache.set(`data_sources_queue_${chunk}`, {}, 30));
+                                    .finally(() => void Cache.set(`data_sources_queue_${chunk}`, {}, 6000));
                             })
                             .catch((e) => {
                                 Logger.error(`unable to process event from queue ${e}`);
