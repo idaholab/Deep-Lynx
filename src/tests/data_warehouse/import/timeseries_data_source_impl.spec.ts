@@ -13,7 +13,6 @@ import fs from 'fs';
 import {plainToInstance} from 'class-transformer';
 
 const csv = require('csvtojson');
-const fastLoad = require('dl-fast-load');
 
 // Generally testing the standard implementation to verify that the ReceiveData and other underlying functions that most
 // other implementations rely on function ok.
@@ -363,9 +362,6 @@ describe('A Standard DataSource Implementation can', async () => {
         fs.writeFileSync('./test-timeseries-data.json', sampleJSON);
 
         // now we create an import through the datasource
-
-        let stream = fs.createReadStream('./test-timeseries-data.json').pause();
-        fastLoad.ingest(stream);
 
         let received = await source!.ReceiveData(fs.createReadStream('./test-timeseries-data.json'), user);
         expect(received.isError, received.error?.error).false;
