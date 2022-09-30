@@ -20,19 +20,17 @@ void PostgresAdapter.Instance.init()
                         dataSourceRepo
                             .findByID(chunk as string)
                             .then((source) => {
+                                callback();
+
                                 if (source.isError) {
                                     Logger.error(`unable to fetch data source ${source.error?.error}`);
-                                    callback();
                                     return;
                                 }
+
                                 source.value
                                     .Run()
-                                    .then(() => {
-                                        callback();
-                                    })
                                     .catch((e) => {
                                         Logger.error(`unable to process event from queue ${e}`);
-                                        callback();
                                     })
                                     .finally(() => void Cache.set(`data_sources_queue_${chunk}`, {}, 30));
                             })
