@@ -249,9 +249,9 @@ export default class Mapper {
 
     // run query and return all rows, cast to T
     rows<T>(q: QueryConfig | string, options?: Options<T>): Promise<Result<T[]>> {
-        if (Config.log_db) console.time('db rows');
         if (options && options.transaction) {
             return new Promise<Result<any[]>>((resolve) => {
+                if (Config.log_db) console.time('db rows');
                 options
                     .transaction!.query(q)
                     .then((results) => {
@@ -271,6 +271,7 @@ export default class Mapper {
             });
         } else {
             return new Promise<Result<any[]>>((resolve) => {
+                if (Config.log_db) console.time('db rows');
                 PostgresAdapter.Instance.Pool.query(q)
                     .then((results) => {
                         if (options && options.resultClass) {
