@@ -194,7 +194,7 @@ export class Config {
 
         this._export_data_interval = process.env.EXPORT_INTERVAL || '10m';
         this._export_data_concurrency = process.env.EXPORT_DATA_CONCURRENCY ? parseInt(process.env.EXPORT_DATA_CONCURRENCY, 10) : 4;
-        this._emitter_interval = process.env.EMITTER_INTERVAL || '500ms';
+        this._emitter_interval = process.env.EMITTER_INTERVAL || '2s';
 
         this._queue_system = process.env.QUEUE_SYSTEM || 'database';
 
