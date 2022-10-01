@@ -409,9 +409,12 @@ export default class GraphQLSchemaGenerator {
         const results = await pMap(metatypeResults.value, metatypeMapper, {concurrency: 10})
 
         results.forEach((result) => {
+            if(result) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            metatypeGraphQLObjects[result[0]] = result[1]
+                metatypeGraphQLObjects[result[0]] = result[1]
+            }
+
         })
 
         const relationshipGraphQLObjects: {[key: string]: any} = {};
@@ -615,9 +618,11 @@ export default class GraphQLSchemaGenerator {
 
         const rResults= await pMap(relationshipResults.value, relationshipMapper, {concurrency: 10})
         rResults.forEach((result) => {
+            if(result) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            relationshipGraphQLObjects[result[0]] = result[1]
+                relationshipGraphQLObjects[result[0]] = result[1]
+            }
         })
 
         const metatypeObjects = new GraphQLObjectType({
