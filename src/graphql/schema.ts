@@ -36,8 +36,6 @@ import {Transform} from "stream";
 import Edge from "../domain_objects/data_warehouse/data/edge";
 import Config from "../services/config";
 
-let GRAPHQLSCHEMA: Map<string, GraphQLSchema> = new Map<string, GraphQLSchema>();
-
 // GraphQLSchemaGenerator takes a container and generates a valid GraphQL schema for all contained metatypes. This will
 // allow users to query and filter data based on node type, the various properties that type might have, and other bits
 // of metadata.
