@@ -94,7 +94,7 @@ async function Start(): Promise<any> {
     const graceful = new Graceful({brees: [bree]});
     graceful.listen();
 
-    await bree.start();
+    // await bree.start();
 
     // if enabled, create an initial SuperUser for easier system management
     // if SAML is configured, the initial SAML user will be assigned admin status
