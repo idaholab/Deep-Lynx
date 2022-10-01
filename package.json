@@ -24,6 +24,7 @@
         "build:web": "copyfiles \"./.env\" ./AdminWebApp && cd ./AdminWebApp && npm install && npm run build -- --dest ./../dist/http_server/web_gui",
         "watch": "nodemon",
         "start": "tsc && copyfiles -u 1 \"./src/**/*.hbs\" ./dist && copyfiles -u 1 \"./src/http_server/assets/**\" ./dist && node -r dotenv/config ./dist/main.js",
+        "start:docker": "node ./dist/main.js",
         "test": "cross-env TS_NODE_FILES=true npm run test:raw",
         "test:raw": " cd src/tests && cross-env-shell nyc mocha --exit -r ts-node/register -r dotenv/config --recursive \"**/*.spec.ts\" \"**/**/*.spec.ts\" \"**/**/**/*.spec.ts\" --prof --timeout 30000 ",
         "prepare": "husky install"
@@ -80,7 +81,6 @@
         "passport": "^0.4.1",
         "passport-http": "^0.3.0",
         "passport-saml": "^3.1.2",
-        "pg": "^8.5.1",
         "prettier": "2.3.1",
         "run-script-os": "^1.1.5",
         "ts-node": "^10.9.1",
@@ -154,6 +154,7 @@
         "pg-format": "^1.0.4",
         "pg-large-object": "^2.0.0",
         "pg-query-stream": "^4.2.1",
+        "pg": "^8.8.0",
         "reflect-metadata": "^0.1.13",
         "short-uuid": "^4.2.0",
         "tslib": "^2.3.0",
