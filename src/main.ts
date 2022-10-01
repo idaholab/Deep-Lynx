@@ -48,16 +48,16 @@ async function Start(): Promise<any> {
             //     interval: '30s',
             //     timeout: 0,
             // },*/
-            {
-                name: 'data_staging_emitter', // will run data_staging_emitter on an infinite loop
-                interval: Config.emitter_interval,
-                timeout: 0,
-            },
             // {
-            //     name: 'edge_queue_emitter', // will run edge_queue_emitter on an infinite loop
+            //     name: 'data_staging_emitter', // will run data_staging_emitter on an infinite loop
             //     interval: Config.emitter_interval,
             //     timeout: 0,
             // },
+            {
+                name: 'edge_queue_emitter', // will run edge_queue_emitter on an infinite loop
+                interval: Config.emitter_interval,
+                timeout: 0,
+            },
             // {
             //     name: 'events_queue', // will run events_queue.ts - a never ending processing of the events queue
             //     interval: '1m',
