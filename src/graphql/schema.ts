@@ -406,9 +406,13 @@ export default class GraphQLSchemaGenerator {
                 resolve: this.resolverForMetatype(containerID, metatype, options),
             }];
         };
-        const results = await pMap(metatypeResults.value, metatypeMapper, {concurrency: 4})
+        const results = await pMap(metatypeResults.value, metatypeMapper, {concurrency: 10})
 
-        console.log(results)
+        results.forEach((result) => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            metatypeGraphQLObjects[result[0]] = result[1]
+        })
 
         const relationshipGraphQLObjects: {[key: string]: any} = {};
 
@@ -523,8 +527,8 @@ export default class GraphQLSchemaGenerator {
             },
         });
 
-        relationshipResults.value.forEach((relationship) => {
-            relationshipGraphQLObjects[stringToValidPropertyName(relationship.name)] = {
+        const relationshipMapper = (relationship: MetatypeRelationship) => {
+            return [stringToValidPropertyName(relationship.name), {
                 args: {
                     ...this.inputFieldsForRelationship(relationship),
                     _record: {type: edgeRecordInputType},
@@ -606,8 +610,15 @@ export default class GraphQLSchemaGenerator {
                     }),
                 ),
                 resolve: this.resolverForRelationships(containerID, relationship, options),
-            };
-        });
+            }];
+        };
+
+        const rResults= await pMap(relationshipResults.value, relationshipMapper, {concurrency: 10})
+        rResults.forEach((result) => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            relationshipGraphQLObjects[result[0]] = result[1]
+        })
 
         const metatypeObjects = new GraphQLObjectType({
             name: 'metatypes',

@@ -142,9 +142,6 @@ export default class Mapper {
                     .catch((e) => {
                         Logger.error(`query failed - ${(e as Error).message}`);
                         resolve(Result.Failure(e));
-                    })
-                    .finally(() => {
-                        if (Config.log_db) console.timeEnd('db run statement');
                     });
             });
         } else {
