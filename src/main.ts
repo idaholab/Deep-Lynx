@@ -11,11 +11,6 @@ import UserRepository from './data_access_layer/repositories/access_management/u
 import PostgresAdapter from './data_access_layer/mappers/db_adapters/postgres/postgres';
 import OAuthRepository from './data_access_layer/repositories/access_management/oauth_repository';
 import {Migrator} from './data_access_layer/migrate';
-import {GraphQLSchema} from 'graphql';
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-global.GRAPHQLSCHEMA = new Map<string, GraphQLSchema>();
 
 process.on('unhandledRejection', (reason, promise) => {
     BackedLogger.error(`Unhandled rejection at ${promise} reason: ${reason}`);

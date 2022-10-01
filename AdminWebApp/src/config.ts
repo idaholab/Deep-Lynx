@@ -4,7 +4,7 @@ export class Config {
     private static instance: Config;
 
     get appUrl(): string {
-        if (process.env.VUE_APP_BUNDLED_BUILD === 'true') {
+        if (process.env.VUE_APP_BUNDLED_BUILD) {
             return `${location.origin}/#`;
         } else {
             return process.env.VUE_APP_APP_URL || 'http://localhost:8090';
@@ -16,7 +16,7 @@ export class Config {
     }
 
     get deepLynxApiUri(): string {
-        if (process.env.VUE_APP_BUNDLED_BUILD === 'true') {
+        if (process.env.VUE_APP_BUNDLED_BUILD) {
             return `${location.origin}`;
         } else {
             return process.env.VUE_APP_DEEP_LYNX_API_URL || 'http://localhost:8090';
