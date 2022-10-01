@@ -35,6 +35,7 @@ import Node from "../domain_objects/data_warehouse/data/node";
 import {Transform} from "stream";
 import Edge from "../domain_objects/data_warehouse/data/edge";
 import Config from "../services/config";
+import pMap from "p-map";
 
 let GRAPHQLSCHEMA: Map<string, GraphQLSchema> = new Map<string, GraphQLSchema>();
 
@@ -232,7 +233,8 @@ export default class GraphQLSchemaGenerator {
             },
         });
 
-        metatypeResults.value.forEach((metatype) => {
+
+        const metatypeMapper = (metatype: Metatype) => {
             if (!metatype.keys || metatype.keys.length === 0) return;
 
             // the following 4 input/object types are used for querying or introspection on _relationship
@@ -307,7 +309,7 @@ export default class GraphQLSchemaGenerator {
                 },
             });
 
-            metatypeGraphQLObjects[stringToValidPropertyName(metatype.name)] = {
+            return [stringToValidPropertyName(metatype.name), {
                 args: {
                     ...this.inputFieldsForMetatype(metatype),
                     _record: {type: recordInputType},
@@ -402,8 +404,11 @@ export default class GraphQLSchemaGenerator {
                         }),
                     ),
                 resolve: this.resolverForMetatype(containerID, metatype, options),
-            };
-        });
+            }];
+        };
+        const results = await pMap(metatypeResults.value, metatypeMapper, {concurrency: 4})
+
+        console.log(results)
 
         const relationshipGraphQLObjects: {[key: string]: any} = {};
 
