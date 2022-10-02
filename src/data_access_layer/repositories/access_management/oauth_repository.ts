@@ -134,7 +134,7 @@ export default class OAuthRepository extends Repository implements RepositoryInt
         const errors = await request.validationErrors();
         if (errors) return Promise.resolve(Result.Failure(`oauth request does not pass validation ${errors.join(',')}`));
 
-        const set = await Cache.set(token, request, 60 * 10);
+        const set = await Cache.set(token, request, 60 * 100);
         if (!set) return Promise.resolve(Result.Failure(`unable to store request in cache`));
 
         return Promise.resolve(Result.Success(token));
@@ -147,7 +147,7 @@ export default class OAuthRepository extends Repository implements RepositoryInt
         if (!cached) return new Promise((resolve) => resolve(Result.Failure('unable to retrieve original request from cache')));
 
         const originalReq = plainToClass(OAuthRequest, cached);
-        console.log(originalReq);
+        console.log(JSON.stringify(originalReq));
 
         const user = await userRepo.findByID(originalReq.user_id!);
         if (user.isError) return new Promise((resolve) => resolve(Result.Pass(user)));
