@@ -14,6 +14,7 @@
         :headers="headers()"
         :items="dataSources"
         sort-by="calories"
+        :loading="dataSourcesLoading"
         class="elevation-1"
     >
       <template v-slot:top>
@@ -180,6 +181,8 @@ export default class DataSources extends Vue {
 
   dialog= false
   select = ""
+  dataSourcesLoading = false
+  timeseriesLoading = false
   dataSources: DataSourceT[] = []
   timeseriesDataSources: DataSourceT[] = []
   errorMessage = ""
@@ -203,19 +206,23 @@ export default class DataSources extends Vue {
   }
 
   refreshDataSources() {
+    this.dataSourcesLoading = true
     this.$client.listDataSources(this.containerID, true, false)
         .then(dataSources => {
           this.dataSources = dataSources
         })
         .catch(e => this.errorMessage = e)
+        .finally(() => this.dataSourcesLoading = false)
   }
 
   refreshTimeseriesDataSources() {
+    this.timeseriesLoading = true
     this.$client.listDataSources(this.containerID, true, true)
         .then(dataSources => {
           this.timeseriesDataSources= dataSources
         })
         .catch(e => this.errorMessage = e)
+        .finally(() => this.timeseriesLoading = false)
   }
 
 
