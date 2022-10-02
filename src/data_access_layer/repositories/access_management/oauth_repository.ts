@@ -147,6 +147,7 @@ export default class OAuthRepository extends Repository implements RepositoryInt
         if (!cached) return new Promise((resolve) => resolve(Result.Failure('unable to retrieve original request from cache')));
 
         const originalReq = plainToClass(OAuthRequest, cached);
+        console.log(originalReq);
 
         const user = await userRepo.findByID(originalReq.user_id!);
         if (user.isError) return new Promise((resolve) => resolve(Result.Pass(user)));
