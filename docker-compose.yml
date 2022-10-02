@@ -16,6 +16,10 @@ services:
     image: "timescale/timescaledb:latest-pg12"
     ports:
       - "5432:5432"
+  redis:
+    image: "redis:latest"
+    ports:
+      - "6379:6379"
   rabbitmq:
     environment:
       - RABBITMQ_DEFAULT_USER=deeplynx
