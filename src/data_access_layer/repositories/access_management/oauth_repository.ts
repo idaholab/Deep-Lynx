@@ -144,7 +144,6 @@ export default class OAuthRepository extends Repository implements RepositoryInt
     async authorizationCodeExchange(exchangeReq: OAuthTokenExchangeRequest): Promise<Result<string>> {
         const userRepo = new UserRepository();
         const cached = await Cache.get<object>(exchangeReq.code!);
-        console.log(cached);
         if (!cached) return new Promise((resolve) => resolve(Result.Failure('unable to retrieve original request from cache')));
 
         const originalReq = plainToInstance(OAuthRequest, cached);

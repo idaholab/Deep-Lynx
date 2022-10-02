@@ -22,7 +22,6 @@ export default class PostgresAdapter {
     // eslint-disable-next-line @typescript-eslint/require-await
     public async init() {
         this.pool = new Pool({
-            max: 100,
             connectionString: Config.core_db_connection_string,
             ssl: Config.ssl_enabled
                 ? {
