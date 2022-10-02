@@ -11,6 +11,9 @@ ENV VUE_APP_TIME_SERIES_ENABLED="true"
 ENV VUE_APP_APP_URL="http://localhost:8090/#"
 # this should be an alphanumeric random string of at least 15 characters
 ENV VUE_APP_DEEP_LYNX_APP_ID="root"
+
+# turn off jobs on the main thread as this spins up PM2 with the worker
+ENV RUN_JOBS=false
 ENV CORE_DB_CONNECTION_STRING=postgresql://postgres:root@timescaledb:5432/deep_lynx_dev
 
 # Create the base directory and make user "node" the owner
@@ -41,4 +44,4 @@ ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait
 RUN chmod +x /wait
 
 EXPOSE 8090
-CMD /wait && pm2-runtime ./dist/main.js
+CMD /wait && pm2-runtime ecosystem.config.js

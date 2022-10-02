@@ -15,6 +15,7 @@ export class Config {
     private _project_dir: string;
     private readonly _email_address: string;
     private readonly _email_enabled: boolean = true;
+    private readonly _run_jobs: boolean = true;
 
     private readonly _email_validation_enforced: boolean;
     private readonly _container_invite_url: string;
@@ -124,6 +125,7 @@ export class Config {
         this._root_address = process.env.ROOT_ADDRESS || 'http://localhost:8090';
         this._email_address = process.env.EMAIL_ADDRESS || 'do+not+reply@deeplynx.org';
         this._email_enabled = process.env.EMAIL_ENABLED === 'true';
+        this._run_jobs = process.env.RUN_JOBS ? process.env.RUN_JOBS === 'true' : true;
 
         this._email_validation_enforced = process.env.EMAIL_VALIDATION_ENFORCED === 'false';
         this._container_invite_url = process.env.CONTAINER_INVITE_URL || 'http://localhost:8090/container-invite';
@@ -259,6 +261,10 @@ export class Config {
 
     get project_dir(): string {
         return this._project_dir;
+    }
+
+    get run_jobs(): boolean {
+        return this._run_jobs;
     }
 
     get template_dir(): string {
