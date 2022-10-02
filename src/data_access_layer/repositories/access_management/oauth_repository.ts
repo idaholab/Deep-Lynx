@@ -7,7 +7,7 @@ import Cache from '../../../services/cache/cache';
 import UserRepository from './user_repository';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import {classToPlain, plainToClass} from 'class-transformer';
+import {classToPlain, plainToClass, plainToInstance} from 'class-transformer';
 import Config from '../../../services/config';
 import {Request} from 'express';
 import {OAuthApplication, OAuthRequest, OAuthTokenExchangeRequest} from '../../../domain_objects/access_management/oauth/oauth';
@@ -144,10 +144,10 @@ export default class OAuthRepository extends Repository implements RepositoryInt
     async authorizationCodeExchange(exchangeReq: OAuthTokenExchangeRequest): Promise<Result<string>> {
         const userRepo = new UserRepository();
         const cached = await Cache.get<object>(exchangeReq.code!);
+        console.log(cached);
         if (!cached) return new Promise((resolve) => resolve(Result.Failure('unable to retrieve original request from cache')));
 
-        const originalReq = plainToClass(OAuthRequest, cached);
-        console.log(JSON.stringify(originalReq));
+        const originalReq = plainToInstance(OAuthRequest, cached);
 
         const user = await userRepo.findByID(originalReq.user_id!);
         if (user.isError) return new Promise((resolve) => resolve(Result.Pass(user)));
