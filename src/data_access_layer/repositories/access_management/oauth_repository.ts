@@ -7,7 +7,7 @@ import Cache from '../../../services/cache/cache';
 import UserRepository from './user_repository';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import {classToPlain, plainToClass, plainToInstance} from 'class-transformer';
+import {classToPlain, plainToClass, plainToInstance, serialize} from 'class-transformer';
 import Config from '../../../services/config';
 import {Request} from 'express';
 import {OAuthApplication, OAuthRequest, OAuthTokenExchangeRequest} from '../../../domain_objects/access_management/oauth/oauth';
@@ -134,7 +134,7 @@ export default class OAuthRepository extends Repository implements RepositoryInt
         const errors = await request.validationErrors();
         if (errors) return Promise.resolve(Result.Failure(`oauth request does not pass validation ${errors.join(',')}`));
 
-        const set = await Cache.set(token, request, 60 * 100);
+        const set = await Cache.set(token, serialize(request), 60 * 100);
         if (!set) return Promise.resolve(Result.Failure(`unable to store request in cache`));
 
         return Promise.resolve(Result.Success(token));
