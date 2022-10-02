@@ -108,7 +108,12 @@ export class RedisCacheImpl implements CacheInterface {
             return new Promise((resolve) => resolve(undefined));
         }
 
-        return new Promise((resolve) => resolve(JSON.parse(val) as T));
+        try {
+            const parsed = JSON.parse(val);
+            return new Promise((resolve) => resolve(parsed as T));
+        } catch {
+            return new Promise((resolve) => resolve(val as T));
+        }
     }
 
     async set(key: string, val: any, ttl?: number): Promise<boolean> {
