@@ -144,7 +144,7 @@ export class RedisCacheImpl implements CacheInterface {
     async flush(): Promise<boolean> {
         const flushed = await this._redis.flushall();
 
-        if (flushed !== 1 && flushed !== 0) {
+        if (flushed !== 1 && flushed !== 0 && flushed !== 'OK') {
             Logger.error(`error flushing all values from redis`);
         }
 
