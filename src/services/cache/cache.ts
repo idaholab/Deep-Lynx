@@ -115,9 +115,9 @@ export class RedisCacheImpl implements CacheInterface {
         let set: string;
 
         if (ttl) {
-            set = await this._redis.set(key, JSON.stringify(val), 'EX', ttl);
+            set = await this._redis.set(key, val, 'EX', ttl);
         } else {
-            set = await this._redis.set(key, JSON.stringify(val));
+            set = await this._redis.set(key, val);
         }
 
         if (set !== 'OK') {
