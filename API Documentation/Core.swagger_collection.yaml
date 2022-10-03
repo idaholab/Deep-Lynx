@@ -4827,11 +4827,6 @@ paths:
         required: true
       - schema:
           type: string
-        name: sourceID
-        in: path
-        required: true
-      - schema:
-          type: string
         name: originalMappingID
         in: path
         required: true
