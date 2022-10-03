@@ -3,6 +3,8 @@ import Result from '../../common_classes/result';
 import { Readable } from 'stream';
 import * as fs from 'fs';
 import Logger from './../logger';
+import File from '../../domain_objects/data_warehouse/data/file';
+const short = require('short-uuid');
 const digestStream = require('digest-stream');
 
 /*
@@ -14,7 +16,13 @@ export default class Filesystem implements BlobStorage {
     private _directory: string;
     private _isWindows: boolean | undefined;
 
-    async deleteFile(filepath: string): Promise<Result<boolean>> {
+    async deleteFile(f: File): Promise<Result<boolean>> {
+        let filepath;
+        if (f.short_uuid) {
+            filepath = `${f.adapter_file_path}${f.file_name}${f.short_uuid}`;
+        } else {
+            filepath = `${f.adapter_file_path}${f.file_name}`;
+        }
         if (this._isWindows) filepath = filepath.replace(new RegExp('/', 'g'), `\\`);
 
         fs.unlinkSync(filepath);
@@ -46,6 +54,8 @@ export default class Filesystem implements BlobStorage {
             return Promise.resolve(Result.Failure('directory does not exist or was unable to be opened'));
         }
 
+        const shortUUID = short.generate();
+
         // Windows directories use backslashes instead of forward slashes in unix like systems
         if (this._isWindows) filepath = filepath.replace(new RegExp('/', 'g'), `\\`);
 
@@ -53,7 +63,7 @@ export default class Filesystem implements BlobStorage {
             fs.mkdirSync(`${this._directory}${filepath}`, { recursive: true });
         }
 
-        const writeStream = fs.createWriteStream(`${this._directory}${filepath}${filename}`, { flags: 'w' });
+        const writeStream = fs.createWriteStream(`${this._directory}${filepath}${filename}${shortUUID}`, { flags: 'w' });
 
         stream?.on('error', (err: Error) => {
             Logger.error(`error saving file to filesystem ${err}`);
@@ -76,13 +86,21 @@ export default class Filesystem implements BlobStorage {
                 filepath: `${this._directory}${filepath}`,
                 size: dataLength / 1000,
                 md5hash,
-                adapter_name: this.name()
+                metadata: {},
+                adapter_name: this.name(),
+                shortUUID
             } as BlobUploadResponse)
         );
     }
 
-    downloadStream(filepath: string): Promise<Readable | undefined> {
-        return Promise.resolve(fs.createReadStream(`${filepath}`));
+    downloadStream(f: File): Promise<Readable | undefined> {
+        let filepath;
+        if (f.short_uuid) {
+            filepath = `${f.adapter_file_path}${f.file_name}${f.short_uuid}`;
+        } else {
+            filepath = `${f.adapter_file_path}${f.file_name}`;
+        }
+        return Promise.resolve(fs.createReadStream(filepath));
     }
 
     // the isWindows could be solved by looking at process.platform instead, but I'd rather limit the access
