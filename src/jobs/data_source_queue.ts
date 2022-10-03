@@ -7,6 +7,21 @@ import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/p
 import DataSourceRepository from '../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import {parentPort} from 'worker_threads';
 
+// handle cache clears from parent IF memory cache
+if (Config.cache_provider === 'memory') {
+    parentPort?.on('message', (message: any) => {
+        const parts = message.split('|');
+        // if a two part message it's a deleted key
+        if (parts.length === 2 && parts[0] === 'deleted') {
+            void Cache.del(parts[1]);
+        }
+
+        if (parts.length === 1 && parts[0] === 'flush') {
+            void Cache.flush();
+        }
+    });
+}
+
 process.setMaxListeners(100);
 void PostgresAdapter.Instance.init()
     .then(() => {

@@ -2,7 +2,7 @@
 import {Server} from './http_server/server';
 import BackedLogger from './services/logger';
 import Config from './services/config';
-import Cache from './services/cache/cache';
+import {Cache} from './services/cache/cache';
 const path = require('path');
 import Bree from 'bree';
 const Graceful = require('@ladjs/graceful');
@@ -24,7 +24,7 @@ async function Start(): Promise<any> {
     const migrator = new Migrator();
     await migrator.Run();
 
-    void Cache.flush();
+    void Cache.Instance.cache.flush();
 
     if (Config.run_jobs) {
         // Bree is a job runner that allows us to start and schedule independent processes across threads
@@ -95,7 +95,21 @@ async function Start(): Promise<any> {
         graceful.listen();
 
         await bree.start();
+
+
+        Cache.Instance.on('deleted', (key) => {
+            bree.workers.forEach((worker) => {
+                worker.postMessage(`deleted|${key}`);
+            });
+        });
+
+        Cache.Instance.on('flush', () => {
+            bree.workers.forEach((worker) => {
+                worker.postMessage(`flush`);
+            });
+        });
     }
+
 
     // if enabled, create an initial SuperUser for easier system management
     // if SAML is configured, the initial SAML user will be assigned admin status

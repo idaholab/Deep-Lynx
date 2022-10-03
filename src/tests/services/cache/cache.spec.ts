@@ -1,14 +1,17 @@
-import { expect } from 'chai';
-import { MemoryCacheImpl, RedisCacheImpl } from '../../../services/cache/cache';
+import {expect} from 'chai';
+import {MemoryCacheImpl, RedisCacheImpl} from '../../../services/cache/cache';
 import Logger from '../../../services/logger';
+import EventEmitter from 'events';
+
+const emptyEmitter = new EventEmitter();
 
 describe('Memory Cache implementation can', async () => {
     it('save an item to the cache', async () => {
-        const cache = new MemoryCacheImpl();
+        const cache = new MemoryCacheImpl(emptyEmitter);
 
         const testObject = {
             test: 'test',
-            number: 1
+            number: 1,
         };
 
         const set = await cache.set('test object', testObject, 1000);
@@ -16,11 +19,11 @@ describe('Memory Cache implementation can', async () => {
     });
 
     it('retrieve an item from the cache', async () => {
-        const cache = new MemoryCacheImpl();
+        const cache = new MemoryCacheImpl(emptyEmitter);
 
         const testObject = {
             test: 'test',
-            number: 1
+            number: 1,
         };
 
         const set = await cache.set('test object', testObject, 1000);
@@ -33,11 +36,11 @@ describe('Memory Cache implementation can', async () => {
     });
 
     it('remove an item from the cache', async () => {
-        const cache = new MemoryCacheImpl();
+        const cache = new MemoryCacheImpl(emptyEmitter);
 
         const testObject = {
             test: 'test',
-            number: 1
+            number: 1,
         };
 
         const set = await cache.set('test object', testObject, 1000);
@@ -65,11 +68,11 @@ describe('Redis cache implementation can', async () => {
     });
 
     it('save an item to the cache', async () => {
-        const cache = new RedisCacheImpl();
+        const cache = new RedisCacheImpl(emptyEmitter);
 
         const testObject = {
             test: 'test',
-            number: 1
+            number: 1,
         };
 
         const set = await cache.set('test object', testObject, 1000);
@@ -77,11 +80,11 @@ describe('Redis cache implementation can', async () => {
     });
 
     it('retrieve an item from the cache', async () => {
-        const cache = new RedisCacheImpl();
+        const cache = new RedisCacheImpl(emptyEmitter);
 
         const testObject = {
             test: 'test',
-            number: 1
+            number: 1,
         };
 
         const set = await cache.set('test object', testObject, 1000);
@@ -98,11 +101,11 @@ describe('Redis cache implementation can', async () => {
     });
 
     it('remove an item from the cache', async () => {
-        const cache = new RedisCacheImpl();
+        const cache = new RedisCacheImpl(emptyEmitter);
 
         const testObject = {
             test: 'test',
-            number: 1
+            number: 1,
         };
 
         const set = await cache.set('test object', testObject, 1000);
