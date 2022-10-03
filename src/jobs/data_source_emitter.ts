@@ -19,6 +19,21 @@ const devnull = require('dev-null');
 const postgresAdapter = PostgresAdapter.Instance;
 const dataSourceMapper = DataSourceMapper.Instance;
 
+// handle cache clears from parent IF memory cache
+if (Config.cache_provider === 'memory') {
+    parentPort?.on('message', (message: any) => {
+        const parts = message.split('|');
+        // if a two part message it's a deleted key
+        if (parts.length === 2 && parts[0] === 'deleted') {
+            void Cache.del(parts[1]);
+        }
+
+        if (parts.length === 1 && parts[0] === 'flush') {
+            void Cache.flush();
+        }
+    });
+}
+
 void postgresAdapter
     .init()
     .then(() => {
