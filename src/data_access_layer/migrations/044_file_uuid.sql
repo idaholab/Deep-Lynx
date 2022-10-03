@@ -1,0 +1,1 @@
+ALTER TABLE files ADD COLUMN short_uuid text DEFAULT NULL;

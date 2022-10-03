@@ -37,6 +37,9 @@ export default class File extends BaseDomainClass {
     @IsOptional()
     metadata: object = {};
 
+    @IsString()
+    short_uuid?: string;
+
     constructor(input: {
         container_id: string;
         data_source_id?: string;
@@ -46,6 +49,7 @@ export default class File extends BaseDomainClass {
         adapter_file_path: string;
         adapter: string;
         metadata?: object;
+        short_uuid?: string;
     }) {
         super();
 
@@ -58,6 +62,7 @@ export default class File extends BaseDomainClass {
             this.adapter_file_path = input.adapter_file_path;
             this.adapter = input.adapter;
             if (input.metadata) this.metadata = input.metadata;
+            if (input.short_uuid) this.short_uuid = input.short_uuid;
         }
     }
 }

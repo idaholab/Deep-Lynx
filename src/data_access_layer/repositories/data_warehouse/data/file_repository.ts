@@ -10,6 +10,7 @@ import BlobStorageProvider from '../../../../services/blob_storage/blob_storage'
 // with listing results to a file
 import EventRepository from "../../event_system/event_repository";
 import Event from "../../../../domain_objects/event_system/event";
+import Logger from "../../../../services/logger";
 
 /*
     FileRepository contains methods for persisting and retrieving file records
@@ -22,6 +23,15 @@ export default class FileRepository extends Repository implements RepositoryInte
     #eventRepo: EventRepository = new EventRepository();
 
     delete(f: File): Promise<Result<boolean>> {
+        if (f.adapter) {
+            const blobStorage = BlobStorageProvider(f.adapter);
+            blobStorage?.deleteFile(f).then((result) => {
+                if (result.isError) {
+                    Logger.error(`unable to delete file from storage provider ${result.error?.error}`);
+                }
+            })
+        }
+        
         if (f.id) {
             return this.#mapper.Delete(f.id);
         }
@@ -89,7 +99,7 @@ export default class FileRepository extends Repository implements RepositoryInte
         const blobStorage = BlobStorageProvider(f.adapter);
         if (!blobStorage) return Promise.resolve(undefined);
 
-        return blobStorage.downloadStream(`${f.adapter_file_path!}${f.file_name}`);
+        return blobStorage.downloadStream(f);
     }
 
     /*
@@ -123,6 +133,7 @@ export default class FileRepository extends Repository implements RepositoryInte
             metadata: result.value.metadata,
             container_id: containerID,
             data_source_id: dataSourceID,
+            short_uuid: result.value.short_uuid,
         });
 
         const saved = await this.save(file, user);
@@ -157,6 +168,11 @@ export default class FileRepository extends Repository implements RepositoryInte
 
     file_name(operator: string, value: any) {
         super.query('file_name', operator, value);
+        return this;
+    }
+
+    short_uuid(operator: string, value: any) {
+        super.query('short_uuid', operator, value);
         return this;
     }
 
