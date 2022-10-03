@@ -1,7 +1,8 @@
 version: "3.9"
 services:
   deep-lynx:
-    image: "idaholab/deeplynx:latest"
+    #image: "idaholab/deeplynx:latest"
+    build : .
     restart: on-failure
     depends_on:
       - timescaledb

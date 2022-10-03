@@ -1,4 +1,4 @@
-.env
+.env-local
 .idea
 .DS_Store
 .husky
