@@ -5,13 +5,12 @@ import AzureBlobImpl from './azure_blob_impl';
 import Filesystem from './filesystem_impl';
 import LargeObject from './pg_large_file_impl';
 import File from '../../domain_objects/data_warehouse/data/file';
-import { NakedDomainClass } from '../../common_classes/base_domain_class';
 
 /*
     BlobStorage is an interface that Deep Lynx uses to accept and store user uploads.
     Implementations should be able to handle any file type.
  */
-export interface BlobStorage{
+export interface BlobStorage {
     uploadPipe(filepath: string, filename: string, stream: Readable | null, contentType?: string, encoding?: string): Promise<Result<BlobUploadResponse>>;
     deleteFile(file: File): Promise<Result<boolean>>;
     downloadStream(file: File): Promise<Readable | undefined>;

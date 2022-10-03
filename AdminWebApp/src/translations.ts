@@ -666,7 +666,7 @@ export default {
             ifcSettingsTitle: 'IFC Settings',
             stopNodes: 'Ignored Properties',
             stopNodesHelp:
-                'Ignored Properties tell DeepLynx what JSON properties, CSV columns, or XML types to ignore when creating the type mapping. For example if you have a two identical payloads, but one has an additional field, you could tell DeepLynx to ignore than additional field and the resulting type mapping would continue to match.',
+                'Ignored Properties tell DeepLynx what JSON properties, CSV columns, or XML types to ignore when creating the type mapping. For example if you have a two identical payloads, but one has an additional field, you could tell DeepLynx to ignore the additional field and the resulting type mapping would continue to match.',
             valueNodes: 'Property Value vs. Type',
             valueNodesHelp:
                 "Property Value vs. Type tells DeepLynx that a JSON property, CSV column, or XML type should have it's value examined as well as examining its type. This allows you to send in identical payload structures but create a different type mapping depending on the value of a property. ",
