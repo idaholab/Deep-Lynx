@@ -23,7 +23,7 @@ import MetatypeRelationshipPair from '../../domain_objects/data_warehouse/ontolo
 import MetatypeRelationshipPairMapper from '../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
 import EdgeMapper from '../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import Edge from '../../domain_objects/data_warehouse/data/edge';
-import GraphQLSchemaGenerator from '../../graphql/schema';
+import GraphQLRunner from '../../graphql/schema';
 import {plainToClass} from 'class-transformer';
 
 describe('Using a new GraphQL Query on graph return we', async () => {
@@ -623,8 +623,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         expect(relPairs.value).not.empty;
         expect(edgeResults.value.length).eq(72);
 
-        const schemaGenerator = new GraphQLSchemaGenerator();
-        GraphQLSchemaGenerator.resetSchema();
+        const schemaGenerator = new GraphQLRunner();
 
         const schemaResults = await schemaGenerator.ForContainer(containerID, {});
         expect(schemaResults.isError).false;
@@ -680,8 +679,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
     });
 
     it('can save a query n layers deep given a root node to file', async () => {
-        const schemaGenerator = new GraphQLSchemaGenerator();
-        GraphQLSchemaGenerator.resetSchema();
+        const schemaGenerator = new GraphQLRunner();
 
         const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true});
         expect(schemaResults.isError).false;
@@ -821,7 +819,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
             expect(nL.edge_properties.color).eq('red');
             expect(nL.destination_properties.name).not.undefined;
             expect(nL.edge_data_source).undefined;
-            if (!(nL.origin_metatype_uuid === metatypes[1].uuid)){
+            if (!(nL.origin_metatype_uuid === metatypes[1].uuid)) {
                 expect(nL.destination_metatype_uuid).eq(metatypes[1].uuid);
             }
             expect(nL.relationship_uuid).not.undefined;
@@ -1055,7 +1053,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
             expect(nL.destination_metatype_id).not.undefined;
             expect(nL.destination_metatype_id).to.be.oneOf(metatypeIDs);
         }
-    });    
+    });
 });
 
 const test_keys: MetatypeKey[] = [

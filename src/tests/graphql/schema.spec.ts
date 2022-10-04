@@ -21,7 +21,7 @@ import ImportMapper from '../../data_access_layer/mappers/data_warehouse/import/
 import DataStagingMapper from '../../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
 import DataStagingRepository from '../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import Container from '../../domain_objects/data_warehouse/ontology/container';
-import GraphQLSchemaGenerator from '../../graphql/schema';
+import GraphQLRunner from '../../graphql/schema';
 import {GraphQLObjectType, GraphQLString, GraphQLFloat, GraphQLBoolean, GraphQLList, GraphQLEnumType} from 'graphql';
 import {DataSourceFactory} from '../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import TypeTransformation, {KeyMapping} from '../../domain_objects/data_warehouse/etl/type_transformation';
@@ -660,10 +660,9 @@ describe('The GraphQL Schema Generator', async () => {
     });
 
     it('can generate a valid schema', async () => {
-        const schemaGenerator = new GraphQLSchemaGenerator();
-        GraphQLSchemaGenerator.resetSchema();
+        const schemaGenerator = new GraphQLRunner();
 
-        const containerSchema = await schemaGenerator.ForContainer(containerID, {});
+        const containerSchema = await schemaGenerator.ForContainer(containerID, {fullSchema: true});
         expect(containerSchema.isError).false;
         const typeMap = containerSchema.value.getTypeMap();
 
@@ -727,8 +726,7 @@ describe('The GraphQL Schema Generator', async () => {
 
     // the processed data should generate 1 Maintenance record and 2 Maintenance Entry records by this point
     it('can return nodes based on metadata', async () => {
-        const schemaGenerator = new GraphQLSchemaGenerator();
-        GraphQLSchemaGenerator.resetSchema();
+        const schemaGenerator = new GraphQLRunner();
 
         const containerSchema = await schemaGenerator.ForContainer(containerID, {});
         expect(containerSchema.isError).false;

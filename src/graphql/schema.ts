@@ -14,7 +14,7 @@ import {
     GraphQLEnumValueConfig,
     GraphQLInputObjectType,
     GraphQLInt,
-    GraphQLNonNull,
+    GraphQLNonNull, graphql,
 } from 'graphql';
 import MetatypeRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 import Result from '../common_classes/result';
@@ -34,16 +34,17 @@ import {plainToClass} from "class-transformer";
 import Node from "../domain_objects/data_warehouse/data/node";
 import {Transform} from "stream";
 import Edge from "../domain_objects/data_warehouse/data/edge";
-import Config from "../services/config";
 import pMap from "p-map";
 import gql from "graphql-tag";
+import MetatypeRelationshipPair from "../domain_objects/data_warehouse/ontology/metatype_relationship_pair";
+import {isMainThread, Worker} from "worker_threads";
 
-let GRAPHQLSCHEMA: Map<string, GraphQLSchema> = new Map<string, GraphQLSchema>();
+const GRAPHQLSCHEMA: Map<string, GraphQLSchema> = new Map<string, GraphQLSchema>();
 
 // GraphQLSchemaGenerator takes a container and generates a valid GraphQL schema for all contained metatypes. This will
 // allow users to query and filter data based on node type, the various properties that type might have, and other bits
 // of metadata.
-export default class GraphQLSchemaGenerator {
+export default class GraphQLRunner {
     #metatypeRepo: MetatypeRepository;
     #metatypePairRepo: MetatypeRelationshipPairRepository;
     #relationshipRepo: MetatypeRelationshipRepository;
@@ -60,18 +61,64 @@ export default class GraphQLSchemaGenerator {
         this.#transformationMapper = TypeTransformationMapper.Instance;
     }
 
+    // RunQuery is a simple wrapper over the schema generation followed by running the actual query
+    async RunQuery(containerID: string, query: Query, options: ResolverOptions): Promise<any> {
+        if(isMainThread){
+            options.metatypes = this.metatypesFromQuery(query.query)
+            options.relationships = this.relationshipsFromQuery(query.query)
+            const isNodesQuery = this.isNodesQuery(query.query)
+
+            if(options.metatypes.length > 0 || options.relationships.length > 0 || isNodesQuery) {
+                const schema = await this.ForContainer(containerID, options)
+                if(schema.isError) return Promise.reject(schema.error)
+
+                return graphql({
+                    schema: schema.value,
+                    source: query.query,
+                    variableValues: query.variables
+                })
+            } else {
+                options.fullSchema = true;
+                const worker = new Worker(__dirname+'/schema_worker.js', {
+                    workerData: {
+                        containerID,
+                        query,
+                        options
+                    }
+                })
+
+                return new Promise((resolve, reject) => {
+                    worker.on('error', () => {
+                        reject('worker error for graphql generation')
+                    })
+
+                    worker.on('message', (message:string) => {
+                        resolve(JSON.parse(message))
+                    })
+                } )
+            }
+
+            // if we're not the main thread then this is an introspective query which needs
+            // the entire object
+        } else {
+            const schema = await this.ForContainer(containerID, options)
+            if(schema.isError) return Promise.reject(schema.error)
+
+            return graphql({
+                schema: schema.value,
+                source: query.query,
+                variableValues: query.variables
+            })
+        }
+
+    }
+
     // generate requires a containerID because the schema it generates is based on a user's ontology and ontologies are
     // separated by containers
     async ForContainer(containerID: string, options: ResolverOptions): Promise<Result<GraphQLSchema>> {
-        // fetch all metatypes for the container, with their keys
-        const metatypesSearch = this.metatypesFromQuery(options.query)
-        const isNodesQuery = this.isNodesQuery(options.query)
-
-        // check for existence of cached schema, else generate the schema dynamically (only if needing all metatypes)
-        if (GRAPHQLSCHEMA.has(containerID) && Config.cache_graphql && metatypesSearch.length === 0 && !isNodesQuery) {
-            return Promise.resolve(Result.Success(GRAPHQLSCHEMA.get(containerID)!));
-        }
-
+        let metatypes: Metatype[] = []
+        let relationships: MetatypeRelationship[] = []
+        let metatypePairs: MetatypeRelationshipPair[] = []
         // fetch the currently published ontology if the versionID wasn't provided
         if (!options.ontologyVersionID) {
             const ontResults = await this.#ontologyRepo
@@ -87,48 +134,90 @@ export default class GraphQLSchemaGenerator {
             }
         }
 
-        let metatypeRepo = this.#metatypeRepo
-            .where()
-            .containerID('eq', containerID)
-            .and()
-            .ontologyVersion('eq', options.ontologyVersionID)
+        let metatypeIDs: string[] = []
+        if(options.fullSchema || (options.metatypes && options.metatypes.length > 0)) {
+            let metatypeRepo = this.#metatypeRepo
+                .where()
+                .containerID('eq', containerID)
+                .and()
+                .ontologyVersion('eq', options.ontologyVersionID)
 
-        // for now if no metatype specified or it's an introspection we load all
-        if(metatypesSearch.length > 0 || isNodesQuery) {
-            metatypeRepo = metatypeRepo.and()
-                .name("%", metatypesSearch)
-        }
+            if(options.metatypes && options.metatypes.length > 0) {
+                metatypeRepo = metatypeRepo.and().name("%", options.metatypes)
+            }
 
-        const metatypeResults = await metatypeRepo.list(true, {sortBy: 'id'});
-        if (metatypeResults.isError) {
-            return Promise.resolve(Result.Pass(metatypeResults));
+            const metatypeResults = await metatypeRepo.list(true, {sortBy: 'id'});
+            if (metatypeResults.isError) {
+                return Promise.resolve(Result.Pass(metatypeResults));
+            }
+
+            metatypes= metatypeResults.value
+            metatypeIDs = metatypeResults.value.map((m) => m.id!);
         }
 
         // fetch all metatype relationship pairs - used for _relationship queries.
-        const metatypePairResults = await this.#metatypePairRepo
-            .where()
-            .containerID('eq', containerID)
-            .and()
-            .ontologyVersion('eq', options.ontologyVersionID)
-            .list();
-        if (metatypePairResults.isError) {
-            return Promise.resolve(Result.Pass(metatypePairResults));
+        if(metatypeIDs.length > 0) {
+            const metatypePairResults = await this.#metatypePairRepo
+                .where()
+                .containerID('eq', containerID)
+                .and()
+                .ontologyVersion('eq', options.ontologyVersionID)
+                .and()
+                .origin_metatype_id('in', metatypeIDs)
+                .or()
+                .containerID('eq', containerID)
+                .and()
+                .ontologyVersion('eq', options.ontologyVersionID)
+                .and()
+                .destination_metatype_id('in', metatypeIDs)
+                .list();
+
+            if (metatypePairResults.isError) {
+                return Promise.resolve(Result.Pass(metatypePairResults));
+            }
+
+            metatypePairs = metatypePairResults.value
+        } else if (options.fullSchema) {
+            const metatypePairResults = await this.#metatypePairRepo
+                .where()
+                .containerID('eq', containerID)
+                .and()
+                .ontologyVersion('eq', options.ontologyVersionID)
+                .list();
+
+            if (metatypePairResults.isError) {
+                return Promise.resolve(Result.Pass(metatypePairResults));
+            }
+
+            metatypePairs = metatypePairResults.value
         }
 
-        // fetch all relationship types. Used for relationship wrapper queries.
-        const relationshipResults = await this.#relationshipRepo
-            .where()
-            .containerID('eq', containerID)
-            .and()
-            .ontologyVersion('eq', options.ontologyVersionID)
-            .list(true);
-        if (relationshipResults.isError) {
-            return Promise.resolve(Result.Pass(relationshipResults));
+
+        if(options.fullSchema || (options.relationships && options.relationships.length > 0)) {
+            // fetch all relationship types. Used for relationship wrapper queries.
+            let relationshipRepo = this.#relationshipRepo
+                .where()
+                .containerID('eq', containerID)
+                .and()
+                .ontologyVersion('eq', options.ontologyVersionID)
+
+            if(options.relationships && options.relationships.length > 0) {
+                relationshipRepo = relationshipRepo.and()
+                    .name("%", options.relationships)
+            }
+
+            const relationshipResults = await relationshipRepo.list(true);
+            if (relationshipResults.isError) {
+                return Promise.resolve(Result.Pass(relationshipResults));
+            }
+
+            relationships = relationshipResults.value
         }
+
 
         // used for querying edges based on node (see input._relationship resolver)
         const metatypePairObjects: {[key: string]: any} = {};
-        metatypePairResults.value.forEach((pair) => {
+        metatypePairs.forEach((pair) => {
             const origin = stringToValidPropertyName(pair.origin_metatype_name!);
             const rel = stringToValidPropertyName(pair.relationship_name!);
             const dest = stringToValidPropertyName(pair.destination_metatype_name!);
@@ -417,7 +506,7 @@ export default class GraphQLSchemaGenerator {
                 resolve: this.resolverForMetatype(containerID, metatype, options),
             }];
         };
-        const results = await pMap(metatypeResults.value, metatypeMapper, {concurrency: 10})
+        const results = await pMap(metatypes, metatypeMapper, {concurrency: 10})
 
         results.forEach((result) => {
             if(result) {
@@ -627,7 +716,7 @@ export default class GraphQLSchemaGenerator {
             }];
         };
 
-        const rResults= await pMap(relationshipResults.value, relationshipMapper, {concurrency: 10})
+        const rResults= await pMap(relationships, relationshipMapper, {concurrency: 10})
         rResults.forEach((result) => {
             if(result) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -841,14 +930,6 @@ export default class GraphQLSchemaGenerator {
                 fields
             })
         })
-
-        // only cache now if we're loading the entire schema
-        if(metatypesSearch.length === 0 || !isNodesQuery) {
-            GRAPHQLSCHEMA.set(containerID, schema);
-
-
-            return Promise.resolve(Result.Success(GRAPHQLSCHEMA.get(containerID)!));
-        }
 
         return Promise.resolve(Result.Success(schema));
     }
@@ -1863,7 +1944,42 @@ export default class GraphQLSchemaGenerator {
                 root.selections?.forEach((selection: {[key: string]: any}) => {
                     if(selection.name?.value === 'metatypes') {
                         search(selection.selectionSet, r)
-                    } else {
+                    } else if(selection.name?.value !== '__schema') {
+                        if(selection.name?.value) r.push(selection.name.value);
+                    }
+                })
+            }
+
+            return r
+        }
+
+        return search(gql(query),results)
+    }
+
+    private relationshipsFromQuery(query: string | undefined): string[] {
+        if(!query) return [];
+        const results: string[] = [];
+
+        const search = (root: {[key: string]: any} | undefined, r: string[]) => {
+            if(!root) return r;
+            // if root object or non-field send in the definitions
+            if(root.kind === 'Document') {
+                root.definitions.forEach((def: any) => search(def, r))
+            }
+
+            if(root.kind === 'OperationDefinition') {
+                search(root.selectionSet, r)
+            }
+
+            if(root.kind === 'Field' && root.name?.value === 'metatypes') {
+                search(root.selectionSet, r)
+            }
+
+            if(root.kind === 'SelectionSet') {
+                root.selections?.forEach((selection: {[key: string]: any}) => {
+                    if(selection.name?.value === 'relationships') {
+                        search(selection.selectionSet, r)
+                    } else if(selection.name?.value !== '__schema') {
                         if(selection.name?.value) r.push(selection.name.value);
                     }
                 })
@@ -1908,15 +2024,11 @@ export default class GraphQLSchemaGenerator {
         // if search has any results it indicates we found nodes in the query
         return search(gql(query), results).length > 0
     }
+}
 
-    public static resetSchema(containerID?: string): void {
-        if(containerID) {
-            GRAPHQLSCHEMA.delete(containerID)
-            return
-        }
-
-        GRAPHQLSCHEMA = new Map<string, GraphQLSchema>()
-    }
+export type Query = {
+    query: string;
+    variables?: any
 }
 
 export type ResolverOptions = {
@@ -1924,4 +2036,7 @@ export type ResolverOptions = {
     returnFile?: boolean;
     returnFileType?: 'json' | 'csv' | 'parquet' | string;
     query?: string; // passing in the query allows us to pare down the schema we generate
+    metatypes?: string[] // metatype names to search
+    relationships?: string[] // relationship names to search
+    fullSchema?: boolean;
 }

@@ -225,6 +225,7 @@ export class Repository {
                 break;
             }
             case '%': {
+                if (!value || value === '' || value.length === 0) break;
                 if (Array.isArray(value)) {
                     this._rawQuery.push(format(`%s %% %L`, fieldName, value.join('|')));
                 } else {
