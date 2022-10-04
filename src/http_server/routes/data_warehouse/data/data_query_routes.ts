@@ -18,6 +18,7 @@ export default class DataQueryRoutes {
                 ontologyVersionID: req.query.ontologyVersionID as string,
                 returnFile: String(req.query.returnFile).toLowerCase() === 'true',
                 returnFileType: String(req.query.returnFileType).toLowerCase(),
+                query: req.body.query,
             })
             .then((schemaResult) => {
                 if (schemaResult.isError) {
