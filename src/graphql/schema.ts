@@ -36,6 +36,7 @@ import {Transform} from "stream";
 import Edge from "../domain_objects/data_warehouse/data/edge";
 import Config from "../services/config";
 import pMap from "p-map";
+import gql from "graphql-tag";
 
 let GRAPHQLSCHEMA: Map<string, GraphQLSchema> = new Map<string, GraphQLSchema>();
 
@@ -62,8 +63,12 @@ export default class GraphQLSchemaGenerator {
     // generate requires a containerID because the schema it generates is based on a user's ontology and ontologies are
     // separated by containers
     async ForContainer(containerID: string, options: ResolverOptions): Promise<Result<GraphQLSchema>> {
-        // check for existence of cached schema, else generate the schema dynamically
-        if (GRAPHQLSCHEMA.has(containerID) && Config.cache_graphql) {
+        // fetch all metatypes for the container, with their keys
+        const metatypesSearch = this.metatypesFromQuery(options.query)
+        const isNodesQuery = this.isNodesQuery(options.query)
+
+        // check for existence of cached schema, else generate the schema dynamically (only if needing all metatypes)
+        if (GRAPHQLSCHEMA.has(containerID) && Config.cache_graphql && metatypesSearch.length === 0 && !isNodesQuery) {
             return Promise.resolve(Result.Success(GRAPHQLSCHEMA.get(containerID)!));
         }
 
@@ -82,13 +87,19 @@ export default class GraphQLSchemaGenerator {
             }
         }
 
-        // fetch all metatypes for the container, with their keys
-        const metatypeResults = await this.#metatypeRepo
+        let metatypeRepo = this.#metatypeRepo
             .where()
             .containerID('eq', containerID)
             .and()
             .ontologyVersion('eq', options.ontologyVersionID)
-            .list(true, {sortBy: 'id'});
+
+        // for now if no metatype specified or it's an introspection we load all
+        if(metatypesSearch.length > 0 || isNodesQuery) {
+            metatypeRepo = metatypeRepo.and()
+                .name("%", metatypesSearch)
+        }
+
+        const metatypeResults = await metatypeRepo.list(true, {sortBy: 'id'});
         if (metatypeResults.isError) {
             return Promise.resolve(Result.Pass(metatypeResults));
         }
@@ -824,14 +835,22 @@ export default class GraphQLSchemaGenerator {
             resolve: this.resolverForNodes(containerID, options) as any
         };
 
-        GRAPHQLSCHEMA.set(containerID, new GraphQLSchema({
+        const schema = new GraphQLSchema({
             query: new GraphQLObjectType({
                 name: 'Query',
-                fields,
-            }),
-        }));
+                fields
+            })
+        })
 
-        return Promise.resolve(Result.Success(GRAPHQLSCHEMA.get(containerID)!));
+        // only cache now if we're loading the entire schema
+        if(metatypesSearch.length === 0 && !isNodesQuery) {
+            GRAPHQLSCHEMA.set(containerID, schema);
+
+
+            return Promise.resolve(Result.Success(GRAPHQLSCHEMA.get(containerID)!));
+        }
+
+        return Promise.resolve(Result.Success(schema));
     }
 
     resolverForMetatype(containerID: string, metatype: Metatype, resolverOptions?: ResolverOptions): (_: any, {input}: {input: any}) => any {
@@ -1819,6 +1838,69 @@ export default class GraphQLSchemaGenerator {
         return [operator as string, parts.join(' ')];
     }
 
+    // metatypeFromQuery breaks down a query, parsing it into an object, and then checking that object to see if there
+    // are metatypes it needs to build into the schema
+    private metatypesFromQuery(query: string | undefined): string[] {
+        if(!query) return [];
+        const results: string[] = [];
+
+        const search = (root: {[key: string]: any} | undefined, r: string[]) => {
+            if(!root) return r;
+            // if root object or non-field send in the definitions
+            if(root.kind === 'Document') {
+                root.definitions.forEach((def: any) => search(def, r))
+            }
+
+            if(root.kind === 'OperationDefinition') {
+                search(root.selectionSet, r)
+            }
+
+            if(root.kind === 'Field' && root.name?.value === 'metatypes') {
+                search(root.selectionSet, r)
+            }
+
+            if(root.kind === 'SelectionSet') {
+                root.selections?.forEach((selection: {[key: string]: any}) => {
+                    if(selection.name?.value === 'metatypes') {
+                        search(selection.selectionSet, r)
+                    } else {
+                        if(selection.name?.value) r.push(selection.name.value);
+                    }
+                })
+            }
+
+            return r
+        }
+
+        return search(gql(query),results)
+    }
+
+    private isNodesQuery(query: string | undefined): boolean {
+        if(!query) return false;
+        const results: boolean[] = [];
+
+        const search = (root: {[key: string]: any} | undefined, r: boolean[]) => {
+            if(!root) return r;
+            // if root object or non-field send in the definitions
+            if(root.kind === 'Document') {
+                root.definitions.forEach((def: any) => search(def, r))
+            }
+
+            if(root.kind === 'OperationDefinition') {
+                search(root.selectionSet, r)
+            }
+
+            if(root.kind === 'Field' && root.name?.value === 'nodes') {
+                r.push(true)
+            }
+
+            return r
+        }
+
+        // if search has any results it indicates we found nodes in the query
+        return search(gql(query), results).length > 0
+    }
+
     public static resetSchema(containerID?: string): void {
         if(containerID) {
             GRAPHQLSCHEMA.delete(containerID)
@@ -1833,4 +1915,5 @@ export type ResolverOptions = {
     ontologyVersionID?: string;
     returnFile?: boolean;
     returnFileType?: 'json' | 'csv' | 'parquet' | string;
+    query?: string; // passing in the query allows us to pare down the schema we generate
 }
