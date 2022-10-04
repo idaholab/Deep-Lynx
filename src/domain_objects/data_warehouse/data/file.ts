@@ -38,6 +38,7 @@ export default class File extends BaseDomainClass {
     metadata: object = {};
 
     @IsString()
+    @IsOptional()
     short_uuid?: string;
 
     constructor(input: {

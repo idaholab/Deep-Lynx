@@ -168,7 +168,7 @@ export default class FileMapper extends Mapper {
                   metadata = u.metadata::jsonb,
                   data_source_id = u.data_source_id::bigint,
                   md5hash = u.md5hash,
-                  short_uuid = u.short_uuid
+                  short_uuid = u.short_uuid,
                   modified_by = u.modified_by,
                   modified_at = NOW()
                   FROM(VALUES %L) AS u(
