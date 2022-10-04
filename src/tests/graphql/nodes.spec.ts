@@ -239,8 +239,34 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     });
 
     it('can query by metatype', async () => {
+        // we load the schema here because we're also testing the ability for the generator to grab only what it needs
+        const schemaGenerator = new GraphQLSchemaGenerator();
+        GraphQLSchemaGenerator.resetSchema();
+
+        const schemaResults = await schemaGenerator.ForContainer(containerID, {
+            query: `{
+                metatypes{
+                    Multimeta{
+                        _record{
+                            id
+                            metatype_uuid
+                        }
+                        name
+                        color
+                    }
+                    
+                    Singleton {
+                        id
+                    }
+                }
+            }`,
+        });
+        expect(schemaResults.isError).false;
+        expect(schemaResults.value).not.empty;
+        let s = schemaResults.value;
+
         const response = await graphql({
-            schema,
+            schema: s,
             source: `{
                 metatypes{
                     Multimeta{
@@ -362,7 +388,20 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     it('can save a query by metatype to file as parquet', async () => {
         const schemaGenerator = new GraphQLSchemaGenerator();
 
-        const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true, returnFileType: 'parquet'});
+        const schemaResults = await schemaGenerator.ForContainer(containerID, {
+            returnFile: true,
+            returnFileType: 'parquet',
+            query: `{
+                metatypes{
+                    Multimeta{
+                        id
+                        file_name
+                        file_size
+                        md5hash
+                    }
+                }
+            }`,
+        });
         expect(schemaResults.isError).false;
         expect(schemaResults.value).not.empty;
 
