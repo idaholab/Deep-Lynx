@@ -11,7 +11,7 @@ import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/meta
 import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
 import MetatypeKeyRepository from './metatype_key_repository';
-import GraphQLSchemaGenerator from '../../../../graphql/schema';
+import GraphQLRunner from '../../../../graphql/schema';
 
 /*
     MetatypeRepository contains methods for persisting and retrieving a metatype
@@ -318,8 +318,6 @@ export default class MetatypeRepository extends Repository implements Repository
 
         const keysDeleted = await new MetatypeKeyRepository().deleteCachedForMetatype(id, containerID);
         if (!keysDeleted) Logger.error(`unable to remove keys for metatype ${id} from cache`);
-
-        GraphQLSchemaGenerator.resetSchema(containerID);
 
         return Promise.resolve(deleted);
     }

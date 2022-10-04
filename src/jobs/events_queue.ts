@@ -7,7 +7,7 @@ import Event from '../domain_objects/event_system/event';
 import EventRepository from '../data_access_layer/repositories/event_system/event_repository';
 import EventActionRepository from '../data_access_layer/repositories/event_system/event_action_repository';
 import EventAction from '../domain_objects/event_system/event_action';
-import GraphQLSchemaGenerator from '../graphql/schema';
+import GraphQLRunner from '../graphql/schema';
 import {graphql} from 'graphql';
 import {Emailer} from '../services/email/email';
 import {BasicEmailTemplate} from '../services/email/templates/basic';
@@ -137,7 +137,7 @@ async function processFunction(event: Event) {
 
             case 'send_data':
                 // attempt to query the data directly and send out
-                const generator = new GraphQLSchemaGenerator();
+                const generator = new GraphQLRunner();
                 await generator
                     .ForContainer(event.container_id!, {})
                     .then(async (schemaResult) => {

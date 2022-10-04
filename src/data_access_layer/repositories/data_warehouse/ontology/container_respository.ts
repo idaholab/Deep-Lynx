@@ -9,7 +9,7 @@ import {plainToClass, serialize} from 'class-transformer';
 import Config from '../../../../services/config';
 import {User} from '../../../../domain_objects/access_management/user';
 import ContainerAlertMapper from '../../../mappers/data_warehouse/ontology/container_alert_mapper';
-import GraphQLSchemaGenerator from '../../../../graphql/schema';
+import GraphQLRunner from '../../../../graphql/schema';
 
 /*
     ContainerRepository contains methods for persisting and retrieving a container
@@ -258,7 +258,6 @@ export default class ContainerRepository implements RepositoryInterface<Containe
         const deleted = await Cache.del(`${ContainerMapper.tableName}:${id}`);
         if (!deleted) Logger.error(`unable to remove container ${id} from cache`);
 
-        GraphQLSchemaGenerator.resetSchema(id);
         return Promise.resolve(deleted);
     }
 }

@@ -23,7 +23,7 @@ import MetatypeRelationshipPair from '../../domain_objects/data_warehouse/ontolo
 import MetatypeRelationshipPairMapper from '../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
 import EdgeMapper from '../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import Edge from '../../domain_objects/data_warehouse/data/edge';
-import GraphQLSchemaGenerator from '../../graphql/schema';
+import GraphQLRunner from '../../graphql/schema';
 
 describe('Using a new GraphQL Query on edges we', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -31,6 +31,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
     let dataSourceID = '';
     let nodes: Node[] = [];
     let schema: GraphQLSchema;
+    let runner: GraphQLRunner = new GraphQLRunner();
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
@@ -341,7 +342,7 @@ describe('Using a new GraphQL Query on edges we', async () => {
         expect(relPairs.value).not.empty;
         expect(edgeResults.value.length).eq(7);
 
-        const schemaGenerator = new GraphQLSchemaGenerator();
+        const schemaGenerator = new GraphQLRunner();
 
         const schemaResults = await schemaGenerator.ForContainer(containerID, {});
         expect(schemaResults.isError).false;
@@ -361,9 +362,10 @@ describe('Using a new GraphQL Query on edges we', async () => {
     });
 
     it('can query by relationship', async () => {
-        const response = await graphql({
-            schema,
-            source: `{
+        const response = await runner.RunQuery(
+            containerID,
+            {
+                query: `{
                 relationships{
                     forwards{
                         name
@@ -374,7 +376,9 @@ describe('Using a new GraphQL Query on edges we', async () => {
                     }
                 }
             }`,
-        });
+            },
+            {},
+        );
         expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.relationships.forwards;
@@ -391,23 +395,19 @@ describe('Using a new GraphQL Query on edges we', async () => {
     });
 
     it('can save by relationship to file', async () => {
-        const schemaGenerator = new GraphQLSchemaGenerator();
-        GraphQLSchemaGenerator.resetSchema();
-
-        const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true});
-        expect(schemaResults.isError).false;
-        expect(schemaResults.value).not.empty;
-
-        const response = await graphql({
-            schema: schemaResults.value,
-            source: `{
+        const response = await runner.RunQuery(
+            containerID,
+            {
+                query: `{
                 relationships{
                     forwards{
                        file_size 
                     }
                 }
             }`,
-        });
+            },
+            {returnFile: true},
+        );
         expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.relationships.forwards;
@@ -417,9 +417,10 @@ describe('Using a new GraphQL Query on edges we', async () => {
     });
 
     it('can filter by edge properties', async () => {
-        const response = await graphql({
-            schema,
-            source: `{
+        const response = await runner.RunQuery(
+            containerID,
+            {
+                query: `{
                 relationships{
                     forwards(
                         name: {operator: "eq", value: "Timbo Crooks Jr."}
@@ -432,7 +433,9 @@ describe('Using a new GraphQL Query on edges we', async () => {
                     }
                 }
             }`,
-        });
+            },
+            {},
+        );
         expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.relationships.forwards;
@@ -450,9 +453,10 @@ describe('Using a new GraphQL Query on edges we', async () => {
     });
 
     it('can filter by edge record metadata', async () => {
-        const response = await graphql({
-            schema,
-            source: `{
+        const response = await runner.RunQuery(
+            containerID,
+            {
+                query: `{
                 relationships{
                     forwards(
                         _record: {
@@ -467,7 +471,9 @@ describe('Using a new GraphQL Query on edges we', async () => {
                     }
                 }
             }`,
-        });
+            },
+            {},
+        );
         expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.relationships.forwards;
