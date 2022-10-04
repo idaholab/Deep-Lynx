@@ -843,7 +843,7 @@ export default class GraphQLSchemaGenerator {
         })
 
         // only cache now if we're loading the entire schema
-        if(metatypesSearch.length === 0 && !isNodesQuery) {
+        if(metatypesSearch.length === 0 || !isNodesQuery) {
             GRAPHQLSCHEMA.set(containerID, schema);
 
 
@@ -1888,6 +1888,14 @@ export default class GraphQLSchemaGenerator {
 
             if(root.kind === 'OperationDefinition') {
                 search(root.selectionSet, r)
+            }
+
+            if(root.kind === 'SelectionSet') {
+                root.selections?.forEach((selection: any) => {
+                    if(selection.name?.value === 'nodes') {
+                        r.push(true)
+                    }
+                })
             }
 
             if(root.kind === 'Field' && root.name?.value === 'nodes') {

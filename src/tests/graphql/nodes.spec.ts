@@ -324,8 +324,29 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     });
 
     it('can query by metatype and filter by properties, returning nodes', async () => {
+        const schemaGenerator = new GraphQLSchemaGenerator();
+        GraphQLSchemaGenerator.resetSchema();
+
+        const schemaResults = await schemaGenerator.ForContainer(containerID, {
+            query: `{
+                nodes(metatype_uuid: {operator: "eq", value: "${metatypeList[0].uuid}"},
+                properties: [ 
+                {key: "color", operator: "eq", value: "red"},
+                {key: "name",operator: "eq",  value: "MultiNode2"}
+                ]){
+                    id
+                    metatype_name
+                    metatype_uuid
+                    properties
+                }
+            }`,
+        });
+        expect(schemaResults.isError).false;
+        expect(schemaResults.value).not.empty;
+        let s = schemaResults.value;
+
         const response = await graphql({
-            schema,
+            schema: s,
             source: `{
                 nodes(metatype_uuid: {operator: "eq", value: "${metatypeList[0].uuid}"},
                 properties: [ 
