@@ -64,7 +64,7 @@ export default class OntologyVersionRepository extends Repository implements Rep
 
     setStatus(
         id: string,
-        status: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready' | 'error',
+        status: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready' | 'error' | 'generating',
         statusMessage?: string,
     ): Promise<Result<boolean>> {
         return this.#mapper.SetStatus(id, status, statusMessage);

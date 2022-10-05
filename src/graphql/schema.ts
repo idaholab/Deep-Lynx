@@ -88,8 +88,8 @@ export default class GraphQLRunner {
                 })
 
                 return new Promise((resolve, reject) => {
-                    worker.on('error', () => {
-                        reject('worker error for graphql generation')
+                    worker.on('error', (err) => {
+                        reject(`worker error for graphql generation ${err}`)
                     })
 
                     worker.on('message', (message:string) => {

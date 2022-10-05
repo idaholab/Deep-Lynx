@@ -69,6 +69,7 @@ describe('A Container Import', async () => {
             false,
             false,
             '',
+            './dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError, `container creation from ontology failed: ${container.error}`).false;
@@ -91,7 +92,15 @@ describe('A Container Import', async () => {
 
         const original = fs.readFileSync(`${__dirname}/test.owl`);
 
-        let container = await containerImport.ImportOntology(user, containerInput, original, false, false, '');
+        let container = await containerImport.ImportOntology(
+            user,
+            containerInput,
+            original,
+            false,
+            false,
+            '',
+            './dist/data_access_layer/mappers/data_warehouse/ontology',
+        );
 
         expect(container.isError).false;
         expect(container.value).not.empty;
@@ -99,13 +108,21 @@ describe('A Container Import', async () => {
 
         const updated = fs.readFileSync(`${__dirname}/test_update.owl`);
 
-        container = await containerImport.ImportOntology(user, containerInput, updated, false, true, containerID);
+        container = await containerImport.ImportOntology(
+            user,
+            containerInput,
+            updated,
+            false,
+            true,
+            containerID,
+            './dist/data_access_layer/mappers/data_warehouse/ontology',
+        );
 
         expect(container.isError).false;
         expect(container.value).not.empty;
 
         return storage.Delete(container.value);
-    });
+    }).timeout(20000);
 
     it('can prevent container update when a metatype to be removed has associated data', async () => {
         // using the Document class/metatype
@@ -123,7 +140,15 @@ describe('A Container Import', async () => {
         let containerID: string;
 
         const original = fs.readFileSync(`${__dirname}/test.owl`);
-        let container = await containerImport.ImportOntology(user, containerInput, original, false, false, '');
+        let container = await containerImport.ImportOntology(
+            user,
+            containerInput,
+            original,
+            false,
+            false,
+            '',
+            './dist/data_access_layer/mappers/data_warehouse/ontology',
+        );
 
         expect(container.isError).false;
         expect(container.value).not.empty;
@@ -151,13 +176,21 @@ describe('A Container Import', async () => {
         expect(nodeCreate.isError).false;
 
         const updated = fs.readFileSync(`${__dirname}/test_metatype_removal_err.owl`);
-        container = await containerImport.ImportOntology(user, containerInput, updated, false, true, containerID);
+        container = await containerImport.ImportOntology(
+            user,
+            containerInput,
+            updated,
+            false,
+            true,
+            containerID,
+            './dist/data_access_layer/mappers/data_warehouse/ontology',
+        );
 
         expect(container.isError).true;
 
         await storage.Delete(containerID);
         return storage.Delete(container.value);
-    });
+    }).timeout(20000);
 
     it('can prevent container update when a metatype key to be removed is for a metatype with associated data', async () => {
         // using the Document class/metatype
@@ -175,7 +208,15 @@ describe('A Container Import', async () => {
         let containerID: string;
 
         const original = fs.readFileSync(`${__dirname}/test.owl`);
-        let container = await containerImport.ImportOntology(user, containerInput, original, false, false, '');
+        let container = await containerImport.ImportOntology(
+            user,
+            containerInput,
+            original,
+            false,
+            false,
+            '',
+            './dist/data_access_layer/mappers/data_warehouse/ontology',
+        );
 
         expect(container.isError).false;
         expect(container.value).not.empty;
@@ -203,13 +244,21 @@ describe('A Container Import', async () => {
         expect(nodeCreate.isError).false;
 
         const updated = fs.readFileSync(`${__dirname}/test_metatype_key_removal_err.owl`);
-        container = await containerImport.ImportOntology(user, containerInput, updated, false, true, containerID);
+        container = await containerImport.ImportOntology(
+            user,
+            containerInput,
+            updated,
+            false,
+            true,
+            containerID,
+            './dist/data_access_layer/mappers/data_warehouse/ontology',
+        );
 
         expect(container.isError).true;
 
         await storage.Delete(containerID);
         return storage.Delete(container.value);
-    });
+    }).timeout(20000);
 
     it('can prevent container update when a metatype relationship pair to be removed has associated data', async () => {
         // using the Action class/metatype
@@ -230,7 +279,15 @@ describe('A Container Import', async () => {
 
         const original = fs.readFileSync(`${__dirname}/test.owl`);
 
-        let container = await containerImport.ImportOntology(user, containerInput, original, false, false, '');
+        let container = await containerImport.ImportOntology(
+            user,
+            containerInput,
+            original,
+            false,
+            false,
+            '',
+            './dist/data_access_layer/mappers/data_warehouse/ontology',
+        );
 
         expect(container.isError).false;
         expect(container.value).not.empty;
@@ -297,13 +354,21 @@ describe('A Container Import', async () => {
 
         const updated = fs.readFileSync(`${__dirname}/test_metatype_relationship_removal_err.owl`);
 
-        container = await containerImport.ImportOntology(user, containerInput, updated, false, true, containerID);
+        container = await containerImport.ImportOntology(
+            user,
+            containerInput,
+            updated,
+            false,
+            true,
+            containerID,
+            './dist/data_access_layer/mappers/data_warehouse/ontology',
+        );
 
         expect(container.isError).true;
 
         await storage.Delete(containerID);
         return storage.Delete(container.value);
-    });
+    }).timeout(20000);
 
     it('can remove deleted metatypes, metatype keys, relationship pairs, and relationships from the container with no associated data', async () => {
         // using Action, Document, and Equipment classes/metatypes and caused by/causes relationships
@@ -319,19 +384,35 @@ describe('A Container Import', async () => {
         let containerID: string;
 
         const original = fs.readFileSync(`${__dirname}/test.owl`);
-        let container = await containerImport.ImportOntology(user, containerInput, original, false, false, '');
+        let container = await containerImport.ImportOntology(
+            user,
+            containerInput,
+            original,
+            false,
+            false,
+            '',
+            './dist/data_access_layer/mappers/data_warehouse/ontology',
+        );
 
         expect(container.isError).false;
         expect(container.value).not.empty;
         containerID = container.value;
 
         const updated = fs.readFileSync(`${__dirname}/test_successful_removal_update.owl`);
-        container = await containerImport.ImportOntology(user, containerInput, updated, false, true, containerID);
+        container = await containerImport.ImportOntology(
+            user,
+            containerInput,
+            updated,
+            false,
+            true,
+            containerID,
+            './dist/data_access_layer/mappers/data_warehouse/ontology',
+        );
 
         expect(container.isError).false;
         expect(container.value).not.empty;
 
         await storage.Delete(containerID);
         return storage.Delete(container.value);
-    });
+    }).timeout(20000);
 });
