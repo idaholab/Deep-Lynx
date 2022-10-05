@@ -268,7 +268,15 @@ export default class ContainerImport {
                         worker.on('message', (message:string) => {
                             const result = plainToInstance(Result, JSON.parse(message) as object)
 
-                            if(result.isError) Logger.error(result.error)
+                            if(result.isError) {
+                                void this.rollbackVersion(
+                                    container.id!,
+                                    ontologyVersionID!,
+                                    input.ontology_versioning_enabled,
+                                    update,
+                                    result.error)
+                                Logger.error(result.error)
+                            }
                             else Logger.info('ontology imported successfully')
                         })
 
@@ -392,7 +400,15 @@ export default class ContainerImport {
                     worker.on('message', (message:string) => {
                         const result = plainToInstance(Result, JSON.parse(message) as object)
 
-                        if(result.isError) Logger.error(result.error)
+                        if(result.isError) {
+                            void this.rollbackVersion(
+                                container.id!,
+                                ontologyVersionID!,
+                                input.ontology_versioning_enabled,
+                                update,
+                                result.error)
+                            Logger.error(result.error)
+                        }
                         else Logger.info('ontology imported successfully')
                     })
 
@@ -1273,7 +1289,7 @@ export default class ContainerImport {
         await containerRepo.createAlert(new ContainerAlert({
             containerID,
             type: 'error',
-            message: `Unable to import ontology using OWL file or URL. Contact administrator for more information ${errorMessage} `
+            message: `Unable to import ontology using OWL file or URL. Contact administrator for more information ${JSON.stringify(errorMessage)} `
         }))
 
         return Promise.resolve()
