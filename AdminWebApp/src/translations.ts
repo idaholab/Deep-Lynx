@@ -90,6 +90,7 @@ export default {
             serviceUsersDescription: 'External Application Access',
         },
         containerAlert: {
+            generatingOntology: 'Currently generating ontology',
             acknowledge: 'Acknowledge Alert',
             containerAdminAcknowledge: 'Only Container Administrators can dismiss alerts. Please contact your administrator to remove this alert.',
         },

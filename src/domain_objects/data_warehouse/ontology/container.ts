@@ -142,7 +142,7 @@ export class ContainerAlert extends NakedDomainClass {
     container_id?: string;
 
     @IsString()
-    @IsIn(['information', 'warning', 'error'])
+    @IsIn(['info', 'warning', 'error'])
     type?: string;
 
     @IsString()
@@ -168,7 +168,7 @@ export class ContainerAlert extends NakedDomainClass {
 
     constructor(input: {
         containerID: string;
-        type: 'information' | 'warning' | 'error';
+        type: 'info' | 'warning' | 'error';
         message: string;
         createdBy?: string;
         acknowledgedAt?: Date;
