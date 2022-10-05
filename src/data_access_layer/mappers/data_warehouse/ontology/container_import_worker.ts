@@ -13,7 +13,7 @@ void PostgresAdapter.Instance.init()
                 parentPort?.postMessage(JSON.stringify(result));
             })
             .catch((e) => {
-                Logger.error(`unexpected error in graphql processing thread ${e}`);
+                Logger.error(`unexpected error in ontology processing thread ${e}`);
                 parentPort?.emit('error');
             })
             .finally(() => process.exit(0));
@@ -21,6 +21,6 @@ void PostgresAdapter.Instance.init()
     .catch((e) => {
         void PostgresAdapter.Instance.close();
 
-        Logger.error(`unexpected error in processing queue thread ${e}`);
+        Logger.error(`unexpected error in ontology processing thread ${e}`);
         process.exit(1);
     });
