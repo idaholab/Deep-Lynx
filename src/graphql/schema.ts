@@ -49,16 +49,12 @@ export default class GraphQLRunner {
     #metatypePairRepo: MetatypeRelationshipPairRepository;
     #relationshipRepo: MetatypeRelationshipRepository;
     #ontologyRepo: OntologyVersionRepository;
-    #nodeRepo: NodeRepository;
-    #transformationMapper: TypeTransformationMapper;
 
     constructor() {
         this.#metatypeRepo = new MetatypeRepository();
         this.#metatypePairRepo = new MetatypeRelationshipPairRepository();
         this.#relationshipRepo = new MetatypeRelationshipRepository();
         this.#ontologyRepo = new OntologyVersionRepository();
-        this.#nodeRepo = new NodeRepository();
-        this.#transformationMapper = TypeTransformationMapper.Instance;
     }
 
     // RunQuery is a simple wrapper over the schema generation followed by running the actual query
@@ -1944,10 +1940,20 @@ export default class GraphQLRunner {
                 root.selections?.forEach((selection: {[key: string]: any}) => {
                     if(selection.name?.value === 'metatypes') {
                         search(selection.selectionSet, r)
-                    } else if(selection.name?.value !== '__schema') {
+                    } else if (selection.name.value === '__type') {
+                        selection.arguments.forEach((argument: any) => {
+                            if (argument.name.value === 'name') {
+                                search(argument, r)
+                            }
+                        })
+                    } else if(selection.name?.value !== '__schema' && selection.name?.value !== 'relationships') {
                         if(selection.name?.value) r.push(selection.name.value);
                     }
                 })
+            }
+
+            if(root.kind === 'Argument') {
+                if(root.value.value){r.push(root.value.value)};
             }
 
             return r
@@ -1971,7 +1977,7 @@ export default class GraphQLRunner {
                 search(root.selectionSet, r)
             }
 
-            if(root.kind === 'Field' && root.name?.value === 'metatypes') {
+            if(root.kind === 'Field' && root.name?.value === 'relationships') {
                 search(root.selectionSet, r)
             }
 
@@ -1979,10 +1985,20 @@ export default class GraphQLRunner {
                 root.selections?.forEach((selection: {[key: string]: any}) => {
                     if(selection.name?.value === 'relationships') {
                         search(selection.selectionSet, r)
-                    } else if(selection.name?.value !== '__schema') {
+                    } else if (selection.name.value === '__type') {
+                        selection.arguments.forEach((argument: any) => {
+                            if (argument.name.value === 'name') {
+                                search(argument, r)
+                            }
+                        })
+                    } else if(selection.name?.value !== '__schema' && selection.name?.value !== 'metatypes') {
                         if(selection.name?.value) r.push(selection.name.value);
                     }
                 })
+            }
+
+            if(root.kind === 'Argument') {
+                if(root.value.value){r.push(root.value.value)};
             }
 
             return r

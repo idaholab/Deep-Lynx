@@ -572,6 +572,39 @@ describe('Using a new GraphQL Query on nodes we', async () => {
 
         return Promise.resolve();
     });
+
+    it('can query introspectively', async () => {
+        const response = await schemaRunner.RunQuery(
+            containerID,
+            {
+                query: `{ 
+                    __type(name:"Multimeta"){
+                        name
+                        fields{
+                            name
+                            type{
+                                name
+                            }
+                        }
+                    }
+                }`,
+            },
+            {},
+        );
+        expect(response.errors, response.errors?.join(',')).undefined;
+        expect(response.data).not.undefined;
+        const data = response.data!.__type;
+        expect(data.name).eq('Multimeta');
+
+        data.fields.forEach((field: any) => {
+            expect(field.name).not.undefined;
+            if(field.name === '_record'){expect(field.type.name === 'recordInfo')}
+            if(field.name === '_relationship'){expect(field.type.name === 'Multimeta_relationshipInfo')}
+            if(field.name === '_file'){expect(field.type.name === 'fileInfo')}
+        })
+
+        return Promise.resolve();
+    });
 });
 
 const test_keys: MetatypeKey[] = [
