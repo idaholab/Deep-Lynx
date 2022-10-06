@@ -15,6 +15,7 @@ void PostgresAdapter.Instance.init()
             .catch((e) => {
                 Logger.error(`unexpected error in ontology processing thread ${e}`);
                 parentPort?.emit('error');
+                process.exit(1);
             })
             .finally(() => process.exit(0));
     })

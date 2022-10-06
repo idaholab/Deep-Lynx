@@ -257,6 +257,21 @@ export default class ContainerImport {
                         Logger.error(`worker error for ontology importer ${err}`)
                     })
 
+                    worker.on('exit', (code) => {
+                        if(code === 1) {
+                            void this.rollbackVersion(
+                                container.id!,
+                                ontologyVersionID!,
+                                input.ontology_versioning_enabled,
+                                update,
+                            )
+                            Logger.error('ontology version worker exited abnormally')
+                        } else {
+                            void ontologyRepo.setStatus(ontologyVersionID!, 'ready')
+                            resolve(Result.Success(container.id!))
+                        }
+                    })
+
                     // if we have a dir assume it's a test and be sync
                     if(dirname) {
                         worker.on('message', (message:string) => {
