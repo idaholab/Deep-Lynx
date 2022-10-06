@@ -39,6 +39,10 @@ export class Config {
         return process.env.VUE_APP_TIME_SERIES_ENABLED === 'true';
     }
 
+    get dataManagementEnabled(): boolean {
+        return process.env.VUE_APP_DATA_MANAGEMENT_ENABLED === 'true';
+    }
+
     public static Instance(): Config {
         if (!Config.instance) {
             Config.instance = new Config();

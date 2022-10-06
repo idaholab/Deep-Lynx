@@ -13,7 +13,7 @@
         <v-col
             cols="12"
         >
-          <v-container flat class="pa-0">
+          <v-container flat class="pa-0" v-show="showGraph">
             <v-row v-if="results !== null && results.length == 0">
               <v-col align="center">
                 <p>{{$t('dataQuery.noResults')}}</p>
@@ -129,6 +129,7 @@ export default class DataQuery extends Vue {
 
   dialog = false
   tab: any | null = null
+  showGraph = false
   results: ResultSet | null = null
   selectedProperties: any| null = null
   expanded = []
@@ -154,6 +155,13 @@ export default class DataQuery extends Vue {
   }
 
   async loadResults(queryResult: any) {
+    // if queryResult === null, do not show graph
+    if (queryResult === null) {
+      this.showGraph = false
+      return
+    }
+
+    this.showGraph = true
     this.activeTabName = 'graph'
     this.tab = this.tabs()[0]
     this.results = queryResult.nodes
