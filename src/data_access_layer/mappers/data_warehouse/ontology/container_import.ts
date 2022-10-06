@@ -23,6 +23,7 @@ import OntologyVersion from "../../../../domain_objects/data_warehouse/ontology/
 const convert = require('xml-js');
 const xmlToJson = require('xml-2-json-streaming');
 const xmlParser = xmlToJson();
+import pAll from 'p-all';
 
 const containerRepo = new ContainerRepository();
 const metatypeRelationshipRepo = new MetatypeRelationshipRepository();
@@ -1104,7 +1105,7 @@ export default class ContainerImport {
                     }
                 });
 
-                const propertyPromises: Promise<Result<boolean>>[] = [];
+                const propertyPromises: (() => Promise<Result<boolean>>)[] = [];
 
                 // declare structures to hold metatype keys and relationship pairs for cache invalidation
                 const metatypeKeys: MetatypeKey[] = []
@@ -1136,7 +1137,7 @@ export default class ContainerImport {
                             data.id = originalKeyData.id;
                             updateRelationships.push(data);
                         } else {
-                            propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(input.user, [data], false));
+                            propertyPromises.push(() => metatypeRelationshipPairRepo.bulkSave(input.user, [data], false));
                             relationshipPairs.push(data);
                         }
                     }
@@ -1238,7 +1239,7 @@ export default class ContainerImport {
                             const buffer = toSaveKeyBuffer.slice(0);
                             toSaveKeyBuffer = []
 
-                            propertyPromises.push(metatypeKeyRepo.bulkSave(input.user, buffer))
+                            propertyPromises.push(() => metatypeKeyRepo.bulkSave(input.user, buffer))
                         }
 
                         if (toSaveRelationshipBuffer.length > 500) {
@@ -1246,25 +1247,25 @@ export default class ContainerImport {
                             const buffer = toSaveRelationshipBuffer.slice(0);
                             toSaveKeyBuffer = []
 
-                            propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(input.user, buffer, false))
+                            propertyPromises.push(() => metatypeRelationshipPairRepo.bulkSave(input.user, buffer, false))
                         }
 
                     }
 
-                    propertyPromises.push(metatypeKeyRepo.bulkSave(input.user, toSaveKeyBuffer));
-                    propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(input.user, toSaveRelationshipBuffer, false));
+                    propertyPromises.push(() => metatypeKeyRepo.bulkSave(input.user, toSaveKeyBuffer));
+                    propertyPromises.push(() => metatypeRelationshipPairRepo.bulkSave(input.user, toSaveRelationshipBuffer, false));
 
                     if (updateKeys.length > 0) {
-                        propertyPromises.push(metatypeKeyRepo.bulkSave(input.user, updateKeys));
+                        propertyPromises.push(() => metatypeKeyRepo.bulkSave(input.user, updateKeys));
                         metatypeKeys.concat(updateKeys);
                     }
 
                     if (updateRelationships.length > 0) {
-                        propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(input.user, updateRelationships, false));
+                        propertyPromises.push(() => metatypeRelationshipPairRepo.bulkSave(input.user, updateRelationships, false));
                         relationshipPairs.concat(updateRelationships);
                     }
                 });
-                const propertyResults: Result<boolean>[] = await Promise.all(propertyPromises);
+                const propertyResults: Result<boolean>[] = await pAll(propertyPromises, {concurrency: 2});
 
                 // Invalidate cache for this container as a final step
                 for (const metatype of metatypes) {
