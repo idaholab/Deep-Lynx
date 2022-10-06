@@ -1234,7 +1234,7 @@ export default class ContainerImport {
                             }
                         }
 
-                        if (toSaveKeyBuffer.length > 500) {
+                        if (toSaveKeyBuffer.length > 1000) {
                             // clone the buffer so we can clear
                             const buffer = toSaveKeyBuffer.slice(0);
                             toSaveKeyBuffer = []
@@ -1242,7 +1242,7 @@ export default class ContainerImport {
                             propertyPromises.push(() => metatypeKeyRepo.bulkSave(input.user, buffer))
                         }
 
-                        if (toSaveRelationshipBuffer.length > 500) {
+                        if (toSaveRelationshipBuffer.length > 1000) {
                             // clone the buffer so we can clear
                             const buffer = toSaveRelationshipBuffer.slice(0);
                             toSaveKeyBuffer = []
