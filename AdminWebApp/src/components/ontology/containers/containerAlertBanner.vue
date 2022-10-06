@@ -33,7 +33,7 @@ export default class ContainerAlertBanner extends Vue {
   mounted() {
     this.loadAlerts()
     pWaitFor(() => this.pendingOntologyVersions(), {
-      interval: 500
+      interval: 5000
     })
         .then(() => {
           this.loadAlerts()
