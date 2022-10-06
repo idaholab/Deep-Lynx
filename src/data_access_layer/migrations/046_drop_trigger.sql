@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS check_metatype_key ON metatype_keys;
