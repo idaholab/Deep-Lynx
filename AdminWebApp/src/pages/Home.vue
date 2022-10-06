@@ -178,7 +178,7 @@
                <v-list-item
             two-line
             link
-            v-if="$auth.Auth('data', 'write', containerID)"
+            v-if="$auth.Auth('data', 'write', containerID) && dataManagementEnabled"
             @click="setActiveComponent('data-management')"
             :input-value="currentMainComponent === 'DataManagement'"
             :ripple="{class:'list-ripple'}"
@@ -549,6 +549,7 @@ export default class Home extends Vue {
   componentName: string | TranslateResult = 'Home'
   argument: string = this.arguments
   componentKey = 0 // this is so we can force a re-render of certain components on component change - assign as key
+  dataManagementEnabled = Config.dataManagementEnabled
 
   metatypesCount = 0
   relationshipCount = 0
