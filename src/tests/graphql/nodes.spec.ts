@@ -5,7 +5,6 @@ import MetatypeMapper from '../../data_access_layer/mappers/data_warehouse/ontol
 import faker from 'faker';
 import {expect} from 'chai';
 import NodeMapper from '../../data_access_layer/mappers/data_warehouse/data/node_mapper';
-import {graphql, GraphQLSchema} from 'graphql';
 import Container from '../../domain_objects/data_warehouse/ontology/container';
 import Metatype from '../../domain_objects/data_warehouse/ontology/metatype';
 import ContainerMapper from '../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
@@ -23,15 +22,15 @@ import MetatypeRelationshipPair from '../../domain_objects/data_warehouse/ontolo
 import MetatypeRelationshipPairMapper from '../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
 import EdgeMapper from '../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import Edge from '../../domain_objects/data_warehouse/data/edge';
-import GraphQLSchemaGenerator from '../../graphql/schema';
+import GraphQLRunner from '../../graphql/schema';
 
 describe('Using a new GraphQL Query on nodes we', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
     let user: User;
     let dataSourceID = '';
     let nodes: Node[] = [];
-    let schema: GraphQLSchema;
     let metatypeList: Metatype[] = [];
+    const schemaRunner = new GraphQLRunner();
 
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
@@ -218,14 +217,6 @@ describe('Using a new GraphQL Query on nodes we', async () => {
         );
         expect(edge.isError).false;
 
-        const schemaGenerator = new GraphQLSchemaGenerator();
-        GraphQLSchemaGenerator.resetSchema();
-
-        const schemaResults = await schemaGenerator.ForContainer(containerID, {});
-        expect(schemaResults.isError).false;
-        expect(schemaResults.value).not.empty;
-        schema = schemaResults.value;
-
         return Promise.resolve();
     });
 
@@ -239,9 +230,10 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     });
 
     it('can query by metatype', async () => {
-        const response = await graphql({
-            schema,
-            source: `{
+        const response = await schemaRunner.RunQuery(
+            containerID,
+            {
+                query: `{
                 metatypes{
                     Multimeta{
                         _record{
@@ -253,7 +245,9 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     }
                 }
             }`,
-        });
+            },
+            {},
+        );
         expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.metatypes.Multimeta;
@@ -270,9 +264,10 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     });
 
     it('can query by metatype, returning nodes', async () => {
-        const response = await graphql({
-            schema,
-            source: `{
+        const response = await schemaRunner.RunQuery(
+            containerID,
+            {
+                query: `{
                 nodes(metatype_uuid: {operator: "eq", value: "${metatypeList[0].uuid}"}){
                     id
                     metatype_name
@@ -280,7 +275,9 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     properties
                 }
             }`,
-        });
+            },
+            {},
+        );
         expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.nodes;
@@ -298,9 +295,10 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     });
 
     it('can query by metatype and filter by properties, returning nodes', async () => {
-        const response = await graphql({
-            schema,
-            source: `{
+        const response = await schemaRunner.RunQuery(
+            containerID,
+            {
+                query: `{
                 nodes(metatype_uuid: {operator: "eq", value: "${metatypeList[0].uuid}"},
                 properties: [ 
                 {key: "color", operator: "eq", value: "red"},
@@ -312,7 +310,9 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     properties
                 }
             }`,
-        });
+            },
+            {},
+        );
         expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.nodes;
@@ -331,16 +331,10 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     });
 
     it('can save a query by metatype to file', async () => {
-        const schemaGenerator = new GraphQLSchemaGenerator();
-        GraphQLSchemaGenerator.resetSchema();
-
-        const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true});
-        expect(schemaResults.isError).false;
-        expect(schemaResults.value).not.empty;
-
-        const response = await graphql({
-            schema: schemaResults.value,
-            source: `{
+        const response = await schemaRunner.RunQuery(
+            containerID,
+            {
+                query: `{
                 metatypes{
                     Multimeta{
                         id
@@ -350,7 +344,9 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     }
                 }
             }`,
-        });
+            },
+            {returnFile: true},
+        );
         expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.metatypes.Multimeta;
@@ -360,15 +356,10 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     });
 
     it('can save a query by metatype to file as parquet', async () => {
-        const schemaGenerator = new GraphQLSchemaGenerator();
-
-        const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true, returnFileType: 'parquet'});
-        expect(schemaResults.isError).false;
-        expect(schemaResults.value).not.empty;
-
-        const response = await graphql({
-            schema: schemaResults.value,
-            source: `{
+        const response = await schemaRunner.RunQuery(
+            containerID,
+            {
+                query: `{
                 metatypes{
                     Multimeta{
                         id
@@ -378,7 +369,9 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     }
                 }
             }`,
-        });
+            },
+            {returnFile: true},
+        );
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.metatypes.Multimeta;
@@ -388,9 +381,10 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     });
 
     it('can filter by metatype property', async () => {
-        const response = await graphql({
-            schema,
-            source: `{
+        const response = await schemaRunner.RunQuery(
+            containerID,
+            {
+                query: `{
                 metatypes{
                     Multimeta(
                         color: {operator: "eq", value: "red"}
@@ -404,7 +398,9 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     }
                 }
             }`,
-        });
+            },
+            {},
+        );
         expect(response.errors, response.errors?.join(',')).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.metatypes.Multimeta;
@@ -423,9 +419,10 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     });
 
     it('can filter by record metadata', async () => {
-        const response = await graphql({
-            schema,
-            source: `{
+        const response = await schemaRunner.RunQuery(
+            containerID,
+            {
+                query: `{
                 metatypes{
                     Multimeta(
                         _record: {
@@ -441,7 +438,9 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     }
                 }
             }`,
-        });
+            },
+            {},
+        );
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.metatypes.Multimeta;
@@ -460,9 +459,10 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     });
 
     it('can filter by multiple metatype properties', async () => {
-        const response = await graphql({
-            schema,
-            source: `{
+        const response = await schemaRunner.RunQuery(
+            containerID,
+            {
+                query: `{
                 metatypes{
                     Multimeta(
                         color:{operator:"eq" value: "red"},
@@ -477,7 +477,9 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     }
                 }
             }`,
-        });
+            },
+            {},
+        );
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.metatypes.Multimeta;
@@ -497,9 +499,10 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     });
 
     it('can filter by relationship', async () => {
-        const response = await graphql({
-            schema,
-            source: `{
+        const response = await schemaRunner.RunQuery(
+            containerID,
+            {
+                query: `{
                 metatypes{
                     Multimeta(
                         _relationship: {
@@ -517,7 +520,9 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     }
                 }
             }`,
-        });
+            },
+            {},
+        );
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.metatypes.Multimeta;
@@ -536,15 +541,10 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     });
 
     it('can save to file by relationship', async () => {
-        const schemaGenerator = new GraphQLSchemaGenerator();
-
-        const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true});
-        expect(schemaResults.isError).false;
-        expect(schemaResults.value).not.empty;
-
-        const response = await graphql({
-            schema: schemaResults.value,
-            source: `{
+        const response = await schemaRunner.RunQuery(
+            containerID,
+            {
+                query: `{
                 metatypes{
                     Multimeta(
                         _relationship: {
@@ -560,13 +560,48 @@ describe('Using a new GraphQL Query on nodes we', async () => {
                     }
                 }
             }`,
-        });
+            },
+            {returnFile: true},
+        );
 
         expect(response.errors).undefined;
         expect(response.data).not.undefined;
         const data = response.data!.metatypes.Multimeta;
 
         expect(data.file_size).gt(0);
+
+        return Promise.resolve();
+    });
+
+    it('can query introspectively', async () => {
+        const response = await schemaRunner.RunQuery(
+            containerID,
+            {
+                query: `{ 
+                    __type(name:"Multimeta"){
+                        name
+                        fields{
+                            name
+                            type{
+                                name
+                            }
+                        }
+                    }
+                }`,
+            },
+            {},
+        );
+        expect(response.errors, response.errors?.join(',')).undefined;
+        expect(response.data).not.undefined;
+        const data = response.data!.__type;
+        expect(data.name).eq('Multimeta');
+
+        data.fields.forEach((field: any) => {
+            expect(field.name).not.undefined;
+            if(field.name === '_record'){expect(field.type.name === 'recordInfo')}
+            if(field.name === '_relationship'){expect(field.type.name === 'Multimeta_relationshipInfo')}
+            if(field.name === '_file'){expect(field.type.name === 'fileInfo')}
+        })
 
         return Promise.resolve();
     });

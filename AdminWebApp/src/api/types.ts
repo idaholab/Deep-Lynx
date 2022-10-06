@@ -244,6 +244,7 @@ export type HttpDataSourceConfig = {
     secure: boolean;
     auth_method: 'none' | 'basic' | 'token';
     poll_interval: number; // in minutes
+    timeout: number; // milliseconds
     token?: string; // security token, set if auth method is token
     username?: string; // auth method basic
     password?: string; // auth method basic
@@ -260,6 +261,7 @@ export type JazzDataSourceConfig = {
     artifact_types: string[]; // artifact types to retrieve, everything else is ignored
     limit: number;
     poll_interval: number; // in minutes
+    timeout: number; // milliseconds
     token: string; // security token for http authentication
     stop_nodes?: string[];
     value_nodes?: string[];
@@ -619,6 +621,7 @@ export function DefaultJazzDataSourceConfig(): JazzDataSourceConfig {
         artifact_types: [],
         poll_interval: 10,
         token: '',
+        timeout: 30000,
         limit: 10,
         data_retention_days: 30,
     };
@@ -631,6 +634,7 @@ export function DefaultHttpDataSourceConfig(): HttpDataSourceConfig {
         secure: true,
         auth_method: 'none',
         poll_interval: 10,
+        timeout: 15000,
         data_retention_days: 30,
     };
 }

@@ -1,3 +1,5 @@
+import EventEmitter from 'events';
+
 const NodeCache = require('node-cache');
 const Redis = require('ioredis');
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -10,7 +12,7 @@ import Logger from '../logger';
     Presenting Cache as a singleton class allows us to avoid creating many instances
     of the same cache adapter.
  */
-class Cache {
+export class Cache extends EventEmitter {
     public cache: CacheInterface;
     private static instance: Cache;
 
@@ -23,19 +25,20 @@ class Cache {
     }
 
     constructor() {
+        super();
         switch (Config.cache_provider) {
             case 'memory': {
-                this.cache = new MemoryCacheImpl();
+                this.cache = new MemoryCacheImpl(this);
                 break;
             }
 
             case 'redis': {
-                this.cache = new RedisCacheImpl();
+                this.cache = new RedisCacheImpl(this);
                 break;
             }
 
             default: {
-                this.cache = new MemoryCacheImpl();
+                this.cache = new MemoryCacheImpl(this);
                 break;
             }
         }
@@ -59,6 +62,8 @@ export interface CacheInterface {
  */
 export class MemoryCacheImpl implements CacheInterface {
     private _cache: any;
+    private _emitter: EventEmitter;
+
     get<T>(key: string): Promise<T | undefined> {
         const value = this._cache.get(key);
 
@@ -78,6 +83,8 @@ export class MemoryCacheImpl implements CacheInterface {
 
     del(key: string): Promise<boolean> {
         const deleted = this._cache.del(key);
+        this._emitter.emit('deleted', key);
+
         if (deleted !== 1 && deleted !== 0) {
             Logger.error(`error deleting value from memory: ${deleted}`);
             return new Promise((resolve) => resolve(false));
@@ -88,11 +95,14 @@ export class MemoryCacheImpl implements CacheInterface {
 
     flush(): Promise<boolean> {
         this._cache.flushAll();
+        this._emitter.emit('flushed');
+
         return new Promise((resolve) => resolve(true));
     }
 
-    constructor() {
+    constructor(emitter: EventEmitter) {
         this._cache = new NodeCache();
+        this._emitter = emitter;
     }
 }
 
@@ -101,6 +111,8 @@ export class MemoryCacheImpl implements CacheInterface {
  */
 export class RedisCacheImpl implements CacheInterface {
     private _redis: RedisStatic;
+    private _emitter: EventEmitter;
+
     async get<T>(key: string): Promise<T | undefined> {
         const val = await this._redis.get(key);
 
@@ -108,16 +120,21 @@ export class RedisCacheImpl implements CacheInterface {
             return new Promise((resolve) => resolve(undefined));
         }
 
-        return new Promise((resolve) => resolve(JSON.parse(val) as T));
+        try {
+            const parsed = JSON.parse(val);
+            return new Promise((resolve) => resolve(parsed as T));
+        } catch {
+            return new Promise((resolve) => resolve(val as T));
+        }
     }
 
     async set(key: string, val: any, ttl?: number): Promise<boolean> {
         let set: string;
 
         if (ttl) {
-            set = await this._redis.set(key, JSON.stringify(val), 'EX', ttl);
+            set = await this._redis.set(key, val, 'EX', ttl);
         } else {
-            set = await this._redis.set(key, JSON.stringify(val));
+            set = await this._redis.set(key, val);
         }
 
         if (set !== 'OK') {
@@ -138,21 +155,24 @@ export class RedisCacheImpl implements CacheInterface {
             return new Promise((resolve) => resolve(false));
         }
 
+        this._emitter.emit('deleted', key);
         return new Promise((resolve) => resolve(true));
     }
 
     async flush(): Promise<boolean> {
         const flushed = await this._redis.flushall();
 
-        if (flushed !== 1 && flushed !== 0) {
+        if (flushed !== 1 && flushed !== 0 && flushed !== 'OK') {
             Logger.error(`error flushing all values from redis`);
         }
 
+        this._emitter.emit('flushed');
         return new Promise((resolve) => resolve(true));
     }
 
-    constructor() {
+    constructor(emitter: EventEmitter) {
         this._redis = new Redis(Config.redis_connection_string);
+        this._emitter = emitter;
     }
 }
 

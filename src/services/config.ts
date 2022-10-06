@@ -15,6 +15,7 @@ export class Config {
     private _project_dir: string;
     private readonly _email_address: string;
     private readonly _email_enabled: boolean = true;
+    private readonly _run_jobs: boolean = true;
 
     private readonly _email_validation_enforced: boolean;
     private readonly _container_invite_url: string;
@@ -32,6 +33,7 @@ export class Config {
     private readonly _cache_redis_connection_string: string;
     private readonly _initial_import_cache_ttl: number;
     private readonly _import_cache_ttl: number;
+    private readonly _log_db: boolean;
 
     private readonly _core_db_connection_string: string;
     private readonly _timescaledb_enabled: boolean = false;
@@ -123,6 +125,7 @@ export class Config {
         this._root_address = process.env.ROOT_ADDRESS || 'http://localhost:8090';
         this._email_address = process.env.EMAIL_ADDRESS || 'do+not+reply@deeplynx.org';
         this._email_enabled = process.env.EMAIL_ENABLED === 'true';
+        this._run_jobs = process.env.RUN_JOBS ? process.env.RUN_JOBS === 'true' : true;
 
         this._email_validation_enforced = process.env.EMAIL_VALIDATION_ENFORCED === 'false';
         this._container_invite_url = process.env.CONTAINER_INVITE_URL || 'http://localhost:8090/container-invite';
@@ -193,7 +196,7 @@ export class Config {
 
         this._export_data_interval = process.env.EXPORT_INTERVAL || '10m';
         this._export_data_concurrency = process.env.EXPORT_DATA_CONCURRENCY ? parseInt(process.env.EXPORT_DATA_CONCURRENCY, 10) : 4;
-        this._emitter_interval = process.env.EMITTER_INTERVAL || '500ms';
+        this._emitter_interval = process.env.EMITTER_INTERVAL || '10s';
 
         this._queue_system = process.env.QUEUE_SYSTEM || 'database';
 
@@ -212,6 +215,8 @@ export class Config {
         this._rsa_client_id = process.env.RSA_CLIENT_ID || 'DeepLynx';
 
         this._hpc_email = process.env.HPC_EMAIL || '';
+
+        this._log_db = process.env.LOG_DB === 'true' || false;
 
         this._emit_events = process.env.EMIT_EVENTS === 'true' || false;
         this._process_queue_name = process.env.PROCESS_QUEUE_NAME || 'process';
@@ -256,6 +261,10 @@ export class Config {
 
     get project_dir(): string {
         return this._project_dir;
+    }
+
+    get run_jobs(): boolean {
+        return this._run_jobs;
     }
 
     get template_dir(): string {
@@ -564,6 +573,10 @@ export class Config {
 
     get log_jobs(): boolean {
         return this._log_jobs;
+    }
+
+    get log_db(): boolean {
+        return this._log_db;
     }
 
     public static Instance(): Config {

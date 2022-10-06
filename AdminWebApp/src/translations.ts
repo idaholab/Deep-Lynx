@@ -90,6 +90,7 @@ export default {
             serviceUsersDescription: 'External Application Access',
         },
         containerAlert: {
+            generatingOntology: 'Currently generating ontology',
             acknowledge: 'Acknowledge Alert',
             containerAdminAcknowledge: 'Only Container Administrators can dismiss alerts. Please contact your administrator to remove this alert.',
         },
@@ -618,6 +619,7 @@ export default {
             archived: 'archived',
         },
         createDataSource: {
+            timeout: 'Timeout (ms)',
             value: 'Value',
             key: 'Key',
             chunkInterval: 'Chunk Interval',
@@ -665,7 +667,7 @@ export default {
             ifcSettingsTitle: 'IFC Settings',
             stopNodes: 'Ignored Properties',
             stopNodesHelp:
-                'Ignored Properties tell DeepLynx what JSON properties, CSV columns, or XML types to ignore when creating the type mapping. For example if you have a two identical payloads, but one has an additional field, you could tell DeepLynx to ignore than additional field and the resulting type mapping would continue to match.',
+                'Ignored Properties tell DeepLynx what JSON properties, CSV columns, or XML types to ignore when creating the type mapping. For example if you have a two identical payloads, but one has an additional field, you could tell DeepLynx to ignore the additional field and the resulting type mapping would continue to match.',
             valueNodes: 'Property Value vs. Type',
             valueNodesHelp:
                 "Property Value vs. Type tells DeepLynx that a JSON property, CSV column, or XML type should have it's value examined as well as examining its type. This allows you to send in identical payload structures but create a different type mapping depending on the value of a property. ",
@@ -694,6 +696,7 @@ export default {
                 'This controls how many days Deep Lynx will retain the raw data you import. A value of 0 will retain no raw data after processing and a value of -1 will retain raw data indefinitely.',
         },
         editDataSource: {
+            timeout: 'Timeout (ms)',
             aveva: 'Aveva',
             jazz: 'Jazz',
             http: 'HTTP Poller',

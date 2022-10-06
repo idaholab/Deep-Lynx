@@ -7,7 +7,7 @@ import Node, {NodeIDPayload} from '../../../../domain_objects/data_warehouse/dat
 import EdgeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import NodeLeafRepository from '../../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
-import GraphQLSchemaGenerator from '../../../../graphql/schema';
+import GraphQLRunner from '../../../../graphql/schema';
 import {graphql} from 'graphql';
 import {stringToValidPropertyName} from '../../../../services/utilities';
 import NodeGraphQLSchemaGenerator from '../../../../graphql/node_graph_schema';

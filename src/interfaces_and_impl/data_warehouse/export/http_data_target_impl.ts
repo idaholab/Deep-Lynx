@@ -9,9 +9,9 @@ import {SuperUser, User} from '../../../domain_objects/access_management/user';
 import UserRepository from '../../../data_access_layer/repositories/access_management/user_repository';
 import {plainToClass} from 'class-transformer';
 import {DataTarget} from './data_target';
-import GraphQLSchemaGenerator from '../../../graphql/schema';
+import GraphQLRunner from '../../../graphql/schema';
 import {graphql} from 'graphql';
-import Cache from "../../../services/cache/cache"
+import Cache from '../../../services/cache/cache';
 
 const humanInterval = require('human-interval');
 const buildUrl = require('build-url');
@@ -80,7 +80,7 @@ export default class HttpDataTargetImpl implements DataTarget {
         const config = this.DataTargetRecord.config as HttpDataTargetConfig;
 
         // check cache if resource is being used and lock if it's not
-        const key = 'dataTargetLock' + this.DataTargetRecord.id;
+        const key = `dataTargetLock${this.DataTargetRecord.id}`;
 
         const cachedValue = await Cache.get(key);
         if (cachedValue !== undefined) {
@@ -88,16 +88,18 @@ export default class HttpDataTargetImpl implements DataTarget {
         }
 
         // create cache variable to lock resource
-        const item = {value: null}
+        const item = {value: null};
 
         try {
             await Cache.set(key, item, 30);
         } catch (error) {
             Logger.error('unable to cache dataTarget for resource locking', error);
         }
-        
+
         let set = await this.#mapper.SetStatus(this.DataTargetRecord.id!, 'system', 'polling');
-        if (set.isError) {Logger.error(`unable to update data target status:${set.error?.error}`);}
+        if (set.isError) {
+            Logger.error(`unable to update data target status:${set.error?.error}`);
+        }
 
         // because the user could have either set the target to inactive or modified
         // the configuration since this last ran, update the current data target record
@@ -116,7 +118,9 @@ export default class HttpDataTargetImpl implements DataTarget {
         // cut if we're no longer set to active
         if (!this.DataTargetRecord.active) {
             set = await this.#mapper.SetStatus(this.DataTargetRecord.id!, 'system', 'ready');
-            if (set.isError) {Logger.error(`unable to update data target status:${set.error?.error}`);}
+            if (set.isError) {
+                Logger.error(`unable to update data target status:${set.error?.error}`);
+            }
             try {
                 await Cache.del(key);
             } catch (error) {
@@ -125,7 +129,8 @@ export default class HttpDataTargetImpl implements DataTarget {
             return Promise.resolve();
         }
 
-        if (this.DataTargetRecord.last_run_at !== null){
+        if (this.DataTargetRecord.last_run_at !== null) {
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             const nextRunTime = new Date(this.DataTargetRecord.last_run_at?.getTime() + humanInterval(config.poll_interval));
             // if we haven't reached the next poll time, then return
             if (nextRunTime.getTime() >= new Date().getTime()) {
@@ -134,25 +139,24 @@ export default class HttpDataTargetImpl implements DataTarget {
         }
 
         // query graph for data
-        const generator = new GraphQLSchemaGenerator();
-        let data: any; 
+        const generator = new GraphQLRunner();
+        let data: any;
 
         try {
             Logger.debug(`data target ${this.DataTargetRecord.id} http polling for data`);
-            const schemaResult = await generator.ForContainer(this.DataTargetRecord.container_id!, {})
+            const schemaResult = await generator.ForContainer(this.DataTargetRecord.container_id!, {});
 
             if (schemaResult.isError) {
-                Logger.error(`Error while generating schema for data target id ${this.DataTargetRecord?.id}`)
+                Logger.error(`Error while generating schema for data target id ${this.DataTargetRecord?.id}`);
                 return;
             }
 
             data = await graphql({
                 schema: schemaResult.value,
                 source: config.graphql_query!,
-            })
-
+            });
         } catch (error) {
-            Logger.error(`Schema generation failed for data target ${this.DataTargetRecord?.id}`, error)
+            Logger.error(`Schema generation failed for data target ${this.DataTargetRecord?.id}`, error);
         }
 
         // create http request
@@ -171,7 +175,9 @@ export default class HttpDataTargetImpl implements DataTarget {
             }
 
             case 'token': {
-                if (config.token) {httpConfig.headers.Authorization = `Bearer ${config.token}`;}
+                if (config.token) {
+                    httpConfig.headers.Authorization = `Bearer ${config.token}`;
+                }
             }
         }
 
@@ -181,22 +187,30 @@ export default class HttpDataTargetImpl implements DataTarget {
                 Logger.debug(`data target ${this.DataTargetRecord.id} post failed`);
             } else {
                 let reference = '';
-                if ('Reference' in resp.headers) {reference = resp.headers.Reference;}
+                if ('Reference' in resp.headers) {
+                    reference = resp.headers.Reference;
+                }
 
                 // set to super user if we don't know who's running the target
                 let user = SuperUser;
                 const retrievedUser = await this.#userRepo.findByID(this.DataTargetRecord.created_by!);
-                if (!retrievedUser.isError) {user = retrievedUser.value;}
+                if (!retrievedUser.isError) {
+                    user = retrievedUser.value;
+                }
             }
         } catch (err) {
             Logger.error(`data target ${this.DataTargetRecord.id} post failed ${err}`);
         }
 
         const setLastRunAt = await this.#mapper.SetLastRunAt(this.DataTargetRecord.id!);
-        if (setLastRunAt.isError) {Logger.error(`unable to update data target last_run_at${setLastRunAt.error?.error}`);}
+        if (setLastRunAt.isError) {
+            Logger.error(`unable to update data target last_run_at${setLastRunAt.error?.error}`);
+        }
 
         set = await this.#mapper.SetStatus(this.DataTargetRecord.id!, 'system', 'ready');
-        if (set.isError) {Logger.error(`unable to update data target status:${set.error?.error}`);}
+        if (set.isError) {
+            Logger.error(`unable to update data target status:${set.error?.error}`);
+        }
 
         // delete the cached value used for locking, if this fails the cache auto-deletes after 30sec
 

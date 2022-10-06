@@ -1312,22 +1312,20 @@ export default class TransformationDialog extends Vue {
           const keys = Object.keys(value[0])
 
           keys.map(k => {
-            if(!Array.isArray(value[0][k])) {
-              this.payloadKeys.push(`${cleanKey}.[].${k}`)
+            this.payloadKeys.push(`${cleanKey}.[].${k}`)
 
-              // remove keys for higher array objects so that
-              // we are left with keys for the lowest array objects
-              const bracketCount = (`${cleanKey}.[].${k}`.split("[]").length - 1)
+            // remove keys for higher array objects so that
+            // we are left with keys for the lowest array objects
+            const bracketCount = (`${cleanKey}.[].${k}`.split("[]").length - 1)
 
-              if(bracketCount > prevBracketCount) {
-                // set prevBracketCount to the new highest number of brackets
-                prevBracketCount = bracketCount
+            if(bracketCount > prevBracketCount) {
+              // set prevBracketCount to the new highest number of brackets
+              prevBracketCount = bracketCount
 
-                // reset the array to remove all previously stored keys
-                this.payloadSelectedArrayKeys = []
-              }
-              this.payloadSelectedArrayKeys.push(`${cleanKey}.[].${k}`)
+              // reset the array to remove all previously stored keys
+              this.payloadSelectedArrayKeys = []
             }
+            this.payloadSelectedArrayKeys.push(`${cleanKey}.[].${k}`)
           })
         }
 

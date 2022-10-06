@@ -5,11 +5,11 @@ TIMESCALEDB_ENABLED=true
 WAIT_HOSTS=rabbitmq:5672
 
 # valid options are blank (defaults to memory), memory, or redis
-CACHE_PROVIDER=memory
+CACHE_PROVIDER=redis
 # default time in seconds
 CACHE_DEFAULT_TTL=21600
 # redis connection string - e.g redis://user:password@redis-service.com:6379/
-CACHE_REDIS_CONNECTION_STRING=
+CACHE_REDIS_CONNECTION_STRING=redis://redis:6379
 
 # debug,info,warn,error,silent
 LOG_LEVEL=debug

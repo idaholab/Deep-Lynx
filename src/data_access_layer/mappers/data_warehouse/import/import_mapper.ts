@@ -322,7 +322,7 @@ export default class ImportMapper extends Mapper {
 
     private retrieveLastAndLockStatement(logID: string): QueryConfig {
         return {
-            text: `SELECT * FROM imports WHERE data_source_id = $1 ORDER BY modified_at DESC NULLS LAST LIMIT 1 FOR UPDATE NOWAIT `,
+            text: `SELECT * FROM imports WHERE data_source_id = $1 ORDER BY modified_at DESC NULLS LAST LIMIT 1 FOR NO KEY UPDATE NOWAIT `,
             values: [logID],
         };
     }

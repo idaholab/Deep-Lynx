@@ -77,8 +77,8 @@ export default class OntologyUpdate extends Vue {
       this.$client.updateContainerFromImport(this.containerID, this.owlFile, this.owlFilePath, this.$store.state.activeContainer?.name)
           .then(() => {
             this.loading = false
-            this.successMessage = "Container updated successfully"
             this.errorMessage = ""
+            this.$router.go(0)
           })
           .catch(e => {
             this.loading = false

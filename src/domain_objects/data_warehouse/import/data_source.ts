@@ -88,6 +88,9 @@ export class HttpDataSourceConfig extends BaseDataSourceConfig {
     // poll interval in minutes
     poll_interval = 10;
 
+    // timout of http request in milliseconds
+    timeout = 15000;
+
     @ValidateIf((o) => o.auth_method === 'token')
     @IsString()
     @Exclude({toPlainOnly: true})
@@ -111,6 +114,7 @@ export class HttpDataSourceConfig extends BaseDataSourceConfig {
         username?: string;
         password?: string;
         secure?: boolean;
+        timeout?: number;
     }) {
         super();
 
@@ -121,6 +125,7 @@ export class HttpDataSourceConfig extends BaseDataSourceConfig {
             this.username = input.username;
             this.password = input.password;
             if (input.secure) this.secure = input.secure;
+            if (input.timeout) this.timeout = input.timeout;
         }
     }
 }
@@ -139,6 +144,9 @@ export class JazzDataSourceConfig extends BaseDataSourceConfig {
 
     // poll interval in minutes
     poll_interval = 10;
+
+    // timout of http request in milliseconds
+    timeout = 30000;
 
     // limit records returned, can be useful for large projects
     limit?: number;
@@ -159,6 +167,7 @@ export class JazzDataSourceConfig extends BaseDataSourceConfig {
         token: string;
         project_name: string;
         poll_interval?: number;
+        timeout?: number;
         secure?: boolean;
         limit?: number;
         artifact_types?: string[];
@@ -173,6 +182,7 @@ export class JazzDataSourceConfig extends BaseDataSourceConfig {
             if (input.secure) this.secure = input.secure;
             if (input.limit) this.limit = input.limit;
             if (input.artifact_types) this.artifact_types = input.artifact_types;
+            if (input.timeout) this.timeout = 30000;
         }
     }
 }

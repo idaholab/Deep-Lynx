@@ -1,4 +1,5 @@
 <template>
+  <div>
   <div v-if="container">
     <error-banner :message="errorMessage"></error-banner>
     <v-app-bar
@@ -463,6 +464,22 @@
         </v-row>
       </v-container>
     </v-main>
+  </div>
+    <div v-else>
+      <v-container>
+        <v-layout align-center justify-center column fill-height>
+          <v-flex row align-center>
+            <v-progress-circular indeterminate :size="150"  style="margin-top: 200px" color="primary" class=""></v-progress-circular>
+
+          </v-flex>
+          <v-flex row align-center>
+            <div class="align-self-center ma-auto">
+              <v-img max-height="250" max-width="250" src="../assets/lynx.png"></v-img>
+            </div>
+          </v-flex>
+        </v-layout>
+      </v-container>
+    </div>
   </div>
 </template>
 

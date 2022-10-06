@@ -176,6 +176,7 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
     private async requestData(config: JazzDataSourceConfig, pollTransaction: PoolClient, url: string, importID?: string): Promise<Result<any>> {
         let resp: AxiosResponse<any>;
         const httpConfig: AxiosRequestConfig = {};
+        httpConfig.timeout = config.timeout;
         httpConfig.headers = {};
 
         if (config.token) httpConfig.headers.Authorization = `Bearer ${config.token}`;

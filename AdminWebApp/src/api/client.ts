@@ -114,6 +114,7 @@ export class Client {
         formData.append('description', container.description);
         formData.append('data_versioning_enabled', container.config.data_versioning_enabled);
         formData.append('ontology_versioning_enabled', container.config.ontology_versioning_enabled);
+        formData.append('enabled_data_sources', container.config.enabled_data_sources.join(','));
 
         if (owlFile) {
             formData.append('file', owlFile);
