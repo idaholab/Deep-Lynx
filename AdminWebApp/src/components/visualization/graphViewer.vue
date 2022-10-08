@@ -25,6 +25,11 @@
             <v-icon v-bind="attrs" v-on="on" >{{info}}</v-icon>
           </template>
           <v-card max-width="364" style="justify-content: left">
+
+            <v-card-text class="text-h5 font-weight-bold">
+            Hover over the blue "+" icon in the top left of the graph view to find graph edit tools!
+            </v-card-text>
+
             <v-list>
               <v-list-item>
                 <v-slider
@@ -82,7 +87,7 @@
                 <v-divider></v-divider>
 
                 <v-card-text>
-                  Controls <br>
+                  <b>Controls</b> <br>
                   - Pan : Left click drag on open area of graph <br>
                   - Zoom : Mousewheel scroll <br>
                   - Center on node: Double click node <br>
@@ -112,22 +117,32 @@
           transition="slide-x-transition"
       >
         <template v-slot:activator>
-          <v-btn
-              v-model="editFab"
-              :color="edgeFlag ? 'purple' : 'blue darken-2'"
-              dark
-              editFab
-          >
-            <v-icon v-if="editFab">
-              mdi-close
-            </v-icon>
-            <v-icon v-else-if="edgeFlag">
-              mdi-vector-circle
-            </v-icon>
-            <v-icon v-else>
-              mdi-plus
-            </v-icon>
-          </v-btn>
+          <v-tooltip v-model="edgeFlag" right>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn
+                v-model="editFab"
+                :color="edgeFlag ? 'purple' : 'blue darken-2'"
+                dark
+                editFab
+                v-on="edgeFlag ? on : null"
+                v-bind="attrs"
+              >
+                <v-icon v-if="editFab">
+                  mdi-close
+                </v-icon>
+                <v-icon v-else-if="edgeFlag">
+                  mdi-vector-circle
+                </v-icon>
+                <v-icon v-else>
+                  mdi-plus
+                </v-icon>
+              </v-btn>
+            </template>
+            <span>
+              Drag a node towards other nodes to create new edges. <br/>
+              Release the node once the desired edge is indicated to bring up the dialog for edge creation.
+            </span>
+          </v-tooltip>
         </template>
 
         <v-tooltip open-delay=500 right>
@@ -246,7 +261,9 @@
           </v-list-item-group>
         </v-list>
       </v-navigation-drawer>
+
       <div id="forcegraph" ref="forcegraph" ></div>
+      
     </v-card>
     <!-- End Graph Component -->
 
@@ -1475,6 +1492,8 @@ export default class GraphViewer extends Vue {
 
   createNode(node: any) {
 
+    this.loading = true
+
     const refinedNode = {
       id: node.id,
       container_id: node.container_id,
@@ -1501,6 +1520,7 @@ export default class GraphViewer extends Vue {
     // wait for the graph to refresh and then zoom and center on the new node
     setTimeout(() => {
       this.centerGraphOnNode(nodeInGraph[0])
+      this.loading = false
     }, this.graphRenderTime + this.zoomToFitDuration)
 
   }
