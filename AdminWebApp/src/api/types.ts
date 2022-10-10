@@ -36,6 +36,7 @@ export type MetatypeT = {
     parent_id?: string;
     ontology_version?: string;
     old_id?: string;
+    uuid?: string;
 };
 
 export type MetatypeRelationshipT = {
@@ -84,7 +85,7 @@ export type MetatypeKeyT = {
     property_name: string;
     required: boolean;
     description: string;
-    data_type: 'number' | 'date' | 'string' | 'boolean' | 'enumeration' | 'file';
+    data_type: 'number' | 'number64' | 'float' | 'float64' | 'date' | 'string' | 'boolean' | 'enumeration' | 'file';
     archived: boolean;
     validation:
         | {
@@ -111,7 +112,7 @@ export type MetatypeRelationshipKeyT = {
     property_name: string;
     required: boolean;
     description: string;
-    data_type: 'number' | 'date' | 'string' | 'boolean' | 'enumeration' | 'file';
+    data_type: 'number' | 'number64' | 'float' | 'float64' | 'date' | 'string' | 'boolean' | 'enumeration' | 'file';
     archived: boolean;
     validation: {
         regex: string;
@@ -169,6 +170,13 @@ export type EdgeT = {
     relationship: MetatypeRelationshipT;
     destination_node?: NodeT;
     origin_node?: NodeT;
+    origin_id?: string;
+    destination_id?: string;
+    metatype_relationship_name?: string;
+    relationship_id?: string;
+    properties: PropertyT[] | object;
+    created_at: string;
+    modified_at: string;
 };
 
 export type PropertyT = {
@@ -236,6 +244,7 @@ export type HttpDataSourceConfig = {
     secure: boolean;
     auth_method: 'none' | 'basic' | 'token';
     poll_interval: number; // in minutes
+    timeout: number; // milliseconds
     token?: string; // security token, set if auth method is token
     username?: string; // auth method basic
     password?: string; // auth method basic
@@ -252,6 +261,7 @@ export type JazzDataSourceConfig = {
     artifact_types: string[]; // artifact types to retrieve, everything else is ignored
     limit: number;
     poll_interval: number; // in minutes
+    timeout: number; // milliseconds
     token: string; // security token for http authentication
     stop_nodes?: string[];
     value_nodes?: string[];
@@ -611,6 +621,7 @@ export function DefaultJazzDataSourceConfig(): JazzDataSourceConfig {
         artifact_types: [],
         poll_interval: 10,
         token: '',
+        timeout: 30000,
         limit: 10,
         data_retention_days: 30,
     };
@@ -623,6 +634,7 @@ export function DefaultHttpDataSourceConfig(): HttpDataSourceConfig {
         secure: true,
         auth_method: 'none',
         poll_interval: 10,
+        timeout: 15000,
         data_retention_days: 30,
     };
 }

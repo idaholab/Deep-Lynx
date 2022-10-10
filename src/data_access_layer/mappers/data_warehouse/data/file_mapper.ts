@@ -138,6 +138,7 @@ export default class FileMapper extends Mapper {
                   metadata,
                   data_source_id,
                   md5hash,
+                  short_uuid,
                   created_by,
                   modified_by) VALUES %L RETURNING *`;
         const values = files.map((file) => [
@@ -149,6 +150,7 @@ export default class FileMapper extends Mapper {
             JSON.stringify(file.metadata),
             file.data_source_id,
             file.md5hash,
+            file.short_uuid,
             userID,
             userID,
         ]);
@@ -166,6 +168,7 @@ export default class FileMapper extends Mapper {
                   metadata = u.metadata::jsonb,
                   data_source_id = u.data_source_id::bigint,
                   md5hash = u.md5hash,
+                  short_uuid = u.short_uuid,
                   modified_by = u.modified_by,
                   modified_at = NOW()
                   FROM(VALUES %L) AS u(
@@ -178,6 +181,7 @@ export default class FileMapper extends Mapper {
                   metadata,
                   data_source_id,
                   md5hash,
+                  short_uuid,
                   modified_by)
                   WHERE u.id::bigint = f.id RETURNING f.*`;
         const values = files.map((file) => [
@@ -190,6 +194,7 @@ export default class FileMapper extends Mapper {
             JSON.stringify(file.metadata),
             file.data_source_id,
             file.md5hash,
+            file.short_uuid,
             userID,
             userID,
         ]);

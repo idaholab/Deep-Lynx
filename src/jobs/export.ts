@@ -12,8 +12,24 @@ import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/p
 import PQueue from 'p-queue';
 import {parentPort} from 'worker_threads';
 import Config from '../services/config';
+import Cache from '../services/cache/cache';
 
 const postgresAdapter = PostgresAdapter.Instance;
+
+// handle cache clears from parent IF memory cache
+if (Config.cache_provider === 'memory') {
+    parentPort?.on('message', (message: any) => {
+        const parts = message.split('|');
+        // if a two part message it's a deleted key
+        if (parts.length === 2 && parts[0] === 'deleted') {
+            void Cache.del(parts[1]);
+        }
+
+        if (parts.length === 1 && parts[0] === 'flush') {
+            void Cache.flush();
+        }
+    });
+}
 
 void postgresAdapter
     .init()
@@ -48,21 +64,20 @@ void postgresAdapter
                         else {
                             process.exit(0);
                         }
-                    })
+                    });
             })
             .catch((e) => {
-                void PostgresAdapter.Instance.close()
+                void PostgresAdapter.Instance.close();
 
-                Logger.error(`unable to restart exports ${e}`)
+                Logger.error(`unable to restart exports ${e}`);
                 if (parentPort) parentPort.postMessage('done');
                 else {
                     process.exit(1);
                 }
             });
-
     })
     .catch((e) => {
-        void PostgresAdapter.Instance.close()
+        void PostgresAdapter.Instance.close();
 
         Logger.error(`unexpected error in export thread ${e}`);
         if (parentPort) parentPort.postMessage('done');

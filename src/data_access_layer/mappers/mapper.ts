@@ -11,6 +11,9 @@ import Logger from '../../services/logger';
 import 'reflect-metadata';
 import {ClassConstructor, plainToClass, plainToInstance} from 'class-transformer';
 import QueryStream from 'pg-query-stream'; // this is required for the class-transformer package we use
+import Config from '../../services/config';
+const UIDGenerator = require('uid-generator');
+const uidgen = new UIDGenerator();
 
 // Mapper contains ORM like CRUD functions, and a few helpers for more complex functionality.
 // This contains things like transaction runners, as well as things like the type decoder

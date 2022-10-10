@@ -4,6 +4,7 @@ import Config from '../config';
 import AzureBlobImpl from './azure_blob_impl';
 import Filesystem from './filesystem_impl';
 import LargeObject from './pg_large_file_impl';
+import File from '../../domain_objects/data_warehouse/data/file';
 
 /*
     BlobStorage is an interface that Deep Lynx uses to accept and store user uploads.
@@ -11,8 +12,8 @@ import LargeObject from './pg_large_file_impl';
  */
 export interface BlobStorage {
     uploadPipe(filepath: string, filename: string, stream: Readable | null, contentType?: string, encoding?: string): Promise<Result<BlobUploadResponse>>;
-    deleteFile(filepath: string): Promise<Result<boolean>>;
-    downloadStream(filepath: string): Promise<Readable | undefined>;
+    deleteFile(file: File): Promise<Result<boolean>>;
+    downloadStream(file: File): Promise<Readable | undefined>;
     name(): string;
 }
 
@@ -24,6 +25,7 @@ export type BlobUploadResponse = {
     md5hash: string; // hex encoded md5 hash
     metadata: {[key: string]: any}; // adapter specific metadata if needed
     adapter_name: string;
+    short_uuid?: string;
 };
 
 // Returns an instantiated FileStorage provider if provider method is set, or user

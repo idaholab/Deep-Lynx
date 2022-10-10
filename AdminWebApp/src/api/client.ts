@@ -97,6 +97,9 @@ export class Client {
     async containerFromImport(container: ContainerT | any, owlFile: File | null, owlFilePath: string): Promise<string> {
         const config: AxiosRequestConfig = {};
         config.headers = {'Access-Control-Allow-Origin': '*'};
+        config.validateStatus = () => {
+            return true;
+        };
 
         if (this.config?.auth_method === 'token') {
             config.headers = {Authorization: `Bearer ${RetrieveJWT()}`};
@@ -111,6 +114,7 @@ export class Client {
         formData.append('description', container.description);
         formData.append('data_versioning_enabled', container.config.data_versioning_enabled);
         formData.append('ontology_versioning_enabled', container.config.ontology_versioning_enabled);
+        formData.append('enabled_data_sources', container.config.enabled_data_sources.join(','));
 
         if (owlFile) {
             formData.append('file', owlFile);
@@ -131,7 +135,8 @@ export class Client {
                     resolve(resp.data.value);
                 });
             })
-            .catch((error: any) => {
+            .catch((e: any) => {
+                const error = JSON.parse(e);
                 const resp: AxiosResponse = {data: {}, status: 500, statusText: 'internal server error', headers: '', config: error.config};
                 if (error.response) {
                     // The request was made and the server responded with a status code
@@ -162,7 +167,7 @@ export class Client {
                     resp.data.error = error.request;
                 } else {
                     // Something happened in setting up the request that triggered an Error
-                    resp.data.error = error.message;
+                    resp.data.error = error.error;
                 }
 
                 return new Promise<string>((resolve, reject) => {
@@ -726,6 +731,10 @@ export class Client {
         return this.get<NodeT>(`/containers/${containerID}/graphs/nodes/${nodeID}`);
     }
 
+    retrieveEdge(containerID: string, edgeID: string): Promise<EdgeT> {
+        return this.get<EdgeT>(`/containers/${containerID}/graphs/edges/${edgeID}`);
+    }
+
     countNodes(containerID: string, dataSourceID: string): Promise<number> {
         const query: {[key: string]: any} = {};
 
@@ -1260,9 +1269,9 @@ export class Client {
         const resp: AxiosResponse = await axios.post(url, data, config);
 
         return new Promise<T>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.data.error.error);
+            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
 
-            if (resp.data.isError) reject(resp.data.value);
+            if (resp.data.isError) reject(resp.data.error);
 
             resolve(resp.data.value as T);
         });

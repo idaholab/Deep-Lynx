@@ -4,7 +4,7 @@ import MetatypeKeyMapper from './metatype_key_mapper';
 import Result from '../../../../common_classes/result';
 import Logger from '../../../../services/logger';
 import ContainerRepository from '../../../repositories/data_warehouse/ontology/container_respository';
-import Container, { ContainerConfig } from "../../../../domain_objects/data_warehouse/ontology/container";
+import Container, {ContainerAlert, ContainerConfig} from "../../../../domain_objects/data_warehouse/ontology/container";
 import MetatypeRepository from '../../../repositories/data_warehouse/ontology/metatype_repository';
 import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
 import MetatypeRelationshipRepository from '../../../repositories/data_warehouse/ontology/metatype_relationship_repository';
@@ -23,6 +23,7 @@ import OntologyVersion from "../../../../domain_objects/data_warehouse/ontology/
 const convert = require('xml-js');
 const xmlToJson = require('xml-2-json-streaming');
 const xmlParser = xmlToJson();
+import pAll from 'p-all';
 
 const containerRepo = new ContainerRepository();
 const metatypeRelationshipRepo = new MetatypeRelationshipRepository();
@@ -32,6 +33,8 @@ const metatypeKeyRepo = new MetatypeKeyRepository();
 const ontologyRepo = new OntologyVersionRepository();
 const nodeRepo = new NodeRepository();
 const edgeRepo = new EdgeRepository();
+import {Worker} from "worker_threads";
+import {plainToInstance} from "class-transformer";
 
 // vestigial type for ease of use
 export type ContainerImportT = {
@@ -40,6 +43,7 @@ export type ContainerImportT = {
     path?: string | undefined;
     data_versioning_enabled: boolean
     ontology_versioning_enabled: boolean
+    enabled_data_sources: string[]
 };
 
 /*
@@ -129,7 +133,86 @@ export default class ContainerImport {
         dryrun: boolean,
         update: boolean,
         containerID: string,
+        dirname?: string, // override the dirname, needed for testing
     ): Promise<Result<string>> {
+        let workerLocation: string
+        if(dirname) {
+            workerLocation = dirname+'/container_import_worker.js'
+        } else {
+            workerLocation = __dirname+'/container_import_worker.js'
+        }
+        let container: Container;
+        let ontologyVersionID: string | undefined;
+
+        // only do container creation and whatnot if a dryrun
+        if(!dryrun) {
+            if (!update) {
+                container = new Container({
+                    name: input.name,
+                    description: input.description!,
+                    config: new ContainerConfig({
+                        data_versioning_enabled: input.data_versioning_enabled,
+                        ontology_versioning_enabled: input.ontology_versioning_enabled,
+                        enabled_data_sources: input.enabled_data_sources
+                    })
+                });
+
+                const saved = await containerRepo.save(container, user);
+                if (saved.isError) return Promise.resolve(Result.DebugFailure(saved.error.error));
+            } else {
+                const containerResult = await containerRepo.findByID(containerID);
+                if (containerResult.isError) return Promise.resolve(Result.Failure(`Unable to retrieve container ${containerID}`));
+
+                container = containerResult.value;
+            }
+
+            // if it's an update we need to set the ontology version manually so that we're not actually updating
+            // the ontology if versioning is enabled
+            if(container.config!.ontology_versioning_enabled && update) {
+                if(container.config!.ontology_versioning_enabled) {
+                    const ontologyVersion  =  new OntologyVersion({
+                        container_id: container.id!,
+                        name: `Update - ${name} ${new Date().toDateString()}`,
+                        description: 'Updates created from uploading an .OWL file',
+                        status: 'generating'
+                    })
+
+                    const saved = await ontologyRepo.save(ontologyVersion, user)
+
+                    if(saved.isError) {
+                        Logger.error(`unable to create ontology version for update from .OWL file ${saved.error?.error}`)
+                    } else {
+                        ontologyVersionID = ontologyVersion.id
+                    }
+                }
+            }
+
+            // if we're not making the ontology, and it's set to null, let's make sure we check for existing ontology
+            // versions to ensure we're assigning these guys to the proper one - when we create a container an ontology
+            // version is automatically created, so this will pull that one.
+            if(!ontologyVersionID) {
+                const results = await ontologyRepo
+                    .where()
+                    .containerID('eq', container.id!)
+                    .and()
+                    .status('eq', 'published').list({sortBy: 'id', sortDesc: true, limit: 1})
+                if(results.isError) {
+                    Logger.error(`unable to find published version of ontology ${results.error?.error}`)
+                } else if(results.value.length > 0){
+                    ontologyVersionID = results.value[0].id
+                }
+            }
+
+            if(ontologyVersionID) {
+            // now we set the ontology version's status to generating
+                const set = await ontologyRepo.setStatus(ontologyVersionID, 'generating')
+                if(set.isError) {
+                    Logger.error(`unable to set ontology version status to generating ${set.error}`)
+                }
+            }
+        }
+
+
         if (file.length === 0) {
             // configure and make an http request to retrieve the ontology file then parse ontology
             const axiosConfig: AxiosRequestConfig = {
@@ -152,20 +235,71 @@ export default class ContainerImport {
                         spaces: 4,
                     });
 
-                    this.parseOntology(
-                        user,
-                        JSON.parse(jsonData),
-                        input.name,
-                        input.description || '',
-                        input.data_versioning_enabled,
-                        input.ontology_versioning_enabled,
-                        dryrun, update, containerID)
-                        .then((result) => {
-                            resolve(result);
+                    const worker = new Worker(workerLocation, {
+                        workerData: {
+                            user,
+                            json: JSON.parse(jsonData),
+                            name: input.name,
+                            description: input.description || '',
+                            data_versioning_enabled: input.data_versioning_enabled,
+                            ontology_versioning_enabled: input.ontology_versioning_enabled,
+                            dryrun, update, container
+                        }
+                    })
+
+                    worker.on('error', (err: any) => {
+                        void this.rollbackVersion(
+                            container.id!,
+                            ontologyVersionID!,
+                            input.ontology_versioning_enabled,
+                            update,
+                            err)
+
+                        Logger.error(`worker error for ontology importer ${err}`)
+                    })
+
+                    worker.on('close', (code) => {
+                        if(code === 1) {
+                            void this.rollbackVersion(
+                                container.id!,
+                                ontologyVersionID!,
+                                input.ontology_versioning_enabled,
+                                update,
+                            )
+                            Logger.error('ontology version worker exited abnormally')
+                        } else {
+                            void ontologyRepo.setStatus(ontologyVersionID!, 'ready')
+                            resolve(Result.Success(container.id!))
+                        }
+                    })
+
+                    // if we have a dir assume it's a test and be sync
+                    if(dirname) {
+                        worker.on('message', (message:string) => {
+                            const result = plainToInstance(Result, JSON.parse(message) as object)
+
+                            resolve(result)
                         })
-                        .catch((e) => {
-                            reject(e);
-                        });
+                    } else {
+                        worker.on('message', (message:string) => {
+                            const result = plainToInstance(Result, JSON.parse(message) as object)
+
+                            if(result.isError) {
+                                void this.rollbackVersion(
+                                    container.id!,
+                                    ontologyVersionID!,
+                                    input.ontology_versioning_enabled,
+                                    update,
+                                    result.error)
+                                Logger.error(result.error)
+                            }
+                            else Logger.info('ontology imported successfully')
+                        })
+
+                        resolve(Result.Success(container.id!))
+                    }
+
+
                 }).catch((e) => {
                     return Promise.reject(Result.Failure(e));
                 });
@@ -183,7 +317,7 @@ export default class ContainerImport {
             // ontology file has been supplied, cleanse XML, convert to json, and parse ontology
             let xml = file.toString('utf8');
 
-            // subsititue entities if they exist to enable JSON conversion
+            // substitute entities if they exist to enable JSON conversion
             const doctypeRegexTest = new RegExp('<!DOCTYPE', 'gm')
             const entityRegex = new RegExp('<!ENTITY (\\w*) "(\\S+)"', 'gm')
 
@@ -248,35 +382,85 @@ export default class ContainerImport {
                 return json
             });
 
-            return new Promise<Result<string>>((resolve) => {
-                resolve(this.parseOntology(
-                    user,
-                    json,
-                    input.name,
-                    input.description || '',
-                    input.data_versioning_enabled,
-                    input.ontology_versioning_enabled,
-                    dryrun, update, containerID));
+            return new Promise<Result<string>>((resolve, reject) => {
+                const worker = new Worker(workerLocation, {
+                    workerData:{ input: {
+                        user,
+                        json,
+                        name: input.name,
+                        description: input.description || '',
+                        data_versioning_enabled: input.data_versioning_enabled,
+                        ontology_versioning_enabled: input.ontology_versioning_enabled,
+                        dryrun, update, container, ontologyVersionID
+                    }}
+                })
+
+                worker.on('error', (err: any) => {
+                    void this.rollbackVersion(
+                        container.id!,
+                        ontologyVersionID!,
+                        input.ontology_versioning_enabled,
+                        update,
+                        err)
+                    Logger.error(`worker error for ontology importer ${err}`)
+                })
+
+                worker.on('close', () => {
+                    void this.rollbackVersion(
+                        container.id!,
+                        ontologyVersionID!,
+                        input.ontology_versioning_enabled,
+                        update,
+                    )
+                    Logger.error('ontology version worker exited abnormally')
+                })
+
+                // if we have a dir assume it's a test and be sync
+                if(dirname) {
+                    worker.on('message', (message:string) => {
+                        const result = plainToInstance(Result, JSON.parse(message) as object)
+
+                        resolve(result)
+                    })
+                } else {
+                    worker.on('message', (message:string) => {
+                        const result = plainToInstance(Result, JSON.parse(message) as object)
+
+                        if(result.isError) {
+                            void this.rollbackVersion(
+                                container.id!,
+                                ontologyVersionID!,
+                                input.ontology_versioning_enabled,
+                                update,
+                                result.error)
+                            Logger.error(result.error)
+                        }
+                        else Logger.info('ontology imported successfully')
+                    })
+
+                    resolve(Result.Success(container.id!))
+                }
             }).catch((e) => {
                 Logger.error(e)
                 if (e.message) {
                     return Promise.reject(Result.Failure(e.message));
                 }
-                return Promise.reject(Result.Failure(e));
+                return Promise.reject(Result.Error(e));
             });
         }
     }
 
-    private async parseOntology(
-        user: User | any,
-        json: any,
-        name: string,
-        description: string,
-        data_versioning_enabled: boolean,
-        ontology_versioning_enabled: boolean,
-        dryrun: boolean,
-        update: boolean,
-        containerID: string,
+    async parseOntology(
+        input: {user: User | any,
+            json: any,
+            name: string,
+            description: string,
+            data_versioning_enabled: boolean,
+            ontology_versioning_enabled: boolean,
+            dryrun: boolean,
+            update: boolean,
+            container: Container,
+            ontologyVersionID?: string}
     ): Promise<Result<string>> {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         return new Promise<Result<string>>(async (resolve) => {
@@ -287,13 +471,13 @@ export default class ContainerImport {
 
             // We currently only allow rdf/xml documents
             // Fail if the xml document does not match specified type
-            if (json['rdf:RDF']) {
-                json = json['rdf:RDF'];
+            if (input.json['rdf:RDF']) {
+                input.json = input.json['rdf:RDF'];
 
-                ontologyHead = json['owl:Ontology'] || {};
-                objectProperties = json['owl:ObjectProperty'] || [];
-                datatypeProperties = json['owl:DatatypeProperty'] || [];
-                classes = json['owl:Class'] || [];
+                ontologyHead = input.json['owl:Ontology'] || {};
+                objectProperties = input.json['owl:ObjectProperty'] || [];
+                datatypeProperties = input.json['owl:DatatypeProperty'] || [];
+                classes = input.json['owl:Class'] || [];
             } else {
                 resolve(Result.Failure('Unrecognized file content. Please ensure this is a valid rdf/xml document.'));
             }
@@ -643,11 +827,11 @@ export default class ContainerImport {
                 });
             }
 
-            let ontologyDescription = description || '';
+            let ontologyDescription = input.description || '';
             // grab the ontology description if the provided description matches
             // an attribute of the ontology head
-            if (ontologyHead[description]) {
-                ontologyDescription = ontologyHead[description].textNode ? ontologyHead[description].textNode : description;
+            if (ontologyHead[input.description]) {
+                ontologyDescription = ontologyHead[input.description].textNode ? ontologyHead[input.description].textNode : input.description;
             }
 
             // grab the default ontology description if available and none provided
@@ -660,7 +844,7 @@ export default class ContainerImport {
                 ontologyDescription = ontologyHead['rdfs:comment'].textNode ? ontologyHead['rdfs:comment'].textNode : ontologyHead['rdfs:comment'];
             }
 
-            if (dryrun) {
+            if (input.dryrun) {
                 let explainString = '<b>Ontology Extractor - Explain Plan</b><br/>';
                 explainString += 'Container name: ' + name + '<br/>';
                 explainString += 'Container description: ' + ontologyDescription + '<br/>';
@@ -669,26 +853,6 @@ export default class ContainerImport {
                 explainString += '# of relationships: ' + relationshipMap.size + '<br/>';
                 resolve(Result.Success(explainString));
             } else {
-                let container: Container;
-
-                // If performing a create, need to create container and retrieve container ID
-                if (!update) {
-                    container = new Container({
-                        name,
-                        description: ontologyDescription,
-                        config: new ContainerConfig({data_versioning_enabled, ontology_versioning_enabled})
-                    });
-
-                    const saved = await containerRepo.save(container, user);
-                    if (saved.isError) return resolve(Result.DebugFailure(saved.error.error));
-                    containerID = container.id!;
-                } else {
-                    const containerResult = await containerRepo.findByID(containerID);
-                    if (containerResult.isError) return resolve(Result.Failure(`Unable to retrieve container ${containerID}`));
-
-                    container = containerResult.value;
-                }
-
                 const allRelationshipPairNames: string[] = [];
 
                 // prepare inherits relationship pairs
@@ -733,56 +897,21 @@ export default class ContainerImport {
                     }
                 });
 
-                // if it's an update we need to set the ontology version manually so that we're not actually updating
-                // the ontology if versioning is enabled
-                let ontologyVersionID: string | undefined
-                if(container.config!.ontology_versioning_enabled && update) {
-                    if(container.config!.ontology_versioning_enabled) {
-                        const ontologyVersion  =  new OntologyVersion({
-                            container_id: containerID,
-                            name: `Update - ${name} ${new Date().toDateString()}`,
-                            description: 'Updates created from uploading an .OWL file',
-                            status: 'ready'
-                        })
 
-                        const saved = await ontologyRepo.save(ontologyVersion, user)
-
-                        if(saved.isError) {
-                            Logger.error(`unable to create ontology version for update from .OWL file ${saved.error?.error}`)
-                        } else {
-                            ontologyVersionID = ontologyVersion.id
-                        }
-                    }
-                }
-
-                // if we're not making the ontology and it's set to null, let's make sure we check for existing ontology
-                // versions to ensure we're assigning these guys to the proper one
-                if(!ontologyVersionID) {
-                    const results = await ontologyRepo
-                        .where()
-                        .containerID('eq', containerID)
-                        .and()
-                        .status('eq', 'published').list({sortBy: 'id', sortDesc: true, limit: 1})
-                    if(results.isError) {
-                        Logger.error(`unable to find published version of ontology ${results.error?.error}`)
-                    } else if(results.value.length > 0){
-                        ontologyVersionID = results.value[0].id
-                    }
-                }
 
                 // only pull and map the old data if we're updating an ontology in place, in a container where versioning
                 // isn't enabled
-                if (update && !container.config!.ontology_versioning_enabled) {
+                if (input.update && !input.container.config!.ontology_versioning_enabled) {
                     let oldMetatypeRelationships: MetatypeRelationship[] = [];
                     let oldMetatypes: Metatype[] = [];
                     let oldMetatypeRelationshipPairs: MetatypeRelationshipPair[] = [];
 
                     // retrieve existing container, relationships, metatypes, and relationship pairs
-                    oldMetatypeRelationships = (await metatypeRelationshipRepo.where().containerID('eq', containerID).list(false)).value;
+                    oldMetatypeRelationships = (await metatypeRelationshipRepo.where().containerID('eq', input.container.id!).list(false)).value;
 
-                    oldMetatypes = (await metatypeRepo.where().containerID('eq', containerID).list(false)).value;
+                    oldMetatypes = (await metatypeRepo.where().containerID('eq', input.container.id!).list(false)).value;
 
-                    oldMetatypeRelationshipPairs = (await metatypeRelationshipPairRepo.where().containerID('eq', containerID).list()).value;
+                    oldMetatypeRelationshipPairs = (await metatypeRelationshipPairRepo.where().containerID('eq', input.container.id!).list()).value;
 
                     // loop through above, checking if there is anything in old that has been removed
                     // if anything has been removed, check for associated nodes/edges
@@ -802,13 +931,15 @@ export default class ContainerImport {
                                 // no associated data, remove metatype
                                 Logger.info(`Removing metatype ${metatype.name}`);
                                 const removal = await metatypeRepo.delete(metatype);
-                                if (removal.error) return resolve(Result.Failure(`Unable to delete metatype ${metatype.name}`));
+                                if (removal.error) {
+                                    return resolve(Result.Failure(`Unable to delete metatype ${metatype.name}`));
+                                }
                             }
                         } else {
                             // mark metatype for update and add existing IDs
                             const thisMetatype = classListMap.get(metatype.name);
                             thisMetatype.update = true;
-                            thisMetatype.container_id = containerID;
+                            thisMetatype.container_id = input.container.id!;
                             thisMetatype.ontology_version = metatype.ontology_version;
                             thisMetatype.db_id = metatype.id;
                             classIDMap.set(thisMetatype.id, thisMetatype);
@@ -822,6 +953,14 @@ export default class ContainerImport {
                                     const nodes = (await nodeRepo.where().metatypeID('eq', metatype.id!).list(false, {limit: 10})).value;
 
                                     if (nodes.length > 0) {
+                                        await this.rollbackVersion(
+                                            input.container.id!,
+                                            input.ontologyVersionID!,
+                                            input.ontology_versioning_enabled,
+                                            input.update,
+                                            `Attempting to remove metatype ${metatype.name} key ${key.name}.
+                      This metatype has associated data, please delete the data before container update.` )
+
                                         resolve(
                                             Result.Failure(`Attempting to remove metatype ${metatype.name} key ${key.name}.
                       This metatype has associated data, please delete the data before container update.`),
@@ -830,7 +969,15 @@ export default class ContainerImport {
                                         // no associated data, remove key
                                         Logger.info(`Removing metatype key ${key.name}`);
                                         const removal = await metatypeKeyRepo.delete(key);
-                                        if (removal.error) return resolve(Result.Failure(`Unable to delete metatype key ${key.name}`));
+                                        if (removal.error) {
+                                            await this.rollbackVersion(
+                                                input.container.id!,
+                                                input.ontologyVersionID!,
+                                                input.ontology_versioning_enabled,
+                                                input.update,
+                                                `Unable to delete metatype key ${key.name}` )
+                                            return resolve(Result.Failure(`Unable to delete metatype key ${key.name}`));
+                                        }
                                     }
                                 } else {
                                     // update key
@@ -855,7 +1002,9 @@ export default class ContainerImport {
                                 // no associated data, remove relationship pair
                                 Logger.info(`Removing relationship pair ${relationshipPair.name}`);
                                 const removal = await metatypeRelationshipPairRepo.delete(relationshipPair);
-                                if (removal.error) return resolve(Result.Failure(`Unable to delete metatype relationship pair ${relationshipPair.name}`));
+                                if (removal.error) {
+                                    return resolve(Result.Failure(`Unable to delete metatype relationship pair ${relationshipPair.name}`));
+                                }
                             }
                         } else {
                             // update key
@@ -876,7 +1025,9 @@ export default class ContainerImport {
                             // any edges instantiated from relationship pairs that depend on the relationship would have already been found
                             Logger.info(`Removing relationship ${relationship.name}`);
                             const removal = await metatypeRelationshipRepo.delete(relationship);
-                            if (removal.error) return resolve(Result.Failure(`Unable to delete relationship ${relationship.name}`));
+                            if (removal.error) {
+                                return resolve(Result.Failure(`Unable to delete relationship ${relationship.name}`));
+                            }
                         } else {
                             const thisRelationship = relationshipMap.get(relationship.name);
                             thisRelationship.update = true;
@@ -889,10 +1040,10 @@ export default class ContainerImport {
 
                 relationshipMap.forEach((relationship) => {
                     const data = new MetatypeRelationship({
-                        container_id: containerID,
+                        container_id: input.container.id!,
                         name: relationship.name,
                         description: relationship.description,
-                        ontology_version: (ontologyVersionID) ? ontologyVersionID : relationship.ontology_version,
+                        ontology_version: (input.ontologyVersionID) ? input.ontologyVersionID : relationship.ontology_version,
                     });
 
                     // if marked for update, assign relationship id
@@ -904,19 +1055,8 @@ export default class ContainerImport {
                     metatypeRelationships.push(data);
                 });
 
-                const relationshipPromise = await metatypeRelationshipRepo.bulkSave(user, metatypeRelationships, false);
-                // check for an error and rollback if necessary
-                if (relationshipPromise.isError && !update) {
-                    const rollback = await this.rollbackOntology(container)
-                        .then((result) => {
-                            return result + ' ' + relationshipPromise.error?.error;
-                        })
-                        .catch((err: string) => {
-                            return err + ' ' + relationshipPromise.error?.error;
-                        });
-                    resolve(Result.DebugFailure(rollback));
-                    return;
-                } else if (relationshipPromise.isError) {
+                const relationshipPromise = await metatypeRelationshipRepo.bulkSave(input.user, metatypeRelationships, false);
+                if (relationshipPromise.isError) {
                     resolve(Result.Pass(relationshipPromise))
                 }
 
@@ -933,10 +1073,10 @@ export default class ContainerImport {
 
                 classListMap.forEach((thisClass: MetatypeExtendT) => {
                     const data = new Metatype({
-                        container_id: containerID,
+                        container_id: input.container.id!,
                         name: thisClass.name,
                         description: thisClass.description,
-                        ontology_version: (ontologyVersionID) ? ontologyVersionID : thisClass.ontology_version,
+                        ontology_version: (input.ontologyVersionID) ? input.ontologyVersionID : thisClass.ontology_version,
                     });
 
                     // if marked for update, assign metatype id
@@ -948,19 +1088,9 @@ export default class ContainerImport {
                     metatypes.push(data);
                 });
 
-                const metatypePromise = await metatypeRepo.bulkSave(user, metatypes, false);
+                const metatypePromise = await metatypeRepo.bulkSave(input.user, metatypes, false);
                 // check for an error and rollback if necessary
-                if (metatypePromise.isError && !update) {
-                    const rollback = await this.rollbackOntology(container)
-                        .then((result) => {
-                            return result + ' ' + metatypePromise.error?.error;
-                        })
-                        .catch((err: string) => {
-                            return err + ' ' + metatypePromise.error?.error;
-                        });
-                    resolve(Result.DebugFailure(rollback));
-                    return;
-                } else if (metatypePromise.isError) {
+                if (metatypePromise.isError) {
                     resolve(Result.Pass(metatypePromise))
                 }
 
@@ -975,7 +1105,7 @@ export default class ContainerImport {
                     }
                 });
 
-                const propertyPromises: Promise<Result<boolean>>[] = [];
+                const propertyPromises: (() => Promise<Result<boolean>>)[] = [];
 
                 // declare structures to hold metatype keys and relationship pairs for cache invalidation
                 const metatypeKeys: MetatypeKey[] = []
@@ -998,8 +1128,8 @@ export default class ContainerImport {
                             destination_metatype: classIDMap.get(thisClass.parent_id).db_id,
                             relationship: relationship.db_id,
                             relationship_type: 'many:one',
-                            container_id: containerID,
-                            ontology_version: (ontologyVersionID) ? ontologyVersionID : thisClass.ontology_version
+                            container_id: input.container.id!,
+                            ontology_version: (input.ontologyVersionID) ? input.ontologyVersionID : thisClass.ontology_version
                         });
 
                         if (thisClass.updateKeyNames.includes(relationshipName)) {
@@ -1007,7 +1137,7 @@ export default class ContainerImport {
                             data.id = originalKeyData.id;
                             updateRelationships.push(data);
                         } else {
-                            propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, [data], false));
+                            propertyPromises.push(() => metatypeRelationshipPairRepo.bulkSave(input.user, [data], false));
                             relationshipPairs.push(data);
                         }
                     }
@@ -1047,10 +1177,15 @@ export default class ContainerImport {
                                     break;
                             }
 
+                            if(!dataProp?.name) {
+                                resolve(Result.Failure('unable to load .owl file, data property missing label or name'))
+                                return
+                            }
+
                             const propName = dataProp.name.split(' ').join('_');
                             const data = new MetatypeKey({
                                 metatype_id: thisClass.db_id,
-                                container_id: containerID,
+                                container_id: input.container.id!,
                                 name: dataProp.name,
                                 required: false,
                                 property_name: stringToValidPropertyName(propName),
@@ -1062,7 +1197,7 @@ export default class ContainerImport {
                                     max,
                                 },
                                 options: propertyOptions.length > 0 ? propertyOptions : undefined,
-                                ontology_version: (ontologyVersionID) ? ontologyVersionID : property.ontology_version
+                                ontology_version: (input.ontologyVersionID) ? input.ontologyVersionID : property.ontology_version
                             });
 
                             if (thisClass.updateKeyNames.includes(dataProp.name)) {
@@ -1085,8 +1220,8 @@ export default class ContainerImport {
                                 destination_metatype: classIDMap.get(property.target).db_id,
                                 relationship: relationshipID,
                                 relationship_type: 'many:many',
-                                container_id: containerID,
-                                ontology_version: (ontologyVersionID) ? ontologyVersionID : relationship.ontology_version
+                                container_id: input.container.id!,
+                                ontology_version: (input.ontologyVersionID) ? input.ontologyVersionID : relationship.ontology_version
                             });
 
                             if (thisClass.updateKeyNames.includes(relationshipName)) {
@@ -1099,72 +1234,90 @@ export default class ContainerImport {
                             }
                         }
 
-                        if (toSaveKeyBuffer.length > 500) {
+                        if (toSaveKeyBuffer.length > 1000) {
                             // clone the buffer so we can clear
                             const buffer = toSaveKeyBuffer.slice(0);
                             toSaveKeyBuffer = []
 
-                            propertyPromises.push(metatypeKeyRepo.bulkSave(user, buffer))
+                            propertyPromises.push(() => metatypeKeyRepo.bulkSave(input.user, buffer))
                         }
 
-                        if (toSaveRelationshipBuffer.length > 500) {
+                        if (toSaveRelationshipBuffer.length > 1000) {
                             // clone the buffer so we can clear
                             const buffer = toSaveRelationshipBuffer.slice(0);
                             toSaveKeyBuffer = []
 
-                            propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, buffer, false))
+                            propertyPromises.push(() => metatypeRelationshipPairRepo.bulkSave(input.user, buffer, false))
                         }
 
                     }
 
-                    propertyPromises.push(metatypeKeyRepo.bulkSave(user, toSaveKeyBuffer));
-                    propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, toSaveRelationshipBuffer, false));
+                    propertyPromises.push(() => metatypeKeyRepo.bulkSave(input.user, toSaveKeyBuffer));
+                    propertyPromises.push(() => metatypeRelationshipPairRepo.bulkSave(input.user, toSaveRelationshipBuffer, false));
 
                     if (updateKeys.length > 0) {
-                        propertyPromises.push(metatypeKeyRepo.bulkSave(user, updateKeys));
+                        propertyPromises.push(() => metatypeKeyRepo.bulkSave(input.user, updateKeys));
                         metatypeKeys.concat(updateKeys);
                     }
 
                     if (updateRelationships.length > 0) {
-                        propertyPromises.push(metatypeRelationshipPairRepo.bulkSave(user, updateRelationships, false));
+                        propertyPromises.push(() => metatypeRelationshipPairRepo.bulkSave(input.user, updateRelationships, false));
                         relationshipPairs.concat(updateRelationships);
                     }
                 });
-                const propertyResults: Result<boolean>[] = await Promise.all(propertyPromises);
+                const propertyResults: Result<boolean>[] = await pAll(propertyPromises, {concurrency: 2});
 
                 // Invalidate cache for this container as a final step
                 for (const metatype of metatypes) {
                     // this will also invalidate cached keys for these metatypes
-                    if (metatype.id) void metatypeRepo.deleteCached(metatype.id, containerID);
+                    if (metatype.id) void metatypeRepo.deleteCached(metatype.id, input.container.id);
                 }
                 for (const metatypeRelationship of metatypeRelationships) {
-                    if (metatypeRelationship.id) void metatypeRelationshipRepo.deleteCached(metatypeRelationship.id, containerID);
+                    if (metatypeRelationship.id) void metatypeRelationshipRepo.deleteCached(metatypeRelationship.id, input.container.id);
                 }
 
                 for (const relationshipPair of relationshipPairs) {
-                    if (relationshipPair.id) void metatypeRelationshipPairRepo.deleteCached(relationshipPair.id, containerID);
+                    if (relationshipPair.id) void metatypeRelationshipPairRepo.deleteCached(relationshipPair.id, input.container.id);
                 }
 
                 for (const propResult of propertyResults) {
-                    if (propResult.isError && !update) {
-                        const rollback = await this.rollbackOntology(container)
-                            .then((result) => {
-                                return result + ' ' + propResult.error?.error;
-                            })
-                            .catch((err: string) => {
-                                return err + ' ' + propResult.error?.error;
-                            });
-                        resolve(Result.DebugFailure(rollback));
-                        return;
-                    } else if (propResult.isError) {
+                    if (propResult.isError) {
                         resolve(Result.Pass(propResult))
                     }
                 }
 
-                resolve(Result.Success(containerID));
+                if(!input.update || !input.ontology_versioning_enabled) {
+                    await ontologyRepo.setStatus(input.ontologyVersionID!, 'published')
+                } else {
+                    await ontologyRepo.setStatus(input.ontologyVersionID!, 'ready')
+                }
+
+                await containerRepo.createAlert(new ContainerAlert({
+                    containerID: input.container.id!,
+                    type: 'info' ,
+                    message: `Container ontology successfully loaded from OWL file or URL`
+                }))
+
+                resolve(Result.Success(input.container.id!));
             }
         }).catch<Result<string>>((e: string) => {
             return Promise.resolve(Result.DebugFailure(e));
         });
+    }
+
+    async rollbackVersion(containerID: string, ontologyVersionID: string, versioningEnabled: boolean, isUpdate: boolean, errorMessage?: string): Promise<void> {
+        if(isUpdate && !versioningEnabled) {
+            await ontologyRepo.setStatus(ontologyVersionID, 'published')
+        } else {
+            await ontologyRepo.setStatus(ontologyVersionID, 'error', errorMessage)
+        }
+
+        await containerRepo.createAlert(new ContainerAlert({
+            containerID,
+            type: 'error',
+            message: `Unable to import ontology using OWL file or URL. Contact administrator for more information ${JSON.stringify(errorMessage)} `
+        }))
+
+        return Promise.resolve()
     }
 }

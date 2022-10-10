@@ -50,7 +50,7 @@
               <v-checkbox
                   v-model="metatypeKey.required"
               >
-                <template v-slot:label>{{$t('createMetatypeKey.required')}} <small style="color:#ff0000" >*</small></template>
+                <template v-slot:label>{{$t('createMetatypeKey.required')}}</template>
               </v-checkbox>
               <v-textarea
                   v-model="metatypeKey.description"
@@ -87,7 +87,7 @@
 
 
               <!-- default value and options should be comboboxes when set to enumeration -->
-              <div v-if="metatypeKey.data_type === 'enumeration'" >
+              <div v-if="metatypeKey.data_type && metatypeKey.data_type === 'enumeration'" >
                 <v-combobox
                     v-model="metatypeKey.default_value"
                     multiple
@@ -96,6 +96,17 @@
                     chips
                     :label="$t('createMetatypeKey.defaultValue')"
                 ></v-combobox>
+
+                <v-combobox
+                    v-model="metatypeKey.options"
+                    :label="$t('createMetatypeKey.options')"
+                    multiple
+                    clearable
+                    deletable-chips
+                    chips
+                >
+                  <template slot="append-outer"><info-tooltip :message="$t('ontology.optionsHelp')"></info-tooltip> </template>
+                </v-combobox>
               </div>
 
               <div v-if="metatypeKey.data_type !== 'enumeration'" >
@@ -119,16 +130,9 @@
                     :label="$t('createMetatypeKey.defaultValue')"
                     :disabled="metatypeKey.data_type === 'file'"
                 ></v-text-field>
+
               </div>
 
-              <v-combobox
-                  v-model="metatypeKey.options"
-                  :label="$t('createMetatypeKey.options')"
-                  multiple
-                  clearable
-                  deletable-chips
-                  chips
-              ></v-combobox>
             </v-form>
             <p><span style="color:red">*</span> = {{$t('createMetatypeKey.requiredField')}}</p>
           </v-col>

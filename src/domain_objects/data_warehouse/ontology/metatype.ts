@@ -43,6 +43,10 @@ export default class Metatype extends BaseDomainClass {
     @IsString()
     ontology_version?: string;
 
+    @IsOptional()
+    @IsString()
+    uuid?: string;
+
     @Type(() => MetatypeKey)
     keys: MetatypeKey[] | undefined;
     // for tracking removed keys for update

@@ -2,6 +2,7 @@ import {BlobStorage, BlobUploadResponse} from './blob_storage';
 import Result from '../../common_classes/result';
 import {Readable, Writable} from 'stream';
 import PostgresAdapter from '../../data_access_layer/mappers/db_adapters/postgres/postgres';
+import File from '../../domain_objects/data_warehouse/data/file';
 const LargeObjectManager = require('pg-large-object').LargeObjectManager;
 const digestStream = require('digest-stream');
 
@@ -11,7 +12,7 @@ const digestStream = require('digest-stream');
     environment could have unintended consequences
  */
 export default class LargeObject implements BlobStorage {
-    async deleteFile(filepath: string): Promise<Result<boolean>> {
+    async deleteFile(f: File): Promise<Result<boolean>> {
         return new Promise((resolve, reject) => {
             PostgresAdapter.Instance.Pool.connect()
                 .then((client) => {
@@ -19,7 +20,7 @@ export default class LargeObject implements BlobStorage {
                         .query('BEGIN')
                         .then(() => {
                             client
-                                .query({text: 'SELECT lo_unlink($1);', values: [parseInt(filepath, 10)]})
+                                .query({text: 'SELECT lo_unlink($1);', values: [parseInt(f.adapter_file_path!, 10)]})
                                 .then(() => {
                                     client
                                         .query('COMMIT')
@@ -100,7 +101,7 @@ export default class LargeObject implements BlobStorage {
         });
     }
 
-    downloadStream(filepath: string): Promise<Readable | undefined> {
+    downloadStream(f: File): Promise<Readable | undefined> {
         return new Promise((resolve, reject) => {
             PostgresAdapter.Instance.Pool.connect()
                 .then((client) => {
@@ -109,7 +110,7 @@ export default class LargeObject implements BlobStorage {
                     client
                         .query('BEGIN')
                         .then(() => {
-                            manager.openAndReadableStream(parseInt(filepath, 10), 16384, (err: any, size: any, stream: Readable) => {
+                            manager.openAndReadableStream(parseInt(f.adapter_file_path!, 10), 16384, (err: any, size: any, stream: Readable) => {
                                 if (err) reject(err);
 
                                 stream.on('end', () => {

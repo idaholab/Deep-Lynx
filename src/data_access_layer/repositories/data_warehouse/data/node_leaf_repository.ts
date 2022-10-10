@@ -56,13 +56,35 @@ export default class NodeLeafRepository extends Repository {
         return this;
     }
 
+    metatypeUUID(operator: string, value: any) {
+        // checks for metatype uuid as origin or destination (anywhere in nodeLeaf object).
+        // Parentheses needed, otherwise the second part of the OR statement will override
+        // any previous filter logic.
+        this._rawQuery.push('(');
+        super.query('origin_metatype_uuid', operator, value);
+        this._rawQuery.push('OR');
+        super.query('destination_metatype_uuid', operator, value);
+        this._rawQuery.push(')');
+        return this;
+    }
+
     originMetatypeId(operator: string, value: any) {
+        super.query('origin_metatype_id', operator, value);
+        return this;
+    }
+
+    originMetatypeUUID(operator: string, value: any) {
         super.query('origin_metatype_id', operator, value);
         return this;
     }
 
     destinationMetatypeId(operator: string, value: any) {
         super.query('destination_metatype_id', operator, value);
+        return this;
+    }
+
+    destinationMetatypeUUID(operator: string, value: any) {
+        super.query('destination_metatype_uuid', operator, value);
         return this;
     }
 
@@ -73,6 +95,11 @@ export default class NodeLeafRepository extends Repository {
 
     relationshipId(operator: string, value: any) {
         super.query('relationship_id', operator, value);
+        return this;
+    }
+
+    relationshipUUID(operator: string, value: any) {
+        super.query('relationship_uuid', operator, value);
         return this;
     }
 

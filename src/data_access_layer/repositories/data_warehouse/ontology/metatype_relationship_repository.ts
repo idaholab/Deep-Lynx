@@ -10,7 +10,7 @@ import MetatypeRelationshipKeyMapper from '../../../mappers/data_warehouse/ontol
 import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 import {PoolClient} from 'pg';
 import {User} from '../../../../domain_objects/access_management/user';
-import GraphQLSchemaGenerator from '../../../../graphql/schema';
+import GraphQLRunner from '../../../../graphql/schema';
 
 /*
     MetatypeRelationshipRepository contains methods for persisting and retrieving a metatype relationship
@@ -320,7 +320,6 @@ export default class MetatypeRelationshipRepository extends Repository implement
         const deleted = await Cache.del(`${MetatypeRelationshipMapper.tableName}:${id}`);
         if (!deleted) Logger.error(`unable to remove metatype relationship ${id} from cache`);
 
-        GraphQLSchemaGenerator.resetSchema(containerID);
         return Promise.resolve(deleted);
     }
 
@@ -360,6 +359,11 @@ export default class MetatypeRelationshipRepository extends Repository implement
 
     deleted_at(operator: string, value?: any) {
         super.query('deleted_at', operator, value);
+        return this;
+    }
+
+    uuid(operator: string, value: any) {
+        super.query('uuid', operator, value);
         return this;
     }
 

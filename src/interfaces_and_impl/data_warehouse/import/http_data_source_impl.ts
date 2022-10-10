@@ -113,7 +113,7 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
         let lastImportTime = '';
 
         // fetch last import, include time as url param - we lock the record on
-        // retrieval because if we can successfully lock it it means that it's
+        // retrieval because if we can successfully lock it means that it's
         // not currently being processed or another export polling function is
         // acting on it
         const lastImport = await this.#importRepo.findLastAndLock(this.DataSourceRecord.id!, pollTransaction.value);
@@ -149,6 +149,7 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
         // configure and send http request
         let resp: AxiosResponse<any>;
         const httpConfig: {[key: string]: any} = {};
+        httpConfig.timeout = config.timeout;
 
         if (lastImport.value && lastImport.value.reference) httpConfig.headers.Reference = lastImport.value.reference;
 

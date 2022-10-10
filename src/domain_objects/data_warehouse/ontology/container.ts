@@ -59,7 +59,7 @@ export default class Container extends BaseDomainClass {
     @Type(() => ContainerConfig)
     config?: ContainerConfig;
 
-    constructor(input: {name: string; description: string; config?: ContainerConfig}) {
+    constructor(input: {name: string; description: string; config?: ContainerConfig; id?: string}) {
         super();
 
         // we have to do this because class-transformer doesn't know to create
@@ -68,6 +68,7 @@ export default class Container extends BaseDomainClass {
             this.name = input.name;
             this.description = input.description;
             input.config ? (this.config = input.config) : (this.config = new ContainerConfig());
+            if (input.id) this.id = input.id;
         }
     }
 
@@ -167,7 +168,7 @@ export class ContainerAlert extends NakedDomainClass {
 
     constructor(input: {
         containerID: string;
-        type: 'information' | 'warning' | 'error';
+        type: 'info' | 'warning' | 'error';
         message: string;
         createdBy?: string;
         acknowledgedAt?: Date;

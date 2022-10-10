@@ -83,6 +83,13 @@
                       required
                   ></v-text-field>
 
+                  <v-text-field
+                      v-model="httpConfig.timeout"
+                      :label="$t('createDataSource.timeout')"
+                      type="number"
+                      required
+                  ></v-text-field>
+
                   <v-checkbox
                       v-model="httpConfig.secure"
                       :label="$t('createDataSource.secure')"
@@ -125,6 +132,13 @@
                   <v-text-field
                       v-model="jazzConfig.poll_interval"
                       :label="$t('createDataSource.pollInterval')"
+                      type="number"
+                      required
+                  ></v-text-field>
+
+                  <v-text-field
+                      v-model="jazzConfig.timeout"
+                      :label="$t('createDataSource.timeout')"
                       type="number"
                       required
                   ></v-text-field>
@@ -318,7 +332,7 @@
 
               <div v-if="newDataSource.adapter_type === 'timeseries'">
                 <p><b>{{$t('createDataSource.description')}}</b></p>
-                <p>{{$t('createDataSource.timeseriesDescription')}}</p>
+                <p>{{$t('createDataSource.timeseriesDescription')}} <a :href="$t('dataMapping.tableDesignHelpLink')" target="_blank">{{$t('dataMapping.here')}}.</a></p>
 
                 <h4>{{$t('dataMapping.tableDesign')}}<info-tooltip :message="$t('dataMapping.tableDesignHelp')"></info-tooltip></h4>
                 <v-data-table
@@ -337,7 +351,7 @@
                     hide-default-footer
                 >
                   <template v-slot:[`item.column_name`]="{ item, index }">
-
+                    <span style="visibility: hidden" :id="`timeseries_column_${index}`"></span>
                     <v-text-field
                         :label="$t('dataMapping.columnName')"
                         v-model="item.column_name"
@@ -512,7 +526,9 @@
                           v-model="stopNodes"
                           :label="$t('createDataSource.stopNodes')"
                           :placeholder="$t('createDataSource.typeToAdd')"
-                      ></v-combobox>
+                      >
+                        <template slot="append-outer"><info-tooltip :message="$t('createDataSource.stopNodesHelp')"></info-tooltip></template>
+                      </v-combobox>
 
                       <v-combobox
                           style="margin-top: 10px"
@@ -523,7 +539,9 @@
                           v-model="valueNodes"
                           :label="$t('createDataSource.valueNodes')"
                           :placeholder="$t('createDataSource.typeToAdd')"
-                      ></v-combobox>
+                      >
+                        <template slot="append-outer"><info-tooltip :message="$t('createDataSource.valueNodesHelp')"></info-tooltip> </template>
+                      </v-combobox>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                 </v-expansion-panels>
@@ -752,6 +770,10 @@ export default class CreateDataSourceDialog extends Vue {
         .then((dataSource)=> {
           this.clearNewAdapter()
           this.$emit("dataSourceCreated", dataSource)
+
+          if(dataSource.adapter_type === 'timeseries') {
+            this.$emit("timeseriesSourceCreated")
+          }
 
           this.dialog = false
           this.errorMessage = ""

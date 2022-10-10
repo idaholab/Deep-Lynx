@@ -447,6 +447,11 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return this;
     }
 
+    metatypeUUID(operator: string, value: any) {
+        super.query('metatype_uuid', operator, value);
+        return this;
+    }
+
     async count(transaction?: PoolClient, queryOptions?: QueryOptions): Promise<Result<number>> {
         const results = await super.count(transaction, queryOptions);
 
@@ -499,6 +504,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
                 id: {type: 'INT64'},
                 container_id: {type: 'INT64'},
                 metatype_id: {type: 'INT64'},
+                metatype_uuid: {type: 'UTF8'},
                 metatype_name: {type: 'UTF8'},
                 properties: {type: 'JSON'},
                 original_data_id: {type: 'UTF8', optional: true},

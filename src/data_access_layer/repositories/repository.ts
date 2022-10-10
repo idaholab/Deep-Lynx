@@ -224,6 +224,15 @@ export class Repository {
                 this._rawQuery.push(`${fieldName}::${typeCast} > $${this._values.length}::${typeCast}`);
                 break;
             }
+            case '%': {
+                if (!value || value === '' || value.length === 0) break;
+                if (Array.isArray(value)) {
+                    this._rawQuery.push(format(`%s %% %L`, fieldName, value.join('|')));
+                } else {
+                    this._rawQuery.push(format(`%s %% %L`, fieldName, value));
+                }
+                break;
+            }
             case 'in': {
                 let values: any[] = [];
                 if (!Array.isArray(value)) {

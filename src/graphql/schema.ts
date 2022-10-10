@@ -14,7 +14,7 @@ import {
     GraphQLEnumValueConfig,
     GraphQLInputObjectType,
     GraphQLInt,
-    GraphQLNonNull,
+    GraphQLNonNull, graphql,
 } from 'graphql';
 import MetatypeRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
 import Result from '../common_classes/result';
@@ -34,38 +34,87 @@ import {plainToClass} from "class-transformer";
 import Node from "../domain_objects/data_warehouse/data/node";
 import {Transform} from "stream";
 import Edge from "../domain_objects/data_warehouse/data/edge";
-import Config from "../services/config";
+import pMap from "p-map";
+import gql from "graphql-tag";
+import MetatypeRelationshipPair from "../domain_objects/data_warehouse/ontology/metatype_relationship_pair";
+import {isMainThread, Worker} from "worker_threads";
 
-let GRAPHQLSCHEMA: Map<string, GraphQLSchema> = new Map<string, GraphQLSchema>();
+const GRAPHQLSCHEMA: Map<string, GraphQLSchema> = new Map<string, GraphQLSchema>();
 
 // GraphQLSchemaGenerator takes a container and generates a valid GraphQL schema for all contained metatypes. This will
 // allow users to query and filter data based on node type, the various properties that type might have, and other bits
 // of metadata.
-export default class GraphQLSchemaGenerator {
+export default class GraphQLRunner {
     #metatypeRepo: MetatypeRepository;
     #metatypePairRepo: MetatypeRelationshipPairRepository;
     #relationshipRepo: MetatypeRelationshipRepository;
     #ontologyRepo: OntologyVersionRepository;
-    #nodeRepo: NodeRepository;
-    #transformationMapper: TypeTransformationMapper;
 
     constructor() {
         this.#metatypeRepo = new MetatypeRepository();
         this.#metatypePairRepo = new MetatypeRelationshipPairRepository();
         this.#relationshipRepo = new MetatypeRelationshipRepository();
         this.#ontologyRepo = new OntologyVersionRepository();
-        this.#nodeRepo = new NodeRepository();
-        this.#transformationMapper = TypeTransformationMapper.Instance;
+    }
+
+    // RunQuery is a simple wrapper over the schema generation followed by running the actual query
+    async RunQuery(containerID: string, query: Query, options: ResolverOptions): Promise<any> {
+        if(isMainThread){
+            options.metatypes = this.metatypesFromQuery(query.query)
+            options.relationships = this.relationshipsFromQuery(query.query)
+            const isNodesQuery = this.isNodesQuery(query.query)
+
+            if(options.metatypes.length > 0 || options.relationships.length > 0 || isNodesQuery) {
+                const schema = await this.ForContainer(containerID, options)
+                if(schema.isError) return Promise.reject(schema.error)
+
+                return graphql({
+                    schema: schema.value,
+                    source: query.query,
+                    variableValues: query.variables
+                })
+            } else {
+                options.fullSchema = true;
+                const worker = new Worker(__dirname+'/schema_worker.js', {
+                    workerData: {
+                        containerID,
+                        query,
+                        options
+                    }
+                })
+
+                return new Promise((resolve, reject) => {
+                    worker.on('error', (err) => {
+                        reject(`worker error for graphql generation ${err}`)
+                    })
+
+                    worker.on('message', (message:string) => {
+                        resolve(JSON.parse(message))
+                    })
+                } )
+            }
+
+            // if we're not the main thread then this is an introspective query which needs
+            // the entire object
+        } else {
+            const schema = await this.ForContainer(containerID, options)
+            if(schema.isError) return Promise.reject(schema.error)
+
+            return graphql({
+                schema: schema.value,
+                source: query.query,
+                variableValues: query.variables
+            })
+        }
+
     }
 
     // generate requires a containerID because the schema it generates is based on a user's ontology and ontologies are
     // separated by containers
     async ForContainer(containerID: string, options: ResolverOptions): Promise<Result<GraphQLSchema>> {
-        // check for existence of cached schema, else generate the schema dynamically
-        if (GRAPHQLSCHEMA.has(containerID) && Config.cache_graphql) {
-            return Promise.resolve(Result.Success(GRAPHQLSCHEMA.get(containerID)!));
-        }
-
+        let metatypes: Metatype[] = []
+        let relationships: MetatypeRelationship[] = []
+        let metatypePairs: MetatypeRelationshipPair[] = []
         // fetch the currently published ontology if the versionID wasn't provided
         if (!options.ontologyVersionID) {
             const ontResults = await this.#ontologyRepo
@@ -81,42 +130,90 @@ export default class GraphQLSchemaGenerator {
             }
         }
 
-        // fetch all metatypes for the container, with their keys
-        const metatypeResults = await this.#metatypeRepo
-            .where()
-            .containerID('eq', containerID)
-            .and()
-            .ontologyVersion('eq', options.ontologyVersionID)
-            .list(true, {sortBy: 'id'});
-        if (metatypeResults.isError) {
-            return Promise.resolve(Result.Pass(metatypeResults));
+        let metatypeIDs: string[] = []
+        if(options.fullSchema || (options.metatypes && options.metatypes.length > 0)) {
+            let metatypeRepo = this.#metatypeRepo
+                .where()
+                .containerID('eq', containerID)
+                .and()
+                .ontologyVersion('eq', options.ontologyVersionID)
+
+            if(options.metatypes && options.metatypes.length > 0) {
+                metatypeRepo = metatypeRepo.and().name("%", options.metatypes)
+            }
+
+            const metatypeResults = await metatypeRepo.list(true, {sortBy: 'id'});
+            if (metatypeResults.isError) {
+                return Promise.resolve(Result.Pass(metatypeResults));
+            }
+
+            metatypes= metatypeResults.value
+            metatypeIDs = metatypeResults.value.map((m) => m.id!);
         }
 
         // fetch all metatype relationship pairs - used for _relationship queries.
-        const metatypePairResults = await this.#metatypePairRepo
-            .where()
-            .containerID('eq', containerID)
-            .and()
-            .ontologyVersion('eq', options.ontologyVersionID)
-            .list();
-        if (metatypePairResults.isError) {
-            return Promise.resolve(Result.Pass(metatypePairResults));
+        if(metatypeIDs.length > 0) {
+            const metatypePairResults = await this.#metatypePairRepo
+                .where()
+                .containerID('eq', containerID)
+                .and()
+                .ontologyVersion('eq', options.ontologyVersionID)
+                .and()
+                .origin_metatype_id('in', metatypeIDs)
+                .or()
+                .containerID('eq', containerID)
+                .and()
+                .ontologyVersion('eq', options.ontologyVersionID)
+                .and()
+                .destination_metatype_id('in', metatypeIDs)
+                .list();
+
+            if (metatypePairResults.isError) {
+                return Promise.resolve(Result.Pass(metatypePairResults));
+            }
+
+            metatypePairs = metatypePairResults.value
+        } else if (options.fullSchema) {
+            const metatypePairResults = await this.#metatypePairRepo
+                .where()
+                .containerID('eq', containerID)
+                .and()
+                .ontologyVersion('eq', options.ontologyVersionID)
+                .list();
+
+            if (metatypePairResults.isError) {
+                return Promise.resolve(Result.Pass(metatypePairResults));
+            }
+
+            metatypePairs = metatypePairResults.value
         }
 
-        // fetch all relationship types. Used for relationship wrapper queries.
-        const relationshipResults = await this.#relationshipRepo
-            .where()
-            .containerID('eq', containerID)
-            .and()
-            .ontologyVersion('eq', options.ontologyVersionID)
-            .list(true);
-        if (relationshipResults.isError) {
-            return Promise.resolve(Result.Pass(relationshipResults));
+
+        if(options.fullSchema || (options.relationships && options.relationships.length > 0)) {
+            // fetch all relationship types. Used for relationship wrapper queries.
+            let relationshipRepo = this.#relationshipRepo
+                .where()
+                .containerID('eq', containerID)
+                .and()
+                .ontologyVersion('eq', options.ontologyVersionID)
+
+            if(options.relationships && options.relationships.length > 0) {
+                relationshipRepo = relationshipRepo.and()
+                    .name("%", options.relationships)
+            }
+
+            const relationshipResults = await relationshipRepo.list(true);
+            if (relationshipResults.isError) {
+                return Promise.resolve(Result.Pass(relationshipResults));
+            }
+
+            relationships = relationshipResults.value
         }
+
 
         // used for querying edges based on node (see input._relationship resolver)
         const metatypePairObjects: {[key: string]: any} = {};
-        metatypePairResults.value.forEach((pair) => {
+        metatypePairs.forEach((pair) => {
             const origin = stringToValidPropertyName(pair.origin_metatype_name!);
             const rel = stringToValidPropertyName(pair.relationship_name!);
             const dest = stringToValidPropertyName(pair.destination_metatype_name!);
@@ -181,6 +278,13 @@ export default class GraphQLSchemaGenerator {
                         value: {type: new GraphQLList(GraphQLString)}
                     }
                 })},
+                metatype_uuid: {type: new GraphQLInputObjectType({
+                    name: "record_input_metatype_uuid",
+                    fields: {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLString)}
+                    }
+                })},
                 sortBy: {type: GraphQLString},
                 sortDesc: {type: GraphQLBoolean},
                 sortProp: {type: GraphQLBoolean},
@@ -199,6 +303,7 @@ export default class GraphQLSchemaGenerator {
                 import_id: {type: GraphQLString},
                 metatype_id: {type: GraphQLString},
                 metatype_name: {type: GraphQLString},
+                metatype_uuid: {type: GraphQLString},
                 created_at: {type: GraphQLString},
                 deleted_at: {type: GraphQLString},
                 created_by: {type: GraphQLString},
@@ -224,7 +329,8 @@ export default class GraphQLSchemaGenerator {
             },
         });
 
-        metatypeResults.value.forEach((metatype) => {
+
+        const metatypeMapper = (metatype: Metatype) => {
             if (!metatype.keys || metatype.keys.length === 0) return;
 
             // the following 4 input/object types are used for querying or introspection on _relationship
@@ -299,7 +405,7 @@ export default class GraphQLSchemaGenerator {
                 },
             });
 
-            metatypeGraphQLObjects[stringToValidPropertyName(metatype.name)] = {
+            return [stringToValidPropertyName(metatype.name), {
                 args: {
                     ...this.inputFieldsForMetatype(metatype),
                     _record: {type: recordInputType},
@@ -394,8 +500,18 @@ export default class GraphQLSchemaGenerator {
                         }),
                     ),
                 resolve: this.resolverForMetatype(containerID, metatype, options),
-            };
-        });
+            }];
+        };
+        const results = await pMap(metatypes, metatypeMapper, {concurrency: 10})
+
+        results.forEach((result) => {
+            if(result) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+                metatypeGraphQLObjects[result[0]] = result[1]
+            }
+
+        })
 
         const relationshipGraphQLObjects: {[key: string]: any} = {};
 
@@ -459,6 +575,27 @@ export default class GraphQLSchemaGenerator {
                         value: {type: new GraphQLList(GraphQLString)}
                     }
                 })},
+                relationship_pair_uuid: {type: new GraphQLInputObjectType({
+                    name: "edge_record_relationship_pair_uuid",
+                    fields: {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLString)}
+                    }
+                })},
+                origin_metatype_uuid: {type: new GraphQLInputObjectType({
+                    name: "edge_record_origin_metatype_uuid",
+                    fields: {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLString)}
+                    }
+                })},
+                destination_metatype_uuid: {type: new GraphQLInputObjectType({
+                    name: "edge_record_destination_metatype_uuid",
+                    fields: {
+                        operator: {type: GraphQLString},
+                        value: {type: new GraphQLList(GraphQLString)}
+                    }
+                })},
                 limit: {type: GraphQLInt, defaultValue: 10000},
                 page: {type: GraphQLInt, defaultValue: 1},
             },
@@ -473,9 +610,12 @@ export default class GraphQLSchemaGenerator {
                 import_id: {type: GraphQLString},
                 origin_id: {type: GraphQLString},
                 origin_metatype_id: {type: GraphQLString},
+                origin_metatype_uuid: {type: GraphQLString},
                 destination_id: {type: GraphQLString},
                 destination_metatype_id: {type: GraphQLString},
+                destination_metatype_uuid: {type: GraphQLString},
                 relationship_name: {type: GraphQLString},
+                relationship_pair_uuid: {type: GraphQLString},
                 created_at: {type: GraphQLString},
                 created_by: {type: GraphQLString},
                 modified_at: {type: GraphQLString},
@@ -486,8 +626,8 @@ export default class GraphQLSchemaGenerator {
             },
         });
 
-        relationshipResults.value.forEach((relationship) => {
-            relationshipGraphQLObjects[stringToValidPropertyName(relationship.name)] = {
+        const relationshipMapper = (relationship: MetatypeRelationship) => {
+            return [stringToValidPropertyName(relationship.name), {
                 args: {
                     ...this.inputFieldsForRelationship(relationship),
                     _record: {type: edgeRecordInputType},
@@ -569,8 +709,17 @@ export default class GraphQLSchemaGenerator {
                     }),
                 ),
                 resolve: this.resolverForRelationships(containerID, relationship, options),
-            };
-        });
+            }];
+        };
+
+        const rResults= await pMap(relationships, relationshipMapper, {concurrency: 10})
+        rResults.forEach((result) => {
+            if(result) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+                relationshipGraphQLObjects[result[0]] = result[1]
+            }
+        })
 
         const metatypeObjects = new GraphQLObjectType({
             name: 'metatypes',
@@ -588,10 +737,13 @@ export default class GraphQLSchemaGenerator {
             fields: {
                 name: {type: GraphQLString},
                 id: {type: GraphQLString},
+                uuid: {type: GraphQLString},
                 origin_name: {type: GraphQLString},
                 origin_id: {type: GraphQLString},
+                origin_uuid: {type: GraphQLString},
                 destination_name: {type: GraphQLString},
                 destination_id: {type: GraphQLString},
+                destination_uuid: {type: GraphQLString},
             },
         });
 
@@ -600,6 +752,7 @@ export default class GraphQLSchemaGenerator {
             fields: {
                 name: {type: GraphQLString},
                 id: {type: GraphQLString},
+                uuid: {type: GraphQLString},
             },
         });
 
@@ -625,6 +778,7 @@ export default class GraphQLSchemaGenerator {
                     origin_id: {type: GraphQLString},
                     origin_metatype_name: {type: GraphQLString},
                     origin_metatype_id: {type: GraphQLString},
+                    origin_metatype_uuid: {type: GraphQLString},
                     origin_data_source: {type: GraphQLString},
                     origin_metadata: {type: GraphQLJSON},
                     origin_created_by: {type: GraphQLString},
@@ -635,7 +789,9 @@ export default class GraphQLSchemaGenerator {
                     edge_id: {type: GraphQLString},
                     relationship_name: {type: GraphQLString},
                     relationship_pair_id: {type: GraphQLString},
+                    relationship_pair_uuid: {type: GraphQLString},
                     relationship_id: {type: GraphQLString},
+                    relationship_uuid: {type: GraphQLString},
                     edge_data_source: {type: GraphQLString},
                     edge_metadata: {type: GraphQLJSON},
                     edge_created_by: {type: GraphQLString},
@@ -646,6 +802,7 @@ export default class GraphQLSchemaGenerator {
                     destination_id: {type: GraphQLString},
                     destination_metatype_name: {type: GraphQLString},
                     destination_metatype_id: {type: GraphQLString},
+                    destination_metatype_uuid: {type: GraphQLString},
                     destination_data_source: {type: GraphQLString},
                     destination_metadata: {type: GraphQLJSON},
                     destination_created_by: {type: GraphQLString},
@@ -707,6 +864,13 @@ export default class GraphQLSchemaGenerator {
                     value: {type: new GraphQLList(GraphQLJSON)}
                 }
             })},
+            metatype_uuid: {type: new GraphQLInputObjectType({
+                name: "node_input_metatype_uuid",
+                fields : {
+                    operator: {type: GraphQLString},
+                    value: {type: new GraphQLList(GraphQLJSON)}
+                }
+            })},
             metatype_name: {type: new GraphQLInputObjectType({
                 name: "node_input_metatype_name",
                 fields : {
@@ -756,20 +920,20 @@ export default class GraphQLSchemaGenerator {
             resolve: this.resolverForNodes(containerID, options) as any
         };
 
-        GRAPHQLSCHEMA.set(containerID, new GraphQLSchema({
+        const schema = new GraphQLSchema({
             query: new GraphQLObjectType({
                 name: 'Query',
-                fields,
-            }),
-        }));
+                fields
+            })
+        })
 
-        return Promise.resolve(Result.Success(GRAPHQLSCHEMA.get(containerID)!));
+        return Promise.resolve(Result.Success(schema));
     }
 
     resolverForMetatype(containerID: string, metatype: Metatype, resolverOptions?: ResolverOptions): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
             let repo = new NodeRepository();
-            repo = repo.where().containerID('eq', containerID).and().metatypeID('eq', metatype.id);
+            repo = repo.where().containerID('eq', containerID).and().metatypeUUID('eq', metatype.uuid);
 
             // you might notice that metatype_id and metatype_name are missing as filters - these are not
             // needed as we've already dictated what metatype to look for based on the query itself
@@ -821,6 +985,15 @@ export default class GraphQLSchemaGenerator {
 
                     repo = repo.and().modifiedAt(input._record.modified_at.operator, input._record.modified_at.value);
                 }
+
+                // metatype_id can be used to filter on a specific ontolgy version's metatype ID instead of global metatype UUID
+                if (input._record.metatype_id) {
+                    if(Array.isArray(input._record.metatype_id.value) && input._record.metatype_id.value.length === 1) {
+                        input._record.metatype_id.value = input._record.metatype_id.value[0];
+                    }
+
+                    repo = repo.and().metatypeID(input._record.metatype_id.operator, input._record.metatype_id.value);
+                }
             }
 
             // variable to store results of edge DB call if _relationship input
@@ -863,6 +1036,7 @@ export default class GraphQLSchemaGenerator {
                     import_id: {type: 'INT64', optional: true},
                     metatype_id: {type: 'INT64'},
                     metatype_name: {type: 'UTF8'},
+                    metatype_uuid: {type: 'UTF8'},
                     metadata: {type: 'JSON', optional: true},
                     created_at: {type: 'TIMESTAMP_MILLIS'},
                     created_by: {type: 'UTF8'},
@@ -930,6 +1104,7 @@ export default class GraphQLSchemaGenerator {
                             original_id: node.original_data_id,
                             import_id: node.import_data_id,
                             metatype_id: node.metatype_id,
+                            metatype_uuid: node.metatype_uuid,
                             metatype_name: node.metatype_name,
                             metadata: node.metadata,
                             created_at: node.created_at?.toISOString(),
@@ -1002,6 +1177,7 @@ export default class GraphQLSchemaGenerator {
                                         original_id: node.original_data_id,
                                         import_id: node.import_data_id,
                                         metatype_id: node.metatype_id,
+                                        metatype_uuid: node.metatype_uuid,
                                         metatype_name: node.metatype_name,
                                         metadata: node.metadata,
                                         created_at: node.created_at?.toISOString(),
@@ -1052,6 +1228,14 @@ export default class GraphQLSchemaGenerator {
                 }
 
                 repo = repo.and().metatypeID(input.metatype_id.operator, input.metatype_id.value);
+            }
+
+            if (input.metatype_uuid) {
+                if(Array.isArray(input.metatype_uuid.value) && input.metatype_uuid.value.length === 1) {
+                    input.metatype_uuid.value = input.metatype_uuid.value[0];
+                }
+
+                repo = repo.and().metatypeUUID(input.metatype_uuid.operator, input.metatype_uuid.value);
             }
 
             if (input.metatype_name) {
@@ -1128,6 +1312,7 @@ export default class GraphQLSchemaGenerator {
                         import_id: node.import_data_id,
                         metatype_id: node.metatype_id,
                         metatype_name: node.metatype_name,
+                        metatype_uuid: node.metatype_uuid,
                         metadata: node.metadata,
                         created_at: node.created_at?.toISOString(),
                         created_by: node.created_by,
@@ -1196,6 +1381,7 @@ export default class GraphQLSchemaGenerator {
                                     import_id: node.import_data_id,
                                     metatype_id: node.metatype_id,
                                     metatype_name: node.metatype_name,
+                                    metatype_uuid: node.metatype_uuid,
                                     metadata: node.metadata,
                                     created_at: node.created_at?.toISOString(),
                                     created_by: node.created_by,
@@ -1360,6 +1546,30 @@ export default class GraphQLSchemaGenerator {
 
                     repo = repo.and().destination_node_id(input._record.destination_id.operator, input._record.destination_id.value);
                 }
+
+                if (input._record.relationship_pair_uuid) {
+                    if(Array.isArray(input._record.relationship_pair_uuid.value) && input._record.relationship_pair_uuid.value.length === 1) {
+                        input._record.relationship_pair_uuid.value = input._record.relationship_pair_uuid.value[0];
+                    }
+
+                    repo = repo.and().metatypeRelationshipUUID(input._record.relationship_pair_uuid.operator, input._record.relationship_pair_uuid.value);
+                }
+
+                if (input._record.destination_metatype_uuid) {
+                    if(Array.isArray(input._record.destination_metatype_uuid.value) && input._record.destination_metatype_uuid.value.length === 1) {
+                        input._record.destination_metatype_uuid.value = input._record.destination_metatype_uuid.value[0];
+                    }
+
+                    repo = repo.and().destinationMetatypeUUID(input._record.destination_metatype_uuid.operator, input._record.destination_metatype_uuid.value);
+                }
+
+                if (input._record.origin_metatype_uuid) {
+                    if(Array.isArray(input._record.origin_metatype_uuid.value) && input._record.origin_metatype_uuid.value.length === 1) {
+                        input._record.origin_metatype_uuid.value = input._record.origin_metatype_uuid.value[0];
+                    }
+
+                    repo = repo.and().originMetatypeUUID(input._record.origin_metatype_uuid.operator, input._record.origin_metatype_uuid.value);
+                }
             }
 
             // we must map out what the graphql refers to a relationship's keys are
@@ -1411,9 +1621,12 @@ export default class GraphQLSchemaGenerator {
                             import_id: edge.import_data_id,
                             origin_id: edge.origin_id,
                             origin_metatype_id: edge.origin_metatype_id,
+                            origin_metatype_uuid: edge.origin_metatype_uuid,
                             destination_id: edge.destination_id,
                             destination_metatype_id: edge.destination_metatype_id,
+                            destination_metatype_uuid: edge.destination_metatype_uuid,
                             relationship_name: edge.metatype_relationship_name,
+                            relationship_pair_uuid: edge.metatype_relationship_uuid,
                             metadata: edge.metadata,
                             created_at: edge.created_at?.toISOString(),
                             created_by: edge.created_by,
@@ -1480,9 +1693,12 @@ export default class GraphQLSchemaGenerator {
                                         import_id: edge.import_data_id,
                                         origin_id: edge.origin_id,
                                         origin_metatype_id: edge.origin_metatype_id,
+                                        origin_metatype_uuid: edge.origin_metatype_uuid,
                                         destination_id: edge.destination_id,
                                         destination_metatype_id: edge.destination_metatype_id,
+                                        destination_metatype_uuid: edge.destination_metatype_uuid,
                                         relationship_name: edge.metatype_relationship_name,
+                                        relationship_pair_uuid: edge.metatype_relationship_uuid,
                                         metadata: edge.metadata,
                                         created_at: edge.created_at?.toISOString(),
                                         created_by: edge.created_by,
@@ -1597,6 +1813,9 @@ export default class GraphQLSchemaGenerator {
                 } else if (input.edge_type.id) {
                     const query = this.breakQuery(input.edge_type.id);
                     repo = repo.and().relationshipId(query[0], query[1]);
+                } else if (input.edge_type.uuid) {
+                    const query = this.breakQuery(input.edge_type.uuid);
+                    repo = repo.and().relationshipUUID(query[0], query[1]);
                 }
             }
 
@@ -1607,6 +1826,9 @@ export default class GraphQLSchemaGenerator {
                 } else if (input.node_type.name) {
                     const query = this.breakQuery(input.node_type.name);
                     repo = repo.and().metatypeName(query[0], query[1]);
+                } else if (input.node_type.uuid) {
+                    const query = this.breakQuery(input.node_type.uuid);
+                    repo = repo.and().metatypeUUID(query[0], query[1]);
                 }
 
                 if (input.node_type.origin_id) {
@@ -1615,6 +1837,9 @@ export default class GraphQLSchemaGenerator {
                 } else if (input.node_type.origin_name) {
                     const query = this.breakQuery(input.node_type.origin_name);
                     repo = repo.and().originMetatypeName(query[0], query[1]);
+                } else if (input.node_type.origin_uuid) {
+                    const query = this.breakQuery(input.node_type.origin_uuid);
+                    repo = repo.and().originMetatypeUUID(query[0], query[1]);
                 }
 
                 if (input.node_type.destination_id) {
@@ -1623,6 +1848,9 @@ export default class GraphQLSchemaGenerator {
                 } else if (input.node_type.destination_name) {
                     const query = this.breakQuery(input.node_type.destination_name);
                     repo = repo.and().destinationMetatypeName(query[0], query[1]);
+                } else if (input.node_type.destination_uuid) {
+                    const query = this.breakQuery(input.node_type.destination_uuid);
+                    repo = repo.and().destinationMetatypeUUID(query[0], query[1]);
                 }
             }
 
@@ -1687,18 +1915,144 @@ export default class GraphQLSchemaGenerator {
         return [operator as string, parts.join(' ')];
     }
 
-    public static resetSchema(containerID?: string): void {
-        if(containerID) {
-            GRAPHQLSCHEMA.delete(containerID)
-            return
+    // metatypeFromQuery breaks down a query, parsing it into an object, and then checking that object to see if there
+    // are metatypes it needs to build into the schema
+    private metatypesFromQuery(query: string | undefined): string[] {
+        if(!query) return [];
+        const results: string[] = [];
+
+        const search = (root: {[key: string]: any} | undefined, r: string[]) => {
+            if(!root) return r;
+            // if root object or non-field send in the definitions
+            if(root.kind === 'Document') {
+                root.definitions.forEach((def: any) => search(def, r))
+            }
+
+            if(root.kind === 'OperationDefinition') {
+                search(root.selectionSet, r)
+            }
+
+            if(root.kind === 'Field' && root.name?.value === 'metatypes') {
+                search(root.selectionSet, r)
+            }
+
+            if(root.kind === 'SelectionSet') {
+                root.selections?.forEach((selection: {[key: string]: any}) => {
+                    if(selection.name?.value === 'metatypes') {
+                        search(selection.selectionSet, r)
+                    } else if (selection.name.value === '__type') {
+                        selection.arguments.forEach((argument: any) => {
+                            if (argument.name.value === 'name') {
+                                search(argument, r)
+                            }
+                        })
+                    } else if(selection.name?.value !== '__schema' && selection.name?.value !== 'relationships') {
+                        if(selection.name?.value) r.push(selection.name.value);
+                    }
+                })
+            }
+
+            if(root.kind === 'Argument') {
+                if(root.value.value){r.push(root.value.value)};
+            }
+
+            return r
         }
 
-        GRAPHQLSCHEMA = new Map<string, GraphQLSchema>()
+        return search(gql(query),results)
     }
+
+    private relationshipsFromQuery(query: string | undefined): string[] {
+        if(!query) return [];
+        const results: string[] = [];
+
+        const search = (root: {[key: string]: any} | undefined, r: string[]) => {
+            if(!root) return r;
+            // if root object or non-field send in the definitions
+            if(root.kind === 'Document') {
+                root.definitions.forEach((def: any) => search(def, r))
+            }
+
+            if(root.kind === 'OperationDefinition') {
+                search(root.selectionSet, r)
+            }
+
+            if(root.kind === 'Field' && root.name?.value === 'relationships') {
+                search(root.selectionSet, r)
+            }
+
+            if(root.kind === 'SelectionSet') {
+                root.selections?.forEach((selection: {[key: string]: any}) => {
+                    if(selection.name?.value === 'relationships') {
+                        search(selection.selectionSet, r)
+                    } else if (selection.name.value === '__type') {
+                        selection.arguments.forEach((argument: any) => {
+                            if (argument.name.value === 'name') {
+                                search(argument, r)
+                            }
+                        })
+                    } else if(selection.name?.value !== '__schema' && selection.name?.value !== 'metatypes') {
+                        if(selection.name?.value) r.push(selection.name.value);
+                    }
+                })
+            }
+
+            if(root.kind === 'Argument') {
+                if(root.value.value){r.push(root.value.value)};
+            }
+
+            return r
+        }
+
+        return search(gql(query),results)
+    }
+
+    private isNodesQuery(query: string | undefined): boolean {
+        if(!query) return false;
+        const results: boolean[] = [];
+
+        const search = (root: {[key: string]: any} | undefined, r: boolean[]) => {
+            if(!root) return r;
+            // if root object or non-field send in the definitions
+            if(root.kind === 'Document') {
+                root.definitions.forEach((def: any) => search(def, r))
+            }
+
+            if(root.kind === 'OperationDefinition') {
+                search(root.selectionSet, r)
+            }
+
+            if(root.kind === 'SelectionSet') {
+                root.selections?.forEach((selection: any) => {
+                    if(selection.name?.value === 'nodes') {
+                        r.push(true)
+                    }
+                })
+            }
+
+            if(root.kind === 'Field' && root.name?.value === 'nodes') {
+                r.push(true)
+            }
+
+            return r
+        }
+
+        // if search has any results it indicates we found nodes in the query
+        return search(gql(query), results).length > 0
+    }
+}
+
+export type Query = {
+    query: string;
+    variables?: any
 }
 
 export type ResolverOptions = {
     ontologyVersionID?: string;
     returnFile?: boolean;
     returnFileType?: 'json' | 'csv' | 'parquet' | string;
+    query?: string; // passing in the query allows us to pare down the schema we generate
+    metatypes?: string[] // metatype names to search
+    relationships?: string[] // relationship names to search
+    fullSchema?: boolean;
 }

@@ -3,6 +3,8 @@ import Result from '../../common_classes/result';
 import { Readable } from 'stream';
 import { BlobServiceClient, ContainerClient, RestError } from '@azure/storage-blob';
 import Logger from './../logger';
+import File from '../../domain_objects/data_warehouse/data/file';
+const short = require('short-uuid');
 const digestStream = require('digest-stream');
 
 /*
@@ -17,9 +19,14 @@ export default class AzureBlobImpl implements BlobStorage {
         return 'azure_blob';
     }
 
-    async deleteFile(filepath: string): Promise<Result<boolean>> {
-        const blobClient = this._ContainerClient.getBlockBlobClient(filepath);
-
+    async deleteFile(f: File): Promise<Result<boolean>> {
+        let blobClient;
+        if (f.short_uuid) {
+            blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
+        } else {
+            blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}`);
+        }
+        
         const response = await blobClient.delete();
         if (response.errorCode) {
             Logger.error(`error deleting file in azure blob storage ${response.errorCode}`);
@@ -30,7 +37,8 @@ export default class AzureBlobImpl implements BlobStorage {
     }
 
     async uploadPipe(filepath: string, filename: string, stream: Readable | null, contentType: string, encoding: string): Promise<Result<BlobUploadResponse>> {
-        const blobClient = this._ContainerClient.getBlockBlobClient(`${filepath}${filename}`);
+        const shortUUID = short.generate();
+        const blobClient = this._ContainerClient.getBlockBlobClient(`${filepath}${filename}${shortUUID}`);
 
         if (stream) {
             let md5hash = '';
@@ -66,7 +74,8 @@ export default class AzureBlobImpl implements BlobStorage {
                     size: dataLength / 1000,
                     md5hash,
                     metadata: {},
-                    adapter_name: this.name()
+                    adapter_name: this.name(),
+                    shortUUID
                 })
             );
         }
@@ -94,8 +103,13 @@ export default class AzureBlobImpl implements BlobStorage {
             });
     }
 
-    async downloadStream(filepath: string): Promise<Readable | undefined> {
-        const blobClient = this._ContainerClient.getBlockBlobClient(`${filepath}`);
+    async downloadStream(f: File): Promise<Readable | undefined> {
+        let blobClient;
+        if (f.short_uuid) {
+            blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}${f.short_uuid}`);
+        } else {
+            blobClient = this._ContainerClient.getBlockBlobClient(`${f.adapter_file_path}${f.file_name}`);
+        }
         const download = await blobClient.download(0);
 
         return Promise.resolve(download.readableStreamBody as Readable);

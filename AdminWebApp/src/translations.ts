@@ -2,9 +2,13 @@ export default {
     en: {
         beta: 'BETA',
         ontology: {
+            optionsHelp: 'This value represents the valid options if the enumeration data type is choosen. This is not required on any other data type.',
             propertyName: 'This is the JSON compliant property name your data will be stored under inside the database schema.',
         },
         home: {
+            upload: 'Upload',
+            deleteUser: 'Remove User From Container',
+            editUser: 'Edit User Roles In Container',
             bugs: 'Ran into some bugs?',
             contactUs: 'Tell Us!',
             beta: 'beta',
@@ -28,8 +32,8 @@ export default {
             import: 'Import',
             imported: 'Data Imported',
             data: 'Data',
-            dataQuery: 'Data Query',
-            dataQueryDescription: 'Query Processed Data',
+            dataQuery: 'Graph',
+            dataQueryDescription: 'Query and Edit Data',
             dataSources: 'Data Sources',
             dataSourcesDescription: 'Configure Data Import Sources',
             dataExplorer: 'Explorer',
@@ -80,6 +84,8 @@ export default {
             inviteUserCardLinkText: 'Manage Users',
             ontologyVersioning: 'Ontology Versioning',
             ontologyVersioningDescription: 'Manage Version and Changelists',
+            ontologyVersioningLongDescription:
+                "Use this page to manage your Ontology's versioning and changelist system. You can browse your published versions, as well as manage pending and approved changelists for publishing.",
             serviceUsers: 'Application API Keys',
             serviceUsersDescription: 'External Application Access',
         },
@@ -116,17 +122,20 @@ export default {
             return: 'return',
         },
         dataQuery: {
+            deleteNode: 'Delete Node',
+            deleteEdge: 'Delete Edge',
             nodeFiles: 'Files',
             nodeTimeseries: 'Timeseries Data',
             name: 'Name',
             value: 'Value',
             dataQuery: 'Data Query',
             results: 'Results',
-            queryData: 'Query Processed Data',
+            queryData: 'Query and Edit Data',
             list: 'List',
             json: 'JSON',
             graph: 'Graph',
             nodeInformation: 'Node Information',
+            edgeInformation: 'Edge Information',
             selectNode: 'Select Node for more information',
             noResults: 'No Results',
             id: 'ID',
@@ -136,8 +145,11 @@ export default {
             copyID: 'Click to Copy ',
             createdAt: 'Created At',
             nodeID: 'ID',
+            edgeID: 'ID',
             nodeType: 'Type',
             nodeProperties: 'Properties',
+            edgeProperties: 'Properties',
+            relType: 'Relationship',
         },
         nodeFiles: {
             id: 'ID',
@@ -606,6 +618,7 @@ export default {
             archived: 'archived',
         },
         createDataSource: {
+            timeout: 'Timeout (ms)',
             value: 'Value',
             key: 'Key',
             chunkInterval: 'Chunk Interval',
@@ -625,7 +638,9 @@ export default {
             jazzDescription: 'This is the Jazz/Doors Next Generation data source. This allows you to pull in artifacts automatically from the Jazz/DNG server.',
             avevaDescription: 'This is a wrapper over the standard data source, but contains Aveva Everything3D specific configuration values.',
             timeseriesDescription:
-                'This data source is built specifically for timeseries data. Users must design a timeseries data table and set attachment parameters prior to successful creation. Users upload timeseries data directly to this source, bypassing the standard type mapping system.',
+                'This data source is built specifically for timeseries data. Users must design a timeseries data table and set attachment parameters prior to successful creation. Users upload timeseries data directly to this source, bypassing the standard type mapping system. You can find more information and help ',
+            here: 'here',
+            tableDesignHelpLink: 'https://gitlab.software.inl.gov/b650/Deep-Lynx/-/wikis/Timeseries-Data-Sources',
             newDataSource: 'New Data Source',
             formTitle: 'Create New Data Source',
             name: 'Name',
@@ -649,8 +664,12 @@ export default {
             typeToAdd: 'Type and hit "Enter" to add entry',
             ifcElementTypes: 'Element Types for IFC Generation',
             ifcSettingsTitle: 'IFC Settings',
-            stopNodes: 'Stop Nodes',
-            valueNodes: 'Value Nodes',
+            stopNodes: 'Ignored Properties',
+            stopNodesHelp:
+                'Ignored Properties tell DeepLynx what JSON properties, CSV columns, or XML types to ignore when creating the type mapping. For example if you have a two identical payloads, but one has an additional field, you could tell DeepLynx to ignore the additional field and the resulting type mapping would continue to match.',
+            valueNodes: 'Property Value vs. Type',
+            valueNodesHelp:
+                "Property Value vs. Type tells DeepLynx that a JSON property, CSV column, or XML type should have it's value examined as well as examining its type. This allows you to send in identical payload structures but create a different type mapping depending on the value of a property. ",
             dangerZone: 'Advanced Settings',
 
             dangerZoneWarning:
@@ -676,6 +695,7 @@ export default {
                 'This controls how many days Deep Lynx will retain the raw data you import. A value of 0 will retain no raw data after processing and a value of -1 will retain raw data indefinitely.',
         },
         editDataSource: {
+            timeout: 'Timeout (ms)',
             aveva: 'Aveva',
             jazz: 'Jazz',
             http: 'HTTP Poller',
@@ -804,6 +824,7 @@ export default {
                 'Data may have already been generated using this Transformation. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Transformation. If you would like to keep this data and orphan it, please uncheck the box below.',
         },
         dataMapping: {
+            here: 'here',
             mappingHelp:
                 'Mapping allows you to specify what kind of record this transformation should produce. Each transformation can produce either a relationship or node. Further information will be requested as you work through the form.',
             nodeAttachmentParameters: 'Node Attachment Parameters - optional',
@@ -1244,6 +1265,7 @@ export default {
             requiredField: 'Required Field',
         },
         queryBuilder: {
+            limitOntology: 'Limit results to current Ontology version',
             recordLimit: 'Limit',
             previousQueries: 'Previous Queries',
             queryBuilder: 'Query Builder',

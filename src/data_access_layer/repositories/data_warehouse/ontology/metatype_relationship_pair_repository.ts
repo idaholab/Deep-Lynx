@@ -12,7 +12,7 @@ import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatyp
 import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
 import {User} from '../../../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
-import GraphQLSchemaGenerator from '../../../../graphql/schema';
+import GraphQLRunner from '../../../../graphql/schema';
 
 /*
     MetatypeRelationshipPair contains methods for persisting and retrieving a metatype relationship pair
@@ -164,7 +164,7 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
 
             const results = await Promise.all(operations);
             results.forEach((result) => {
-                if (result.isError) errors.push(result.error!.error);
+                if (result.isError) errors.push(result.error.error);
             });
 
             if (errors.length > 0) return Promise.resolve(Result.Failure(`one or more relationships failed to save: ${errors.join(',')}`));
@@ -290,7 +290,6 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         const deleted = await Cache.del(`${MetatypeRelationshipPairMapper.tableName}:${id}`);
         if (!deleted) Logger.error(`unable to remove metatype relationship pair ${id} from cache`);
 
-        GraphQLSchemaGenerator.resetSchema(containerID);
         return Promise.resolve(deleted);
     }
 
@@ -375,6 +374,11 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
 
     deleted_at(operator: string, value?: any) {
         super.query('metatype_relationship_pairs.deleted_at', operator, value);
+        return this;
+    }
+
+    uuid(operator: string, value: any) {
+        super.query('metatype_relationship_pairs.uuid', operator, value);
         return this;
     }
 

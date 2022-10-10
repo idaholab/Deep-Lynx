@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-for-in-array */
 import RepositoryInterface, {QueryOptions, Repository} from '../../repository';
-import TypeMapping from '../../../../domain_objects/data_warehouse/etl/type_mapping';
+import TypeMapping, {TypeMappingComparison} from '../../../../domain_objects/data_warehouse/etl/type_mapping';
 import TypeMappingMapper from '../../../mappers/data_warehouse/etl/type_mapping_mapper';
 import Result from '../../../../common_classes/result';
 import {PoolClient} from 'pg';
@@ -302,6 +302,12 @@ export default class TypeMappingRepository extends Repository implements Reposit
         if (!deleted) Logger.error(`unable to remove type mapping ${t.id} from cache`);
 
         return Promise.resolve(deleted);
+    }
+
+    // copy transformations allows us to quickly copy the transformations from one mapping to another, typically used
+    // by the UI to facilitate easy management of type mappings
+    copyTransformations(u: User, sourceID: string, targetID: string): Promise<Result<boolean>> {
+        return this.#mapper.CopyTransformations(u.id!, sourceID, targetID);
     }
 
     // importToDataSource will take type mappings transfer them and their transformations to a different data source

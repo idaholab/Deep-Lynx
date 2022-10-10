@@ -80,6 +80,13 @@
                       :rules="[v => !!v || 'Item is required']"
                   ></v-text-field>
 
+                  <v-text-field
+                      v-model="dataSource.config.timeout"
+                      :label="$t('editDataSource.timeout')"
+                      type="number"
+                      :rules="[v => !!v || 'Item is required']"
+                  ></v-text-field>
+
                   <v-checkbox
                       v-model="dataSource.config.secure"
                       :label="$t('editDataSource.secure')"
@@ -120,6 +127,13 @@
                   <v-text-field
                       v-model="dataSource.config.poll_interval"
                       :label="$t('editDataSource.pollInterval')"
+                      type="number"
+                       :rules="[v => !!v || 'Item is required']"
+                  ></v-text-field>
+
+                  <v-text-field
+                      v-model="dataSource.config.timeout"
+                      :label="$t('editDataSource.timeout')"
                       type="number"
                        :rules="[v => !!v || 'Item is required']"
                   ></v-text-field>
@@ -324,7 +338,8 @@
                     disable-sort
                     hide-default-footer
                 >
-                  <template v-slot:[`item.column_name`]="{ item }">
+                  <template v-slot:[`item.column_name`]="{ item , index }">
+                    <span style="visibility: hidden" :id="`timeseries_column_${index}`"></span>
 
                     <v-text-field
                         :label="$t('dataMapping.columnName')"
@@ -409,7 +424,8 @@
                     hide-default-footer
                 >
 
-                  <template v-slot:[`item.type`]="{ item }">
+                  <template v-slot:[`item.type`]="{ item, index}">
+                    <span style="visibility: hidden" :id="`node_attachment_${index}`"></span>
                     <v-select
                         :label="$t('dataMapping.type')"
                         :items=parameterFilterTypes
@@ -487,7 +503,9 @@
                           v-model="dataSource.config.stop_nodes"
                           :label="$t('editDataSource.stopNodes')"
                           :placeholder="$t('editDataSource.typeToAdd')"
-                      ></v-combobox>
+                      >
+                        <template slot="append-outer"><info-tooltip :message="$t('createDataSource.stopNodesHelp')"></info-tooltip> </template>
+                      </v-combobox>
 
                       <v-combobox
                           style="margin-top: 10px"
@@ -498,7 +516,9 @@
                           v-model="dataSource.config.value_nodes"
                           :label="$t('editDataSource.valueNodes')"
                           :placeholder="$t('editDataSource.typeToAdd')"
-                      ></v-combobox>
+                      >
+                        <template slot="append-outer"><info-tooltip :message="$t('createDataSource.valueNodesHelp')"></info-tooltip> </template>
+                      </v-combobox>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
                 </v-expansion-panels>

@@ -1,7 +1,22 @@
 ![img.png](lynx.png)
 
-The construction of megaprojects has consistently demonstrated challenges for project managers in regard to meeting cost, schedule, and performance requirements. Megaproject construction challenges are common place within megaprojects with many active projects in the United States failing to meet cost and schedule efforts by significant margins. Currently, engineering teams operate in siloed tools and disparate teams where connections across design, procurement, and construction systems are translated manually or over brittle point-to-point integrations. The manual nature of data exchange increases the risk of silent errors in the reactor design, with each silent error cascading across the design. These cascading errors lead to uncontrollable risk during construction, resulting in significant delays and cost overruns. Deep Lynx allows for an integrated platform during design and operations of mega projects.
+## What is DeepLynx?
 
+DeepLynx is a open-source data warehouse focused on enabling complex projects to embrace digital engineering. It accomplishes bringing digital thread and digital twins to these projects with integrations to a large collection of software systems across a project's lifecycle.
+
+Data is stored in a graph-like format following a user-defined domain ontology. Using the provided GraphQL interface, users and applications can request exactly the data they need by using client side defined queries. This aids finding relationships between complex datasets enabling data science efforts and AI/ML.
+
+## Why Embrace Digital Engineering and DeepLynx?
+
+The construction of megaprojects has consistently demonstrated challenges for project managers in regard to meeting cost, schedule, and performance requirements.
+
+Currently, engineering teams operate in siloed tools and disparate teams. Data connections across design, procurement, construction, and operations systems are translated manually or over brittle point-to-point integrations.
+
+This uncoordinated and disjoint data exchange across these siloes increases the risk of silent errors. These silent errors can cascade across the effort and lead to uncontrollable risk during construction, resulting in significant delays and cost overruns.
+
+DeepLynx is a key tool in solving this problem for megaprojects by bringing those siloed efforts into an integrated platform that operates over the course of a project's lifecycle. DeepLynx integrates to widely used enterprise scale software. The list of software integrations include tools such as Innoslate for systems engineering, IBM's DOORS for requirements management, design tools such as AutoDesk's Revit, and asset management in ABB's AssetSuite.
+
+Leveraging this rich set of integrations allows for projects to efficiently consolidate their data into a cohesive data lake. This data lake provides the foundation for digital thread and digital twin efforts.
 ## **Documentation**
 
 `DeepLynx` is documented in the following ways
@@ -29,7 +44,7 @@ The initial startup might take a while as the operation must first fetch the pre
 _________
 #### **Requirements**
 
--   node.js 14.x, 15.x, 16.x, 17.x
+-   node.js 14.x, 15.x, 16.x, 17.x , 18.x-untested
 -   Typescript ^4.x.x
 -   npm ^6.x
 -   Docker ^18.x - _optional_ - for ease of use in development

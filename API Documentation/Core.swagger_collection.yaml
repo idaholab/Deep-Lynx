@@ -496,7 +496,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200Response'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Node'
       deprecated: false
       x-codegen-request-body-name: Body
   '/containers/{container_id}/graphs/nodes/{node_id}':
@@ -1117,7 +1119,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generic200Response'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Edge'
       description: 'This endpoint will attempt to create a connection between two nodes. You can either pass in the node''s Deep Lynx IDs, or the node''s original id, metatype id, and data source id to create these edges.'
       requestBody:
         content:
@@ -4804,6 +4808,35 @@ paths:
         '200':
           description: OK
       description: Publishes an ontology version
+  '/containers/{container_id}/import/datasources/{sourceID}/mappings/{mappingID}/copy/{originalMappingID}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: sourceID
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: mappingID
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: originalMappingID
+        in: path
+        required: true
+    post:
+      summary: ''
+      operationId: CopyTransformations
+      responses:
+        '200':
+          description: OK
+      description: 'This endpoint copies transformations from the {originalMappingID} type mapping (final parameter) to the {mappingID} type mapping. This POST has NO body.'
 components:
   securitySchemes:
     BearerAuth:

@@ -349,7 +349,7 @@ export default class OAuthRoutes {
         // so that we can restore it as part of the redirect
         if (oauthRequest) {
             const token = Buffer.from(uuidv4()).toString('base64');
-            Cache.set(token, classToPlain(oauthRequest), 60 * 10).then((set) => {
+            Cache.set(token, serialize(oauthRequest), 60 * 10).then((set) => {
                 if (!set) {
                     res.redirect(buildUrl('/oauth', {queryParams: {error: `unable to set RelayState in cache`}}));
                     return;

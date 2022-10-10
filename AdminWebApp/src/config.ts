@@ -4,7 +4,11 @@ export class Config {
     private static instance: Config;
 
     get appUrl(): string {
-        return process.env.VUE_APP_APP_URL || 'http://localhost:8090';
+        if (process.env.VUE_APP_BUNDLED_BUILD === 'true') {
+            return `${location.origin}/#`;
+        } else {
+            return process.env.VUE_APP_APP_URL || 'http://localhost:8090';
+        }
     }
 
     get deepLynxAppID(): string {
@@ -12,7 +16,11 @@ export class Config {
     }
 
     get deepLynxApiUri(): string {
-        return process.env.VUE_APP_DEEP_LYNX_API_URL || 'http://localhost:8090';
+        if (process.env.VUE_APP_BUNDLED_BUILD === 'true') {
+            return `${location.origin}`;
+        } else {
+            return process.env.VUE_APP_DEEP_LYNX_API_URL || 'http://localhost:8090';
+        }
     }
 
     get deepLynxApiAuth(): string | undefined {
@@ -29,6 +37,10 @@ export class Config {
 
     get timeSeriesEnabled(): boolean {
         return process.env.VUE_APP_TIME_SERIES_ENABLED === 'true';
+    }
+
+    get dataManagementEnabled(): boolean {
+        return process.env.VUE_APP_DATA_MANAGEMENT_ENABLED === 'true';
     }
 
     public static Instance(): Config {

@@ -7,7 +7,7 @@ import Node, {NodeIDPayload} from '../../../../domain_objects/data_warehouse/dat
 import EdgeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import NodeLeafRepository from '../../../../data_access_layer/repositories/data_warehouse/data/node_leaf_repository';
-import GraphQLSchemaGenerator from '../../../../graphql/schema';
+import GraphQLRunner from '../../../../graphql/schema';
 import {graphql} from 'graphql';
 import {stringToValidPropertyName} from '../../../../services/utilities';
 import NodeGraphQLSchemaGenerator from '../../../../graphql/node_graph_schema';
@@ -33,12 +33,12 @@ export default class GraphRoutes {
         app.get('/containers/:containerID/graphs/nodes/:nodeID/timeseries', ...middleware, authInContainer('read', 'data'), this.queryTimeseriesDataTypes);
 
         app.post(
-            '/containers/:containerID/import/datasources/:dataSourceID/data', 
-            ...middleware, 
-            authInContainer('read', 'data'), 
-            this.queryTimeseriesDataSource
+            '/containers/:containerID/import/datasources/:dataSourceID/data',
+            ...middleware,
+            authInContainer('read', 'data'),
+            this.queryTimeseriesDataSource,
         );
-        
+
         app.get('/containers/:containerID/graphs/nodes/:nodeID/files', ...middleware, authInContainer('read', 'data'), this.listFilesForNode);
         app.put('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.attachFileToNode);
         app.delete('/containers/:containerID/graphs/nodes/:nodeID/files/:fileID', ...middleware, authInContainer('write', 'data'), this.detachFileFromNode);
@@ -288,9 +288,9 @@ export default class GraphRoutes {
         let toSave: Node[] = [];
 
         if (Array.isArray(req.body)) {
-            toSave = plainToClass(Node, req.body);
+            toSave = plainToInstance(Node, req.body);
         } else {
-            toSave = [plainToClass(Node, req.body as object)];
+            toSave = [plainToInstance(Node, req.body as object)];
         }
 
         // update with containerID and current active graph if none specified
@@ -303,7 +303,12 @@ export default class GraphRoutes {
         nodeRepo
             .bulkSave(req.currentUser!, toSave)
             .then((result) => {
-                result.asResponse(res);
+                if (result.isError) {
+                    Result.Error(result.error?.error).asResponse(res);
+                    return;
+                }
+
+                Result.Success(toSave).asResponse(res);
             })
             .catch((err) => {
                 Result.Error(err).asResponse(res);
@@ -330,7 +335,12 @@ export default class GraphRoutes {
         edgeRepo
             .bulkSave(req.currentUser!, toSave)
             .then((result) => {
-                result.asResponse(res);
+                if (result.isError) {
+                    Result.Error(result.error?.error).asResponse(res);
+                    return;
+                }
+
+                Result.Success(toSave).asResponse(res);
             })
             .catch((err) => {
                 Result.Error(err).asResponse(res);
@@ -484,7 +494,7 @@ export default class GraphRoutes {
             })
             .then((schemaResult) => {
                 if (schemaResult.isError) {
-                    Result.Error(schemaResult.error!).asResponse(res);
+                    Result.Error(schemaResult.error).asResponse(res);
                     return;
                 }
 
@@ -525,7 +535,7 @@ export default class GraphRoutes {
             })
             .then((schemaResult) => {
                 if (schemaResult.isError) {
-                    Result.Error(schemaResult.error!).asResponse(res);
+                    Result.Error(schemaResult.error).asResponse(res);
                     return;
                 }
 

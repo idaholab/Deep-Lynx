@@ -1,4 +1,5 @@
 <template>
+  <div>
   <div v-if="container">
     <error-banner :message="errorMessage"></error-banner>
     <v-app-bar
@@ -122,7 +123,6 @@
           <template v-slot:activator>
             <v-list-item-title>{{$t("home.data")}}</v-list-item-title>
           </template>
-
           <v-list-item
             two-line
             link
@@ -152,19 +152,6 @@
           <v-list-item
             two-line
             link
-            v-if="$auth.Auth('data', 'write', containerID)"
-            @click="setActiveComponent('data-management')"
-            :input-value="currentMainComponent === 'DataManagement'"
-            :ripple="{class:'list-ripple'}"
-          >
-            <v-list-item-content>
-              <v-list-item-title>{{$t("home.dataManagement")}}</v-list-item-title>
-              <v-list-item-subtitle>{{$t("home.dataManagementDescription")}}</v-list-item-subtitle>
-            </v-list-item-content>
-          </v-list-item>
-          <v-list-item
-            two-line
-            link
             v-if="$auth.Auth('data', 'read', containerID)"
             @click="setActiveComponent('data-imports')"
             :input-value="currentMainComponent === 'DataImports'"
@@ -188,6 +175,19 @@
               <v-list-item-subtitle>{{$t("home.dataMappingDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
+               <v-list-item
+            two-line
+            link
+            v-if="$auth.Auth('data', 'write', containerID) && dataManagementEnabled"
+            @click="setActiveComponent('data-management')"
+            :input-value="currentMainComponent === 'DataManagement'"
+            :ripple="{class:'list-ripple'}"
+          >
+            <v-list-item-content>
+              <v-list-item-title>{{$t("home.dataManagement")}}-<small>{{$t("home.beta")}}</small></v-list-item-title>
+              <v-list-item-subtitle>{{$t("home.dataManagementDescription")}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
           <v-list-item
             two-line link
             v-if="$auth.Auth('data', 'write', containerID)"
@@ -200,7 +200,6 @@
               <v-list-item-subtitle>{{$t("home.dataExportDescription")}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-
         </v-list-group>
 
         <v-list-group
@@ -466,6 +465,22 @@
       </v-container>
     </v-main>
   </div>
+    <div v-else>
+      <v-container>
+        <v-layout align-center justify-center column fill-height>
+          <v-flex row align-center>
+            <v-progress-circular indeterminate :size="150"  style="margin-top: 200px" color="primary" class=""></v-progress-circular>
+
+          </v-flex>
+          <v-flex row align-center>
+            <div class="align-self-center ma-auto">
+              <v-img max-height="250" max-width="250" src="../assets/lynx.png"></v-img>
+            </div>
+          </v-flex>
+        </v-layout>
+      </v-container>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -534,6 +549,7 @@ export default class Home extends Vue {
   componentName: string | TranslateResult = 'Home'
   argument: string = this.arguments
   componentKey = 0 // this is so we can force a re-render of certain components on component change - assign as key
+  dataManagementEnabled = Config.dataManagementEnabled
 
   metatypesCount = 0
   relationshipCount = 0

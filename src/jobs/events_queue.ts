@@ -7,12 +7,28 @@ import Event from '../domain_objects/event_system/event';
 import EventRepository from '../data_access_layer/repositories/event_system/event_repository';
 import EventActionRepository from '../data_access_layer/repositories/event_system/event_action_repository';
 import EventAction from '../domain_objects/event_system/event_action';
-import GraphQLSchemaGenerator from '../graphql/schema';
+import GraphQLRunner from '../graphql/schema';
 import {graphql} from 'graphql';
 import {Emailer} from '../services/email/email';
 import {BasicEmailTemplate} from '../services/email/templates/basic';
 import PostgresAdapter from '../data_access_layer/mappers/db_adapters/postgres/postgres';
 import {parentPort} from 'worker_threads';
+import Cache from '../services/cache/cache';
+
+// handle cache clears from parent IF memory cache
+if (Config.cache_provider === 'memory') {
+    parentPort?.on('message', (message: any) => {
+        const parts = message.split('|');
+        // if a two part message it's a deleted key
+        if (parts.length === 2 && parts[0] === 'deleted') {
+            void Cache.del(parts[1]);
+        }
+
+        if (parts.length === 1 && parts[0] === 'flush') {
+            void Cache.flush();
+        }
+    });
+}
 
 void PostgresAdapter.Instance.init()
     .then(() => {
@@ -121,7 +137,7 @@ async function processFunction(event: Event) {
 
             case 'send_data':
                 // attempt to query the data directly and send out
-                const generator = new GraphQLSchemaGenerator();
+                const generator = new GraphQLRunner();
                 await generator
                     .ForContainer(event.container_id!, {})
                     .then(async (schemaResult) => {

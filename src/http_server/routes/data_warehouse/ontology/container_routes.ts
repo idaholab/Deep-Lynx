@@ -211,13 +211,16 @@ export default class ContainerRoutes {
             // we have to force the data_versioning to boolean here
             if (input.data_versioning_enabled) input.data_versioning_enabled = String(input.data_versioning_enabled).toLowerCase() === 'true';
             if (input.ontology_versioning_enabled) input.ontology_versioning_enabled = String(input.ontology_versioning_enabled).toLowerCase() === 'true';
+            if (input.enabled_data_sources) input.enabled_data_sources = input.enabled_data_sources.split(',');
 
             containerImport
                 .ImportOntology(user, input as ContainerImportT, fileBuffer, String(req.query.dryrun).toLowerCase() === 'true', false, '')
                 .then((result) => {
                     result.asResponse(res);
                 })
-                .catch((err) => Result.Error(err).asResponse(res));
+                .catch((err) => {
+                    Result.Error(err).asResponse(res);
+                });
         });
 
         return req.pipe(busboy);

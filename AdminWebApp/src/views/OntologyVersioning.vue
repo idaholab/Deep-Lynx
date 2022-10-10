@@ -2,7 +2,7 @@
   <div>
     <v-card>
       <v-toolbar flat color="white">
-        <v-toolbar-title>{{$t('home.ontologyVersioningDescription')}}</v-toolbar-title>
+        <v-toolbar-title>{{$t('home.ontologyVersioningDescription')}}<br><span class="text-caption">{{$t('home.ontologyVersioningLongDescription')}}</span></v-toolbar-title>
       </v-toolbar>
 
       <error-banner :message="errorMessage"></error-banner>

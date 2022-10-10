@@ -1,88 +1,93 @@
 <template>
   <div>
     <v-card style="width: 100%; height: 100%; position: relative">
-      <v-toolbar flat color="lightgray" > 
+      <v-toolbar flat color="lightgray" >
         <v-toolbar-title>Graph</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-progress-circular indeterminate v-if="loading"  style="margin-right: 16px"></v-progress-circular>
         <div class="mr-5">
           <v-btn
-            @click="resetGraph"
-            :disabled="graph.nodes.length < 1"
+              @click="resetGraph"
+              :disabled="graph.nodes.length < 1"
           >
             Reset Graph
           </v-btn>
         </div>
 
-          <v-menu
+        <v-menu
             v-model="showHelp"
             :close-on-content-click="false"
             :nudge-left="25"
             :nudge-bottom="25"
             left
-          >
-            <template v-slot:activator="{on, attrs}">
-              <v-icon v-bind="attrs" v-on="on" >{{info}}</v-icon>
-            </template>
-            <v-card max-width="364" style="justify-content: left"> 
-              <v-list>
-                <v-list-item>
-                  <v-slider
+        >
+          <template v-slot:activator="{on, attrs}">
+            <v-icon v-bind="attrs" v-on="on" >{{info}}</v-icon>
+          </template>
+          <v-card max-width="364" style="justify-content: left">
+
+            <v-card-text class="text-h5 font-weight-bold">
+            Hover over the blue "+" icon in the top left of the graph view to find graph edit tools!
+            </v-card-text>
+
+            <v-list>
+              <v-list-item>
+                <v-slider
                     v-model="minZoom"
                     thumb-label
                     :max="maxMinZoom < maxZoom ? maxMinZoom : maxZoom"
                     :min="minMinZoom"
                     label="Min Zoom"
                     step=0.1
-                  ></v-slider>
-                </v-list-item>
-                <v-list-item>
-                    <v-slider
-                      v-model="maxZoom"
-                      thumb-label
-                      :max="maxMaxZoom"
-                      :min="minMaxZoom > minZoom ? minMaxZoom : minZoom"
-                      label="Max Zoom"
-                      step=1
-                    ></v-slider>
-                </v-list-item>
-                <v-list-item>
-                  <v-list-item-action>
-                    <v-btn
+                ></v-slider>
+              </v-list-item>
+              <v-list-item>
+                <v-slider
+                    v-model="maxZoom"
+                    thumb-label
+                    :max="maxMaxZoom"
+                    :min="minMaxZoom > minZoom ? minMaxZoom : minZoom"
+                    label="Max Zoom"
+                    step=1
+                ></v-slider>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-action>
+                  <v-btn
                       icon
                       @click="updateGraphZoom"
                       :disabled="graph.nodes.length < 1"
-                    >
-                      <v-icon>{{ 'mdi-autorenew' }}</v-icon>
-                    </v-btn>
-                  </v-list-item-action>
-                  <v-list-item-title>Update Zoom</v-list-item-title>
-                </v-list-item>
-                <v-list-item>
-                  <v-list-item-action>
-                    <v-btn
+                  >
+                    <v-icon>{{ 'mdi-autorenew' }}</v-icon>
+                  </v-btn>
+                </v-list-item-action>
+                <v-list-item-title>Update Zoom</v-list-item-title>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-action>
+                  <v-btn
                       icon
                       @click="resetGraphZoom"
                       :disabled="graph.nodes.length < 1"
-                    >
-                      <v-icon>{{ 'mdi-autorenew' }}</v-icon>
-                    </v-btn>
-                  </v-list-item-action>
-                  <v-list-item-title>Reset Zoom</v-list-item-title>
-                </v-list-item>
-              </v-list>
-      
-              <v-card-actions>
-                Graph Help
-                <v-spacer></v-spacer>
+                  >
+                    <v-icon>{{ 'mdi-autorenew' }}</v-icon>
+                  </v-btn>
+                </v-list-item-action>
+                <v-list-item-title>Reset Zoom</v-list-item-title>
+              </v-list-item>
+            </v-list>
 
-              </v-card-actions>
-              <v-expand-transition>
+            <v-card-actions>
+              Graph Help
+              <v-spacer></v-spacer>
+
+            </v-card-actions>
+            <v-expand-transition>
               <div v-show="showHints">
                 <v-divider></v-divider>
-        
+
                 <v-card-text>
-                  Controls <br>
+                  <b>Controls</b> <br>
                   - Pan : Left click drag on open area of graph <br>
                   - Zoom : Mousewheel scroll <br>
                   - Center on node: Double click node <br>
@@ -95,31 +100,134 @@
                 </v-card-text>
               </div>
             </v-expand-transition>
-            </v-card>
-          </v-menu>
+          </v-card>
+        </v-menu>
       </v-toolbar>
+
+      <error-banner :message="errorMessage"></error-banner>
+      <!-- Graph edit tools -->
+      <v-speed-dial
+          v-model="editFab"
+          top
+          left
+          direction="bottom"
+          absolute
+          style="margin-top: 62px"
+          open-on-hover
+          transition="slide-x-transition"
+      >
+        <template v-slot:activator>
+          <v-tooltip v-model="edgeFlag" right>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn
+                v-model="editFab"
+                :color="edgeFlag ? 'purple' : 'blue darken-2'"
+                dark
+                editFab
+                v-on="edgeFlag ? on : null"
+                v-bind="attrs"
+              >
+                <v-icon v-if="editFab">
+                  mdi-close
+                </v-icon>
+                <v-icon v-else-if="edgeFlag">
+                  mdi-vector-circle
+                </v-icon>
+                <v-icon v-else>
+                  mdi-plus
+                </v-icon>
+              </v-btn>
+            </template>
+            <span>
+              Drag a node towards other nodes to create new edges. <br/>
+              Release the node once the desired edge is indicated to bring up the dialog for edge creation.
+            </span>
+          </v-tooltip>
+        </template>
+
+        <v-tooltip open-delay=500 right>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+                editFab
+                dark
+                small
+                color="green"
+                v-bind="attrs"
+                v-on="on"
+                @click="newNodeDialog = true"
+            >
+              <v-icon>mdi-plus-circle</v-icon>
+            </v-btn>
+          </template>
+          <span>Create a node</span>
+        </v-tooltip>
+
+        <!-- Future: Implement multinode creation -->
+        <!-- <v-tooltip open-delay=500 right>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+              editFab
+              dark
+              small
+              color="indigo"
+              v-bind="attrs"
+              v-on="on"
+            >
+              <v-icon>mdi-plus-circle-multiple</v-icon>
+            </v-btn>
+          </template>
+          <span>Create multiple nodes</span>
+        </v-tooltip> -->
+
+        <v-tooltip open-delay=500 right>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+                editFab
+                dark
+                small
+                color="purple"
+                v-bind="attrs"
+                v-on="on"
+                @click="edgeFlag = !edgeFlag"
+            >
+              <v-icon>mdi-vector-circle</v-icon>
+            </v-btn>
+          </template>
+          <span>Enable/disable edge creation</span>
+        </v-tooltip>
+      </v-speed-dial>
 
       <!-- Color Legend and Filter -->
       <v-navigation-drawer
-        v-model="showColorLegend"
-        absolute
-        right
-        permanent
-        :mini-variant.sync="mini"
-        style="margin-top: 64px"
+          v-model="showColorLegend"
+          absolute
+          right
+          permanent
+          :mini-variant.sync="mini"
+          style="margin-top: 64px"
       >
         <v-list-item class="px-2">
 
           <v-btn
-            icon
-            @click.stop="mini = !mini"
+              icon
+              @click.stop="mini = !mini"
           >
             <v-icon v-if="!mini">mdi-chevron-right</v-icon>
             <v-icon v-else>mdi-chevron-left</v-icon>
           </v-btn>
-  
-          <v-list-item-title>Node Legend</v-list-item-title>
+
+          <v-list-item-title>Legend</v-list-item-title>
         </v-list-item>
+
+        <v-list-item>
+          <v-switch
+              hide-details
+              class="d-flex justify-center"
+              v-model="edgeLabelFlag"
+              label="Toggle edge labels"
+          ></v-switch>
+        </v-list-item>
+
         <v-list-item>
           <v-select
               v-model="colorGroup"
@@ -129,19 +237,19 @@
               hint="Choose how to group node color"
               persistent-hint
               v-if="!mini"
-            >
-            </v-select>
+          >
+          </v-select>
         </v-list-item>
         <v-list dense style="width: fit-content">
           <v-list-item-group
-            color="primary"
-            multiple
-            v-model="selectedFilters"
+              color="primary"
+              multiple
+              v-model="selectedFilters"
           >
             <v-list-item
-              v-for="(item, i) in nodeColorsArray"
-              :key="i"
-              @click="filterOnGroupItem(i)"
+                v-for="(item, i) in nodeColorsArray"
+                :key="i"
+                @click="filterOnGroupItem(i)"
             >
               <v-list-item-icon style="margin-right: 12px">
                 <v-icon color="#b2df8a" :style='`color: ` + item.key + `!important`'>mdi-circle</v-icon>
@@ -153,19 +261,200 @@
           </v-list-item-group>
         </v-list>
       </v-navigation-drawer>
+
       <div id="forcegraph" ref="forcegraph" ></div>
+      
     </v-card>
     <!-- End Graph Component -->
 
+    <!-- New Node dialog -->
+    <v-dialog
+        v-model="newNodeDialog"
+        width="50%"
+    >
+      <v-card class="pt-1 pb-3 px-2">
+        <select-data-source
+            :containerID="containerID"
+            :dataSourceID="selectedDataSource"
+            @selected="setDataSource">
+        </select-data-source>
+        <div v-if="(selectedDataSource !== null)">
+          <v-divider></v-divider>
+          <create-node-card
+              :dataSourceID="selectedDataSource.id"
+              :containerID="containerID"
+              :disabled="!selectedDataSource.active || selectedDataSource.archived"
+              @nodeCreated="createNode"
+              @close="newNodeDialog = false"
+          >
+          </create-node-card>
+        </div>
+      </v-card>
+    </v-dialog>
+
+    <!-- New Edge dialog -->
+    <v-dialog
+        v-model="newEdgeDialog"
+        @click:outside="closeEdgeDialog()"
+        width="50%"
+    >
+      <v-card class="pt-1 pb-3 px-2">
+        <template v-if="interimLink">
+          <v-form
+              ref="edgeForm"
+              v-model="validEdge"
+          >
+            <v-card-title>
+              <span class="headline text-h3">{{$t("createEdge.formTitle")}}</span>
+            </v-card-title>
+
+            <v-col cols="12">
+              <v-row>
+                <v-col cols="6">
+                  <v-text-field
+                      :value="interimLink.source.metatype_name"
+                      label="Origin Metatype"
+                      readonly
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="6">
+                  <v-text-field
+                      :value="interimLink.target.metatype_name"
+                      label="Destination Metatype"
+                      readonly
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+
+              <v-row v-if="relationshipPairs.length === 0">
+                <div class="pa-6 pb-0">
+                  <p>No valid relationships for this metatype pair.</p>
+                </div>
+              </v-row>
+
+              <div v-else>
+
+                <v-row>
+                  <v-col cols="6">
+                    <v-text-field
+                        :value="interimLink.source.id"
+                        label="Origin ID"
+                        readonly
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="6">
+                    <v-text-field
+                        :value="interimLink.target.id"
+                        label="Destination ID"
+                        readonly
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+
+                <v-select
+                    :items="relationshipPairs"
+                    v-model="selectedRelationshipPair"
+                    :single-line="false"
+                    item-text="name"
+                    clearable
+                    :label="$t('dataMapping.chooseRelationship')"
+                    return-object
+                    :rules="[v => !!v || $t('createEdge.relationshipRequired')]"
+                    required
+                    @change="listRelationshipKeys(selectedRelationshipPair.relationship_id)"
+                >
+                  <template slot="append-outer"><info-tooltip :message="$t('dataMapping.relationshipPairSearchHelp')"></info-tooltip></template>
+
+                  <template slot="item" slot-scope="data">
+                    {{data.item.origin_metatype_name}} - {{data.item.relationship_name}} - {{data.item.destination_metatype_name}}
+                  </template>
+
+                </v-select>
+
+                <div v-if="selectedRelationshipPair">
+                    <v-col :cols="12" v-if="relationshipKeys && relationshipKeys.length !== 0">
+                        <v-checkbox
+                            v-model="optional"
+                            :label="'Show Optional Fields'"
+                        ></v-checkbox>
+                        <v-col :cols="12">
+                            <v-data-table
+                                :items="relationshipKeys"
+                                :disable-pagination="true"
+                                :hide-default-footer="true"
+                                v-if="optional === true"
+                            >
+                              <template v-slot:[`item`]="{item}">
+
+                                  <div v-if="item['data_type'] === 'enumeration'">
+                                    <v-combobox
+                                      v-model="item['default_value']"
+                                      :label="item['name']"
+                                      :items="item['options']"
+                                    ></v-combobox>
+                                  </div>
+
+                                  <div v-if="item['data_type'] === 'boolean'">
+                                    <v-select
+                                      v-model="item['default_value']"
+                                      :label="item['name']"
+                                      :items="booleanOptions"
+                                    ></v-select>
+                                  </div>
+
+                                  <div v-if="item['data_type'] !== 'enumeration' && item['data_type'] !== 'boolean'">
+                                    
+                                    <v-text-field 
+                                        v-if="item['data_type'] === 'number'||item['data_type'] === 'float'"
+                                        v-model="item['default_value']"
+                                        type="number"
+                                        :label="item['name']"
+                                    ></v-text-field>
+
+                                    <v-text-field
+                                        v-else
+                                        v-model="item['default_value']"
+                                        :label="item['name']"
+                                        :disabled="item['data_type'] === 'file'"
+                                    ></v-text-field>
+
+                                  </div>
+                                  
+                              </template>
+                            </v-data-table>
+                        </v-col>
+                    </v-col>
+                </div>
+
+                <select-data-source
+                    @selected="setDataSource"
+                    :dataSourceID="interimLink.source.data_source_id"
+                    :containerID="containerID">
+                </select-data-source>
+
+              </div>
+
+            </v-col>
+
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="blue darken-1" text @click="closeEdgeDialog()" >{{$t("createNode.cancel")}}</v-btn>
+              <v-btn v-if="relationshipPairs.length > 0" color="blue darken-1" text :disabled="!validEdge" @click="createEdge()">{{$t("createNode.save")}}</v-btn>
+            </v-card-actions>
+          </v-form>
+        </template>
+      </v-card>
+    </v-dialog>
+
     <!-- Node Properties dialog -->
     <v-dialog
-      v-model="nodeDialog"
-      width="50%"
+        v-model="nodeDialog"
+        width="50%"
     >
       <v-card
-        @mouseover="opacity = 1.0"
-        @mouseleave="opacity = 0.5"
-        :style="`opacity: ${opacity}`"
+          @mouseover="opacity = 1.0"
+          @mouseleave="opacity = 0.5"
+          :style="`opacity: ${opacity}`"
       >
 
         <div class="mt-2 pt-3 px-5 pb-5 height-full">
@@ -191,6 +480,7 @@
                           :headers="propertyHeaders()"
                       >
                       </v-data-table>
+
                     </v-expansion-panel-content>
                   </v-expansion-panel>
 
@@ -219,8 +509,66 @@
           </div>
 
           <p v-if="currentNodeInfo === null">{{$t('dataQuery.selectNode')}}</p>
+          <v-row>
+            <v-col :cols="12">
+              <v-btn color="red darken-1" style="color: white" @click="deleteNode(currentNodeInfo)">{{$t('dataQuery.deleteNode')}}</v-btn>
+            </v-col>
+          </v-row>
         </div>
+      </v-card>
+    </v-dialog>
 
+    <!-- Edge Properties dialog -->
+    <v-dialog
+        v-model="edgeDialog"
+        width="50%"
+    >
+      <v-card
+          @mouseover="opacity = 1.0"
+          @mouseleave="opacity = 0.5"
+          :style="`opacity: ${opacity}`"
+      >
+
+        <div class="mt-2 pt-3 px-5 pb-5 height-full">
+          <h4 class="primary--text">{{$t('dataQuery.edgeInformation')}}</h4>
+          <div v-if="currentEdgeInfo !== null">
+            <v-row>
+              <v-col>
+                <div><span class="text-overline">{{$t('dataQuery.edgeID')}}:</span> {{currentEdgeInfo.id}}</div>
+                <div><span class="text-overline">{{$t('dataQuery.relType')}}:</span> {{currentEdgeInfo.metatype_relationship.name}}</div>
+                <div><span class="text-overline">DataSource:</span> {{datasources[currentEdgeInfo.data_source_id]?.name}} ({{currentEdgeInfo.data_source_id}})</div>
+                <div><span class="text-overline">Created At:</span> {{currentEdgeInfo.created_at}}</div>
+                <div><span class="text-overline">Modified At:</span> {{currentEdgeInfo.modified_at}}</div>
+                <v-expansion-panels 
+                  multiple v-model="openPanels" 
+                  v-if="currentEdgeInfo.properties !== null"
+                >
+                  <v-expansion-panel>
+                    <v-expansion-panel-header>
+                      <div><span class="text-overline">{{$t('dataQuery.edgeProperties')}}:</span></div>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <v-data-table
+                        :items="Object.keys(currentEdgeInfo.properties).map(k => {
+                          return {key: k, value: currentEdgeInfo.properties[k]}
+                        })"
+                        :headers="propertyHeaders()"
+                      ></v-data-table>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                </v-expansion-panels>
+              </v-col>
+            </v-row>
+
+          </div>
+
+          <p v-if="currentEdgeID === null">{{$t('dataQuery.selectEdge')}}</p>
+          <v-row>
+            <v-col :cols="12">
+              <v-btn color="red darken-1" style="color: white" @click="deleteEdge(currentEdgeID)">{{$t('dataQuery.deleteEdge')}}</v-btn>
+            </v-col>
+          </v-row>
+        </div>
       </v-card>
     </v-dialog>
   </div>
@@ -229,14 +577,24 @@
 <script lang="ts">
 import NodeFilesDialog from "@/components/data/nodeFilesDialog.vue";
 import NodeTimeseriesDataTable from "@/components/data/nodeTimeseriesDataTable.vue";
+import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
+import CreateNodeCard from "@/components/data/createNodeCard.vue";
+import CreateEdgeDialog from "@/components/data/createEdgeDialog.vue";
 import {Component, Prop, Watch, Vue} from "vue-property-decorator";
-import {NodeT, DataSourceT} from "@/api/types";
+import {NodeT, DataSourceT, MetatypeRelationshipPairT, MetatypeRelationshipKeyT} from "@/api/types";
 import ForceGraph, {ForceGraphInstance} from 'force-graph';
 import {forceX, forceY} from 'd3-force';
 
 import {mdiInformation} from "@mdi/js";
+import { EdgeT } from "../../api/types";
 
-@Component({components: {NodeFilesDialog, NodeTimeseriesDataTable}})
+@Component({components: {
+    NodeFilesDialog,
+    NodeTimeseriesDataTable,
+    CreateNodeCard,
+    CreateEdgeDialog,
+    SelectDataSource
+  }})
 export default class GraphViewer extends Vue {
   @Prop()
   readonly containerID!: string
@@ -245,7 +603,10 @@ export default class GraphViewer extends Vue {
   readonly results!: NodeT[]
 
   dialog = false
+  optional = false
   currentNodeInfo: any = null
+  currentEdgeInfo: any = null
+  currentEdgeID: any = null
   openPanels: number[] = [0]
   loading = false
 
@@ -260,6 +621,9 @@ export default class GraphViewer extends Vue {
     links: []
   }
 
+  graphRenderTime = 2000 // time in ms to spend rendering the graph on changes
+  zoomToFitDuration = 1000 // time in ms to spend on zoom transition after graph changes
+
   nodesById: any = {}
   nodeColorsArray: any = []
 
@@ -267,11 +631,14 @@ export default class GraphViewer extends Vue {
   colorGroupOptions = ['metatype', 'data source']
   colorGroupFilter: any = []
   selectedFilters: any = []
+  errorMessage = ""
 
   datasources: {[key: string]: DataSourceT} = {}
 
   nodeDialog = false
+  edgeDialog = false
   selectedNode: any
+  selectedEdge: any
   opacity = 1.0
 
   previousClick = 0
@@ -294,6 +661,28 @@ export default class GraphViewer extends Vue {
   maxZoom = 125
   maxMaxZoom = 1000
   minMaxZoom = 10
+
+  editFab = false
+  newNodeDialog = false
+  newEdgeDialog = false
+
+  edgeFlag = false // edge creation disabled by default
+  dragSourceNode: any | null = null
+  interimLink: any | null = null
+  linkIdCounter = 0
+  snapInDistance = 25
+  snapOutDistance = 40
+
+  selectedDataSource: DataSourceT | null = null
+
+  relationshipPairs: MetatypeRelationshipPairT[] = []
+  relationshipPairSearch = ""
+  selectedRelationshipPair: MetatypeRelationshipPairT | null = null
+  relationshipKeys: any = {}
+  validEdge = false
+  edgeLabelFlag = false
+  booleanOptions = [true, false]
+  edgeProperties = {}
 
   @Watch('results', {immediate: true})
   graphUpdate() {
@@ -318,7 +707,7 @@ export default class GraphViewer extends Vue {
         this.colorGroupFilter.push(index)
       }
     }
-    
+
     // apply filter to graph
     const filterList: any = []
 
@@ -337,9 +726,9 @@ export default class GraphViewer extends Vue {
           filterList.push(value.trim())
         }
       });
-      
+
     });
-    
+
     this.graph.nodes.forEach((node: NodeT) => {
       // use a nodes "collapsed" property to determine whether to hide it
       if (this.colorGroup === 'data source') {
@@ -375,7 +764,7 @@ export default class GraphViewer extends Vue {
 
   async loadResults(graphResults: NodeT[] | null = null) {
     this.loading = true
-    
+
     const nodeIDs: string[] =  []
     let edges: any = []
 
@@ -516,143 +905,271 @@ export default class GraphViewer extends Vue {
 
     if (graphElem != null) {
       this.canvas = this.forceGraph(graphElem)
-        .width(graphElem.offsetWidth) // canvas width
-        .height(graphElem.offsetHeight) // canvas height
-        .minZoom(this.minZoom)
-        .maxZoom(this.maxZoom)
-        .graphData(this.graph) // graph data
-        // .backgroundColor('#101020') // set background color of canvas
-        .nodeLabel((node: any) => {
-          return `${node.metatype_name} : ${node.id}`
-        }) // set node label when hovering
-        .onNodeRightClick(node => {
-          // double clicks can be difficult to do dragging a node and custom timing to determine single or double click
-          // right clicks will open up a new graph around the selected node, while double clicks will center and zoom
-          this.openNodeGraph(node)
-        }) // open node properties on right click
-        .nodeCanvasObject((node: any, ctx, globalScale) => {
+          .width(graphElem.offsetWidth) // canvas width
+          .height(graphElem.offsetHeight) // canvas height
+          .minZoom(this.minZoom)
+          .maxZoom(this.maxZoom)
+          .graphData(this.graph) // graph data
+          // .backgroundColor('#101020') // set background color of canvas
+          .nodeLabel((node: any) => {
+            return `${node.metatype_name} : ${node.id}`
+          }) // set node label when hovering
+          .onNodeRightClick(node => {
+            // double clicks can be difficult to do dragging a node and custom timing to determine single or double click
+            // right clicks will open up a new graph around the selected node, while double clicks will center and zoom
+            this.openNodeGraph(node)
+          }) // open node properties on right click
+          .nodeCanvasObject((node: any, ctx, globalScale) => {
 
-          // don't draw the full node if it is marked as collapsed
-          if (!node.collapsed) {
+            // don't draw the full node if it is marked as collapsed
+            if (!node.collapsed) {
 
-            if (highlightNodes.has(node)) {
-              // add ring just for highlighted nodes
-              ctx.beginPath();
-              ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
-              ctx.fillStyle = node === hoverNode ? 'red' : 'orange';
-              ctx.fill();
+              if (highlightNodes.has(node)) {
+                // add ring just for highlighted nodes
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
+                ctx.fillStyle = node === hoverNode ? 'red' : 'orange';
+                ctx.fill();
+              } else if (node.new_node) { // add ring for newly created nodes
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
+                ctx.fillStyle = 'yellow';
+                ctx.fill();
+              }
+
+              // then apply normal colors and labels (must happen after highlight styles have been created)
+
+              ctx.beginPath()
+              ctx.arc(node.x, node.y, 10, 0, 2 * Math.PI)
+              ctx.fillStyle = node.color;
+              ctx.fill()
+
+              const nodeName = node.properties.name ? node.properties.name : node.id;
+              const label = `${nodeName}` as string;
+              const fontSize = Math.min(24/globalScale, NODE_R * 1.4);
+
+              ctx.font = `${fontSize}px Sans-Serif`;
+
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = '#101020';
+              ctx.fillText(label, node.x!, node.y!);
             }
 
-            // then apply normal colors and labels (must happen after highlight styles have been created)
+          }) // add text over nodes
+          .nodeCanvasObjectMode(node => highlightNodes.has(node) ? 'after' : 'after') // this format required for correctly displaying styles and text for both highlighted and non-highlighted states
+          .nodeAutoColorBy((node: any) => {
+            if (this.colorGroup === 'metatype') {
+              return `${node.metatype_name}`
+            } else if (this.colorGroup === 'data source') {
+              return `${node.data_source_id}`
+            } else {
+              return `${node.metatype_name}` // default to metatype
+            }
+          }) // auto color node
+          .linkColor(() => '#363642') // link color
+          .linkCurvature('curvature')
+          .linkDirectionalArrowLength(5) // use directional arrows for links and set size of link
+          .linkDirectionalArrowRelPos(1) // size of directional arrow
+          .linkCanvasObjectMode(() => 'after')
+          .linkCanvasObject((link: any, ctx, globalScale) => {
+            if (this.edgeLabelFlag) {
+              const MAX_FONT_SIZE = 24/globalScale;
+              const LABEL_NODE_MARGIN = this.canvas!.nodeRelSize() * 1.6;
 
-            ctx.beginPath()
-            ctx.arc(node.x, node.y, 10, 0, 2 * Math.PI)
-            ctx.fillStyle = node.color;
-            ctx.fill()
+              const start = link.source;
+              const end = link.target;
 
-            const nodeName = node.properties.name ? node.properties.name : node.id;
-            const label = `${nodeName}` as string;
-            const fontSize = Math.min(24/globalScale, NODE_R * 1.4);
+              // ignore unbound links
+              if (typeof start !== 'object' || typeof end !== 'object') return;
 
-            ctx.font = `${fontSize}px Sans-Serif`;
+              // calculate label positioning
+              let coordinates = {x: 0, y: 0};
+              coordinates.x = start.x + (end.x - start.x) / 2;
+              coordinates.y = start.y + (end.y - start.y) / 2;
 
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#101020';
-            ctx.fillText(label, node.x!, node.y!);
-          }
+              // handle curved links
+              if (+link.curvature > 0) {
+                coordinates = this.getQuadraticXY(
+                    0.5,
+                    start.x,
+                    start.y,
+                    link.__controlPoints[0],
+                    link.__controlPoints[1],
+                    end.x,
+                    end.y
+                );
+              }
 
-        }) // add text over nodes
-        .nodeCanvasObjectMode(node => highlightNodes.has(node) ? 'after' : 'after') // this format required for correctly displaying styles and text for both highlighted and non-highlighted states
-        .nodeAutoColorBy((node: any) => {
-          if (this.colorGroup === 'metatype') {
-            return `${node.metatype_name}`
-          } else if (this.colorGroup === 'data source') {
-            return `${node.data_source_id}`
-          } else {
-            return `${node.metatype_name}` // default to metatype
-          }
-        }) // auto color node
-        .linkColor(() => '#363642') // link color
-        .linkCurvature('curvature')
-        .linkDirectionalArrowLength(5) // use directional arrows for links and set size of link
-        .linkDirectionalArrowRelPos(1) // size of directional arrow
-        .linkCanvasObjectMode(() => 'after')
-        .linkLabel((link: any) => `${link.name} : ${link.id}`)
-        .onNodeHover((node: any) => {
-          highlightNodes.clear();
-          highlightLinks.clear();
+              const relLink = { x: end.x - start.x, y: end.y - start.y };
 
-          if (node) {
-            highlightNodes.add(node);
-            if (node.neighbors) node.neighbors.forEach((neighbor: any) => highlightNodes.add(neighbor));
-            if (node.links) node.links.forEach((link: any) => highlightLinks.add(link));
-          }
+              let maxTextLength = Math.sqrt(Math.pow(relLink.x, 2) + Math.pow(relLink.y, 2)) - LABEL_NODE_MARGIN * 2;
 
-          hoverNode = node || null;
-        })
-        .onNodeClick((node: any) => {
+              let textAngle = Math.atan2(relLink.y, relLink.x);
+              // maintain label vertical orientation for legibility
+              if (textAngle > Math.PI / 2) textAngle = -(Math.PI - textAngle);
+              if (textAngle < -Math.PI / 2) textAngle = -(-Math.PI - textAngle);
 
-          this.loading = true
-          
-          // base case, first click on a node ever
-          if (this.currentClick === 0) {
-            this.previousClick = Date.now();
-            this.currentClick = Date.now();
-            this.firstClickID = node.id;
-            void this.showNodeProperties(node);
-          } else {
+              const label = `${link.name}`; // link label
 
-            // handle double click check
-            this.currentClick = Date.now();
+              // need to make maxTextLength positive for self-referencing links
+              if (link.source.id === link.target.id) {
+                if (maxTextLength < 0) {
+                  maxTextLength = maxTextLength * -1;
+                }
+              }
 
-            if (this.currentClick - this.previousClick < this.doubleClickTimer) {
+              // estimate fontSize to fit in link length
+              ctx.font = '1px Sans-Serif';
+              const fontSize = Math.min(MAX_FONT_SIZE, maxTextLength / ctx.measureText(label).width);
+              ctx.font = `${fontSize}px Sans-Serif`;
+              const textWidth = ctx.measureText(label).width;
+              const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
 
-              // handle node ids
-              if (node.id !== this.firstClickID) {
-                // different nodes, go to one click behavior
+              // draw text label (with background rect)
+              ctx.save();
+              ctx.translate(coordinates.x, coordinates.y);
+              ctx.rotate(textAngle);
+
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+              ctx.fillRect(- bckgDimensions[0] / 2, - bckgDimensions[1] / 2, bckgDimensions[0], bckgDimensions[1]);
+
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = 'black';
+              ctx.fillText(label, 0, 0);
+              ctx.restore();
+            }
+          }) // add labels to links/edges
+          .linkLabel((link: any) => `${link.name} : ${link.id}`)
+          .onNodeHover((node: any) => {
+            highlightNodes.clear();
+            highlightLinks.clear();
+
+            if (node) {
+              highlightNodes.add(node);
+              if (node.neighbors) node.neighbors.forEach((neighbor: any) => highlightNodes.add(neighbor));
+              if (node.links) node.links.forEach((link: any) => highlightLinks.add(link));
+            }
+
+            hoverNode = node || null;
+          })
+          .onNodeClick((node: any) => {
+
+            this.loading = true
+
+            // base case, first click on a node ever
+            if (this.currentClick === 0) {
+              this.previousClick = Date.now();
+              this.currentClick = Date.now();
+              this.firstClickID = node.id;
+              void this.showNodeProperties(node);
+            } else {
+
+              // handle double click check
+              this.currentClick = Date.now();
+
+              if (this.currentClick - this.previousClick < this.doubleClickTimer) {
+
+                // handle node ids
+                if (node.id !== this.firstClickID) {
+                  // different nodes, go to one click behavior
+                  this.previousClick = Date.now();
+                  this.firstClickID = node.id;
+                  void this.showNodeProperties(node);
+                } else {
+                  // handle double click
+                  this.previousClick = Date.now();
+                  this.firstClickID = node.id;
+                  this.doubleClickFlag = true;
+                }
+
+              } else {
+                // clicks too far apart, reset and perform single click
                 this.previousClick = Date.now();
                 this.firstClickID = node.id;
                 void this.showNodeProperties(node);
-              } else {
-                // handle double click
-                this.previousClick = Date.now();
-                this.firstClickID = node.id;
-                this.doubleClickFlag = true;
               }
-              
-            } else {
-              // clicks too far apart, reset and perform single click
-              this.previousClick = Date.now();
-              this.firstClickID = node.id;
-              void this.showNodeProperties(node);
+
             }
 
-          }
+          })
+          .onNodeDrag((dragNode: any) => {
+            // overwrite the default behavior of resetting the graph zoom
+            this.canvas?.onEngineStop(() => true)
 
-        })
-        .onNodeDrag(() => {
-          // overwrite the default behavior of resetting the graph zoom
-          this.canvas?.onEngineStop(() => true)
-        })
-        .nodeRelSize(NODE_R)
-        .onLinkHover(link => {
-          highlightNodes.clear();
-          highlightLinks.clear();
+            // add edge sensing logic if enabled
+            if (this.edgeFlag) {
+              this.dragSourceNode = dragNode;
+              for (const node of this.graph.nodes) {
+                if (dragNode === node) {
+                  continue;
+                }
+                // close enough: snap onto node as target for suggested link
+                if (!this.interimLink && this.nodeDistance(dragNode, node) < this.snapInDistance) {
+                  this.setInterimLink(this.dragSourceNode, node);
+                }
+                // close enough to other node: snap over to other node as target for suggested link
+                if (this.interimLink && node !== this.interimLink.target && this.nodeDistance(dragNode, node) < this.snapInDistance) {
+                  this.removeLink(this.interimLink);
+                  this.setInterimLink(this.dragSourceNode, node);
+                }
+              }
+              // far away enough: snap out of the current target node
+              if (this.interimLink && this.nodeDistance(dragNode, this.interimLink.target) > this.snapOutDistance) {
+                this.removeInterimLinkWithoutAddingIt();
+              }
+            }
+          })
+          .onNodeDragEnd(() => {
 
-          if (link) {
-            highlightLinks.add(link);
-            highlightNodes.add(link.source);
-            highlightNodes.add(link.target);
-          }
-        })
-        .linkWidth(link => highlightLinks.has(link) ? 5 : 1) // bold highlighted links
-        .linkDirectionalParticles(3) // number of particles to display on highlighted links
-        .linkDirectionalParticleWidth(link => highlightLinks.has(link) ? 6 : 0) // show particles only when link is highlighted
-        .linkDirectionalParticleColor(() => 'cyan') // set link particle color
-        .linkDirectionalParticleSpeed(.015) // set link particle speed
+            // bring up create edge dialog if edgeFlag enabled and intermLink is populated
+            if (this.edgeFlag && this.interimLink) {
 
-    
+              // grab metatype relationship pairs
+              this.$client.listMetatypeRelationshipPairs(this.containerID, {
+                name: undefined,
+                limit: 1000,
+                offset: 0,
+                originID: this.interimLink.source.metatype_id,
+                destinationID: this.interimLink.target.metatype_id,
+                ontologyVersion: this.$store.getters.currentOntologyVersionID,
+                metatypeID: undefined,
+                loadRelationships: false,
+              })
+                  .then((pairs: MetatypeRelationshipPairT[]) => {
+                    this.relationshipPairs = pairs as MetatypeRelationshipPairT[]
+                  })
+                  .catch(e => this.errorMessage = e)
+
+              this.newEdgeDialog = true
+            }
+          })
+          .nodeRelSize(NODE_R)
+          .onLinkClick((link: any) => {
+            this.currentEdgeID = link.id;
+            this.edgeDialog = true;
+            this.$client.retrieveEdge(this.containerID, link.id).then((edge) => {
+              this.getEdgeInfo(edge)
+            });
+          })
+          .onLinkHover(link => {
+            highlightNodes.clear();
+            highlightLinks.clear();
+
+            if (link) {
+              highlightLinks.add(link);
+              highlightNodes.add(link.source);
+              highlightNodes.add(link.target);
+            }
+          })
+          .linkWidth(link => highlightLinks.has(link) ? 5 : 1) // bold highlighted links
+          .linkDirectionalParticles(3) // number of particles to display on highlighted links
+          .linkDirectionalParticleWidth(link => highlightLinks.has(link) ? 6 : 0) // show particles only when link is highlighted
+          .linkDirectionalParticleColor(() => 'cyan') // set link particle color
+          .linkDirectionalParticleSpeed(.015) // set link particle speed
+
+
       this.canvas.graphData(this.graph) // this call is necessary to force the canvas to reheat
 
       this.canvas.d3Force('charge') // applies some distance between nodes
@@ -661,10 +1178,10 @@ export default class GraphViewer extends Vue {
       this.canvas.d3Force('y', this.forceY)
 
 
-      this.canvas.cooldownTime(2000) // set to a small render time
+      this.canvas.cooldownTime(this.graphRenderTime) // set to a small render time
       this.canvas.onEngineStop(() => {
         this.buildNodeColorLegend()
-        this.canvas!.zoomToFit(1000, 10, () => {
+        this.canvas!.zoomToFit(this.zoomToFitDuration, 10, () => {
           this.loading = false
           return true
         })
@@ -682,8 +1199,8 @@ export default class GraphViewer extends Vue {
     this.filterOnGroupItem(null)
     // make new graph call for the selected node
     // retrieve a graph of depth 1 around the selected node
-    const newGraph = await this.$client.submitGraphQLQuery(this.containerID, { query: 
-      `{
+    const newGraph = await this.$client.submitGraphQLQuery(this.containerID, { query:
+          `{
           graph(
               root_node: "${node.id}"
               depth: "1"
@@ -750,15 +1267,14 @@ export default class GraphViewer extends Vue {
   }
 
   showNodeProperties(node: any) {
-    // only take sigle click action if the gap between previous and current clicks sufficiently far apart
+    // only take single click action if the gap between previous and current clicks sufficiently far apart
     this.delay(this.doubleClickTimer).then(() => {
       if (this.doubleClickFlag) {
 
         // on double click, center and zoom
-        this.canvas!.centerAt(node.x, node.y, 1000);
-        this.canvas!.zoom(4, 2000)
+        this.centerGraphOnNode(node)
         this.doubleClickFlag = false
-        
+
       } else {
         // ensure properties panel is already expanded (and only properties)
         this.openPanels = [0]
@@ -772,6 +1288,25 @@ export default class GraphViewer extends Vue {
 
       this.loading = false
     })
+  }
+
+  showEdgeProperties(edge: any) {
+    this.openPanels = [0]
+    this.opacity = 1.0
+    this.getEdgeInfo(edge)
+    this.selectedEdge = edge
+    this.edgeDialog = true;
+  }
+
+  listRelationshipKeys(relationshipID: string) {
+    this.$client.listMetatypeRelationshipKeys(this.containerID, relationshipID).then((keys) => {
+      this.relationshipKeys = keys;
+    })
+  }
+
+  centerGraphOnNode(node: any) {
+    this.canvas!.centerAt(node.x, node.y, 1000);
+    this.canvas!.zoom(5, 1500)
   }
 
   buildNodeColorLegend() {
@@ -800,15 +1335,15 @@ export default class GraphViewer extends Vue {
             nodeColorsMap.set(node.color, `${colorEntry}, ${node.metatype_name}`);
           }
         }
-        
-        
+
+
       } else {
-         if (this.colorGroup === 'data source') {
+        if (this.colorGroup === 'data source') {
           nodeColorsMap.set(node.color, dataSourceName);
-         } else {
+        } else {
           nodeColorsMap.set(node.color, node.metatype_name);
-         }
-        
+        }
+
       }
     });
 
@@ -827,7 +1362,7 @@ export default class GraphViewer extends Vue {
     this.filterOnGroupItem(null)
 
     this.loading = true
-    
+
     // delete the node color to force recoloring the node
     this.graph.nodes.forEach((node: any) => {
       delete node.color
@@ -841,7 +1376,7 @@ export default class GraphViewer extends Vue {
 
     this.colorGroupFilter = []
     this.filterOnGroupItem(null)
-    
+
   }
 
   // used for calculating where to place a link label on curved links
@@ -869,7 +1404,7 @@ export default class GraphViewer extends Vue {
 
         this.loadResults()
         this.updateColorGroup(this.colorGroup)
-        
+
         this.colorGroupFilter = []
         this.selectedFilters = []
         this.filterOnGroupItem(null)
@@ -911,6 +1446,168 @@ export default class GraphViewer extends Vue {
       created_at: data.created_at.split(' (')[0], // remove timezone text if present
       modified_at: data.modified_at.split(' (')[0] // remove timezone text if present
     }
+  }
+
+  getEdgeInfo(data: EdgeT) {
+    this.currentEdgeInfo = {
+      id: data.id,
+      container_id: this.containerID,
+      data_source_id: data.data_source_id,
+      origin_id: data.origin_id,
+      destination_id: data.destination_id,
+      metatype_relationship: {
+        name: data.metatype_relationship_name,
+        id: data.relationship_id
+      },
+      properties: data.properties,
+      created_at: data.created_at.split(' (')[0], // remove timezone text if present
+      modified_at: data.modified_at.split(' (')[0] // remove timezone text if present
+    }
+  }
+
+  nodeDistance(node1: NodeT, node2: NodeT) {
+    return Math.sqrt(Math.pow(node1.x - node2.x, 2) + Math.pow(node1.y - node2.y, 2));
+  }
+
+  setInterimLink(source: any, target: any) {
+    const linkId = this.linkIdCounter ++;
+    this.interimLink = { id: linkId, source: source, target: target, name: 'link_' + linkId };
+    this.graph.links.push(this.interimLink);
+    this.canvas?.graphData(this.graph)
+  }
+
+  removeLink(link: any) {
+    this.graph.links.splice(this.graph.links.indexOf(link), 1);
+  }
+
+  removeInterimLinkWithoutAddingIt() {
+    this.removeLink(this.interimLink);
+    this.interimLink = null;
+    this.canvas?.graphData(this.graph)
+  }
+
+  setDataSource(dataSource: any) {
+    this.selectedDataSource = dataSource
+  }
+
+  createNode(node: any) {
+
+    this.loading = true
+
+    const refinedNode = {
+      id: node.id,
+      container_id: node.container_id,
+      data_source_id: node.data_source_id,
+      metatype_id: node.metatype_id,
+      metatype_name: node.metatype_name,
+      created_at: node.created_at,
+      modified_at: node.modified_at,
+      properties: node.properties,
+      original_id: null,
+      collapsed: false,
+      childLinks: [],
+      new_node: true // extra property to be used for highlighting newly created nodes
+    }
+
+    this.graph.nodes.push(refinedNode)
+    this.canvas?.graphData(this.graph)
+
+    // returns an array with one object. returned node will have graph position
+    const nodeInGraph = this.graph.nodes.filter((graphNode: any) => {
+      return graphNode.id === refinedNode.id
+    })
+
+    // wait for the graph to refresh and then zoom and center on the new node
+    setTimeout(() => {
+      this.centerGraphOnNode(nodeInGraph[0])
+      this.loading = false
+    }, this.graphRenderTime + this.zoomToFitDuration)
+
+  }
+
+  deleteNode(node: any) {
+    this.nodeDialog = false;
+    this.$client.deleteNode(this.containerID, node.id)
+        .then((result) => {
+          if(result) {
+            this.graph.nodes = this.graph.nodes.filter((g: any) => g.id !== node.id)
+            this.canvas?.graphData(this.graph)
+          }
+        })
+        .catch(e => this.errorMessage = e)
+  }
+
+  deleteEdge(edgeID: string) {
+    this.edgeDialog = false;
+    this.$client.deleteEdge(this.containerID, edgeID)
+        .then((result) => {
+          if(result) {
+            this.graph.links = this.graph.links.filter((g: any) => g.id !== edgeID)
+            this.canvas?.graphData(this.graph)
+          }
+        })
+        .catch(e => this.errorMessage = e)
+  }
+
+  closeEdgeDialog() {
+    // if the user cancels or clicks outside the create edge dialog box, remove the temporary edge
+    this.removeInterimLinkWithoutAddingIt()
+    this.newEdgeDialog = false
+  }
+
+  createEdge() {
+    this.setEdgeProperties()
+    this.$client.createEdge(this.containerID,
+        {
+          "container_id": this.containerID,
+          "data_source_id": this.selectedDataSource.id,
+          "origin_id": this.interimLink.source.id,
+          "destination_id": this.interimLink.target.id,
+          "relationship_pair_id": this.selectedRelationshipPair.id,
+          "properties": this.edgeProperties,
+        }
+    )
+        .then((results: EdgeT[]) => {
+          // update graph edge with returned edge and reheat the graph
+
+          const refinedEdge = {
+            collapsed: false,
+            id: results[0].id,
+            name: this.selectedRelationshipPair.relationship_name,
+            nodePairId: this.interimLink.source.id + '_' + this.interimLink.target.id,
+            source: this.interimLink.source,
+            target: this.interimLink.target
+          }
+          this.graph.links.push(refinedEdge)
+          this.canvas?.graphData(this.graph)
+
+          this.newEdgeDialog = false
+        })
+        .catch(e => this.errorMessage = e)
+  }
+
+  setEdgeProperties() {
+    const properties: { [key: string]: any } = {};
+    this.relationshipKeys.forEach((key: MetatypeRelationshipKeyT) => {
+      if (String(key.default_value).toLowerCase() === "true") {
+        key.default_value = true
+      } else if (String(key.default_value).toLowerCase() === "false") {
+        key.default_value = false
+      } else if (String(key.default_value) === "" || String(key.default_value) === "null") {
+        key.default_value = undefined
+      }
+
+      if (key.data_type === "number") {
+        key.default_value = parseInt(key.default_value as string, 10)
+      }
+
+      if (key.data_type === "float") {
+        key.default_value = parseFloat(key.default_value as string)
+      }
+
+      properties[key.property_name] = key.default_value
+    })
+    this.edgeProperties = properties
   }
 
 }

@@ -4,13 +4,16 @@
       <v-toolbar flat color="white">
         <v-toolbar-title>{{$t('home.dataQueryDescription')}}</v-toolbar-title>
       </v-toolbar>
-      <query-builder :containerID="containerID" @results="loadResults"></query-builder>
+      <query-builder
+          :initialQuery="true"
+          :containerID="containerID"
+          @results="loadResults"></query-builder>
 
       <v-row>
         <v-col
             cols="12"
         >
-          <v-container flat class="pa-0">
+          <v-container flat class="pa-0" v-show="showGraph">
             <v-row v-if="results !== null && results.length == 0">
               <v-col align="center">
                 <p>{{$t('dataQuery.noResults')}}</p>
@@ -35,7 +38,7 @@
                 <v-card flat>
                   <v-row>
                     <v-col
-                        cols="12"
+                        :cols="12"
                         class="graph"
                     >
                       <graph-viewer :containerID="containerID" :results="results"></graph-viewer>
@@ -126,6 +129,7 @@ export default class DataQuery extends Vue {
 
   dialog = false
   tab: any | null = null
+  showGraph = false
   results: ResultSet | null = null
   selectedProperties: any| null = null
   expanded = []
@@ -151,6 +155,13 @@ export default class DataQuery extends Vue {
   }
 
   async loadResults(queryResult: any) {
+    // if queryResult === null, do not show graph
+    if (queryResult === null) {
+      this.showGraph = false
+      return
+    }
+
+    this.showGraph = true
     this.activeTabName = 'graph'
     this.tab = this.tabs()[0]
     this.results = queryResult.nodes
@@ -269,5 +280,4 @@ export default class DataQuery extends Vue {
 .node-info {
     border-left: 1px solid $darkgray;
 }
-
 </style>

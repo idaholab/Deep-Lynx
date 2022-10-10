@@ -9,7 +9,7 @@ import TypeMappingMapper from '../../../../mappers/data_warehouse/etl/type_mappi
 import Logger from '../../../../../services/logger';
 import ContainerRepository from '../container_respository';
 import {ContainerAlert} from '../../../../../domain_objects/data_warehouse/ontology/container';
-import GraphQLSchemaGenerator from '../../../../../graphql/schema';
+import GraphQLRunner from '../../../../../graphql/schema';
 
 export default class OntologyVersionRepository extends Repository implements RepositoryInterface<OntologyVersion> {
     #mapper: OntologyVersionMapper = OntologyVersionMapper.Instance;
@@ -33,9 +33,6 @@ export default class OntologyVersionRepository extends Repository implements Rep
         if (errors) {
             return Promise.resolve(Result.Failure(`ontology version does not pass validation ${errors.join(',')}`));
         }
-
-        // we must invalidate any previous graphql results if we're doing this
-        GraphQLSchemaGenerator.resetSchema(v.container_id);
 
         // if we have an id, attempt to update the Changelist
         if (v.id) {
@@ -67,7 +64,7 @@ export default class OntologyVersionRepository extends Repository implements Rep
 
     setStatus(
         id: string,
-        status: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready' | 'error',
+        status: 'pending' | 'approved' | 'rejected' | 'published' | 'deprecated' | 'ready' | 'error' | 'generating',
         statusMessage?: string,
     ): Promise<Result<boolean>> {
         return this.#mapper.SetStatus(id, status, statusMessage);
@@ -99,9 +96,6 @@ export default class OntologyVersionRepository extends Repository implements Rep
             SuperUser,
         );
         if (alert.isError) Logger.error(`unable create container alert for new ontology ${alert.error?.error}`);
-
-        // we must invalidate any previous graphql results if we're doing this
-        GraphQLSchemaGenerator.resetSchema(version.value.container_id);
 
         return Promise.resolve(Result.Success(true));
     }

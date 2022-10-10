@@ -164,7 +164,7 @@
                 <v-checkbox
                     v-model="selectedMetatypeRelationshipKey.required"
                 >
-                  <template v-slot:label>{{$t('editMetatypeRelationshipKey.required')}} <small style="color:#ff0000" >*</small></template>
+                  <template v-slot:label>{{$t('editMetatypeRelationshipKey.required')}}</template>
                 </v-checkbox>
                 <v-textarea
                     v-model="selectedMetatypeRelationshipKey.description"
@@ -213,6 +213,17 @@
                       deletable-chips
                       chips
                   ></v-combobox>
+
+                  <v-combobox
+                      v-model="selectedMetatypeRelationshipKey.options"
+                      :label="$t('editMetatypeRelationshipKey.options')"
+                      multiple
+                      clearable
+                      deletable-chips
+                      chips
+                  >
+                    <template slot="append-outer"><info-tooltip :message="$t('ontology.optionsHelp')"></info-tooltip> </template>
+                  </v-combobox>
                 </div>
 
                 <div v-if="selectedMetatypeRelationshipKey.data_type !== 'enumeration'" >
@@ -240,14 +251,6 @@
                   ></v-text-field>
                 </div>
 
-                <v-combobox
-                    v-model="selectedMetatypeRelationshipKey.options"
-                    :label="$t('editMetatypeRelationshipKey.options')"
-                    multiple
-                    clearable
-                    deletable-chips
-                    chips
-                ></v-combobox>
               </v-form>
               <p><span style="color:red">*</span> = {{$t('editMetatypeRelationshipKey.requiredField')}}</p>
             </v-col>

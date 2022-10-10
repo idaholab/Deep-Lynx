@@ -23,7 +23,7 @@ import MetatypeRelationshipPair from '../../domain_objects/data_warehouse/ontolo
 import MetatypeRelationshipPairMapper from '../../data_access_layer/mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
 import EdgeMapper from '../../data_access_layer/mappers/data_warehouse/data/edge_mapper';
 import Edge from '../../domain_objects/data_warehouse/data/edge';
-import GraphQLSchemaGenerator from '../../graphql/schema';
+import GraphQLRunner from '../../graphql/schema';
 import {plainToClass} from 'class-transformer';
 
 describe('Using a new GraphQL Query on graph return we', async () => {
@@ -623,8 +623,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
         expect(relPairs.value).not.empty;
         expect(edgeResults.value.length).eq(72);
 
-        const schemaGenerator = new GraphQLSchemaGenerator();
-        GraphQLSchemaGenerator.resetSchema();
+        const schemaGenerator = new GraphQLRunner();
 
         const schemaResults = await schemaGenerator.ForContainer(containerID, {});
         expect(schemaResults.isError).false;
@@ -680,8 +679,7 @@ describe('Using a new GraphQL Query on graph return we', async () => {
     });
 
     it('can save a query n layers deep given a root node to file', async () => {
-        const schemaGenerator = new GraphQLSchemaGenerator();
-        GraphQLSchemaGenerator.resetSchema();
+        const schemaGenerator = new GraphQLRunner();
 
         const schemaResults = await schemaGenerator.ForContainer(containerID, {returnFile: true});
         expect(schemaResults.isError).false;
@@ -780,6 +778,52 @@ describe('Using a new GraphQL Query on graph return we', async () => {
             expect(nL.edge_properties.color).eq('red');
             expect(nL.destination_properties.name).not.undefined;
             expect(nL.edge_data_source).undefined;
+        }
+    });
+
+    it('can filter by metatype uuid', async () => {
+        const response = await graphql({
+            schema,
+            source: `{
+                graph(
+                    root_node: "${songs[0].id}"
+                    node_type: {uuid: "${metatypes[1].uuid}"}
+                    depth: "10"
+                ){
+                    depth
+                    origin_id
+                    origin_properties
+                    origin_metatype_name
+                    relationship_name
+                    edge_properties
+                    destination_id
+                    destination_properties
+                    destination_metatype_name
+                    origin_metatype_uuid
+                    destination_metatype_uuid
+                    relationship_uuid
+                    relationship_pair_uuid
+                }
+            }`,
+        });
+        expect(response.errors).undefined;
+        expect(response.data).not.undefined;
+        const data = response.data!.graph;
+        expect(data.length).eq(13);
+
+        for (const nL of data) {
+            expect(nL.depth).not.undefined;
+            expect(nL.depth).gt(0);
+            expect(nL.depth).lte(10);
+            expect(nL.origin_properties.name).not.undefined;
+            expect(nL.edge_properties.color).eq('red');
+            expect(nL.destination_properties.name).not.undefined;
+            expect(nL.edge_data_source).undefined;
+            if (!(nL.origin_metatype_uuid === metatypes[1].uuid)) {
+                expect(nL.destination_metatype_uuid).eq(metatypes[1].uuid);
+            }
+            expect(nL.relationship_uuid).not.undefined;
+            expect(nL.relationship_pair_uuid).not.undefined;
         }
     });
 
@@ -933,6 +977,53 @@ describe('Using a new GraphQL Query on graph return we', async () => {
             expect(nL.relationship_id).eq(relationships[1].id);
             expect(nL.destination_properties.name).not.undefined;
             expect(nL.edge_data_source).undefined;
+        }
+    });
+
+    it('can filter by relationship uuid', async () => {
+        const response = await graphql({
+            schema,
+            source: `{
+                graph(
+                    root_node: "${songs[0].id}"
+                    edge_type: {uuid: "${relationships[1].uuid}"}
+                    depth: "10"
+                ){
+                    depth
+                    origin_id
+                    origin_properties
+                    origin_metatype_name
+                    relationship_name
+                    relationship_id
+                    edge_properties
+                    destination_id
+                    destination_properties
+                    destination_metatype_name
+                    relationship_uuid
+                    relationship_pair_uuid
+                    origin_metatype_uuid
+                    destination_metatype_uuid
+                }
+            }`,
+        });
+        expect(response.errors).undefined;
+        expect(response.data).not.undefined;
+        const data = response.data!.graph;
+        expect(data.length).eq(9);
+
+        for (const nL of data) {
+            expect(nL.depth).not.undefined;
+            expect(nL.depth).gt(0);
+            expect(nL.depth).lte(10);
+            expect(nL.origin_properties.name).not.undefined;
+            expect(nL.edge_properties.color).eq('red');
+            expect(nL.relationship_id).eq(relationships[1].id);
+            expect(nL.destination_properties.name).not.undefined;
+            expect(nL.edge_data_source).undefined;
+            expect(nL.relationship_uuid).eq(relationships[1].uuid);
+            expect(nL.relationship_pair_uuid).not.undefined;
+            expect(nL.origin_metatype_uuid).not.undefined;
+            expect(nL.destination_metatype_uuid).not.undefined;
         }
     });
 

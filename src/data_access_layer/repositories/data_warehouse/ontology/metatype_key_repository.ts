@@ -10,7 +10,7 @@ import Logger from '../../../../services/logger';
 import Config from '../../../../services/config';
 import MetatypeMapper from '../../../mappers/data_warehouse/ontology/metatype_mapper';
 import {plainToClass, serialize} from 'class-transformer';
-import GraphQLSchemaGenerator from '../../../../graphql/schema';
+import GraphQLRunner from '../../../../graphql/schema';
 
 /*
  We have the bare minimum of functions in this repository, and it only exists
@@ -160,7 +160,6 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
         const deleted = await Cache.del(`${MetatypeMapper.tableName}:${metatypeID}:keys`);
         if (!deleted) Logger.error(`unable to remove metatype ${metatypeID}'s keys from cache`);
 
-        GraphQLSchemaGenerator.resetSchema(containerID);
         return Promise.resolve(deleted);
     }
 
@@ -187,6 +186,11 @@ export default class MetatypeKeyRepository extends Repository implements Reposit
 
     id(operator: string, value: any) {
         super.query('id', operator, value);
+        return this;
+    }
+
+    uuid(operator: string, value: any) {
+        super.query('uuid', operator, value);
         return this;
     }
 
