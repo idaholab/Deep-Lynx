@@ -33,8 +33,11 @@ impl<'a> Finalize for Manager {}
 
 impl Manager {
     fn new(mut cx: FunctionContext) -> JsResult<JsBox<Manager>> {
+        // TODO: get the argument object out of the function
         let connection_string = cx.argument::<JsString>(0)?.value(&mut cx);
         //let connection_string = String::from("postgresql://darrjw@localhost:5433/deep_lynx");
+        // TODO: copy the argument object into a rust struct representing the table needing to be done
+
         let rt = runtime(&mut cx)?;
         let (tx, rx) = mpsc::channel::<ManagerMessage>();
 
@@ -44,9 +47,8 @@ impl Manager {
                 .connect(connection_string.borrow())
                 .await;
 
-            println!("Connections established");
-            let (mut tx1, mut rx1) = tokio::sync::mpsc::channel::<CopyMessage>(2048);
-
+            // TODO: pull in table information this is going to, pass it into the copy thread, this thread - only in charge of the copy
+            let (mut tx1, mut rx1) = tokio::sync::mpsc::channel::<ManagerMessage>(2048);
             rt.spawn(async move {
                 let start = Instant::now();
                 let mut copier = pool
@@ -60,10 +62,10 @@ impl Manager {
                     match message {
                         None => {}
                         Some(m) => match m {
-                            CopyMessage::Copy(message) => {
+                            ManagerMessage::Write(message) => {
                                 copier.send(message.as_slice()).await;
                             }
-                            CopyMessage::Close => {
+                            ManagerMessage::Close => {
                                 println!("finished");
                                 break;
                             }
@@ -71,37 +73,32 @@ impl Manager {
                     }
                 }
 
-                let bob = copier.finish().await;
-                println!("{:?}", bob);
-                let duration = start.elapsed();
-                println!("Time elapsed in writing 1 million rows is: {:?}", duration);
+                println!("{:?}", copier.finish().await);
+                println!("Time elapsed in writing 1 million rows is: {:?}", start.elapsed());
             });
 
-            let stream = NodeStream::new(rx);
-            let stream = BufReader::with_capacity(4096, stream);
-            let mut i = 0;
-
+            let stream = BufReader::with_capacity(4096, NodeStream::new(rx));
             let mut rdr = csv::ReaderBuilder::new().flexible(true).from_reader(stream);
 
+            let mut i = 0;
             while let Some(result) = rdr.records().next() {
-                // The iterator yields Result<StringRecord, Error>, so we check the
-                // error here..
+                // TODO: if it has a header, set a map for accessing and ordering the input if header isn't set then ignore map and do a straight insert in the order of the input
+                // TODO: create a record to send that's in the proper order, has timestamps converted, and has had string replace ran to get rid of "," on numbers (or "." if european)
+                // TODO: add better error handling
                 let record = result.unwrap();
-                tx1.send(CopyMessage::Copy(
+                let sent = tx1.send(ManagerMessage::Write(
                     [
                         record.as_byte_record().as_slice().to_vec(),
                         String::from("\n").into_bytes(),
                     ]
-                    .concat(),
+                        .concat(),
                 ))
-                .await;
-
-                // println!("{:?}", record);
+                    .await;
 
                 i += 1;
             }
 
-            tx1.send(CopyMessage::Close).await;
+            tx1.send(ManagerMessage::Close).await;
         });
 
         return Ok(cx.boxed(Manager { channel: tx }));
@@ -115,6 +112,7 @@ impl Manager {
             .as_slice(&mut cx)
             .to_vec();
 
+        // TODO: add better error handling
         manager.channel.send(ManagerMessage::Write(chunk)).unwrap();
 
         return Ok(null);
@@ -124,24 +122,15 @@ impl Manager {
         let manager = cx.argument::<JsBox<Manager>>(0)?;
         let null = cx.null();
 
+        // TODO: add better error handling
         manager.channel.send(ManagerMessage::Close).unwrap();
 
         return Ok(null);
     }
 }
 
-enum CopyMessage {
-    Copy(Vec<u8>),
-    Close,
-}
-
-// Messages sent on the database channel
 enum ManagerMessage {
-    // Promise to resolve and callback to be executed
-    // Deferred is threaded through the message instead of moved to the closure so that it
-    // can be manually rejected.
     Write(Vec<u8>),
-    // Indicates that the thread should be stopped and connection closed
     Close,
 }
 
@@ -221,7 +210,7 @@ impl Read for NodeStream {
 
 #[neon::main]
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
-    cx.export_function("manager", Manager::new)?;
+    cx.export_function("new", Manager::new)?;
     cx.export_function("read", Manager::read)?;
     cx.export_function("finish", Manager::finish)?;
     Ok(())
