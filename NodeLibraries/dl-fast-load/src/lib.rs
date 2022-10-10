@@ -33,8 +33,8 @@ impl<'a> Finalize for Manager {}
 
 impl Manager {
     fn new(mut cx: FunctionContext) -> JsResult<JsBox<Manager>> {
-        //let connection_string = cx.argument::<JsString>(0)?.value(&mut cx);
-        let connection_string = String::from("postgresql://darrjw@localhost:5433/deep_lynx");
+        let connection_string = cx.argument::<JsString>(0)?.value(&mut cx);
+        //let connection_string = String::from("postgresql://darrjw@localhost:5433/deep_lynx");
         let rt = runtime(&mut cx)?;
         let (tx, rx) = mpsc::channel::<ManagerMessage>();
 
