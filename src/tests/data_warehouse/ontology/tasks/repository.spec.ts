@@ -71,6 +71,13 @@ describe('A Task Repository', async () => {
         return Promise.resolve();
     });
 
+    after(async () => {
+        await UserMapper.Instance.Delete(user.id!);
+        await ContainerStorage.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
+    });
+
+
     it('can save, list, and find by ID', async () => {
         const repo = new TaskRepository();
 

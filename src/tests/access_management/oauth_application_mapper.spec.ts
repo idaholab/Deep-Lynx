@@ -38,7 +38,8 @@ describe('A OAuth Application can', async () => {
     });
 
     after(async () => {
-        return UserMapper.Instance.Delete(user.id!);
+        await UserMapper.Instance.Delete(user.id!);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can be saved to storage', async () => {

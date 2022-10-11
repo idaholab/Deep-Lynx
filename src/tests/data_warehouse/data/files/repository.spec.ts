@@ -75,7 +75,8 @@ describe('A File Repository can', async () => {
     after(async () => {
         await DataSourceMapper.Instance.Delete(dataSourceID);
         await UserMapper.Instance.Delete(user.id!);
-        return ContainerStorage.Instance.Delete(containerID);
+        await ContainerStorage.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can save a File', async () => {

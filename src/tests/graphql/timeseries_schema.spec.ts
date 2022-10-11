@@ -269,6 +269,7 @@ describe('A Data Source Schema Generator', async () => {
         // we have to delete datasource manually so hypertable gets deleted, hopefully that eventually
         // gets handled as hypertable should always be deleted with the datasource and container
         await DataSourceMapper.Instance.DeleteWithData(dataSourceID);
+        await UserMapper.Instance.Delete(user.id!);
         await ContainerMapper.Instance.Delete(containerID);
         // force close of database connection
         void PostgresAdapter.Instance.close();

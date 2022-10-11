@@ -57,7 +57,8 @@ describe('A User Container Invite can', async () => {
 
     after(async () => {
         await ContainerMapper.Instance.Delete(containerID);
-        return UserMapper.Instance.Delete(user.id!);
+        await UserMapper.Instance.Delete(user.id!);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can be saved to storage', async () => {
