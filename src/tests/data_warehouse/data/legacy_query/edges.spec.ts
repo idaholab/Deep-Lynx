@@ -142,7 +142,8 @@ describe('Using a legacy GraphQL Query for a nodes edges', async () => {
     });
 
     after(async () => {
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can query by id, with all edge resolvers functioning', async () => {

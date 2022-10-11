@@ -25,6 +25,10 @@ describe('A Container Import', async () => {
             Logger.debug('skipping container import tests, no storage layer');
             this.skip();
         }
+        if (process.env.TEST_ONTOLOGY_IMPORTER === 'false') {
+            Logger.debug('skipping container import tests');
+            this.skip();
+        }
         await PostgresAdapter.Instance.init();
 
         const userResult = await UserMapper.Instance.Create(
@@ -47,8 +51,12 @@ describe('A Container Import', async () => {
     });
 
     after(async () => {
-        await UserMapper.Instance.Delete(user.id!);
-        return PostgresAdapter.Instance.close();
+        if (process.env.TEST_ONTOLOGY_IMPORTER === 'true') {
+            await UserMapper.Instance.Delete(user.id!);
+            void PostgresAdapter.Instance.close();
+        }
+
+        return Promise.resolve();
     });
 
     it('can create a container from a valid ontology file', async () => {
@@ -70,7 +78,7 @@ describe('A Container Import', async () => {
             false,
             false,
             '',
-            './dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError, `container creation from ontology failed: ${container.error}`).false;
@@ -101,7 +109,7 @@ describe('A Container Import', async () => {
             false,
             false,
             '',
-            './dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).false;
@@ -117,7 +125,7 @@ describe('A Container Import', async () => {
             false,
             true,
             containerID,
-            './dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).false;
@@ -150,7 +158,7 @@ describe('A Container Import', async () => {
             false,
             false,
             '',
-            './dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).false;
@@ -186,7 +194,7 @@ describe('A Container Import', async () => {
             false,
             true,
             containerID,
-            './dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).true;
@@ -219,7 +227,7 @@ describe('A Container Import', async () => {
             false,
             false,
             '',
-            './dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).false;
@@ -255,7 +263,7 @@ describe('A Container Import', async () => {
             false,
             true,
             containerID,
-            './dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).true;
@@ -291,7 +299,7 @@ describe('A Container Import', async () => {
             false,
             false,
             '',
-            './dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).false;
@@ -366,7 +374,7 @@ describe('A Container Import', async () => {
             false,
             true,
             containerID,
-            './dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).true;
@@ -397,7 +405,7 @@ describe('A Container Import', async () => {
             false,
             false,
             '',
-            './dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).false;
@@ -412,7 +420,7 @@ describe('A Container Import', async () => {
             false,
             true,
             containerID,
-            './dist/data_access_layer/mappers/data_warehouse/ontology',
+            '../../dist/data_access_layer/mappers/data_warehouse/ontology',
         );
 
         expect(container.isError).false;

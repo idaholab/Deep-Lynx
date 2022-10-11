@@ -35,6 +35,11 @@ describe('A Task Mapper', async () => {
         return Promise.resolve();
     });
 
+    after(async () => {
+        await ContainerStorage.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
+    });
+
     it('can save to storage', async () => {
         const mapper = TaskMapper.Instance;
 

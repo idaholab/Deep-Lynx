@@ -55,8 +55,8 @@ describe('A File can', async () => {
 
     after(async () => {
         await DataSourceMapper.Instance.Delete(dataSourceID);
-
-        return ContainerStorage.Instance.Delete(containerID);
+        await ContainerStorage.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can be saved to storage', async () => {

@@ -28,6 +28,7 @@ import {Readable} from 'stream';
 import {DataSource} from '../../../interfaces_and_impl/data_warehouse/import/data_source';
 import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 import {ProcessData} from '../../../data_processing/process';
+import ContainerMapper from '../../../data_access_layer/mappers/data_warehouse/ontology/container_mapper';
 
 // This test will generate a basic ontology and test data, process it, and persist to the database. You must delete
 // this data manually - which is why it's disabled by default. This is generally used in a development environment when
