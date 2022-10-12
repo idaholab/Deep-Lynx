@@ -14,13 +14,8 @@
             cols="12"
         >
           <v-container flat class="pa-0" v-show="showGraph">
-            <v-row v-if="results !== null && results.length == 0">
-              <v-col align="center">
-                <p>{{$t('dataQuery.noResults')}}</p>
-              </v-col>
-            </v-row>
             <v-tabs
-                v-if="results !== null && results.length > 0"
+                v-if="results"
                 v-model="tab"
                 background-color="lightgray"
                 slider-color="darkgray"
@@ -183,6 +178,7 @@ export default class DataQuery extends Vue {
   prettyPrintDate(date: string) {
     return new Date(Date.parse(date)).toISOString().split("T").join(' ').slice(0, 16) + ' UTC'
   }
+
 }
 </script>
 
