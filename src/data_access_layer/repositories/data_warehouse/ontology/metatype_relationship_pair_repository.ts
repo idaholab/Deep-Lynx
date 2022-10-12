@@ -13,6 +13,7 @@ import MetatypeRelationship from '../../../../domain_objects/data_warehouse/onto
 import {User} from '../../../../domain_objects/access_management/user';
 import {PoolClient} from 'pg';
 import GraphQLRunner from '../../../../graphql/schema';
+import MetatypeRelationshipMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_mapper';
 
 /*
     MetatypeRelationshipPair contains methods for persisting and retrieving a metatype relationship pair
@@ -297,14 +298,14 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         super(MetatypeRelationshipPairMapper.tableName);
         // in order to select the composite fields we must redo the initial query
         // to accept LEFT JOINs
-        this._rawQuery = [
-            `SELECT metatype_relationship_pairs.*, origin.name as origin_metatype_name , 
+        this._query.SELECT = [
+            `SELECT ${this._tableAlias}.*, origin.name as origin_metatype_name , 
                     destination.name AS destination_metatype_name, 
-                    relationships.name AS relationship_name 
-                FROM ${MetatypeRelationshipPairMapper.tableName}`,
-            `LEFT JOIN metatypes origin ON metatype_relationship_pairs.origin_metatype_id = origin.id`,
-            `LEFT JOIN metatypes destination ON metatype_relationship_pairs.destination_metatype_id = destination.id`,
-            `LEFT JOIN metatype_relationships relationships ON metatype_relationship_pairs.relationship_id = relationships.id`,
+                    relationships.name AS relationship_name`,
+            `FROM ${MetatypeRelationshipPairMapper.tableName} ${this._tableAlias}`,
+            `LEFT JOIN metatypes origin ON ${this._tableAlias}.origin_metatype_id = origin.id`,
+            `LEFT JOIN metatypes destination ON ${this._tableAlias}.destination_metatype_id = destination.id`,
+            `LEFT JOIN metatype_relationships relationships ON ${this._tableAlias}.relationship_id = relationships.id`,
         ];
     }
 
@@ -314,32 +315,27 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
     }
 
     containerID(operator: string, value: any) {
-        super.query('metatype_relationship_pairs.container_id', operator, value);
+        super.query('container_id', operator, value);
         return this;
     }
 
     name(operator: string, value: any) {
-        super.query('metatype_relationship_pairs.name', operator, value);
+        super.query('name', operator, value);
         return this;
     }
 
     description(operator: string, value: any) {
-        super.query('metatype_relationship_pairs.description', operator, value);
+        super.query('description', operator, value);
         return this;
     }
 
-    // metatypeID will search relationships by both origin and destination
-    metatypeID(operator: string, value: any) {
-        return this.origin_metatype_id(operator, value).or().destination_metatype_id(operator, value);
-    }
-
     origin_metatype_id(operator: string, value: any) {
-        super.query('metatype_relationship_pairs.origin_metatype_id', operator, value);
+        super.query('origin_metatype_id', operator, value);
         return this;
     }
 
     destination_metatype_id(operator: string, value: any) {
-        super.query('metatype_relationship_pairs.destination_metatype_id', operator, value);
+        super.query('destination_metatype_id', operator, value);
         return this;
     }
 
@@ -354,31 +350,31 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
     }
 
     relationship_id(operator: string, value: any) {
-        super.query('metatype_relationship_pairs.relationship_id', operator, value);
+        super.query('relationship_id', operator, value);
         return this;
     }
 
     relationship_type(operator: string, value: any) {
-        super.query('metatype_relationship_pairs.relationship_type', operator, value);
+        super.query('relationship_type', operator, value);
         return this;
     }
 
     ontologyVersion(operator: string, value?: any) {
         if (typeof value === 'undefined') {
-            super.query('metatype_relationship_pairs.ontology_version', 'is null');
+            super.query('ontology_version', 'is null');
         } else {
-            super.query('metatype_relationship_pairs.ontology_version', operator, value);
+            super.query('ontology_version', operator, value);
         }
         return this;
     }
 
     deleted_at(operator: string, value?: any) {
-        super.query('metatype_relationship_pairs.deleted_at', operator, value);
+        super.query('deleted_at', operator, value);
         return this;
     }
 
     uuid(operator: string, value: any) {
-        super.query('metatype_relationship_pairs.uuid', operator, value);
+        super.query('uuid', operator, value);
         return this;
     }
 
@@ -386,14 +382,15 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
         const results = await super.count();
 
         // reset the query
-        this._rawQuery = [
-            `SELECT metatype_relationship_pairs.*, 
+        this._query.SELECT = [
+            `SELECT ${this._tableAlias}.*, 
                     origin.name as origin_metatype_name , 
                     destination.name AS destination_metatype_name, 
-                    relationships.name AS relationship_name FROM ${MetatypeRelationshipPairMapper.tableName}`,
-            `LEFT JOIN metatypes origin ON metatype_relationship_pairs.origin_metatype_id = origin.id`,
-            `LEFT JOIN metatypes destination ON metatype_relationship_pairs.destination_metatype_id = destination.id`,
-            `LEFT JOIN metatype_relationships relationships ON metatype_relationship_pairs.relationship_id = relationships.id`,
+                    relationships.name AS relationship_name`,
+            `FROM ${MetatypeRelationshipPairMapper.tableName} ${this._tableAlias}`,
+            `LEFT JOIN metatypes origin ON ${this._tableAlias}.origin_metatype_id = origin.id`,
+            `LEFT JOIN metatypes destination ON ${this._tableAlias}.destination_metatype_id = destination.id`,
+            `LEFT JOIN metatype_relationships relationships ON ${this._tableAlias}.relationship_id = relationships.id`,
         ];
 
         if (results.isError) return Promise.resolve(Result.Pass(results));
@@ -407,14 +404,15 @@ export default class MetatypeRelationshipPairRepository extends Repository imple
             resultClass: MetatypeRelationshipPair,
         });
         // reset the query
-        this._rawQuery = [
-            `SELECT metatype_relationship_pairs.*, 
+        this._query.SELECT = [
+            `SELECT ${this._tableAlias}.*, 
                     origin.name as origin_metatype_name , 
                     destination.name AS destination_metatype_name, 
-                    relationships.name AS relationship_name FROM ${MetatypeRelationshipPairMapper.tableName}`,
-            `LEFT JOIN metatypes origin ON metatype_relationship_pairs.origin_metatype_id = origin.id`,
-            `LEFT JOIN metatypes destination ON metatype_relationship_pairs.destination_metatype_id = destination.id`,
-            `LEFT JOIN metatype_relationships relationships ON metatype_relationship_pairs.relationship_id = relationships.id`,
+                    relationships.name AS relationship_name`,
+            `FROM ${MetatypeRelationshipPairMapper.tableName} ${this._tableAlias}`,
+            `LEFT JOIN metatypes origin ON ${this._tableAlias}.origin_metatype_id = origin.id`,
+            `LEFT JOIN metatypes destination ON ${this._tableAlias}.destination_metatype_id = destination.id`,
+            `LEFT JOIN metatype_relationships relationships ON ${this._tableAlias}.relationship_id = relationships.id`,
         ];
 
         if (results.isError) return Promise.resolve(Result.Pass(results));

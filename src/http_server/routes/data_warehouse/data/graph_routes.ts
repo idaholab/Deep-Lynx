@@ -124,12 +124,11 @@ export default class GraphRoutes {
             repo = repo
                 .where()
                 .containerID('eq', req.container.id!)
-                .and()
-                .origin_node_id('in', payload.node_ids)
-                .or()
-                .containerID('eq', req.container.id!)
-                .and()
-                .destination_node_id('in', payload.node_ids);
+                .and( new EdgeRepository()
+                    .origin_node_id('in', payload.node_ids)
+                    .or()
+                    .destination_node_id('in', payload.node_ids)
+                );
 
             if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
                 repo.count(undefined, {

@@ -9,6 +9,7 @@ import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 import {QueueFactory} from '../../../../services/queue/queue';
 import Logger from '../../../../services/logger';
 import Config from '../../../../services/config';
+import DataSourceMapper from '../../../mappers/data_warehouse/import/data_source_mapper';
 
 /*
     DataStaging contains methods for persisting and retrieving an import's data
@@ -221,10 +222,10 @@ export default class DataStagingRepository extends Repository implements Reposit
     constructor() {
         super(DataStagingMapper.tableName);
 
-        this._rawQuery = [
-            `SELECT data_staging.*, data_sources.container_id, data_sources.config AS data_source_config
-            FROM data_staging 
-            LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id`,
+        this._query.SELECT = [
+            `SELECT ${this._tableAlias}.*, data_sources.container_id, data_sources.config AS data_source_config`,
+            `FROM data_staging ${this._tableAlias} 
+            LEFT JOIN data_sources ON data_sources.id = ${this._tableAlias}.data_source_id`,
         ];
     }
 
@@ -235,11 +236,6 @@ export default class DataStagingRepository extends Repository implements Reposit
 
     importID(operator: string, value: any) {
         super.query('import_id', operator, value);
-        return this;
-    }
-
-    status(operator: string, value: 'ready' | 'processing' | 'error' | 'stopped' | 'completed') {
-        super.query('status', operator, value);
         return this;
     }
 
@@ -257,10 +253,10 @@ export default class DataStagingRepository extends Repository implements Reposit
     async count(transaction?: PoolClient): Promise<Result<number>> {
         const results = await super.count(transaction);
 
-        this._rawQuery = [
-            `SELECT data_staging.*, data_sources.container_id, data_sources.config AS data_source_config
-             FROM data_staging
-                      LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id`,
+        this._query.SELECT = [
+            `SELECT ${this._tableAlias}.*, data_sources.container_id, data_sources.config AS data_source_config`,
+            `FROM data_staging ${this._tableAlias} 
+            LEFT JOIN data_sources ON data_sources.id = ${this._tableAlias}.data_source_id`,
         ];
 
         return Promise.resolve(Result.Pass(results));
@@ -280,10 +276,10 @@ export default class DataStagingRepository extends Repository implements Reposit
             resultClass: DataStaging,
         });
 
-        this._rawQuery = [
-            `SELECT data_staging.*, data_sources.container_id, data_sources.config AS data_source_config
-            FROM data_staging 
-            LEFT JOIN data_sources ON data_sources.id = data_staging.data_source_id`,
+        this._query.SELECT = [
+            `SELECT ${this._tableAlias}.*, data_sources.container_id, data_sources.config AS data_source_config`,
+            `FROM data_staging ${this._tableAlias} 
+            LEFT JOIN data_sources ON data_sources.id = ${this._tableAlias}.data_source_id`,
         ];
 
         return Promise.resolve(Result.Pass(results));

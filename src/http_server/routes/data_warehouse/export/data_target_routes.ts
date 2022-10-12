@@ -145,12 +145,11 @@ export default class DataTargetRoutes {
                     .finally(() => next());
         } else {
             repository
-                .and()
-                .archived(String(req.query.archived).toLowerCase() === 'true')
-                .or()
-                .containerID('eq', req.container!.id) // we have to specify the container again in an OR statement
-                .and()
-                .archived(false) // we always want to at least list all unarchived ones
+                .and( new DataTargetRepository()
+                    .archived(String(req.query.archived).toLowerCase() === 'true')
+                    .or()
+                    .archived(false) // we always want to at least list all unarchived ones
+                )
                 .list({
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,

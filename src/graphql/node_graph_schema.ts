@@ -276,10 +276,10 @@ export default class NodeGraphQLSchemaGenerator {
                 // same statement but we must add "and" in front of each subsequent call to "query" or else we'll get
                 // sql statement errors
                 if (i === 0) {
-                    repo = repo.query(propertyMap[key].column_name, input[key].operator, input[key].value, propertyMap[key].value_type);
+                    repo = repo.query(propertyMap[key].column_name, input[key].operator, input[key].value, {dataType: propertyMap[key].value_type});
                     i++;
                 } else {
-                    repo = repo.and().query(propertyMap[key].column_name, input[key].operator, input[key].value, propertyMap[key].value_type);
+                    repo = repo.and().query(propertyMap[key].column_name, input[key].operator, input[key].value, {dataType: propertyMap[key].value_type});
                 }
             });
 
@@ -778,13 +778,29 @@ export default class NodeGraphQLSchemaGenerator {
                     input[key].value = input[key].value[0];
                 }
 
-                // same statement but we must add "and" in front of each subsequent call to "query" or else we'll get
-                // sql statement errors
+                // same statement but we must add "and" in front of each subsequent call to "query"
+                // otherwise we'll get sql statement errors
                 if (i === 0) {
-                    repo = repo.query(propertyMap[key].column_name, input[key].operator, input[key].value, propertyMap[key].type);
+                    repo = repo.query(
+                        propertyMap[key].column_name,
+                        input[key].operator,
+                        input[key].value,
+                        {
+                            dataType: propertyMap[key].type,
+                            tableName: `y_${source.DataSourceRecord?.id}`
+                        }
+                    );
                     i++;
                 } else {
-                    repo = repo.and().query(propertyMap[key].column_name, input[key].operator, input[key].value, propertyMap[key].type);
+                    repo = repo.and().query(
+                        propertyMap[key].column_name,
+                        input[key].operator,
+                        input[key].value,
+                        {
+                            dataType: propertyMap[key].type,
+                            tableName: `y_${source.DataSourceRecord?.id}`
+                        }
+                    );
                 }
             });
 

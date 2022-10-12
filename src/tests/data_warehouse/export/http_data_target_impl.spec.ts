@@ -225,7 +225,6 @@ describe('An HTTP Data Target can', async () => {
 
         const key = 'dataTargetLock' + fetchedTarget.value.DataTargetRecord?.id;
         const cachedTarget = await Cache.get(key);
-        console.log(cachedTarget);
         expect(cachedTarget).to.equal(undefined);
 
         return Promise.resolve();

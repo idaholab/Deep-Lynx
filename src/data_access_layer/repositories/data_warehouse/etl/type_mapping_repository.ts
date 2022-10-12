@@ -627,10 +627,12 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
         // in order to search based on the name of resulting metatype/metatype relationships
         // we must create a series of joins
-        this._rawQuery = [
-            `SELECT DISTINCT ON (type_mappings.id) type_mappings.*, 
-             metatypes.name as resulting_metatype_name, metatype_relationships.name as resulting_metatype_relationship_name FROM type_mappings`,
-            'LEFT JOIN type_mapping_transformations ON type_mappings.id = type_mapping_transformations.type_mapping_id',
+        this._query.SELECT = [
+            `SELECT DISTINCT ON (${this._tableAlias}.id) ${this._tableAlias}.*, 
+                metatypes.name as resulting_metatype_name, 
+                metatype_relationships.name as resulting_metatype_relationship_name`,
+            `FROM type_mappings ${this._tableAlias}`,
+            `LEFT JOIN type_mapping_transformations ON ${this._tableAlias}.id = type_mapping_transformations.type_mapping_id`,
             'LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id',
             'LEFT JOIN metatype_relationship_pairs on type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id',
             'LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id ',
@@ -638,22 +640,22 @@ export default class TypeMappingRepository extends Repository implements Reposit
     }
 
     id(operator: string, value: any) {
-        super.query('type_mappings.id', operator, value);
+        super.query('id', operator, value);
         return this;
     }
 
     containerID(operator: string, value: any) {
-        super.query('type_mappings.container_id', operator, value);
+        super.query('container_id', operator, value);
         return this;
     }
 
     dataSourceID(operator: string, value: any) {
-        super.query('type_mappings.data_source_id', operator, value);
+        super.query('data_source_id', operator, value);
         return this;
     }
 
     active(operator: string, value: any) {
-        super.query('type_mappings.active', operator, value);
+        super.query('active', operator, value);
         return this;
     }
 
@@ -670,10 +672,12 @@ export default class TypeMappingRepository extends Repository implements Reposit
     async count(): Promise<Result<number>> {
         const results = await super.count();
         // reset the query
-        this._rawQuery = [
-            `SELECT DISTINCT ON (type_mappings.id) type_mappings.*, 
-             metatypes.name as resulting_metatype_name, metatype_relationships.name as resulting_metatype_relationship_name FROM type_mappings`,
-            'LEFT JOIN type_mapping_transformations ON type_mappings.id = type_mapping_transformations.type_mapping_id',
+        this._query.SELECT = [
+            `SELECT DISTINCT ON (${this._tableAlias}.id) ${this._tableAlias}.*, 
+                metatypes.name as resulting_metatype_name, 
+                metatype_relationships.name as resulting_metatype_relationship_name`,
+            `FROM type_mappings ${this._tableAlias}`,
+            `LEFT JOIN type_mapping_transformations ON ${this._tableAlias}.id = type_mapping_transformations.type_mapping_id`,
             'LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id',
             'LEFT JOIN metatype_relationship_pairs on type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id',
             'LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id ',
@@ -688,10 +692,12 @@ export default class TypeMappingRepository extends Repository implements Reposit
             resultClass: TypeMapping,
         });
         // reset the query
-        this._rawQuery = [
-            `SELECT DISTINCT ON (type_mappings.id) type_mappings.*, 
-             metatypes.name as resulting_metatype_name, metatype_relationships.name as resulting_metatype_relationship_name FROM type_mappings`,
-            'LEFT JOIN type_mapping_transformations ON type_mappings.id = type_mapping_transformations.type_mapping_id',
+        this._query.SELECT = [
+            `SELECT DISTINCT ON (${this._tableAlias}.id) ${this._tableAlias}.*, 
+                metatypes.name as resulting_metatype_name, 
+                metatype_relationships.name as resulting_metatype_relationship_name`,
+            `FROM type_mappings ${this._tableAlias}`,
+            `LEFT JOIN type_mapping_transformations ON ${this._tableAlias}.id = type_mapping_transformations.type_mapping_id`,
             'LEFT JOIN metatypes ON type_mapping_transformations.metatype_id = metatypes.id',
             'LEFT JOIN metatype_relationship_pairs on type_mapping_transformations.metatype_relationship_pair_id = metatype_relationship_pairs.id',
             'LEFT JOIN metatype_relationships ON metatype_relationship_pairs.relationship_id = metatype_relationships.id ',
