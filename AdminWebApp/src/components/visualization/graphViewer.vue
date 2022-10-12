@@ -262,7 +262,7 @@
         </v-list>
       </v-navigation-drawer>
 
-      <div id="forcegraph" ref="forcegraph" ></div>
+      <div ref="forcegraph" ></div>
       
     </v-card>
     <!-- End Graph Component -->
@@ -684,6 +684,8 @@ export default class GraphViewer extends Vue {
   booleanOptions = [true, false]
   edgeProperties = {}
 
+  blankGraphFlag = false
+
   @Watch('results', {immediate: true})
   graphUpdate() {
     // reset graph
@@ -793,21 +795,32 @@ export default class GraphViewer extends Vue {
 
     // fetch the edges
     // returns all edges in the container where either the origin or destination id is in the provided list of node IDs
-    edges = await this.$client.listEdgesForNodeIDs(this.containerID, nodeIDs)
+    if (nodeIDs.length > 0) {
+      edges = await this.$client.listEdgesForNodeIDs(this.containerID, nodeIDs)
 
-    if (edges) {
-      edges.forEach((edge: any) => {
-        // only push links where both source and target IDs are present in the graph
-        if (nodeIDs.indexOf(edge.origin_id) != -1 && nodeIDs.indexOf(edge.destination_id) != -1) {
-          this.graph.links.push({
-            source: edge.origin_id,
-            target: edge.destination_id,
-            name: edge.metatype_relationship_name,
-            id: edge.id,
-            collapsed: false // flag for showing/hiding links. set all to visible by default
-          })
-        }
-      });
+      if (edges) {
+        edges.forEach((edge: any) => {
+          // only push links where both source and target IDs are present in the graph
+          if (nodeIDs.indexOf(edge.origin_id) != -1 && nodeIDs.indexOf(edge.destination_id) != -1) {
+            this.graph.links.push({
+              source: edge.origin_id,
+              target: edge.destination_id,
+              name: edge.metatype_relationship_name,
+              id: edge.id,
+              collapsed: false // flag for showing/hiding links. set all to visible by default
+            })
+          }
+        });
+      }
+    } else {
+      // we need to load a blank graph to allow editing
+      // mark the flag as true to accomodate a blank graph
+      this.blankGraphFlag = true
+
+      // push a simple node to force the graph to render
+      this.graph.nodes.push({
+        "id": "test"
+      })
     }
 
 
@@ -891,13 +904,11 @@ export default class GraphViewer extends Vue {
     });
 
     // create a map of datasource IDs and names for reference by nodes
-    if (this.graph.nodes.length > 0) {
-      const sources = await this.$client.listDataSources(this.graph.nodes[0].container_id)
+    const sources = await this.$client.listDataSources(this.containerID)
 
-      for (const datasource of sources) {
-        if (datasource.id != undefined) {
-          this.datasources[datasource.id] = datasource;
-        }
+    for (const datasource of sources) {
+      if (datasource.id != undefined) {
+        this.datasources[datasource.id] = datasource;
       }
     }
 
@@ -1170,6 +1181,12 @@ export default class GraphViewer extends Vue {
           .linkDirectionalParticleSpeed(.015) // set link particle speed
 
 
+      // handle potential empty results
+      if (this.blankGraphFlag) {
+        this.graph.nodes = []
+        this.loading = false
+      }
+      
       this.canvas.graphData(this.graph) // this call is necessary to force the canvas to reheat
 
       this.canvas.d3Force('charge') // applies some distance between nodes
