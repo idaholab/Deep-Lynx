@@ -170,7 +170,7 @@ export default class OAuthRepository extends Repository implements RepositoryInt
             }
         } else {
             // if we're not doing PKCE there must be a client secret present
-            const application = await OAuthMapper.Instance.Retrieve(exchangeReq.client_id!);
+            const application = await OAuthMapper.Instance.RetrieveByClientID(exchangeReq.client_id!);
             if (application.isError) return new Promise((resolve) => resolve(Result.Pass(application)));
 
             const valid = await bcrypt.compare(exchangeReq.client_secret!, application.value.client_secret!);
