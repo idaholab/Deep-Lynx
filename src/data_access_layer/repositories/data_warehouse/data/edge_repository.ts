@@ -363,7 +363,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     }
 
     property(key: string, operator: string, value: any, dataType?: string) {
-        super.queryJsonb(key, 'properties', operator, value, dataType);
+        super.queryJsonb(key, 'properties', operator, value, {dataType});
         return this;
     }
 

@@ -69,13 +69,19 @@ export default class ImportRepository extends Repository implements RepositoryIn
         super(ImportMapper.tableName);
 
         // in order to select the composite fields we must redo the initial query
-        this._rawQuery = [
-            `SELECT imports.*,
-            SUM(CASE WHEN (data_staging.errors IS NOT NULL AND data_staging.errors != '{}') AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS total_errors,
-            SUM(CASE WHEN data_staging.inserted_at IS NOT NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
-            SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
-            FROM imports
-            LEFT JOIN data_staging ON data_staging.import_id = imports.id`,
+        this._query.SELECT = [
+            `SELECT ${this._tableAlias}.*,
+            SUM(CASE WHEN (data_staging.errors IS NOT NULL 
+                AND data_staging.errors != '{}') 
+                AND data_staging.import_id = ${this._tableAlias}.id 
+                THEN 1 ELSE 0 END) AS total_errors,
+            SUM(CASE WHEN data_staging.inserted_at IS NOT NULL 
+                AND data_staging.import_id = ${this._tableAlias}.id 
+                THEN 1 ELSE 0 END) AS records_inserted,
+            SUM(CASE WHEN data_staging.import_id = ${this._tableAlias}.id 
+                THEN 1 ELSE 0 END) as total_records`,
+            `FROM imports ${this._tableAlias} 
+            LEFT JOIN data_staging ON data_staging.import_id = ${this._tableAlias}.id`,
         ];
     }
 
@@ -90,12 +96,12 @@ export default class ImportRepository extends Repository implements RepositoryIn
     }
 
     dataSourceID(operator: string, value: any) {
-        super.query('imports.data_source_id', operator, value);
+        super.query('data_source_id', operator, value);
         return this;
     }
 
     status(operator: string, value: 'ready' | 'processing' | 'error' | 'stopped' | 'completed') {
-        super.query('imports.status', operator, value);
+        super.query('status', operator, value);
         return this;
     }
 
@@ -103,31 +109,37 @@ export default class ImportRepository extends Repository implements RepositoryIn
         const results = await super.count(transaction, queryOptions);
 
         // in order to select the composite fields we must redo the initial query
-        this._rawQuery = [
-            `SELECT imports.*,
-            SUM(CASE WHEN data_staging.inserted_at IS NOT NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
-            SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
-            FROM imports
-            LEFT JOIN data_staging ON data_staging.import_id = imports.id`,
+        this._query.SELECT = [
+            `SELECT ${this._tableAlias}.*,
+            SUM(CASE WHEN data_staging.inserted_at IS NOT NULL 
+                AND data_staging.import_id = ${this._tableAlias}.id 
+                THEN 1 ELSE 0 END) AS records_inserted,
+            SUM(CASE WHEN data_staging.import_id = ${this._tableAlias}.id 
+                THEN 1 ELSE 0 END) as total_records`,
+            `FROM imports ${this._tableAlias} 
+            LEFT JOIN data_staging ON data_staging.import_id = ${this._tableAlias}.id`,
         ];
 
         return Promise.resolve(Result.Pass(results));
     }
 
     async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<Import[]>> {
-        if (options) options.groupBy = 'imports.id';
+        if (options) options.groupBy = `${this._tableAlias}.id`;
 
         const results = await super.findAll<Import>(options, {
             transaction,
             resultClass: Import,
         });
         // in order to select the composite fields we must redo the initial query
-        this._rawQuery = [
-            `SELECT imports.*,
-            SUM(CASE WHEN data_staging.inserted_at IS NOT NULL AND data_staging.import_id = imports.id THEN 1 ELSE 0 END) AS records_inserted,
-            SUM(CASE WHEN data_staging.import_id = imports.id THEN 1 ELSE 0 END) as total_records
-            FROM imports
-            LEFT JOIN data_staging ON data_staging.import_id = imports.id`,
+        this._query.SELECT = [
+            `SELECT ${this._tableAlias}.*,
+            SUM(CASE WHEN data_staging.inserted_at IS NOT NULL 
+                AND data_staging.import_id = ${this._tableAlias}.id 
+                THEN 1 ELSE 0 END) AS records_inserted,
+            SUM(CASE WHEN data_staging.import_id = ${this._tableAlias}.id 
+                THEN 1 ELSE 0 END) as total_records`,
+            `FROM imports ${this._tableAlias} 
+            LEFT JOIN data_staging ON data_staging.import_id = ${this._tableAlias}.id`,
         ];
 
         return Promise.resolve(Result.Pass(results));

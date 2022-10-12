@@ -1,7 +1,5 @@
 import {BaseDomainClass} from '../../../common_classes/base_domain_class';
-import {Expose, plainToClass, Transform, Type} from 'class-transformer';
-import Metatype, {MetatypeID} from '../ontology/metatype';
-import MetatypeRelationshipPair, {MetatypeRelationshipPairID} from '../ontology/metatype_relationship_pair';
+import {Type} from 'class-transformer';
 import {EdgeMetadata} from './edge';
 import {NodeMetadata} from './node';
 
@@ -137,7 +135,7 @@ export default class NodeLeaf extends BaseDomainClass {
     }
 }
 
-export const nodeLeafQuery = `SELECT * FROM
+export const nodeLeafQuery = [`SELECT nodeleafs.*`, `FROM
 (WITH RECURSIVE search_graph(
     origin_id, origin_metatype_id, origin_metatype_name, origin_properties, origin_data_source,
     origin_metadata, origin_created_by, origin_created_at, origin_modified_by, origin_modified_at,
@@ -217,4 +215,4 @@ UNION
      WHERE g.container_id = $2 AND sg.depth < $3
 ) SELECT * FROM search_graph
 WHERE (origin_id = ANY(path)) AND destination_id IS NOT NULL AND origin_id IS NOT NULL)) nodeleafs
-WHERE depth <= $3`;
+WHERE depth <= $3`];

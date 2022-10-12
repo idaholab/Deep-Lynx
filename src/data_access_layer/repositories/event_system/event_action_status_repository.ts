@@ -54,7 +54,7 @@ export default class EventActionStatusRepository extends Repository implements R
     }
 
     eventID(operator: string, value: any) {
-        super.query(`event ->> 'id'`, operator, value);
+        super.queryJsonb('id', 'event', operator, value);
         return this;
     }
 

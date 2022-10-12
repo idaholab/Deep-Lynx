@@ -19,7 +19,7 @@ export default class EdgeQueueItemRepository extends Repository {
     }
 
     nextAttemptAt(operator: string, value: string) {
-        super.query('next_attempt_at', operator, value, 'date');
+        super.query('next_attempt_at', operator, value, {dataType: 'date'});
         return this;
     }
 
