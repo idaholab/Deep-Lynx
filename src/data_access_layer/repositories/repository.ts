@@ -392,7 +392,12 @@ export class Repository {
             destination_alias, options.destination_col
         ];
 
-        this._query.JOINS?.push(format(`%s JOIN %s %s ON %s.%s %s %s.%s`, ...values));
+        const current_joins = this._query.JOINS.join(' ');
+        const search = new RegExp(`.* JOIN .* ${destination_alias!} ON`, 'g');
+        // only add join if table isn't already joined under alias
+        if (!current_joins.match(search)) {
+            this._query.JOINS?.push(format(`%s JOIN %s %s ON %s.%s %s %s.%s`, ...values));
+        }
 
         return this;
     }
