@@ -30,6 +30,7 @@ import EdgeRepository from '../../../data_access_layer/repositories/data_warehou
 import MetatypeRelationshipPairRepository from '../../../data_access_layer/repositories/data_warehouse/ontology/metatype_relationship_pair_repository';
 import DataSourceRepository, { DataSourceFactory } from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import fs from 'fs';
+import DataStagingRepository from '../../../data_access_layer/repositories/data_warehouse/import/data_staging_repository';
 
 describe('The updated repository layer', async () => {
     let containerID: string;
@@ -1290,6 +1291,62 @@ describe('The updated repository layer', async () => {
         
         return Promise.resolve();
     });
+
+    it('deduplicates repeated joins without a new alias', async () => {
+        const nodeRepo = new NodeRepository();
+        const stagingRepo = new DataStagingRepository();
+        const edgeRepo = new EdgeRepository();
+
+        // first join
+        let query = nodeRepo.where().containerID('eq', containerID)
+            .join(stagingRepo._tableName, {
+                origin_col: 'data_staging_id',
+                destination_col: 'id',
+            })
+            .addFields('data', stagingRepo._tableName)
+        expect(query._query.JOINS).not.undefined;
+        let check = new RegExp(`.* JOIN ${stagingRepo._tableName} .* ON .*data_staging_id = .*id`);
+        expect(query._query.JOINS?.length).eq(1);
+        expect(query._query.JOINS![0]).match(check);
+
+        // second join (duplicate)
+        query = query
+            .join(stagingRepo._tableName, {
+                origin_col: 'data_staging_id',
+                destination_col: 'id',
+            });
+        // this second (duplicate) join shouldn't have been added
+        expect(query._query.JOINS?.length).eq(1);
+
+        // testing a non-duplicate join
+        query = query
+            .join(edgeRepo._tableName, {
+                origin_col: 'id',
+                destination_col: 'origin_id',
+            });
+        // this join should have been added as it isn't a duplicate
+        expect(query._query.JOINS?.length).eq(2);
+        // ensure that the join added was the right one
+        check = new RegExp(`.* JOIN ${edgeRepo._tableName} .* ON .*id = .*origin_id`);
+        expect(query._query.JOINS![1]).match(check);
+
+        // testing a duplicate join with an alternate alias
+        query = query
+            .join(stagingRepo._tableName, {
+                origin_col: 'data_staging_id',
+                destination_col: 'id',
+                destination_alias: 'new_alias'
+            });
+        // this join should have been added as it has a unique alias
+        expect(query._query.JOINS?.length).eq(3);
+        // ensure that the join added was the right one
+        check = new RegExp(`.* JOIN ${stagingRepo._tableName} new_alias ON .*data_staging_id = new_alias.id`);
+        expect(query._query.JOINS![2]).match(check);
+
+        const results = await query.list();
+        expect(results.isError).false;
+        return Promise.resolve();
+    })
 });
 
 const test_keys: MetatypeKey[] = [
