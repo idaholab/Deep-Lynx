@@ -29,14 +29,62 @@ pub struct Manager {
     channel: mpsc::Sender<ManagerMessage>,
 }
 
+pub struct DataSource {
+    id: String,
+    adapter_type: String,
+    columns: Vec<TimeseriesColumn>,
+}
+
+pub struct TimeseriesColumn {
+    column_name: String,
+    property_name: String,
+    is_primary_timestamp: bool,
+    data_type: String,
+    date_conversion_format_string: String,
+}
+
 impl<'a> Finalize for Manager {}
 
 impl Manager {
     fn new(mut cx: FunctionContext) -> JsResult<JsBox<Manager>> {
-        // TODO: get the argument object out of the function
-        let connection_string = cx.argument::<JsString>(0)?.value(&mut cx);
-        //let connection_string = String::from("postgresql://darrjw@localhost:5433/deep_lynx");
-        // TODO: copy the argument object into a rust struct representing the table needing to be done
+        let input_object = cx.argument::<JsObject>(0)?;
+
+        let connection_string: Handle<JsString> = input_object.get(&mut cx, "connectionString")?;
+        let connection_string = connection_string.value(&mut cx);
+
+        let data_source: Handle<JsObject> = input_object.get(&mut cx, "dataSource")?;
+        let data_source_id: Handle<JsString> = data_source.get(&mut cx, "id")?;
+        let data_source_id = data_source_id.value(&mut cx);
+
+        let adapter_type: Handle<JsString> = data_source.get(&mut cx, "adapter_type")?;
+        let adapter_type = adapter_type.value(&mut cx);
+
+        let config: Handle<JsObject> = data_source.get(&mut cx, "config")?;
+        let columns: Handle<JsArray> = config.get(&mut cx, "columns")?;
+        let mut final_columns: Vec<TimeseriesColumn> = vec![];
+
+        for i in 0..columns.len(&mut cx) {
+            let column: Handle<JsObject> = columns.get(&mut cx, 0)?;
+            let column_name: Handle<JsString> = column.get(&mut cx, "column_name")?;
+            let property_name: Handle<JsString> = column.get(&mut cx, "property_name")?;
+            let is_primary_timestamp : Handle<JsBoolean> = column.get(&mut cx, "is_primary_timestamp")?;
+            let data_type: Handle<JsString> = column.get(&mut cx, "type")?;
+            let date_conversion_format_string: Handle<JsString> = column.get(&mut cx, "date_conversion_format_string")?;
+
+            final_columns.push(TimeseriesColumn{
+                column_name: column_name.value(&mut cx),
+                property_name: property_name.value(&mut cx),
+                is_primary_timestamp: is_primary_timestamp.value(&mut cx),
+                data_type: data_type.value(&mut cx),
+                date_conversion_format_string: date_conversion_format_string.value(&mut cx)
+            })
+        }
+
+        let data_source = DataSource {
+            id: data_source_id,
+            adapter_type: adapter_type,
+            columns: final_columns
+        };
 
         let rt = runtime(&mut cx)?;
         let (tx, rx) = mpsc::channel::<ManagerMessage>();
@@ -73,7 +121,7 @@ impl Manager {
                     }
                 }
 
-                println!("{:?}", copier.finish().await);
+                copier.finish().await;
                 println!("Time elapsed in writing 1 million rows is: {:?}", start.elapsed());
             });
 

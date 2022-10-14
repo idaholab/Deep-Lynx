@@ -11,8 +11,11 @@ import DataSourceRecord, {TimeseriesColumn, TimeseriesDataSourceConfig} from '..
 import DataSourceRepository, {DataSourceFactory} from '../../../data_access_layer/repositories/data_warehouse/import/data_source_repository';
 import fs from 'fs';
 import {plainToInstance} from 'class-transformer';
+import Config from '../../../services/config';
+import {PassThrough} from 'stream';
 
 const csv = require('csvtojson');
+const fastLoad = require('dl-fast-load');
 
 // Generally testing the standard implementation to verify that the ReceiveData and other underlying functions that most
 // other implementations rely on function ok.
@@ -380,6 +383,91 @@ describe('A Standard DataSource Implementation can', async () => {
 
         fs.unlinkSync('./test-timeseries-data.csv');
         fs.unlinkSync('./test-timeseries-data.json');
+        return sourceRepo.delete(source!);
+    });
+
+    it('can ingest data to a hypertable using dl-fast-load', async () => {
+        // build the data source first
+        const sourceRepo = new DataSourceRepository();
+
+        let source = new DataSourceFactory().fromDataSourceRecord(
+            new DataSourceRecord({
+                container_id: containerID,
+                name: 'Test Data Source',
+                active: false,
+                adapter_type: 'timeseries',
+                config: new TimeseriesDataSourceConfig({
+                    columns: [
+                        {
+                            column_name: 'primary_timestamp',
+                            property_name: 'Timestamp',
+                            is_primary_timestamp: true,
+                            type: 'date',
+                            date_conversion_format_string: 'YYYY-MM-DD HH:MI:SS',
+                        },
+                        {
+                            column_name: 'temperature',
+                            property_name: 'Temperature (K)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'velocity_i',
+                            property_name: 'Velocity[i] (m/s)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'velocity_j',
+                            property_name: 'Velocity[j] (m/s)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'x',
+                            property_name: 'X (m)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'y',
+                            property_name: 'Y (m)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                        {
+                            column_name: 'z',
+                            property_name: 'Z (m)',
+                            is_primary_timestamp: false,
+                            type: 'number',
+                        },
+                    ] as TimeseriesColumn[],
+                }),
+            }),
+        );
+
+        // now let's try csv files
+        fs.writeFileSync('./test-timeseries-data.csv', sampleCSV);
+
+        let loader = fastLoad.new({
+            connectionString: Config.core_db_connection_string,
+            dataSource: source?.DataSourceRecord,
+        });
+
+        const pass = new PassThrough();
+
+        pass.on('data', (chunk) => {
+            fastLoad.read(loader, chunk);
+        });
+
+        pass.on('finish', () => {
+            fastLoad.finish(loader);
+        });
+
+        const stream = fs.createReadStream('./test-timeseries-data.csv');
+        stream.pipe(pass);
+
+        fs.unlinkSync('./test-timeseries-data.csv');
         return sourceRepo.delete(source!);
     });
 });
