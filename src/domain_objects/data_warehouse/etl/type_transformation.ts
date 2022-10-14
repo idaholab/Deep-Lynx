@@ -56,6 +56,39 @@ export class Condition extends NakedDomainClass {
 }
 
 /*
+   EdgeConnectionParameter allow us to specify filters for a range of nodes that might satisfy the origin or destination
+   of an edge
+ */
+export class EdgeConnectionParameter {
+    @IsString()
+    @IsIn(['data_source', 'metatype_id', 'metatype_uuid', 'metatype_name', 'original_id', 'property', 'id'])
+    type?: string;
+
+    @IsString()
+    @IsOptional()
+    operator?: string; // CURRENTLY NOT USED, ADDED TO SHOW EXPANSION ROUTE
+
+    @IsOptional()
+    key?: string;
+
+    @IsOptional()
+    property?: string;
+
+    @IsOptional()
+    value?: any;
+
+    constructor(input: {type?: string; operator?: string; key?: string; property?: string; value?: any}) {
+        if (input) {
+            if (input.type) this.type = input.type;
+            if (input.operator) this.operator = input.operator;
+            if (input.key) this.key = input.key;
+            if (input.property) this.property = input.property;
+            if (input.value) this.value = input.value;
+        }
+    }
+}
+
+/*
    KeyMapping contains fields for both metatype and metatype relationship in order
    to handle a type mapping that results in both a Node and Edge final product.
  */
@@ -242,6 +275,12 @@ export default class TypeTransformation extends BaseDomainClass {
     @IsString()
     unique_identifier_key?: string;
 
+    @IsOptional()
+    origin_parameters?: EdgeConnectionParameter[] = [];
+
+    @IsOptional()
+    destination_parameters?: EdgeConnectionParameter[] = [];
+
     // these values are not saved on the transformation object, but are fetched
     // when this is pulled from the database. They're for ease of use when working
     // with the domain object and help us avoid having to make extra database calls
@@ -305,6 +344,8 @@ export default class TypeTransformation extends BaseDomainClass {
         data_source_id?: string;
         config?: TransformationConfiguration;
         name?: string;
+        origin_parameters?: EdgeConnectionParameter[];
+        destination_parameters?: EdgeConnectionParameter[];
     }) {
         super();
 
@@ -331,6 +372,8 @@ export default class TypeTransformation extends BaseDomainClass {
             if (input.container_id) this.container_id = input.container_id;
             if (input.data_source_id) this.data_source_id = input.data_source_id;
             if (input.config) this.config = input.config;
+            if (input.destination_parameters) this.destination_parameters = input.destination_parameters;
+            if (input.origin_parameters) this.origin_parameters = input.origin_parameters;
         }
     }
 
@@ -674,6 +717,26 @@ export default class TypeTransformation extends BaseDomainClass {
             const origin_original_id = TypeTransformation.getNestedValue(this.origin_id_key!, data.data, index);
             const destination_original_id = TypeTransformation.getNestedValue(this.destination_id_key!, data.data, index);
 
+            // attempts to fill the value fields of the connection parameters with the payload value when
+            // necessary
+            if (this.origin_parameters) {
+                // eslint-disable-next-line @typescript-eslint/no-for-in-array
+                for (const i in this.origin_parameters) {
+                    if (this.origin_parameters[i].key) {
+                        this.origin_parameters[i].value = TypeTransformation.getNestedValue(this.origin_parameters[i].key!, data.data, index);
+                    }
+                }
+            }
+
+            if (this.destination_parameters) {
+                // eslint-disable-next-line @typescript-eslint/no-for-in-array
+                for (const i in this.destination_parameters) {
+                    if (this.destination_parameters[i].key) {
+                        this.destination_parameters[i].value = TypeTransformation.getNestedValue(this.destination_parameters[i].key!, data.data, index);
+                    }
+                }
+            }
+
             const edge = new Edge({
                 metatype_relationship_pair: this.metatype_relationship_pair_id,
                 properties: newPayloadRelationship,
@@ -688,6 +751,8 @@ export default class TypeTransformation extends BaseDomainClass {
                 destination_original_id: destination_original_id ? `${destination_original_id}` : undefined,
                 destination_metatype_id: this.destination_metatype_id,
                 destination_data_source_id: this.destination_data_source_id,
+                origin_parameters: this.origin_parameters,
+                destination_parameters: this.destination_parameters,
                 metadata: new EdgeMetadata({
                     conversions,
                     failed_conversions: failedConversions,
