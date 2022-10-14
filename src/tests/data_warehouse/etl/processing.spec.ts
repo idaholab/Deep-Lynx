@@ -693,7 +693,6 @@ describe('A Data Processor', async () => {
             }
         }
 
-        // double check no nodes were created
         const edgeRepo = new EdgeRepository();
         const edges = await edgeRepo.where().importDataID('eq', dataImportID).list();
 

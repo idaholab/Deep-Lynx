@@ -22,6 +22,7 @@ import Edge from '../../../../domain_objects/data_warehouse/data/edge';
 import EdgeRepository from '../../../../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import DataSourceMapper from '../../../../data_access_layer/mappers/data_warehouse/import/data_source_mapper';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
+import {EdgeConnectionParameter} from '../../../../domain_objects/data_warehouse/etl/type_transformation';
 
 describe('An Edge Repository', async () => {
     let containerID: string = process.env.TEST_CONTAINER_ID || '';
@@ -260,6 +261,68 @@ describe('An Edge Repository', async () => {
         expect(saved.isError).true;
 
         return edgeRepo.delete(edges[0]);
+    });
+
+    it('can generate Edges based on Edge with filters', async () => {
+        const edgeRepo = new EdgeRepository();
+
+        const edge = new Edge({
+            container_id: containerID,
+            metatype_relationship_pair: pair.id!,
+            properties: payload,
+            origin_parameters: [
+                new EdgeConnectionParameter({
+                    type: 'id',
+                    value: nodes[0].id,
+                }),
+                new EdgeConnectionParameter({
+                    type: 'data_source',
+                    value: nodes[0].data_source_id,
+                }),
+                new EdgeConnectionParameter({
+                    type: 'metatype_id',
+                    value: nodes[0].metatype_id,
+                }),
+                new EdgeConnectionParameter({
+                    type: 'property',
+                    property: 'flower_name',
+                    value: 'Daisy',
+                }),
+            ],
+            destination_parameters: [
+                new EdgeConnectionParameter({
+                    type: 'id',
+                    value: nodes[1].id,
+                }),
+                new EdgeConnectionParameter({
+                    type: 'data_source',
+                    value: nodes[1].data_source_id,
+                }),
+                new EdgeConnectionParameter({
+                    type: 'metatype_id',
+                    value: nodes[1].metatype_id,
+                }),
+                new EdgeConnectionParameter({
+                    type: 'property',
+                    property: 'flower_name',
+                    value: 'Daisy',
+                }),
+            ],
+        });
+
+        let edges = await edgeRepo.populateFromParameters(edge);
+        expect(edges.isError, edges.error).false;
+        expect(edges.value.length).eq(1);
+
+        // normal save first
+        let saved = await edgeRepo.bulkSave(user, edges.value);
+        expect(saved.isError, JSON.stringify(saved.error)).false;
+        edges.value.forEach((edge) => {
+            expect(edge.id).not.undefined;
+            expect(edge.properties).to.have.deep.property('flower_name', 'Daisy');
+        });
+
+        return Promise.resolve();
     });
 
     it('can list Edges to file', async () => {
