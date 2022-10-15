@@ -381,7 +381,6 @@ export default class DataSourceMapper extends Mapper {
         const createStatement = format(
             `CREATE TABLE IF NOT EXISTS %I (
                 ${columnStatements.join(',')},
-                _nodes bigint[] DEFAULT NULL,
                 _metadata jsonb DEFAULT NULL
                 )`,
             'y_' + source.id!,
@@ -396,19 +395,21 @@ export default class DataSourceMapper extends Mapper {
             },
         ];
 
-        if ((source.config as TimeseriesDataSourceConfig).chunk_interval) {
-            statements.push({
-                text: format(
-                    `SELECT create_hypertable(%L, %L, chunk_time_interval => %L::integer)`,
-                    'y_' + source.id!,
-                    primaryTimestampColumnName,
-                    (source.config as TimeseriesDataSourceConfig).chunk_interval,
-                ),
-            });
-        } else {
-            statements.push({
-                text: format(`SELECT create_hypertable(%L, %L)`, 'y_' + source.id!, primaryTimestampColumnName),
-            });
+        if (Config.timescaledb_enabled) {
+            if ((source.config as TimeseriesDataSourceConfig).chunk_interval) {
+                statements.push({
+                    text: format(
+                        `SELECT create_hypertable(%L, %L, chunk_time_interval => %L::integer)`,
+                        'y_' + source.id!,
+                        primaryTimestampColumnName,
+                        (source.config as TimeseriesDataSourceConfig).chunk_interval,
+                    ),
+                });
+            } else {
+                statements.push({
+                    text: format(`SELECT create_hypertable(%L, %L)`, 'y_' + source.id!, primaryTimestampColumnName),
+                });
+            }
         }
 
         if (columns.filter((c) => c.unique).length > 0) {

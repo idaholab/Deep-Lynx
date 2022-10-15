@@ -1,5 +1,6 @@
 extern crate core;
 
+use chrono::{DateTime, NaiveDateTime, Utc};
 use neon::prelude::*;
 use neon::result::Throw;
 use neon::types::buffer::TypedArray;
@@ -7,6 +8,7 @@ use once_cell::sync::OnceCell;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgConnection;
 use std::borrow::Borrow;
+use std::collections::HashMap;
 use std::future::Future;
 use std::io::{BufReader, Read};
 use std::ops::Deref;
@@ -29,12 +31,14 @@ pub struct Manager {
     channel: mpsc::Sender<ManagerMessage>,
 }
 
+#[derive(Clone, Debug)]
 pub struct DataSource {
     id: String,
     adapter_type: String,
     columns: Vec<TimeseriesColumn>,
 }
 
+#[derive(Clone, Debug)]
 pub struct TimeseriesColumn {
     column_name: String,
     property_name: String,
@@ -64,27 +68,33 @@ impl Manager {
         let mut final_columns: Vec<TimeseriesColumn> = vec![];
 
         for i in 0..columns.len(&mut cx) {
-            let column: Handle<JsObject> = columns.get(&mut cx, 0)?;
+            let column: Handle<JsObject> = columns.get(&mut cx, i)?;
             let column_name: Handle<JsString> = column.get(&mut cx, "column_name")?;
             let property_name: Handle<JsString> = column.get(&mut cx, "property_name")?;
-            let is_primary_timestamp : Handle<JsBoolean> = column.get(&mut cx, "is_primary_timestamp")?;
+            let is_primary_timestamp: Handle<JsBoolean> =
+                column.get(&mut cx, "is_primary_timestamp")?;
             let data_type: Handle<JsString> = column.get(&mut cx, "type")?;
-            let date_conversion_format_string: Handle<JsString> = column.get(&mut cx, "date_conversion_format_string")?;
 
-            final_columns.push(TimeseriesColumn{
+            let mut date_conversion_format_string = JsString::new(&mut cx, "");
+            if data_type.value(&mut cx).as_str() == "date" {
+            date_conversion_format_string = column.get(&mut cx, "date_conversion_format_string")?;
+            }
+
+            final_columns.push(TimeseriesColumn {
                 column_name: column_name.value(&mut cx),
                 property_name: property_name.value(&mut cx),
                 is_primary_timestamp: is_primary_timestamp.value(&mut cx),
                 data_type: data_type.value(&mut cx),
-                date_conversion_format_string: date_conversion_format_string.value(&mut cx)
+                date_conversion_format_string: date_conversion_format_string.value(&mut cx),
             })
         }
 
         let data_source = DataSource {
             id: data_source_id,
             adapter_type: adapter_type,
-            columns: final_columns
+            columns: final_columns,
         };
+        let table_name = format!("y_{}", data_source.id);
 
         let rt = runtime(&mut cx)?;
         let (tx, rx) = mpsc::channel::<ManagerMessage>();
@@ -95,13 +105,18 @@ impl Manager {
                 .connect(connection_string.borrow())
                 .await;
 
-            // TODO: pull in table information this is going to, pass it into the copy thread, this thread - only in charge of the copy
             let (mut tx1, mut rx1) = tokio::sync::mpsc::channel::<ManagerMessage>(2048);
             rt.spawn(async move {
                 let start = Instant::now();
                 let mut copier = pool
                     .unwrap()
-                    .copy_in_raw("COPY test_table(bldg_number) FROM STDIN WITH (FORMAT csv)")
+                    .copy_in_raw(
+                        format!(
+                            "COPY {} FROM STDIN WITH (DELIMITER '|', FORMAT csv)",
+                            table_name
+                        )
+                        .as_str(),
+                    )
                     .await;
                 let mut copier = copier.unwrap();
 
@@ -121,26 +136,79 @@ impl Manager {
                     }
                 }
 
-                copier.finish().await;
-                println!("Time elapsed in writing 1 million rows is: {:?}", start.elapsed());
+                let result = copier.finish().await;
+                result.unwrap();
+                println!(
+                    "Time elapsed in writing rows is: {:?}",
+                    start.elapsed()
+                );
             });
 
             let stream = BufReader::with_capacity(4096, NodeStream::new(rx));
             let mut rdr = csv::ReaderBuilder::new().flexible(true).from_reader(stream);
+            let mut order: Vec<usize> = vec![];
+            let mut map: HashMap<usize, TimeseriesColumn> = HashMap::new();
+
+            // because we're borrowing here lets keep this in its own scope
+            // we need to build the order in which we reorganize the csv file
+            for column in data_source.columns {
+                {
+                    let headers = rdr.headers().unwrap();
+
+                    for (i, header) in headers.iter().enumerate() {
+                        if header == column.property_name {
+                            order.push(i);
+                            map.insert(i, column.clone());
+                            break;
+                        }
+                    }
+                }
+            }
 
             let mut i = 0;
             while let Some(result) = rdr.records().next() {
-                // TODO: if it has a header, set a map for accessing and ordering the input if header isn't set then ignore map and do a straight insert in the order of the input
-                // TODO: create a record to send that's in the proper order, has timestamps converted, and has had string replace ran to get rid of "," on numbers (or "." if european)
-                // TODO: add better error handling
+                let mut to_send: Vec<String> = vec![];
                 let record = result.unwrap();
-                let sent = tx1.send(ManagerMessage::Write(
-                    [
-                        record.as_byte_record().as_slice().to_vec(),
-                        String::from("\n").into_bytes(),
-                    ]
-                        .concat(),
-                ))
+                for index in &order {
+                    match record.get(index.clone()) {
+                        Some(value) => {
+                            match map.get(&index) {
+                                Some(column) => {
+                                    if column.data_type == "date" {
+                                        let parsed = NaiveDateTime::parse_from_str(
+                                            value,
+                                            column.date_conversion_format_string.as_str(),
+                                        )
+                                        .unwrap();
+                                        to_send.push(parsed.to_string());
+                                        continue;
+                                    }
+
+                                    // make sure we're removing the comma on number types, postgres will freak out
+                                    if column.data_type == "number"
+                                        || column.data_type == "number64"
+                                        || column.data_type == "float"
+                                        || column.data_type == "float64"
+                                    {
+                                        to_send.push(value.replace(",", ""));
+                                        continue;
+                                    }
+
+                                    to_send.push(value.to_string());
+                                }
+                                None => {}
+                            }
+                        }
+                        None => {}
+                    }
+                }
+
+                // append an additional empty field, will eventually be used to capture metadata
+                to_send.push(String::from(""));
+                let sent = tx1
+                    .send(ManagerMessage::Write(
+                        [to_send.join("|").as_bytes(), String::from("\n").as_bytes()].concat(),
+                    ))
                     .await;
 
                 i += 1;

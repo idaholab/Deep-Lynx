@@ -13,7 +13,10 @@ import fs from 'fs';
 import {plainToInstance} from 'class-transformer';
 import Config from '../../../services/config';
 import {PassThrough} from 'stream';
+import {exec} from 'child_process';
+import {promisify} from 'util';
 
+const promiseExec = promisify(exec);
 const csv = require('csvtojson');
 const fastLoad = require('dl-fast-load');
 
@@ -386,9 +389,17 @@ describe('A Standard DataSource Implementation can', async () => {
         return sourceRepo.delete(source!);
     });
 
-    it('can ingest data to a hypertable using dl-fast-load', async () => {
+    it('can ingest data to a hypertable using dl-fast-load', async (done) => {
+        if (process.env.TEST_FAST_LOAD !== 'true') {
+            done();
+            return;
+        }
         // build the data source first
         const sourceRepo = new DataSourceRepository();
+
+        await promiseExec(
+            `echo "Timestamp,Temperature (K),Velocity[i] (m/s),Velocity[j] (m/s),X (m),Y (m),Z (m)" > ${__dirname}/1million.csv && perl -E \'for($i=0;$i<1000000;$i++){say "2022-07-18 02:32:27.532059,$i,$i,$i,$i,$i,$i"}\' >> ${__dirname}/1million.csv`,
+        );
 
         let source = new DataSourceFactory().fromDataSourceRecord(
             new DataSourceRecord({
@@ -403,7 +414,7 @@ describe('A Standard DataSource Implementation can', async () => {
                             property_name: 'Timestamp',
                             is_primary_timestamp: true,
                             type: 'date',
-                            date_conversion_format_string: 'YYYY-MM-DD HH:MI:SS',
+                            date_conversion_format_string: '%Y-%m-%d %H:%M:%S%.f',
                         },
                         {
                             column_name: 'temperature',
@@ -446,12 +457,13 @@ describe('A Standard DataSource Implementation can', async () => {
             }),
         );
 
-        // now let's try csv files
-        fs.writeFileSync('./test-timeseries-data.csv', sampleCSV);
+        let results = await sourceRepo.save(source!, user);
+        expect(results.isError, results.error?.error).false;
+        expect(source!.DataSourceRecord?.id).not.undefined;
 
         let loader = fastLoad.new({
-            connectionString: Config.core_db_connection_string,
-            dataSource: source?.DataSourceRecord,
+            connectionString: Config.core_db_connection_string as string,
+            dataSource: source?.DataSourceRecord as object,
         });
 
         const pass = new PassThrough();
@@ -464,12 +476,15 @@ describe('A Standard DataSource Implementation can', async () => {
             fastLoad.finish(loader);
         });
 
-        const stream = fs.createReadStream('./test-timeseries-data.csv');
+        const stream = fs.createReadStream(__dirname + '/1million.csv');
         stream.pipe(pass);
 
-        fs.unlinkSync('./test-timeseries-data.csv');
-        return sourceRepo.delete(source!);
-    });
+        setTimeout(() => {
+            void sourceRepo.delete(source!);
+            fs.unlinkSync(__dirname + '/1million.csv');
+            done();
+        }, 10000);
+    }).timeout(10000);
 });
 
 const sampleCSV =
