@@ -118,7 +118,11 @@ export default class MetatypeRelationshipPairRoutes {
         }
 
         if (typeof req.query.metatypeID !== 'undefined' && (req.query.metatypeID as string) !== '') {
-            repository = repository.and().metatypeID('eq', req.query.metatypeID);
+            repository = repository.and((new MetatypeRelationshipPairRepository)
+                .origin_metatype_id('eq', req.query.metatypeID)
+                .or()
+                .destination_metatype_id('eq', req.query.metatypeID)
+            );
         }
 
         if (typeof req.query.ontologyVersion !== 'undefined' && (req.query.ontologyVersion as string) !== '') {

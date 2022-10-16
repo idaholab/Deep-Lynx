@@ -36,37 +36,103 @@ export default interface RepositoryInterface<T> {
 */
 export class Repository {
     public readonly _tableName: string;
-    // TODO: replace with pg_format library
-    public _rawQuery: string[] = [];
-    public _values: any[] = [];
+    public _tableAlias: string;
 
-    protected constructor(tableName: string, options?: ConstructorOptions) {
+    public _query: {
+        SELECT: string[];
+        JOINS?: string[];
+        WHERE?: string[];
+        OPTIONS?: string[];
+        VALUES: any[];
+    } = {SELECT: [], VALUES: [],};
+
+    public _aliasMap = new Map<string, string>();
+
+    constructor(tableName: string, options?: ConstructorOptions) {
         this._tableName = tableName;
+        this._tableAlias = '';
+
+        if (this._tableName !== '') {
+            if (this._aliasMap.has(this._tableName)) {
+                this._tableAlias = this._aliasMap.get(this._tableName)!;
+            } else {
+                this._tableAlias = this._setAlias(this._tableName);
+            }
+        }
 
         if (options && options.distinct) {
-            this._rawQuery.push(`SELECT DISTINCT * FROM ${this._tableName}`);
+            this._query.SELECT = [format(`SELECT DISTINCT %s.*`, this._tableAlias)];
+            this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
         } else {
-            this._rawQuery.push(`SELECT * FROM ${this._tableName}`);
+            this._query.SELECT = [format(`SELECT %s.*`, this._tableAlias)];
+            this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
         }
     }
 
-    where() {
-        this._rawQuery.push('WHERE');
+    // In the event of multiple nested conditions being needed in the WHERE clause, it is
+    // possible that there will be a need for parentheses immediately after the where keyword.
+    // In this case a query can be passed in, much like in the AND or OR clauses.
+    where(repo?: Repository) {
+        if (repo?._query.WHERE) {
+            let query = repo._query.WHERE.join(' ');
+            // replacing any table aliases from new repo with the alias found in this repo
+            query = query.replace(new RegExp(repo._tableAlias, 'g'), this._tableAlias);
+            this._query.WHERE = [format(`WHERE ( %s )`, query)];
+        } else {
+            this._query.WHERE = ['WHERE'];
+        }
         return this;
     }
 
-    and() {
-        this._rawQuery.push('AND');
+    // AND now has the capability for nested query conditions. If no condition is supplied,
+    // functionality will continue as expected. If a query is passed into and(), behavior is
+    // changed to return AND ( x ). If chaining with further conditions, another and() or or()
+    // is necessary.
+    and(repo?: Repository) {
+        if (repo?._query.WHERE) {
+            let query = repo._query.WHERE.join(' ');
+            // replacing any table aliases from new repo with the alias found in this repo
+            query = query.replace(new RegExp(repo._tableAlias, 'g'), this._tableAlias);
+            this._query.WHERE?.push(format(`AND ( %s )`, query));
+        } else {
+            this._query.WHERE?.push('AND');
+        }
         return this;
     }
 
-    or() {
-        this._rawQuery.push('OR');
+    // OR now has the capability for nested query conditions. If no condition is supplied,
+    // functionality will continue as expected. If a query is passed into or(), behavior is
+    // changed to return OR ( x ). If chaining with further conditions, another and() or or()
+    // is necessary.
+    or(repo?: Repository) {
+        if (repo?._query.WHERE) {
+            let query = repo._query.WHERE.join(' ');
+            // replacing any table aliases from new repo with the alias found in this repo
+            query = query.replace(new RegExp(repo._tableAlias, 'g'), this._tableAlias);
+            this._query.WHERE?.push(format(`OR ( %s )`, query));
+        } else {
+            this._query.WHERE?.push('OR');
+        }
         return this;
     }
 
-    queryJsonb(key: string, fieldName: string, operator: string, value: any, dataType?: string) {
-        this._rawQuery.push(`(${fieldName}`);
+    queryJsonb(key: string, fieldName: string, operator: string, value: any, conditions?: QueryConditions) {
+        if (!this._query.WHERE) {this._query.WHERE = []}
+
+        let table;
+        if (conditions?.tableAlias) {
+            table = conditions.tableAlias;
+        } else if (conditions?.tableName) {
+            table = this._aliasMap.has(conditions.tableName) ? (this._aliasMap.get(conditions.tableName)) : (conditions.tableName);
+        } else {
+            table = this._tableAlias;
+        }
+
+        if (!fieldName.includes('.') && table !== '') {
+            fieldName = `${table}.${fieldName}`
+        }
+
+        this._query.WHERE?.push(format(`(%s`,fieldName));
 
         // the key can be a dot.notation nested set of keys
         const keys = key.split('.');
@@ -77,12 +143,14 @@ export class Repository {
         }
 
         if (keys.length > 0) {
-            this._rawQuery.push(`-> ${keys.join('->')}`);
+            this._query.WHERE?.push(`-> ${keys.join('->')}`);
         }
 
         // this determines how we cast the value extracted from the jsonb payload - normally they come out as text so
         // default to it in all cases - string is obviously not a part of the switch statement below as it's the default
         let typeCast = 'text';
+        let dataType;
+        if (conditions?.dataType) { dataType = conditions.dataType }
 
         switch (dataType) {
             case undefined: {
@@ -118,28 +186,23 @@ export class Repository {
         // note we only type cast the eq, neq, <. and > operators. in and like rely on the data being strings
         switch (operator) {
             case 'eq': {
-                this._values.push(value);
-                this._rawQuery.push(`->> '${finalKey}')::${typeCast} = $${this._values.length}::${typeCast}`);
+                this._query.WHERE?.push(format(`->> '%s')::${typeCast} = %L::${typeCast}`, finalKey, value));
                 break;
             }
             case 'neq': {
-                this._values.push(value);
-                this._rawQuery.push(`->> '${finalKey}')::${typeCast} <> $${this._values.length}::${typeCast}`);
+                this._query.WHERE?.push(format(`->> '%s')::${typeCast} <> %L::${typeCast}`, finalKey, value));
                 break;
             }
             case '<': {
-                this._values.push(value);
-                this._rawQuery.push(`->> '${finalKey}')::${typeCast} < $${this._values.length}::${typeCast}`);
+                this._query.WHERE?.push(format(`->> '%s')::${typeCast} < %L::${typeCast}`, finalKey, value));
                 break;
             }
             case '>': {
-                this._values.push(value);
-                this._rawQuery.push(`->> '${finalKey}')::${typeCast} > $${this._values.length}::${typeCast}`);
+                this._query.WHERE?.push(format(`->> '%s')::${typeCast} > %L::${typeCast}`, finalKey, value));
                 break;
             }
             case 'like': {
-                this._values.push(value);
-                this._rawQuery.push(`->> '${finalKey}') ILIKE $${this._values.length}`);
+                this._query.WHERE?.push(format(`->> '%s') ILIKE %L`, finalKey, value));
                 break;
             }
             case 'in': {
@@ -156,7 +219,8 @@ export class Repository {
                     output.push(`'${v}'`);
                 });
 
-                this._rawQuery.push(`->> '${finalKey}') IN (${output.join(',')})`);
+                this._query.WHERE?.push(format(`->> '%s') IN (%s)`, finalKey, output.join(',')));
+
                 break;
             }
         }
@@ -164,8 +228,25 @@ export class Repository {
         return this;
     }
 
-    query(fieldName: string, operator: string, value?: any, dataType?: string) {
+    query(fieldName: string, operator: string, value?: any, conditions?: QueryConditions) {
+        if (!this._query.WHERE) {this._query.WHERE = []}
+
+        let table;
+        if (conditions?.tableAlias) {
+            table = conditions.tableAlias;
+        } else if (conditions?.tableName) {
+            table = this._aliasMap.has(conditions.tableName) ? (this._aliasMap.get(conditions.tableName)) : (conditions.tableName);
+        } else {
+            table = this._tableAlias;
+        }
+
+        if (!fieldName.includes('.') && table !== '') {
+            fieldName = `${table}.${fieldName}`
+        }
+
         let typeCast = 'text';
+        let dataType;
+        if (conditions?.dataType) { dataType = conditions.dataType }
 
         switch (dataType) {
             case undefined: {
@@ -200,36 +281,31 @@ export class Repository {
 
         switch (operator) {
             case 'eq': {
-                this._values.push(value);
-                this._rawQuery.push(`${fieldName} = $${this._values.length}`);
+                this._query.WHERE?.push(format(`%s = %L`, fieldName, value));
                 break;
             }
             case 'neq': {
-                this._values.push(value);
-                this._rawQuery.push(`${fieldName} <> $${this._values.length}`);
+                this._query.WHERE?.push(format(`%s <> %L`, fieldName, value));
                 break;
             }
             case 'like': {
-                this._values.push(value);
-                this._rawQuery.push(`${fieldName} ILIKE $${this._values.length}`);
+                this._query.WHERE?.push(format(`%s ILIKE %L`, fieldName, value));
                 break;
             }
             case '<': {
-                this._values.push(value);
-                this._rawQuery.push(`${fieldName}::${typeCast} < $${this._values.length}::${typeCast}`);
+                this._query.WHERE?.push(format(`%s::${typeCast} < %L::${typeCast}`, fieldName, value));
                 break;
             }
             case '>': {
-                this._values.push(value);
-                this._rawQuery.push(`${fieldName}::${typeCast} > $${this._values.length}::${typeCast}`);
+                this._query.WHERE?.push(format(`%s::${typeCast} > %L::${typeCast}`, fieldName, value));
                 break;
             }
             case '%': {
                 if (!value || value === '' || value.length === 0) break;
                 if (Array.isArray(value)) {
-                    this._rawQuery.push(format(`%s %% %L`, fieldName, value.join('|')));
+                    this._query.WHERE?.push(format(`%s %% %L`, fieldName, value.join('|')));
                 } else {
-                    this._rawQuery.push(format(`%s %% %L`, fieldName, value));
+                    this._query.WHERE?.push(format(`%s %% %L`, fieldName, value));
                 }
                 break;
             }
@@ -247,7 +323,7 @@ export class Repository {
                     output.push(`'${v}'`);
                 });
 
-                this._rawQuery.push(`${fieldName} IN (${output.join(',')})`);
+                this._query.WHERE?.push(format(`%s IN (%s)`, fieldName, output.join(',')));
                 break;
             }
             case 'between': {
@@ -262,20 +338,96 @@ export class Repository {
                     return this;
                 }
 
-                this._rawQuery.push(format(`%s BETWEEN %L::${typeCast} AND %L::${typeCast}`, fieldName, values[0], values[1]));
+                this._query.WHERE?.push(format(`%s BETWEEN %L::${typeCast} AND %L::${typeCast}`, fieldName, values[0], values[1]));
                 break;
             }
             // is null/is not null completely ignores the value because for some reason the formatting library will
             // does not like us including null on queries
             case 'is null': {
-                this._rawQuery.push(`${fieldName} IS NULL`);
+                this._query.WHERE?.push(format(`%s IS NULL`, fieldName));
                 break;
             }
 
             case 'is not null': {
-                this._rawQuery.push(`${fieldName} IS NOT NULL`);
+                this._query.WHERE?.push(format(`%s IS NOT NULL`, fieldName));
                 break;
             }
+        }
+
+        return this;
+    }
+
+    // TODO: find out if we need to change the result class as the result of a joined query.
+    // Resulting fields with the same name are also being overwritten, so we might need to
+    // use column aliases for each field coming from a non-native table.
+    join(destination: string, options: JoinOptions, origin: string = this._tableName) {
+        if (this._query.JOINS === undefined) {this._query.JOINS = []}
+
+        let destination_alias;
+        if (options.destination_alias){
+            destination_alias = options.destination_alias;
+        } else if (this._aliasMap.has(destination)) {
+            destination_alias = this._aliasMap.get(destination);
+        } else {
+            destination_alias = this._setAlias(destination);
+        }
+
+        const join_type = options.join_type ? (options.join_type) : ('LEFT');
+        const operator = options.operator ? (options.operator) : ('=');
+
+        let originAlias;
+        if(origin === this._tableName){
+            originAlias = this._tableAlias;
+        } else{
+            if(this._aliasMap.has(origin)){
+                originAlias = this._aliasMap.get(origin);
+            } else {
+                originAlias = origin;
+            }
+        }
+
+        const values = [
+            join_type, destination, destination_alias,
+            originAlias, options.origin_col, operator,
+            destination_alias, options.destination_col
+        ];
+
+        const current_joins = this._query.JOINS.join(' ');
+        const search = new RegExp(`.* JOIN .* ${destination_alias!} ON`, 'g');
+        // only add join if table isn't already joined under alias
+        if (!current_joins.match(search)) {
+            this._query.JOINS?.push(format(`%s JOIN %s %s ON %s.%s %s %s.%s`, ...values));
+        }
+
+        return this;
+    }
+
+    // Used to select which fields will be added to the query by the join, otherwise no fields will be
+    // added. Param options are a singular field, a list of fields, or an object of fields and aliases.
+    addFields(fields: string | string[] | {[field: string]: string}, tableName?: string){
+        let table = '';
+        if (tableName) {
+            table = (this._aliasMap.has(tableName)) ? (this._aliasMap.get(tableName)!) : (tableName);
+        } else {
+            table = this._tableAlias;
+        }
+
+        if (typeof fields === 'string'){
+            fields = (!fields.includes('.') && table !== '') ? (`${table}.${fields}`) : (fields);
+            this._query.SELECT.splice(1, 0, format(`, %s`, fields));
+        } else if (Array.isArray(fields)) {
+            fields.forEach((field) => {
+                field = (!field.includes('.') && table !== '') ? (`${table}.${field}`) : (field);
+                this._query.SELECT.splice(1, 0, format(`, %s`, field));
+            });
+        } else {
+            Object.entries(fields).forEach((entry) => {
+                let field = entry[0];
+                const alias = entry[1];
+
+                field = (!field.includes('.') && table !== '') ? (`${table}.${field}`) : (field);
+                this._query.SELECT.splice(1, 0, format(`, %s AS %s`, field, alias));
+            })
         }
 
         return this;
@@ -284,36 +436,73 @@ export class Repository {
     findAll<T>(queryOptions?: QueryOptions, options?: Options<T>): Promise<Result<T[]>> {
         const storage = new Mapper();
 
+        if (queryOptions) {
+            this._query.OPTIONS = [];
+        }
+
         if (queryOptions && queryOptions.groupBy) {
-            this._rawQuery.push(`GROUP BY ${queryOptions.groupBy}`);
+            // qualify groupby with table name to avoid errors
+            let table: string;
+            if (queryOptions.tableName && this._aliasMap.has(queryOptions.tableName)) {
+                table = this._aliasMap.get(queryOptions.tableName)!;
+            } else if (queryOptions.tableName) {
+                table = queryOptions.tableName;
+            } else {
+                table = this._tableAlias;
+            }
+
+            if (table !== '') {
+                // if there is a list of groupBy columns, qualify each with table name
+                const groupByParts = queryOptions.groupBy.split(',');
+                const groupBy: string[] = [];
+                groupByParts.forEach((part) => {
+                    if (part.includes('.')) {
+                        // skip pre-qualified columns
+                        groupBy.push(part);
+                    } else {
+                        groupBy.push(`${table}.${part}`);
+                    }
+                });
+                queryOptions.groupBy = groupBy.join(',');
+            }
+
+            this._query.OPTIONS?.push(format(`GROUP BY %s`, queryOptions.groupBy));
         }
 
         if (queryOptions && queryOptions.sortBy) {
             if (queryOptions.sortDesc) {
-                this._rawQuery.push(`ORDER BY "${queryOptions.sortBy}" DESC`);
+                this._query.OPTIONS?.push(format(`ORDER BY %s DESC`, queryOptions.sortBy));
             } else {
-                this._rawQuery.push(`ORDER BY "${queryOptions.sortBy}" ASC`);
+                this._query.OPTIONS?.push(format(`ORDER BY %s ASC`, queryOptions.sortBy));
             }
         }
 
         if (queryOptions && queryOptions.offset) {
-            this._values.push(queryOptions.offset);
-            this._rawQuery.push(`OFFSET $${this._values.length}`);
+            this._query.OPTIONS?.push(format(`OFFSET %L`, queryOptions.offset));
         }
 
         if (queryOptions && queryOptions.limit) {
-            this._values.push(queryOptions.limit);
-            this._rawQuery.push(`LIMIT $${this._values.length}`);
+            this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
-        const query = {
-            text: this._rawQuery.join(' '),
-            values: this._values,
-        };
+        const text = [
+            this._query.SELECT.join(' '),
+            this._query.JOINS?.join(' '),
+            this._query.WHERE?.join(' '),
+            this._query.OPTIONS?.join(' '),
+        ].join(' ');
+
+        const query = {text, values: this._query.VALUES};
 
         // reset the filter
-        this._rawQuery = [`SELECT * FROM ${this._tableName}`];
-        this._values = [];
+        this._query = {
+            SELECT: [
+                format(`SELECT %s.*`, this._tableAlias),
+                format(`FROM %s %s`, this._tableName, this._tableAlias)
+            ],
+            VALUES: [],
+        }
+        this._aliasMap.clear();
 
         return storage.rows<T>(query, options);
     }
@@ -321,36 +510,48 @@ export class Repository {
     findAllStreaming(queryOptions?: QueryOptions, options?: Options<any>): Promise<QueryStream> {
         const storage = new Mapper();
 
+        if (queryOptions) {
+            this._query.OPTIONS = [];
+        }
+
         if (queryOptions && queryOptions.groupBy) {
-            this._rawQuery.push(`GROUP BY ${queryOptions.groupBy}`);
+            this._query.OPTIONS?.push(format(`GROUP BY %s`, queryOptions.groupBy));
         }
 
         if (queryOptions && queryOptions.sortBy) {
             if (queryOptions.sortDesc) {
-                this._rawQuery.push(`ORDER BY "${queryOptions.sortBy}" DESC`);
+                this._query.OPTIONS?.push(format(`ORDER BY %s DESC`, queryOptions.sortBy));
             } else {
-                this._rawQuery.push(`ORDER BY "${queryOptions.sortBy}" ASC`);
+                this._query.OPTIONS?.push(format(`ORDER BY %s ASC`, queryOptions.sortBy));
             }
         }
 
         if (queryOptions && queryOptions.offset) {
-            this._values.push(queryOptions.offset);
-            this._rawQuery.push(`OFFSET $${this._values.length}`);
+            this._query.OPTIONS?.push(format(`OFFSET %L`, queryOptions.offset));
         }
 
         if (queryOptions && queryOptions.limit) {
-            this._values.push(queryOptions.limit);
-            this._rawQuery.push(`LIMIT $${this._values.length}`);
+            this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
-        const query = {
-            text: this._rawQuery.join(' '),
-            values: this._values,
-        };
+        const text = [
+            this._query.SELECT.join(' '),
+            this._query.JOINS?.join(' '),
+            this._query.WHERE?.join(' '),
+            this._query.OPTIONS?.join(' '),
+        ].join(' ');
+
+        const query = {text, values: this._query.VALUES};
 
         // reset the filter
-        this._rawQuery = [`SELECT * FROM ${this._tableName}`];
-        this._values = [];
+        this._query = {
+            SELECT: [
+                format(`SELECT %s.*`, this._tableAlias),
+                format(`FROM %s %s`, this._tableName, this._tableAlias)
+            ],
+            VALUES: [],
+        }
+        this._aliasMap.clear()
 
         return storage.rowsStreaming(query, options);
     }
@@ -358,36 +559,48 @@ export class Repository {
     async findAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, options?: Options<any>): Promise<Result<File>> {
         const storage = new Mapper();
 
+        if (queryOptions) {
+            this._query.OPTIONS = [];
+        }
+
         if (queryOptions && queryOptions.groupBy) {
-            this._rawQuery.push(`GROUP BY ${queryOptions.groupBy}`);
+            this._query.OPTIONS?.push(format(`GROUP BY %s`, queryOptions.groupBy));
         }
 
         if (queryOptions && queryOptions.sortBy) {
             if (queryOptions.sortDesc) {
-                this._rawQuery.push(`ORDER BY "${queryOptions.sortBy}" DESC`);
+                this._query.OPTIONS?.push(format(`ORDER BY %s DESC`, queryOptions.sortBy));
             } else {
-                this._rawQuery.push(`ORDER BY "${queryOptions.sortBy}" ASC`);
+                this._query.OPTIONS?.push(format(`ORDER BY %s ASC`, queryOptions.sortBy));
             }
         }
 
         if (queryOptions && queryOptions.offset) {
-            this._values.push(queryOptions.offset);
-            this._rawQuery.push(`OFFSET $${this._values.length}`);
+            this._query.OPTIONS?.push(format(`OFFSET %L`, queryOptions.offset));
         }
 
         if (queryOptions && queryOptions.limit) {
-            this._values.push(queryOptions.limit);
-            this._rawQuery.push(`LIMIT $${this._values.length}`);
+            this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
-        const query = {
-            text: this._rawQuery.join(' '),
-            values: this._values,
-        };
+        const text = [
+            this._query.SELECT.join(' '),
+            this._query.JOINS?.join(' '),
+            this._query.WHERE?.join(' '),
+            this._query.OPTIONS?.join(' '),
+        ].join(' ');
+
+        const query = {text, values: this._query.VALUES};
 
         // reset the filter
-        this._rawQuery = [`SELECT * FROM ${this._tableName}`];
-        this._values = [];
+        this._query = {
+            SELECT: [
+                format(`SELECT %s.*`, this._tableAlias),
+                format(`FROM %s %s`, this._tableName, this._tableAlias)
+            ],
+            VALUES: [],
+        }
+        this._aliasMap.clear()
 
         try {
             // blob storage will pick the proper provider based on environment variable, no need to specify here unless
@@ -482,28 +695,44 @@ export class Repository {
         const storage = new Mapper();
 
         // modify the original query to be count
-        this._rawQuery[0] = `SELECT COUNT(*) FROM ${this._tableName}`;
+        this._query.SELECT = [format(`SELECT COUNT(*) FROM %s %s`, this._tableName, this._tableAlias)];
 
         if (queryOptions && queryOptions.offset) {
-            this._values.push(queryOptions.offset);
-            this._rawQuery.push(`OFFSET $${this._values.length}`);
+            this._query.OPTIONS?.push(format(`OFFSET %L`, queryOptions.offset));
         }
 
         if (queryOptions && queryOptions.limit) {
-            this._values.push(queryOptions.limit);
-            this._rawQuery.push(`LIMIT $${this._values.length}`);
+            this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
-        const query = {
-            text: this._rawQuery.join(' '),
-            values: this._values,
-        };
+        const text = [
+            this._query.SELECT.join(' '),
+            this._query.JOINS?.join(' '),
+            this._query.WHERE?.join(' '),
+            this._query.OPTIONS?.join(' '),
+        ].join(' ');
+
+        const query = {text, values: this._query.VALUES};
 
         // reset the filter
-        this._rawQuery = [`SELECT * FROM ${this._tableName}`];
-        this._values = [];
+        this._query = {
+            SELECT: [
+                format(`SELECT %s.*`, this._tableAlias),
+                format(`FROM %s %s`, this._tableName, this._tableAlias)
+            ],
+            VALUES: [],
+        }
+        this._aliasMap.clear()
 
         return storage.count(query, transaction);
+    }
+
+    // used to return random table alias
+    private _setAlias(table: string): string {
+        const num = Math.floor(Math.random() * 1000);
+        const alias = `x${num}_${table}`;
+        this._aliasMap.set(table, alias);
+        return alias;
     }
 }
 
@@ -515,7 +744,23 @@ export type QueryOptions = {
     // generally used if we have a complicated set of joins
     groupBy?: string | undefined;
     distinct?: boolean | undefined;
+    // used to qualify groupBy column
+    tableName?: string | undefined;
 };
+
+export type JoinOptions = {
+    origin_col: string | undefined,
+    operator?: '=' | '<>' | undefined,
+    destination_col: string | undefined,
+    destination_alias?: string | undefined,
+    join_type?: 'INNER' | 'RIGHT' | 'LEFT' | 'FULL OUTER' | undefined,
+};
+
+export type QueryConditions = {
+    dataType?: string | undefined,
+    tableName?: string | undefined,
+    tableAlias?: string | undefined,
+}
 
 export type FileOptions = {
     containerID: string;

@@ -388,6 +388,11 @@ relationshipSampleQuery =
     {text: 'Simple Graph Query', value: this.simpleGraphQuery},
   ]
 
+  mounted() {
+    // run the default query on page load
+    this.submitQuery()
+  }
+  
   setRawEditor() {
     this.activeTab = 'rawEditor'
     

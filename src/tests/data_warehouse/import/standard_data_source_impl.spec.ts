@@ -87,7 +87,8 @@ describe('A Standard DataSource Implementation can', async () => {
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can receive data from an array of objects', async () => {

@@ -102,14 +102,14 @@ export default class DataSourceGraphQLSchemaGenerator {
     graphQLObjectsForDataSource(source: DataSource, options: ResolverOptions): {[key: string]: any} {
         const dataSourceGrapQLObjects: {[key: string]: any} = {};
 
-        let name = 'Timeseries'
+        const name = 'Timeseries';
 
         dataSourceGrapQLObjects[stringToValidPropertyName(name)] = {
             args: {
                 _record: {type: this.recordInputType},
                 ...this.inputFieldsForDataSource(source)
             },
-            description: `Timeseries data from the data source ${source!.DataSourceRecord!.name}`,
+            description: `Timeseries data from the data source ${source.DataSourceRecord!.name}`,
             type: options.returnFile
                 ? this.fileInfo
                 : new GraphQLList(new GraphQLObjectType({
@@ -307,13 +307,29 @@ export default class DataSourceGraphQLSchemaGenerator {
                     input[key].value = input[key].value[0];
                 }
 
-                // same statement bust we must add "and" in front of each subsequent call to "query"
+                // same statement but we must add "and" in front of each subsequent call to "query"
                 // otherwise we'll get sql statement errors
                 if (i === 0) {
-                    repo = repo.query(propertyMap[key].column_name, input[key].operator, input[key].value, propertyMap[key].type);
+                    repo = repo.query(
+                        propertyMap[key].column_name,
+                        input[key].operator,
+                        input[key].value,
+                        {
+                            dataType: propertyMap[key].type,
+                            tableName: `y_${source.DataSourceRecord?.id}`
+                        }
+                    );
                     i++;
                 } else {
-                    repo = repo.and().query(propertyMap[key].column_name, input[key].operator, input[key].value, propertyMap[key].type);
+                    repo = repo.and().query(
+                        propertyMap[key].column_name,
+                        input[key].operator,
+                        input[key].value,
+                        {
+                            dataType: propertyMap[key].type,
+                            tableName: `y_${source.DataSourceRecord?.id}`
+                        }
+                    );
                 }
             });
 

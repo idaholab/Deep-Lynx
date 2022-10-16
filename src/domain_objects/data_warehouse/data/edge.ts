@@ -4,7 +4,7 @@ import {Expose, plainToClass, Transform, Type} from 'class-transformer';
 import Container from '../ontology/container';
 import MetatypeRelationshipPair, {MetatypeRelationshipPairID} from '../ontology/metatype_relationship_pair';
 import Node from './node';
-import {Conversion} from '../etl/type_transformation';
+import {Conversion, EdgeConnectionParameter} from '../etl/type_transformation';
 import TimeseriesEntry from './timeseries';
 
 export class EdgeMetadata {
@@ -132,6 +132,14 @@ export default class Edge extends BaseDomainClass {
     @IsString()
     destination_metatype_uuid?: string;
 
+    // These fields don't get persisted to the database, only used in the push between transformation and edge queue
+    // item.
+    @IsOptional()
+    origin_parameters?: EdgeConnectionParameter[];
+
+    @IsOptional()
+    destination_parameters?: EdgeConnectionParameter[];
+
     constructor(input: {
         container_id: Container | string;
         metatype_relationship_pair: MetatypeRelationshipPair | string;
@@ -151,6 +159,8 @@ export default class Edge extends BaseDomainClass {
         destination_original_id?: string;
         metadata?: EdgeMetadata;
         created_at?: Date;
+        origin_parameters?: EdgeConnectionParameter[];
+        destination_parameters?: EdgeConnectionParameter[];
     }) {
         super();
 
@@ -174,6 +184,8 @@ export default class Edge extends BaseDomainClass {
             if (input.destination_metatype_id) this.destination_metatype_id = input.destination_metatype_id;
             if (input.metadata) this.metadata = input.metadata;
             if (input.created_at) this.created_at = input.created_at;
+            if (input.origin_parameters) this.origin_parameters = input.origin_parameters;
+            if (input.destination_parameters) this.destination_parameters = input.destination_parameters;
         }
     }
 }

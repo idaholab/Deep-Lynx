@@ -57,6 +57,7 @@ describe('An Ontology Version Repo', async () => {
     });
 
     after(async () => {
+        await UserMapper.Instance.Delete(user.id!);
         await ContainerMapper.Instance.Delete(containerID);
         return PostgresAdapter.Instance.close();
     });

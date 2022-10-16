@@ -78,7 +78,8 @@ describe('Using a legacy GraphQL Query on nodes we', async () => {
     });
 
     after(async () => {
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can query by id, with all resolvers functioning', async () => {

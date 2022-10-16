@@ -68,7 +68,8 @@ describe('A Standard DataSource Implementation can', async () => {
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can create a new timeseries data source, building proper table and tearing down', async () => {

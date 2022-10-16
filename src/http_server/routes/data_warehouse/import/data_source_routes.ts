@@ -174,14 +174,11 @@ export default class DataSourceRoutes {
             repository
                 .and()
                 .timeseries(String(req.query.timeseries).toLowerCase() === 'true')
-                .and()
-                .archived(String(req.query.archived).toLowerCase() === 'true')
-                .or()
-                .timeseries(String(req.query.timeseries).toLowerCase() === 'true')
-                .and()
-                .containerID('eq', req.container!.id) // we have to specify the container again in an OR statement
-                .and()
-                .archived(false) // we always want to at least list all unarchived ones
+                .and( new DataSourceRepository()
+                    .archived(String(req.query.archived).toLowerCase() === 'true')
+                    .or()
+                    .archived(false) // we always want to at least list all unarchived ones
+                )
                 .list({
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,

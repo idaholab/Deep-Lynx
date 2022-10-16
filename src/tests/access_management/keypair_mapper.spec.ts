@@ -17,6 +17,10 @@ describe('A KeyPair', async () => {
         return PostgresAdapter.Instance.init();
     });
 
+    after(async () => {
+        return PostgresAdapter.Instance.close();
+    });
+
     it('can be created', async () => {
         const storage = UserMapper.Instance;
 

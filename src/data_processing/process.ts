@@ -7,7 +7,6 @@ import {SuperUser} from '../domain_objects/access_management/user';
 import FileMapper from '../data_access_layer/mappers/data_warehouse/data/file_mapper';
 import Logger from '../services/logger';
 import NodeRepository from '../data_access_layer/repositories/data_warehouse/data/node_repository';
-import EdgeRepository from '../data_access_layer/repositories/data_warehouse/data/edge_repository';
 import Node, {IsNodes} from '../domain_objects/data_warehouse/data/node';
 import Edge, {EdgeQueueItem, IsEdges} from '../domain_objects/data_warehouse/data/edge';
 import DataStagingRepository from '../data_access_layer/repositories/data_warehouse/import/data_staging_repository';

@@ -36,7 +36,8 @@ describe('A Data Target', async () => {
     });
 
     after(async () => {
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can be saved to storage', async () => {

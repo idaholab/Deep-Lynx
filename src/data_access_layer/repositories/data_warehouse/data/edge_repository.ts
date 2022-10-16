@@ -12,6 +12,9 @@ import NodeRepository from './node_repository';
 import File, {EdgeFile} from '../../../../domain_objects/data_warehouse/data/file';
 import FileMapper from '../../../mappers/data_warehouse/data/file_mapper';
 import QueryStream from 'pg-query-stream';
+import {EdgeConnectionParameter} from '../../../../domain_objects/data_warehouse/etl/type_transformation';
+import {valueCompare} from '../../../../services/utilities';
+import {instanceToPlain, plainToInstance} from 'class-transformer';
 
 /*
     EdgeRepository contains methods for persisting and retrieving edges
@@ -296,6 +299,98 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         return Promise.resolve(Result.Success(true));
     }
 
+    // populateFromParameters takes an edge record contains parameters and generates edges to be inserted based on those
+    // filters
+    async populateFromParameters(e: Edge): Promise<Result<Edge[]>> {
+        const edges: Edge[] = [];
+        if (!e.origin_parameters || e.origin_parameters.length === 0 || !e.destination_parameters || e.destination_parameters.length === 0) {
+            return Promise.resolve(Result.Failure('edge to populate from must have both origin and destination filters'));
+        }
+
+        const originNodes = await this.parametersRepoBuilder(e.container_id!, e.origin_parameters).list(false);
+        if (originNodes.isError) return Promise.resolve(Result.Pass(originNodes));
+
+        const destNodes = await this.parametersRepoBuilder(e.container_id!, e.destination_parameters).list(false);
+        if (destNodes.isError) return Promise.resolve(Result.Pass(destNodes));
+
+        originNodes.value.forEach((origin) => {
+            destNodes.value.forEach((dest) => {
+                const newEdge: Edge = plainToInstance(Edge, {...instanceToPlain(e)});
+                newEdge.origin_id = origin.id;
+                newEdge.destination_id = dest.id;
+
+                edges.push(newEdge);
+            });
+        });
+
+        return Promise.resolve(Result.Success(edges));
+    }
+
+    private parametersRepoBuilder(containerID: string, parameters: EdgeConnectionParameter[]): NodeRepository {
+        let nodeRepo = new NodeRepository().where().containerID('eq', containerID);
+        const dataSourceIDs: string[] = [];
+        const metatypeIDs: string[] = [];
+        const metatypeUUIDs: string[] = [];
+        const metatypeNames: string[] = [];
+        const originalIDs: any[] = [];
+        const ids: string[] = [];
+        const properties: {property: string; value: any}[] = [];
+
+        // **NOTE** for now we are just going to do equality on the operators, no matter what the filter might say
+        // this is because the UI will default to equality for now and it helps cut down our calls to listing nodes
+        // which might be a considerably expensive call
+        parameters.forEach((p) => {
+            switch (p.type) {
+                case 'data_source': {
+                    dataSourceIDs.push(p.value);
+                    break;
+                }
+
+                case 'metatype_id': {
+                    metatypeIDs.push(p.value);
+                    break;
+                }
+
+                case 'metatype_uuid': {
+                    metatypeUUIDs.push(p.value);
+                    break;
+                }
+
+                case 'metatype_name': {
+                    metatypeNames.push(p.value);
+                    break;
+                }
+
+                case 'original_id': {
+                    originalIDs.push(p.value);
+                    break;
+                }
+
+                case 'property': {
+                    properties.push({property: p.property!, value: p.value});
+                    break;
+                }
+
+                case 'id': {
+                    ids.push(p.value);
+                    break;
+                }
+            }
+        });
+
+        if (dataSourceIDs.length > 0) nodeRepo = nodeRepo.and().dataSourceID('in', dataSourceIDs);
+        if (metatypeIDs.length > 0) nodeRepo = nodeRepo.and().metatypeID('in', metatypeIDs);
+        if (metatypeUUIDs.length > 0) nodeRepo = nodeRepo.and().metatypeUUID('in', metatypeUUIDs);
+        if (metatypeNames.length > 0) nodeRepo = nodeRepo.and().metatypeName('in', metatypeNames);
+        if (originalIDs.length > 0) nodeRepo = nodeRepo.and().originalDataID('in', originalIDs);
+        if (ids.length > 0) nodeRepo = nodeRepo.and().id('in', ids);
+        properties.forEach((p) => {
+            nodeRepo = nodeRepo.and().property(p.property, 'eq', p.value);
+        });
+
+        return nodeRepo;
+    }
+
     addFile(edge: Edge, fileID: string): Promise<Result<boolean>> {
         if (!edge.id) {
             return Promise.resolve(Result.Failure('edge must have id'));
@@ -363,7 +458,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     }
 
     property(key: string, operator: string, value: any, dataType?: string) {
-        super.queryJsonb(key, 'properties', operator, value, dataType);
+        super.queryJsonb(key, 'properties', operator, value, {dataType});
         return this;
     }
 

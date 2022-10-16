@@ -149,7 +149,8 @@ describe('A Type Transformation Repository', async () => {
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it("can populate a Transformation's keys with valid instantiated classes", async () => {

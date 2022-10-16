@@ -4,7 +4,7 @@ import LargeObject from '../../../services/blob_storage/pg_large_file_impl';
 import PostgresAdapter from '../../../data_access_layer/mappers/db_adapters/postgres/postgres';
 import File from '../../../domain_objects/data_warehouse/data/file';
 
-describe('Filesystem storage can', async () => {
+describe('Large object storage can', async () => {
     let provider: LargeObject;
 
     before(async function () {

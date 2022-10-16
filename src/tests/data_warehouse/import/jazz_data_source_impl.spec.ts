@@ -80,7 +80,8 @@ describe('An Jazz Data Source can', async () => {
     after(async () => {
         if (process.env.CORE_DB_CONNECTION_STRING !== '' && process.env.JAZZ_DATA_SOURCE_URL !== '' && process.env.JAZZ_DATA_SOURCE_PROJECT_NAME !== '') {
             await UserMapper.Instance.Delete(user.id!);
-            return ContainerMapper.Instance.Delete(containerID);
+            await ContainerMapper.Instance.Delete(containerID);
+            return PostgresAdapter.Instance.close();
         }
 
         return Promise.resolve();
