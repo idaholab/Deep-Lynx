@@ -480,10 +480,10 @@ describe('A Standard DataSource Implementation can', async () => {
         stream.pipe(pass);
 
         setTimeout(() => {
-            void sourceRepo.delete(source!);
+            sourceRepo.delete(source!);
             fs.unlinkSync(__dirname + '/1million.csv');
-            done();
-        }, 10000);
+            return Promise.resolve()
+        }, 9000);
     }).timeout(10000);
 });
 

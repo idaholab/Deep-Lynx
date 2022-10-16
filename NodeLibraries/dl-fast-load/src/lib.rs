@@ -77,7 +77,8 @@ impl Manager {
 
             let mut date_conversion_format_string = JsString::new(&mut cx, "");
             if data_type.value(&mut cx).as_str() == "date" {
-            date_conversion_format_string = column.get(&mut cx, "date_conversion_format_string")?;
+                date_conversion_format_string =
+                    column.get(&mut cx, "date_conversion_format_string")?;
             }
 
             final_columns.push(TimeseriesColumn {
@@ -138,16 +139,12 @@ impl Manager {
 
                 let result = copier.finish().await;
                 result.unwrap();
-                println!(
-                    "Time elapsed in writing rows is: {:?}",
-                    start.elapsed()
-                );
+                println!("Time elapsed in writing rows is: {:?}", start.elapsed());
             });
 
             let stream = BufReader::with_capacity(4096, NodeStream::new(rx));
             let mut rdr = csv::ReaderBuilder::new().flexible(true).from_reader(stream);
-            let mut order: Vec<usize> = vec![];
-            let mut map: HashMap<usize, TimeseriesColumn> = HashMap::new();
+            let mut order: Vec<(usize, TimeseriesColumn)> = vec![];
 
             // because we're borrowing here lets keep this in its own scope
             // we need to build the order in which we reorganize the csv file
@@ -157,8 +154,7 @@ impl Manager {
 
                     for (i, header) in headers.iter().enumerate() {
                         if header == column.property_name {
-                            order.push(i);
-                            map.insert(i, column.clone());
+                            order.push((i, column));
                             break;
                         }
                     }
@@ -169,35 +165,30 @@ impl Manager {
             while let Some(result) = rdr.records().next() {
                 let mut to_send: Vec<String> = vec![];
                 let record = result.unwrap();
-                for index in &order {
+                for (index, column) in &order {
                     match record.get(index.clone()) {
                         Some(value) => {
-                            match map.get(&index) {
-                                Some(column) => {
-                                    if column.data_type == "date" {
-                                        let parsed = NaiveDateTime::parse_from_str(
-                                            value,
-                                            column.date_conversion_format_string.as_str(),
-                                        )
-                                        .unwrap();
-                                        to_send.push(parsed.to_string());
-                                        continue;
-                                    }
-
-                                    // make sure we're removing the comma on number types, postgres will freak out
-                                    if column.data_type == "number"
-                                        || column.data_type == "number64"
-                                        || column.data_type == "float"
-                                        || column.data_type == "float64"
-                                    {
-                                        to_send.push(value.replace(",", ""));
-                                        continue;
-                                    }
-
-                                    to_send.push(value.to_string());
-                                }
-                                None => {}
+                            if column.data_type == "date" {
+                                let parsed = NaiveDateTime::parse_from_str(
+                                    value,
+                                    column.date_conversion_format_string.as_str(),
+                                )
+                                .unwrap();
+                                to_send.push(parsed.to_string());
+                                continue;
                             }
+
+                            // make sure we're removing the comma on number types, postgres will freak out
+                            if column.data_type == "number"
+                                || column.data_type == "number64"
+                                || column.data_type == "float"
+                                || column.data_type == "float64"
+                            {
+                                to_send.push(value.replace(",", ""));
+                                continue;
+                            }
+
+                            to_send.push(value.to_string());
                         }
                         None => {}
                     }
