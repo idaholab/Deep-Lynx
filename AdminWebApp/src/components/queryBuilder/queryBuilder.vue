@@ -18,7 +18,7 @@
               :input-value="results && result.id === results.id"
               two-line>
               <v-list-item-content>
-                <v-list-item-title>{{result.ran.toISOString().split('T').join(' ').substr(0, 19)}}</v-list-item-title>
+                <v-list-item-title>{{$utils.formatISODate(result.ran.toISOString())}}</v-list-item-title>
                 <v-list-item-subtitle>{{result.nodes.length}} {{$t('queryBuilder.results')}}</v-list-item-subtitle>
               </v-list-item-content>
             </v-list-item>
@@ -148,7 +148,8 @@
                       v-if="Object.keys(rawQueryResult).length !== 0"
                       :value="rawQueryResult"
                       copyable
-                      :expand-depth="4"
+                      expanded
+                      :expand-depth="7"
                       style="overflow-y: auto; overflow-x: auto"
                     />
                     <p v-else style="padding: 10px">Results will be displayed here</p>

@@ -118,6 +118,13 @@ export default class NodeMapper extends Mapper {
         });
     }
 
+    public async ListHistory(id: string, transaction?: PoolClient): Promise<Result<Node[]>> {
+        return super.rows<Node>(this.listHistoryStatement(id), {
+            transaction,
+            resultClass: this.resultClass,
+        });
+    }
+
     public async RetrieveByCompositeOriginalID(originalID: string, dataSourceID: string, metatypeID: string, transaction?: PoolClient): Promise<Result<Node>> {
         return super.retrieve(this.retrieveByCompositeOriginalIDStatement(dataSourceID, metatypeID, originalID), {transaction, resultClass: this.resultClass});
     }
@@ -210,6 +217,16 @@ export default class NodeMapper extends Mapper {
             text: `SELECT * FROM current_nodes WHERE id = $1`,
             values: [nodeID],
         };
+    }
+
+    // retrives all versions of a node
+    private listHistoryStatement(nodeID: string): QueryConfig {
+        return {
+            text: `SELECT nodes.*, metatypes.name as metatype_name
+            FROM nodes LEFT JOIN metatypes ON nodes.metatype_id = metatypes.id
+            WHERE nodes.id = $1 ORDER BY nodes.created_at ASC`,
+            values: [nodeID],
+        }
     }
 
     private domainRetrieveStatement(nodeID: string, containerID: string): QueryConfig {

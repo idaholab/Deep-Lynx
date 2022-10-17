@@ -459,6 +459,7 @@
 
         <div class="mt-2 pt-3 px-5 pb-5 height-full">
           <h4 class="primary--text">{{$t('dataQuery.nodeInformation')}}</h4>
+
           <div v-if="currentNodeInfo !== null">
             <v-row>
               <v-col>
@@ -504,6 +505,38 @@
                 </v-expansion-panels>
               </v-col>
 
+              <!-- Node History View -->
+              <v-col cols="3" style="margin-top: 160px">
+                <v-card>
+                  <v-list-item>
+                    <v-list-item-title><span class="text-overline">Node History:</span></v-list-item-title>
+                  </v-list-item>
+
+                  <v-list dense style="width: fit-content">
+                    <v-list-item-group
+                        color="primary"
+                    >
+                      <v-list-item
+                        two-line
+                        v-for="(item, i) in currentNodeInfo.history"
+                        :key="i"
+                        @click="getInfo(item)"
+                      >
+
+                        <v-list-item-icon style="margin-right: 12px">
+                          <v-icon color="#b2df8a" >mdi-edit</v-icon>
+                        </v-list-item-icon>
+
+                        <v-list-item-content>
+                          <v-list-item-title>{{$utils.formatISODate(item.created_at)}}</v-list-item-title>
+                          <v-list-item-subtitle>Created by: {{users[item.created_by]?.display_name}} ({{item.created_by }})</v-list-item-subtitle>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list-item-group>
+                  </v-list>
+                </v-card>
+              </v-col>
+
             </v-row>
 
           </div>
@@ -514,7 +547,9 @@
               <v-btn color="red darken-1" style="color: white" @click="deleteNode(currentNodeInfo)">{{$t('dataQuery.deleteNode')}}</v-btn>
             </v-col>
           </v-row>
+
         </div>
+
       </v-card>
     </v-dialog>
 
@@ -634,6 +669,7 @@ export default class GraphViewer extends Vue {
   errorMessage = ""
 
   datasources: {[key: string]: DataSourceT} = {}
+  users: {[key: string]: DataSourceT} = {}
 
   nodeDialog = false
   edgeDialog = false
@@ -902,15 +938,6 @@ export default class GraphViewer extends Vue {
         }
       }
     });
-
-    // create a map of datasource IDs and names for reference by nodes
-    const sources = await this.$client.listDataSources(this.containerID)
-
-    for (const datasource of sources) {
-      if (datasource.id != undefined) {
-        this.datasources[datasource.id] = datasource;
-      }
-    }
 
     const graphElem = this.$refs.forcegraph as HTMLElement;
 
@@ -1283,7 +1310,7 @@ export default class GraphViewer extends Vue {
     // Reset Graph may be used to return to original results
   }
 
-  showNodeProperties(node: any) {
+  showNodeProperties(node: NodeT) {
     // only take single click action if the gap between previous and current clicks sufficiently far apart
     this.delay(this.doubleClickTimer).then(() => {
       if (this.doubleClickFlag) {
@@ -1450,7 +1477,10 @@ export default class GraphViewer extends Vue {
     }
   }
 
-  getInfo(data: NodeT) {
+  async getInfo(data: NodeT) {
+    // retrieve node history
+    const nodeHistory = await this.$client.retrieveNodeHistory(this.containerID, data.id);
+
     this.currentNodeInfo = {
       id: data.id,
       container_id: this.containerID,
@@ -1460,8 +1490,9 @@ export default class GraphViewer extends Vue {
         name: data.metatype_name
       },
       properties: data.properties,
-      created_at: data.created_at.split(' (')[0], // remove timezone text if present
-      modified_at: data.modified_at.split(' (')[0] // remove timezone text if present
+      created_at: this.$utils.formatISODate(data.created_at),
+      modified_at: this.$utils.formatISODate(data.modified_at),
+      history: nodeHistory
     }
   }
 
@@ -1477,8 +1508,8 @@ export default class GraphViewer extends Vue {
         id: data.relationship_id
       },
       properties: data.properties,
-      created_at: data.created_at.split(' (')[0], // remove timezone text if present
-      modified_at: data.modified_at.split(' (')[0] // remove timezone text if present
+      created_at: this.$utils.formatISODate(data.created_at),
+      modified_at: this.$utils.formatISODate(data.modified_at),
     }
   }
 
@@ -1625,6 +1656,26 @@ export default class GraphViewer extends Vue {
       properties[key.property_name] = key.default_value
     })
     this.edgeProperties = properties
+  }
+
+  async mounted() {
+    // create a map of datasource IDs and names for reference by nodes
+    const sources = await this.$client.listDataSources(this.containerID)
+
+    for (const datasource of sources) {
+      if (datasource.id != undefined) {
+        this.datasources[datasource.id] = datasource;
+      }
+    }
+
+    // create a map of users
+    const users = await this.$client.listUsers(this.containerID)
+
+    for (const user of users) {
+      if (user.id != undefined) {
+        this.users[user.id] = user;
+      }
+    }
   }
 
 }

@@ -91,6 +91,7 @@ export default {
         },
         containerAlert: {
             acknowledge: 'Acknowledge Alert',
+            generatingOntology: 'Generating Ontology',
             containerAdminAcknowledge: 'Only Container Administrators can dismiss alerts. Please contact your administrator to remove this alert.',
         },
         apiKeys: {
