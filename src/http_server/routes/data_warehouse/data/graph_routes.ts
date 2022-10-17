@@ -106,12 +106,28 @@ export default class GraphRoutes {
     }
 
     private static retrieveNode(req: Request, res: Response, next: NextFunction) {
-        if (req.node) {
-            Result.Success(req.node).asResponse(res);
-            next();
+        // first check if the node history is desired, otherwise load the single current node
+        if (String(req.query.history).toLowerCase() === 'true') {
+            if (req.container) {
+                nodeRepo.findNodeHistoryByID(req.params.nodeID)
+                    .then((result) => {
+                        if (result.isError && result.error) {
+                            result.asResponse(res);
+                            return;
+                        }
+                        res.status(200).json(result);
+                    })
+                    .catch((err) => Result.Failure(err, 404).asResponse(res))
+                    .finally(() => next());
+            }
         } else {
-            Result.Failure(`node not found`, 404).asResponse(res);
-            next();
+            if (req.node) {
+                Result.Success(req.node).asResponse(res);
+                next();
+            } else {
+                Result.Failure(`node not found`, 404).asResponse(res);
+                next();
+            }
         }
     }
 

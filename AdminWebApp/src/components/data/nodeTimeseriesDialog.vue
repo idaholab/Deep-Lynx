@@ -92,7 +92,6 @@
 <script lang="ts">
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
 import {DataSourceT, NodeT, TimeseriesDataSourceConfig, TypeMappingTransformationT} from "@/api/types";
-import {stringToValidPropertyName} from "@/utilities";
 import LineChart from "@/components/charts/lineChart.vue";
 
 @Component({components: {LineChart}})
@@ -233,7 +232,7 @@ export default class NodeTimeseriesDialog extends Vue {
             return
           }
 
-          this.results = results.data[this.transformation?.name ? stringToValidPropertyName(this.transformation?.name) + "_legacy" : 'z_'+this.transformation?.id + "_legacy"]
+          this.results = results.data[this.transformation?.name ? this.$utils.stringToValidPropertyName(this.transformation?.name) + "_legacy" : 'z_'+this.transformation?.id + "_legacy"]
         })
         .catch((e) => this.errorMessage = e)
     } else {
@@ -244,7 +243,7 @@ export default class NodeTimeseriesDialog extends Vue {
             return
           }
 
-          this.results = results.data[this.dataSource?.name ? stringToValidPropertyName(this.dataSource?.name): 'y_'+this.dataSource?.id]
+          this.results = results.data[this.dataSource?.name ? this.$utils.stringToValidPropertyName(this.dataSource?.name): 'y_'+this.dataSource?.id]
         })
         .catch((e) => this.errorMessage = e)
     }
@@ -270,7 +269,7 @@ export default class NodeTimeseriesDialog extends Vue {
     return {
       query: `
 {
-  ${this.transformation?.name ? stringToValidPropertyName(this.transformation?.name!)+'_legacy' : 'z_' + this.transformationID + "_legacy"}
+  ${this.transformation?.name ? this.$utils.stringToValidPropertyName(this.transformation?.name!)+'_legacy' : 'z_' + this.transformationID + "_legacy"}
   (_record: {
       sortBy: "${this.transformation?.keys.find(k => k.is_primary_timestamp)?.column_name}",sortDesc: false}
       ${this.transformation?.keys.find(k => k.is_primary_timestamp)?.column_name}: {
@@ -287,7 +286,7 @@ export default class NodeTimeseriesDialog extends Vue {
     return {
       query: `
 {
-  ${this.dataSource?.name ? stringToValidPropertyName(this.dataSource?.name!) : 'y_' + this.dataSourceID}
+  ${this.dataSource?.name ? this.$utils.stringToValidPropertyName(this.dataSource?.name!) : 'y_' + this.dataSourceID}
   (_record: {
       sortBy: "${(this.dataSource?.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name}",sortDesc: false}
       ${(this.dataSource?.config as TimeseriesDataSourceConfig).columns.find(c => c.is_primary_timestamp)?.column_name}: {

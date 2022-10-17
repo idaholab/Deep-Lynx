@@ -871,7 +871,6 @@ import {
   TypeMappingTransformationSubexpression,
   TypeMappingTransformationT
 } from "@/api/types";
-import {getNestedValue} from "@/utilities";
 import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import SearchMetatypes from "@/components/ontology/metatypes/searchMetatypes.vue";
 import {v4 as uuidv4} from 'uuid'
@@ -1306,7 +1305,7 @@ export default class TransformationDialog extends Vue {
 
         // now that we have a clean key, fetch the first value in that array payload
         // if it's an object, push its keys into the resulting payload keys
-        const value = getNestedValue(cleanKey, this.payload, new Array(i +1).fill(0))
+        const value = this.$utils.getNestedValue(cleanKey, this.payload, new Array(i +1).fill(0))
 
         if(Array.isArray(value)) {
           const keys = Object.keys(value[0])
