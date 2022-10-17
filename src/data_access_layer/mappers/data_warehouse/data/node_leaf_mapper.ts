@@ -42,7 +42,7 @@ export default class NodeLeafMapper extends Mapper {
     // query-building function: returns a list of node-edge-node pairs (NodeLeafs)
     private retrieveNthNodesStatement(nodeID: string, container_id: string, depth: string): QueryConfig {
         return {
-            text: nodeLeafQuery,
+            text: nodeLeafQuery.join(' '),
             values: [nodeID, container_id, depth],
         };
     }

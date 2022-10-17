@@ -308,7 +308,7 @@ describe('A Timeseries Repository', async () => {
         const saved = await repo.bulkSave(entries);
         expect(saved.isError, saved.error?.error).false;
 
-        let results = await repo.where().query('open', 'eq', true, 'boolean').list();
+        let results = await repo.where().query('open', 'eq', true, {dataType: 'boolean'}).list();
         expect(results.isError, results.error?.error).false;
         expect(results.value.length).eq(1);
 

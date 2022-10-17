@@ -221,9 +221,9 @@ describe('Using a new GraphQL Query on nodes we', async () => {
     });
 
     after(async () => {
-        await UserMapper.Instance.Delete(user.id!);
         await DataSourceMapper.Instance.Delete(dataSourceID);
         await ContainerMapper.Instance.Delete(containerID);
+        await UserMapper.Instance.Delete(user.id!);
         void PostgresAdapter.Instance.close();
 
         return Promise.resolve();

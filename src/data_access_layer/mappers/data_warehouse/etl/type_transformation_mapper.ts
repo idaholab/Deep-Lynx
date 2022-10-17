@@ -163,6 +163,8 @@ export default class TypeTransformationMapper extends Mapper {
             unique_identifier_key,
             root_array,
             config,
+            origin_parameters,
+            destination_parameters,
             created_by,
             modified_by) VALUES %L RETURNING *)
 
@@ -198,6 +200,8 @@ export default class TypeTransformationMapper extends Mapper {
             tt.unique_identifier_key,
             tt.root_array,
             JSON.stringify(tt.config),
+            JSON.stringify(tt.origin_parameters),
+            JSON.stringify(tt.destination_parameters),
             userID,
             userID,
         ]);
@@ -227,6 +231,8 @@ export default class TypeTransformationMapper extends Mapper {
             unique_identifier_key = u.unique_identifier_key,
             root_array = u.root_array,
             config = u.config::jsonb,
+            origin_parameters = u.origin_parameters::jsonb,
+            destination_parameters = u.destination_parameters::jsonb,
             modified_by = u.modified_by,
             modified_at = NOW()
             FROM (VALUES %L) as u(
@@ -251,6 +257,8 @@ export default class TypeTransformationMapper extends Mapper {
                             unique_identifier_key,
                             root_array,
                             config,
+                            origin_parameters,
+                            destination_parameters,
                             modified_by
                           ) WHERE u.id::bigint= t.id RETURNING t.*)
 
@@ -286,6 +294,8 @@ export default class TypeTransformationMapper extends Mapper {
             tt.unique_identifier_key,
             tt.root_array,
             JSON.stringify(tt.config),
+            JSON.stringify(tt.origin_parameters),
+            JSON.stringify(tt.destination_parameters),
             userID,
             userID,
         ]);

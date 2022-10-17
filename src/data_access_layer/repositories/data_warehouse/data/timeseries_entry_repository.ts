@@ -13,7 +13,7 @@ export default class TimeseriesEntryRepository extends Repository {
 
     // transformationID is optional and should only be provided if this repository is going to be used for querying a
     // timeseries table
-    constructor(transformationID?: string, timestampColumn?: string) {
+    constructor(transformationID?: string) {
         super(transformationID ? `z_${transformationID}` : '', {
             distinct: true,
         });
@@ -58,16 +58,18 @@ export default class TimeseriesEntryRepository extends Repository {
     histogram(column: string, min: string | number, max: string | number, nbuckets: number, additionalColumns?: string[]) {
         let text = '';
         let values: any[] = [];
+        const tableAlias = (this._aliasMap.has(this._tableName)) ? (this._aliasMap.get(this._tableName)) : (this._tableName);
 
         if (additionalColumns && additionalColumns.length > 0) {
-            text = `SELECT ${additionalColumns.join(',')}, histogram(%s, %L::numeric, %L::numeric, %L::integer) FROM ${this._tableName} as t`;
+            text = `SELECT ${additionalColumns.join(',')}, histogram(%s, %L::numeric, %L::numeric, %L::integer) FROM ${this._tableName} as ${tableAlias}`;
             values = [column, min, max, nbuckets];
         } else {
-            text = `SELECT histogram(%s, %L::numeric, %L::numeric, %L::integer) FROM ${this._tableName} as t`;
+            text = `SELECT histogram(%s, %L::numeric, %L::numeric, %L::integer) FROM ${this._tableName} as ${tableAlias}`;
             values = [column, min, max, nbuckets];
         }
 
-        this._rawQuery[0] = format(text, ...values);
+        this._query.SELECT = [format(text, ...values)];
+
         if (this.#groupBy && additionalColumns) {
             this.#groupBy.push(...additionalColumns);
         } else if (additionalColumns) {
@@ -77,11 +79,17 @@ export default class TimeseriesEntryRepository extends Repository {
         return this;
     }
 
-    query(fieldName: string, operator: string, value?: any, dataType?: string): this {
-        return super.query(`"${fieldName}"`, operator, value, dataType);
+    query(fieldName: string, operator: string, value?: any, conditions?: {dataType?: string}) {
+        return super.query(`"${fieldName}"`, operator, value, {dataType: conditions?.dataType});
     }
 
     list(queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<any[]>> {
+        if (queryOptions) {
+            queryOptions!.tableName = this._tableName;
+        } else {
+            queryOptions = {tableName: this._tableName};
+        }
+
         if (queryOptions && queryOptions.groupBy && this.#groupBy) {
             queryOptions.groupBy = [queryOptions.groupBy, ...this.#groupBy].join(',');
         } else if (queryOptions && this.#groupBy) {
@@ -94,6 +102,12 @@ export default class TimeseriesEntryRepository extends Repository {
     }
 
     listAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
+        if (queryOptions) {
+            queryOptions!.tableName = this._tableName;
+        } else {
+            queryOptions = {tableName: this._tableName};
+        }
+
         if (queryOptions && queryOptions.groupBy && this.#groupBy) {
             queryOptions.groupBy = [queryOptions.groupBy, ...this.#groupBy].join(',');
         } else if (queryOptions && this.#groupBy) {

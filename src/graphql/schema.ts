@@ -158,14 +158,11 @@ export default class GraphQLRunner {
                 .containerID('eq', containerID)
                 .and()
                 .ontologyVersion('eq', options.ontologyVersionID)
-                .and()
-                .origin_metatype_id('in', metatypeIDs)
-                .or()
-                .containerID('eq', containerID)
-                .and()
-                .ontologyVersion('eq', options.ontologyVersionID)
-                .and()
-                .destination_metatype_id('in', metatypeIDs)
+                .and(new MetatypeRelationshipPairRepository()
+                    .origin_metatype_id('in', metatypeIDs)
+                    .or()
+                    .destination_metatype_id('in', metatypeIDs)
+                )
                 .list();
 
             if (metatypePairResults.isError) {
@@ -1822,13 +1819,25 @@ export default class GraphQLRunner {
             if (input.node_type) {
                 if (input.node_type.id) {
                     const query = this.breakQuery(input.node_type.id);
-                    repo = repo.and().metatypeId(query[0], query[1]);
+                    repo = repo.and((new NodeLeafRepository('','',''))
+                        .originMetatypeId(query[0], query[1])
+                        .or()
+                        .destinationMetatypeId(query[0], query[1])
+                    );
                 } else if (input.node_type.name) {
                     const query = this.breakQuery(input.node_type.name);
-                    repo = repo.and().metatypeName(query[0], query[1]);
+                    repo = repo.and((new NodeLeafRepository('','',''))
+                        .originMetatypeName(query[0], query[1])
+                        .or()
+                        .destinationMetatypeName(query[0], query[1])
+                    );
                 } else if (input.node_type.uuid) {
                     const query = this.breakQuery(input.node_type.uuid);
-                    repo = repo.and().metatypeUUID(query[0], query[1]);
+                    repo = repo.and((new NodeLeafRepository('','',''))
+                        .originMetatypeUUID(query[0], query[1])
+                        .or()
+                        .destinationMetatypeUUID(query[0], query[1])
+                    );
                 }
 
                 if (input.node_type.origin_id) {

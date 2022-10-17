@@ -111,6 +111,7 @@ describe('A Report Query Repository', async () => {
         await ReportMapper.Instance.Delete(reportID);
         await FileMapper.Instance.Delete(fileID);
         await DataSourceMapper.Instance.Delete(dataSourceID);
+        await UserMapper.Instance.Delete(user.id!);
         await ContainerMapper.Instance.Delete(containerID);
         return PostgresAdapter.Instance.close();
     });

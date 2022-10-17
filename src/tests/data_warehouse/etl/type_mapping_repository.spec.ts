@@ -180,7 +180,8 @@ describe('A Type Mapping Repository', async () => {
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
         await ContainerMapper.Instance.Delete(container2ID);
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can save a Type Mapping', async () => {

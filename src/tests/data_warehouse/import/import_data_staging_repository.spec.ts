@@ -92,7 +92,8 @@ describe('An Import or Data Staging Repository can', async () => {
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
-        return ContainerMapper.Instance.Delete(containerID);
+        await ContainerMapper.Instance.Delete(containerID);
+        return PostgresAdapter.Instance.close();
     });
 
     it('can save an Import and Data Staging', async () => {

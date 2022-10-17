@@ -427,23 +427,7 @@ export default class NodeRepository extends Repository implements RepositoryInte
     }
 
     property(key: string, operator: string, value: any, dataType?: string) {
-        super.queryJsonb(key, 'properties', operator, value, dataType);
-        return this;
-    }
-
-    // properties for nth layer node query:
-    depth(operator: string, value: any) {
-        super.query('depth', operator, value);
-        return this;
-    }
-
-    relationshipID(operator: string, value: any) {
-        super.query('relationship_name', operator, value);
-        return this;
-    }
-
-    relationshipName(operator: string, value: any) {
-        super.query('relationship_id', operator, value);
+        super.queryJsonb(key, 'properties', operator, value, {dataType});
         return this;
     }
 

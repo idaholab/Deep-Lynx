@@ -199,8 +199,8 @@ export default class DataSourceRepository extends Repository implements Reposito
         return this;
     }
 
-    timeseriesQuery(fieldName: string, operator: string, value?: any, dataType?: string): this {
-        return super.query(`"${fieldName}"`, operator, value, dataType);
+    timeseriesQuery(fieldName: string, operator: string, value?: any, dataType?: string): Repository {
+        return super.query(`"${fieldName}"`, operator, value, {dataType});
     }
 
     async list(options?: QueryOptions, transaction?: PoolClient): Promise<Result<(DataSource | undefined)[]>> {
@@ -217,7 +217,11 @@ export default class DataSourceRepository extends Repository implements Reposito
     // this into its own repository like last time, but it didn't make sense
     async listTimeseries(dataSourceID: string, options?: QueryOptions, transaction?: PoolClient): Promise<Result<any[]>> {
         // we have to hijack the top of the query to point to the proper table
-        this._rawQuery[0] = options?.distinct ? `SELECT DISTINCT * FROM y_${dataSourceID}` : `SELECT * FROM y_${dataSourceID}`;
+        if (options?.distinct) {
+            this._query.SELECT = [`SELECT DISTINCT y_${dataSourceID}.*`, `FROM y_${dataSourceID}`];
+        } else {
+            this._query.SELECT = [`SELECT y_${dataSourceID}.*`, `FROM y_${dataSourceID}`];
+        }
 
         if (options && options.groupBy && this.#groupBy) {
             options.groupBy = [options.groupBy, ...this.#groupBy].join(',');
@@ -234,8 +238,11 @@ export default class DataSourceRepository extends Repository implements Reposito
 
     async listTimeseriesToFile(dataSourceID: string, fileOptions: FileOptions, options?: QueryOptions, transaction?: PoolClient): Promise<Result<File>> {
         // we have to hijack the top of the query to point to the proper table
-        this._rawQuery[0] = options?.distinct ? `SELECT DISTINCT * FROM y_${dataSourceID}` : `SELECT * FROM y_${dataSourceID}`;
-
+        if (options?.distinct) {
+            this._query.SELECT = [`SELECT DISTINCT y_${dataSourceID}.*`, `FROM y_${dataSourceID}`];
+        } else {
+            this._query.SELECT = [`SELECT y_${dataSourceID}.*`, `FROM y_${dataSourceID}`];
+        }
         if (options && options.groupBy && this.#groupBy) {
             options.groupBy = [options.groupBy, ...this.#groupBy].join(',');
         } else if (options && this.#groupBy) {

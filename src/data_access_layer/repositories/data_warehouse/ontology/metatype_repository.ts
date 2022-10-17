@@ -357,17 +357,17 @@ export default class MetatypeRepository extends Repository implements Repository
     }
 
     modified_at(operator: string, value?: any) {
-        super.query('modified_at', operator, value, 'date');
+        super.query('modified_at', operator, value, {dataType: 'date'});
         return this;
     }
 
     created_at(operator: string, value?: any) {
-        super.query('created_at', operator, value, 'date');
+        super.query('created_at', operator, value, {dataType: 'date'});
         return this;
     }
 
     deleted_at(operator: string, value?: any) {
-        super.query('deleted_at', operator, value, 'date');
+        super.query('deleted_at', operator, value, {dataType: 'date'});
         return this;
     }
 

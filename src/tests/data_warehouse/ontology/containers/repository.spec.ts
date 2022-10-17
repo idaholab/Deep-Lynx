@@ -56,6 +56,7 @@ describe('A Container Repository', async () => {
 
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
+        await UserMapper.Instance.Delete(user2.id!);
         return PostgresAdapter.Instance.close();
     });
 
@@ -182,6 +183,7 @@ describe('A Container Repository', async () => {
 
         await repository.delete(container1);
         await repository.delete(container2);
+        await repository.delete(container3);
 
         return Promise.resolve();
     });

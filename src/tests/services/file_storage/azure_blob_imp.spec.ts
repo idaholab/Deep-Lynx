@@ -34,8 +34,6 @@ describe('Azure Blob Storage can', async () => {
             expect(false).true;
         }
 
-        console.log(result);
-
         return provider.deleteFile(file);
     });
 

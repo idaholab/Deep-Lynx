@@ -52,10 +52,6 @@ describe('Gremlin Exporter', async () => {
         return Promise.resolve();
     });
 
-    after(() => {
-        return ContainerMapper.Instance.Delete(containerID);
-    });
-
     it('can initiate export by copying nodes and edges', async () => {
         const storage = EdgeMapper.Instance;
         const nStorage = NodeMapper.Instance;
