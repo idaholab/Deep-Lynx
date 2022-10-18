@@ -104,7 +104,7 @@ describe('A Datasource Repository can', async () => {
         expect(source!.DataSourceRecord?.id).not.undefined;
 
         // now we create an import through the datasource
-        const newImport = await source!.ReceiveData(toStream([test_payload]), user, {overrideJsonStream: true});
+        const newImport = await source!.ReceiveData(toStream([test_payload]), user, {overrideJsonStream: true, bufferSize: 1});
         expect(newImport.isError).false;
         expect((newImport.value as Import).id).not.undefined;
 
@@ -138,7 +138,7 @@ describe('A Datasource Repository can', async () => {
         expect(source!.DataSourceRecord?.id).not.undefined;
 
         // now we create an import through the datasource
-        const newImport = await source!.ReceiveData(toStream([test_payload]), user, {overrideJsonStream: true});
+        const newImport = await source!.ReceiveData(toStream([test_payload]), user, {overrideJsonStream: true, bufferSize: 1});
         expect(newImport.isError).false;
         expect((newImport.value as Import).id).not.undefined;
 

@@ -103,7 +103,7 @@ export class DataStaging extends NakedDomainClass {
     })
     data_source_config?: StandardDataSourceConfig | HttpDataSourceConfig | JazzDataSourceConfig | AvevaDataSourceConfig = new StandardDataSourceConfig();
 
-    constructor(input: {data_source_id: string; import_id: string; data: any; shape_hash?: string}) {
+    constructor(input: {data_source_id: string; import_id: string; data: any; shape_hash?: string; container_id?: string}) {
         super();
 
         if (input) {
@@ -111,6 +111,7 @@ export class DataStaging extends NakedDomainClass {
             this.import_id = input.import_id;
             this.data = input.data;
             if (input.shape_hash) this.shape_hash = input.shape_hash;
+            if (input.container_id) this.container_id = input.container_id;
         }
     }
 }

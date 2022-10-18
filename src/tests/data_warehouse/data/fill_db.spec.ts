@@ -501,7 +501,7 @@ describe('We can generate test data', async () => {
                 objectMode: true,
             }),
             user,
-            {overrideJsonStream: true},
+            {overrideJsonStream: true, bufferSize: 1},
         );
     });
 
