@@ -234,18 +234,18 @@ export default class ImportRoutes {
                     } else if (mimeType === 'text/csv' || mimeType === 'application/vnd.ms-excel') {
                         importPromises.push(
                             req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
-                                transformStreams: [
-                                    csv({
-                                        downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
-                                    }),
-                                ],
+                                transformStream: csv({
+                                    downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
+                                }),
+                                bufferSize: Config.data_source_receive_buffer,
                             }),
                         );
                     } else if (mimeType === 'text/xml' || mimeType === 'application/xml') {
                         const xmlStream = xmlParser.createStream();
                         importPromises.push(
                             req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
-                                transformStreams: [xmlStream],
+                                transformStream: xmlStream,
+                                bufferSize: Config.data_source_receive_buffer,
                             }),
                         );
                     } else {
@@ -412,6 +412,7 @@ export default class ImportRoutes {
                         req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
                             importID: req.query.importID as string | undefined,
                             returnStagingRecords: true,
+                            bufferSize: Config.data_source_receive_buffer,
                         }),
                     );
                 } else if (mimeType === 'text/csv') {
@@ -419,11 +420,10 @@ export default class ImportRoutes {
                         req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
                             importID: req.query.importID as string | undefined,
                             returnStagingRecords: true,
-                            transformStreams: [
-                                csv({
-                                    downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
-                                }),
-                            ],
+                            transformStream: csv({
+                                downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
+                            }),
+                            bufferSize: Config.data_source_receive_buffer,
                         }),
                     );
                 } else if (mimeType === 'text/xml' || mimeType === 'application/xml') {
@@ -432,7 +432,8 @@ export default class ImportRoutes {
                         req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
                             importID: req.query.importID as string | undefined,
                             returnStagingRecords: true,
-                            transformStreams: [xmlStream],
+                            transformStream: xmlStream,
+                            bufferSize: Config.data_source_receive_buffer,
                         }),
                     );
                 }
@@ -550,7 +551,7 @@ export default class ImportRoutes {
         if (req.dataSource && req.dataImport) {
             if (req.headers['content-type']?.includes('application/json') || req.headers['Content-Type']?.includes('application/json')) {
                 req.dataSource
-                    .ReceiveData(req, req.currentUser!, {importID: req.dataImport.id})
+                    .ReceiveData(req, req.currentUser!, {importID: req.dataImport.id, bufferSize: Config.data_source_receive_buffer})
                     .then((result) => {
                         result.asResponse(res);
                     })
@@ -567,16 +568,20 @@ export default class ImportRoutes {
                     if (mimeType === 'application/json') {
                         // shouldn't need to do anything special for a valid json file, ReceiveData can handle valid json
                         // files
-                        importPromises.push(req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {importID: req.dataImport!.id}));
+                        importPromises.push(
+                            req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
+                                importID: req.dataImport!.id,
+                                bufferSize: Config.data_source_receive_buffer,
+                            }),
+                        );
                     } else if (mimeType === 'text/csv') {
                         importPromises.push(
                             req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
                                 importID: req.dataImport!.id,
-                                transformStreams: [
-                                    csv({
-                                        downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
-                                    }),
-                                ],
+                                transformStream: csv({
+                                    downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
+                                }),
+                                bufferSize: Config.data_source_receive_buffer,
                             }),
                         );
                     } else if (mimeType === 'text/xml' || mimeType === 'application/xml') {
@@ -584,7 +589,8 @@ export default class ImportRoutes {
                         importPromises.push(
                             req.dataSource!.ReceiveData(file as Readable, req.currentUser!, {
                                 importID: req.dataImport!.id,
-                                transformStreams: [xmlStream],
+                                transformStream: xmlStream,
+                                bufferSize: Config.data_source_receive_buffer,
                             }),
                         );
                     }

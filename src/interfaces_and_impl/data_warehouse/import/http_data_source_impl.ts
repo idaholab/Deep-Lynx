@@ -186,7 +186,11 @@ export default class HttpDataSourceImpl extends StandardDataSourceImpl implement
                 const retrievedUser = await this.#userRepo.findByID(this.DataSourceRecord.created_by!);
                 if (!retrievedUser.isError) user = retrievedUser.value;
 
-                const received = await this.ReceiveData(toStream(resp.data), user, {transaction: pollTransaction.value, overrideJsonStream: true});
+                const received = await this.ReceiveData(toStream(resp.data), user, {
+                    transaction: pollTransaction.value,
+                    overrideJsonStream: true,
+                    bufferSize: Config.data_source_receive_buffer,
+                });
                 if (received.isError) {
                     Logger.error(`unable to process data received from http data source ${received.error?.error}`);
                 }
