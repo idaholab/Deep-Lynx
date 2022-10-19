@@ -97,6 +97,7 @@ export class Server {
                                     bufferSize: 1,
                                     errorCallback: (err) => {
                                         socket.send(`ERROR: cannot parse or process records ${err}`);
+                                        socket.terminate();
                                     },
                                 })
                                 .catch((e) => {
