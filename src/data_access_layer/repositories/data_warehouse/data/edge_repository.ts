@@ -257,6 +257,14 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             }
 
             origin = request.value;
+        } else if (e.origin_original_id && e.origin_data_source_id && e.origin_metatype_id) {
+            const request = await this.#nodeRepo.findByCompositeID(e.origin_original_id, e.origin_data_source_id, e.origin_metatype_id, transaction);
+            if (request.isError) {
+                return Promise.resolve(Result.Failure('origin node not found'));
+            }
+
+            origin = request.value;
+            e.origin_id = request.value.id!;
         } else if (e.origin_original_id && e.data_source_id && e.origin_metatype_id) {
             const request = await this.#nodeRepo.findByCompositeID(e.origin_original_id, e.data_source_id, e.origin_metatype_id, transaction);
             if (request.isError) {
@@ -277,6 +285,14 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             }
 
             destination = request.value;
+        } else if (e.destination_original_id && e.destination_data_source_id && e.destination_metatype_id) {
+            const request = await this.#nodeRepo.findByCompositeID(e.destination_original_id, e.destination_data_source_id, e.destination_metatype_id, transaction);
+            if (request.isError) {
+                return Promise.resolve(Result.Failure('origin node not found'));
+            }
+
+            destination = request.value;
+            e.destination_id = request.value.id!;
         } else if (e.destination_original_id && e.data_source_id && e.destination_metatype_id) {
             const request = await this.#nodeRepo.findByCompositeID(e.destination_original_id, e.data_source_id, e.destination_metatype_id, transaction);
             if (request.isError) {
