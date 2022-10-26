@@ -19,6 +19,10 @@ import MetatypeRelationshipRepository from '../ontology/metatype_relationship_re
 import {ContainerAlert} from '../../../../domain_objects/data_warehouse/ontology/container';
 import ContainerRepository from '../ontology/container_respository';
 import DataSourceRecord from '../../../../domain_objects/data_warehouse/import/data_source';
+import MetatypeRelationship from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship';
+import Metatype from '../../../../domain_objects/data_warehouse/ontology/metatype';
+import MetatypeKey from '../../../../domain_objects/data_warehouse/ontology/metatype_key';
+import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 
 /*
     TypeMappingRepository contains methods for persisting and retrieving nodes
@@ -499,6 +503,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
         // new metatypes
         const metatypeNames: string[] = [];
         const pairNames: string[] = [];
+        let relationshipList: MetatypeRelationship[] = [];
 
         transformations.value.forEach((t) => {
             if (t.metatype_name) {
@@ -531,15 +536,18 @@ export default class TypeMappingRepository extends Repository implements Reposit
         if (pairs.isError) return Promise.resolve([Result.Failure('unable to list relationship pairs')]);
 
         // we have to single out the relationships so we can get the keys loaded on them
-        const relationships = await relationshipRepo
-            .where()
-            .containerID('eq', mappings[0].container_id)
-            .and()
-            .ontologyVersion('eq', ontologyVersion)
-            .and()
-            .id('in', pairs.value.map((p) => p.relationship_id).join(','))
-            .list(true);
-        if (relationships.isError) return Promise.resolve([Result.Failure('unable to list relationships')]);
+        if (pairs.value.length > 0) {
+            const relationships = await relationshipRepo
+                .where()
+                .containerID('eq', mappings[0].container_id)
+                .and()
+                .ontologyVersion('eq', ontologyVersion)
+                .and()
+                .id('in', pairs.value.map((p) => p.relationship_id).join(','))
+                .list(true);
+            if (relationships.isError) return Promise.resolve([Result.Failure('unable to list relationships')]);
+            relationshipList = relationships.value;
+        }
 
         const results: Result<boolean>[] = [];
 
@@ -548,57 +556,75 @@ export default class TypeMappingRepository extends Repository implements Reposit
             if (t.metatype_id) {
                 const foundMetatype = metatypes.value.find((m) => m.name === t.metatype_name);
                 if (!foundMetatype) {
-                    results.push(Result.Failure(`unable to find metatype by name for transformation ${t.id}`));
+                    results.push(Result.Failure(`unable to find metatype with name ${t.metatype_name} for transformation ${t.id}`));
                     return;
                 }
 
                 transformations.value[i].metatype_id = foundMetatype.id;
 
-                // now loop through the keys, comparing with the found metatype's keys - if we can't find one, remove it
-                // from the main transformation and add it into the failed upgraded key array on the configuration object
+                // now loop through the keys, comparing with the found metatype's keys - if we can't find one,
+                // add it into the failed upgraded key array on the configuration object
                 transformations.value[i].keys.forEach((k, j) => {
-                    if (k.metatype_key && foundMetatype.keys) {
-                        const foundKey = foundMetatype.keys.find((newKey) => newKey.name === k.metatype_key?.name);
+                    if (k.key && foundMetatype.keys) {
+                        let foundKey: MetatypeKey | undefined;
+                        if (foundMetatype.keys.find((newKey) => newKey.property_name === k.key)) {
+                            foundKey = foundMetatype.keys.find((newKey) => newKey.property_name === k.key);
+                        } else {
+                            foundKey = foundMetatype.keys.find((newKey) => newKey.name === k.key);
+                        }
                         if (!foundKey) {
-                            transformations.value[i].config.failed_upgraded_keys.push(...transformations.value[i].keys.splice(j, 1));
+                            transformations.value[i].config.failed_upgraded_keys.push(transformations.value[i].keys[j]);
+                            transformations.value[i].keys.splice(j, 1);
                             return;
                         }
 
                         transformations.value[i].keys[j].metatype_key = foundKey;
                         transformations.value[i].keys[j].metatype_key_id = foundKey.id;
                     } else {
-                        transformations.value[i].config.failed_upgraded_keys.push(...transformations.value[i].keys.splice(j, 1));
+                        transformations.value[i].config.failed_upgraded_keys.push(transformations.value[i].keys[j]);
+                        transformations.value[i].keys.splice(j, 1);
                     }
-                });
+                })
             }
 
             if (t.metatype_relationship_pair_id) {
-                const foundMetatypeRelationshipPair = pairs.value.find((p) => p.name === t.metatype_relationship_pair_name);
-                if (!foundMetatypeRelationshipPair) {
-                    results.push(Result.Failure(`unable to find metatype relationship pair by name for transformation ${t.id}`));
+                const foundPair = pairs.value.find((p) => p.name === t.metatype_relationship_pair_name);
+                if (!foundPair) {
+                    results.push(Result.Failure(`unable to find metatype relationship pair with name ${t.metatype_relationship_pair_name} for transformation ${t.id}`));
                     return;
                 }
 
-                transformations.value[i].metatype_relationship_pair_id = foundMetatypeRelationshipPair.id;
+                transformations.value[i].metatype_relationship_pair_id = foundPair.id;
 
-                const foundRelationship = relationships.value.find((r) => r.id === foundMetatypeRelationshipPair.relationship_id);
+                const foundRelationship = relationshipList.find((r) => r.id === foundPair.relationship_id);
+                if (!foundRelationship) {
+                    results.push(Result.Failure(`unable to find relationship with name ${foundPair.relationship_name} on transformation ${t.id}`))
+                    return;
+                }
 
-                // now loop through the keys, comparing with the found metatype's keys - if we can't find one, remove it
-                // from the main transformation and add it into the failed upgraded key array on the configuration object
+                // now loop through the keys, comparing with the found metatype's keys - if we can't find one,
+                // add it into the failed upgraded key array on the configuration object
                 transformations.value[i].keys.forEach((k, j) => {
-                    if (k.metatype_relationship_key && foundRelationship?.keys) {
-                        const foundKey = foundRelationship.keys.find((newKey) => newKey.name === k.metatype_relationship_key?.name);
+                    if (k.key && foundRelationship.keys) {
+                        let foundKey: MetatypeRelationshipKey | undefined;
+                        if (foundRelationship.keys.find((newKey) => newKey.property_name === k.key)) {
+                            foundKey = foundRelationship.keys.find((newKey) => newKey.property_name === k.key);
+                        } else {
+                            foundKey = foundRelationship.keys.find((newKey) => newKey.name === k.key);
+                        }
                         if (!foundKey) {
-                            transformations.value[i].config.failed_upgraded_keys.push(...transformations.value[i].keys.splice(j, 1));
+                            transformations.value[i].config.failed_upgraded_keys.push(transformations.value[i].keys[j]);
+                            transformations.value[i].keys.splice(j, 1);
                             return;
                         }
 
                         transformations.value[i].keys[j].metatype_relationship_key = foundKey;
                         transformations.value[i].keys[j].metatype_relationship_key_id = foundKey.id;
                     } else {
-                        transformations.value[i].config.failed_upgraded_keys.push(...transformations.value[i].keys.splice(j, 1));
+                        transformations.value[i].config.failed_upgraded_keys.push(transformations.value[i].keys[j]);
+                        transformations.value[i].keys.splice(j, 1);
                     }
-                });
+                })
             }
 
             // if we've made it here, count it as a successful upgrade
