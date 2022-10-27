@@ -326,7 +326,7 @@ export class Client {
         if (nameIn) query.nameIn = nameIn;
         if (loadRelationships) query.loadRelationships = loadRelationships;
         if (originName) query.originName = originName;
-        if (destinationName) query.destinationname = destinationName;
+        if (destinationName) query.destinationName = destinationName;
         query.deleted = deleted;
 
         return this.get<MetatypeRelationshipPairT[] | number>(`/containers/${containerID}/metatype_relationship_pairs`, query);
