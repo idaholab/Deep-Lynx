@@ -695,7 +695,12 @@ export class Repository {
         const storage = new Mapper();
 
         // modify the original query to be count
-        this._query.SELECT = [format(`SELECT COUNT(*) FROM %s %s`, this._tableName, this._tableAlias)];
+        // if multiple tables are joined in, only modify the select statement
+        if (this._query.SELECT.join(' ').includes('JOIN')) {
+            this._query.SELECT[0] = `SELECT COUNT(*)`
+        } else {
+            this._query.SELECT = [format(`SELECT COUNT(*) FROM %s %s`, this._tableName, this._tableAlias)];
+        }
 
         if (queryOptions && queryOptions.offset) {
             this._query.OPTIONS?.push(format(`OFFSET %L`, queryOptions.offset));
