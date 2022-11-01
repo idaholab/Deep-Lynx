@@ -78,7 +78,7 @@
                                 <v-toolbar-title>{{$t('dataQuery.viewProperties')}}</v-toolbar-title>
                               </v-toolbar>
 
-                              <json-view :value="item.properties"></json-view>
+                              <json-viewer :value="item.properties"></json-viewer>
                             </v-col>
                           </v-row>
                           <node-files-dialog :icon="true" :node="item"></node-files-dialog>
