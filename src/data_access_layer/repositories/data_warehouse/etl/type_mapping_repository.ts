@@ -405,7 +405,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
             value_nodes: source.config?.value_nodes,
         });
         // run transformation work prior to manipulating any data on the mapping itself
-        if (typeMapping.transformations)
+        if (typeMapping.transformations) {
             for (const i in typeMapping.transformations) {
                 // we wipe different fields depending on whether or not this is a separate container, as if it's the same
                 // we can reuse a good chunk of the ids
@@ -455,7 +455,62 @@ export default class TypeMappingRepository extends Repository implements Reposit
                 typeMapping.transformations[i].created_at = undefined;
                 typeMapping.transformations[i].modified_by = undefined;
                 typeMapping.transformations[i].modified_at = undefined;
+
+                // wipe the metatypeIDs in the edge connection params if there are any as well as data sources and node ids
+                // wipe only if they are VALUES not keys, keys will change as the data changes
+                if (typeMapping.transformations[i].origin_parameters) {
+                    for (const j in typeMapping.transformations[i].origin_parameters!) {
+                        if (typeMapping.transformations[i].origin_parameters![j].type)
+                            switch (typeMapping.transformations[i].origin_parameters![j].type) {
+                                case 'metatype_id': {
+                                    typeMapping.transformations[i].origin_parameters![j].value = undefined;
+                                    break;
+                                }
+
+                                case 'data_source': {
+                                    typeMapping.transformations[i].origin_parameters![j].value = undefined;
+                                    break;
+                                }
+
+                                case 'id': {
+                                    typeMapping.transformations[i].origin_parameters![j].value = undefined;
+                                    break;
+                                }
+
+                                default: {
+                                    break;
+                                }
+                            }
+                    }
+                }
+
+                if (typeMapping.transformations[i].destination_parameters) {
+                    for (const j in typeMapping.transformations[i].destination_parameters!) {
+                        if (typeMapping.transformations[i].destination_parameters![j].type)
+                            switch (typeMapping.transformations[i].destination_parameters![j].type) {
+                                case 'metatype_id': {
+                                    typeMapping.transformations[i].destination_parameters![j].value = undefined;
+                                    break;
+                                }
+
+                                case 'data_source': {
+                                    typeMapping.transformations[i].destination_parameters![j].value = undefined;
+                                    break;
+                                }
+
+                                case 'id': {
+                                    typeMapping.transformations[i].destination_parameters![j].value = undefined;
+                                    break;
+                                }
+
+                                default: {
+                                    break;
+                                }
+                            }
+                    }
+                }
             }
+        }
 
         if (separateContainer) {
             typeMapping.container_id = undefined;
@@ -584,13 +639,15 @@ export default class TypeMappingRepository extends Repository implements Reposit
                         transformations.value[i].config.failed_upgraded_keys.push(transformations.value[i].keys[j]);
                         transformations.value[i].keys.splice(j, 1);
                     }
-                })
+                });
             }
 
             if (t.metatype_relationship_pair_id) {
                 const foundPair = pairs.value.find((p) => p.name === t.metatype_relationship_pair_name);
                 if (!foundPair) {
-                    results.push(Result.Failure(`unable to find metatype relationship pair with name ${t.metatype_relationship_pair_name} for transformation ${t.id}`));
+                    results.push(
+                        Result.Failure(`unable to find metatype relationship pair with name ${t.metatype_relationship_pair_name} for transformation ${t.id}`),
+                    );
                     return;
                 }
 
@@ -598,7 +655,7 @@ export default class TypeMappingRepository extends Repository implements Reposit
 
                 const foundRelationship = relationshipList.find((r) => r.id === foundPair.relationship_id);
                 if (!foundRelationship) {
-                    results.push(Result.Failure(`unable to find relationship with name ${foundPair.relationship_name} on transformation ${t.id}`))
+                    results.push(Result.Failure(`unable to find relationship with name ${foundPair.relationship_name} on transformation ${t.id}`));
                     return;
                 }
 
@@ -624,7 +681,16 @@ export default class TypeMappingRepository extends Repository implements Reposit
                         transformations.value[i].config.failed_upgraded_keys.push(transformations.value[i].keys[j]);
                         transformations.value[i].keys.splice(j, 1);
                     }
-                })
+                });
+
+                // we need to update the metatype_id filters if they exist to use the new origin and destination metatype
+                if (transformations.value[i].origin_parameters && transformations.value[i].origin_parameters!.length > 0) {
+                    transformations.value[i].origin_parameters![0].value = foundPair.origin_metatype_id;
+                }
+
+                if (transformations.value[i].destination_parameters && transformations.value[i].destination_parameters!.length > 0) {
+                    transformations.value[i].destination_parameters![0].value = foundPair.destination_metatype_id;
+                }
             }
 
             // if we've made it here, count it as a successful upgrade

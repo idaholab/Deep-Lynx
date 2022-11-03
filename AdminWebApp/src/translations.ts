@@ -1,6 +1,7 @@
 export default {
     en: {
         beta: 'BETA',
+        deprecatedParams: 'DEPRECATED, CONVERT TO PARAMETERS',
         ontology: {
             optionsHelp: 'This value represents the valid options if the enumeration data type is choosen. This is not required on any other data type.',
             propertyName: 'This is the JSON compliant property name your data will be stored under inside the database schema.',
@@ -825,6 +826,11 @@ export default {
                 'Data may have already been generated using this Transformation. We will remove this data by default so as to avoid "orphaned" data, or data that we cannot trace back to an individual Transformation. If you would like to keep this data and orphan it, please uncheck the box below.',
         },
         dataMapping: {
+            keysOrValues: 'Payload key or static value',
+            parentParameters: 'Parent Connection Parameters',
+            childParameters: 'Child Connection Parameters',
+            convertToParameters: 'Convert to Parameters',
+            chooseMetatypeKey: 'Select Property',
             here: 'here',
             mappingHelp:
                 'Mapping allows you to specify what kind of record this transformation should produce. Each transformation can produce either a relationship or node. Further information will be requested as you work through the form.',
@@ -886,6 +892,7 @@ export default {
             conditions: 'Condition(s)',
             conditionsHelp: 'Your transformation will only be applied to the data when these conditions are met.',
             key: 'Key',
+            keys: 'Keys',
             operator: 'Operator',
             value: 'Value',
             addCondition: 'Save Condition',
