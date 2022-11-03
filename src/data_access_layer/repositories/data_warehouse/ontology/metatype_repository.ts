@@ -295,6 +295,19 @@ export default class MetatypeRepository extends Repository implements Repository
         return Promise.resolve(retrieved);
     }
 
+    async findByUUID(uuid: string, loadKeys = true): Promise<Result<Metatype>> {
+        const retrieved = await this.#mapper.RetrieveByUUID(uuid);
+        // we do not want to cache this unless we have the entire object, keys included
+        if (!retrieved.isError && loadKeys) {
+            const keys = await this.#keyMapper.ListForMetatype(retrieved.value.id!);
+            if (!keys.isError) retrieved.value.addKey(...keys.value);
+
+            // don't fail out on cache set failure, it will log and move on
+        }
+
+        return Promise.resolve(retrieved);
+    }
+
     private async getCached(id: string): Promise<Metatype | undefined> {
         const cached = await Cache.get<object>(`${MetatypeMapper.tableName}:${id}`);
         if (cached) {

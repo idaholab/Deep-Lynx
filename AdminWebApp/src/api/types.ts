@@ -374,6 +374,15 @@ export type TypeMappingTransformationCondition = {
     subexpressions: TypeMappingTransformationSubexpression[];
 };
 
+export type EdgeConfigKeyT = {
+    id?: string; // only needed for the UI to keep track of things
+    type?: string;
+    operator?: string;
+    property?: any;
+    key?: any;
+    value?: any;
+};
+
 // Actions that can be performed when a transformation encounters an error
 export type TransformationErrorAction = 'ignore' | 'fail on required' | 'fail';
 export const TransformationErrorActions: TransformationErrorAction[] = ['ignore', 'fail on required', 'fail'];
@@ -414,6 +423,8 @@ export type TypeMappingTransformationT = {
     metatype_relationship_pair_ontology_version?: string;
     keys: TypeMappingTransformationKeyMapping[];
     archived: boolean;
+    origin_parameters?: EdgeConfigKeyT[];
+    destination_parameters?: EdgeConfigKeyT[];
 };
 
 export type TypeMappingTransformationPayloadT = {

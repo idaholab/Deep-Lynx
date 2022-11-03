@@ -313,6 +313,14 @@ export default class TypeTransformationRepository extends Repository implements 
                             if (foundKey) transformations[i].keys[j].metatype_relationship_key_id = foundKey.id;
                         }
                     }
+
+                    if (transformations[i].origin_parameters && transformations[i].origin_parameters!.length > 0) {
+                        transformations[i].origin_parameters![0].value = foundPair.origin_metatype_id
+                    }
+
+                    if (transformations[i].destination_parameters && transformations[i].destination_parameters!.length > 0) {
+                        transformations[i].destination_parameters![0].value = foundPair.destination_metatype_id
+                    }
                 }
             }
 

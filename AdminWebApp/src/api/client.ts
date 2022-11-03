@@ -340,6 +340,10 @@ export class Client {
         return this.get<MetatypeT>(`/containers/${containerID}/metatypes/${metatypeID}`);
     }
 
+    retrieveMetatypeByUUID(containerID: string, metatypeID: string): Promise<MetatypeT> {
+        return this.get<MetatypeT>(`/containers/${containerID}/metatypes/${metatypeID}`, {uuid: true});
+    }
+
     updateMetatype(containerID: string, metatypeID: string, metatype: any): Promise<boolean> {
         return this.put<boolean>(`/containers/${containerID}/metatypes/${metatypeID}`, metatype);
     }

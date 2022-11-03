@@ -273,18 +273,22 @@ describe('An Edge Repository', async () => {
             origin_parameters: [
                 new EdgeConnectionParameter({
                     type: 'id',
+                    operator: '==',
                     value: nodes[0].id,
                 }),
                 new EdgeConnectionParameter({
                     type: 'data_source',
+                    operator: '==',
                     value: nodes[0].data_source_id,
                 }),
                 new EdgeConnectionParameter({
                     type: 'metatype_id',
+                    operator: '==',
                     value: nodes[0].metatype_id,
                 }),
                 new EdgeConnectionParameter({
                     type: 'property',
+                    operator: '==',
                     property: 'flower_name',
                     value: 'Daisy',
                 }),
@@ -292,18 +296,22 @@ describe('An Edge Repository', async () => {
             destination_parameters: [
                 new EdgeConnectionParameter({
                     type: 'id',
+                    operator: '==',
                     value: nodes[1].id,
                 }),
                 new EdgeConnectionParameter({
                     type: 'data_source',
+                    operator: '==',
                     value: nodes[1].data_source_id,
                 }),
                 new EdgeConnectionParameter({
                     type: 'metatype_id',
+                    operator: '==',
                     value: nodes[1].metatype_id,
                 }),
                 new EdgeConnectionParameter({
                     type: 'property',
+                    operator: '==',
                     property: 'flower_name',
                     value: 'Daisy',
                 }),
@@ -311,7 +319,7 @@ describe('An Edge Repository', async () => {
         });
 
         let edges = await edgeRepo.populateFromParameters(edge);
-        expect(edges.isError, edges.error).false;
+        expect(edges.isError, JSON.stringify(edges.error)).false;
         expect(edges.value.length).eq(1);
 
         // normal save first
