@@ -692,7 +692,7 @@ export class Client {
         return this.postNoPayload(`/containers/${containerID}/import/imports/${importID}/reprocess`);
     }
 
-    createNode(containerID: string, node: any): Promise<NodeT[]> {
+    createOrUpdateNode(containerID: string, node: any): Promise<NodeT[]> {
         return this.post<NodeT[]>(`/containers/${containerID}/graphs/nodes`, node);
     }
 

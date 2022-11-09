@@ -449,7 +449,7 @@
     <!-- Node Properties dialog -->
     <v-dialog
         v-model="nodeDialog"
-        width="50%"
+        width="70%"
     >
       <v-card
           @mouseover="opacity = 1.0"
@@ -472,6 +472,14 @@
                   <v-expansion-panel>
                     <v-expansion-panel-header>
                       <div><span class="text-overline">{{$t('dataQuery.nodeProperties')}}:</span></div>
+
+                      <edit-node-dialog 
+                        :node="currentNodeInfo" 
+                        :dataSourceID="currentNodeInfo.data_source_id" 
+                        :containerID="containerID"
+                        @nodeUpdated="nodeUpdated" 
+                        >
+                      </edit-node-dialog>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-data-table
@@ -556,7 +564,7 @@
     <!-- Edge Properties dialog -->
     <v-dialog
         v-model="edgeDialog"
-        width="50%"
+        width="70%"
     >
       <v-card
           @mouseover="opacity = 1.0"
@@ -615,6 +623,7 @@ import NodeTimeseriesDataTable from "@/components/data/nodeTimeseriesDataTable.v
 import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import CreateNodeCard from "@/components/data/createNodeCard.vue";
 import CreateEdgeDialog from "@/components/data/createEdgeDialog.vue";
+import EditNodeDialog from "@/components/data/editNodeDialog.vue";
 import {Component, Prop, Watch, Vue} from "vue-property-decorator";
 import {NodeT, DataSourceT, MetatypeRelationshipPairT, MetatypeRelationshipKeyT} from "@/api/types";
 import ForceGraph, {ForceGraphInstance} from 'force-graph';
@@ -628,7 +637,8 @@ import { EdgeT } from "../../api/types";
     NodeTimeseriesDataTable,
     CreateNodeCard,
     CreateEdgeDialog,
-    SelectDataSource
+    SelectDataSource,
+    EditNodeDialog
   }})
 export default class GraphViewer extends Vue {
   @Prop()
@@ -1706,6 +1716,13 @@ export default class GraphViewer extends Vue {
 
   disableGraphEdit() {
     this.edgeFlag = false
+  }
+
+  nodeUpdated(node: any) {
+    this.selectedNode.properties = node.properties
+    
+    this.loading = true
+    this.showNodeProperties(this.selectedNode)
   }
 
   async mounted() {

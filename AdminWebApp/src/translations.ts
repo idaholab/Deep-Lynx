@@ -1013,6 +1013,7 @@ export default {
             keyType: 'Data Type',
             keyActions: 'Actions',
             requiredField: 'Required Field',
+            addProperty: 'Add Property',
         },
         createEdge: {
             createEdge: 'Create Edge',
