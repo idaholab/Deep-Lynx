@@ -47,6 +47,9 @@ export default class SearchMetatypes extends Vue {
   metatypeID?: string | string[]
 
   @Prop({required: false})
+  metatypeUUID?: string | string[]
+
+  @Prop({required: false})
   rules?: any
 
   search = ""
@@ -69,6 +72,23 @@ export default class SearchMetatypes extends Vue {
       }
 
       this.$client.retrieveMetatype(this.containerID, this.metatypeID as string)
+          .then((result: MetatypeT) => {
+            this.selectedMetatype = result
+            this.emitSelected(this.selectedMetatype)
+          })
+          .finally(() => this.loading = false)
+    } else if (this.metatypeUUID) {
+      if(Array.isArray(this.metatypeUUID)) {
+        this.selectedMetatype = []
+
+        this.metatypeUUID.forEach(id => {
+          this.$client.retrieveMetatypeByUUID(this.containerID, id as string)
+              .then((result: MetatypeT) => (this.selectedMetatype as MetatypeT[]).push(result))
+              .finally(() => this.loading = false)
+        })
+      }
+
+      this.$client.retrieveMetatypeByUUID(this.containerID, this.metatypeUUID as string)
           .then((result: MetatypeT) => {
             this.selectedMetatype = result
             this.emitSelected(this.selectedMetatype)

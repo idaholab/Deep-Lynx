@@ -209,20 +209,37 @@ export function metatypeContext(): any {
 
         const repo = new MetatypeRepository();
 
-        repo.findByID(req.params.metatypeID)
-            .then((result) => {
-                if (result.isError) {
-                    resp.status(result.error?.errorCode!).json(result);
-                    return;
-                }
+        if (req.query && req.query.uuid === 'true') {
+            repo.findByUUID(req.params.metatypeID)
+                .then((result) => {
+                    if (result.isError) {
+                        resp.status(result.error?.errorCode!).json(result);
+                        return;
+                    }
 
-                req.metatype = result.value;
-                next();
-            })
-            .catch((error) => {
-                resp.status(500).json(error);
-                return;
-            });
+                    req.metatype = result.value;
+                    next();
+                })
+                .catch((error) => {
+                    resp.status(500).json(error);
+                    return;
+                });
+        } else {
+            repo.findByID(req.params.metatypeID)
+                .then((result) => {
+                    if (result.isError) {
+                        resp.status(result.error?.errorCode!).json(result);
+                        return;
+                    }
+
+                    req.metatype = result.value;
+                    next();
+                })
+                .catch((error) => {
+                    resp.status(500).json(error);
+                    return;
+                });
+        }
     };
 }
 
