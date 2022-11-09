@@ -1,19 +1,25 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: deeplynx-dev-pv
-  namespace: deeplynx-dev
+  name: deeplynx-prd-pv
+  namespace: deeplynx-prd
   labels:
-    service: deeplynx-dev
-    app: deeplynx-dev
+    app: deeplynx-prd
+    service: deeplynx-prd
+  annotations:
+    pv.kubernetes.io/bind-completed: 'yes'
+    pv.kubernetes.io/bound-by-controller: 'yes'
+    pv.kubernetes.io/migrated-to: file.csi.azure.com
+    volume.beta.kubernetes.io/storage-provisioner: kubernetes.io/azure-file
 spec:
   accessModes:
     - ReadWriteMany
-  storageClassName: deeplynx-dev-file
   resources:
     requests:
       storage: 100Gi
-
+  volumeName: pvc-2d8848ed-b301-4384-824f-8250746c31df
+  storageClassName: deeplynx-prd-file
+  volumeMode: Filesystem
 
 ---
 
@@ -21,7 +27,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deeplynx-redis
-  namespace: deeplynx-dev
+  namespace: deeplynx-prd
   labels:
     app: deeplynx-redis
     service: deeplynx-redis
@@ -49,7 +55,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deeplynx
-  namespace: deeplynx-dev
+  namespace: deeplynx-acc
   labels:
     service: deeplynx
     app: deeplynx
@@ -68,8 +74,8 @@ spec:
     spec:
       containers:
         - name: deeplynx
-          image: ${CI_REGISTRY}/${CI_REGISTRY_PATH}:latest-dev
-          imagePullPolicy: Always
+          image: ${CI_REGISTRY}/${CI_REGISTRY_PATH}:latest
+          imagePullPolicy: IfNotPresent
           args:
             - /bin/sh
             - -c
@@ -155,7 +161,7 @@ spec:
             - name: TZ
               value: '${TZ}'
             - name: COMMIT_REF_FOR_CICD
-              value: '${CI_COMMIT_SHA}'
+              value: '{$CI_COMMIT_SHA}'
             - name: NODE_EXTRA_CA_CERTS
               value: '${NODE_EXTRA_CA_CERTS}'
             - name: RUN_JOBS
@@ -175,7 +181,7 @@ spec:
       volumes:
         - name: nfs
           persistentVolumeClaim:
-            claimName: deeplynx-dev-pv
+            claimName: deeplynx-prd-pv
 
 ---
 
@@ -183,7 +189,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: deeplynx-ingress
-  namespace: deeplynx-dev
+  namespace: deeplynx-prd
 spec:
   type: ClusterIP
   ports:
@@ -197,7 +203,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: deeplynx-dev
+  namespace: deeplynx-prd
   labels:
     app: deeplynx-redis
   name: deeplynx-redis
@@ -224,7 +230,7 @@ metadata:
       more_clear_headers "x-frame-options";
       more_clear_headers "content-security-policy";
   name: deeplynx-nginx-ingress
-  namespace: deeplynx-dev
+  namespace: deeplynx-prd
 spec:
   rules:
     - host: ${NETWORKING_HOST}

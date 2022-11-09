@@ -1,24 +1,17 @@
-# This is a basic workflow to help you get started with Actions
-
-name: Build Development
-
-# Controls when the workflow will run
+name: Build and Deploy Acceptance
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "development" ]
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
-  build-deeplynx-dev:
+  build-deeplynx-acc:
     runs-on: [ self-hosted ]
-    environment: development
+    environment: acceptance
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: development
+          ref: main
       - shell: bash
         name: ACR build
         env:
@@ -34,14 +27,14 @@ jobs:
           az cloud set --name AzureUSGovernment
           az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
           az account set --subscription $ACR_SUBSCRIPTION
-          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/Dockerfile -t $ACR_PATH:latest-dev .
+          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/Dockerfile -t $ACR_PATH:latest .
       - shell: bash
         name: ACR Get Scan
         env:
           ACR_REGISTRY: ${{ secrets.CI_REGISTRY }}
           ACR_PATH: ${{ secrets.CI_REGISTRY_PATH }}
         run: |
-          imageDigest=$(az acr repository show -n $ACR_REGISTRY -t $ACR_PATH:latest-dev | jq --raw-output '.digest')
+          imageDigest=$(az acr repository show -n $ACR_REGISTRY -t $ACR_PATH:latest | jq --raw-output '.digest')
           healthquery="securityresources
           | where type == 'microsoft.security/assessments/subassessments'
           | where id matches regex  '(.+?)/providers/Microsoft.ContainerRegistry/registries/(.+)/providers/Microsoft.Security/assessments/dbd0cb49-b563-45e7-9724-889e799fa648/'
@@ -139,7 +132,7 @@ jobs:
         run: |
           echo $JAZZ_HOST
           cd $GITHUB_WORKSPACE
-          envsubst < kubernetes/development.yml > kubernetes/development_final.yml
+          envsubst < kubernetes/acceptance.yml > kubernetes/acceptance_final.yml
       - uses: azure/setup-kubectl@v3
       - uses: azure/k8s-set-context@v3
         with:
@@ -150,9 +143,9 @@ jobs:
         with:
           resource-group: ${{ secrets.CI_RESOURCE_GROUP }}
           name: ${{ secrets.CLUSTER_NAME }}
-          namespace: deeplynx-dev
+          namespace: deeplynx-acc
           action: deploy
           force: true
           strategy: basic
           manifests: |
-            kubernetes/development_final.yml
+            kubernetes/acceptance_final.yml

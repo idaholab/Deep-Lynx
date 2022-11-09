@@ -1,15 +1,15 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: deeplynx-dev-pv
-  namespace: deeplynx-dev
+  name: deeplynx-acc-pv
+  namespace: deeplynx-acc
   labels:
-    service: deeplynx-dev
-    app: deeplynx-dev
+    service: deeplynx-acc
+    app: deeplynx-acc
 spec:
   accessModes:
     - ReadWriteMany
-  storageClassName: deeplynx-dev-file
+  storageClassName: deeplynx-acc-file
   resources:
     requests:
       storage: 100Gi
@@ -21,7 +21,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deeplynx-redis
-  namespace: deeplynx-dev
+  namespace: deeplynx-acc
   labels:
     app: deeplynx-redis
     service: deeplynx-redis
@@ -49,7 +49,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deeplynx
-  namespace: deeplynx-dev
+  namespace: deeplynx-acc
   labels:
     service: deeplynx
     app: deeplynx
@@ -68,8 +68,8 @@ spec:
     spec:
       containers:
         - name: deeplynx
-          image: ${CI_REGISTRY}/${CI_REGISTRY_PATH}:latest-dev
-          imagePullPolicy: Always
+          image: ${CI_REGISTRY}/${CI_REGISTRY_PATH}:latest
+          imagePullPolicy: IfNotPresent
           args:
             - /bin/sh
             - -c
@@ -155,7 +155,7 @@ spec:
             - name: TZ
               value: '${TZ}'
             - name: COMMIT_REF_FOR_CICD
-              value: '${CI_COMMIT_SHA}'
+              value: '{$CI_COMMIT_SHA}'
             - name: NODE_EXTRA_CA_CERTS
               value: '${NODE_EXTRA_CA_CERTS}'
             - name: RUN_JOBS
@@ -175,7 +175,7 @@ spec:
       volumes:
         - name: nfs
           persistentVolumeClaim:
-            claimName: deeplynx-dev-pv
+            claimName: deeplynx-acc-pv
 
 ---
 
@@ -183,7 +183,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: deeplynx-ingress
-  namespace: deeplynx-dev
+  namespace: deeplynx-acc
 spec:
   type: ClusterIP
   ports:
@@ -197,7 +197,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: deeplynx-dev
+  namespace: deeplynx-acc
   labels:
     app: deeplynx-redis
   name: deeplynx-redis
@@ -224,7 +224,7 @@ metadata:
       more_clear_headers "x-frame-options";
       more_clear_headers "content-security-policy";
   name: deeplynx-nginx-ingress
-  namespace: deeplynx-dev
+  namespace: deeplynx-acc
 spec:
   rules:
     - host: ${NETWORKING_HOST}
