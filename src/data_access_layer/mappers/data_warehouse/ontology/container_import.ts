@@ -1159,23 +1159,30 @@ export default class ContainerImport {
                                 propertyOptions = dataProp.dp_enum;
                             }
 
-                            // Leave 0 for unbounded and 'some' restriction type
-                            let min = 0;
-                            let max = 0;
+                            // support min/exact 1 to make property required
+                            let required = false;
                             const cardinalityQuantity = parseInt(property.cardinality_quantity, 10);
 
-                            switch (property.restriction_type) {
-                                case 'exact':
-                                    min = cardinalityQuantity;
-                                    max = cardinalityQuantity;
-                                    break;
-                                case 'min':
-                                    min = cardinalityQuantity;
-                                    break;
-                                case 'max':
-                                    max = cardinalityQuantity;
-                                    break;
+                            if (property.restriction_type === 'min' && cardinalityQuantity === 1) {
+                                required = true;
+                            } else if (property.restriction_type === 'exact' && cardinalityQuantity === 1) {
+                                required = true;
                             }
+
+                            // SUPPORT CARDINALITY IN FUTURE VERSION
+
+                            // switch (property.restriction_type) {
+                            //     case 'exact':
+                            //         min = cardinalityQuantity;
+                            //         max = cardinalityQuantity;
+                            //         break;
+                            //     case 'min':
+                            //         min = cardinalityQuantity;
+                            //         break;
+                            //     case 'max':
+                            //         max = cardinalityQuantity;
+                            //         break;
+                            // }
 
                             if(!dataProp?.name) {
                                 resolve(Result.Failure('unable to load .owl file, data property missing label or name'))
@@ -1187,14 +1194,14 @@ export default class ContainerImport {
                                 metatype_id: thisClass.db_id,
                                 container_id: input.container.id!,
                                 name: dataProp.name,
-                                required: false,
+                                required,
                                 property_name: stringToValidPropertyName(propName),
                                 description: dataProp.description,
                                 data_type: property.target,
-                                validation: {
+                                validation: { // OWL file does not supply regex validation information
                                     regex: '',
-                                    min,
-                                    max,
+                                    min: 0,
+                                    max: 0,
                                 },
                                 options: propertyOptions.length > 0 ? propertyOptions : undefined,
                                 ontology_version: (input.ontologyVersionID) ? input.ontologyVersionID : property.ontology_version
