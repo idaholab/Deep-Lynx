@@ -291,7 +291,6 @@ export default class TypeTransformation extends BaseDomainClass {
     // or to fetch unrelated data. I'd love to make these readonly, but the class-transformer
     // package currently cannot set readonly properties on transform
     @IsOptional()
-    @IsString()
     container_id?: string;
 
     @IsOptional()
