@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM node:18-alpine
 
 # these settings are needed for the admin web gui build, these variables are all baked into the Vue application and thus
 # are available to any end user that wants to dig deep enough in the webpage - as such we don't feel it a security risk
