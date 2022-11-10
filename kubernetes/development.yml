@@ -68,7 +68,7 @@ spec:
     spec:
       containers:
         - name: deeplynx
-          image: ${CI_REGISTRY}/${CI_REGISTRY_PATH}:latest-dev
+          image: ${CI_REGISTRY}/${CI_REGISTRY_PATH}:${RUN_NUMBER}-dev
           imagePullPolicy: Always
           args:
             - /bin/sh

@@ -22,7 +22,7 @@ jobs:
           ACR_SP_TENANT: ${{ secrets.CI_SP_TENANT }}
           ACR_SUBSCRIPTION: ${{ secrets.CI_ACR_SUBSCRIPTION }}
           NODE_ENV: ${{ secrets.NODE_ENV }}
-          RUN_NUMBER: ${{github.run_number}}
+          RUN_NUMBER: ${{ github.run_number }}
         run: |
           cd $GITHUB_WORKSPACE
           az cloud set --name AzureUSGovernment
@@ -73,6 +73,7 @@ jobs:
           ELM_HOST: ${{ secrets.ELM_HOST }}
           ELM_IP: ${{ secrets.ELM_IP }}
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
+          RUN_NUMBER: ${{ github.run_number }}
         run: |
           cd $GITHUB_WORKSPACE
           envsubst < kubernetes/development.yml > kubernetes/development_final.yml
