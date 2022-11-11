@@ -153,6 +153,7 @@ jobs:
 mirror-repository:
   runs-on: [ self-hosted ]
   environment: production
+  needs: build-deeplynx-acc
   steps:
     - uses: actions/checkout@v3
       with:
