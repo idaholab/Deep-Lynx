@@ -204,7 +204,7 @@
           right
           permanent
           :mini-variant.sync="mini"
-          style="margin-top: 64px"
+          style="margin-top: 64px; width: fit-content"
       >
         <v-list-item class="px-2">
 
@@ -449,7 +449,7 @@
     <!-- Node Properties dialog -->
     <v-dialog
         v-model="nodeDialog"
-        width="50%"
+        width="70%"
     >
       <v-card
           @mouseover="opacity = 1.0"
@@ -472,6 +472,14 @@
                   <v-expansion-panel>
                     <v-expansion-panel-header>
                       <div><span class="text-overline">{{$t('dataQuery.nodeProperties')}}:</span></div>
+
+                      <edit-node-dialog 
+                        :node="currentNodeInfo" 
+                        :dataSourceID="currentNodeInfo.data_source_id" 
+                        :containerID="containerID"
+                        @nodeUpdated="nodeUpdated" 
+                        >
+                      </edit-node-dialog>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-data-table
@@ -556,7 +564,7 @@
     <!-- Edge Properties dialog -->
     <v-dialog
         v-model="edgeDialog"
-        width="50%"
+        width="70%"
     >
       <v-card
           @mouseover="opacity = 1.0"
@@ -615,6 +623,7 @@ import NodeTimeseriesDataTable from "@/components/data/nodeTimeseriesDataTable.v
 import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import CreateNodeCard from "@/components/data/createNodeCard.vue";
 import CreateEdgeDialog from "@/components/data/createEdgeDialog.vue";
+import EditNodeDialog from "@/components/data/editNodeDialog.vue";
 import {Component, Prop, Watch, Vue} from "vue-property-decorator";
 import {NodeT, DataSourceT, MetatypeRelationshipPairT, MetatypeRelationshipKeyT} from "@/api/types";
 import ForceGraph, {ForceGraphInstance} from 'force-graph';
@@ -628,7 +637,8 @@ import { EdgeT } from "../../api/types";
     NodeTimeseriesDataTable,
     CreateNodeCard,
     CreateEdgeDialog,
-    SelectDataSource
+    SelectDataSource,
+    EditNodeDialog
   }})
 export default class GraphViewer extends Vue {
   @Prop()
@@ -1358,45 +1368,91 @@ export default class GraphViewer extends Vue {
 
     this.graph.nodes.forEach((node: NodeT) => {
       // check if color has already been set, and then append name if so
-      const colorEntry = nodeColorsMap.get(node.color)
-      const dataSourceName = `${this.datasources[node.data_source_id]?.name} (${node.data_source_id})`
+      let colorEntry = nodeColorsMap.get(node.color)
+      const dataSourceName = `${this.datasources[node.data_source_id]?.name} (#${node.data_source_id})`
 
       if (colorEntry) {
 
+        // create string of all current names and check if this name is present
+        let names = ''
+        colorEntry.forEach((colorObject: any) => {
+          names += colorObject.name + ' '
+        })
+
         if (this.colorGroup === 'data source') {
           // if the data source name is not already part of colorEntry, add it
-          const match = colorEntry.search(`${this.datasources[node.data_source_id]?.name} \\(${node.data_source_id}\\)`)
+          const match = names.search(`${this.datasources[node.data_source_id]?.name} \\(#${node.data_source_id}\\)`)
 
           if (match === -1) {
-            nodeColorsMap.set(node.color, `${colorEntry}, ${dataSourceName}`);
+            // add the new name and count for this color
+            colorEntry[colorEntry.length] =
+              {
+                name: node.metatype_name,
+                count: 0
+              }
+            
+            nodeColorsMap.set(node.color, colorEntry)
           }
 
         } else { // default to 'metatype'
           // if the metatype name is not already part of colorEntry, add it
-          const match = colorEntry.search(node.metatype_name)
+          const match = names.search(node.metatype_name)
 
           if (match === -1) {
-            nodeColorsMap.set(node.color, `${colorEntry}, ${node.metatype_name}`);
+            // add the new name and count for this color
+            colorEntry[colorEntry.length] =
+              {
+                name: node.metatype_name,
+                count: 0
+              }
+            
+            nodeColorsMap.set(node.color, colorEntry)
           }
         }
 
 
       } else {
         if (this.colorGroup === 'data source') {
-          nodeColorsMap.set(node.color, dataSourceName);
+          nodeColorsMap.set(node.color, [
+            {
+              name: dataSourceName,
+              count: 0
+            }
+          ]);
         } else {
-          nodeColorsMap.set(node.color, node.metatype_name);
+          nodeColorsMap.set(node.color, [
+            {
+              name: node.metatype_name,
+              count: 0
+            }
+          ]);
         }
 
       }
+
+      // incremement counter
+      colorEntry = nodeColorsMap.get(node.color)
+      if (this.colorGroup === 'data source') {
+        const colorNode = colorEntry.filter((x: any) => (x.name === dataSourceName))[0]
+        ++colorNode.count
+      } else {
+        const colorNode = colorEntry.filter((x: any) => (x.name === node.metatype_name))[0]
+        colorNode.count += 1
+      }
+
     });
 
     // reset the array for new queries
     this.nodeColorsArray = [];
 
     // convert to an array so that Vue2 can iterate over it reactively
-    nodeColorsMap.forEach((value: string, key: string) => {
-      this.nodeColorsArray.push({'key': key, 'value': value});
+    nodeColorsMap.forEach((value: any, key: string) => {
+      // loop through list in value to create a combined string of names and counts
+      let legendEntry = ''
+      value.forEach((colorObject: any) => {
+        legendEntry = legendEntry.concat(colorObject.name, ' [', colorObject.count.toString(), '] ')
+      })
+      this.nodeColorsArray.push({'key': key, 'value': legendEntry});
     });
   }
 
@@ -1656,6 +1712,17 @@ export default class GraphViewer extends Vue {
       properties[key.property_name] = key.default_value
     })
     this.edgeProperties = properties
+  }
+
+  disableGraphEdit() {
+    this.edgeFlag = false
+  }
+
+  nodeUpdated(node: any) {
+    this.selectedNode.properties = node.properties
+    
+    this.loading = true
+    this.showNodeProperties(this.selectedNode)
   }
 
   async mounted() {
