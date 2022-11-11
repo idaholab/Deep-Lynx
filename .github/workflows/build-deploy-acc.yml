@@ -161,4 +161,39 @@ mirror-repository:
       name: mirror-deep-lynx-repo
       run: |
         git remote public add ${{ secrets.PUBLIC_GITHUB_URL }}
-        git push public main --force
+        git branch -m master
+        git push public master --force
+update-sdks:
+  runs-on: [ self-hosted ]
+  environment: production
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: main
+    - uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '8'
+    - run: |
+        mkdir /opt/swagger && cd /opt/swagger
+        wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.35/swagger-codegen-cli-3.0.35.jar -O swagger-codegen-cli.jar
+        git clone ${{ secrets.DL_JS_SDK }}
+        git clone ${{ secrets.DL_PY_SDK }}
+        git clone ${{ secrets.DL_CSHARP_SDK }}
+        git clone ${{ secrets.DL_R_SDK }}
+        java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l typescript-axios -o deeplynx-js-sdk
+        java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l csharp -o deeplynx-csharp-sdk
+        java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l r -o deeplynx-r-sdk
+        java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l python -o deeplynx-py-pkg --additional-properties packageName=deep_lynx projectName=deep_lynx
+        cd deeplynx-js-sdk
+        git add * && git commit -m $GITHUB_SHA || true
+        git push ${{ secrets.DL_JS_SDK }} main 
+        cd ../deeplynx-py-pkg
+        git add * && git commit -m $GITHUB_SHA || true
+        git push ${{ secrets.DL_PY_SDK }} main
+        cd ../deeplynx-csharp-sdk
+        git add * && git commit -m $GITHUB_SHA || true
+        git push ${{ secrets.DL_CSHARP_SDK }} main
+        cd ../deeplynx-r-sdk
+        git add * && git commit -m $GITHUB_SHA || true
+        git push ${{ secrets.DL_R_SDK }} mai
