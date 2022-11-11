@@ -13,10 +13,6 @@ jobs:
         with:
           ref: development
       - shell: bash
-        name: Short Sha
-        id: vars
-        run: echo "SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-      - shell: bash
         name: ACR build
         env:
           ACR_SP_USER: ${{ secrets.CI_SP_USER }}
