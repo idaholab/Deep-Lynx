@@ -103,6 +103,6 @@ jobs:
         name: mirror-deep-lynx-repo
         run: |
           git fetch --unshallow origin
-          git remote add public ${{ secrets.PUBLIC_GITHUB_URL }}
-          git push public development --force
-          git push public -tags
+          git remote add github-pub ${{ secrets.PUBLIC_GITHUB_URL }}
+          git push github-pub development --force
+          git push github-pub -tags
