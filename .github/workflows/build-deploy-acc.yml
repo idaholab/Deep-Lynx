@@ -12,6 +12,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: main
+      - name: Short Sha
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - shell: bash
         name: ACR build
         env:
@@ -22,20 +25,21 @@ jobs:
           ACR_SP_TENANT: ${{ secrets.CI_SP_TENANT }}
           ACR_SUBSCRIPTION: ${{ secrets.CI_ACR_SUBSCRIPTION }}
           NODE_ENV: ${{ secrets.NODE_ENV }}
-          RUN_NUMBER: ${{ github.run_number }}
+          SHORT_SHA: ${{ steps.vars.outputs.sha_short }}
         run: |
           cd $GITHUB_WORKSPACE
           az cloud set --name AzureUSGovernment
           az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
           az account set --subscription $ACR_SUBSCRIPTION
-          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/Dockerfile -t $ACR_PATH:$RUN_NUMBER-latest .
+          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/Dockerfile -t $ACR_PATH:$SHORT_SHA-latest .
       - shell: bash
         name: ACR Get Scan
         env:
           ACR_REGISTRY: ${{ secrets.CI_REGISTRY }}
           ACR_PATH: ${{ secrets.CI_REGISTRY_PATH }}
+          SHORT_SHA: ${{ steps.vars.outputs.sha_short }}
         run: |
-          imageDigest=$(az acr repository show -n $ACR_REGISTRY -t $ACR_PATH:$RUN_NUMBER-latest | jq --raw-output '.digest')
+          imageDigest=$(az acr repository show -n $ACR_REGISTRY -t $ACR_PATH:$SHORT_SHA-latest | jq --raw-output '.digest')
           healthquery="securityresources
           | where type == 'microsoft.security/assessments/subassessments'
           | where id matches regex  '(.+?)/providers/Microsoft.ContainerRegistry/registries/(.+)/providers/Microsoft.Security/assessments/dbd0cb49-b563-45e7-9724-889e799fa648/'
@@ -130,6 +134,7 @@ jobs:
           ELM_HOST: ${{ secrets.ELM_HOST }}
           ELM_IP: ${{ secrets.ELM_IP }}
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
+          SHORT_SHA: ${{ steps.vars.outputs.sha_short }}
         run: |
           echo $JAZZ_HOST
           cd $GITHUB_WORKSPACE
@@ -164,7 +169,7 @@ mirror-repository:
         git remote public add ${{ secrets.PUBLIC_GITHUB_URL }}
         git branch -m master
         git push public master --force
-        git push public --tags
+        git push public -tags
         git branch -m main
 update-sdks:
   runs-on: [ self-hosted ]

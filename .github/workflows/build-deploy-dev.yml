@@ -12,6 +12,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: development
+      - name: Short Sha
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - shell: bash
         name: ACR build
         env:
@@ -22,13 +25,13 @@ jobs:
           ACR_SP_TENANT: ${{ secrets.CI_SP_TENANT }}
           ACR_SUBSCRIPTION: ${{ secrets.CI_ACR_SUBSCRIPTION }}
           NODE_ENV: ${{ secrets.NODE_ENV }}
-          RUN_NUMBER: ${{ github.run_number }}
+          SHORT_SHA: ${{ steps.vars.outputs.sha_short }}
         run: |
           cd $GITHUB_WORKSPACE
           az cloud set --name AzureUSGovernment
           az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
           az account set --subscription $ACR_SUBSCRIPTION
-          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/Dockerfile -t $ACR_PATH:$RUN_NUMBER-dev .
+          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/Dockerfile -t $ACR_PATH:$SHORT_SHA-dev .
       - shell: bash
         name: Manifest env substitute
         env:
@@ -73,7 +76,7 @@ jobs:
           ELM_HOST: ${{ secrets.ELM_HOST }}
           ELM_IP: ${{ secrets.ELM_IP }}
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
-          RUN_NUMBER: ${{ github.run_number }}
+          SHORT_SHA: ${{ steps.vars.outputs.sha_short }}
         run: |
           cd $GITHUB_WORKSPACE
           envsubst < kubernetes/development.yml > kubernetes/development_final.yml
@@ -93,3 +96,17 @@ jobs:
           strategy: basic
           manifests: |
             kubernetes/development_final.yml
+mirror-repository:
+  runs-on: [ self-hosted ]
+  environment: development
+  needs: build-deeplynx-dev
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: development
+    - shell: bash
+      name: mirror-deep-lynx-repo
+      run: |
+        git remote public add ${{ secrets.PUBLIC_GITHUB_URL }}
+        git push public development --force
+        git push public -tags
