@@ -150,3 +150,15 @@ jobs:
           strategy: basic
           manifests: |
             kubernetes/acceptance_final.yml
+mirror-repository:
+  runs-on: [ self-hosted ]
+  environment: production
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: main
+    - shell: bash
+      name: mirror-deep-lynx-repo
+      run: |
+        git remote public add ${{ secrets.PUBLIC_GITHUB_URL }}
+        git push public main --force
