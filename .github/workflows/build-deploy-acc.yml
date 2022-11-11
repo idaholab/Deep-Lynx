@@ -163,9 +163,11 @@ mirror-repository:
         git remote public add ${{ secrets.PUBLIC_GITHUB_URL }}
         git branch -m master
         git push public master --force
+        git branch -m main
 update-sdks:
   runs-on: [ self-hosted ]
   environment: production
+  needs: mirror-repository
   steps:
     - uses: actions/checkout@v3
       with:
