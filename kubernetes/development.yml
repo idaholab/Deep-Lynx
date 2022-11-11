@@ -68,7 +68,7 @@ spec:
     spec:
       containers:
         - name: deeplynx
-          image: ${CI_REGISTRY}/${CI_REGISTRY_PATH}:${SHORT_SHA}-dev
+          image: ${CI_REGISTRY}/${CI_REGISTRY_PATH}:${GITHUB_SHA}-dev
           imagePullPolicy: Always
           args:
             - /bin/sh

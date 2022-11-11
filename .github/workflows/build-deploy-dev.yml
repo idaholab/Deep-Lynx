@@ -26,13 +26,12 @@ jobs:
           ACR_SP_TENANT: ${{ secrets.CI_SP_TENANT }}
           ACR_SUBSCRIPTION: ${{ secrets.CI_ACR_SUBSCRIPTION }}
           NODE_ENV: ${{ secrets.NODE_ENV }}
-          SHORT_SHA: ${SHA_SHORT}
         run: |
           cd $GITHUB_WORKSPACE
           az cloud set --name AzureUSGovernment
           az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
           az account set --subscription $ACR_SUBSCRIPTION
-          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/Dockerfile -t $ACR_PATH:$SHORT_SHA-dev .
+          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/Dockerfile -t $ACR_PATH:$GITHUB_SHA-dev .
       - shell: bash
         name: Manifest env substitute
         env:
@@ -77,7 +76,6 @@ jobs:
           ELM_HOST: ${{ secrets.ELM_HOST }}
           ELM_IP: ${{ secrets.ELM_IP }}
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
-          SHORT_SHA: ${{ steps.vars.outputs.sha_short }}
         run: |
           cd $GITHUB_WORKSPACE
           envsubst < kubernetes/development.yml > kubernetes/development_final.yml
