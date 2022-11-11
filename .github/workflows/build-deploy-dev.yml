@@ -15,7 +15,7 @@ jobs:
       - shell: bash
         name: Short Sha
         id: vars
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - shell: bash
         name: ACR build
         env:
@@ -26,7 +26,7 @@ jobs:
           ACR_SP_TENANT: ${{ secrets.CI_SP_TENANT }}
           ACR_SUBSCRIPTION: ${{ secrets.CI_ACR_SUBSCRIPTION }}
           NODE_ENV: ${{ secrets.NODE_ENV }}
-          SHORT_SHA: ${{ steps.vars.outputs.sha_short }}
+          SHORT_SHA: ${SHA_SHORT}
         run: |
           cd $GITHUB_WORKSPACE
           az cloud set --name AzureUSGovernment
