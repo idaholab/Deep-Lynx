@@ -17,7 +17,7 @@ jobs:
       - name: Checkout tools repo
         uses: actions/checkout@v3
         with:
-          repository: digital-engineering/kubernetes
+          repository: Digital-Engineering/kubernetes
           ref: main
           path: kubernetes
           token: ${{ secrets.GH_TOKEN }}
@@ -67,7 +67,7 @@ jobs:
           ELM_IP: ${{ secrets.ELM_IP }}
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
         run: |
-          cd $GITHUB_WORKSPACE/kubernetes/deeplynx
+          cd kubernetes/deeplynx
           envsubst < kubernetes/production.yml > kubernetes/production_final.yml
       - uses: azure/setup-kubectl@v3
       - uses: azure/k8s-set-context@v3

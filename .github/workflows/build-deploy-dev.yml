@@ -84,7 +84,7 @@ jobs:
           ELM_IP: ${{ secrets.ELM_IP }}
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
         run: |
-          cd $GITHUB_WORKSPACE/kubernetes/deeplynx
+          cd kubernetes/deeplynx
           envsubst < development.yml > development_final.yml
       - uses: azure/setup-kubectl@v3
       - uses: azure/k8s-set-context@v3

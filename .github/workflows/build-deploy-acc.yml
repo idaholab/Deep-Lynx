@@ -143,7 +143,7 @@ jobs:
           ELM_IP: ${{ secrets.ELM_IP }}
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
         run: |
-          cd $GITHUB_WORKSPACE/kubernetes/deeplynx
+          cd kubernetes/deeplynx
           envsubst < acceptance.yml > acceptance_final.yml
       - uses: azure/setup-kubectl@v3
       - uses: azure/k8s-set-context@v3
@@ -191,7 +191,7 @@ jobs:
           distribution: 'temurin'
           java-version: '8'
       - run: |
-          mkdir /opt/swagger && cd /opt/swagger
+          sudo mkdir /opt/swagger && cd /opt/swagger
           wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.35/swagger-codegen-cli-3.0.35.jar -O swagger-codegen-cli.jar
           git clone ${{ secrets.DL_JS_SDK }}
           git clone ${{ secrets.DL_PY_SDK }}
