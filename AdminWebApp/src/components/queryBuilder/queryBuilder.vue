@@ -396,6 +396,7 @@ relationshipSampleQuery =
   
   setRawEditor() {
     this.activeTab = 'rawEditor'
+    this.$emit('disableGraphEdit', true)
     
     // clear any graph results
     if (this.results !== null) {
@@ -467,16 +468,24 @@ relationshipSampleQuery =
       }
 
       this.loading = true
-      const queryResult = await this.$client.submitGraphQLQuery(this.containerID, { query: `${this.codeMirror?.getValue()}` })
+      this.$client.submitGraphQLQuery(this.containerID, { query: `${this.codeMirror?.getValue()}` })
+        .then((queryResult: any) => {
+          if(queryResult.errors) {
+            this.errorMessage = queryResult.errors.map((error: any) => error.message as string).join(' ')
+            this.loading = false
+            return
+          }
 
-      if(queryResult.errors) {
-        this.errorMessage = queryResult.errors.map((error: any) => error.message as string).join(' ')
-        this.loading = false
-        return
-      }
+          this.rawQueryResult = queryResult
+          this.loading = false
+        })
+        .catch((err: string) => {
+          this.errorMessage = 'There is a problem with the GraphQL query or server error. Please see the result tab.'
 
-      this.rawQueryResult = queryResult
-      this.loading = false
+          this.rawQueryResult = {'error': err}
+          this.loading = false
+        })
+
     }
   }
 

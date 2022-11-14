@@ -696,7 +696,7 @@ export class Client {
         return this.postNoPayload(`/containers/${containerID}/import/imports/${importID}/reprocess`);
     }
 
-    createNode(containerID: string, node: any): Promise<NodeT[]> {
+    createOrUpdateNode(containerID: string, node: any): Promise<NodeT[]> {
         return this.post<NodeT[]>(`/containers/${containerID}/graphs/nodes`, node);
     }
 
@@ -1314,7 +1314,9 @@ export class Client {
         const resp: AxiosResponse = await axios.post(url, data, config);
 
         return new Promise<T>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
+            if (resp.status < 200 || resp.status > 299) {
+                resp.data.error ? reject(resp.data.error) : reject(resp.data);
+            }
 
             resolve(resp.data as T);
         });
