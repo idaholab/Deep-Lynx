@@ -1,4 +1,4 @@
-name: Deploy Production and Update SDKS
+name: Deploy Production
 
 on:
   workflow_dispatch:
