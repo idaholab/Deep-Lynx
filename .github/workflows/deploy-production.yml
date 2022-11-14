@@ -8,9 +8,19 @@ jobs:
     runs-on: [ self-hosted ]
     environment: production
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
         with:
+          path: deeplynx
           ref: main
+
+      - name: Checkout tools repo
+        uses: actions/checkout@v3
+        with:
+          repository: Digital-Engineering/kubernetes
+          ref: main
+          path: kubernetes
+
       - shell: bash
         name: Manifest env substitute
         env:
@@ -56,7 +66,7 @@ jobs:
           ELM_IP: ${{ secrets.ELM_IP }}
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
         run: |
-          cd $GITHUB_WORKSPACE
+          cd $GITHUB_WORKSPACE/kubernetes/deeplynx
           envsubst < kubernetes/production.yml > kubernetes/production_final.yml
       - uses: azure/setup-kubectl@v3
       - uses: azure/k8s-set-context@v3
@@ -73,4 +83,4 @@ jobs:
           force: true
           strategy: basic
           manifests: |
-            kubernetes/production_final.yml
+            kubernetes/deeplynx/production_final.yml

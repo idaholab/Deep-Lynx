@@ -9,9 +9,19 @@ jobs:
     runs-on: [ self-hosted ]
     environment: acceptance
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
         with:
+          path: deeplynx
           ref: main
+
+      - name: Checkout tools repo
+        uses: actions/checkout@v3
+        with:
+          repository: Digital-Engineering/kubernetes
+          ref: main
+          path: kubernetes
+
       - shell: bash
         name: ACR build
         env:
@@ -24,11 +34,11 @@ jobs:
           NODE_ENV: ${{ secrets.NODE_ENV }}
           SHORT_SHA: ${{ steps.vars.outputs.sha_short }}
         run: |
-          cd $GITHUB_WORKSPACE
+          cd $GITHUB_WORKSPACE/deeplynx
           az cloud set --name AzureUSGovernment
           az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
           az account set --subscription $ACR_SUBSCRIPTION
-          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/Dockerfile -t $ACR_PATH:$GITHUB_SHA-latest .
+          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/deeplynx/Dockerfile -t $ACR_PATH:$GITHUB_SHA-latest .
       - shell: bash
         name: ACR Get Scan
         env:
@@ -132,8 +142,8 @@ jobs:
           ELM_IP: ${{ secrets.ELM_IP }}
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
         run: |
-          cd $GITHUB_WORKSPACE
-          envsubst < kubernetes/acceptance.yml > kubernetes/acceptance_final.yml
+          cd $GITHUB_WORKSPACE/kubernetes/deeplynx
+          envsubst < acceptance.yml > acceptance_final.yml
       - uses: azure/setup-kubectl@v3
       - uses: azure/k8s-set-context@v3
         with:
@@ -149,7 +159,7 @@ jobs:
           force: true
           strategy: basic
           manifests: |
-            kubernetes/acceptance_final.yml
+            kubernetes/deeplynx/acceptance_final.yml
   mirror-repository:
     runs-on: [ self-hosted ]
     environment: production
