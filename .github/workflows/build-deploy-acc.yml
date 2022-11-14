@@ -143,7 +143,7 @@ jobs:
           ELM_IP: ${{ secrets.ELM_IP }}
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
         run: |
-          cd kubernetes/deeplynx
+          cd $GITHUB_WORKSPACE/kubernetes/deeplynx/manifests
           envsubst < acceptance.yml > acceptance_final.yml
       - uses: azure/setup-kubectl@v3
       - uses: azure/k8s-set-context@v3
@@ -160,7 +160,7 @@ jobs:
           force: true
           strategy: basic
           manifests: |
-            kubernetes/deeplynx/acceptance_final.yml
+            kubernetes/deeplynx/manifests/acceptance_final.yml
   mirror-repository:
     runs-on: [ self-hosted ]
     environment: production
