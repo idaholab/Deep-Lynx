@@ -20,6 +20,7 @@ jobs:
           repository: Digital-Engineering/kubernetes
           ref: main
           path: kubernetes
+          token: ${{ secrets.GH_TOKEN }}
 
       - shell: bash
         name: Manifest env substitute
