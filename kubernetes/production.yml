@@ -55,7 +55,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deeplynx
-  namespace: deeplynx-acc
+  namespace: deeplynx-prd
   labels:
     service: deeplynx
     app: deeplynx
