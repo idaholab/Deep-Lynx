@@ -36,7 +36,7 @@ jobs:
           ACR_PATH: ${{ secrets.CI_REGISTRY_PATH }}
           SHORT_SHA: ${{ steps.vars.outputs.sha_short }}
         run: |
-          imageDigest=$(az acr repository show -n $ACR_REGISTRY -t $ACR_PATH:$SHORT_SHA-latest | jq --raw-output '.digest')
+          imageDigest=$(az acr repository show -n $ACR_REGISTRY -t $ACR_PATH:$GITHUB_SHA-latest | jq --raw-output '.digest')
           healthquery="securityresources
           | where type == 'microsoft.security/assessments/subassessments'
           | where id matches regex  '(.+?)/providers/Microsoft.ContainerRegistry/registries/(.+)/providers/Microsoft.Security/assessments/dbd0cb49-b563-45e7-9724-889e799fa648/'
