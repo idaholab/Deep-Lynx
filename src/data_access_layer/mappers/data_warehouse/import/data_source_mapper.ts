@@ -396,7 +396,7 @@ export default class DataSourceMapper extends Mapper {
             },
         ];
 
-        if ((source.config as TimeseriesDataSourceConfig).chunk_interval) {
+        if ((source.config as TimeseriesDataSourceConfig).chunk_interval && Config.timescaledb_enabled) {
             statements.push({
                 text: format(
                     `SELECT create_hypertable(%L, %L, chunk_time_interval => %L::integer)`,
@@ -405,7 +405,7 @@ export default class DataSourceMapper extends Mapper {
                     (source.config as TimeseriesDataSourceConfig).chunk_interval,
                 ),
             });
-        } else {
+        } else if (Config.timescaledb_enabled) {
             statements.push({
                 text: format(`SELECT create_hypertable(%L, %L)`, 'y_' + source.id!, primaryTimestampColumnName),
             });

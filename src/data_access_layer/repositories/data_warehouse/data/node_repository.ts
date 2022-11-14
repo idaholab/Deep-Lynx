@@ -48,6 +48,16 @@ export default class NodeRepository extends Repository implements RepositoryInte
         return Promise.resolve(node);
     }
 
+    async findNodeHistoryByID(id: string, transaction?: PoolClient): Promise<Result<Node[]>> {
+        const nodes = await this.#mapper.ListHistory(id, transaction);
+
+        if (nodes.isError) {
+            return Promise.reject(nodes.error)
+        }
+
+        return Promise.resolve(nodes);
+    }
+
     // composite id's are only unique when paired with a data source as well
     async findByCompositeID(id: string, dataSourceID: string, metatypeID: string, transaction?: PoolClient): Promise<Result<Node>> {
         const node = await this.#mapper.RetrieveByCompositeOriginalID(id, dataSourceID, metatypeID, transaction);

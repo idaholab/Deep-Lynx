@@ -50,6 +50,10 @@ export default class MetatypeMapper extends Mapper {
         return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
 
+    public async RetrieveByUUID(id: string): Promise<Result<Metatype>> {
+        return super.retrieve(this.retrieveStatementByUUID(id), {resultClass: this.resultClass});
+    }
+
     public async Update(userID: string, m: Metatype, transaction?: PoolClient): Promise<Result<Metatype>> {
         const r = await super.run(this.fullUpdateStatement(userID, m), {
             transaction,
@@ -102,6 +106,14 @@ export default class MetatypeMapper extends Mapper {
     private retrieveStatement(metatypeID: string): QueryConfig {
         return {
             text: `SELECT * FROM metatypes_view WHERE id = $1`,
+            values: [metatypeID],
+        };
+    }
+
+    private retrieveStatementByUUID(metatypeID: string): QueryConfig {
+        return {
+            text: `SELECT * FROM metatypes_view 
+                    WHERE uuid = $1 AND ontology_version IN (SELECT id FROM ontology_versions WHERE status = 'published' ORDER BY id DESC LIMIT 1)`,
             values: [metatypeID],
         };
     }

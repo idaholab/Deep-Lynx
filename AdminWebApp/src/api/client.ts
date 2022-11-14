@@ -326,7 +326,7 @@ export class Client {
         if (nameIn) query.nameIn = nameIn;
         if (loadRelationships) query.loadRelationships = loadRelationships;
         if (originName) query.originName = originName;
-        if (destinationName) query.destinationname = destinationName;
+        if (destinationName) query.destinationName = destinationName;
         query.deleted = deleted;
 
         return this.get<MetatypeRelationshipPairT[] | number>(`/containers/${containerID}/metatype_relationship_pairs`, query);
@@ -338,6 +338,10 @@ export class Client {
 
     retrieveMetatype(containerID: string, metatypeID: string): Promise<MetatypeT> {
         return this.get<MetatypeT>(`/containers/${containerID}/metatypes/${metatypeID}`);
+    }
+
+    retrieveMetatypeByUUID(containerID: string, metatypeID: string): Promise<MetatypeT> {
+        return this.get<MetatypeT>(`/containers/${containerID}/metatypes/${metatypeID}`, {uuid: true});
     }
 
     updateMetatype(containerID: string, metatypeID: string, metatype: any): Promise<boolean> {
@@ -692,7 +696,7 @@ export class Client {
         return this.postNoPayload(`/containers/${containerID}/import/imports/${importID}/reprocess`);
     }
 
-    createNode(containerID: string, node: any): Promise<NodeT[]> {
+    createOrUpdateNode(containerID: string, node: any): Promise<NodeT[]> {
         return this.post<NodeT[]>(`/containers/${containerID}/graphs/nodes`, node);
     }
 
@@ -729,6 +733,13 @@ export class Client {
 
     retrieveNode(containerID: string, nodeID: string): Promise<NodeT> {
         return this.get<NodeT>(`/containers/${containerID}/graphs/nodes/${nodeID}`);
+    }
+
+    retrieveNodeHistory(containerID: string, nodeID: string): Promise<NodeT[]> {
+        const query: {[key: string]: any} = {};
+        query.history = 'true';
+
+        return this.get<NodeT[]>(`/containers/${containerID}/graphs/nodes/${nodeID}`, query);
     }
 
     retrieveEdge(containerID: string, edgeID: string): Promise<EdgeT> {
@@ -1303,7 +1314,9 @@ export class Client {
         const resp: AxiosResponse = await axios.post(url, data, config);
 
         return new Promise<T>((resolve, reject) => {
-            if (resp.status < 200 || resp.status > 299) reject(resp.data.error);
+            if (resp.status < 200 || resp.status > 299) {
+                resp.data.error ? reject(resp.data.error) : reject(resp.data);
+            }
 
             resolve(resp.data as T);
         });

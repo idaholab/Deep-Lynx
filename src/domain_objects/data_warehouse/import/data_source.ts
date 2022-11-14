@@ -22,6 +22,7 @@ import {Exclude, Type} from 'class-transformer';
 import {PoolClient} from 'pg';
 import {Transform} from 'stream';
 import {DataRetentionDays} from '../../validators/data_retention_validator';
+import {WebSocket} from 'ws';
 
 // ReceiveDataOptions will allow us to grow the potential options needed by the ReceiveData
 // function of various implementations without having to grow the parameter list
@@ -30,8 +31,10 @@ export class ReceiveDataOptions {
     importID?: string;
     returnStagingRecords? = false; // needed if you'd rather return the individual staging records over the import, useful if needing to attach files
     overrideJsonStream? = false; // needed if you're passing raw json objects or an object stream
-    transformStreams?: Transform[]; // streams to pipe to, prior to piping to the JSONStream
-    bufferSize?: number = 1000; // buffer size for timeseries records to be inserted into the db, modify this at runtime if needed
+    transformStream?: Transform; // streams to pipe to, prior to piping to the JSONStream
+    bufferSize = 1000; // buffer size for timeseries records to be inserted into the db, modify this at runtime if needed
+    websocket?: WebSocket;
+    errorCallback?: (error: any) => void;
 }
 
 /*

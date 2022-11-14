@@ -9,6 +9,7 @@ import translations from './translations';
 import vuetify from './plugins/vuetify';
 import AuthPlugin from '@/auth/authentication_service';
 import ClientPlugin from '@/api/client';
+import UtilsPlugin from '@/utilities';
 import Config from '@/config';
 import ErrorBanner from '@/components/general/errorBanner.vue';
 import SuccessBanner from '@/components/general/successBanner.vue';
@@ -22,7 +23,7 @@ Vue.config.devtools = true;
 Vue.use(ElementUI);
 Vue.use(VueI18n);
 Vue.use(JsonViewer);
-Vue.use(VueObserveVisibility)
+Vue.use(VueObserveVisibility);
 
 const i18n = new VueI18n({
     locale: 'en', // if you need get the browser language use following "window.navigator.language"
@@ -38,6 +39,8 @@ Vue.use(ClientPlugin, {
 });
 
 Vue.use(AuthPlugin);
+
+Vue.use(UtilsPlugin);
 
 // register our error handling banner for use across the whole app
 Vue.component('error-banner', ErrorBanner);

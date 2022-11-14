@@ -44,7 +44,7 @@ export class Repository {
         WHERE?: string[];
         OPTIONS?: string[];
         VALUES: any[];
-    } = {SELECT: [], VALUES: [],};
+    } = {SELECT: [], VALUES: []};
 
     public _aliasMap = new Map<string, string>();
 
@@ -117,22 +117,24 @@ export class Repository {
     }
 
     queryJsonb(key: string, fieldName: string, operator: string, value: any, conditions?: QueryConditions) {
-        if (!this._query.WHERE) {this._query.WHERE = []}
+        if (!this._query.WHERE) {
+            this._query.WHERE = [];
+        }
 
         let table;
         if (conditions?.tableAlias) {
             table = conditions.tableAlias;
         } else if (conditions?.tableName) {
-            table = this._aliasMap.has(conditions.tableName) ? (this._aliasMap.get(conditions.tableName)) : (conditions.tableName);
+            table = this._aliasMap.has(conditions.tableName) ? this._aliasMap.get(conditions.tableName) : conditions.tableName;
         } else {
             table = this._tableAlias;
         }
 
         if (!fieldName.includes('.') && table !== '') {
-            fieldName = `${table}.${fieldName}`
+            fieldName = `${table}.${fieldName}`;
         }
 
-        this._query.WHERE?.push(format(`(%s`,fieldName));
+        this._query.WHERE?.push(format(`(%s`, fieldName));
 
         // the key can be a dot.notation nested set of keys
         const keys = key.split('.');
@@ -150,7 +152,9 @@ export class Repository {
         // default to it in all cases - string is obviously not a part of the switch statement below as it's the default
         let typeCast = 'text';
         let dataType;
-        if (conditions?.dataType) { dataType = conditions.dataType }
+        if (conditions?.dataType) {
+            dataType = conditions.dataType;
+        }
 
         switch (dataType) {
             case undefined: {
@@ -193,6 +197,14 @@ export class Repository {
                 this._query.WHERE?.push(format(`->> '%s')::${typeCast} <> %L::${typeCast}`, finalKey, value));
                 break;
             }
+            case '==': {
+                this._query.WHERE?.push(format(`->> '%s')::${typeCast} = %L::${typeCast}`, finalKey, value));
+                break;
+            }
+            case '!=': {
+                this._query.WHERE?.push(format(`->> '%s')::${typeCast} <> %L::${typeCast}`, finalKey, value));
+                break;
+            }
             case '<': {
                 this._query.WHERE?.push(format(`->> '%s')::${typeCast} < %L::${typeCast}`, finalKey, value));
                 break;
@@ -229,24 +241,28 @@ export class Repository {
     }
 
     query(fieldName: string, operator: string, value?: any, conditions?: QueryConditions) {
-        if (!this._query.WHERE) {this._query.WHERE = []}
+        if (!this._query.WHERE) {
+            this._query.WHERE = [];
+        }
 
         let table;
         if (conditions?.tableAlias) {
             table = conditions.tableAlias;
         } else if (conditions?.tableName) {
-            table = this._aliasMap.has(conditions.tableName) ? (this._aliasMap.get(conditions.tableName)) : (conditions.tableName);
+            table = this._aliasMap.has(conditions.tableName) ? this._aliasMap.get(conditions.tableName) : conditions.tableName;
         } else {
             table = this._tableAlias;
         }
 
         if (!fieldName.includes('.') && table !== '') {
-            fieldName = `${table}.${fieldName}`
+            fieldName = `${table}.${fieldName}`;
         }
 
         let typeCast = 'text';
         let dataType;
-        if (conditions?.dataType) { dataType = conditions.dataType }
+        if (conditions?.dataType) {
+            dataType = conditions.dataType;
+        }
 
         switch (dataType) {
             case undefined: {
@@ -285,6 +301,14 @@ export class Repository {
                 break;
             }
             case 'neq': {
+                this._query.WHERE?.push(format(`%s <> %L`, fieldName, value));
+                break;
+            }
+            case '==': {
+                this._query.WHERE?.push(format(`%s = %L`, fieldName, value));
+                break;
+            }
+            case '!=': {
                 this._query.WHERE?.push(format(`%s <> %L`, fieldName, value));
                 break;
             }
@@ -361,10 +385,12 @@ export class Repository {
     // Resulting fields with the same name are also being overwritten, so we might need to
     // use column aliases for each field coming from a non-native table.
     join(destination: string, options: JoinOptions, origin: string = this._tableName) {
-        if (this._query.JOINS === undefined) {this._query.JOINS = []}
+        if (this._query.JOINS === undefined) {
+            this._query.JOINS = [];
+        }
 
         let destination_alias;
-        if (options.destination_alias){
+        if (options.destination_alias) {
             destination_alias = options.destination_alias;
         } else if (this._aliasMap.has(destination)) {
             destination_alias = this._aliasMap.get(destination);
@@ -372,25 +398,21 @@ export class Repository {
             destination_alias = this._setAlias(destination);
         }
 
-        const join_type = options.join_type ? (options.join_type) : ('LEFT');
-        const operator = options.operator ? (options.operator) : ('=');
+        const join_type = options.join_type ? options.join_type : 'LEFT';
+        const operator = options.operator ? options.operator : '=';
 
         let originAlias;
-        if(origin === this._tableName){
+        if (origin === this._tableName) {
             originAlias = this._tableAlias;
-        } else{
-            if(this._aliasMap.has(origin)){
+        } else {
+            if (this._aliasMap.has(origin)) {
                 originAlias = this._aliasMap.get(origin);
             } else {
                 originAlias = origin;
             }
         }
 
-        const values = [
-            join_type, destination, destination_alias,
-            originAlias, options.origin_col, operator,
-            destination_alias, options.destination_col
-        ];
+        const values = [join_type, destination, destination_alias, originAlias, options.origin_col, operator, destination_alias, options.destination_col];
 
         const current_joins = this._query.JOINS.join(' ');
         const search = new RegExp(`.* JOIN .* ${destination_alias!} ON`, 'g');
@@ -404,20 +426,20 @@ export class Repository {
 
     // Used to select which fields will be added to the query by the join, otherwise no fields will be
     // added. Param options are a singular field, a list of fields, or an object of fields and aliases.
-    addFields(fields: string | string[] | {[field: string]: string}, tableName?: string){
+    addFields(fields: string | string[] | {[field: string]: string}, tableName?: string) {
         let table = '';
         if (tableName) {
-            table = (this._aliasMap.has(tableName)) ? (this._aliasMap.get(tableName)!) : (tableName);
+            table = this._aliasMap.has(tableName) ? this._aliasMap.get(tableName)! : tableName;
         } else {
             table = this._tableAlias;
         }
 
-        if (typeof fields === 'string'){
-            fields = (!fields.includes('.') && table !== '') ? (`${table}.${fields}`) : (fields);
+        if (typeof fields === 'string') {
+            fields = !fields.includes('.') && table !== '' ? `${table}.${fields}` : fields;
             this._query.SELECT.splice(1, 0, format(`, %s`, fields));
         } else if (Array.isArray(fields)) {
             fields.forEach((field) => {
-                field = (!field.includes('.') && table !== '') ? (`${table}.${field}`) : (field);
+                field = !field.includes('.') && table !== '' ? `${table}.${field}` : field;
                 this._query.SELECT.splice(1, 0, format(`, %s`, field));
             });
         } else {
@@ -425,9 +447,9 @@ export class Repository {
                 let field = entry[0];
                 const alias = entry[1];
 
-                field = (!field.includes('.') && table !== '') ? (`${table}.${field}`) : (field);
+                field = !field.includes('.') && table !== '' ? `${table}.${field}` : field;
                 this._query.SELECT.splice(1, 0, format(`, %s AS %s`, field, alias));
-            })
+            });
         }
 
         return this;
@@ -485,23 +507,15 @@ export class Repository {
             this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
-        const text = [
-            this._query.SELECT.join(' '),
-            this._query.JOINS?.join(' '),
-            this._query.WHERE?.join(' '),
-            this._query.OPTIONS?.join(' '),
-        ].join(' ');
+        const text = [this._query.SELECT.join(' '), this._query.JOINS?.join(' '), this._query.WHERE?.join(' '), this._query.OPTIONS?.join(' ')].join(' ');
 
         const query = {text, values: this._query.VALUES};
 
         // reset the filter
         this._query = {
-            SELECT: [
-                format(`SELECT %s.*`, this._tableAlias),
-                format(`FROM %s %s`, this._tableName, this._tableAlias)
-            ],
+            SELECT: [format(`SELECT %s.*`, this._tableAlias), format(`FROM %s %s`, this._tableName, this._tableAlias)],
             VALUES: [],
-        }
+        };
         this._aliasMap.clear();
 
         return storage.rows<T>(query, options);
@@ -534,24 +548,16 @@ export class Repository {
             this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
-        const text = [
-            this._query.SELECT.join(' '),
-            this._query.JOINS?.join(' '),
-            this._query.WHERE?.join(' '),
-            this._query.OPTIONS?.join(' '),
-        ].join(' ');
+        const text = [this._query.SELECT.join(' '), this._query.JOINS?.join(' '), this._query.WHERE?.join(' '), this._query.OPTIONS?.join(' ')].join(' ');
 
         const query = {text, values: this._query.VALUES};
 
         // reset the filter
         this._query = {
-            SELECT: [
-                format(`SELECT %s.*`, this._tableAlias),
-                format(`FROM %s %s`, this._tableName, this._tableAlias)
-            ],
+            SELECT: [format(`SELECT %s.*`, this._tableAlias), format(`FROM %s %s`, this._tableName, this._tableAlias)],
             VALUES: [],
-        }
-        this._aliasMap.clear()
+        };
+        this._aliasMap.clear();
 
         return storage.rowsStreaming(query, options);
     }
@@ -583,24 +589,16 @@ export class Repository {
             this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
-        const text = [
-            this._query.SELECT.join(' '),
-            this._query.JOINS?.join(' '),
-            this._query.WHERE?.join(' '),
-            this._query.OPTIONS?.join(' '),
-        ].join(' ');
+        const text = [this._query.SELECT.join(' '), this._query.JOINS?.join(' '), this._query.WHERE?.join(' '), this._query.OPTIONS?.join(' ')].join(' ');
 
         const query = {text, values: this._query.VALUES};
 
         // reset the filter
         this._query = {
-            SELECT: [
-                format(`SELECT %s.*`, this._tableAlias),
-                format(`FROM %s %s`, this._tableName, this._tableAlias)
-            ],
+            SELECT: [format(`SELECT %s.*`, this._tableAlias), format(`FROM %s %s`, this._tableName, this._tableAlias)],
             VALUES: [],
-        }
-        this._aliasMap.clear()
+        };
+        this._aliasMap.clear();
 
         try {
             // blob storage will pick the proper provider based on environment variable, no need to specify here unless
@@ -695,7 +693,12 @@ export class Repository {
         const storage = new Mapper();
 
         // modify the original query to be count
-        this._query.SELECT = [format(`SELECT COUNT(*) FROM %s %s`, this._tableName, this._tableAlias)];
+        // if multiple tables are joined in, only modify the select statement
+        if (this._query.SELECT.join(' ').includes('JOIN')) {
+            this._query.SELECT[0] = `SELECT COUNT(*)`;
+        } else {
+            this._query.SELECT = [format(`SELECT COUNT(*) FROM %s %s`, this._tableName, this._tableAlias)];
+        }
 
         if (queryOptions && queryOptions.offset) {
             this._query.OPTIONS?.push(format(`OFFSET %L`, queryOptions.offset));
@@ -705,24 +708,16 @@ export class Repository {
             this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
-        const text = [
-            this._query.SELECT.join(' '),
-            this._query.JOINS?.join(' '),
-            this._query.WHERE?.join(' '),
-            this._query.OPTIONS?.join(' '),
-        ].join(' ');
+        const text = [this._query.SELECT.join(' '), this._query.JOINS?.join(' '), this._query.WHERE?.join(' '), this._query.OPTIONS?.join(' ')].join(' ');
 
         const query = {text, values: this._query.VALUES};
 
         // reset the filter
         this._query = {
-            SELECT: [
-                format(`SELECT %s.*`, this._tableAlias),
-                format(`FROM %s %s`, this._tableName, this._tableAlias)
-            ],
+            SELECT: [format(`SELECT %s.*`, this._tableAlias), format(`FROM %s %s`, this._tableName, this._tableAlias)],
             VALUES: [],
-        }
-        this._aliasMap.clear()
+        };
+        this._aliasMap.clear();
 
         return storage.count(query, transaction);
     }
@@ -749,18 +744,18 @@ export type QueryOptions = {
 };
 
 export type JoinOptions = {
-    origin_col: string | undefined,
-    operator?: '=' | '<>' | undefined,
-    destination_col: string | undefined,
-    destination_alias?: string | undefined,
-    join_type?: 'INNER' | 'RIGHT' | 'LEFT' | 'FULL OUTER' | undefined,
+    origin_col: string | undefined;
+    operator?: '=' | '<>' | undefined;
+    destination_col: string | undefined;
+    destination_alias?: string | undefined;
+    join_type?: 'INNER' | 'RIGHT' | 'LEFT' | 'FULL OUTER' | undefined;
 };
 
 export type QueryConditions = {
-    dataType?: string | undefined,
-    tableName?: string | undefined,
-    tableAlias?: string | undefined,
-}
+    dataType?: string | undefined;
+    tableName?: string | undefined;
+    tableAlias?: string | undefined;
+};
 
 export type FileOptions = {
     containerID: string;

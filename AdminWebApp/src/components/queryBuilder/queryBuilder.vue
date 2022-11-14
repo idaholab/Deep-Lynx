@@ -18,7 +18,7 @@
               :input-value="results && result.id === results.id"
               two-line>
               <v-list-item-content>
-                <v-list-item-title>{{result.ran.toISOString().split('T').join(' ').substr(0, 19)}}</v-list-item-title>
+                <v-list-item-title>{{$utils.formatISODate(result.ran.toISOString())}}</v-list-item-title>
                 <v-list-item-subtitle>{{result.nodes.length}} {{$t('queryBuilder.results')}}</v-list-item-subtitle>
               </v-list-item-content>
             </v-list-item>
@@ -148,7 +148,8 @@
                       v-if="Object.keys(rawQueryResult).length !== 0"
                       :value="rawQueryResult"
                       copyable
-                      :expand-depth="4"
+                      expanded
+                      :expand-depth="7"
                       style="overflow-y: auto; overflow-x: auto"
                     />
                     <p v-else style="padding: 10px">Results will be displayed here</p>
@@ -395,6 +396,7 @@ relationshipSampleQuery =
   
   setRawEditor() {
     this.activeTab = 'rawEditor'
+    this.$emit('disableGraphEdit', true)
     
     // clear any graph results
     if (this.results !== null) {
@@ -466,16 +468,24 @@ relationshipSampleQuery =
       }
 
       this.loading = true
-      const queryResult = await this.$client.submitGraphQLQuery(this.containerID, { query: `${this.codeMirror?.getValue()}` })
+      this.$client.submitGraphQLQuery(this.containerID, { query: `${this.codeMirror?.getValue()}` })
+        .then((queryResult: any) => {
+          if(queryResult.errors) {
+            this.errorMessage = queryResult.errors.map((error: any) => error.message as string).join(' ')
+            this.loading = false
+            return
+          }
 
-      if(queryResult.errors) {
-        this.errorMessage = queryResult.errors.map((error: any) => error.message as string).join(' ')
-        this.loading = false
-        return
-      }
+          this.rawQueryResult = queryResult
+          this.loading = false
+        })
+        .catch((err: string) => {
+          this.errorMessage = 'There is a problem with the GraphQL query or server error. Please see the result tab.'
 
-      this.rawQueryResult = queryResult
-      this.loading = false
+          this.rawQueryResult = {'error': err}
+          this.loading = false
+        })
+
     }
   }
 

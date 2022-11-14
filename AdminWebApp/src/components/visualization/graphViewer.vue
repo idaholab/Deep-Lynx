@@ -204,7 +204,7 @@
           right
           permanent
           :mini-variant.sync="mini"
-          style="margin-top: 64px"
+          style="margin-top: 64px; width: fit-content"
       >
         <v-list-item class="px-2">
 
@@ -449,7 +449,7 @@
     <!-- Node Properties dialog -->
     <v-dialog
         v-model="nodeDialog"
-        width="50%"
+        width="70%"
     >
       <v-card
           @mouseover="opacity = 1.0"
@@ -459,6 +459,7 @@
 
         <div class="mt-2 pt-3 px-5 pb-5 height-full">
           <h4 class="primary--text">{{$t('dataQuery.nodeInformation')}}</h4>
+
           <div v-if="currentNodeInfo !== null">
             <v-row>
               <v-col>
@@ -471,6 +472,14 @@
                   <v-expansion-panel>
                     <v-expansion-panel-header>
                       <div><span class="text-overline">{{$t('dataQuery.nodeProperties')}}:</span></div>
+
+                      <edit-node-dialog 
+                        :node="currentNodeInfo" 
+                        :dataSourceID="currentNodeInfo.data_source_id" 
+                        :containerID="containerID"
+                        @nodeUpdated="nodeUpdated" 
+                        >
+                      </edit-node-dialog>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <v-data-table
@@ -504,6 +513,38 @@
                 </v-expansion-panels>
               </v-col>
 
+              <!-- Node History View -->
+              <v-col cols="3" style="margin-top: 160px">
+                <v-card>
+                  <v-list-item>
+                    <v-list-item-title><span class="text-overline">Node History:</span></v-list-item-title>
+                  </v-list-item>
+
+                  <v-list dense style="width: fit-content">
+                    <v-list-item-group
+                        color="primary"
+                    >
+                      <v-list-item
+                        two-line
+                        v-for="(item, i) in currentNodeInfo.history"
+                        :key="i"
+                        @click="getInfo(item)"
+                      >
+
+                        <v-list-item-icon style="margin-right: 12px">
+                          <v-icon color="#b2df8a" >mdi-edit</v-icon>
+                        </v-list-item-icon>
+
+                        <v-list-item-content>
+                          <v-list-item-title>{{$utils.formatISODate(item.created_at)}}</v-list-item-title>
+                          <v-list-item-subtitle>Created by: {{users[item.created_by]?.display_name}} ({{item.created_by }})</v-list-item-subtitle>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list-item-group>
+                  </v-list>
+                </v-card>
+              </v-col>
+
             </v-row>
 
           </div>
@@ -514,14 +555,16 @@
               <v-btn color="red darken-1" style="color: white" @click="deleteNode(currentNodeInfo)">{{$t('dataQuery.deleteNode')}}</v-btn>
             </v-col>
           </v-row>
+
         </div>
+
       </v-card>
     </v-dialog>
 
     <!-- Edge Properties dialog -->
     <v-dialog
         v-model="edgeDialog"
-        width="50%"
+        width="70%"
     >
       <v-card
           @mouseover="opacity = 1.0"
@@ -580,6 +623,7 @@ import NodeTimeseriesDataTable from "@/components/data/nodeTimeseriesDataTable.v
 import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import CreateNodeCard from "@/components/data/createNodeCard.vue";
 import CreateEdgeDialog from "@/components/data/createEdgeDialog.vue";
+import EditNodeDialog from "@/components/data/editNodeDialog.vue";
 import {Component, Prop, Watch, Vue} from "vue-property-decorator";
 import {NodeT, DataSourceT, MetatypeRelationshipPairT, MetatypeRelationshipKeyT} from "@/api/types";
 import ForceGraph, {ForceGraphInstance} from 'force-graph';
@@ -593,7 +637,8 @@ import { EdgeT } from "../../api/types";
     NodeTimeseriesDataTable,
     CreateNodeCard,
     CreateEdgeDialog,
-    SelectDataSource
+    SelectDataSource,
+    EditNodeDialog
   }})
 export default class GraphViewer extends Vue {
   @Prop()
@@ -634,6 +679,7 @@ export default class GraphViewer extends Vue {
   errorMessage = ""
 
   datasources: {[key: string]: DataSourceT} = {}
+  users: {[key: string]: DataSourceT} = {}
 
   nodeDialog = false
   edgeDialog = false
@@ -902,15 +948,6 @@ export default class GraphViewer extends Vue {
         }
       }
     });
-
-    // create a map of datasource IDs and names for reference by nodes
-    const sources = await this.$client.listDataSources(this.containerID)
-
-    for (const datasource of sources) {
-      if (datasource.id != undefined) {
-        this.datasources[datasource.id] = datasource;
-      }
-    }
 
     const graphElem = this.$refs.forcegraph as HTMLElement;
 
@@ -1283,7 +1320,7 @@ export default class GraphViewer extends Vue {
     // Reset Graph may be used to return to original results
   }
 
-  showNodeProperties(node: any) {
+  showNodeProperties(node: NodeT) {
     // only take single click action if the gap between previous and current clicks sufficiently far apart
     this.delay(this.doubleClickTimer).then(() => {
       if (this.doubleClickFlag) {
@@ -1331,45 +1368,91 @@ export default class GraphViewer extends Vue {
 
     this.graph.nodes.forEach((node: NodeT) => {
       // check if color has already been set, and then append name if so
-      const colorEntry = nodeColorsMap.get(node.color)
-      const dataSourceName = `${this.datasources[node.data_source_id]?.name} (${node.data_source_id})`
+      let colorEntry = nodeColorsMap.get(node.color)
+      const dataSourceName = `${this.datasources[node.data_source_id]?.name} (#${node.data_source_id})`
 
       if (colorEntry) {
 
+        // create string of all current names and check if this name is present
+        let names = ''
+        colorEntry.forEach((colorObject: any) => {
+          names += colorObject.name + ' '
+        })
+
         if (this.colorGroup === 'data source') {
           // if the data source name is not already part of colorEntry, add it
-          const match = colorEntry.search(`${this.datasources[node.data_source_id]?.name} \\(${node.data_source_id}\\)`)
+          const match = names.search(`${this.datasources[node.data_source_id]?.name} \\(#${node.data_source_id}\\)`)
 
           if (match === -1) {
-            nodeColorsMap.set(node.color, `${colorEntry}, ${dataSourceName}`);
+            // add the new name and count for this color
+            colorEntry[colorEntry.length] =
+              {
+                name: node.metatype_name,
+                count: 0
+              }
+            
+            nodeColorsMap.set(node.color, colorEntry)
           }
 
         } else { // default to 'metatype'
           // if the metatype name is not already part of colorEntry, add it
-          const match = colorEntry.search(node.metatype_name)
+          const match = names.search(node.metatype_name)
 
           if (match === -1) {
-            nodeColorsMap.set(node.color, `${colorEntry}, ${node.metatype_name}`);
+            // add the new name and count for this color
+            colorEntry[colorEntry.length] =
+              {
+                name: node.metatype_name,
+                count: 0
+              }
+            
+            nodeColorsMap.set(node.color, colorEntry)
           }
         }
 
 
       } else {
         if (this.colorGroup === 'data source') {
-          nodeColorsMap.set(node.color, dataSourceName);
+          nodeColorsMap.set(node.color, [
+            {
+              name: dataSourceName,
+              count: 0
+            }
+          ]);
         } else {
-          nodeColorsMap.set(node.color, node.metatype_name);
+          nodeColorsMap.set(node.color, [
+            {
+              name: node.metatype_name,
+              count: 0
+            }
+          ]);
         }
 
       }
+
+      // incremement counter
+      colorEntry = nodeColorsMap.get(node.color)
+      if (this.colorGroup === 'data source') {
+        const colorNode = colorEntry.filter((x: any) => (x.name === dataSourceName))[0]
+        ++colorNode.count
+      } else {
+        const colorNode = colorEntry.filter((x: any) => (x.name === node.metatype_name))[0]
+        colorNode.count += 1
+      }
+
     });
 
     // reset the array for new queries
     this.nodeColorsArray = [];
 
     // convert to an array so that Vue2 can iterate over it reactively
-    nodeColorsMap.forEach((value: string, key: string) => {
-      this.nodeColorsArray.push({'key': key, 'value': value});
+    nodeColorsMap.forEach((value: any, key: string) => {
+      // loop through list in value to create a combined string of names and counts
+      let legendEntry = ''
+      value.forEach((colorObject: any) => {
+        legendEntry = legendEntry.concat(colorObject.name, ' [', colorObject.count.toString(), '] ')
+      })
+      this.nodeColorsArray.push({'key': key, 'value': legendEntry});
     });
   }
 
@@ -1450,7 +1533,10 @@ export default class GraphViewer extends Vue {
     }
   }
 
-  getInfo(data: NodeT) {
+  async getInfo(data: NodeT) {
+    // retrieve node history
+    const nodeHistory = await this.$client.retrieveNodeHistory(this.containerID, data.id);
+
     this.currentNodeInfo = {
       id: data.id,
       container_id: this.containerID,
@@ -1460,8 +1546,9 @@ export default class GraphViewer extends Vue {
         name: data.metatype_name
       },
       properties: data.properties,
-      created_at: data.created_at.split(' (')[0], // remove timezone text if present
-      modified_at: data.modified_at.split(' (')[0] // remove timezone text if present
+      created_at: this.$utils.formatISODate(data.created_at),
+      modified_at: this.$utils.formatISODate(data.modified_at),
+      history: nodeHistory
     }
   }
 
@@ -1477,8 +1564,8 @@ export default class GraphViewer extends Vue {
         id: data.relationship_id
       },
       properties: data.properties,
-      created_at: data.created_at.split(' (')[0], // remove timezone text if present
-      modified_at: data.modified_at.split(' (')[0] // remove timezone text if present
+      created_at: this.$utils.formatISODate(data.created_at),
+      modified_at: this.$utils.formatISODate(data.modified_at),
     }
   }
 
@@ -1625,6 +1712,37 @@ export default class GraphViewer extends Vue {
       properties[key.property_name] = key.default_value
     })
     this.edgeProperties = properties
+  }
+
+  disableGraphEdit() {
+    this.edgeFlag = false
+  }
+
+  nodeUpdated(node: any) {
+    this.selectedNode.properties = node.properties
+    
+    this.loading = true
+    this.showNodeProperties(this.selectedNode)
+  }
+
+  async mounted() {
+    // create a map of datasource IDs and names for reference by nodes
+    const sources = await this.$client.listDataSources(this.containerID)
+
+    for (const datasource of sources) {
+      if (datasource.id != undefined) {
+        this.datasources[datasource.id] = datasource;
+      }
+    }
+
+    // create a map of users
+    const users = await this.$client.listUsers(this.containerID)
+
+    for (const user of users) {
+      if (user.id != undefined) {
+        this.users[user.id] = user;
+      }
+    }
   }
 
 }

@@ -138,7 +138,7 @@ export default class CreateNodeDialog extends Vue {
   newNode() {
     if (this.metatype.id !== undefined && this.metatype.id !== null){
       this.setProperties()
-      this.$client.createNode(this.containerID,
+      this.$client.createOrUpdateNode(this.containerID,
         {
           "container_id": this.containerID,
           "data_source_id": this.dataSourceID,

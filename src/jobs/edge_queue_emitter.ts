@@ -40,6 +40,12 @@ void postgresAdapter
             .then((queue) => {
                 const emitter = () => {
                     void postgresAdapter.Pool.connect((err, client, done) => {
+                        if (typeof err !== 'undefined') {
+                            Logger.error(JSON.stringify(err));
+                            done();
+                            return;
+                        }
+
                         const stream = client.query(new QueryStream(mapper.needRetriedStreamingStatement()));
                         const promises: Promise<boolean>[] = [];
                         const putPromises: Promise<boolean>[] = [];
