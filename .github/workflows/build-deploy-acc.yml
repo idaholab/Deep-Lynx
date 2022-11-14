@@ -132,7 +132,6 @@ jobs:
           ELM_IP: ${{ secrets.ELM_IP }}
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
         run: |
-          echo $JAZZ_HOST
           cd $GITHUB_WORKSPACE
           envsubst < kubernetes/acceptance.yml > kubernetes/acceptance_final.yml
       - uses: azure/setup-kubectl@v3
