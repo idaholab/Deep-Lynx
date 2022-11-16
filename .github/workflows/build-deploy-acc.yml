@@ -175,8 +175,8 @@ jobs:
           git fetch --unshallow origin
           git remote add github-pub ${{ secrets.PUBLIC_GITHUB_URL }} || git remote set-url github-pub ${{ secrets.PUBLIC_GITHUB_URL }}
           git branch -m master
-          git push public master --force
-          git push public --tags
+          git push github-pub master --force
+          git push github-pub --tags
           git branch -m main
   update-sdks:
     runs-on: [ self-hosted ]
