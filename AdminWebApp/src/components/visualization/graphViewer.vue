@@ -900,7 +900,12 @@ export default class GraphViewer extends Vue {
     }
     this.forceGraph = ForceGraph()
 
-    this.loadResults();
+    // ensure that components are loaded before creating the graph
+    // this is particularly an issue when no results are returned
+    this.$nextTick(() => {
+      this.loadResults();
+    });
+    
   }
 
   filterOnGroupItem(index: number | null) {
