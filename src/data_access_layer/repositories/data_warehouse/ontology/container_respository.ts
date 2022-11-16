@@ -247,8 +247,7 @@ export default class ContainerRepository implements RepositoryInterface<Containe
 
     // export ontology returns a File record with the information needed to download a .json file with the container's
     // exported ontology. Eventually we'll convert this into an OWL file, for now, we just do a File.
-    async exportOntology(containerID: string, user: User): Promise<Result<File>> {
-        let ontologyVersionID: string | undefined;
+    async exportOntology(containerID: string, user: User, ontologyVersionID?: string): Promise<Result<File>> {
         const repo = new OntologyVersionRepository();
 
         const result = await repo.where().containerID('eq', containerID).and().status('eq', 'published').list({sortDesc: true, sortBy: 'id', limit: 1});

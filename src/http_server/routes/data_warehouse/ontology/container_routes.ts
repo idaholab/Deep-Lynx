@@ -6,6 +6,7 @@ import {plainToClass} from 'class-transformer';
 import Container from '../../../../domain_objects/data_warehouse/ontology/container';
 import Result from '../../../../common_classes/result';
 import {FileInfo} from 'busboy';
+import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
 
 const Busboy = require('busboy');
 const Buffer = require('buffer').Buffer;
@@ -30,6 +31,8 @@ export default class ContainerRoutes {
         app.put('/containers/:containerID', ...middleware, authInContainer('write', 'containers'), this.updateContainer);
         app.delete('/containers/:containerID', ...middleware, authInContainer('write', 'containers'), this.archiveContainer);
         app.post('/containers/:containerID/active', ...middleware, authInContainer('read', 'containers'), this.setActive);
+
+        app.get('/containers/:containerID/ontology/export', ...middleware, authInContainer('read', 'ontology'), this.exportOntology);
 
         app.post('/containers/:containerID/permissions', ...middleware, authRequest('write', 'containers'), this.repairPermissions);
 
@@ -281,5 +284,39 @@ export default class ContainerRoutes {
                 set.asResponse(res);
             })
             .catch((err) => Result.Error(err).asResponse(res));
+    }
+
+    private static exportOntology(req: Request, res: Response, next: NextFunction) {
+        if (!req.container) {
+            Result.Failure(`must provide container to export ontology from`).asResponse(res);
+            next();
+            return;
+        }
+
+        repository
+            .exportOntology(req.container.id!, req.currentUser!, req.query.ontologyVersionID as string | undefined)
+            .then((file) => {
+                if (file.isError) {
+                    file.asResponse(res);
+                    return;
+                }
+
+                res.attachment(file.value.file_name);
+                new FileRepository()
+                    .downloadFile(file.value)
+                    .then((stream) => {
+                        if (!stream) {
+                            res.sendStatus(500);
+                            return;
+                        }
+
+                        stream.pipe(res);
+                    })
+                    .catch((err) => {
+                        Result.Error(err).asResponse(res);
+                    });
+            })
+            .catch((err) => Result.Error(err).asResponse(res))
+            .finally(() => next());
     }
 }
