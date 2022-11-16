@@ -14,6 +14,7 @@
           </v-btn>
         </div>
 
+        <!-- Help Menu -->
         <v-menu
             v-model="showHelp"
             :close-on-content-click="false"
@@ -30,7 +31,62 @@
             Hover over the blue "+" icon in the top left of the graph view to find graph edit tools!
             </v-card-text>
 
-            <v-list>
+            <v-list style="padding: 0">
+              <v-subheader>Graph Display</v-subheader>
+              <v-divider></v-divider>
+
+              <v-tooltip bottom nudge-top=135>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-list-item v-bind="attrs" v-on="on">
+
+                    <v-slider
+                      v-model="chargeStrength"
+                      thumb-label
+                      :max="maxChargeStrength"
+                      :min="minChargeStrength"
+                      label="Node Distance"
+                      step=1
+                    ></v-slider>
+                  
+                  </v-list-item>
+                </template>
+                <span>Higher values move the nodes closer together</span>
+              </v-tooltip>
+
+              <v-tooltip bottom nudge-top=135>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-list-item v-bind="attrs" v-on="on">
+                    <v-slider
+                        v-model="linkDistance"
+                        thumb-label
+                        :max="maxLinkDistance"
+                        :min="minLinkDistance"
+                        label="Link Distance"
+                        step=1
+                    ></v-slider>
+                  </v-list-item>
+                </template>
+                <span>Higher values move the edges farther apart</span>
+              </v-tooltip>
+
+              <v-list-item>
+                <v-list-item-action style="margin-top: 0px">
+                  <v-btn
+                      @click="applyGraphForce"
+                      :disabled="graph.nodes.length < 1"
+                      color="primary" 
+                      dark 
+                  >
+                    Update Graph
+                  </v-btn>
+                </v-list-item-action>
+              </v-list-item>
+
+            </v-list>
+
+            <v-list style="padding: 0">
+              <v-subheader>Zoom</v-subheader>
+              <v-divider></v-divider>
               <v-list-item>
                 <v-slider
                     v-model="minZoom"
@@ -51,43 +107,48 @@
                     step=1
                 ></v-slider>
               </v-list-item>
-              <v-list-item>
-                <v-list-item-action>
-                  <v-btn
-                      icon
-                      @click="updateGraphZoom"
-                      :disabled="graph.nodes.length < 1"
-                  >
-                    <v-icon>{{ 'mdi-autorenew' }}</v-icon>
-                  </v-btn>
-                </v-list-item-action>
-                <v-list-item-title>Update Zoom</v-list-item-title>
-              </v-list-item>
-              <v-list-item>
-                <v-list-item-action>
-                  <v-btn
-                      icon
-                      @click="resetGraphZoom"
-                      :disabled="graph.nodes.length < 1"
-                  >
-                    <v-icon>{{ 'mdi-autorenew' }}</v-icon>
-                  </v-btn>
-                </v-list-item-action>
-                <v-list-item-title>Reset Zoom</v-list-item-title>
-              </v-list-item>
+
+              <v-row>
+                <v-col cols="6">
+                  <v-list-item>
+                    <v-list-item-action style="margin-top: 0px">
+                      <v-btn
+                          @click="updateGraphZoom"
+                          :disabled="graph.nodes.length < 1"
+                          color="primary" 
+                          dark
+                      >
+                        Update Zoom
+                      </v-btn>
+                    </v-list-item-action>
+                  </v-list-item>
+                </v-col>
+                <v-col cols="6">
+                  <v-list-item>
+                    <v-list-item-action style="margin-top: 0px">
+                      <v-btn
+                          @click="resetGraphZoom"
+                          :disabled="graph.nodes.length < 1"
+                          color="primary" 
+                          dark
+                      >
+                        Reset Zoom
+                      </v-btn>
+                    </v-list-item-action>
+                  </v-list-item>
+                </v-col>
+              </v-row>
+
             </v-list>
 
-            <v-card-actions>
-              Graph Help
+              <v-subheader>Controls</v-subheader>
               <v-spacer></v-spacer>
 
-            </v-card-actions>
             <v-expand-transition>
               <div v-show="showHints">
                 <v-divider></v-divider>
 
                 <v-card-text>
-                  <b>Controls</b> <br>
                   - Pan : Left click drag on open area of graph <br>
                   - Zoom : Mousewheel scroll <br>
                   - Center on node: Double click node <br>
@@ -104,7 +165,7 @@
         </v-menu>
       </v-toolbar>
 
-      <error-banner :message="errorMessage"></error-banner>
+      <error-banner :message="errorMessage" style="z-index: 9; width: fit-content; margin-left: 480px; margin-top: 6px;"></error-banner>
       <!-- Graph edit tools -->
       <v-speed-dial
           v-model="editFab"
@@ -197,6 +258,42 @@
         </v-tooltip>
       </v-speed-dial>
 
+      <!-- Graph Search -->
+      <v-speed-dial
+          top
+          left
+          direction="right"
+          absolute
+          style="margin-top: 62px; margin-left: 100px"
+          transition="slide-x-transition"
+      >
+        <template v-slot:activator>
+          <v-btn
+            color="blue darken-2"
+            dark
+          >
+            <v-icon>
+              mdi-magnify
+            </v-icon>
+          </v-btn>
+        </template>
+
+        <v-text-field
+          style="width: max-content; margin-top: 35px"
+          background-color="white"
+          label="Search"
+          placeholder="Type and hit enter"
+          outlined
+          v-model="searchInput"
+          autofocus
+          clearable
+          append-icon="mdi-arrow-right-drop-circle"
+          @click:append="findNode(searchInput)"
+          v-on:keyup.enter="findNode(searchInput)"
+        ></v-text-field>
+
+      </v-speed-dial>
+
       <!-- Color Legend and Filter -->
       <v-navigation-drawer
           v-model="showColorLegend"
@@ -225,6 +322,17 @@
               class="d-flex justify-center"
               v-model="edgeLabelFlag"
               label="Toggle edge labels"
+              v-if="!mini"
+          ></v-switch>
+        </v-list-item>
+
+        <v-list-item>
+          <v-switch
+              hide-details
+              class="d-flex justify-center"
+              v-model="nodeLabelFlag"
+              label="Extend node labels"
+              v-if="!mini"
           ></v-switch>
         </v-list-item>
 
@@ -266,6 +374,35 @@
       
     </v-card>
     <!-- End Graph Component -->
+
+    <!-- New Graph dialog -->
+    <v-dialog
+        v-model="newGraphDialog"
+        width="30%"
+    >
+      <v-card v-if="newGraphNode !== null">
+
+        <v-card-title>
+        Selected Node: {{newGraphNode.id}} ({{newGraphNode.metatype_name}})
+        </v-card-title>
+
+        <v-text-field
+          class="px-6"
+          label="Depth"
+          v-model="newGraphDepth"
+          hint="Depth of graph to travel from selected node"
+          :rules="[rules.newGraphDepthRule]"
+          maxlength="2"
+        ></v-text-field>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="newGraphDialog = false" >{{$t("createNode.cancel")}}</v-btn>
+          <v-btn color="blue darken-1" text @click="openNodeGraph(newGraphNode, newGraphDepth)">Go</v-btn>
+        </v-card-actions>
+
+      </v-card>
+    </v-dialog>
 
     <!-- New Node dialog -->
     <v-dialog
@@ -625,9 +762,9 @@ import CreateNodeCard from "@/components/data/createNodeCard.vue";
 import CreateEdgeDialog from "@/components/data/createEdgeDialog.vue";
 import EditNodeDialog from "@/components/data/editNodeDialog.vue";
 import {Component, Prop, Watch, Vue} from "vue-property-decorator";
-import {NodeT, DataSourceT, MetatypeRelationshipPairT, MetatypeRelationshipKeyT} from "@/api/types";
+import {NodeT, DataSourceT, MetatypeRelationshipPairT, MetatypeRelationshipKeyT, UserT} from "@/api/types";
 import ForceGraph, {ForceGraphInstance} from 'force-graph';
-import {forceX, forceY} from 'd3-force';
+import {forceX, forceY, forceManyBody} from 'd3-force';
 
 import {mdiInformation} from "@mdi/js";
 import { EdgeT } from "../../api/types";
@@ -678,8 +815,8 @@ export default class GraphViewer extends Vue {
   selectedFilters: any = []
   errorMessage = ""
 
-  datasources: {[key: string]: DataSourceT} = {}
-  users: {[key: string]: DataSourceT} = {}
+  datasources: Map<string, DataSourceT> = new Map()
+  users: {[key: string]: UserT} = {}
 
   nodeDialog = false
   edgeDialog = false
@@ -708,15 +845,25 @@ export default class GraphViewer extends Vue {
   maxMaxZoom = 1000
   minMaxZoom = 10
 
+  minChargeStrength = -200
+  chargeStrength = -80
+  maxChargeStrength = 0
+
+  minLinkDistance = 20
+  linkDistance = 30
+  maxLinkDistance = 120
+
   editFab = false
   newNodeDialog = false
   newEdgeDialog = false
+
+  searchInput = ''
 
   edgeFlag = false // edge creation disabled by default
   dragSourceNode: any | null = null
   interimLink: any | null = null
   linkIdCounter = 0
-  snapInDistance = 25
+  snapInDistance = 35
   snapOutDistance = 40
 
   selectedDataSource: DataSourceT | null = null
@@ -730,7 +877,19 @@ export default class GraphViewer extends Vue {
   booleanOptions = [true, false]
   edgeProperties = {}
 
+  nodeLabelFlag = false
+
   blankGraphFlag = false
+
+  newGraphDialog = false
+  newGraphDepth = 1
+  newGraphNode: NodeT | null = null
+  rules = {
+    newGraphDepthRule: ((value: string) => {
+      const pattern = /^\d+$/
+      return pattern.test(value) || 'Invalid depth. Must be a number.'
+    }) 
+  }
 
   @Watch('results', {immediate: true})
   graphUpdate() {
@@ -761,14 +920,26 @@ export default class GraphViewer extends Vue {
 
     // create array of data source IDs or metatype names from the given index(es)
     this.colorGroupFilter.forEach((i: number) => {
-      // if the nodeColorsArray value is a string with multiple values separated by commas, separate out the values
-      const colorValues = this.nodeColorsArray[i].value.split(',')
+      // remove any parts of the string in brackets or parentheses
+      let colorList = this.nodeColorsArray[i].value.replace(/(\[\d+\])/g, "").trim()
+      colorList = colorList.replace(/( \(.+\))/g, "").trim()
+
+      // if the nodeColorsArray value is a string with multiple values separated by spaces, separate out the values
+      // there should be two spaces between metatype and data source names after the regex replacements
+      const colorValues = colorList.split('  ')
 
       colorValues.forEach((value: string) => {
         if (this.colorGroup === 'data source') {
-          const match = value.trim().match(/\((\d*)\)/) ?? []
-          filterList.push(match[1]) // retrieves the string data source id from the value property, finding the matched digit within parentheses
-          // leave as a string for matching against node.data_source_id
+          // retrieve corresponding data source id      
+          let datasourceID = ''
+          
+          this.datasources.forEach((datasource: DataSourceT, key: string) => {
+            if (datasource.name === value) {
+              datasourceID = key
+            }
+          });
+
+          filterList.push(datasourceID) // leave as a string for matching against node.data_source_id
         } else {
           // default to behavior for metatype filtering
           filterList.push(value.trim())
@@ -965,9 +1136,10 @@ export default class GraphViewer extends Vue {
           .onNodeRightClick(node => {
             // double clicks can be difficult to do dragging a node and custom timing to determine single or double click
             // right clicks will open up a new graph around the selected node, while double clicks will center and zoom
-            this.openNodeGraph(node)
+            this.openNodeGraphDialog(node)
           }) // open node properties on right click
           .nodeCanvasObject((node: any, ctx, globalScale) => {
+            const MAX_FONT_SIZE = 24/globalScale; // ranges from 1 zoomed in to ~30 zoomed out
 
             // don't draw the full node if it is marked as collapsed
             if (!node.collapsed) {
@@ -986,22 +1158,28 @@ export default class GraphViewer extends Vue {
               }
 
               // then apply normal colors and labels (must happen after highlight styles have been created)
+              const radius = 10
 
               ctx.beginPath()
-              ctx.arc(node.x, node.y, 10, 0, 2 * Math.PI)
+              ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI)
               ctx.fillStyle = node.color;
               ctx.fill()
 
               const nodeName = node.properties.name ? node.properties.name : node.id;
               const label = `${nodeName}` as string;
-              const fontSize = Math.min(24/globalScale, NODE_R * 1.4);
+              node.label = label // used for search
+
+              const fontSize = Math.min(MAX_FONT_SIZE, 10); // set a max font size with a constant value
 
               ctx.font = `${fontSize}px Sans-Serif`;
 
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               ctx.fillStyle = '#101020';
-              ctx.fillText(label, node.x!, node.y!);
+
+              let maxWidth: number | undefined = radius * 2 - 2
+              if (this.nodeLabelFlag) maxWidth = undefined
+              ctx.fillText(label, node.x!, node.y!, maxWidth); // keep text inside the bounds of the node circle
             }
 
           }) // add text over nodes
@@ -1149,6 +1327,10 @@ export default class GraphViewer extends Vue {
             // add edge sensing logic if enabled
             if (this.edgeFlag) {
               this.dragSourceNode = dragNode;
+
+              // freeze all other graph elements
+              this.canvas?.cooldownTime(0)
+
               for (const node of this.graph.nodes) {
                 if (dragNode === node) {
                   continue;
@@ -1192,6 +1374,9 @@ export default class GraphViewer extends Vue {
 
               this.newEdgeDialog = true
             }
+
+            // reset cooldown time to unfreeze the graph
+            this.canvas?.cooldownTime(15000) // 15000 default
           })
           .nodeRelSize(NODE_R)
           .onLinkClick((link: any) => {
@@ -1212,7 +1397,7 @@ export default class GraphViewer extends Vue {
             }
           })
           .linkWidth(link => highlightLinks.has(link) ? 5 : 1) // bold highlighted links
-          .linkDirectionalParticles(3) // number of particles to display on highlighted links
+          .linkDirectionalParticles(2) // number of particles to display on highlighted links
           .linkDirectionalParticleWidth(link => highlightLinks.has(link) ? 6 : 0) // show particles only when link is highlighted
           .linkDirectionalParticleColor(() => 'cyan') // set link particle color
           .linkDirectionalParticleSpeed(.015) // set link particle speed
@@ -1224,13 +1409,7 @@ export default class GraphViewer extends Vue {
         this.loading = false
       }
       
-      this.canvas.graphData(this.graph) // this call is necessary to force the canvas to reheat
-
-      this.canvas.d3Force('charge') // applies some distance between nodes
-      this.canvas.d3Force('link') // apply link force for spacing
-      this.canvas.d3Force('x', this.forceX) // apply forces to keep nodes centered
-      this.canvas.d3Force('y', this.forceY)
-
+      this.applyGraphForce()
 
       this.canvas.cooldownTime(this.graphRenderTime) // set to a small render time
       this.canvas.onEngineStop(() => {
@@ -1245,7 +1424,24 @@ export default class GraphViewer extends Vue {
 
   }
 
-  async openNodeGraph(node: any) {
+  applyGraphForce() {
+    const manyBody = forceManyBody()
+    manyBody.strength(this.chargeStrength)
+
+    this.canvas!.graphData(this.graph) // this call is necessary to force the canvas to reheat
+
+    this.canvas!.d3Force('charge', manyBody) // applies some distance between nodes
+    this.canvas!.d3Force('link')!.distance(this.linkDistance) // apply link force for spacing
+    this.canvas!.d3Force('x', this.forceX) // apply forces to keep nodes centered
+    this.canvas!.d3Force('y', this.forceY)
+  }
+
+  openNodeGraphDialog(node: NodeT) {
+    this.newGraphNode = node
+    this.newGraphDialog = true
+  }
+
+  async openNodeGraph(node: NodeT, depth = 1) {
     this.loading = true
 
     this.colorGroupFilter = []
@@ -1257,7 +1453,7 @@ export default class GraphViewer extends Vue {
           `{
           graph(
               root_node: "${node.id}"
-              depth: "1"
+              depth: "${depth}"
           ){
               destination_id
               destination_metatype_id
@@ -1315,6 +1511,8 @@ export default class GraphViewer extends Vue {
       links: []
     }
 
+    this.newGraphDialog = false
+
     // load newly created graph
     this.loadResults(graphResults)
     // Reset Graph may be used to return to original results
@@ -1369,7 +1567,7 @@ export default class GraphViewer extends Vue {
     this.graph.nodes.forEach((node: NodeT) => {
       // check if color has already been set, and then append name if so
       let colorEntry = nodeColorsMap.get(node.color)
-      const dataSourceName = `${this.datasources[node.data_source_id]?.name} (#${node.data_source_id})`
+      const dataSourceName = `${this.datasources.get(node.data_source_id)?.name} (#${node.data_source_id})`
 
       if (colorEntry) {
 
@@ -1381,7 +1579,7 @@ export default class GraphViewer extends Vue {
 
         if (this.colorGroup === 'data source') {
           // if the data source name is not already part of colorEntry, add it
-          const match = names.search(`${this.datasources[node.data_source_id]?.name} \\(#${node.data_source_id}\\)`)
+          const match = names.search(`${this.datasources.get(node.data_source_id)?.name} \\(#${node.data_source_id}\\)`)
 
           if (match === -1) {
             // add the new name and count for this color
@@ -1437,7 +1635,7 @@ export default class GraphViewer extends Vue {
         ++colorNode.count
       } else {
         const colorNode = colorEntry.filter((x: any) => (x.name === node.metatype_name))[0]
-        colorNode.count += 1
+        ++colorNode.count
       }
 
     });
@@ -1725,13 +1923,53 @@ export default class GraphViewer extends Vue {
     this.showNodeProperties(this.selectedNode)
   }
 
+  findNode(label: string) {
+    // handle empty search
+    if (label === '') {
+      return
+    }
+    
+    // perform case-insensitive searches
+    label = label.toLowerCase()
+    this.loading = true
+
+    // first look for an exact match
+    const searchNode = this.graph.nodes.filter((node: NodeT) => node.label.toLowerCase() === label)
+
+    if (searchNode.length > 0) {
+      // center on the new node
+      setTimeout(() => {
+        this.centerGraphOnNode(searchNode[0])
+        this.loading = false
+      }, this.zoomToFitDuration)
+
+    } else {
+
+      // attempt to find the first instance of a match that contains the input
+      const partialMatch = this.graph.nodes.filter((node: NodeT) => node.label.toLowerCase().includes(label))
+
+      if (partialMatch.length > 0) {
+        // center on the new node
+        setTimeout(() => {
+          this.centerGraphOnNode(partialMatch[0])
+          this.loading = false
+        }, this.zoomToFitDuration)
+
+      } else {
+        this.loading = false
+        this.errorMessage = `Node containing label '${label}' not found`
+      }
+
+    }
+  }
+
   async mounted() {
     // create a map of datasource IDs and names for reference by nodes
     const sources = await this.$client.listDataSources(this.containerID)
 
     for (const datasource of sources) {
       if (datasource.id != undefined) {
-        this.datasources[datasource.id] = datasource;
+        this.datasources.set(datasource.id, datasource);
       }
     }
 

@@ -529,9 +529,10 @@ relationshipSampleQuery =
     this.results = {id, query: this.queryParts, nodes: []}
 
     this.$client.submitGraphQLQuery(this.containerID, this.buildQuery())
-        .then(results => {
+        .then((results: any) => {
           if(results.errors) {
-            this.errorMessage = (results.errors as string[]).join(' ')
+            this.errorMessage = results.errors[0].message ? 
+              results.errors.map(function(result: any) { return result.message }).join(", ") : (results.errors as string[]).join(' ')
             return
           }
 
