@@ -67,6 +67,12 @@ export default class MetatypeRelationshipMapper extends Mapper {
         });
     }
 
+    public async ListForExport(containerID: string, ontologyVersionID?: string): Promise<Result<MetatypeRelationship[]>> {
+        return super.rows(this.forExportStatement(containerID, ontologyVersionID), {
+            resultClass: this.resultClass,
+        });
+    }
+
     public async Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id));
     }
@@ -130,5 +136,23 @@ export default class MetatypeRelationshipMapper extends Mapper {
         const values = relationships.map((r) => [r.id, r.name, r.description, userID]);
 
         return format(text, values);
+    }
+
+    private forExportStatement(containerID: string, ontologyVersionID?: string): QueryConfig {
+        if (ontologyVersionID) {
+            return {
+                text: `SELECT m.name, m.description, m.id as old_id
+                    FROM metatype_relationships m 
+                    WHERE m.deleted_at IS NULL AND m.container_id = $1 AND m.ontology_version = $2`,
+                values: [containerID, ontologyVersionID],
+            };
+        } else {
+            return {
+                text: `SELECT m.name, m.description, m.id as old_id
+                    FROM metatype_relationships m 
+                    WHERE m.deleted_at IS NULL AND m.container_id = $1 AND m.ontology_version IS NULL`,
+                values: [containerID],
+            };
+        }
     }
 }

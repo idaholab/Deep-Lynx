@@ -66,6 +66,12 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
         });
     }
 
+    public async ListForExport(containerID: string, ontologyVersionID?: string): Promise<Result<MetatypeRelationshipPair[]>> {
+        return super.rows(this.forExportStatement(containerID, ontologyVersionID), {
+            resultClass: this.resultClass,
+        });
+    }
+
     public async Archive(pairID: string, userID: string): Promise<Result<boolean>> {
         return super.runStatement(this.archiveStatement(pairID, userID));
     }
@@ -172,5 +178,37 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
             text: `SELECT * FROM metatype_relationship_pairs WHERE id = $1`,
             values: [pairID],
         };
+    }
+
+    private forExportStatement(containerID: string, ontologyVersionID?: string): QueryConfig {
+        if (ontologyVersionID) {
+            return {
+                text: `SELECT m.container_id, 
+                          m.name, 
+                          m.description, 
+                          m.id as old_id, 
+                          m.destination_metatype_id, 
+                          m.origin_metatype_id, 
+                          m.relationship_id, 
+                          m.relationship_type
+                    FROM metatype_relationship_pairs m 
+                    WHERE m.deleted_at IS NULL AND m.container_id = $1 AND m.ontology_version = $2`,
+                values: [containerID, ontologyVersionID],
+            };
+        } else {
+            return {
+                text: `SELECT m.container_id, 
+                          m.name, 
+                          m.description, 
+                          m.id as old_id, 
+                          m.destination_metatype_id, 
+                          m.origin_metatype_id, 
+                          m.relationship_id, 
+                          m.relationship_type
+                    FROM metatype_relationship_pairs m 
+                    WHERE m.deleted_at IS NULL AND m.container_id = $1 AND m.ontology_version IS NULL`,
+                values: [containerID],
+            };
+        }
     }
 }

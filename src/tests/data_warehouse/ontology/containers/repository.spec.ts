@@ -6,6 +6,8 @@ import Container from '../../../../domain_objects/data_warehouse/ontology/contai
 import UserMapper from '../../../../data_access_layer/mappers/access_management/user_mapper';
 import ContainerRepository from '../../../../data_access_layer/repositories/data_warehouse/ontology/container_respository';
 import {User} from '../../../../domain_objects/access_management/user';
+import fs from 'fs';
+import FileRepository from '../../../../data_access_layer/repositories/data_warehouse/data/file_repository';
 
 describe('A Container Repository', async () => {
     let user: User;
@@ -57,7 +59,8 @@ describe('A Container Repository', async () => {
     after(async () => {
         await UserMapper.Instance.Delete(user.id!);
         await UserMapper.Instance.Delete(user2.id!);
-        return PostgresAdapter.Instance.close();
+        void PostgresAdapter.Instance.close();
+        return Promise.resolve();
     });
 
     it('can be saved', async () => {
@@ -201,4 +204,30 @@ describe('A Container Repository', async () => {
 
         return repository.delete(container);
     });
+
+    it('can export a container', async () => {
+        const repository = new ContainerRepository();
+        const container = new Container({
+            name: faker.name.findName(),
+            description: faker.random.alphaNumeric(),
+        });
+
+        const results = await repository.save(container, user);
+        expect(results.isError).false;
+        expect(container.id).not.undefined;
+
+        const file = await repository.exportOntology(container.id!, user);
+        expect(file.isError).false;
+
+        // now lets check the download
+        let writer = fs.createWriteStream(`${container.id}_export.json`);
+
+        let downloadStream = await new FileRepository().downloadFile(file.value);
+        expect(downloadStream).not.undefined;
+
+        downloadStream?.pipe(writer);
+
+        fs.unlinkSync(`${container.id}_export.json`);
+        return repository.delete(container);
+    }).timeout(2000);
 });

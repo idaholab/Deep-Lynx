@@ -71,6 +71,12 @@ export default class MetatypeMapper extends Mapper {
         });
     }
 
+    public async ListForExport(containerID: string, ontologyVersionID?: string): Promise<Result<Metatype[]>> {
+        return super.rows(this.forExportStatement(containerID, ontologyVersionID), {
+            resultClass: this.resultClass,
+        });
+    }
+
     public async InUse(id: string): Promise<Result<boolean>> {
         const results = await super.rows<any>(this.inUseStatement(id));
         if (results.isError) return Promise.resolve(Result.Pass(results));
@@ -160,5 +166,23 @@ export default class MetatypeMapper extends Mapper {
                     SELECT t.id FROM data_type_mapping_transformations WHERE t.metatype_id = $1 ) LIMIT 1`,
             values: [id],
         };
+    }
+
+    private forExportStatement(containerID: string, ontologyVersionID?: string): QueryConfig {
+        if (ontologyVersionID) {
+            return {
+                text: `SELECT m.name, m.description, m.id as old_id
+                    FROM metatypes m 
+                    WHERE m.deleted_at IS NULL AND m.container_id = $1 AND m.ontology_version = $2`,
+                values: [containerID, ontologyVersionID],
+            };
+        } else {
+            return {
+                text: `SELECT m.name, m.description, m.id as old_id
+                    FROM metatypes m 
+                    WHERE m.deleted_at IS NULL AND m.container_id = $1 AND m.ontology_version IS NULL`,
+                values: [containerID],
+            };
+        }
     }
 }

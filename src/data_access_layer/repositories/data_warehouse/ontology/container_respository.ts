@@ -9,7 +9,15 @@ import {plainToClass, serialize} from 'class-transformer';
 import Config from '../../../../services/config';
 import {User} from '../../../../domain_objects/access_management/user';
 import ContainerAlertMapper from '../../../mappers/data_warehouse/ontology/container_alert_mapper';
-import GraphQLRunner from '../../../../graphql/schema';
+import MetatypeMapper from '../../../mappers/data_warehouse/ontology/metatype_mapper';
+import OntologyVersionRepository from './versioning/ontology_version_repository';
+import MetatypeKeyMapper from '../../../mappers/data_warehouse/ontology/metatype_key_mapper';
+import MetatypeRelationshipMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_mapper';
+import MetatypeRelationshipKeyMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_key_mapper';
+import MetatypeRelationshipPairMapper from '../../../mappers/data_warehouse/ontology/metatype_relationship_pair_mapper';
+import fs from 'fs';
+import FileRepository from '../data/file_repository';
+import File from '../../../../domain_objects/data_warehouse/data/file';
 
 /*
     ContainerRepository contains methods for persisting and retrieving a container
@@ -235,6 +243,64 @@ export default class ContainerRepository implements RepositoryInterface<Containe
 
     async activeAlertsForContainer(containerID: string): Promise<Result<ContainerAlert[]>> {
         return this.#alertMapper.ListUnacknowledgedForContainer(containerID);
+    }
+
+    // export ontology returns a File record with the information needed to download a .json file with the container's
+    // exported ontology. Eventually we'll convert this into an OWL file, for now, we just do a File.
+    async exportOntology(containerID: string, user: User): Promise<Result<File>> {
+        let ontologyVersionID: string | undefined;
+        const repo = new OntologyVersionRepository();
+
+        const result = await repo.where().containerID('eq', containerID).and().status('eq', 'published').list({sortDesc: true, sortBy: 'id', limit: 1});
+
+        if (!result.isError || result.value.length > 0) {
+            ontologyVersionID = result.value[0].id;
+        }
+
+        const metatypes = await MetatypeMapper.Instance.ListForExport(containerID, ontologyVersionID);
+        if (metatypes.isError) return Promise.resolve(Result.Pass(metatypes));
+
+        const metatype_keys = await MetatypeKeyMapper.Instance.ListForExport(containerID, ontologyVersionID);
+        if (metatype_keys.isError) return Promise.resolve(Result.Pass(metatype_keys));
+
+        const relationships = await MetatypeRelationshipMapper.Instance.ListForExport(containerID, ontologyVersionID);
+        if (relationships.isError) return Promise.resolve(Result.Pass(relationships));
+
+        const relationship_keys = await MetatypeRelationshipKeyMapper.Instance.ListForExport(containerID, ontologyVersionID);
+        if (relationship_keys.isError) return Promise.resolve(Result.Pass(relationship_keys));
+
+        const relationship_pairs = await MetatypeRelationshipPairMapper.Instance.ListForExport(containerID, ontologyVersionID);
+        if (relationship_pairs.isError) return Promise.resolve(Result.Pass(relationship_pairs));
+
+        const ontologyExport: {[key: string]: any} = {
+            version: 1, // hardcoded for a reason!
+            metatypes: metatypes.value,
+            metatype_keys: metatype_keys.value,
+            relationships: relationships.value,
+            relationship_keys: relationship_keys.value,
+            relationship_pairs: relationship_pairs.value,
+        };
+
+        try {
+            fs.appendFileSync(`container_export_${containerID}.json`, JSON.stringify(ontologyExport));
+
+            // this naming scheme should be enough to avoid clashes
+            const readStream = fs.createReadStream(`container_export_${containerID}.json`);
+            const fileRepo = new FileRepository();
+
+            const file = await fileRepo.uploadFile(containerID, user, `container_export_${containerID}`, 'utf8', 'application/json', readStream);
+            if (file.isError) return Promise.resolve(Result.Pass(file));
+
+            const saved = await fileRepo.save(file.value, user);
+            if (saved.isError) return Promise.resolve(Result.Pass(saved));
+
+            // don't forget to remove the temporary file
+            fs.unlinkSync(`container_export_${containerID}.json`);
+
+            return Promise.resolve(Result.Success(file.value));
+        } catch (e: any) {
+            return Promise.resolve(Result.Error(e));
+        }
     }
 
     private async getCached(id: string): Promise<Container | undefined> {

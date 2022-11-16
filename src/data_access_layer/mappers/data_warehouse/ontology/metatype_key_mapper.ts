@@ -78,6 +78,12 @@ export default class MetatypeKeyMapper extends Mapper {
         });
     }
 
+    public async ListForExport(containerID: string, ontologyVersionID?: string): Promise<Result<MetatypeKey[]>> {
+        return super.rows(this.forExportStatement(containerID, ontologyVersionID), {
+            resultClass: this.resultClass,
+        });
+    }
+
     public async Delete(id: string): Promise<Result<boolean>> {
         return super.runStatement(this.deleteStatement(id));
     }
@@ -241,5 +247,23 @@ export default class MetatypeKeyMapper extends Mapper {
         ]);
 
         return format(text, values);
+    }
+
+    private forExportStatement(containerID: string, ontologyVersionID?: string): QueryConfig {
+        if (ontologyVersionID) {
+            return {
+                text: `SELECT  m.metatype_id, m.property_name, m.data_type, m.required, m.validation, m.options, m.default_value, m.name, m.description, m.id as old_id
+                    FROM metatype_keys m 
+                    WHERE m.deleted_at IS NULL AND m.container_id = $1 AND m.ontology_version = $2`,
+                values: [containerID, ontologyVersionID],
+            };
+        } else {
+            return {
+                text: `SELECT  m.metatype_id, m.property_name, m.data_type, m.required, m.validation, m.options, m.default_value, m.name, m.description, m.id as old_id
+                    FROM metatype_keys m 
+                    WHERE m.deleted_at IS NULL AND m.container_id = $1 AND m.ontology_version IS NULL`,
+                values: [containerID],
+            };
+        }
     }
 }
