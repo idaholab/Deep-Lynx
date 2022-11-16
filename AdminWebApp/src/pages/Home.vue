@@ -228,6 +228,20 @@
           <v-list-item
             two-line
             link
+            v-if="$auth.Auth('ontology', 'read', containerID)"
+            @click="setActiveComponent('container-export')"
+            :input-value="currentMainComponent === 'ContainerExport'"
+            :ripple="{class:'list-ripple'}"
+          >
+            <v-list-item-content>
+              <v-list-item-title>{{$t("home.containerExport")}}</v-list-item-title>
+              <v-list-item-subtitle>{{$t("home.containerExportDescription")}}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+
+          <v-list-item
+            two-line
+            link
             v-if="$auth.Auth('users', 'write', containerID)"
             @click="setActiveComponent('settings')"
             :input-value="currentMainComponent === 'Settings'"
@@ -511,6 +525,7 @@ import Config from "@/config";
 import OntologyVersioning from "@/views/OntologyVersioning.vue";
 import ContainerAlertBanner from "@/components/ontology/containers/containerAlertBanner.vue";
 import ServiceUsers from "@/views/ServiceUsers.vue";
+import ContainerExport from "@/views/ContainerExport.vue";
 
 @Component({components: {
     ContainerSelect,
@@ -534,7 +549,8 @@ import ServiceUsers from "@/views/ServiceUsers.vue";
     Containers,
     OntologyVersioning,
     ContainerAlertBanner,
-    ServiceUsers
+    ServiceUsers,
+    ContainerExport
   }})
 export default class Home extends Vue {
   @Prop(String) readonly containerID: string | undefined
@@ -752,6 +768,13 @@ export default class Home extends Vue {
         this.currentMainComponent = "ServiceUsers"
         this.componentName = this.$t('home.serviceUsers')
         this.$router.replace(`/containers/${this.containerID}/service-users`)
+        break;
+      }
+
+      case "container-export": {
+        this.currentMainComponent = "ContainerExport"
+        this.componentName = this.$t('home.containerExport')
+        this.$router.replace(`/containers/${this.containerID}/container-export`)
         break;
       }
 
