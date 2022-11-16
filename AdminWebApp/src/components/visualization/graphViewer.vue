@@ -301,7 +301,7 @@
           right
           permanent
           :mini-variant.sync="mini"
-          style="margin-top: 64px; width: fit-content"
+          style="margin-top: 64px; width: fit-content; height: 90%"
       >
         <v-list-item class="px-2">
 
