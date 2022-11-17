@@ -292,6 +292,7 @@ export default class EditNodeDialog extends Vue {
     // reset node and properties
     this.selectedNode = null
     this.nodeProperties = []
+    this.errorMessage = ""
     this.dialog = false
   }
 

@@ -192,7 +192,7 @@ jobs:
           java-version: '8'
       - run: |
           sudo mkdir /opt/swagger && cd /opt/swagger
-          wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.35/swagger-codegen-cli-3.0.35.jar -O swagger-codegen-cli.jar
+          sudo wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.35/swagger-codegen-cli-3.0.35.jar -O swagger-codegen-cli.jar
           git clone ${{ secrets.DL_JS_SDK }}
           git clone ${{ secrets.DL_PY_SDK }}
           git clone ${{ secrets.DL_CSHARP_SDK }}

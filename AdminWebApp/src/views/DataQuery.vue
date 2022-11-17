@@ -14,7 +14,7 @@
         <v-col
             cols="12"
         >
-          <v-container flat class="pa-0" v-show="showGraph">
+          <v-container flat class="pa-0" style="max-width: 100%" v-show="showGraph">
             <v-tabs
                 v-if="results"
                 v-model="tab"
