@@ -99,7 +99,19 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
                                                         relationship_type,
                                                         container_id,
                                                         created_by, modified_by)
-                    VALUES %L RETURNING *`;
+                        VALUES %L 
+                    ON CONFLICT(relationship_id,origin_metatype_id,destination_metatype_id) DO UPDATE SET
+                        created_by = EXCLUDED.created_by,
+                        modified_by = EXCLUDED.created_by,
+                        created_at = NOW(),
+                        modified_at = NOW(),
+                        deleted_at = NULL,
+                        name = EXCLUDED.name,
+                        description = EXCLUDED.description
+                    WHERE EXCLUDED.relationship_id = metatype_relationship_pairs.relationship_id
+                    AND EXCLUDED.origin_metatype_id = metatype_relationship_pairs.origin_metatype_id
+                    AND EXCLUDED.destination_metatype_id = metatype_relationship_pairs.destination_metatype_id
+                        RETURNING *`;
 
         const values = pairs.map((pair) => [
             pair.name,

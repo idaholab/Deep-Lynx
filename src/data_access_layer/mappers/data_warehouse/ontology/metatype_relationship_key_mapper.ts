@@ -116,7 +116,26 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
                                                    validation,
                                                    created_by,
                                                    modified_by)
-                        VALUES %L RETURNING *`;
+                        VALUES %L 
+                            ON CONFLICT(metatype_relationship_id, property_name) DO UPDATE SET
+                                created_by = EXCLUDED.created_by,
+                                modified_by = EXCLUDED.created_by,
+                                created_at = NOW(),
+                                modified_at = NOW(),
+                                deleted_at = NULL,
+                                name = EXCLUDED.name,
+                                metatype_relationship_id = EXCLUDED.metatype_relationship_id::bigint,
+                                container_id = EXCLUDED.container_id::bigint,
+                                description = EXCLUDED.description,
+                                property_name = EXCLUDED.property_name,
+                                required = EXCLUDED.required::boolean,
+                                data_type = EXCLUDED.data_type,
+                                options = EXCLUDED.options::jsonb,
+                                default_value = EXCLUDED.default_value::jsonb,
+                                validation = EXCLUDED.validation::jsonb
+                            WHERE EXCLUDED.metatype_relationship_id = metatype_relationship_keys.metatype_relationship_id
+                                AND EXCLUDED.property_name = metatype_relationship_keys.property_name
+                            RETURNING *`;
         const values = keys.map((key) => [
             key.metatype_relationship_id,
             key.container_id,

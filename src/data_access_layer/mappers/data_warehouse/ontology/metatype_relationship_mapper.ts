@@ -90,7 +90,23 @@ export default class MetatypeRelationshipMapper extends Mapper {
     // My hope is that this method will allow us to be flexible and create more complicated
     // queries more easily.
     private createStatement(userID: string, ...relationships: MetatypeRelationship[]): string {
-        const text = `INSERT INTO metatype_relationships(container_id,name,description,created_by,modified_by) VALUES %L RETURNING *`;
+        const text = `INSERT INTO metatype_relationships(
+                                   container_id,
+                                   name,
+                                   description,
+                                   created_by,
+                                   modified_by) VALUES %L
+                      ON CONFLICT (container_id, name, ontology_version) DO UPDATE SET
+                        name = EXCLUDED.name,
+                        created_by = EXCLUDED.created_by,
+                        modified_by = EXCLUDED.created_by,
+                        created_at = NOW(),
+                        modified_at = NOW(),
+                        deleted_at = NULL
+                            WHERE EXCLUDED.name = metatype_relationships.name
+                                AND EXCLUDED.container_id = metatype_relationships.container_id
+                                AND EXCLUDED.ontology_version = metatype_relationships.ontology_version 
+                                   RETURNING *`;
         const values = relationships.map((r) => [r.container_id, r.name, r.description, userID, userID]);
 
         return format(text, values);

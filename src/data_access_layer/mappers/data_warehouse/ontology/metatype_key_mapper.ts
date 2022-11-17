@@ -98,6 +98,10 @@ export default class MetatypeKeyMapper extends Mapper {
         return super.runStatement(this.archiveStatement(id, userID));
     }
 
+    public async ArchiveForImport(ontologyVersionID: string): Promise<Result<boolean>> {
+        return super.runStatement(this.archiveForImportStatement(ontologyVersionID));
+    }
+
     public async Unarchive(id: string, userID: string): Promise<Result<boolean>> {
         return super.runStatement(this.unarchiveStatement(id, userID));
     }
@@ -121,7 +125,26 @@ export default class MetatypeKeyMapper extends Mapper {
                                       validation,
                                       created_by,
                                       modified_by)
-                        VALUES %L RETURNING *`;
+                        VALUES %L 
+                            ON CONFLICT(metatype_id, property_name) DO UPDATE SET
+                                created_by = EXCLUDED.created_by,
+                                modified_by = EXCLUDED.created_by,
+                                created_at = NOW(),
+                                modified_at = NOW(),
+                                deleted_at = NULL,
+                                name = EXCLUDED.name,
+                                metatype_id = EXCLUDED.metatype_id::bigint,
+                                container_id = EXCLUDED.container_id::bigint,
+                                description = EXCLUDED.description,
+                                property_name = EXCLUDED.property_name,
+                                required = EXCLUDED.required::boolean,
+                                data_type = EXCLUDED.data_type,
+                                options = EXCLUDED.options::jsonb,
+                                default_value = EXCLUDED.default_value::jsonb,
+                                validation = EXCLUDED.validation::jsonb
+                            WHERE EXCLUDED.metatype_id = metatype_keys.metatype_id
+                                AND EXCLUDED.property_name = metatype_keys.property_name
+                            RETURNING *`;
         const values = keys.map((key) => [
             key.metatype_id,
             key.container_id,
@@ -158,6 +181,13 @@ export default class MetatypeKeyMapper extends Mapper {
         return {
             text: `UPDATE metatype_keys SET deleted_at = NOW(), modified_at = NOW(), modified_by = $2  WHERE id = $1`,
             values: [metatypeKeyID, userID],
+        };
+    }
+
+    private archiveForImportStatement(ontologyVersionID: string): QueryConfig {
+        return {
+            text: `UPDATE metatype_keys SET deleted_at = NOW() WHERE ontology_version = $1`,
+            values: [ontologyVersionID],
         };
     }
 
