@@ -316,7 +316,6 @@ export default class ContainerRoutes {
                         Result.Error(err).asResponse(res);
                     });
             })
-            .catch((err) => Result.Error(err).asResponse(res))
-            .finally(() => next());
+            .catch((err) => Result.Error(err).asResponse(res));
     }
 }

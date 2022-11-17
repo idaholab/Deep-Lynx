@@ -1,6 +1,7 @@
 export default {
     en: {
         beta: 'BETA',
+        comingSoon: 'coming soon',
         deprecatedParams: 'DEPRECATED, CONVERT TO PARAMETERS',
         ontology: {
             optionsHelp: 'This value represents the valid options if the enumeration data type is choosen. This is not required on any other data type.',
@@ -89,6 +90,18 @@ export default {
                 "Use this page to manage your Ontology's versioning and changelist system. You can browse your published versions, as well as manage pending and approved changelists for publishing.",
             serviceUsers: 'Application API Keys',
             serviceUsersDescription: 'External Application Access',
+            containerExport: 'Export Container',
+            containerExportDescription: 'Export Container to File',
+        },
+        containerExport: {
+            pageTitle: 'Export Container to File',
+            pageDescription:
+                "Use this page to export your container and it's various parts out to file. This file can then be uploaded into an existing or new DeepLynx container on another instance.",
+            exportOntology: 'Ontology',
+            exportOntologyHelp: 'Selects the entire ontology to be exported to your container file.',
+            exportDataSources: 'Data Sources',
+            exportTypeMappings: 'Type Mappings and Transformations',
+            export: 'Export to File',
         },
         containerAlert: {
             acknowledge: 'Acknowledge Alert',

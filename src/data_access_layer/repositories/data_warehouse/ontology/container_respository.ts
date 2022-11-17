@@ -250,10 +250,12 @@ export default class ContainerRepository implements RepositoryInterface<Containe
     async exportOntology(containerID: string, user: User, ontologyVersionID?: string): Promise<Result<File>> {
         const repo = new OntologyVersionRepository();
 
-        const result = await repo.where().containerID('eq', containerID).and().status('eq', 'published').list({sortDesc: true, sortBy: 'id', limit: 1});
+        if (!ontologyVersionID) {
+            const result = await repo.where().containerID('eq', containerID).and().status('eq', 'published').list({sortDesc: true, sortBy: 'id', limit: 1});
 
-        if (!result.isError || result.value.length > 0) {
-            ontologyVersionID = result.value[0].id;
+            if (!result.isError || result.value.length > 0) {
+                ontologyVersionID = result.value[0].id;
+            }
         }
 
         const metatypes = await MetatypeMapper.Instance.ListForExport(containerID, ontologyVersionID);
