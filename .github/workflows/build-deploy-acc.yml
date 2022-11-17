@@ -216,4 +216,4 @@ jobs:
           cd ../deeplynx-r-sdk
           git config --global user.email "${{ secrets.GH_ENTERPRISE_EMAIL }}" && git config --global user.name "${{ secrets.GH_ENTERPRISE_USERNAME }}"
           git add * && git commit -m $GITHUB_SHA || true
-          git push ${{ secrets.DL_R_SDK }} mai
+          git push ${{ secrets.DL_R_SDK }} main
