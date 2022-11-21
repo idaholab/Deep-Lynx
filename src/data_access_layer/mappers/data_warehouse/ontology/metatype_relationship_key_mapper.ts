@@ -1,6 +1,6 @@
 import Result from '../../../../common_classes/result';
 import Mapper from '../../mapper';
-import {PoolClient, QueryConfig} from 'pg';
+import {Pool, PoolClient, QueryConfig} from 'pg';
 import MetatypeRelationshipKey from '../../../../domain_objects/data_warehouse/ontology/metatype_relationship_key';
 
 const format = require('pg-format');
@@ -94,6 +94,10 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
         return super.runStatement(this.archiveStatement(id, userID));
     }
 
+    public async ArchiveForImport(ontologyVersionID: string, transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.archiveForImportStatement(ontologyVersionID), {transaction});
+    }
+
     public async Unarchive(id: string, userID: string): Promise<Result<boolean>> {
         return super.runStatement(this.unarchiveStatement(id, userID));
     }
@@ -154,6 +158,60 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
         return format(text, values);
     }
 
+    private createFromExportStatement(userID: string, ontologyVersionID: string, ...keys: MetatypeRelationshipKey[]): string {
+        const text = `INSERT INTO
+                        metatype_relationship_keys(metatype_relationship_id,
+                                                   container_id,
+                                                   name,
+                                                   description,
+                                                   property_name,
+                                                   required,
+                                                   data_type,
+                                                   options,
+                                                   default_value,
+                                                   validation,
+                                                   ontology_version,
+                                                   old_id,
+                                                   created_by,
+                                                   modified_by)
+                        VALUES %L 
+                            ON CONFLICT(metatype_relationship_id, property_name) DO UPDATE SET
+                                created_by = EXCLUDED.created_by,
+                                modified_by = EXCLUDED.created_by,
+                                created_at = NOW(),
+                                modified_at = NOW(),
+                                deleted_at = NULL,
+                                name = EXCLUDED.name,
+                                metatype_relationship_id = EXCLUDED.metatype_relationship_id::bigint,
+                                container_id = EXCLUDED.container_id::bigint,
+                                description = EXCLUDED.description,
+                                property_name = EXCLUDED.property_name,
+                                required = EXCLUDED.required::boolean,
+                                data_type = EXCLUDED.data_type,
+                                options = EXCLUDED.options::jsonb,
+                                default_value = EXCLUDED.default_value::jsonb,
+                                validation = EXCLUDED.validation::jsonb
+                            WHERE EXCLUDED.metatype_relationship_id = metatype_relationship_keys.metatype_relationship_id
+                                AND EXCLUDED.property_name = metatype_relationship_keys.property_name
+                            RETURNING *`;
+        const values = keys.map((key) => [
+            key.metatype_relationship_id,
+            key.container_id,
+            key.name,
+            key.description,
+            key.property_name,
+            key.required,
+            key.data_type,
+            JSON.stringify(key.options),
+            JSON.stringify(key.default_value),
+            JSON.stringify(key.validation),
+            userID,
+            userID,
+        ]);
+
+        return format(text, values);
+    }
+
     private retrieveStatement(metatypeKeyID: string): QueryConfig {
         return {
             text: `SELECT * FROM metatype_relationship_keys WHERE id = $1`,
@@ -172,6 +230,13 @@ export default class MetatypeRelationshipKeyMapper extends Mapper {
         return {
             text: `UPDATE metatype_relationship_keys SET deleted_at = NOW(), modified_at = NOW(), modified_by = $2  WHERE id = $1`,
             values: [metatypeKeyID, userID],
+        };
+    }
+
+    private archiveForImportStatement(ontologyVersionID: string): QueryConfig {
+        return {
+            text: `UPDATE metatype_relationship_keys SET deleted_at = NOW() WHERE ontology_version = $1`,
+            values: [ontologyVersionID],
         };
     }
 

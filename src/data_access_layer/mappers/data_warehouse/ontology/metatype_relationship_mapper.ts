@@ -46,6 +46,18 @@ export default class MetatypeRelationshipMapper extends Mapper {
         });
     }
 
+    public async BulkCreateFromExport(
+        userID: string,
+        ontologyVersionID: string,
+        m: MetatypeRelationship[],
+        transaction?: PoolClient,
+    ): Promise<Result<MetatypeRelationship[]>> {
+        return super.run(this.createFromExportStatement(userID, ontologyVersionID, ...m), {
+            transaction,
+            resultClass: this.resultClass,
+        });
+    }
+
     public async Retrieve(id: string): Promise<Result<MetatypeRelationship>> {
         return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
@@ -81,6 +93,10 @@ export default class MetatypeRelationshipMapper extends Mapper {
         return super.runStatement(this.archiveStatement(id, userID));
     }
 
+    public async ArchiveForImport(ontologyVersionID: string, transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.archiveForImportStatement(ontologyVersionID), {transaction});
+    }
+
     public async Unarchive(id: string, userID: string): Promise<Result<boolean>> {
         return super.runStatement(this.unarchiveStatement(id, userID));
     }
@@ -112,6 +128,32 @@ export default class MetatypeRelationshipMapper extends Mapper {
         return format(text, values);
     }
 
+    private createFromExportStatement(userID: string, ontologyVersionID: string, ...relationships: MetatypeRelationship[]): string {
+        const text = `INSERT INTO metatype_relationships(
+                                   container_id,
+                                   name,
+                                   description,
+                                   ontology_version,
+                                   old_id,
+                                   created_by,
+                                   modified_by) VALUES %L
+                      ON CONFLICT (container_id, name, ontology_version) DO UPDATE SET
+                        name = EXCLUDED.name,
+                        old_id = EXCLUDED.old_id,
+                        created_by = EXCLUDED.created_by,
+                        modified_by = EXCLUDED.created_by,
+                        created_at = NOW(),
+                        modified_at = NOW(),
+                        deleted_at = NULL
+                            WHERE EXCLUDED.name = metatype_relationships.name
+                                AND EXCLUDED.container_id = metatype_relationships.container_id
+                                AND EXCLUDED.ontology_version = metatype_relationships.ontology_version 
+                                   RETURNING *`;
+        const values = relationships.map((r) => [r.container_id, r.name, r.description, ontologyVersionID, r.old_id, userID, userID]);
+
+        return format(text, values);
+    }
+
     // must run statement against the view so that we get the parent id
     private retrieveStatement(relationshipID: string): QueryConfig {
         return {
@@ -124,6 +166,13 @@ export default class MetatypeRelationshipMapper extends Mapper {
         return {
             text: `UPDATE metatype_relationships SET deleted_at = NOW(), modified_at = NOW(), modified_by = $2  WHERE id = $1`,
             values: [relationshipID, userID],
+        };
+    }
+
+    private archiveForImportStatement(ontologyVersionID: string): QueryConfig {
+        return {
+            text: `UPDATE metatype_relationships SET deleted_at = NOW() WHERE ontology_version = $1`,
+            values: [ontologyVersionID],
         };
     }
 

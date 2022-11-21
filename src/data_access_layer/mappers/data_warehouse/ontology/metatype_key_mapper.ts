@@ -98,8 +98,8 @@ export default class MetatypeKeyMapper extends Mapper {
         return super.runStatement(this.archiveStatement(id, userID));
     }
 
-    public async ArchiveForImport(ontologyVersionID: string): Promise<Result<boolean>> {
-        return super.runStatement(this.archiveForImportStatement(ontologyVersionID));
+    public async ArchiveForImport(ontologyVersionID: string, transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.archiveForImportStatement(ontologyVersionID), {transaction});
     }
 
     public async Unarchive(id: string, userID: string): Promise<Result<boolean>> {

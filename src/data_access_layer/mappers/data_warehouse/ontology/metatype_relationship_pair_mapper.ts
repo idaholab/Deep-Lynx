@@ -45,6 +45,18 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
         });
     }
 
+    public async BulkCreateFromExport(
+        userID: string,
+        ontologyVersionID: string,
+        input: MetatypeRelationshipPair[],
+        transaction?: PoolClient,
+    ): Promise<Result<MetatypeRelationshipPair[]>> {
+        return super.run(this.createFromExportStatement(userID, ontologyVersionID, ...input), {
+            transaction,
+            resultClass: this.resultClass,
+        });
+    }
+
     public async Retrieve(id: string): Promise<Result<MetatypeRelationshipPair>> {
         return super.retrieve(this.retrieveStatement(id), {resultClass: this.resultClass});
     }
@@ -74,6 +86,10 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
 
     public async Archive(pairID: string, userID: string): Promise<Result<boolean>> {
         return super.runStatement(this.archiveStatement(pairID, userID));
+    }
+
+    public async ArchiveForImport(ontologyVersionID: string, transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.archiveForImportStatement(ontologyVersionID), {transaction});
     }
 
     public async Unarchive(pairID: string, userID: string): Promise<Result<boolean>> {
@@ -128,6 +144,51 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
         return format(text, values);
     }
 
+    private createFromExportStatement(userID: string, ontologyVersionID: string, ...pairs: MetatypeRelationshipPair[]): string {
+        const text = `INSERT INTO
+                            metatype_relationship_pairs(
+                                                        name,
+                                                        description,
+                                                        relationship_id,
+                                                        origin_metatype_id,
+                                                        destination_metatype_id,
+                                                        relationship_type,
+                                                        container_id,
+                                                        ontology_version,
+                                                        old_id,
+                                                        created_by, modified_by)
+                        VALUES %L 
+                    ON CONFLICT(relationship_id,origin_metatype_id,destination_metatype_id) DO UPDATE SET
+                        old_id = EXCLUDED.old_id,
+                        created_by = EXCLUDED.created_by,
+                        modified_by = EXCLUDED.created_by,
+                        created_at = NOW(),
+                        modified_at = NOW(),
+                        deleted_at = NULL,
+                        name = EXCLUDED.name,
+                        description = EXCLUDED.description
+                    WHERE EXCLUDED.relationship_id = metatype_relationship_pairs.relationship_id
+                    AND EXCLUDED.origin_metatype_id = metatype_relationship_pairs.origin_metatype_id
+                    AND EXCLUDED.destination_metatype_id = metatype_relationship_pairs.destination_metatype_id
+                        RETURNING *`;
+
+        const values = pairs.map((pair) => [
+            pair.name,
+            pair.description,
+            pair.relationship!.id,
+            pair.originMetatype!.id,
+            pair.destinationMetatype!.id,
+            pair.relationship_type,
+            pair.container_id,
+            ontologyVersionID,
+            pair.old_id,
+            userID,
+            userID,
+        ]);
+
+        return format(text, values);
+    }
+
     private fullUpdateStatement(userID: string, ...pairs: MetatypeRelationshipPair[]): string {
         const text = `UPDATE metatype_relationship_pairs AS p SET
                             name = u.name,
@@ -168,6 +229,13 @@ export default class MetatypeRelationshipPairMapper extends Mapper {
         return {
             text: `UPDATE metatype_relationship_pairs SET deleted_at = NOW(), modified_at = NOW(), modified_by = $2  WHERE id = $1`,
             values: [pairID, userID],
+        };
+    }
+
+    private archiveForImportStatement(ontologyVersionID: string): QueryConfig {
+        return {
+            text: `UPDATE metatype_relationship_pairs SET deleted_at = NOW() WHERE ontology_version = $1`,
+            values: [ontologyVersionID],
         };
     }
 

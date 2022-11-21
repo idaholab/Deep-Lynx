@@ -92,6 +92,10 @@ export default class MetatypeMapper extends Mapper {
         return super.runStatement(this.archiveStatement(id, userID));
     }
 
+    public async ArchiveForImport(ontologyVersionID: string, transaction?: PoolClient): Promise<Result<boolean>> {
+        return super.runStatement(this.archiveForImportStatement(ontologyVersionID), {transaction});
+    }
+
     public async Unarchive(id: string, userID: string): Promise<Result<boolean>> {
         return super.runStatement(this.unarchiveStatement(id, userID));
     }
@@ -145,6 +149,13 @@ export default class MetatypeMapper extends Mapper {
         return {
             text: `UPDATE metatypes SET deleted_at = NOW(), modified_at = NOW(), modified_by = $2  WHERE id = $1`,
             values: [metatypeID, userID],
+        };
+    }
+
+    private archiveForImportStatement(ontologyVersionID: string): QueryConfig {
+        return {
+            text: `UPDATE metatypes SET deleted_at = NOW() WHERE ontology_version = $1`,
+            values: [ontologyVersionID],
         };
     }
 
