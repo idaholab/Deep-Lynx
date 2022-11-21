@@ -257,6 +257,14 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             }
 
             origin = request.value;
+        } else if (e.origin_original_id && e.origin_data_source_id && e.origin_metatype_id) {
+            const request = await this.#nodeRepo.findByCompositeID(e.origin_original_id, e.origin_data_source_id, e.origin_metatype_id, transaction);
+            if (request.isError) {
+                return Promise.resolve(Result.Failure('origin node not found'));
+            }
+
+            origin = request.value;
+            e.origin_id = request.value.id!;
         } else if (e.origin_original_id && e.data_source_id && e.origin_metatype_id) {
             const request = await this.#nodeRepo.findByCompositeID(e.origin_original_id, e.data_source_id, e.origin_metatype_id, transaction);
             if (request.isError) {
@@ -277,6 +285,19 @@ export default class EdgeRepository extends Repository implements RepositoryInte
             }
 
             destination = request.value;
+        } else if (e.destination_original_id && e.destination_data_source_id && e.destination_metatype_id) {
+            const request = await this.#nodeRepo.findByCompositeID(
+                e.destination_original_id,
+                e.destination_data_source_id,
+                e.destination_metatype_id,
+                transaction,
+            );
+            if (request.isError) {
+                return Promise.resolve(Result.Failure('origin node not found'));
+            }
+
+            destination = request.value;
+            e.destination_id = request.value.id!;
         } else if (e.destination_original_id && e.data_source_id && e.destination_metatype_id) {
             const request = await this.#nodeRepo.findByCompositeID(e.destination_original_id, e.data_source_id, e.destination_metatype_id, transaction);
             if (request.isError) {
@@ -303,8 +324,15 @@ export default class EdgeRepository extends Repository implements RepositoryInte
     // filters
     async populateFromParameters(e: Edge): Promise<Result<Edge[]>> {
         const edges: Edge[] = [];
+
+        // if we already have id's or original id's set, then return a new instance of the edge
+        if ((e.origin_id && e.destination_id) || (e.origin_original_id && e.destination_original_id)) {
+            edges.push(plainToInstance(Edge, {...instanceToPlain(e)}));
+        }
+
+        // if we have no filters, simply return the array
         if (!e.origin_parameters || e.origin_parameters.length === 0 || !e.destination_parameters || e.destination_parameters.length === 0) {
-            return Promise.resolve(Result.Failure('edge to populate from must have both origin and destination filters'));
+            return Promise.resolve(Result.Success(edges));
         }
 
         const originNodes = await this.parametersRepoBuilder(e.container_id!, e.origin_parameters).list(false);
@@ -328,13 +356,6 @@ export default class EdgeRepository extends Repository implements RepositoryInte
 
     private parametersRepoBuilder(containerID: string, parameters: EdgeConnectionParameter[]): NodeRepository {
         let nodeRepo = new NodeRepository().where().containerID('eq', containerID);
-        const dataSourceIDs: string[] = [];
-        const metatypeIDs: string[] = [];
-        const metatypeUUIDs: string[] = [];
-        const metatypeNames: string[] = [];
-        const originalIDs: any[] = [];
-        const ids: string[] = [];
-        const properties: {property: string; value: any}[] = [];
 
         // **NOTE** for now we are just going to do equality on the operators, no matter what the filter might say
         // this is because the UI will default to equality for now and it helps cut down our calls to listing nodes
@@ -342,50 +363,40 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         parameters.forEach((p) => {
             switch (p.type) {
                 case 'data_source': {
-                    dataSourceIDs.push(p.value);
+                    nodeRepo = nodeRepo.and().dataSourceID(p.operator!, p.value);
                     break;
                 }
 
                 case 'metatype_id': {
-                    metatypeIDs.push(p.value);
+                    nodeRepo = nodeRepo.and().metatypeID(p.operator!, p.value);
                     break;
                 }
 
                 case 'metatype_uuid': {
-                    metatypeUUIDs.push(p.value);
+                    nodeRepo = nodeRepo.and().metatypeUUID(p.operator!, p.value);
                     break;
                 }
 
                 case 'metatype_name': {
-                    metatypeNames.push(p.value);
+                    nodeRepo = nodeRepo.and().metatypeName(p.operator!, p.value);
                     break;
                 }
 
                 case 'original_id': {
-                    originalIDs.push(p.value);
+                    nodeRepo = nodeRepo.and().originalDataID(p.operator!, p.value);
                     break;
                 }
 
                 case 'property': {
-                    properties.push({property: p.property!, value: p.value});
+                    nodeRepo = nodeRepo.and().property(p.property!, p.operator!, p.value);
                     break;
                 }
 
                 case 'id': {
-                    ids.push(p.value);
+                    nodeRepo = nodeRepo.and().id(p.operator!, p.value);
                     break;
                 }
             }
-        });
-
-        if (dataSourceIDs.length > 0) nodeRepo = nodeRepo.and().dataSourceID('in', dataSourceIDs);
-        if (metatypeIDs.length > 0) nodeRepo = nodeRepo.and().metatypeID('in', metatypeIDs);
-        if (metatypeUUIDs.length > 0) nodeRepo = nodeRepo.and().metatypeUUID('in', metatypeUUIDs);
-        if (metatypeNames.length > 0) nodeRepo = nodeRepo.and().metatypeName('in', metatypeNames);
-        if (originalIDs.length > 0) nodeRepo = nodeRepo.and().originalDataID('in', originalIDs);
-        if (ids.length > 0) nodeRepo = nodeRepo.and().id('in', ids);
-        properties.forEach((p) => {
-            nodeRepo = nodeRepo.and().property(p.property, 'eq', p.value);
         });
 
         return nodeRepo;

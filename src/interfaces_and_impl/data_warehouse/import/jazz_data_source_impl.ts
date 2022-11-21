@@ -312,6 +312,7 @@ export default class JazzDataSourceImpl extends StandardDataSourceImpl implement
                     importID: importID ? importID : undefined,
                     transaction: pollTransaction,
                     overrideJsonStream: true,
+                    bufferSize: Config.data_source_receive_buffer,
                 });
                 if (received.isError) {
                     Logger.error(`unable to process data received from http data source ${received.error?.error}`);

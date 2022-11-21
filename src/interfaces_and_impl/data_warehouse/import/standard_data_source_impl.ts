@@ -71,6 +71,9 @@ export default class StandardDataSourceImpl implements DataSource {
             }
 
             importID = newImport.value.id!;
+            if (options?.websocket) {
+                options.websocket.send(JSON.stringify(newImport.value));
+            }
         }
 
         // we used to lock this for receiving data, but it makes no sense as this is an additive process which does not
@@ -92,6 +95,7 @@ export default class StandardDataSourceImpl implements DataSource {
 
         // our PassThrough stream is what actually processes the data, it's the last step in our eventual pipe
         const pass = new PassThrough({objectMode: true});
+        const queue = await QueueFactory();
 
         // default to storing the raw data
         if (
@@ -101,6 +105,7 @@ export default class StandardDataSourceImpl implements DataSource {
             pass.on('data', (data) => {
                 recordBuffer.push(
                     new DataStaging({
+                        container_id: this.DataSourceRecord?.container_id,
                         data_source_id: this.DataSourceRecord!.id!,
                         import_id: retrievedImport.value.id!,
                         data,
@@ -113,32 +118,33 @@ export default class StandardDataSourceImpl implements DataSource {
 
                 // if we've reached the process record limit, insert into the database and wipe the records array
                 // make sure to COPY the array into bulkSave function so that we can push it into the array of promises
-                // and not modify the underlying array on save, allowing us to move asynchronously,
-                if (recordBuffer.length >= Config.data_source_receive_buffer) {
+                // and not modify the underlying array on save, allowing us to move asynchronously - if we have an open
+                // websocket we also want to save it immediately
+                if (!options || recordBuffer.length >= options.bufferSize) {
                     // if we are returning
                     // the staging records, don't wipe the buffer just keep adding
                     if (!options || !options.returnStagingRecords) {
                         const toSave = [...recordBuffer];
                         recordBuffer = [];
 
-                        saveOperations.push(this.#stagingRepo.bulkSave(toSave, options?.transaction));
+                        saveOperations.push(this.#stagingRepo.bulkSaveAndSend(toSave, options?.transaction));
                     }
                 }
             });
 
             // catch any records remaining in the buffer
             pass.on('end', () => {
-                saveOperations.push(this.#stagingRepo.bulkSave(recordBuffer, options?.transaction));
+                saveOperations.push(this.#stagingRepo.bulkSaveAndSend(recordBuffer, options?.transaction));
             });
         } else {
             // if data retention isn't configured, or it is 0 - we do not retain the data permanently
             // instead of our pipe saving data staging records to the database and having them emitted
             // later we immediately put the full message on the queue for processing - we also only log
             // errors that we encounter when putting on the queue, we don't fail outright
-            const queue = await QueueFactory();
 
             pass.on('data', (data) => {
                 const staging = new DataStaging({
+                    container_id: this.DataSourceRecord?.container_id,
                     data_source_id: this.DataSourceRecord!.id!,
                     import_id: retrievedImport.value.id!,
                     data,
@@ -159,22 +165,15 @@ export default class StandardDataSourceImpl implements DataSource {
         let errorMessage: any | undefined;
 
         // handle all transform streams, piping each in order
-        if (options && options.transformStreams && options.transformStreams.length > 0) {
-            let pipeline = payloadStream;
-
+        if (options && options.transformStream) {
             // for the pipe process to work correctly you must wait for the pipe to finish reading all data
             await new Promise((fulfill) => {
-                for (const pipe of options.transformStreams!) {
-                    pipeline = pipeline.pipe(pipe).on('error', (err: any) => {
-                        errorMessage = err;
-                        fulfill(err);
-                    });
-                }
-
-                pipeline
+                payloadStream
+                    .pipe(options.transformStream!)
                     .pipe(fromJSON)
                     .on('error', (err: any) => {
                         errorMessage = err;
+                        if (options.errorCallback) options.errorCallback(err);
                         fulfill(err);
                     })
                     .pipe(pass)
@@ -186,6 +185,7 @@ export default class StandardDataSourceImpl implements DataSource {
                     .pipe(pass)
                     .on('error', (err: any) => {
                         errorMessage = err;
+                        if (options.errorCallback) options.errorCallback(err);
                         fulfill(err);
                     })
                     .on('finish', fulfill),
@@ -196,6 +196,7 @@ export default class StandardDataSourceImpl implements DataSource {
                     .pipe(fromJSON)
                     .on('error', (err: any) => {
                         errorMessage = err;
+                        if (options?.errorCallback) options.errorCallback(err);
                         fulfill(err);
                     })
                     .pipe(pass)

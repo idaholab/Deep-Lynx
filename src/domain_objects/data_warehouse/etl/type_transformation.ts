@@ -61,6 +61,10 @@ export class Condition extends NakedDomainClass {
  */
 export class EdgeConnectionParameter {
     @IsString()
+    @IsOptional()
+    id?: string; // only needed for the UI to keep track of things
+
+    @IsString()
     @IsIn(['data_source', 'metatype_id', 'metatype_uuid', 'metatype_name', 'original_id', 'property', 'id'])
     type?: string;
 
@@ -287,7 +291,6 @@ export default class TypeTransformation extends BaseDomainClass {
     // or to fetch unrelated data. I'd love to make these readonly, but the class-transformer
     // package currently cannot set readonly properties on transform
     @IsOptional()
-    @IsString()
     container_id?: string;
 
     @IsOptional()
@@ -716,23 +719,27 @@ export default class TypeTransformation extends BaseDomainClass {
             // need to check undefined before we switch to strings
             const origin_original_id = TypeTransformation.getNestedValue(this.origin_id_key!, data.data, index);
             const destination_original_id = TypeTransformation.getNestedValue(this.destination_id_key!, data.data, index);
+            let origin_parameters: EdgeConnectionParameter[] = [];
+            let destination_parameters: EdgeConnectionParameter[] = [];
 
             // attempts to fill the value fields of the connection parameters with the payload value when
             // necessary
             if (this.origin_parameters) {
+                origin_parameters = JSON.parse(JSON.stringify(this.origin_parameters));
                 // eslint-disable-next-line @typescript-eslint/no-for-in-array
-                for (const i in this.origin_parameters) {
-                    if (this.origin_parameters[i].key) {
-                        this.origin_parameters[i].value = TypeTransformation.getNestedValue(this.origin_parameters[i].key!, data.data, index);
+                for (const i in origin_parameters) {
+                    if (origin_parameters[i].key) {
+                        origin_parameters[i].value = TypeTransformation.getNestedValue(origin_parameters[i].key!, data.data, index);
                     }
                 }
             }
 
             if (this.destination_parameters) {
+                destination_parameters = JSON.parse(JSON.stringify(this.destination_parameters));
                 // eslint-disable-next-line @typescript-eslint/no-for-in-array
-                for (const i in this.destination_parameters) {
-                    if (this.destination_parameters[i].key) {
-                        this.destination_parameters[i].value = TypeTransformation.getNestedValue(this.destination_parameters[i].key!, data.data, index);
+                for (const i in destination_parameters) {
+                    if (destination_parameters[i].key) {
+                        destination_parameters[i].value = TypeTransformation.getNestedValue(destination_parameters[i].key!, data.data, index);
                     }
                 }
             }
@@ -751,8 +758,8 @@ export default class TypeTransformation extends BaseDomainClass {
                 destination_original_id: destination_original_id ? `${destination_original_id}` : undefined,
                 destination_metatype_id: this.destination_metatype_id,
                 destination_data_source_id: this.destination_data_source_id,
-                origin_parameters: this.origin_parameters,
-                destination_parameters: this.destination_parameters,
+                origin_parameters,
+                destination_parameters,
                 metadata: new EdgeMetadata({
                     conversions,
                     failed_conversions: failedConversions,

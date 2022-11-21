@@ -8,6 +8,7 @@ import Import, {DataStaging} from '../../../domain_objects/data_warehouse/import
 const JSONStream = require('JSONStream');
 
 import pLimit from 'p-limit';
+import ImportMapper from '../../../data_access_layer/mappers/data_warehouse/import/import_mapper';
 
 const limit = pLimit(50);
 
@@ -35,6 +36,26 @@ export default class TimeseriesDataSourceImpl implements DataSource {
             );
         }
 
+        // we're not making the import as part of the transaction because even if we error, we want to record the
+        // problem - and if we have 0 data retention on the source we need the import created prior to loading up
+        // the data as messages for the process queue
+        const newImport = await ImportMapper.Instance.CreateImport(
+            user.id!,
+            new Import({
+                data_source_id: this.DataSourceRecord.id,
+                reference: 'manual upload',
+            }),
+        );
+
+        if (newImport.isError) {
+            if (options?.transaction) await this.#mapper.rollbackTransaction(options?.transaction);
+            return Promise.resolve(Result.Failure(`unable to create import for data ${newImport.error?.error}`));
+        }
+
+        if (options?.websocket) {
+            options.websocket.send(JSON.stringify(newImport.value));
+        }
+
         // a buffer, once it's full we'll write these records to the database and wipe to start again
         let recordBuffer: any[] = [];
 
@@ -50,7 +71,7 @@ export default class TimeseriesDataSourceImpl implements DataSource {
             // if we've reached the process record limit, insert into the database and wipe the records array
             // make sure to COPY the array into bulkSave function so that we can push it into the array of promises
             // and not modify the underlying array on save, allowing us to move asynchronously,
-            if (recordBuffer.length >= 1000) {
+            if (!options || recordBuffer.length >= options.bufferSize) {
                 const toSave = [...recordBuffer];
                 recordBuffer = [];
 
@@ -68,22 +89,15 @@ export default class TimeseriesDataSourceImpl implements DataSource {
         let errorMessage: any | undefined;
 
         // handle all transform streams, piping each in order
-        if (options && options.transformStreams && options.transformStreams.length > 0) {
-            let pipeline = payloadStream;
-
+        if (options && options.transformStream) {
             // for the pipe process to work correctly you must wait for the pipe to finish reading all data
             await new Promise((fulfill) => {
-                for (const pipe of options.transformStreams!) {
-                    pipeline = pipeline.pipe(pipe).on('error', (err: any) => {
-                        errorMessage = err;
-                        fulfill(err);
-                    });
-                }
-
-                pipeline
+                payloadStream
+                    .pipe(options.transformStream!)
                     .pipe(fromJSON)
                     .on('error', (err: any) => {
                         errorMessage = err;
+                        if (options?.errorCallback) options.errorCallback(err);
                         fulfill(err);
                     })
                     .pipe(pass)
@@ -95,6 +109,7 @@ export default class TimeseriesDataSourceImpl implements DataSource {
                     .pipe(pass)
                     .on('error', (err: any) => {
                         errorMessage = err;
+                        if (options?.errorCallback) options.errorCallback(err);
                         fulfill(err);
                     })
                     .on('finish', fulfill),
@@ -105,6 +120,7 @@ export default class TimeseriesDataSourceImpl implements DataSource {
                     .pipe(fromJSON)
                     .on('error', (err: any) => {
                         errorMessage = err;
+                        if (options?.errorCallback) options.errorCallback(err);
                         fulfill(err);
                     })
                     .pipe(pass)

@@ -1,0 +1,119 @@
+name: Build and Deploy Development
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "development" ]
+
+jobs:
+  build-deeplynx-dev:
+    runs-on: [ self-hosted ]
+    environment: Development
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: deeplynx
+          ref: development
+
+      - name: Checkout tools repo
+        uses: actions/checkout@v3
+        with:
+          repository: Digital-Engineering/kubernetes
+          ref: development
+          path: kubernetes
+          token: ${{ secrets.GH_TOKEN }}
+
+      - shell: bash
+        name: ACR build
+        env:
+          ACR_SP_USER: ${{ secrets.CI_SP_USER }}
+          ACR_SP_PASSWORD: ${{ secrets.CI_SP_PASSWORD }}
+          ACR_REGISTRY: ${{ secrets.CI_REGISTRY }}
+          ACR_PATH: ${{ secrets.CI_REGISTRY_PATH }}
+          ACR_SP_TENANT: ${{ secrets.CI_SP_TENANT }}
+          ACR_SUBSCRIPTION: ${{ secrets.CI_ACR_SUBSCRIPTION }}
+          NODE_ENV: ${{ secrets.NODE_ENV }}
+        run: |
+          cd $GITHUB_WORKSPACE/deeplynx
+          az cloud set --name AzureUSGovernment
+          az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
+          az account set --subscription $ACR_SUBSCRIPTION
+          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/deeplynx/Dockerfile -t $ACR_PATH:$GITHUB_SHA-dev .
+      - shell: bash
+        name: Manifest env substitute
+        env:
+          CI_REGISTRY: ${{ secrets.CI_REGISTRY }}
+          CI_REGISTRY_PATH: ${{ secrets.CI_REGISTRY_PATH }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          AZURE_BLOB_CONTAINER_NAME: ${{ secrets.AZURE_BLOB_CONTAINER_NAME }}
+          CONTAINER_INVITE_URL: ${{ secrets.CONTAINER_INVITE_URL }}
+          FILE_STORAGE_METHOD: ${{ secrets.FILE_STORAGE_METHOD}}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_TLS: ${{ secrets.SMTP_TLS }}
+          EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
+          EMAIL_ENABLED: ${{ secrets.EMAIL_ENABLED }}
+          EMAIL_VALIDATION_ENFORCED: ${{ secrets.EMAIL_VALIDATION_ENFORCED }}
+          ROOT_ADDRESS: ${{ secrets.ROOT_ADDRESS }}
+          ENCRYPTION_KEY_PATH: ${{ secrets.ENCRYPTION_KEY_PATH }}
+          NODE_ENV: ${{ secrets.NODE_ENV }}
+          AUTH_STRATEGY: ${{ secrets.AUTH_STRATEGY }}
+          BASE_URL: ${{ secrets.BASE_URL }}
+          SAML_ENABLED: ${{ secrets.SAML_ENABLED }}
+          SAML_ADFS_ENTRY_POINT: ${{ secrets.SAML_ADFS_ENTRY_POINT }}
+          SAML_ADFS_ISSUER: ${{ secrets.SAML_ADFS_ISSUER }}
+          SAML_ADFS_CALLBACK: ${{ secrets.SAML_ADFS_CALLBACK }}
+          SAML_ADFS_PRIVATE_CERT_PATH: ${{ secrets.SAML_ADFS_PRIVATE_CERT_PATH }}
+          SAML_ADFS_PUBLIC_CERT_PATH: ${{ secrets.SAML_ADFS_PUBLIC_CERT_PATH }}
+          SAML_ADFS_CLAIMS_EMAIL: ${{ secrets.SAML_ADFS_CLAIMS_EMAIL }}
+          SAML_ADFS_CLAIMS_NAME: ${{ secrets.SAML_ADFS_CLAIMS_NAME }}
+          PROCESS_QUEUE_NAME: ${{ secrets.PROCESS_QUEUE_NAME }}
+          EVENTS_QUEUE_NAME: ${{ secrets.EVENTS_QUEUE_NAME }}
+          DATA_SOURCES_QUEUE_NAME: ${{ secrets.DATA_SOURCES_QUEUE_NAME }}
+          CACHE_PROVIDER: ${{ secrets.CACHE_PROVIDER }}
+          CACHE_REDIS_CONNECTION_STRING: ${{ secrets.CACHE_REDIS_CONNECTION_STRING }}
+          EDGE_INSERTION_QUEUE_NAME: ${{ secrets.EDGE_INSERTION_QUEUE_NAME }}
+          QUEUE_SYSTEM: ${{ secrets.QUEUE_SYSTEM }}
+          TIMESCALEDB_ENABLED: ${{ secrets.TIMESCALEDB_ENABLED }}
+          TZ: ${{ secrets.TZ }}
+          CI_COMMIT_SHA: $GITHUB_SHA
+          NODE_EXTRA_CA_CERTS: ${{ secrets.NODE_EXTRA_CA_CERTS }}
+          RUN_JOBS: ${{ secrets.RUN_JOBS }}
+          JAZZ_HOST: ${{ secrets.JAZZ_HOST }}
+          JAZZ_IP: ${{ secrets.JAZZ_IP }}
+          ELM_HOST: ${{ secrets.ELM_HOST }}
+          ELM_IP: ${{ secrets.ELM_IP }}
+          NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
+        run: |
+          cd $GITHUB_WORKSPACE/kubernetes/deeplynx/manifests
+          envsubst < development.yml > development_final.yml
+      - uses: azure/setup-kubectl@v3
+      - uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+          context: deploy-service-account
+      - uses: Azure/k8s-deploy@v4
+        with:
+          resource-group: ${{ secrets.CI_RESOURCE_GROUP }}
+          name: ${{ secrets.CLUSTER_NAME }}
+          namespace: deeplynx-dev
+          action: deploy
+          force: true
+          strategy: basic
+          manifests: |
+            kubernetes/deeplynx/manifests/development_final.yml
+  mirror-repository:
+    runs-on: [ self-hosted ]
+    environment: development
+    needs: build-deeplynx-dev
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: development
+      - shell: bash
+        name: mirror-deep-lynx-repo
+        run: |
+          git fetch --unshallow origin
+          git remote add github-pub ${{ secrets.PUBLIC_GITHUB_URL }} || git remote set-url github-pub ${{ secrets.PUBLIC_GITHUB_URL }}
+          git push github-pub development --force
+          git push github-pub --tags

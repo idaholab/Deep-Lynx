@@ -377,11 +377,10 @@ describe('A Standard DataSource Implementation can', async () => {
         fs.writeFileSync('./test-timeseries-data.csv', sampleCSV);
 
         received = await source!.ReceiveData(fs.createReadStream('./test-timeseries-data.csv'), user, {
-            transformStreams: [
-                csv({
-                    downstreamFormat: 'array', // needed because downstream expects an array of json, not single objects
-                }),
-            ],
+            transformStream: csv({
+                downstreamFormat: 'array', // needed because downstream expects an array of json, not single objects
+            }),
+            bufferSize: 1,
         });
         expect(received.isError, received.error?.error).false;
 

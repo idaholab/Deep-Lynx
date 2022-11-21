@@ -395,21 +395,19 @@ export default class DataSourceMapper extends Mapper {
             },
         ];
 
-        if (Config.timescaledb_enabled) {
-            if ((source.config as TimeseriesDataSourceConfig).chunk_interval) {
-                statements.push({
-                    text: format(
-                        `SELECT create_hypertable(%L, %L, chunk_time_interval => %L::integer)`,
-                        'y_' + source.id!,
-                        primaryTimestampColumnName,
-                        (source.config as TimeseriesDataSourceConfig).chunk_interval,
-                    ),
-                });
-            } else {
-                statements.push({
-                    text: format(`SELECT create_hypertable(%L, %L)`, 'y_' + source.id!, primaryTimestampColumnName),
-                });
-            }
+        if ((source.config as TimeseriesDataSourceConfig).chunk_interval && Config.timescaledb_enabled) {
+            statements.push({
+                text: format(
+                    `SELECT create_hypertable(%L, %L, chunk_time_interval => %L::integer)`,
+                    'y_' + source.id!,
+                    primaryTimestampColumnName,
+                    (source.config as TimeseriesDataSourceConfig).chunk_interval,
+                ),
+            });
+        } else if (Config.timescaledb_enabled) {
+            statements.push({
+                text: format(`SELECT create_hypertable(%L, %L)`, 'y_' + source.id!, primaryTimestampColumnName),
+            });
         }
 
         if (columns.filter((c) => c.unique).length > 0) {

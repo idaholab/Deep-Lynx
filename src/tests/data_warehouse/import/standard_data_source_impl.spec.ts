@@ -110,7 +110,7 @@ describe('A Standard DataSource Implementation can', async () => {
         expect(source!.DataSourceRecord?.id).not.undefined;
 
         // now we create an import through the datasource
-        const newImport = await source!.ReceiveData(toStream([sampleObject]), user, {overrideJsonStream: true});
+        const newImport = await source!.ReceiveData(toStream([sampleObject]), user, {overrideJsonStream: true, bufferSize: 1});
         expect(newImport.isError).false;
         expect((newImport.value as Import).id).not.undefined;
 
@@ -145,7 +145,7 @@ describe('A Standard DataSource Implementation can', async () => {
         expect(source!.DataSourceRecord?.id).not.undefined;
 
         // now we create an import through the datasource
-        const newImport = await source!.ReceiveData(toStream([sampleObject]), user, {overrideJsonStream: true, returnStagingRecords: true});
+        const newImport = await source!.ReceiveData(toStream([sampleObject]), user, {overrideJsonStream: true, returnStagingRecords: true, bufferSize: 1});
         expect(newImport.isError).false;
         expect((newImport.value as DataStaging[]).length === 1).true;
 
@@ -224,11 +224,10 @@ describe('A Standard DataSource Implementation can', async () => {
 
         // now we create an import through the datasource
         const newImport = await source!.ReceiveData(fs.createReadStream('./test-data.csv'), user, {
-            transformStreams: [
-                csv({
-                    downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
-                }),
-            ],
+            transformStream: csv({
+                downstreamFormat: 'array', // this is necessary as the ReceiveData expects an array of json, not single objects
+            }),
+            bufferSize: 1,
         });
         expect(newImport.isError).false;
         expect((newImport.value as Import).id).not.undefined;

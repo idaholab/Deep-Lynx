@@ -7,13 +7,14 @@
       <query-builder
           :initialQuery="true"
           :containerID="containerID"
-          @results="loadResults"></query-builder>
+          @results="loadResults"
+          @disableGraphEdit="disableGraphEdit"></query-builder>
 
       <v-row>
         <v-col
             cols="12"
         >
-          <v-container flat class="pa-0" v-show="showGraph">
+          <v-container flat class="pa-0" style="max-width: 100%" v-show="showGraph">
             <v-tabs
                 v-if="results"
                 v-model="tab"
@@ -36,7 +37,7 @@
                         :cols="12"
                         class="graph"
                     >
-                      <graph-viewer :containerID="containerID" :results="results"></graph-viewer>
+                      <graph-viewer :containerID="containerID" :results="results" ref="graph"></graph-viewer>
                     </v-col>
                   </v-row>
                 </v-card>
@@ -78,7 +79,7 @@
                                 <v-toolbar-title>{{$t('dataQuery.viewProperties')}}</v-toolbar-title>
                               </v-toolbar>
 
-                              <json-view :value="item.properties"></json-view>
+                              <json-viewer :value="item.properties"></json-viewer>
                             </v-col>
                           </v-row>
                           <node-files-dialog :icon="true" :node="item"></node-files-dialog>
@@ -122,6 +123,10 @@ export default class DataQuery extends Vue {
   @Prop()
   readonly containerID!: string
 
+  $refs!: {
+    graph: GraphViewer
+  }
+
   dialog = false
   tab: any | null = null
   showGraph = false
@@ -162,8 +167,14 @@ export default class DataQuery extends Vue {
     this.results = queryResult.nodes
   }
 
+  disableGraphEdit() {
+    // ensure graph editing is disabled on tab change
+    this.$refs.graph!.disableGraphEdit();
+  }
+
   setActiveTabName(name: any) {
     this.activeTabName = name;
+    this.$refs.graph!.disableGraphEdit();
   }
 
   copyID(id: string) {
