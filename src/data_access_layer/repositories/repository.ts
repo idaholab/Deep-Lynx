@@ -60,7 +60,12 @@ export class Repository {
             }
         }
 
-        if (options && options.distinct) {
+        if (options && options.distinct_on) {
+            this._query.SELECT = [format(
+                `SELECT DISTINCT ON (%s.%s) %s.*`, this._tableAlias, options.distinct_on, this._tableAlias
+            )];
+            this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
+        } else if (options && options.distinct) {
             this._query.SELECT = [format(`SELECT DISTINCT %s.*`, this._tableAlias)];
             this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
         } else {
@@ -507,6 +512,18 @@ export class Repository {
             this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
+        // allow a user to specify a column to select distinct on 
+        if (queryOptions && queryOptions.distinct_on) {
+            this._query.SELECT[0] = format(
+                `SELECT DISTINCT ON (%s.%s) %s.*`,
+                this._aliasMap.get(queryOptions.distinct_on.table), // column's table alias
+                queryOptions.distinct_on.column, // column
+                this._tableAlias // base table alias
+            )
+        } else if (queryOptions && queryOptions?.distinct) {
+            this._query.SELECT[0] = format(`SELECT DISTINCT %s.*`, this._tableAlias)
+        }
+
         const text = [this._query.SELECT.join(' '), this._query.JOINS?.join(' '), this._query.WHERE?.join(' '), this._query.OPTIONS?.join(' ')].join(' ');
 
         const query = {text, values: this._query.VALUES};
@@ -548,6 +565,18 @@ export class Repository {
             this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
+        // allow a user to specify a column to select distinct on 
+        if (queryOptions && queryOptions.distinct_on) {
+            this._query.SELECT[0] = format(
+                `SELECT DISTINCT ON (%s.%s) %s.*`,
+                this._aliasMap.get(queryOptions.distinct_on.table), // column's table alias
+                queryOptions.distinct_on.column, // column
+                this._tableAlias // base table alias
+            )
+        } else if (queryOptions && queryOptions?.distinct) {
+            this._query.SELECT[0] = format(`SELECT DISTINCT %s.*`, this._tableAlias)
+        }
+
         const text = [this._query.SELECT.join(' '), this._query.JOINS?.join(' '), this._query.WHERE?.join(' '), this._query.OPTIONS?.join(' ')].join(' ');
 
         const query = {text, values: this._query.VALUES};
@@ -587,6 +616,18 @@ export class Repository {
 
         if (queryOptions && queryOptions.limit) {
             this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
+        }
+
+        // allow a user to specify a column to select distinct on 
+        if (queryOptions && queryOptions.distinct_on) {
+            this._query.SELECT[0] = format(
+                `SELECT DISTINCT ON (%s.%s) %s.*`,
+                this._aliasMap.get(queryOptions.distinct_on.table), // column's table alias
+                queryOptions.distinct_on.column, // column
+                this._tableAlias // base table alias
+            )
+        } else if (queryOptions && queryOptions?.distinct) {
+            this._query.SELECT[0] = format(`SELECT DISTINCT %s.*`, this._tableAlias)
         }
 
         const text = [this._query.SELECT.join(' '), this._query.JOINS?.join(' '), this._query.WHERE?.join(' '), this._query.OPTIONS?.join(' ')].join(' ');
@@ -739,6 +780,8 @@ export type QueryOptions = {
     // generally used if we have a complicated set of joins
     groupBy?: string | undefined;
     distinct?: boolean | undefined;
+    // used to specify distinction
+    distinct_on?: {table: string, column: string;} | undefined;
     // used to qualify groupBy column
     tableName?: string | undefined;
 };
@@ -774,4 +817,5 @@ export type DeleteOptions = {
 
 export type ConstructorOptions = {
     distinct?: boolean;
+    distinct_on?: string | undefined; // for the constructor, only select distinct on native table columns
 };
