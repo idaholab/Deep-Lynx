@@ -159,31 +159,19 @@ export default class FileMapper extends Mapper {
     }
 
     private fullUpdateStatement(userID: string, ...files: File[]): string {
-        const text = `UPDATE files as f set
-                  container_id = u.container_id::bigint,
-                  file_name = u.file_name,
-                  file_size = u.file_size::float8,
-                  adapter_file_path = u.adapter_file_path,
-                  adapter = u.adapter,
-                  metadata = u.metadata::jsonb,
-                  data_source_id = u.data_source_id::bigint,
-                  md5hash = u.md5hash,
-                  short_uuid = u.short_uuid,
-                  modified_by = u.modified_by,
-                  modified_at = NOW()
-                  FROM(VALUES %L) AS u(
-                  id,
-                  container_id,
-                  file_name,
-                  file_size,
-                  adapter_file_path,
-                  adapter,
-                  metadata,
-                  data_source_id,
-                  md5hash,
-                  short_uuid,
-                  modified_by)
-                  WHERE u.id::bigint = f.id RETURNING f.*`;
+        const text = `INSERT INTO files(
+                id,
+                container_id,
+                file_name,
+                file_size,
+                adapter_file_path,
+                adapter,
+                metadata,
+                data_source_id,
+                md5hash,
+                short_uuid,
+                created_by,
+                modified_by) VALUES %L RETURNING *`;
         const values = files.map((file) => [
             file.id,
             file.container_id,
@@ -201,6 +189,50 @@ export default class FileMapper extends Mapper {
 
         return format(text, values);
     }
+
+    // private fullUpdateStatement(userID: string, ...files: File[]): string {
+    //     const text = `UPDATE files as f set
+    //               container_id = u.container_id::bigint,
+    //               file_name = u.file_name,
+    //               file_size = u.file_size::float8,
+    //               adapter_file_path = u.adapter_file_path,
+    //               adapter = u.adapter,
+    //               metadata = u.metadata::jsonb,
+    //               data_source_id = u.data_source_id::bigint,
+    //               md5hash = u.md5hash,
+    //               short_uuid = u.short_uuid,
+    //               modified_by = u.modified_by,
+    //               modified_at = NOW()
+    //               FROM(VALUES %L) AS u(
+    //               id,
+    //               container_id,
+    //               file_name,
+    //               file_size,
+    //               adapter_file_path,
+    //               adapter,
+    //               metadata,
+    //               data_source_id,
+    //               md5hash,
+    //               short_uuid,
+    //               modified_by)
+    //               WHERE u.id::bigint = f.id RETURNING f.*`;
+    //     const values = files.map((file) => [
+    //         file.id,
+    //         file.container_id,
+    //         file.file_name,
+    //         file.file_size,
+    //         file.adapter_file_path,
+    //         file.adapter,
+    //         JSON.stringify(file.metadata),
+    //         file.data_source_id,
+    //         file.md5hash,
+    //         file.short_uuid,
+    //         userID,
+    //         userID,
+    //     ]);
+
+    //     return format(text, values);
+    // }
 
     private deleteStatement(containerID: string): QueryConfig {
         return {
