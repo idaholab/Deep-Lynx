@@ -42,6 +42,7 @@ export class Repository {
         SELECT: string[];
         JOINS?: string[];
         WHERE?: string[];
+        GROUPBY?: string[];
         OPTIONS?: string[];
         VALUES: any[];
     } = {SELECT: [], VALUES: []};
@@ -386,9 +387,6 @@ export class Repository {
         return this;
     }
 
-    // TODO: find out if we need to change the result class as the result of a joined query.
-    // Resulting fields with the same name are also being overwritten, so we might need to
-    // use column aliases for each field coming from a non-native table.
     join(destination: string, options: JoinOptions, origin: string = this._tableName) {
         if (this._query.JOINS === undefined) {
             this._query.JOINS = [];
@@ -460,10 +458,36 @@ export class Repository {
         return this;
     }
 
+    // function to enhance grouping capabilities beyond the simple mechanic of the queryOptions groupby
+    groupBy(fields: string | string[], tableName?: string) {
+        if (!this._query.GROUPBY) {
+            this._query.GROUPBY = []
+        }
+
+        let table = '';
+        if (tableName) {
+            table = this._aliasMap.has(tableName) ? this._aliasMap.get(tableName)! : tableName;
+        } else {
+            table = this._tableAlias;
+        }
+
+        if (typeof fields === 'string') {
+            fields = !fields.includes('.') && table !== '' ? `${table}.${fields}` : fields;
+            this._query.GROUPBY.push(format(`%s`, fields))
+        } else if (Array.isArray(fields)) {
+            fields.forEach((field) => {
+                field = !field.includes('.') && table !== '' ? `${table}.${field}` : field;
+                this._query.GROUPBY?.push(format(`%s`, field))
+            })
+        }
+
+        return this;
+    }
+
     findAll<T>(queryOptions?: QueryOptions, options?: Options<T>): Promise<Result<T[]>> {
         const storage = new Mapper();
 
-        if (queryOptions) {
+        if (queryOptions || this._query.GROUPBY) {
             this._query.OPTIONS = [];
         }
 
@@ -490,10 +514,20 @@ export class Repository {
                         groupBy.push(`${table}.${part}`);
                     }
                 });
-                queryOptions.groupBy = groupBy.join(',');
+                queryOptions.groupBy = groupBy.join(', ');
             }
 
-            this._query.OPTIONS?.push(format(`GROUP BY %s`, queryOptions.groupBy));
+            // push to existing groupby or create new if not exists
+            if (this._query.GROUPBY) {
+                this._query.GROUPBY?.push(format(`%s`, queryOptions.groupBy));
+            } else {
+                this._query.GROUPBY = [format(`%s`, queryOptions.groupBy)];
+            }
+        }
+
+        // separate all groupby fields with a comma and push to main query
+        if (this._query.GROUPBY) {
+            this._query.OPTIONS?.push(format (`GROUP BY %s`, this._query.GROUPBY.join(', ')))
         }
 
         if (queryOptions && queryOptions.sortBy) {
