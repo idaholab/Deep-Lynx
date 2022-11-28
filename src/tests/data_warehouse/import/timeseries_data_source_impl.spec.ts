@@ -15,6 +15,8 @@ import Config from '../../../services/config';
 import {PassThrough} from 'stream';
 import {exec} from 'child_process';
 import {promisify} from 'util';
+import ImportRepository from '../../../data_access_layer/repositories/data_warehouse/import/import_repository';
+import Import from '../../../domain_objects/data_warehouse/import/import';
 
 const promiseExec = promisify(exec);
 const csv = require('csvtojson');
@@ -461,6 +463,11 @@ describe('A Standard DataSource Implementation can', async () => {
         expect(results.isError, results.error?.error).false;
         expect(source!.DataSourceRecord?.id).not.undefined;
 
+        let imports = new Import({
+            data_source_id: source?.DataSourceRecord?.id!,
+            status_message: 'ready',
+        });
+
         let loader = fastLoad.new({
             connectionString: Config.core_db_connection_string as string,
             dataSource: source?.DataSourceRecord as object,
@@ -482,7 +489,7 @@ describe('A Standard DataSource Implementation can', async () => {
         setTimeout(() => {
             sourceRepo.delete(source!);
             fs.unlinkSync(__dirname + '/1million.csv');
-            return Promise.resolve()
+            return Promise.resolve();
         }, 9000);
     }).timeout(10000);
 });
