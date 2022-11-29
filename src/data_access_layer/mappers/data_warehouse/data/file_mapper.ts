@@ -171,7 +171,15 @@ export default class FileMapper extends Mapper {
                 md5hash,
                 short_uuid,
                 created_by,
-                modified_by) VALUES %L RETURNING *`;
+                modified_by) VALUES %L 
+                ON CONFLICT(created_at, id) DO UPDATE SET
+                    file_name = EXCLUDED.file_name,
+                    file_size = EXCLUDED.file_size,
+                    metadata = EXCLUDED.metadata,
+                    md5hash = EXCLUDED.md5hash
+                WHERE EXCLUDED.id = files.id
+                 RETURNING *`;
+
         const values = files.map((file) => [
             file.id,
             file.container_id,
