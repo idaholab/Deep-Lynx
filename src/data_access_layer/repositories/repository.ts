@@ -42,6 +42,7 @@ export class Repository {
         SELECT: string[];
         JOINS?: string[];
         WHERE?: string[];
+        GROUPBY?: string[];
         OPTIONS?: string[];
         VALUES: any[];
     } = {SELECT: [], VALUES: []};
@@ -60,7 +61,12 @@ export class Repository {
             }
         }
 
-        if (options && options.distinct) {
+        if (options && options.distinct_on) {
+            this._query.SELECT = [format(
+                `SELECT DISTINCT ON (%s.%s) %s.*`, this._tableAlias, options.distinct_on, this._tableAlias
+            )];
+            this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
+        } else if (options && options.distinct) {
             this._query.SELECT = [format(`SELECT DISTINCT %s.*`, this._tableAlias)];
             this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
         } else {
@@ -381,9 +387,6 @@ export class Repository {
         return this;
     }
 
-    // TODO: find out if we need to change the result class as the result of a joined query.
-    // Resulting fields with the same name are also being overwritten, so we might need to
-    // use column aliases for each field coming from a non-native table.
     join(destination: string, options: JoinOptions, origin: string = this._tableName) {
         if (this._query.JOINS === undefined) {
             this._query.JOINS = [];
@@ -455,10 +458,36 @@ export class Repository {
         return this;
     }
 
+    // function to enhance grouping capabilities beyond the simple mechanic of the queryOptions groupby
+    groupBy(fields: string | string[], tableName?: string) {
+        if (!this._query.GROUPBY) {
+            this._query.GROUPBY = []
+        }
+
+        let table = '';
+        if (tableName) {
+            table = this._aliasMap.has(tableName) ? this._aliasMap.get(tableName)! : tableName;
+        } else {
+            table = this._tableAlias;
+        }
+
+        if (typeof fields === 'string') {
+            fields = !fields.includes('.') && table !== '' ? `${table}.${fields}` : fields;
+            this._query.GROUPBY.push(format(`%s`, fields))
+        } else if (Array.isArray(fields)) {
+            fields.forEach((field) => {
+                field = !field.includes('.') && table !== '' ? `${table}.${field}` : field;
+                this._query.GROUPBY?.push(format(`%s`, field))
+            })
+        }
+
+        return this;
+    }
+
     findAll<T>(queryOptions?: QueryOptions, options?: Options<T>): Promise<Result<T[]>> {
         const storage = new Mapper();
 
-        if (queryOptions) {
+        if (queryOptions || this._query.GROUPBY) {
             this._query.OPTIONS = [];
         }
 
@@ -485,10 +514,20 @@ export class Repository {
                         groupBy.push(`${table}.${part}`);
                     }
                 });
-                queryOptions.groupBy = groupBy.join(',');
+                queryOptions.groupBy = groupBy.join(', ');
             }
 
-            this._query.OPTIONS?.push(format(`GROUP BY %s`, queryOptions.groupBy));
+            // push to existing groupby or create new if not exists
+            if (this._query.GROUPBY) {
+                this._query.GROUPBY?.push(format(`%s`, queryOptions.groupBy));
+            } else {
+                this._query.GROUPBY = [format(`%s`, queryOptions.groupBy)];
+            }
+        }
+
+        // separate all groupby fields with a comma and push to main query
+        if (this._query.GROUPBY) {
+            this._query.OPTIONS?.push(format (`GROUP BY %s`, this._query.GROUPBY.join(', ')))
         }
 
         if (queryOptions && queryOptions.sortBy) {
@@ -505,6 +544,18 @@ export class Repository {
 
         if (queryOptions && queryOptions.limit) {
             this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
+        }
+
+        // allow a user to specify a column to select distinct on 
+        if (queryOptions && queryOptions.distinct_on) {
+            this._query.SELECT[0] = format(
+                `SELECT DISTINCT ON (%s.%s) %s.*`,
+                this._aliasMap.get(queryOptions.distinct_on.table), // column's table alias
+                queryOptions.distinct_on.column, // column
+                this._tableAlias // base table alias
+            )
+        } else if (queryOptions && queryOptions?.distinct) {
+            this._query.SELECT[0] = format(`SELECT DISTINCT %s.*`, this._tableAlias)
         }
 
         const text = [this._query.SELECT.join(' '), this._query.JOINS?.join(' '), this._query.WHERE?.join(' '), this._query.OPTIONS?.join(' ')].join(' ');
@@ -548,6 +599,18 @@ export class Repository {
             this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
+        // allow a user to specify a column to select distinct on 
+        if (queryOptions && queryOptions.distinct_on) {
+            this._query.SELECT[0] = format(
+                `SELECT DISTINCT ON (%s.%s) %s.*`,
+                this._aliasMap.get(queryOptions.distinct_on.table), // column's table alias
+                queryOptions.distinct_on.column, // column
+                this._tableAlias // base table alias
+            )
+        } else if (queryOptions && queryOptions?.distinct) {
+            this._query.SELECT[0] = format(`SELECT DISTINCT %s.*`, this._tableAlias)
+        }
+
         const text = [this._query.SELECT.join(' '), this._query.JOINS?.join(' '), this._query.WHERE?.join(' '), this._query.OPTIONS?.join(' ')].join(' ');
 
         const query = {text, values: this._query.VALUES};
@@ -587,6 +650,18 @@ export class Repository {
 
         if (queryOptions && queryOptions.limit) {
             this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
+        }
+
+        // allow a user to specify a column to select distinct on 
+        if (queryOptions && queryOptions.distinct_on) {
+            this._query.SELECT[0] = format(
+                `SELECT DISTINCT ON (%s.%s) %s.*`,
+                this._aliasMap.get(queryOptions.distinct_on.table), // column's table alias
+                queryOptions.distinct_on.column, // column
+                this._tableAlias // base table alias
+            )
+        } else if (queryOptions && queryOptions?.distinct) {
+            this._query.SELECT[0] = format(`SELECT DISTINCT %s.*`, this._tableAlias)
         }
 
         const text = [this._query.SELECT.join(' '), this._query.JOINS?.join(' '), this._query.WHERE?.join(' '), this._query.OPTIONS?.join(' ')].join(' ');
@@ -739,6 +814,8 @@ export type QueryOptions = {
     // generally used if we have a complicated set of joins
     groupBy?: string | undefined;
     distinct?: boolean | undefined;
+    // used to specify distinction
+    distinct_on?: {table: string, column: string;} | undefined;
     // used to qualify groupBy column
     tableName?: string | undefined;
 };
@@ -774,4 +851,5 @@ export type DeleteOptions = {
 
 export type ConstructorOptions = {
     distinct?: boolean;
+    distinct_on?: string | undefined; // for the constructor, only select distinct on native table columns
 };

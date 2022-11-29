@@ -1271,6 +1271,31 @@ describe('The updated repository layer', async () => {
         return Promise.resolve();
     });
 
+    it('can group by in various formats', async () => {
+        const nodeRepo = new NodeRepository();
+
+        const results = await nodeRepo
+            .join('edges', {origin_col: 'id', destination_col: 'origin_id', destination_alias: 'outgoing'})
+            .addFields({'COUNT(outgoing.id)': 'outgoing_edge_count'})
+            .groupBy('id') // testing singular field
+            .groupBy(`${nodeRepo._tableAlias}.container_id`) // testing qualified field
+            .groupBy('metatype_id', nodeRepo._tableAlias) // testing field with table alias
+            .groupBy('properties', 'current_nodes') // testing table alias retrieval
+            .groupBy(['data_source_id', 'import_data_id', 'data_staging_id']) // testing list
+            .groupBy(['type_mapping_transformation_id', 'original_data_id'], nodeRepo._tableAlias) // testing list with alias
+            .groupBy(['metadata', 'created_at', 'modified_at', 'deleted_at'], 'current_nodes') // testing list with alias retrieval
+            .list(false, {
+                groupBy: 'created_by,modified_by,metatype_name,metatype_uuid', // testing queryOption in list function
+                sortBy: 'outgoing_edge_count', sortDesc: true, limit: 5}) // sort by highest count first
+        expect(results.isError).false;
+        expect(results.value.length).eq(5);
+        // verify a few edge counts
+        expect(results.value[0]['outgoing_edge_count' as keyof object]).eq('48');
+        expect(results.value[4]['outgoing_edge_count' as keyof object]).eq('24');
+
+        return Promise.resolve();
+    })
+
     it('supports timeseries queries', async () => {
         const repo = new DataSourceRepository();
         // const config = source.DataSourceRecord.config as TimeseriesDataSourceConfig;

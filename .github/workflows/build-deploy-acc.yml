@@ -9,9 +9,20 @@ jobs:
     runs-on: [ self-hosted ]
     environment: acceptance
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
         with:
+          path: deeplynx
           ref: main
+
+      - name: Checkout tools repo
+        uses: actions/checkout@v3
+        with:
+          repository: Digital-Engineering/kubernetes
+          ref: main
+          path: kubernetes
+          token: ${{ secrets.GH_TOKEN }}
+
       - shell: bash
         name: ACR build
         env:
@@ -24,11 +35,11 @@ jobs:
           NODE_ENV: ${{ secrets.NODE_ENV }}
           SHORT_SHA: ${{ steps.vars.outputs.sha_short }}
         run: |
-          cd $GITHUB_WORKSPACE
+          cd $GITHUB_WORKSPACE/deeplynx
           az cloud set --name AzureUSGovernment
           az login --service-principal -u $ACR_SP_USER -p $ACR_SP_PASSWORD --tenant $ACR_SP_TENANT
           az account set --subscription $ACR_SUBSCRIPTION
-          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/Dockerfile -t $ACR_PATH:$GITHUB_SHA-latest .
+          az acr build -r $ACR_REGISTRY -f $GITHUB_WORKSPACE/deeplynx/Dockerfile -t $ACR_PATH:$GITHUB_SHA-latest .
       - shell: bash
         name: ACR Get Scan
         env:
@@ -132,8 +143,8 @@ jobs:
           ELM_IP: ${{ secrets.ELM_IP }}
           NETWORKING_HOST: ${{ secrets.NETWORKING_HOST }}
         run: |
-          cd $GITHUB_WORKSPACE
-          envsubst < kubernetes/acceptance.yml > kubernetes/acceptance_final.yml
+          cd $GITHUB_WORKSPACE/kubernetes/deeplynx/manifests
+          envsubst < acceptance.yml > acceptance_final.yml
       - uses: azure/setup-kubectl@v3
       - uses: azure/k8s-set-context@v3
         with:
@@ -149,7 +160,7 @@ jobs:
           force: true
           strategy: basic
           manifests: |
-            kubernetes/acceptance_final.yml
+            kubernetes/deeplynx/manifests/acceptance_final.yml
   mirror-repository:
     runs-on: [ self-hosted ]
     environment: production
@@ -164,8 +175,8 @@ jobs:
           git fetch --unshallow origin
           git remote add github-pub ${{ secrets.PUBLIC_GITHUB_URL }} || git remote set-url github-pub ${{ secrets.PUBLIC_GITHUB_URL }}
           git branch -m master
-          git push public master --force
-          git push public --tags
+          git push github-pub master --force
+          git push github-pub --tags
           git branch -m main
   update-sdks:
     runs-on: [ self-hosted ]
@@ -180,29 +191,29 @@ jobs:
           distribution: 'temurin'
           java-version: '8'
       - run: |
-          mkdir /opt/swagger && cd /opt/swagger
-          wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.35/swagger-codegen-cli-3.0.35.jar -O swagger-codegen-cli.jar
-          git clone ${{ secrets.DL_JS_SDK }}
-          git clone ${{ secrets.DL_PY_SDK }}
-          git clone ${{ secrets.DL_CSHARP_SDK }}
-          git clone ${{ secrets.DL_R_SDK }}
+          sudo mkdir /opt/swagger && cd /opt/swagger
+          sudo wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.35/swagger-codegen-cli-3.0.35.jar -O swagger-codegen-cli.jar
+          git clone ${{ secrets.DL_JS_SDK }} deeplynx-js-sdk
+          git clone ${{ secrets.DL_PY_SDK }} deeplynx-py-sdk
+          git clone ${{ secrets.DL_CSHARP_SDK }} deeplynx-csharp-sdk
+          git clone ${{ secrets.DL_R_SDK }} deeplynx-r-sdk
           java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l typescript-axios -o deeplynx-js-sdk
           java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l csharp -o deeplynx-csharp-sdk
           java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l r -o deeplynx-r-sdk
-          java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l python -o deeplynx-py-pkg --additional-properties packageName=deep_lynx projectName=deep_lynx
+          java -jar swagger-codegen-cli.jar generate -i $GITHUB_WORKSPACE/API\ Documentation/Core.swagger_collection.yaml -l python -o deeplynx-py-sdk --additional-properties packageName=deep_lynx projectName=deep_lynx
           cd deeplynx-js-sdk
           git config --global user.email "${{ secrets.GH_ENTERPRISE_EMAIL }}" && git config --global user.name "${{ secrets.GH_ENTERPRISE_USERNAME }}"
-          git add * && git commit -m $GITHUB_SHA || true
+          git add . && git commit -m $GITHUB_SHA || true
           git push ${{ secrets.DL_JS_SDK }} main 
-          cd ../deeplynx-py-pkg
+          cd ../deeplynx-py-sdk
           git config --global user.email "${{ secrets.GH_ENTERPRISE_EMAIL }}" && git config --global user.name "${{ secrets.GH_ENTERPRISE_USERNAME }}"
-          git add * && git commit -m $GITHUB_SHA || true
+          git add . && git commit -m $GITHUB_SHA || true
           git push ${{ secrets.DL_PY_SDK }} main
           cd ../deeplynx-csharp-sdk
           git config --global user.email "${{ secrets.GH_ENTERPRISE_EMAIL }}" && git config --global user.name "${{ secrets.GH_ENTERPRISE_USERNAME }}"
-          git add * && git commit -m $GITHUB_SHA || true
+          git add . && git commit -m $GITHUB_SHA || true
           git push ${{ secrets.DL_CSHARP_SDK }} main
           cd ../deeplynx-r-sdk
           git config --global user.email "${{ secrets.GH_ENTERPRISE_EMAIL }}" && git config --global user.name "${{ secrets.GH_ENTERPRISE_USERNAME }}"
-          git add * && git commit -m $GITHUB_SHA || true
-          git push ${{ secrets.DL_R_SDK }} mai
+          git add . && git commit -m $GITHUB_SHA || true
+          git push ${{ secrets.DL_R_SDK }} main
