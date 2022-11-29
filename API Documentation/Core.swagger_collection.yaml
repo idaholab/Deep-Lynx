@@ -4837,23 +4837,8 @@ paths:
         '200':
           description: OK
       description: 'This endpoint copies transformations from the {originalMappingID} type mapping (final parameter) to the {mappingID} type mapping. This POST has NO body.'
-  '/containers/{container_id}/import/datasources/{datasource_id}/files/{file_id}':
-    parameters:
-      - schema:
-          type: string
-        name: container_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: datasource_id
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: file_id
-        in: path
-        required: true
+  '/containers/:container_id/import/datasources/:data_source_id/files/:file_id':
+    parameters: []
     put:
       summary: Update files
       operationId: put-containers-container_id-import-datasources-datasource_id-files-file_id
