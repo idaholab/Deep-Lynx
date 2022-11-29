@@ -4837,6 +4837,72 @@ paths:
         '200':
           description: OK
       description: 'This endpoint copies transformations from the {originalMappingID} type mapping (final parameter) to the {mappingID} type mapping. This POST has NO body.'
+  '/containers/{container_id}/import/datasources/{datasource_id}/files/{file_id}':
+    parameters:
+      - schema:
+          type: string
+        name: container_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: datasource_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: file_id
+        in: path
+        required: true
+    put:
+      summary: Update files
+      operationId: put-containers-container_id-import-datasources-datasource_id-files-file_id
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+      description: Update a file
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: Authorization
+          description: Bearer token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: object
+                metadata:
+                  type: object
+            examples: {}
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: object
+                metadata:
+                  type: string
+              required:
+                - file
+            examples:
+              example-1:
+                value:
+                  file: null
+          application/xml:
+            schema:
+              type: object
+              properties: {}
+        description: |-
+          Key/value pair where the key is named 'file' and the file is any file. 
+
+          Optionally, any metadata can be added
+      x-internal: false
 components:
   securitySchemes:
     BearerAuth:
