@@ -112,8 +112,6 @@ export default class FileRepository extends Repository implements RepositoryInte
         dataSourceID: string,
         user: User,
         filename: string,
-        encoding: string,
-        mimetype: string,
         stream: Readable,
     ): Promise<Result<File>> {
         const provider = BlobStorageProvider();
@@ -148,8 +146,6 @@ export default class FileRepository extends Repository implements RepositoryInte
         dataSourceID: string,
         user: User,
         filename: string,
-        encoding: string,
-        mimetype: string,
         stream: Readable,
     ): Promise<Result<File>> {
         const provider = BlobStorageProvider();

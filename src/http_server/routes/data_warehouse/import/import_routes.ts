@@ -422,8 +422,6 @@ export default class ImportRoutes {
                         req.params.sourceID,
                         req.currentUser!,
                         filename,
-                        encoding,
-                        mimeType,
                         file as Readable,
                     ),
                 );
@@ -610,8 +608,6 @@ export default class ImportRoutes {
                         req.params.sourceID,
                         req.currentUser!,
                         filename,
-                        encoding,
-                        mimeType,
                         file as Readable,
                     ),
                 );
