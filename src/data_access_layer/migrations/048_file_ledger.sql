@@ -5,3 +5,4 @@ alter table if exists report_query_files drop constraint report_query_files_file
 
 alter table if exists files drop constraint files_pkey;
 alter table if exists files add constraint files_compkey primary key (id, created_at);
+alter table if exists files add constraint files_md5hash_uniq UNIQUE (id, md5hash);

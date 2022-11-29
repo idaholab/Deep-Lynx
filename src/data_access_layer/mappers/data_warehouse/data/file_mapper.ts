@@ -172,11 +172,11 @@ export default class FileMapper extends Mapper {
                 short_uuid,
                 created_by,
                 modified_by) VALUES %L 
-                ON CONFLICT(created_at, id) DO UPDATE SET
+                ON CONFLICT(id, md5hash) DO UPDATE SET
                     file_name = EXCLUDED.file_name,
                     file_size = EXCLUDED.file_size,
                     metadata = EXCLUDED.metadata,
-                    md5hash = EXCLUDED.md5hash
+                    modified_at = NOW()
                 WHERE EXCLUDED.id = files.id
                  RETURNING *`;
 
