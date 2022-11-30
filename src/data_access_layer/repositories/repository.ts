@@ -35,7 +35,7 @@ export default interface RepositoryInterface<T> {
  methods together and then terminate with either a count() or list() call
 */
 export class Repository {
-    public readonly _tableName: string;
+    public _tableName: string;
     public _tableAlias: string;
 
     public _query: {
@@ -48,6 +48,10 @@ export class Repository {
     } = {SELECT: [], VALUES: []};
 
     public _aliasMap = new Map<string, string>();
+
+    // aobjects to store select-field replacements
+    private _selectRoot: string = 'SELECT';
+    private _selectToReplace: {[key: string]: any}[] = [];
 
     constructor(tableName: string, options?: ConstructorOptions) {
         this._tableName = tableName;
@@ -66,13 +70,91 @@ export class Repository {
                 `SELECT DISTINCT ON (%s.%s) %s.*`, this._tableAlias, options.distinct_on, this._tableAlias
             )];
             this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
+            this._selectRoot = format(
+                `SELECT DISTINCT ON (%s.%s)`, this._tableAlias, options.distinct_on
+            )
         } else if (options && options.distinct) {
             this._query.SELECT = [format(`SELECT DISTINCT %s.*`, this._tableAlias)];
             this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
+            this._selectRoot = 'SELECT DISTINCT';
         } else {
             this._query.SELECT = [format(`SELECT %s.*`, this._tableAlias)];
             this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
+            this._selectRoot = 'SELECT';
         }
+    }
+
+    // function to overwrite select statement. the select replacement
+    // isn't applied until list to allow for table name replacements (see from function)
+    // note that this will not take place on a COUNT query.
+    select(fields: string | string[], tableName?: string) {
+        // assign default table if none specified
+        let table = tableName ? tableName : this._tableName
+        if (typeof fields === 'string') {
+            this._selectToReplace.push({'column': fields, 'table': table});
+        } else if (Array.isArray(fields)) {
+            fields.forEach((field) => {
+                this._selectToReplace.push({'column': field, 'table': table})
+            });
+        }
+
+        return this;
+    }
+
+    // returns new select-string. optional param for passing in list on subquery call
+    replaceSelect() {
+        let toAdd: string[] = [];
+        this._selectToReplace.forEach((field) => {
+            let table = this._aliasMap.has(field.table) ? this._aliasMap.get(field.table) : field.table
+            if (!field.column.includes('.') && table !== '') {
+                // if column is within function, add qualifier inside parentheses
+                if (field.column.includes('(')) {
+                    const fieldParts = field.column.split('(')
+                    toAdd.push(fieldParts.join(`(${table}.`))
+                } else {
+                    toAdd.push(`${table}.${field.column}`)
+                }
+            } else {
+                toAdd.push(`${field.column}`)
+            }
+        })
+        this._selectRoot += ` ${toAdd.join(', ')}`
+        return this;
+    }
+
+    // Used to overwrite constructor settings with a new table name. This should be applied
+    // before other functions to ensure that they maintain this table name and alias.
+    from(tableName: string, tableAlias?: string, options?: ConstructorOptions) {
+        this._tableName = tableName;
+        this._tableAlias = tableAlias ? tableAlias : '';
+
+        // set table alias manually if user specifies
+        if (tableAlias) {
+            this._aliasMap.set(tableName, tableAlias);
+        }
+
+        // check if alias exists, assign if not
+        if (this._tableName !== '') {
+            if (this._aliasMap.has(this._tableName)) {
+                this._tableAlias = this._aliasMap.get(this._tableName)!;
+            } else {
+                this._tableAlias = this._setAlias(this._tableName);
+            }
+        }
+
+        // apply select again - this ensures complete override of contructor table name
+        // as the select statement with the default table was previously set there
+        if (options && options.distinct) {
+            this._query.SELECT = [format(`SELECT DISTINCT %s.*`, this._tableAlias)];
+            this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
+            this._selectRoot = 'SELECT DISTINCT';
+        } else {
+            this._query.SELECT = [format(`SELECT %s.*`, this._tableAlias)];
+            this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
+            this._selectRoot = 'SELECT';
+        }
+
+        return this;
     }
 
     // In the event of multiple nested conditions being needed in the WHERE clause, it is
@@ -120,6 +202,22 @@ export class Repository {
             this._query.WHERE?.push('OR');
         }
         return this;
+    }
+
+    // create a subquery. Note that when joining to a subquery, you must use the `destination_alias` join option.
+    subquery(repo: Repository) {
+        // ensure options are applied
+        repo.options({})
+
+        // replace the initial select statement
+        if (repo._selectToReplace.length > 0) {
+            repo.replaceSelect()
+            repo._query.SELECT[0] = repo._selectRoot
+        }
+
+        // prepare subquery for return
+        let query = [repo._query.SELECT.join(' '), repo._query.JOINS?.join(' '), repo._query.WHERE?.join(' '), repo._query.OPTIONS?.join(' ')].join(' ');
+        return format(`( %s )`, query);
     }
 
     queryJsonb(key: string, fieldName: string, operator: string, value: any, conditions?: QueryConditions) {
@@ -387,41 +485,62 @@ export class Repository {
         return this;
     }
 
+    // join to another table
     join(destination: string, options: JoinOptions, origin: string = this._tableName) {
         if (this._query.JOINS === undefined) {
             this._query.JOINS = [];
         }
 
-        let destination_alias;
+        const join_type = options.join_type ? options.join_type : 'LEFT';
+
+        let destination_alias: string;
         if (options.destination_alias) {
             destination_alias = options.destination_alias;
         } else if (this._aliasMap.has(destination)) {
-            destination_alias = this._aliasMap.get(destination);
+            destination_alias = this._aliasMap.get(destination)!;
         } else {
             destination_alias = this._setAlias(destination);
         }
 
-        const join_type = options.join_type ? options.join_type : 'LEFT';
-        const operator = options.operator ? options.operator : '=';
-
-        let originAlias;
+        let originAlias: string;
         if (origin === this._tableName) {
             originAlias = this._tableAlias;
         } else {
             if (this._aliasMap.has(origin)) {
-                originAlias = this._aliasMap.get(origin);
+                originAlias = this._aliasMap.get(origin)!;
             } else {
                 originAlias = origin;
             }
         }
 
-        const values = [join_type, destination, destination_alias, originAlias, options.origin_col, operator, destination_alias, options.destination_col];
+        const onClause: string[] = ['ON'];
+
+        if (Array.isArray(options.conditions)) {
+            options.conditions.forEach((condition, index) => {
+                let operator = condition?.operator ? condition.operator : '='
+                let values = [originAlias, condition?.origin_col, operator, destination_alias, condition?.destination_col];
+                if (index === 0) { // first value
+                    // origin.column operator destination.column
+                    onClause.push(format(`%s.%s %s %s.%s`, ...values));
+                } else { // every other join condition added with AND
+                    // origin.column operator destination.column
+                    onClause.push(format(`AND %s.%s %s %s.%s`, ...values));
+                }
+            })
+        } else {
+            let operator = options.conditions?.operator ? options.conditions.operator : '='
+            let values = [originAlias, options.conditions?.origin_col, operator, destination_alias, options.conditions?.destination_col];
+            // origin.column operator destination.column
+            onClause.push(format(`%s.%s %s %s.%s`, ...values))
+        }
+
+        const values = [join_type, destination, destination_alias, onClause.join(' ')];
 
         const current_joins = this._query.JOINS.join(' ');
         const search = new RegExp(`.* JOIN .* ${destination_alias!} ON`, 'g');
         // only add join if table isn't already joined under alias
         if (!current_joins.match(search)) {
-            this._query.JOINS?.push(format(`%s JOIN %s %s ON %s.%s %s %s.%s`, ...values));
+            this._query.JOINS?.push(format(`%s JOIN %s %s %s`, ...values));
         }
 
         return this;
@@ -484,9 +603,8 @@ export class Repository {
         return this;
     }
 
-    findAll<T>(queryOptions?: QueryOptions, options?: Options<T>): Promise<Result<T[]>> {
-        const storage = new Mapper();
-
+    // popping this out of list function for accessibility by subquery function since it doesn't call `list()`
+    options(queryOptions?: QueryOptions) {
         if (queryOptions || this._query.GROUPBY) {
             this._query.OPTIONS = [];
         }
@@ -554,8 +672,28 @@ export class Repository {
                 queryOptions.distinct_on.column, // column
                 this._tableAlias // base table alias
             )
+            this._selectRoot = format(
+                `SELECT DISTINCT ON (%s.%s)`,
+                this._aliasMap.get(queryOptions.distinct_on.table),
+                queryOptions.distinct_on.column
+            )
         } else if (queryOptions && queryOptions?.distinct) {
             this._query.SELECT[0] = format(`SELECT DISTINCT %s.*`, this._tableAlias)
+            this._selectRoot = 'SELECT DISTINCT'
+        }
+
+        return this;
+    }
+
+    findAll<T>(queryOptions?: QueryOptions, options?: Options<T>): Promise<Result<T[]>> {
+        const storage = new Mapper();
+
+        // set query options (group by, order by, offset, limit, distinct)
+        this.options(queryOptions);
+        
+        if (this._selectToReplace.length > 0) {
+            this.replaceSelect()
+            this._query.SELECT[0] = this._selectRoot
         }
 
         const text = [this._query.SELECT.join(' '), this._query.JOINS?.join(' '), this._query.WHERE?.join(' '), this._query.OPTIONS?.join(' ')].join(' ');
@@ -568,6 +706,8 @@ export class Repository {
             VALUES: [],
         };
         this._aliasMap.clear();
+        this._selectRoot = 'SELECT';
+        this._selectToReplace = [];
 
         return storage.rows<T>(query, options);
     }
@@ -575,40 +715,12 @@ export class Repository {
     findAllStreaming(queryOptions?: QueryOptions, options?: Options<any>): Promise<QueryStream> {
         const storage = new Mapper();
 
-        if (queryOptions) {
-            this._query.OPTIONS = [];
-        }
+        // set query options (group by, order by, offset, limit, distinct)
+        this.options(queryOptions);
 
-        if (queryOptions && queryOptions.groupBy) {
-            this._query.OPTIONS?.push(format(`GROUP BY %s`, queryOptions.groupBy));
-        }
-
-        if (queryOptions && queryOptions.sortBy) {
-            if (queryOptions.sortDesc) {
-                this._query.OPTIONS?.push(format(`ORDER BY %s DESC`, queryOptions.sortBy));
-            } else {
-                this._query.OPTIONS?.push(format(`ORDER BY %s ASC`, queryOptions.sortBy));
-            }
-        }
-
-        if (queryOptions && queryOptions.offset) {
-            this._query.OPTIONS?.push(format(`OFFSET %L`, queryOptions.offset));
-        }
-
-        if (queryOptions && queryOptions.limit) {
-            this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
-        }
-
-        // allow a user to specify a column to select distinct on 
-        if (queryOptions && queryOptions.distinct_on) {
-            this._query.SELECT[0] = format(
-                `SELECT DISTINCT ON (%s.%s) %s.*`,
-                this._aliasMap.get(queryOptions.distinct_on.table), // column's table alias
-                queryOptions.distinct_on.column, // column
-                this._tableAlias // base table alias
-            )
-        } else if (queryOptions && queryOptions?.distinct) {
-            this._query.SELECT[0] = format(`SELECT DISTINCT %s.*`, this._tableAlias)
+        if (this._selectToReplace.length > 0) {
+            this.replaceSelect()
+            this._query.SELECT[0] = this._selectRoot
         }
 
         const text = [this._query.SELECT.join(' '), this._query.JOINS?.join(' '), this._query.WHERE?.join(' '), this._query.OPTIONS?.join(' ')].join(' ');
@@ -621,6 +733,8 @@ export class Repository {
             VALUES: [],
         };
         this._aliasMap.clear();
+        this._selectRoot = 'SELECT';
+        this._selectToReplace = [];
 
         return storage.rowsStreaming(query, options);
     }
@@ -628,40 +742,12 @@ export class Repository {
     async findAllToFile(fileOptions: FileOptions, queryOptions?: QueryOptions, options?: Options<any>): Promise<Result<File>> {
         const storage = new Mapper();
 
-        if (queryOptions) {
-            this._query.OPTIONS = [];
-        }
+        // set query options (group by, order by, offset, limit, distinct)
+        this.options(queryOptions);
 
-        if (queryOptions && queryOptions.groupBy) {
-            this._query.OPTIONS?.push(format(`GROUP BY %s`, queryOptions.groupBy));
-        }
-
-        if (queryOptions && queryOptions.sortBy) {
-            if (queryOptions.sortDesc) {
-                this._query.OPTIONS?.push(format(`ORDER BY %s DESC`, queryOptions.sortBy));
-            } else {
-                this._query.OPTIONS?.push(format(`ORDER BY %s ASC`, queryOptions.sortBy));
-            }
-        }
-
-        if (queryOptions && queryOptions.offset) {
-            this._query.OPTIONS?.push(format(`OFFSET %L`, queryOptions.offset));
-        }
-
-        if (queryOptions && queryOptions.limit) {
-            this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
-        }
-
-        // allow a user to specify a column to select distinct on 
-        if (queryOptions && queryOptions.distinct_on) {
-            this._query.SELECT[0] = format(
-                `SELECT DISTINCT ON (%s.%s) %s.*`,
-                this._aliasMap.get(queryOptions.distinct_on.table), // column's table alias
-                queryOptions.distinct_on.column, // column
-                this._tableAlias // base table alias
-            )
-        } else if (queryOptions && queryOptions?.distinct) {
-            this._query.SELECT[0] = format(`SELECT DISTINCT %s.*`, this._tableAlias)
+        if (this._selectToReplace.length > 0) {
+            this.replaceSelect()
+            this._query.SELECT[0] = this._selectRoot
         }
 
         const text = [this._query.SELECT.join(' '), this._query.JOINS?.join(' '), this._query.WHERE?.join(' '), this._query.OPTIONS?.join(' ')].join(' ');
@@ -674,6 +760,8 @@ export class Repository {
             VALUES: [],
         };
         this._aliasMap.clear();
+        this._selectRoot = 'SELECT';
+        this._selectToReplace = [];
 
         try {
             // blob storage will pick the proper provider based on environment variable, no need to specify here unless
@@ -775,13 +863,8 @@ export class Repository {
             this._query.SELECT = [format(`SELECT COUNT(*) FROM %s %s`, this._tableName, this._tableAlias)];
         }
 
-        if (queryOptions && queryOptions.offset) {
-            this._query.OPTIONS?.push(format(`OFFSET %L`, queryOptions.offset));
-        }
-
-        if (queryOptions && queryOptions.limit) {
-            this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
-        }
+        // set query options (group by, order by, offset, limit, distinct)
+        this.options(queryOptions);
 
         const text = [this._query.SELECT.join(' '), this._query.JOINS?.join(' '), this._query.WHERE?.join(' '), this._query.OPTIONS?.join(' ')].join(' ');
 
@@ -793,6 +876,8 @@ export class Repository {
             VALUES: [],
         };
         this._aliasMap.clear();
+        this._selectRoot = 'SELECT';
+        this._selectToReplace = [];
 
         return storage.count(query, transaction);
     }
@@ -821,12 +906,16 @@ export type QueryOptions = {
 };
 
 export type JoinOptions = {
-    origin_col: string | undefined;
-    operator?: '=' | '<>' | undefined;
-    destination_col: string | undefined;
+    conditions: JoinConditions | JoinConditions[] | undefined;
     destination_alias?: string | undefined;
     join_type?: 'INNER' | 'RIGHT' | 'LEFT' | 'FULL OUTER' | undefined;
 };
+
+export type JoinConditions = {
+    origin_col: string | undefined;
+    operator?: '=' | '<>' | undefined;
+    destination_col: string | undefined;
+}
 
 export type QueryConditions = {
     dataType?: string | undefined;

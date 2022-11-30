@@ -1018,6 +1018,8 @@ export default class GraphViewer extends Vue {
     // fetch the edges
     // returns all edges in the container where either the origin or destination id is in the provided list of node IDs
     if (nodeIDs.length > 0) {
+      this.blankGraphFlag = false
+
       edges = await this.$client.listEdgesForNodeIDs(this.containerID, nodeIDs)
 
       if (edges) {
