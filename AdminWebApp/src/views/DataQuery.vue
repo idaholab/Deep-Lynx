@@ -164,7 +164,7 @@ export default class DataQuery extends Vue {
     this.showGraph = true
     this.activeTabName = 'graph'
     this.tab = this.tabs()[0]
-    this.results = queryResult.nodes
+    this.results = queryResult
   }
 
   disableGraphEdit() {

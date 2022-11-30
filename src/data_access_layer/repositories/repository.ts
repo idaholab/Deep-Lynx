@@ -35,7 +35,7 @@ export default interface RepositoryInterface<T> {
  methods together and then terminate with either a count() or list() call
 */
 export class Repository {
-    public readonly _tableName: string;
+    public _tableName: string;
     public _tableAlias: string;
 
     public _query: {
@@ -67,6 +67,28 @@ export class Repository {
             )];
             this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
         } else if (options && options.distinct) {
+            this._query.SELECT = [format(`SELECT DISTINCT %s.*`, this._tableAlias)];
+            this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
+        } else {
+            this._query.SELECT = [format(`SELECT %s.*`, this._tableAlias)];
+            this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
+        }
+    }
+
+    // Used to overwrite constructor settings with a new table name
+    table(tableName: string, options?: ConstructorOptions) {
+        this._tableName = tableName;
+        this._tableAlias = '';
+
+        if (this._tableName !== '') {
+            if (this._aliasMap.has(this._tableName)) {
+                this._tableAlias = this._aliasMap.get(this._tableName)!;
+            } else {
+                this._tableAlias = this._setAlias(this._tableName);
+            }
+        }
+
+        if (options && options.distinct) {
             this._query.SELECT = [format(`SELECT DISTINCT %s.*`, this._tableAlias)];
             this._query.SELECT.push(format(`FROM %s %s`, this._tableName, this._tableAlias));
         } else {
@@ -546,7 +568,7 @@ export class Repository {
             this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
-        // allow a user to specify a column to select distinct on 
+        // allow a user to specify a column to select distinct on
         if (queryOptions && queryOptions.distinct_on) {
             this._query.SELECT[0] = format(
                 `SELECT DISTINCT ON (%s.%s) %s.*`,
@@ -599,7 +621,7 @@ export class Repository {
             this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
-        // allow a user to specify a column to select distinct on 
+        // allow a user to specify a column to select distinct on
         if (queryOptions && queryOptions.distinct_on) {
             this._query.SELECT[0] = format(
                 `SELECT DISTINCT ON (%s.%s) %s.*`,
@@ -652,7 +674,7 @@ export class Repository {
             this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
-        // allow a user to specify a column to select distinct on 
+        // allow a user to specify a column to select distinct on
         if (queryOptions && queryOptions.distinct_on) {
             this._query.SELECT[0] = format(
                 `SELECT DISTINCT ON (%s.%s) %s.*`,

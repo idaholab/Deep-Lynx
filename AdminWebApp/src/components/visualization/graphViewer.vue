@@ -294,6 +294,48 @@
 
       </v-speed-dial>
 
+      <!-- Time Slider -->
+      <v-speed-dial
+          top
+          left
+          direction="right"
+          absolute
+          style="margin-top: 62px; margin-left: 204px; z-index: 1"
+          transition="slide-x-transition"
+      >
+        <template v-slot:activator>
+          <v-btn
+            color="blue darken-2"
+            dark
+          >
+            <v-icon>
+              mdi-calendar-clock
+            </v-icon>
+          </v-btn>
+        </template>
+
+            <v-slider
+              v-model="pointInTime"
+              :max="now.getTime()"
+              :min="then.getTime()"
+              step=10000
+              :label="new Date(pointInTime).toLocaleString()"
+              :hint="'Earliest date: ' + then.toLocaleString()"
+              persistent-hint
+              style="width: 600px; margin-top: 20px"
+              @click.stop
+            ></v-slider>
+
+            <v-btn
+                dark
+                color="blue darken-2"
+                @click="setPointInTime"
+            >
+              GO
+            </v-btn>
+
+      </v-speed-dial>
+
       <!-- Color Legend and Filter -->
       <v-navigation-drawer
           v-model="showColorLegend"
@@ -761,6 +803,7 @@ import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import CreateNodeCard from "@/components/data/createNodeCard.vue";
 import CreateEdgeDialog from "@/components/data/createEdgeDialog.vue";
 import EditNodeDialog from "@/components/data/editNodeDialog.vue";
+import {ResultSet} from "@/components/queryBuilder/queryBuilder.vue";
 import {Component, Prop, Watch, Vue} from "vue-property-decorator";
 import {NodeT, DataSourceT, MetatypeRelationshipPairT, MetatypeRelationshipKeyT, UserT} from "@/api/types";
 import ForceGraph, {ForceGraphInstance} from 'force-graph';
@@ -782,7 +825,9 @@ export default class GraphViewer extends Vue {
   readonly containerID!: string
 
   @Prop()
-  readonly results!: NodeT[]
+  readonly results!: ResultSet
+
+  query: string | null = null
 
   dialog = false
   optional = false
@@ -891,6 +936,10 @@ export default class GraphViewer extends Vue {
     }) 
   }
 
+  now = new Date()
+  then = new Date("2022-10-01T00:00:00")
+  pointInTime = this.now.getTime()
+
   @Watch('results', {immediate: true})
   graphUpdate() {
     // reset graph
@@ -994,7 +1043,6 @@ export default class GraphViewer extends Vue {
 
     if (graphResults != null) {
       // if custom results are provided, use those
-
       this.graph.nodes = graphResults.map((node: any) => {
         nodeIDs.push(node.id)
 
@@ -1005,7 +1053,7 @@ export default class GraphViewer extends Vue {
 
     } else {
 
-      this.graph.nodes = this.results.map((node: any) => {
+      this.graph.nodes = this.results.nodes.map((node: any) => {
         nodeIDs.push(node.id)
 
         node.collapsed = false
@@ -1013,6 +1061,8 @@ export default class GraphViewer extends Vue {
         return node
       });
 
+      // save the query for future use
+      this.query = this.results.query
     }
 
     // fetch the edges
@@ -1356,19 +1406,23 @@ export default class GraphViewer extends Vue {
               }
             }
           })
-          .onNodeDragEnd(() => {
+          .onNodeDragEnd(async () => {
 
             // bring up create edge dialog if edgeFlag enabled and intermLink is populated
             if (this.edgeFlag && this.interimLink) {
 
               // grab metatype relationship pairs
+              
+              // provide the origin metatype to use its corresponding ontology version if available
+              const originMetatype = await this.$client.retrieveMetatype(this.containerID, this.interimLink.source.metatype_id);
+
               this.$client.listMetatypeRelationshipPairs(this.containerID, {
                 name: undefined,
                 limit: 1000,
                 offset: 0,
                 originID: this.interimLink.source.metatype_id,
                 destinationID: this.interimLink.target.metatype_id,
-                ontologyVersion: this.$store.getters.currentOntologyVersionID,
+                ontologyVersion: originMetatype.ontology_version || this.$store.getters.currentOntologyVersionID,
                 metatypeID: undefined,
                 loadRelationships: false,
               })
@@ -1449,9 +1503,7 @@ export default class GraphViewer extends Vue {
   async openNodeGraph(node: NodeT, depth = 1) {
     this.loading = true
 
-    this.colorGroupFilter = []
-    this.selectedFilters = []
-    this.filterOnGroupItem(null)
+    this.resetFilters()
     // make new graph call for the selected node
     // retrieve a graph of depth 1 around the selected node
     const newGraph = await this.$client.submitGraphQLQuery(this.containerID, { query:
@@ -1660,9 +1712,7 @@ export default class GraphViewer extends Vue {
   }
 
   updateColorGroup(groupSelection: string) {
-    this.colorGroupFilter = []
-    this.selectedFilters = []
-    this.filterOnGroupItem(null)
+    this.resetFilters()
 
     this.loading = true
 
@@ -1677,9 +1727,7 @@ export default class GraphViewer extends Vue {
       this.canvas!.nodeAutoColorBy((node: any) => `${node.data_source_id}`) // auto color by data source
     }
 
-    this.colorGroupFilter = []
-    this.filterOnGroupItem(null)
-
+    this.resetFilters()
   }
 
   // used for calculating where to place a link label on curved links
@@ -1708,11 +1756,15 @@ export default class GraphViewer extends Vue {
         this.loadResults()
         this.updateColorGroup(this.colorGroup)
 
-        this.colorGroupFilter = []
-        this.selectedFilters = []
-        this.filterOnGroupItem(null)
+        this.resetFilters()
       }
     }
+  }
+
+  resetFilters() {
+    this.colorGroupFilter = []
+    this.selectedFilters = []
+    this.filterOnGroupItem(null)
   }
 
   updateGraphZoom() {
@@ -1966,6 +2018,33 @@ export default class GraphViewer extends Vue {
       }
 
     }
+  }
+
+  setPointInTime() {
+    this.loading = true
+
+    // Add the current pointInTime to the query, resubmit, and redo graph results
+     this.$client.submitGraphQLQuery(this.containerID, { query: this.query }, new Date(this.pointInTime).toISOString())
+        .then((results: any) => {
+          if(results.errors) {
+            this.errorMessage = results.errors[0].message ? 
+              results.errors.map(function(result: any) { return result.message }).join(", ") : (results.errors as string[]).join(' ')
+            return
+          }
+
+          // reset graph and filters
+          this.graph = {
+            nodes: [],
+            links: []
+          }
+          this.resetFilters()
+
+          this.loadResults(results.data.nodes)
+       })
+        .catch(e => {
+          this.errorMessage = e
+        })
+        .finally(() => this.loading = false)
   }
 
   async mounted() {

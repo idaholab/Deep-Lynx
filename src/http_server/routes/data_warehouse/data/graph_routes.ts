@@ -146,6 +146,14 @@ export default class GraphRoutes {
                     .destination_node_id('in', payload.node_ids)
                 );
 
+            console.log(repo)
+
+            // TODO: Add ability to filter on point in time
+            // if pointInTime is passed, only return edges that existed at that time
+            if (req.query.pointInTime !== undefined) {
+                // adjust repo here
+            }
+
             if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
                 repo.count(undefined, {
                     limit: req.query.limit ? +req.query.limit : undefined,
@@ -159,6 +167,7 @@ export default class GraphRoutes {
                     })
                     .finally(() => next());
             } else {
+                // TODO: Correct loadMetatypeRelationshipss?
                 repo.list(String(req.query.loadMetatypeRelationshipss).toLowerCase() === 'true', {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,

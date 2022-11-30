@@ -49,7 +49,17 @@ export default class NodeRepository extends Repository implements RepositoryInte
     }
 
     async findNodeHistoryByID(id: string, transaction?: PoolClient): Promise<Result<Node[]>> {
-        const nodes = await this.#mapper.ListHistory(id, transaction);
+        const nodes = await this.#mapper.RetrieveHistory(id, transaction);
+
+        if (nodes.isError) {
+            return Promise.reject(nodes.error)
+        }
+
+        return Promise.resolve(nodes);
+    }
+
+    async listAtPointInTime(pointInTime: string, containerID: string, transaction?: PoolClient): Promise<Result<Node[]>> {
+        const nodes = await this.#mapper.PointInTime(pointInTime, containerID, transaction);
 
         if (nodes.isError) {
             return Promise.reject(nodes.error)
