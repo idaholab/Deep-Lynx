@@ -36,6 +36,8 @@ describe('A Node Schema Generator', async () => {
     let user: User;
     let dataSource: DataSource;
 
+    if(process.env.TIMESCALEDB_ENABLED === "false") {return}
+
     // this covers testing the hypertable creation and deletion as well
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {
@@ -347,7 +349,7 @@ describe('A Node Schema Generator', async () => {
         await TypeTransformationMapper.Instance.DeleteHypertable(transformationID);
         // we have to delete data source manually so hypertable gets deleted, hopefully that eventually gets handled
         // as hypertable should always be deleted with the datasource and container
-        await DataSourceMapper.Instance.DeleteWithData(dataSource.DataSourceRecord?.id!);
+        await DataSourceMapper.Instance.DeleteWithData(dataSource!.DataSourceRecord?.id!);
         await UserMapper.Instance.Delete(user.id!);
         await ContainerMapper.Instance.Delete(containerID);
         // for some reason this suite of tests likes to not let go of the db, so this way we don't wait for it
