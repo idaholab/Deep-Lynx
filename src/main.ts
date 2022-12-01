@@ -50,7 +50,7 @@ async function Start(): Promise<any> {
             },*/
                 {
                     name: 'data_staging_emitter', // will run data_staging_emitter on an infinite loop
-                    interval: Config.emitter_interval,
+                    interval: '1m',
                     timeout: 0,
                 },
                 {
@@ -96,7 +96,6 @@ async function Start(): Promise<any> {
 
         await bree.start();
 
-
         Cache.Instance.on('deleted', (key) => {
             bree.workers.forEach((worker) => {
                 worker.postMessage(`deleted|${key}`);
@@ -109,7 +108,6 @@ async function Start(): Promise<any> {
             });
         });
     }
-
 
     // if enabled, create an initial SuperUser for easier system management
     // if SAML is configured, the initial SAML user will be assigned admin status
