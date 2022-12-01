@@ -14,6 +14,7 @@ import {plainToClass} from 'class-transformer';
 import DataStagingMapper from '../data_access_layer/mappers/data_warehouse/import/data_staging_mapper';
 import {DataStaging} from '../domain_objects/data_warehouse/import/import';
 import {parentPort} from 'worker_threads';
+import BackedLogger from '../services/logger';
 const devnull = require('dev-null');
 process.setMaxListeners(0);
 
@@ -35,6 +36,11 @@ if (Config.cache_provider === 'memory') {
     });
 }
 
+process.on('unhandledRejection', (reason, promise) => {
+    BackedLogger.error(`Unhandled rejection at ${promise} reason: ${reason}`);
+    process.exit(1);
+});
+
 void postgresAdapter
     .init()
     .then(() => {
@@ -43,8 +49,6 @@ void postgresAdapter
                 const emitter = () => {
                     void postgresAdapter.Pool.connect((err, client, done) => {
                         const stream = client.query(new QueryStream(dataStagingMapper.listImportUninsertedActiveMappingStatement()));
-                        const cachePromises: Promise<boolean>[] = [];
-                        const putPromises: Promise<boolean>[] = [];
                         const seenImports: string[] = [];
 
                         stream.on('data', (data) => {
@@ -52,30 +56,37 @@ void postgresAdapter
 
                             // check to see if the importID is in the cache, indicating that there is a high probability that
                             // this message is already in the queue and either is being processed or waiting to be processed
-                            cachePromises.push(
-                                new Promise((resolve) => {
-                                    Cache.get(`imports_${staging.import_id}`)
-                                        .then((set) => {
-                                            if (!set) {
-                                                // if the import isn't the cache, we can go ahead and queue the staging data
-                                                putPromises.push(queue.Put(Config.process_queue, staging));
-                                            }
-                                        })
-                                        // if we error out we need to go ahead and queue this message anyway, just so we're not dropping
-                                        // data
-                                        .catch((e) => {
-                                            Logger.error(`error reading from cache for staging emitter ${e}`);
-                                            putPromises.push(queue.Put(Config.process_queue, staging));
-                                        })
-                                        .finally(() => {
-                                            if (staging.import_id) {
-                                                seenImports.push(staging.import_id);
-                                            }
-
-                                            resolve(true);
+                            Cache.get(`imports_${staging.import_id}`)
+                                .then((set) => {
+                                    // if it's set but in our list of seen imports then odds are we're the one putting this import
+                                    // in, so we need to handle that fact
+                                    if (!set || (set && seenImports.find((i) => staging.import_id === i))) {
+                                        // if the import isn't the cache, we can go ahead and queue the staging data
+                                        queue.Put(Config.process_queue, staging).catch((e) => {
+                                            Logger.error(
+                                                `unexpected error in data staging emitter emitter thread when attempting to put message on queue ${e}`,
+                                            );
                                         });
-                                }),
-                            );
+                                    }
+                                })
+                                // if we error out we need to go ahead and queue this message anyway, just so we're not dropping
+                                // data
+                                .catch((e) => {
+                                    Logger.error(`error reading from cache for staging emitter ${e}`);
+                                    queue.Put(Config.process_queue, staging).catch((e) => {
+                                        Logger.error(`unexpected error in data staging emitter emitter thread when attempting to put message on queue ${e}`);
+                                    });
+                                })
+                                .finally(() => {
+                                    if (staging.import_id) {
+                                        // we set the cache value and push the imports into seen imports
+                                        Cache.set(`imports_${staging.import_id}`, {}, Config.initial_import_cache_ttl).catch((e) => {
+                                            Logger.error(`unexpected error in data staging emitter emitter thread when attempting to put import on cache ${e}`);
+                                        });
+
+                                        seenImports.push(staging.import_id);
+                                    }
+                                });
                         });
 
                         stream.on('error', (e: Error) => {
@@ -89,29 +100,18 @@ void postgresAdapter
                         stream.on('end', () => {
                             done();
 
-                            Promise.all(cachePromises).finally(() => {
-                                Promise.all(putPromises)
-                                    .then(() => {
-                                        const cachePromises: Promise<any>[] = [];
-
-                                        seenImports.forEach((importID) => {
-                                            cachePromises.push(Cache.set(`imports_${importID}`, {}, Config.initial_import_cache_ttl));
-                                        });
-
-                                        Promise.all(cachePromises).finally(() => {
-                                            if (parentPort) parentPort.postMessage('done');
-                                            else {
-                                                process.exit(0);
-                                            }
-                                        });
-                                    })
-                                    .catch((e) => Logger.error(`unable to initiate data source emitter: ${e}`));
+                            seenImports.forEach((importID) => {
+                                Cache.set(`imports_${importID}`, {}, Config.initial_import_cache_ttl).catch((e) => {
+                                    Logger.error(`unexpected error in data staging emitter emitter thread when attempting to put import on cache ${e}`);
+                                });
                             });
                         });
 
                         // we pipe to devnull because we need to trigger the stream and don't
                         // care where the data ultimately ends up
                         stream.pipe(devnull({objectMode: true}));
+
+                        setTimeout(() => emitter(), 1000);
                     });
                 };
 
