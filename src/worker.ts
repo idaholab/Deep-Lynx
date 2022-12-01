@@ -38,7 +38,7 @@ async function Start(): Promise<any> {
             },*/
             {
                 name: 'data_staging_emitter', // will run data_staging_emitter on an infinite loop
-                interval: Config.emitter_interval,
+                interval: '30s',
                 timeout: '1m',
             },
             {
