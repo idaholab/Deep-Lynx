@@ -49,7 +49,7 @@ void postgresAdapter
                 const emitter = () => {
                     void postgresAdapter.Pool.connect((err, client, done) => {
                         const stream = client.query(new QueryStream(dataStagingMapper.listImportUninsertedActiveMappingStatement()));
-                        const seenImports: string[] = [];
+                        const seenImports: Map<string, undefined> = new Map<string, undefined>();
 
                         stream.on('data', (data) => {
                             const staging = plainToClass(DataStaging, data as object);
@@ -60,7 +60,7 @@ void postgresAdapter
                                 .then((set) => {
                                     // if it's set but in our list of seen imports then odds are we're the one putting this import
                                     // in, so we need to handle that fact
-                                    if (!set || (set && seenImports.find((i) => staging.import_id === i))) {
+                                    if (!set || (set && seenImports.has(staging.import_id!))) {
                                         // if the import isn't the cache, we can go ahead and queue the staging data
                                         queue.Put(Config.process_queue, staging).catch((e) => {
                                             Logger.error(
@@ -84,7 +84,7 @@ void postgresAdapter
                                             Logger.error(`unexpected error in data staging emitter emitter thread when attempting to put import on cache ${e}`);
                                         });
 
-                                        seenImports.push(staging.import_id);
+                                        seenImports.set(staging.import_id, undefined);
                                     }
                                 });
                         });
@@ -99,19 +99,18 @@ void postgresAdapter
 
                         stream.on('end', () => {
                             done();
-
-                            seenImports.forEach((importID) => {
-                                Cache.set(`imports_${importID}`, {}, Config.initial_import_cache_ttl).catch((e) => {
-                                    Logger.error(`unexpected error in data staging emitter emitter thread when attempting to put import on cache ${e}`);
-                                });
-                            });
                         });
 
                         // we pipe to devnull because we need to trigger the stream and don't
                         // care where the data ultimately ends up
                         stream.pipe(devnull({objectMode: true}));
 
-                        setTimeout(() => emitter(), 1000);
+                        setTimeout(() => {
+                            if (parentPort) parentPort.postMessage('done');
+                            else {
+                                process.exit(0);
+                            }
+                        }, 10000);
                     });
                 };
 
