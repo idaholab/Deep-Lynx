@@ -19,9 +19,6 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
     const transaction = await mapper.startTransaction();
     const edge = plainToClass(Edge, edgeQueueItem.edge);
 
-    // first thing we do is lower the ttl for this edge, indicating that we're currently processing it
-    await Cache.set(`edge_insertion_${edgeQueueItem.id}`, {}, Config.import_cache_ttl);
-
     // run the filters if needed
     const edges = await repo.populateFromParameters(edge);
     if (edges.isError) {
@@ -120,7 +117,8 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
         }
     }
 
+    // we lower the TTL last to indicate we've processed it and so that the db has time to propagate the change
+    await Cache.set(`edge_insertion_${edgeQueueItem.id}`, {}, Config.import_cache_ttl);
     await mapper.completeTransaction(transaction.value);
-    await Cache.del(`edge_insertion_${edgeQueueItem.id}`);
     return Promise.resolve(Result.Success(true));
 }
