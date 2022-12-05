@@ -17,7 +17,11 @@
             :metatypeID="metatype"
             :multiple="operator === 'in'"
             @selected="setMetatype"></search-metatypes>
-        <v-checkbox v-model="limitOntologyVersion" :label="$t('queryBuilder.limitOntology')"></v-checkbox>
+        <v-checkbox 
+          v-model="limitOntologyVersion" 
+          :label="$t('queryBuilder.limitOntology')"
+          :disabled="disabled"
+        />
       </v-col>
     </v-row>
     <v-row v-if="metatype !== ''">

@@ -569,9 +569,20 @@ relationshipSampleQuery =
       switch(part.componentName) {
         case('MetatypeFilter'): {
           if(part.operator === 'in') {
-            args.push(`metatype_id:{operator: "${part.operator}", value: [${part.value}]} `)
+            if(part.options!.limitOntology){
+              args.push(`metatype_id:{operator: "${part.operator}", value: [${part.value}]} `)
+            } else {
+              // explicitly wrap uuids in quotes to prevent parsing errors
+              const uuids: string[] = [];
+              Array(part.options!.uuids).forEach((uuid) => { uuids.push(`"${uuid}"`) })
+              args.push(`metatype_uuid:{operator: "${part.operator}", value: [${uuids}]} `)
+            }
           } else {
-            args.push(`metatype_id:{operator: "${part.operator}", value: "${part.value}"} `)
+            if(part.options!.limitOntology) {
+              args.push(`metatype_id:{operator: "${part.operator}", value: "${part.value}"} `)
+            } else {
+              args.push(`metatype_uuid:{operator: "${part.operator}", value: "${part.options!.uuids}"}`)
+            }
           }
 
           // we make the assumption that this is a property filter
@@ -650,6 +661,7 @@ export type QueryPart = {
   operator: string;
   value: any;
   nested?: QueryPart[];
+  options?: {[key: string]: any}
 }
 
 export type ResultSet = {
