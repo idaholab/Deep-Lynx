@@ -47,15 +47,16 @@ void postgresAdapter
                         }
 
                         const stream = client.query(new QueryStream(mapper.needRetriedStreamingStatement()));
+                        const seenImports: Map<string, undefined> = new Map<string, undefined>();
 
                         stream.on('data', (data) => {
                             const item = plainToInstance(EdgeQueueItem, data as object);
 
                             // check to see if the edge queue item is in the cache, indicating that there is a high probability that
                             // this message is already in the queue and either is being processed or waiting to be processed
-                            Cache.get(`edge_insertion_${item.id}`)
+                            Cache.get(`edge_insertion_${item.import_id}`)
                                 .then((set) => {
-                                    if (!set) {
+                                    if (!set || seenImports.has(item.import_id!)) {
                                         // if the item isn't the cache, we can go ahead and queue data
                                         queue.Put(Config.edge_insertion_queue, instanceToPlain(item)).catch((e) => {
                                             Logger.error(`error reading from cache for staging emitter ${e}`);
@@ -71,7 +72,8 @@ void postgresAdapter
                                     });
                                 })
                                 .finally(() => {
-                                    void Cache.set(`edge_insertion_${item.id}`, {}, Config.initial_import_cache_ttl);
+                                    void Cache.set(`edge_insertion_${item.import_id}`, {}, Config.initial_import_cache_ttl);
+                                    seenImports.set(item.import_id!, undefined);
                                 });
                         });
 
