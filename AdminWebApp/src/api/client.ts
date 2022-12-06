@@ -655,8 +655,11 @@ export class Client {
         return this.get<FileT[]>(`/containers/${containerID}/graphs/nodes/${nodeID}/files`);
     }
 
-    listEdgesForNodeIDs(containerID: string, nodeIDS: string[]): Promise<EdgeT[]> {
-        return this.post<EdgeT[]>(`/containers/${containerID}/graphs/nodes/edges`, {node_ids: nodeIDS});
+    listEdgesForNodeIDs(containerID: string, nodeIDS: string[], pointInTime?: string): Promise<EdgeT[]> {
+        const query: {[key: string]: any} = {};
+        if (pointInTime) query.pointInTime = pointInTime;
+
+        return this.post<EdgeT[]>(`/containers/${containerID}/graphs/nodes/edges`, {node_ids: nodeIDS}, query);
     }
 
     listDataSources(containerID: string, archived = false, timeseries = false): Promise<DataSourceT[]> {

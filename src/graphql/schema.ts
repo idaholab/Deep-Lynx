@@ -153,7 +153,7 @@ export default class GraphQLRunner {
                 .and()
                 .status('eq', 'published')
                 .and()
-                .publishedAt('<', options.pointInTime)
+                .createdAt('<', options.pointInTime)
                 .list({sortBy: 'id', sortDesc: true});
 
             if (ontResults.isError || ontResults.value.length === 0) {
@@ -983,8 +983,42 @@ export default class GraphQLRunner {
 
     resolverForMetatype(containerID: string, metatype: Metatype, resolverOptions?: ResolverOptions): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
-            let repo = new NodeRepository();
-            repo = repo.where().containerID('eq', containerID).and().metatypeUUID('eq', metatype.uuid);
+            const nodeRepo = new NodeRepository();
+            let repo: NodeRepository;
+
+            // apply subquery if looking at historical view
+            if (resolverOptions?.pointInTime) {
+                // filter on provided pointInTime
+                const sub = nodeRepo.subquery(
+                    new NodeRepository()
+                        .select(['id', 'MAX(created_at) AS created_at'], 'sub_nodes')
+                        .from('nodes', 'sub_nodes')
+                        .where()
+                        .query('created_at', '<', new Date(resolverOptions.pointInTime), {dataType: 'date'})
+                        .and()
+                        .query('container_id', 'eq', containerID)
+                        .and(new NodeRepository()
+                            .query('deleted_at', '>', new Date(resolverOptions.pointInTime), {dataType: 'date'})
+                            .or()
+                            .query('deleted_at', 'is null'))
+                        .groupBy('id', 'nodes'));
+
+                repo = nodeRepo
+                    .join('nodes', {conditions: {origin_col: 'id', destination_col: 'id'}, join_type: 'RIGHT'})
+                    .join(sub, {
+                        conditions: [
+                            {origin_col: 'id', destination_col: 'id'},
+                            {origin_col: 'created_at', destination_col: 'created_at'}
+                        ],
+                        destination_alias: 'sub',
+                        join_type: 'INNER'
+                    }, 'nodes')
+                    .join('metatypes', {conditions: {origin_col: 'metatype_id', destination_col: 'id'}})
+                    .where().containerID('eq', containerID).and().metatypeUUID('eq', metatype.uuid);
+
+            } else {
+                repo = nodeRepo.where().containerID('eq', containerID).and().metatypeUUID('eq', metatype.uuid);
+            }
 
             // you might notice that metatype_id and metatype_name are missing as filters - these are not
             // needed as we've already dictated what metatype to look for based on the query itself
@@ -1252,24 +1286,43 @@ export default class GraphQLRunner {
 
     resolverForNodes(containerID: string, resolverOptions?: ResolverOptions): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
-            let repo = new NodeRepository();
+            const nodeRepo = new NodeRepository();
+            let repo: NodeRepository;
 
-            // override table name variable if looking at historical view
-            // don't have to override table name if we are just using a hardcoded statement, right?
+            // apply subquery if looking at historical view
             if (resolverOptions?.pointInTime) {
-                repo.table(repo._tableName);
-
                 // filter on provided pointInTime
-                repo = repo.where().containerID('eq', containerID);
+                const sub = nodeRepo.subquery(
+                    new NodeRepository()
+                        .select(['id', 'MAX(created_at) AS created_at'], 'sub_nodes')
+                        .from('nodes', 'sub_nodes')
+                        .where()
+                        .query('created_at', '<', new Date(resolverOptions.pointInTime), {dataType: 'date'})
+                        .and()
+                        .query('container_id', 'eq', containerID)
+                        .and(new NodeRepository()
+                            .query('deleted_at', '>', new Date(resolverOptions.pointInTime), {dataType: 'date'})
+                            .or()
+                            .query('deleted_at', 'is null'))
+                        .groupBy('id', 'nodes'));
+
+                repo = nodeRepo
+                    .join('nodes', {conditions: {origin_col: 'id', destination_col: 'id'}, join_type: 'RIGHT'})
+                    .join(sub, {
+                        conditions: [
+                            {origin_col: 'id', destination_col: 'id'},
+                            {origin_col: 'created_at', destination_col: 'created_at'}
+                        ],
+                        destination_alias: 'sub',
+                        join_type: 'INNER'
+                    }, 'nodes')
+                    .join('metatypes', {conditions: {origin_col: 'metatype_id', destination_col: 'id'}})
+                    .where().containerID('eq', containerID)
+
             } else {
-                repo = repo.where().containerID('eq', containerID);
+                repo = nodeRepo.where().containerID('eq', containerID);
             }
 
-            console.log(repo)
-
-            // TODO: Remove this comment?
-            // you might notice that metatype_id and metatype_name are missing as filters - these are not
-            // needed as we've already dictated what metatype to look for based on the query itself
             if (input.id) {
                 if(Array.isArray(input.id.value) && input.id.value.length === 1) {
                     input.id.value = input.id.value[0];

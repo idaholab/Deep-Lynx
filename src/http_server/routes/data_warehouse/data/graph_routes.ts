@@ -136,22 +136,51 @@ export default class GraphRoutes {
         if (req.container) {
             const payload = plainToInstance(NodeIDPayload, req.body as object);
 
-            let repo = new EdgeRepository();
-            repo = repo
-                .where()
-                .containerID('eq', req.container.id!)
-                .and( new EdgeRepository()
-                    .origin_node_id('in', payload.node_ids)
-                    .or()
-                    .destination_node_id('in', payload.node_ids)
-                );
+            const edgeRepo = new EdgeRepository();
+            let repo: EdgeRepository;
 
-            console.log(repo)
-
-            // TODO: Add ability to filter on point in time
             // if pointInTime is passed, only return edges that existed at that time
             if (req.query.pointInTime !== undefined) {
-                // adjust repo here
+                // filter on provided pointInTime
+                const sub = edgeRepo.subquery(
+                    new EdgeRepository()
+                        .select(['id', 'MAX(created_at) AS created_at'], 'sub_edges')
+                        .from('edges', 'sub_edges')
+                        .where()
+                        .query('created_at', '<', new Date(req.query.pointInTime as string), {dataType: 'date'})
+                        .and()
+                        .query('container_id', 'eq', req.container.id!)
+                        .and(new EdgeRepository()
+                            .query('deleted_at', '>', new Date(req.query.pointInTime as string), {dataType: 'date'})
+                            .or()
+                            .query('deleted_at', 'is null'))
+                        .groupBy('id', 'edges'));
+
+                repo = edgeRepo
+                    .join('edges', {conditions: {origin_col: 'id', destination_col: 'id'}, join_type: 'RIGHT'})
+                    .join(sub, {
+                        conditions: [
+                            {origin_col: 'id', destination_col: 'id'},
+                            {origin_col: 'created_at', destination_col: 'created_at'}
+                        ],
+                        destination_alias: 'sub',
+                        join_type: 'INNER'
+                    }, 'edges')
+                    .where().containerID('eq', req.container.id!)
+                    .and( new EdgeRepository()
+                        .origin_node_id('in', payload.node_ids)
+                        .or()
+                        .destination_node_id('in', payload.node_ids)
+                    );
+            } else {
+                repo = edgeRepo
+                    .where()
+                    .containerID('eq', req.container.id!)
+                    .and( new EdgeRepository()
+                        .origin_node_id('in', payload.node_ids)
+                        .or()
+                        .destination_node_id('in', payload.node_ids)
+                    );
             }
 
             if (req.query.count !== undefined && String(req.query.count).toLowerCase() === 'true') {
@@ -167,8 +196,7 @@ export default class GraphRoutes {
                     })
                     .finally(() => next());
             } else {
-                // TODO: Correct loadMetatypeRelationshipss?
-                repo.list(String(req.query.loadMetatypeRelationshipss).toLowerCase() === 'true', {
+                repo.list(String(req.query.loadMetatypeRelationships).toLowerCase() === 'true', {
                     limit: req.query.limit ? +req.query.limit : undefined,
                     offset: req.query.offset ? +req.query.offset : undefined,
                 })
