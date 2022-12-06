@@ -134,9 +134,15 @@
                     <span>Need Help?</span>
                   </v-tooltip>
                 </v-col>
+                <v-spacer />
+                <v-btn @click="submitRawQuery" style="margin-top: 15px; margin-right: 15px">
+                  <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
+                  <span v-if="!loading">{{$t('queryBuilder.runQuery')}}</span>
+                </v-btn>
               </v-row>
+              
 
-              <v-row>
+              <v-row style="margin-bottom:15px">
                 <v-col :cols="6">
                   <v-card style="height: 100%">
                   <textarea v-observe-visibility="initCodeMirror" v-model="metatypeSampleQuery" ref="queryEditor"></textarea>
@@ -156,17 +162,7 @@
                   </v-card>
                 </v-col>
               </v-row>
-              <v-row>
-                <v-col class="d-flex flex-row">
-                  <v-spacer />
-                  <div class="mb-5" >
-                    <v-btn @click="submitRawQuery" style="margin-top: 15px">
-                      <v-progress-circular indeterminate v-if="loading"></v-progress-circular>
-                      <span v-if="!loading">{{$t('queryBuilder.runQuery')}}</span>
-                    </v-btn>
-                  </div>
-                </v-col>
-              </v-row>
+
             </v-tab-item>
           </v-tabs-items>
         </v-card>
@@ -207,6 +203,7 @@ export default class QueryBuilder extends Vue {
   loading = false
   errorMessage = ""
   queryParts: QueryPart[] = []
+  query: string | null = null
   previousResults: ResultSet[] = []
   results: ResultSet | null = null
   limit = 100
@@ -512,6 +509,7 @@ relationshipSampleQuery =
 
   resetQuery() {
     this.queryParts = []
+    this.query = null
     this.results = null
 
     // reset raw query if applicable
@@ -526,9 +524,12 @@ relationshipSampleQuery =
     const id = uuidv4()
     this.loading = true
 
-    this.results = {id, query: this.queryParts, nodes: []}
+    this.results = {id, queryParts: this.queryParts, nodes: []}
 
-    this.$client.submitGraphQLQuery(this.containerID, this.buildQuery())
+    const query = this.buildQuery()
+    this.query = query.query
+
+    this.$client.submitGraphQLQuery(this.containerID, query)
         .then((results: any) => {
           if(results.errors) {
             this.errorMessage = results.errors[0].message ? 
@@ -538,12 +539,12 @@ relationshipSampleQuery =
 
           this.previousResults.push({
             id: id,
-            query: JSON.parse(JSON.stringify(this.queryParts)),
+            queryParts: JSON.parse(JSON.stringify(this.queryParts)),
             nodes: results.data.nodes,
             ran: new Date()
           })
 
-          this.results = {id, query: this.queryParts, nodes: results.data.nodes}
+          this.results = {id, queryParts: this.queryParts, query: query.query, nodes: results.data.nodes}
           this.$emit('results', this.results)
         })
         .catch(e => {
@@ -555,7 +556,8 @@ relationshipSampleQuery =
 
   setResult(result: ResultSet) {
     this.results = result
-    this.queryParts = result.query
+    this.queryParts = result.queryParts
+    this.query = result.query || null
     this.activeTab = 'queryBuilder'
     this.$emit('results', this.results)
   }
@@ -666,7 +668,8 @@ export type QueryPart = {
 
 export type ResultSet = {
   id: string;
-  query: QueryPart[];
+  queryParts: QueryPart[];
+  query?: string;
   nodes: NodeT[];
   ran?: Date;
 }

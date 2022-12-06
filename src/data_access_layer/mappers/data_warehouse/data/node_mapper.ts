@@ -118,8 +118,8 @@ export default class NodeMapper extends Mapper {
         });
     }
 
-    public async ListHistory(id: string, transaction?: PoolClient): Promise<Result<Node[]>> {
-        return super.rows<Node>(this.listHistoryStatement(id), {
+    public async RetrieveHistory(id: string, transaction?: PoolClient): Promise<Result<Node[]>> {
+        return super.rows<Node>(this.retrieveHistoryStatement(id), {
             transaction,
             resultClass: this.resultClass,
         });
@@ -219,8 +219,8 @@ export default class NodeMapper extends Mapper {
         };
     }
 
-    // retrives all versions of a node
-    private listHistoryStatement(nodeID: string): QueryConfig {
+    // retrieves all versions of a node
+    private retrieveHistoryStatement(nodeID: string): QueryConfig {
         return {
             text: `SELECT nodes.*, metatypes.name as metatype_name
             FROM nodes LEFT JOIN metatypes ON nodes.metatype_id = metatypes.id

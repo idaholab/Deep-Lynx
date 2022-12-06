@@ -151,6 +151,16 @@ export default class OntologyVersionRepository extends Repository implements Rep
         return this;
     }
 
+    publishedAt(operator: string, value: any) {
+        super.query('published_at', operator, value);
+        return this;
+    }
+
+    createdAt(operator: string, value: any) {
+        super.query('created_at', operator, value);
+        return this;
+    }
+
     count(): Promise<Result<number>> {
         return super.count();
     }

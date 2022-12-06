@@ -664,7 +664,7 @@ export class Repository {
             this._query.OPTIONS?.push(format(`LIMIT %L`, queryOptions.limit));
         }
 
-        // allow a user to specify a column to select distinct on 
+        // allow a user to specify a column to select distinct on
         if (queryOptions && queryOptions.distinct_on) {
             this._query.SELECT[0] = format(
                 `SELECT DISTINCT ON (%s.%s) %s.*`,
