@@ -589,7 +589,7 @@ relationshipSampleQuery =
           if(part.nested!.length > 0) {
             part.nested!.forEach(nested => {
               if(nested.operator === 'in') {
-                propertyArgs.push(`{key: "${nested.property}", value: [${nested.value}], operator: "${nested.operator}"},`)
+                propertyArgs.push(`{key: "${nested.property}", value: "${nested.value.join(",")}", operator: "${nested.operator}"},`)
               } else {
                 propertyArgs.push(`{key: "${nested.property}", value: "${nested.value}", operator: "${nested.operator}"},`)
               }
@@ -618,7 +618,7 @@ relationshipSampleQuery =
 
         case('OriginalIDFilter'): {
           if(part.operator === 'in') {
-            args.push(`original_id:{operator: "${part.operator}", value: [${part.value}]} `)
+            args.push(`original_id:{operator: "${part.operator}", value: "${part.value.join(",")}"} `)
           } else {
             args.push(`original_id:{operator: "${part.operator}", value: "${part.value}"} `)
           }
