@@ -708,11 +708,7 @@
         v-model="nodeDialog"
         width="70%"
     >
-      <v-card
-          @mouseover="opacity = 1.0"
-          @mouseleave="opacity = 0.5"
-          :style="`opacity: ${opacity}`"
-      >
+      <v-card>
 
         <div class="mt-2 pt-3 px-5 pb-5 height-full">
           <h4 class="primary--text">{{$t('dataQuery.nodeInformation')}}</h4>
@@ -825,11 +821,7 @@
         v-model="edgeDialog"
         width="70%"
     >
-      <v-card
-          @mouseover="opacity = 1.0"
-          @mouseleave="opacity = 0.5"
-          :style="`opacity: ${opacity}`"
-      >
+      <v-card>
 
         <div class="mt-2 pt-3 px-5 pb-5 height-full">
           <h4 class="primary--text">{{$t('dataQuery.edgeInformation')}}</h4>
@@ -947,7 +939,6 @@ export default class GraphViewer extends Vue {
   nodeDialog = false
   edgeDialog = false
   selectedEdge: any
-  opacity = 1.0
 
   previousClick = 0
   currentClick = 0
@@ -1673,8 +1664,6 @@ export default class GraphViewer extends Vue {
       } else {
         // ensure properties panel is already expanded (and only properties)
         this.openPanels = [0]
-        // ensure properties panel has solid opacity
-        this.opacity = 1.0
 
         const history = await this.getInfo(node)
 
@@ -1718,7 +1707,6 @@ export default class GraphViewer extends Vue {
 
   showEdgeProperties(edge: any) {
     this.openPanels = [0]
-    this.opacity = 1.0
     this.getEdgeInfo(edge)
     this.selectedEdge = edge
     this.edgeDialog = true;

@@ -23,6 +23,8 @@ describe('A Timeseries Entry', async () => {
     let transformationID: string = '';
     let transformation2ID: string = '';
 
+    if(process.env.TIMESCALEDB_ENABLED === "false") {return}
+
     // this covers testing the hypertable creeation and deletion as well
     before(async function () {
         if (process.env.CORE_DB_CONNECTION_STRING === '') {

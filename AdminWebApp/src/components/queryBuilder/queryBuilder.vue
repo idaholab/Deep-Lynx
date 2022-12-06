@@ -571,16 +571,27 @@ relationshipSampleQuery =
       switch(part.componentName) {
         case('MetatypeFilter'): {
           if(part.operator === 'in') {
-            args.push(`metatype_id:{operator: "${part.operator}", value: [${part.value}]} `)
+            if(part.options!.limitOntology){
+              args.push(`metatype_id:{operator: "${part.operator}", value: [${part.value}]} `)
+            } else {
+              // explicitly wrap uuids in quotes to prevent parsing errors
+              const uuids: string[] = [];
+              Array(part.options!.uuids).forEach((uuid) => { uuids.push(`"${uuid}"`) })
+              args.push(`metatype_uuid:{operator: "${part.operator}", value: [${uuids}]} `)
+            }
           } else {
-            args.push(`metatype_id:{operator: "${part.operator}", value: "${part.value}"} `)
+            if(part.options!.limitOntology) {
+              args.push(`metatype_id:{operator: "${part.operator}", value: "${part.value}"} `)
+            } else {
+              args.push(`metatype_uuid:{operator: "${part.operator}", value: "${part.options!.uuids}"}`)
+            }
           }
 
           // we make the assumption that this is a property filter
           if(part.nested!.length > 0) {
             part.nested!.forEach(nested => {
               if(nested.operator === 'in') {
-                propertyArgs.push(`{key: "${nested.property}", value: [${nested.value}], operator: "${nested.operator}"},`)
+                propertyArgs.push(`{key: "${nested.property}", value: "${nested.value.join(",")}", operator: "${nested.operator}"},`)
               } else {
                 propertyArgs.push(`{key: "${nested.property}", value: "${nested.value}", operator: "${nested.operator}"},`)
               }
@@ -609,7 +620,7 @@ relationshipSampleQuery =
 
         case('OriginalIDFilter'): {
           if(part.operator === 'in') {
-            args.push(`original_id:{operator: "${part.operator}", value: [${part.value}]} `)
+            args.push(`original_id:{operator: "${part.operator}", value: "${part.value.join(",")}"} `)
           } else {
             args.push(`original_id:{operator: "${part.operator}", value: "${part.value}"} `)
           }
@@ -652,6 +663,7 @@ export type QueryPart = {
   operator: string;
   value: any;
   nested?: QueryPart[];
+  options?: {[key: string]: any}
 }
 
 export type ResultSet = {
