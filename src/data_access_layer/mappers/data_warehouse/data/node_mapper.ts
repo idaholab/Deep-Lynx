@@ -125,13 +125,6 @@ export default class NodeMapper extends Mapper {
         });
     }
 
-    public async PointInTime(pointInTime: string, containerID: string, transaction?: PoolClient): Promise<Result<Node[]>> {
-        return super.rows<Node>(this.pointInTimeStatement(pointInTime, containerID), {
-            transaction,
-            resultClass: this.resultClass,
-        });
-    }
-
     public async RetrieveByCompositeOriginalID(originalID: string, dataSourceID: string, metatypeID: string, transaction?: PoolClient): Promise<Result<Node>> {
         return super.retrieve(this.retrieveByCompositeOriginalIDStatement(dataSourceID, metatypeID, originalID), {transaction, resultClass: this.resultClass});
     }
@@ -224,51 +217,6 @@ export default class NodeMapper extends Mapper {
             text: `SELECT * FROM current_nodes WHERE id = $1`,
             values: [nodeID],
         };
-    }
-
-    // retrieves all valid nodes at a point in time
-    private pointInTimeStatement(pointInTime: string, containerID: string): QueryConfig {
-        return {
-            text: `SELECT nodes.id,
-            nodes.container_id,
-            nodes.metatype_id,
-            nodes.data_source_id,
-            nodes.import_data_id,
-            nodes.data_staging_id,
-            nodes.type_mapping_transformation_id,
-            nodes.original_data_id,
-            nodes.properties,
-            nodes.metadata,
-            nodes.modified_at,
-            nodes.deleted_at,
-            nodes.created_by,
-            nodes.modified_by,
-            MAX(nodes.created_at) AS created_at,
-            metatypes.name AS metatype_name,
-            metatypes.uuid AS metatype_uuid
-            FROM (nodes
-                LEFT JOIN metatypes ON (metatypes.id = nodes.metatype_id))
-            WHERE nodes.created_at < '$1'
-                AND nodes.container_id = $2
-                AND (nodes.deleted_at > '$1' OR nodes.deleted_at IS NULL)
-            GROUP BY nodes.id,
-            nodes.container_id,
-            nodes.metatype_id,
-            nodes.data_source_id,
-            nodes.import_data_id,
-            nodes.data_staging_id,
-            nodes.type_mapping_transformation_id,
-            nodes.original_data_id,
-            nodes.properties,
-            nodes.metadata,
-            nodes.modified_at,
-            nodes.deleted_at,
-            nodes.created_by,
-            nodes.modified_by,
-            metatype_name,
-            metatype_uuid`,
-            values: [pointInTime, containerID],
-        }
     }
 
     // retrieves all versions of a node
