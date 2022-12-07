@@ -109,8 +109,6 @@ export default class FileRepository extends Repository implements RepositoryInte
         containerID: string,
         user: User,
         filename: string,
-        encoding: string,
-        mimetype: string,
         stream: Readable,
         dataSourceID?: string,
     ): Promise<Result<File>> {
@@ -123,6 +121,41 @@ export default class FileRepository extends Repository implements RepositoryInte
         if (result.isError) return Promise.resolve(Result.Pass(result));
 
         const file = new File({
+            file_name: filename,
+            file_size: result.value.size,
+            md5hash: result.value.md5hash,
+            adapter_file_path: result.value.filepath,
+            adapter: provider.name(),
+            metadata: result.value.metadata,
+            container_id: containerID,
+            data_source_id: dataSourceID,
+            short_uuid: result.value.short_uuid,
+        });
+
+        const saved = await this.save(file, user);
+        if (saved.isError) return Promise.resolve(Result.Pass(saved));
+
+        return Promise.resolve(Result.Success(file));
+    }
+
+    async updateFile(
+        fileID: string,
+        containerID: string,
+        dataSourceID: string,
+        user: User,
+        filename: string,
+        stream: Readable,
+    ): Promise<Result<File>> {
+        const provider = BlobStorageProvider();
+
+        if (!provider) return Promise.resolve(Result.Failure('no storage provider set'));
+
+        // run the actual file upload the storage provider
+        const result = await provider.uploadPipe(`containers/${containerID}/datasources/${dataSourceID}/`, filename, stream);
+        if (result.isError) return Promise.resolve(Result.Pass(result));
+
+        const file = new File({
+            id: fileID,
             file_name: filename,
             file_size: result.value.size,
             md5hash: result.value.md5hash,

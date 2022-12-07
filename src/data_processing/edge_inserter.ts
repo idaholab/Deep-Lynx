@@ -19,9 +19,6 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
     const transaction = await mapper.startTransaction();
     const edge = plainToClass(Edge, edgeQueueItem.edge);
 
-    // first thing we do is lower the ttl for this edge, indicating that we're currently processing it
-    await Cache.set(`edge_insertion_${edgeQueueItem.id}`, {}, Config.import_cache_ttl);
-
     // run the filters if needed
     const edges = await repo.populateFromParameters(edge);
     if (edges.isError) {
@@ -40,15 +37,32 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
             Logger.debug(`unable to set next retry time for edge queue item ${set.error?.error}`);
         }
 
-        await Cache.del(`edge_insertion_${edgeQueueItem.id}`);
+        await Cache.del(`edge_insertion_${edge.import_data_id}`);
         return Promise.resolve(Result.Failure(`unable to populate edges from parameter ${edges.error?.error}`));
     }
 
-    // run bulk save, so we don't need a user type
-    const inserted = await repo.bulkSave(edge.created_by!, edges.value, transaction.value);
-    if (inserted.isError) {
+    // we need to do batch insert here
+    let recordBuffer: Edge[] = [];
+    const saveOperations: Promise<Result<boolean>>[] = [];
+
+    edges.value.forEach((e) => {
+        recordBuffer.push(e);
+
+        if (recordBuffer.length >= Config.data_source_batch_size) {
+            const toSave = [...recordBuffer];
+            recordBuffer = [];
+
+            saveOperations.push(repo.bulkSave(edge.created_by!, toSave, transaction.value));
+        }
+    });
+
+    saveOperations.push(repo.bulkSave(edge.created_by!, recordBuffer, transaction.value));
+
+    const saveResults = await Promise.all(saveOperations);
+    if (saveResults.filter((result) => result.isError || !result.value).length > 0) {
         await mapper.rollbackTransaction(transaction.value);
-        Logger.debug(`unable to save edges: ${inserted.error?.error}`);
+        const error = saveResults.filter((result) => result.isError).map((result) => JSON.stringify(result.error));
+        Logger.debug(`unable to save edges: ${error}`);
 
         // if we failed, need to iterate the attempts and set the next attempt date, so we don't swamp the database - this
         // is an exponential backoff
@@ -57,13 +71,13 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
 
         edgeQueueItem.next_attempt_at = new Date(check);
 
-        const set = await queueMapper.SetNextAttemptAt(edgeQueueItem.id!, edgeQueueItem.next_attempt_at.toISOString(), inserted.error?.error);
+        const set = await queueMapper.SetNextAttemptAt(edgeQueueItem.id!, edgeQueueItem.next_attempt_at.toISOString(), error.join(','));
         if (set.isError) {
             Logger.debug(`unable to set next retry time for edge queue item ${set.error?.error}`);
         }
 
-        await Cache.del(`edge_insertion_${edgeQueueItem.id}`);
-        return Promise.resolve(Result.Failure(`unable to save edges ${inserted.error?.error}`));
+        await Cache.del(`edge_insertion_${edge.import_data_id}`);
+        return Promise.resolve(Result.Failure(`unable to save edges ${error}`));
     }
 
     // now we attach the files
@@ -115,12 +129,13 @@ export async function InsertEdge(edgeQueueItem: EdgeQueueItem): Promise<Result<b
             await mapper.rollbackTransaction(transaction.value);
             Logger.debug(`unable to delete edge queue item: ${deleted.error?.error}`);
 
-            await Cache.del(`edge_insertion_${edgeQueueItem.id}`);
+            await Cache.del(`edge_insertion_${edge.import_data_id}`);
             return Promise.resolve(Result.Failure(`unable to delete edge queue item ${deleted.error?.error}`));
         }
     }
 
+    // we lower the TTL last to indicate we've processed it and so that the db has time to propagate the change
+    await Cache.set(`edge_insertion_${edge.import_data_id}`, {}, Config.import_cache_ttl);
     await mapper.completeTransaction(transaction.value);
-    await Cache.del(`edge_insertion_${edgeQueueItem.id}`);
     return Promise.resolve(Result.Success(true));
 }

@@ -6,7 +6,9 @@
         <operators-select
             :disabled="disabled"
             @selected="setOperator"
-            :operator="operator"></operators-select>
+            :operator="operator"
+            :custom_operators="operators"
+        ></operators-select>
       </v-col>
       <v-col :cols="6">
         <search-metatypes
@@ -15,7 +17,11 @@
             :metatypeID="metatype"
             :multiple="operator === 'in'"
             @selected="setMetatype"></search-metatypes>
-        <v-checkbox v-model="limitOntologyVersion" :label="$t('queryBuilder.limitOntology')"></v-checkbox>
+        <v-checkbox 
+          v-model="limitOntologyVersion" 
+          :label="$t('queryBuilder.limitOntology')"
+          :disabled="disabled"
+        />
       </v-col>
     </v-row>
     <v-row v-if="metatype !== ''">
@@ -72,6 +78,12 @@ export default class MetatypeFilter extends Vue {
   loading = false
   keyQueryParts: QueryPart[] = []
   limitOntologyVersion = false
+
+  operators = [
+    {text: 'equals', value: 'eq'},
+    {text: 'not equals', value: 'neq'},
+    {text: 'in', value: 'in'},
+  ]
 
   beforeMount() {
     if(this.queryPart) {

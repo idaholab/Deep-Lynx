@@ -55,12 +55,15 @@ export class Client {
         if (config) this.config = config;
     }
 
-    submitGraphQLQuery(containerID: string, query: any): Promise<any> {
+    submitGraphQLQuery(containerID: string, query: any, pointInTime?: string): Promise<any> {
         if (query.query) {
             query.query = query.query.replace(/\n/g, '');
         }
 
-        return this.postRawReturn<any>(`/containers/${containerID}/data`, query);
+        const queryParams: {[key: string]: any} = {};
+        if (pointInTime) queryParams.pointInTime = pointInTime;
+
+        return this.postRawReturn<any>(`/containers/${containerID}/data`, query, queryParams);
     }
 
     submitNodeGraphQLQuery(containerID: string, nodeID: string, query: any): Promise<any> {
@@ -652,8 +655,11 @@ export class Client {
         return this.get<FileT[]>(`/containers/${containerID}/graphs/nodes/${nodeID}/files`);
     }
 
-    listEdgesForNodeIDs(containerID: string, nodeIDS: string[]): Promise<EdgeT[]> {
-        return this.post<EdgeT[]>(`/containers/${containerID}/graphs/nodes/edges`, {node_ids: nodeIDS});
+    listEdgesForNodeIDs(containerID: string, nodeIDS: string[], pointInTime?: string): Promise<EdgeT[]> {
+        const query: {[key: string]: any} = {};
+        if (pointInTime) query.pointInTime = pointInTime;
+
+        return this.post<EdgeT[]>(`/containers/${containerID}/graphs/nodes/edges`, {node_ids: nodeIDS}, query);
     }
 
     listDataSources(containerID: string, archived = false, timeseries = false): Promise<DataSourceT[]> {

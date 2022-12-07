@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-card style="width: 100%; height: 100%; position: relative">
-      <v-toolbar flat color="lightgray" >
+      <v-toolbar style="z-index: 4;" flat color="lightgray" >
         <v-toolbar-title>Graph</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-progress-circular indeterminate v-if="loading"  style="margin-right: 16px"></v-progress-circular>
@@ -21,11 +21,27 @@
             :nudge-left="25"
             :nudge-bottom="25"
             left
+            attach
         >
           <template v-slot:activator="{on, attrs}">
-            <v-icon v-bind="attrs" v-on="on" >{{info}}</v-icon>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on: onTooltip }">
+
+                <v-btn
+                  color="blue darken-2"
+                  dark
+                  fab
+                  small
+                  v-bind="attrs" v-on="{...on, ...onTooltip}" 
+                >
+                  <v-icon >{{info}}</v-icon>
+                </v-btn>
+            
+              </template>
+              <span>Help & Display</span>
+            </v-tooltip>
           </template>
-          <v-card max-width="364" style="justify-content: left">
+          <v-card max-width="364" :style="'justify-content: left; overflow-y: scroll; overflow-x: hidden; max-height: ' + graphHeight + 'px;'">
 
             <v-card-text class="text-h5 font-weight-bold">
             Hover over the blue "+" icon in the top left of the graph view to find graph edit tools!
@@ -165,6 +181,159 @@
         </v-menu>
       </v-toolbar>
 
+      <!-- Node Card -->
+
+      <v-card v-if="nodeDialog" :style="'height: 100%; max-height: ' + graphHeight + 'px; z-index: 4; position: absolute; min-width: 400px; max-width: 50%; overflow-y: scroll;'">
+
+        <div class="mt-2 pt-3 px-5 pb-5 height-full">
+          <h4 class="primary--text">{{$t('dataQuery.nodeInformation')}}</h4>
+
+          <div v-if="currentNodeInfo !== null">
+            <v-row>
+              <v-col>
+                <div><span class="text-overline">{{$t('dataQuery.nodeID')}}:</span> {{currentNodeInfo.id}}</div>
+                <div><span class="text-overline">{{$t('dataQuery.nodeType')}}:</span> {{currentNodeInfo.metatype.name}}</div>
+                <div><span class="text-overline">DataSource:</span> {{datasources[currentNodeInfo.data_source_id]?.name}} ({{currentNodeInfo.data_source_id}})</div>
+                <div><span class="text-overline">Created At:</span> {{currentNodeInfo.created_at}}</div>
+                <div><span class="text-overline">Modified At:</span> {{currentNodeInfo.modified_at}}</div>
+                <v-expansion-panels multiple v-model="openPanels">
+                  <v-expansion-panel>
+                    <v-expansion-panel-header>
+                      <div><span class="text-overline">{{$t('dataQuery.nodeProperties')}}:</span></div>
+
+                      <edit-node-dialog 
+                        :node="currentNodeInfo" 
+                        :dataSourceID="currentNodeInfo.data_source_id" 
+                        :containerID="containerID"
+                        @nodeUpdated="nodeUpdated" 
+                        >
+                      </edit-node-dialog>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <v-data-table
+                          :items="Object.keys(currentNodeInfo.properties).map(k => {
+                            return {key: k, value: currentNodeInfo.properties[k]}
+                          })"
+                          :headers="propertyHeaders()"
+                      >
+                      </v-data-table>
+
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+
+                  <!-- Node History View -->
+                  <v-expansion-panel>
+                    <v-expansion-panel-header>
+                      <div><span class="text-overline">Node History:</span></div>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <v-list>
+                        <v-list-item-group
+                            color="primary"
+                            v-model="selectedNodeHistory"
+                        >
+                          <v-list-item
+                            two-line
+                            v-for="(item, i) in currentNodeInfo.history"
+                            :key="i"
+                            @click="getInfo(item)"
+                            :value="item.created_at"
+                          >
+
+                            <v-list-item-icon style="margin-right: 12px">
+                              <v-icon color="#b2df8a" >mdi-edit</v-icon>
+                            </v-list-item-icon>
+
+                            <v-list-item-content>
+                              <v-list-item-title>{{$utils.formatISODate(item.created_at)}}</v-list-item-title>
+                              <v-list-item-subtitle>Created by: {{users[item.created_by]?.display_name}} ({{item.created_by }})</v-list-item-subtitle>
+                            </v-list-item-content>
+                          </v-list-item>
+                        </v-list-item-group>
+                      </v-list>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+
+                  <v-expansion-panel>
+                    <v-expansion-panel-header>
+                      <div><span class="text-overline">{{$t('dataQuery.nodeFiles')}}:</span></div>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <node-files-dialog :icon="true" :node="currentNodeInfo"></node-files-dialog>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+
+                  <v-expansion-panel>
+                    <v-expansion-panel-header>
+                      <div><span class="text-overline">{{$t('dataQuery.nodeTimeseries')}}:</span></div>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <node-timeseries-data-table :nodeID="currentNodeInfo.id" :containerID="containerID"></node-timeseries-data-table>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                </v-expansion-panels>
+              </v-col>
+
+            </v-row>
+
+          </div>
+
+          <p v-if="currentNodeInfo === null">{{$t('dataQuery.selectNode')}}</p>
+          <v-row>
+            <v-col :cols="12">
+              <v-btn color="red darken-1" style="color: white" @click="deleteNode(currentNodeInfo)">{{$t('dataQuery.deleteNode')}}</v-btn>
+            </v-col>
+          </v-row>
+
+        </div>
+
+      </v-card>
+
+      <!-- Edge Card -->
+      <v-card v-if="edgeDialog" :style="'height: 100%; max-height: ' + graphHeight + 'px; z-index: 4; position: absolute; min-width: 400px; max-width: 50%; overflow-y: scroll;'">
+
+        <div class="mt-2 pt-3 px-5 pb-5 height-full">
+          <h4 class="primary--text">{{$t('dataQuery.edgeInformation')}}</h4>
+          <div v-if="currentEdgeInfo !== null">
+            <v-row>
+              <v-col>
+                <div><span class="text-overline">{{$t('dataQuery.edgeID')}}:</span> {{currentEdgeInfo.id}}</div>
+                <div><span class="text-overline">{{$t('dataQuery.relType')}}:</span> {{currentEdgeInfo.metatype_relationship.name}}</div>
+                <div><span class="text-overline">DataSource:</span> {{datasources[currentEdgeInfo.data_source_id]?.name}} ({{currentEdgeInfo.data_source_id}})</div>
+                <div><span class="text-overline">Created At:</span> {{currentEdgeInfo.created_at}}</div>
+                <div><span class="text-overline">Modified At:</span> {{currentEdgeInfo.modified_at}}</div>
+                <v-expansion-panels 
+                  multiple v-model="openPanels" 
+                  v-if="currentEdgeInfo.properties !== null"
+                >
+                  <v-expansion-panel>
+                    <v-expansion-panel-header>
+                      <div><span class="text-overline">{{$t('dataQuery.edgeProperties')}}:</span></div>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <v-data-table
+                        :items="Object.keys(currentEdgeInfo.properties).map(k => {
+                          return {key: k, value: currentEdgeInfo.properties[k]}
+                        })"
+                        :headers="propertyHeaders()"
+                      ></v-data-table>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                </v-expansion-panels>
+              </v-col>
+            </v-row>
+
+          </div>
+
+          <p v-if="currentEdgeID === null">{{$t('dataQuery.selectEdge')}}</p>
+          <v-row>
+            <v-col :cols="12">
+              <v-btn color="red darken-1" style="color: white" @click="deleteEdge(currentEdgeID)">{{$t('dataQuery.deleteEdge')}}</v-btn>
+            </v-col>
+          </v-row>
+        </div>
+      </v-card>
+
       <error-banner :message="errorMessage" style="z-index: 9; width: fit-content; margin-left: 480px; margin-top: 6px;"></error-banner>
       <!-- Graph edit tools -->
       <v-speed-dial
@@ -173,7 +342,7 @@
           left
           direction="bottom"
           absolute
-          style="margin-top: 62px"
+          style="margin-top: 62px; z-index: 3"
           open-on-hover
           transition="slide-x-transition"
       >
@@ -264,18 +433,27 @@
           left
           direction="right"
           absolute
-          style="margin-top: 62px; margin-left: 100px"
+          style="margin-top: 62px; margin-left: 100px; z-index: 3"
           transition="slide-x-transition"
       >
         <template v-slot:activator>
-          <v-btn
-            color="blue darken-2"
-            dark
-          >
-            <v-icon>
-              mdi-magnify
-            </v-icon>
-          </v-btn>
+
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on: onTooltip }">
+              
+              <v-btn
+                color="blue darken-2"
+                dark
+                v-on="onTooltip"
+              >
+                <v-icon>
+                  mdi-magnify
+                </v-icon>
+              </v-btn>
+
+            </template>
+            <span>Search</span>
+          </v-tooltip>
         </template>
 
         <v-text-field
@@ -294,6 +472,102 @@
 
       </v-speed-dial>
 
+      <!-- Time Slider/Picker -->
+      <v-speed-dial
+          top
+          left
+          direction="right"
+          absolute
+          style="margin-top: 62px; margin-left: 204px; z-index: 1"
+          transition="slide-x-transition"
+      >
+        <template v-slot:activator>
+
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on: onTooltip }">
+
+              <v-btn
+                color="blue darken-2"
+                dark
+                v-on="onTooltip"
+              >
+                <v-icon>
+                  mdi-calendar-clock
+                </v-icon>
+              </v-btn>
+
+            </template>
+            <span>View graph at point in time</span>
+          </v-tooltip>
+        </template>
+
+        <v-card
+          @click.native.stop
+          v-model="timeSlider"
+          flat
+          style="position: absolute; margin-left: -950px; margin-top: 560px;"
+        >
+          <v-date-picker 
+            v-if="!datePickerSet"
+            v-model="pointInTimeString"
+            :max="now.toISOString().split('T')[0]"
+            :min="then.toISOString().split('T')[0]"
+            @change="datePickerUpdate"
+            @click.native.stop
+            style="height: 460px;"
+          ></v-date-picker>
+
+          <v-btn
+            v-if="datePickerSet"
+            @click="datePickerSet = !datePickerSet"
+            color="blue darken-2"
+            dark
+            fab
+            small
+            style="position: absolute;
+              margin-top: -10px;
+              z-index: 1;
+              margin-left: 35px;"
+          >
+            <v-icon>
+              mdi-arrow-left
+            </v-icon>
+          </v-btn>
+
+          <v-time-picker
+            v-if="datePickerSet"
+            v-model="datePickerTime"
+            use-seconds
+            ampm-in-title
+            @click.native.stop
+            @input="timePickerUpdate"
+            width="335"
+            style="margin-left: 45px"
+          ></v-time-picker>
+        </v-card>
+        
+        <v-slider
+          v-model="pointInTime"
+          :max="now.getTime()"
+          :min="then.getTime()"
+          step=1000
+          :label="new Date(pointInTime).toLocaleString()"
+          :hint="'Earliest date: ' + then.toLocaleString()"
+          persistent-hint
+          style="width: 600px; margin-top: 20px"
+          @click.stop
+        ></v-slider>
+
+        <v-btn
+            dark
+            color="blue darken-2"
+            @click="setPointInTime"
+        >
+          GO
+        </v-btn>
+
+      </v-speed-dial>
+
       <!-- Color Legend and Filter -->
       <v-navigation-drawer
           v-model="showColorLegend"
@@ -301,7 +575,7 @@
           right
           permanent
           :mini-variant.sync="mini"
-          style="margin-top: 64px; width: fit-content; height: 90%"
+          :style="'margin-top: 64px; width: fit-content; max-height:' + graphHeight + 'px'"
       >
         <v-list-item class="px-2">
 
@@ -583,174 +857,6 @@
       </v-card>
     </v-dialog>
 
-    <!-- Node Properties dialog -->
-    <v-dialog
-        v-model="nodeDialog"
-        width="70%"
-    >
-      <v-card
-          @mouseover="opacity = 1.0"
-          @mouseleave="opacity = 0.5"
-          :style="`opacity: ${opacity}`"
-      >
-
-        <div class="mt-2 pt-3 px-5 pb-5 height-full">
-          <h4 class="primary--text">{{$t('dataQuery.nodeInformation')}}</h4>
-
-          <div v-if="currentNodeInfo !== null">
-            <v-row>
-              <v-col>
-                <div><span class="text-overline">{{$t('dataQuery.nodeID')}}:</span> {{currentNodeInfo.id}}</div>
-                <div><span class="text-overline">{{$t('dataQuery.nodeType')}}:</span> {{currentNodeInfo.metatype.name}}</div>
-                <div><span class="text-overline">DataSource:</span> {{datasources[currentNodeInfo.data_source_id]?.name}} ({{currentNodeInfo.data_source_id}})</div>
-                <div><span class="text-overline">Created At:</span> {{currentNodeInfo.created_at}}</div>
-                <div><span class="text-overline">Modified At:</span> {{currentNodeInfo.modified_at}}</div>
-                <v-expansion-panels multiple v-model="openPanels">
-                  <v-expansion-panel>
-                    <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.nodeProperties')}}:</span></div>
-
-                      <edit-node-dialog 
-                        :node="currentNodeInfo" 
-                        :dataSourceID="currentNodeInfo.data_source_id" 
-                        :containerID="containerID"
-                        @nodeUpdated="nodeUpdated" 
-                        >
-                      </edit-node-dialog>
-                    </v-expansion-panel-header>
-                    <v-expansion-panel-content>
-                      <v-data-table
-                          :items="Object.keys(currentNodeInfo.properties).map(k => {
-                            return {key: k, value: currentNodeInfo.properties[k]}
-                          })"
-                          :headers="propertyHeaders()"
-                      >
-                      </v-data-table>
-
-                    </v-expansion-panel-content>
-                  </v-expansion-panel>
-
-                  <v-expansion-panel>
-                    <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.nodeFiles')}}:</span></div>
-                    </v-expansion-panel-header>
-                    <v-expansion-panel-content>
-                      <node-files-dialog :icon="true" :node="currentNodeInfo"></node-files-dialog>
-                    </v-expansion-panel-content>
-                  </v-expansion-panel>
-
-                  <v-expansion-panel>
-                    <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.nodeTimeseries')}}:</span></div>
-                    </v-expansion-panel-header>
-                    <v-expansion-panel-content>
-                      <node-timeseries-data-table :nodeID="currentNodeInfo.id" :containerID="containerID"></node-timeseries-data-table>
-                    </v-expansion-panel-content>
-                  </v-expansion-panel>
-                </v-expansion-panels>
-              </v-col>
-
-              <!-- Node History View -->
-              <v-col cols="3" style="margin-top: 160px">
-                <v-card>
-                  <v-list-item>
-                    <v-list-item-title><span class="text-overline">Node History:</span></v-list-item-title>
-                  </v-list-item>
-
-                  <v-list dense style="width: fit-content">
-                    <v-list-item-group
-                        color="primary"
-                    >
-                      <v-list-item
-                        two-line
-                        v-for="(item, i) in currentNodeInfo.history"
-                        :key="i"
-                        @click="getInfo(item)"
-                      >
-
-                        <v-list-item-icon style="margin-right: 12px">
-                          <v-icon color="#b2df8a" >mdi-edit</v-icon>
-                        </v-list-item-icon>
-
-                        <v-list-item-content>
-                          <v-list-item-title>{{$utils.formatISODate(item.created_at)}}</v-list-item-title>
-                          <v-list-item-subtitle>Created by: {{users[item.created_by]?.display_name}} ({{item.created_by }})</v-list-item-subtitle>
-                        </v-list-item-content>
-                      </v-list-item>
-                    </v-list-item-group>
-                  </v-list>
-                </v-card>
-              </v-col>
-
-            </v-row>
-
-          </div>
-
-          <p v-if="currentNodeInfo === null">{{$t('dataQuery.selectNode')}}</p>
-          <v-row>
-            <v-col :cols="12">
-              <v-btn color="red darken-1" style="color: white" @click="deleteNode(currentNodeInfo)">{{$t('dataQuery.deleteNode')}}</v-btn>
-            </v-col>
-          </v-row>
-
-        </div>
-
-      </v-card>
-    </v-dialog>
-
-    <!-- Edge Properties dialog -->
-    <v-dialog
-        v-model="edgeDialog"
-        width="70%"
-    >
-      <v-card
-          @mouseover="opacity = 1.0"
-          @mouseleave="opacity = 0.5"
-          :style="`opacity: ${opacity}`"
-      >
-
-        <div class="mt-2 pt-3 px-5 pb-5 height-full">
-          <h4 class="primary--text">{{$t('dataQuery.edgeInformation')}}</h4>
-          <div v-if="currentEdgeInfo !== null">
-            <v-row>
-              <v-col>
-                <div><span class="text-overline">{{$t('dataQuery.edgeID')}}:</span> {{currentEdgeInfo.id}}</div>
-                <div><span class="text-overline">{{$t('dataQuery.relType')}}:</span> {{currentEdgeInfo.metatype_relationship.name}}</div>
-                <div><span class="text-overline">DataSource:</span> {{datasources[currentEdgeInfo.data_source_id]?.name}} ({{currentEdgeInfo.data_source_id}})</div>
-                <div><span class="text-overline">Created At:</span> {{currentEdgeInfo.created_at}}</div>
-                <div><span class="text-overline">Modified At:</span> {{currentEdgeInfo.modified_at}}</div>
-                <v-expansion-panels 
-                  multiple v-model="openPanels" 
-                  v-if="currentEdgeInfo.properties !== null"
-                >
-                  <v-expansion-panel>
-                    <v-expansion-panel-header>
-                      <div><span class="text-overline">{{$t('dataQuery.edgeProperties')}}:</span></div>
-                    </v-expansion-panel-header>
-                    <v-expansion-panel-content>
-                      <v-data-table
-                        :items="Object.keys(currentEdgeInfo.properties).map(k => {
-                          return {key: k, value: currentEdgeInfo.properties[k]}
-                        })"
-                        :headers="propertyHeaders()"
-                      ></v-data-table>
-                    </v-expansion-panel-content>
-                  </v-expansion-panel>
-                </v-expansion-panels>
-              </v-col>
-            </v-row>
-
-          </div>
-
-          <p v-if="currentEdgeID === null">{{$t('dataQuery.selectEdge')}}</p>
-          <v-row>
-            <v-col :cols="12">
-              <v-btn color="red darken-1" style="color: white" @click="deleteEdge(currentEdgeID)">{{$t('dataQuery.deleteEdge')}}</v-btn>
-            </v-col>
-          </v-row>
-        </div>
-      </v-card>
-    </v-dialog>
   </div>
 </template>
 
@@ -761,13 +867,14 @@ import SelectDataSource from "@/components/dataSources/selectDataSource.vue";
 import CreateNodeCard from "@/components/data/createNodeCard.vue";
 import CreateEdgeDialog from "@/components/data/createEdgeDialog.vue";
 import EditNodeDialog from "@/components/data/editNodeDialog.vue";
+import {ResultSet} from "@/components/queryBuilder/queryBuilder.vue";
 import {Component, Prop, Watch, Vue} from "vue-property-decorator";
 import {NodeT, DataSourceT, MetatypeRelationshipPairT, MetatypeRelationshipKeyT, UserT} from "@/api/types";
 import ForceGraph, {ForceGraphInstance} from 'force-graph';
 import {forceX, forceY, forceManyBody} from 'd3-force';
 
 import {mdiInformation} from "@mdi/js";
-import { EdgeT } from "../../api/types";
+import { EdgeT, OntologyVersionT } from "../../api/types";
 
 @Component({components: {
     NodeFilesDialog,
@@ -782,7 +889,9 @@ export default class GraphViewer extends Vue {
   readonly containerID!: string
 
   @Prop()
-  readonly results!: NodeT[]
+  readonly results!: ResultSet
+
+  query: string | null = null
 
   dialog = false
   optional = false
@@ -790,7 +899,10 @@ export default class GraphViewer extends Vue {
   currentEdgeInfo: any = null
   currentEdgeID: any = null
   openPanels: number[] = [0]
+  selectedNodeHistory = ''
   loading = false
+
+  graphHeight = 0
 
   forceGraph: ForceGraphInstance | null = ForceGraph();
   canvas: ForceGraphInstance | null = null;
@@ -820,9 +932,7 @@ export default class GraphViewer extends Vue {
 
   nodeDialog = false
   edgeDialog = false
-  selectedNode: any
   selectedEdge: any
-  opacity = 1.0
 
   previousClick = 0
   currentClick = 0
@@ -890,6 +1000,17 @@ export default class GraphViewer extends Vue {
       return pattern.test(value) || 'Invalid depth. Must be a number.'
     }) 
   }
+
+  now = new Date()
+  then = new Date()
+  pointInTime = this.now.getTime()
+  timeSlider = false
+  datePickerSet = false
+  datePickerTime: any = null
+  pointInTimeString = (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10)
+
+  previousNodeSelect: any = null
+  selectedLink: any = null
 
   @Watch('results', {immediate: true})
   graphUpdate() {
@@ -994,7 +1115,6 @@ export default class GraphViewer extends Vue {
 
     if (graphResults != null) {
       // if custom results are provided, use those
-
       this.graph.nodes = graphResults.map((node: any) => {
         nodeIDs.push(node.id)
 
@@ -1005,7 +1125,7 @@ export default class GraphViewer extends Vue {
 
     } else {
 
-      this.graph.nodes = this.results.map((node: any) => {
+      this.graph.nodes = this.results.nodes.map((node: any) => {
         nodeIDs.push(node.id)
 
         node.collapsed = false
@@ -1013,12 +1133,16 @@ export default class GraphViewer extends Vue {
         return node
       });
 
+      // save the query for future use
+      this.query = this.results.query
     }
 
     // fetch the edges
     // returns all edges in the container where either the origin or destination id is in the provided list of node IDs
     if (nodeIDs.length > 0) {
-      edges = await this.$client.listEdgesForNodeIDs(this.containerID, nodeIDs)
+      this.blankGraphFlag = false
+
+      edges = await this.$client.listEdgesForNodeIDs(this.containerID, nodeIDs, new Date(this.pointInTime).toISOString())
 
       if (edges) {
         edges.forEach((edge: any) => {
@@ -1155,7 +1279,7 @@ export default class GraphViewer extends Vue {
                 ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
                 ctx.fillStyle = node === hoverNode ? 'red' : 'orange';
                 ctx.fill();
-              } else if (node.new_node) { // add ring for newly created nodes
+              } else if (node.selected_node) { // add ring for newly created or selected nodes
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
                 ctx.fillStyle = 'yellow';
@@ -1288,6 +1412,7 @@ export default class GraphViewer extends Vue {
           .onNodeClick((node: any) => {
 
             this.loading = true
+            this.selectedLink = null
 
             // base case, first click on a node ever
             if (this.currentClick === 0) {
@@ -1356,19 +1481,23 @@ export default class GraphViewer extends Vue {
               }
             }
           })
-          .onNodeDragEnd(() => {
+          .onNodeDragEnd(async () => {
 
             // bring up create edge dialog if edgeFlag enabled and intermLink is populated
             if (this.edgeFlag && this.interimLink) {
 
               // grab metatype relationship pairs
+              
+              // provide the origin metatype to use its corresponding ontology version if available
+              const originMetatype = await this.$client.retrieveMetatype(this.containerID, this.interimLink.source.metatype_id);
+
               this.$client.listMetatypeRelationshipPairs(this.containerID, {
                 name: undefined,
                 limit: 1000,
                 offset: 0,
                 originID: this.interimLink.source.metatype_id,
                 destinationID: this.interimLink.target.metatype_id,
-                ontologyVersion: this.$store.getters.currentOntologyVersionID,
+                ontologyVersion: originMetatype.ontology_version || this.$store.getters.currentOntologyVersionID,
                 metatypeID: undefined,
                 loadRelationships: false,
               })
@@ -1385,6 +1514,12 @@ export default class GraphViewer extends Vue {
           })
           .nodeRelSize(NODE_R)
           .onLinkClick((link: any) => {
+            // close node dialog if open
+            this.nodeDialog = false;
+            this.resetNodeSelect();
+
+            this.selectedLink = link;
+            
             this.currentEdgeID = link.id;
             this.edgeDialog = true;
             this.$client.retrieveEdge(this.containerID, link.id).then((edge) => {
@@ -1401,11 +1536,38 @@ export default class GraphViewer extends Vue {
               highlightNodes.add(link.target);
             }
           })
-          .linkWidth(link => highlightLinks.has(link) ? 5 : 1) // bold highlighted links
+          .linkWidth((link: any) => {
+            let linkWidth = 1;
+            if (this.selectedLink && link.id === this.selectedLink.id) {
+              linkWidth = 5;
+            }
+
+            if (highlightLinks.has(link)) {
+              linkWidth = 5;
+            }
+            return linkWidth;
+          }) // bold highlighted links
           .linkDirectionalParticles(2) // number of particles to display on highlighted links
-          .linkDirectionalParticleWidth(link => highlightLinks.has(link) ? 6 : 0) // show particles only when link is highlighted
+          .linkDirectionalParticleWidth((link: any) => {
+            let linkParticleWidth = 0;
+            if (this.selectedLink && link.id === this.selectedLink.id) {
+              linkParticleWidth = 6;
+            }
+
+            if (highlightLinks.has(link)) {
+              linkParticleWidth = 6;
+            }
+            return linkParticleWidth;
+          }) // show particles only when link is highlighted
           .linkDirectionalParticleColor(() => 'cyan') // set link particle color
           .linkDirectionalParticleSpeed(.015) // set link particle speed
+          .onBackgroundClick(() => {
+            this.nodeDialog = false // hide node and edge dialog on background clicks
+            this.edgeDialog = false
+            this.selectedLink = null
+
+            this.resetNodeSelect()
+          })
 
 
       // handle potential empty results
@@ -1413,6 +1575,8 @@ export default class GraphViewer extends Vue {
         this.graph.nodes = []
         this.loading = false
       }
+
+      this.graphHeight = graphElem.clientHeight;
       
       this.applyGraphForce()
 
@@ -1449,9 +1613,7 @@ export default class GraphViewer extends Vue {
   async openNodeGraph(node: NodeT, depth = 1) {
     this.loading = true
 
-    this.colorGroupFilter = []
-    this.selectedFilters = []
-    this.filterOnGroupItem(null)
+    this.resetFilters()
     // make new graph call for the selected node
     // retrieve a graph of depth 1 around the selected node
     const newGraph = await this.$client.submitGraphQLQuery(this.containerID, { query:
@@ -1525,7 +1687,7 @@ export default class GraphViewer extends Vue {
 
   showNodeProperties(node: NodeT) {
     // only take single click action if the gap between previous and current clicks sufficiently far apart
-    this.delay(this.doubleClickTimer).then(() => {
+    this.delay(this.doubleClickTimer).then(async () => {
       if (this.doubleClickFlag) {
 
         // on double click, center and zoom
@@ -1535,11 +1697,44 @@ export default class GraphViewer extends Vue {
       } else {
         // ensure properties panel is already expanded (and only properties)
         this.openPanels = [0]
-        // ensure properties panel has solid opacity
-        this.opacity = 1.0
 
-        this.getInfo(node)
-        this.selectedNode = node
+        const history = await this.getInfo(node)
+
+        if (history.length > 1) {
+          let historicalNode: any
+
+          // historical nodes are arranged oldest to newest, so overwrite previous created_at values with newer ones
+          // that are still valid for the given pointInTime
+          history.forEach((node: NodeT) => {
+            if (new Date(node.created_at).getTime() <= this.pointInTime) {
+              this.selectedNodeHistory = node.created_at
+              historicalNode = node
+            }
+          }, this);
+
+          // update information for displayed node
+          this.currentNodeInfo = {
+            id: historicalNode.id,
+            container_id: historicalNode.container_id,
+            data_source_id: historicalNode.data_source_id,
+            metatype: {
+              id: historicalNode.metatype.id,
+              name: historicalNode.metatype_name
+            },
+            properties: historicalNode.properties,
+            created_at: historicalNode.created_at,
+            modified_at: historicalNode.modified_at,
+            history: history
+          }
+
+        } else {
+          this.selectedNodeHistory = history[0].created_at
+        }
+
+        // minimize the legend
+        this.mini = true;
+
+        this.edgeDialog = false;
         this.nodeDialog = true;
       }
 
@@ -1549,7 +1744,6 @@ export default class GraphViewer extends Vue {
 
   showEdgeProperties(edge: any) {
     this.openPanels = [0]
-    this.opacity = 1.0
     this.getEdgeInfo(edge)
     this.selectedEdge = edge
     this.edgeDialog = true;
@@ -1660,9 +1854,7 @@ export default class GraphViewer extends Vue {
   }
 
   updateColorGroup(groupSelection: string) {
-    this.colorGroupFilter = []
-    this.selectedFilters = []
-    this.filterOnGroupItem(null)
+    this.resetFilters()
 
     this.loading = true
 
@@ -1677,9 +1869,7 @@ export default class GraphViewer extends Vue {
       this.canvas!.nodeAutoColorBy((node: any) => `${node.data_source_id}`) // auto color by data source
     }
 
-    this.colorGroupFilter = []
-    this.filterOnGroupItem(null)
-
+    this.resetFilters()
   }
 
   // used for calculating where to place a link label on curved links
@@ -1708,11 +1898,15 @@ export default class GraphViewer extends Vue {
         this.loadResults()
         this.updateColorGroup(this.colorGroup)
 
-        this.colorGroupFilter = []
-        this.selectedFilters = []
-        this.filterOnGroupItem(null)
+        this.resetFilters()
       }
     }
+  }
+
+  resetFilters() {
+    this.colorGroupFilter = []
+    this.selectedFilters = []
+    this.filterOnGroupItem(null)
   }
 
   updateGraphZoom() {
@@ -1736,16 +1930,16 @@ export default class GraphViewer extends Vue {
     }
   }
 
-  async getInfo(data: NodeT) {
+  async getInfo(data: NodeT, update?: boolean) {
     // retrieve node history
     const nodeHistory = await this.$client.retrieveNodeHistory(this.containerID, data.id);
 
     this.currentNodeInfo = {
       id: data.id,
-      container_id: this.containerID,
+      container_id: data.container_id,
       data_source_id: data.data_source_id,
       metatype: {
-        id: data.metatype_id,
+        id: data.metatype_id || data.metatype.id,
         name: data.metatype_name
       },
       properties: data.properties,
@@ -1753,6 +1947,18 @@ export default class GraphViewer extends Vue {
       modified_at: this.$utils.formatISODate(data.modified_at),
       history: nodeHistory
     }
+
+    if (!update) {
+      // remove the highlight from any previously selected node
+      this.resetNodeSelectForID(data.id)
+
+      // highlight the newly selected node
+      data.selected_node = true
+
+      this.previousNodeSelect = data
+    }
+
+    return nodeHistory
   }
 
   getEdgeInfo(data: EdgeT) {
@@ -1797,9 +2003,27 @@ export default class GraphViewer extends Vue {
     this.selectedDataSource = dataSource
   }
 
+  resetNodeSelectForID(id?: string) {
+    // remove selection from previous node if selection exists
+    if (this.previousNodeSelect && this.previousNodeSelect.id !== id) {
+      this.previousNodeSelect.selected_node = false
+      this.previousNodeSelect = null
+    }
+  }
+
+  resetNodeSelect() {
+    // remove selection from previous node if selection exists
+    if (this.previousNodeSelect) {
+      this.previousNodeSelect.selected_node = false
+      this.previousNodeSelect = null
+    }
+  }
+
   createNode(node: any) {
 
     this.loading = true
+
+    this.resetNodeSelectForID(node.id)
 
     const refinedNode = {
       id: node.id,
@@ -1813,11 +2037,17 @@ export default class GraphViewer extends Vue {
       original_id: null,
       collapsed: false,
       childLinks: [],
-      new_node: true // extra property to be used for highlighting newly created nodes
+      selected_node: true // extra property to be used for highlighting newly created nodes
     }
 
     this.graph.nodes.push(refinedNode)
     this.canvas?.graphData(this.graph)
+
+    this.previousNodeSelect = refinedNode
+
+    // rebuild legend
+    this.buildNodeColorLegend()
+    this.applyGraphForce()
 
     // returns an array with one object. returned node will have graph position
     const nodeInGraph = this.graph.nodes.filter((graphNode: any) => {
@@ -1921,11 +2151,11 @@ export default class GraphViewer extends Vue {
     this.edgeFlag = false
   }
 
-  nodeUpdated(node: any) {
-    this.selectedNode.properties = node.properties
-    
-    this.loading = true
-    this.showNodeProperties(this.selectedNode)
+  async nodeUpdated(node: any) {
+    const history = await this.getInfo(node, true)
+
+    // select new version of node
+    this.selectedNodeHistory = history[history.length-1].created_at
   }
 
   findNode(label: string) {
@@ -1968,6 +2198,53 @@ export default class GraphViewer extends Vue {
     }
   }
 
+  setPointInTime() {
+    this.loading = true
+    this.datePickerSet = false
+    const pointInTime = new Date(this.pointInTime).toISOString()
+
+    // update the variables for the date and time pickers to ensure both the pickers and slider are consistent
+    this.pointInTimeString = pointInTime.substr(0, 10)
+    this.datePickerTime = pointInTime.substr(11, 8)
+
+
+    // Add the current pointInTime to the query, resubmit, and redo graph results
+     this.$client.submitGraphQLQuery(this.containerID, { query: this.query }, pointInTime)
+        .then((results: any) => {
+          if(results.errors) {
+            this.errorMessage = results.errors[0].message ? 
+              results.errors.map(function(result: any) { return result.message }).join(", ") : (results.errors as string[]).join(' ')
+            return
+          }
+
+          // reset graph and filters
+          this.graph = {
+            nodes: [],
+            links: []
+          }
+          this.resetFilters()
+
+          this.loadResults(results.data.nodes)
+       })
+        .catch(e => {
+          this.errorMessage = e
+        })
+        .finally(() => this.loading = false)
+  }
+
+  datePickerUpdate(date: string) {
+    // update the selected date to this day at 00:00:00 and show the time picker
+    // add 'T00:00' to force Date to assume a local time zone
+    this.pointInTime = new Date(date + 'T00:00').getTime()
+    this.datePickerSet = true
+  }
+
+  timePickerUpdate(time: string) {
+    // update the selected time of the selected date
+    const currentDate = new Date(this.pointInTime).toISOString().split('T')[0]
+    this.pointInTime = new Date(currentDate + 'T' + time).getTime()
+  }
+
   async mounted() {
     // create a map of datasource IDs and names for reference by nodes
     const sources = await this.$client.listDataSources(this.containerID)
@@ -1986,6 +2263,15 @@ export default class GraphViewer extends Vue {
         this.users[user.id] = user;
       }
     }
+
+    // retrieve the earliest creation_date for all published ontology versions for this container
+    const ontologyVersions = await this.$client.listOntologyVersions(this.containerID, {status: 'published'})
+
+    ontologyVersions.forEach((ontologyVersion: OntologyVersionT) => {
+      const createdDate = new Date(ontologyVersion.created_at!)
+      if (createdDate < this.then) this.then = createdDate
+    });
+
   }
 
 }

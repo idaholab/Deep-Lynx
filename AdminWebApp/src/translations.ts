@@ -165,6 +165,10 @@ export default {
             nodeProperties: 'Properties',
             edgeProperties: 'Properties',
             relType: 'Relationship',
+            originMetatype: 'Origin Metatype',
+            destinationMetatype: 'Destination Metatype',
+            linkType: 'Type',
+            edges: 'Edges',
         },
         nodeFiles: {
             id: 'ID',
@@ -1302,6 +1306,7 @@ export default {
             IDFilter: 'Filter by ID(s)',
             OriginalIDFilter: 'Filter by Original ID',
             metatype: 'Metatype',
+            propertyKey: 'Property Key',
             typeToAdd: 'Type and hit Enter to add',
             originalDataID: 'Original Data ID',
             selectOperator: 'Select Operator',

@@ -17,7 +17,7 @@ import {
     GraphQLNonNull, graphql,
 } from 'graphql';
 import MetatypeRepository from '../data_access_layer/repositories/data_warehouse/ontology/metatype_repository';
-import Result from '../common_classes/result';
+import Result, { ErrorNotFound } from '../common_classes/result';
 import GraphQLJSON from 'graphql-type-json';
 import Metatype from '../domain_objects/data_warehouse/ontology/metatype';
 import MetatypeRelationship from '../domain_objects/data_warehouse/ontology/metatype_relationship';
@@ -38,6 +38,7 @@ import pMap from "p-map";
 import gql from "graphql-tag";
 import MetatypeRelationshipPair from "../domain_objects/data_warehouse/ontology/metatype_relationship_pair";
 import {isMainThread, Worker} from "worker_threads";
+import OntologyVersion from '../domain_objects/data_warehouse/ontology/versioning/ontology_version';
 
 const GRAPHQLSCHEMA: Map<string, GraphQLSchema> = new Map<string, GraphQLSchema>();
 
@@ -115,20 +116,73 @@ export default class GraphQLRunner {
         let metatypes: Metatype[] = []
         let relationships: MetatypeRelationship[] = []
         let metatypePairs: MetatypeRelationshipPair[] = []
-        // fetch the currently published ontology if the versionID wasn't provided
-        if (!options.ontologyVersionID) {
-            const ontResults = await this.#ontologyRepo
+        let ontResults: any = null
+
+        // if pointInTime is supplied, fetch the ontology version that was active at that time
+        if(options.pointInTime && options.ontologyVersionID) {
+            // if ontology version and pointInTime are both passed, ensure version is valid otherwise return error
+
+            ontResults = await this.#ontologyRepo
+                .where()
+                .containerID('eq', containerID)
+                .and()
+                .status('eq', 'published')
+                .and()
+                .publishedAt('<', new Date(options.pointInTime))
+                .list({sortBy: 'id', sortDesc: true});
+
+            let ontVersionFound = false;
+            ontResults.value.forEach((ontVersion: OntologyVersion) => {
+                if(ontVersion.id === options.ontologyVersionID) {
+                    ontVersionFound = true;
+                }
+            });
+
+            if (ontResults.isError || ontResults.value.length === 0 || !ontVersionFound) {
+                const error = 'unable to fetch ontology for the point in time and ontology version provided, or no currently published ontology';
+                Logger.error(error);
+                return Promise.reject(error);
+            }
+
+        } else if (options.pointInTime) {
+            // if pointInTime is supplied, fetch the ontology version that was active at that time
+
+            ontResults = await this.#ontologyRepo
+                .where()
+                .containerID('eq', containerID)
+                .and()
+                .status('eq', 'published')
+                .and()
+                .createdAt('<', options.pointInTime)
+                .list({sortBy: 'id', sortDesc: true});
+
+            if (ontResults.isError || ontResults.value.length === 0) {
+                const error = 'unable to fetch ontology for the point in time provided, or no currently published ontology';
+                Logger.error(error);
+                return Promise.reject(error);
+            } else {
+                options.ontologyVersionID = ontResults.value[0].id;
+            }
+
+        } else if (!options.ontologyVersionID) {
+            // fetch the currently published ontology if the versionID wasn't provided
+
+            ontResults = await this.#ontologyRepo
                 .where()
                 .containerID('eq', containerID)
                 .and()
                 .status('eq', 'published')
                 .list({sortBy: 'id', sortDesc: true});
+
             if (ontResults.isError || ontResults.value.length === 0) {
                 Logger.error('unable to fetch current ontology, or no currently published ontology');
             } else {
                 options.ontologyVersionID = ontResults.value[0].id;
             }
+
         }
+
+        console.log(options.ontologyVersionID)
 
         let metatypeIDs: string[] = []
         if(options.fullSchema || (options.metatypes && options.metatypes.length > 0)) {
@@ -929,8 +983,42 @@ export default class GraphQLRunner {
 
     resolverForMetatype(containerID: string, metatype: Metatype, resolverOptions?: ResolverOptions): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
-            let repo = new NodeRepository();
-            repo = repo.where().containerID('eq', containerID).and().metatypeUUID('eq', metatype.uuid);
+            const nodeRepo = new NodeRepository();
+            let repo: NodeRepository;
+
+            // apply subquery if looking at historical view
+            if (resolverOptions?.pointInTime) {
+                // filter on provided pointInTime
+                const sub = nodeRepo.subquery(
+                    new NodeRepository()
+                        .select(['id', 'MAX(created_at) AS created_at'], 'sub_nodes')
+                        .from('nodes', 'sub_nodes')
+                        .where()
+                        .query('created_at', '<', new Date(resolverOptions.pointInTime), {dataType: 'date'})
+                        .and()
+                        .query('container_id', 'eq', containerID)
+                        .and(new NodeRepository()
+                            .query('deleted_at', '>', new Date(resolverOptions.pointInTime), {dataType: 'date'})
+                            .or()
+                            .query('deleted_at', 'is null'))
+                        .groupBy('id', 'nodes'));
+
+                repo = nodeRepo
+                    .join('nodes', {conditions: {origin_col: 'id', destination_col: 'id'}, join_type: 'RIGHT'})
+                    .join(sub, {
+                        conditions: [
+                            {origin_col: 'id', destination_col: 'id'},
+                            {origin_col: 'created_at', destination_col: 'created_at'}
+                        ],
+                        destination_alias: 'sub',
+                        join_type: 'INNER'
+                    }, 'nodes')
+                    .join('metatypes', {conditions: {origin_col: 'metatype_id', destination_col: 'id'}})
+                    .where().containerID('eq', containerID).and().metatypeUUID('eq', metatype.uuid);
+
+            } else {
+                repo = nodeRepo.where().containerID('eq', containerID).and().metatypeUUID('eq', metatype.uuid);
+            }
 
             // you might notice that metatype_id and metatype_name are missing as filters - these are not
             // needed as we've already dictated what metatype to look for based on the query itself
@@ -1198,11 +1286,43 @@ export default class GraphQLRunner {
 
     resolverForNodes(containerID: string, resolverOptions?: ResolverOptions): (_: any, {input}: {input: any}) => any {
         return async (_, input: {[key: string]: any}) => {
-            let repo = new NodeRepository();
-            repo = repo.where().containerID('eq', containerID);
+            const nodeRepo = new NodeRepository();
+            let repo: NodeRepository;
 
-            // you might notice that metatype_id and metatype_name are missing as filters - these are not
-            // needed as we've already dictated what metatype to look for based on the query itself
+            // apply subquery if looking at historical view
+            if (resolverOptions?.pointInTime) {
+                // filter on provided pointInTime
+                const sub = nodeRepo.subquery(
+                    new NodeRepository()
+                        .select(['id', 'MAX(created_at) AS created_at'], 'sub_nodes')
+                        .from('nodes', 'sub_nodes')
+                        .where()
+                        .query('created_at', '<', new Date(resolverOptions.pointInTime), {dataType: 'date'})
+                        .and()
+                        .query('container_id', 'eq', containerID)
+                        .and(new NodeRepository()
+                            .query('deleted_at', '>', new Date(resolverOptions.pointInTime), {dataType: 'date'})
+                            .or()
+                            .query('deleted_at', 'is null'))
+                        .groupBy('id', 'nodes'));
+
+                repo = nodeRepo
+                    .join('nodes', {conditions: {origin_col: 'id', destination_col: 'id'}, join_type: 'RIGHT'})
+                    .join(sub, {
+                        conditions: [
+                            {origin_col: 'id', destination_col: 'id'},
+                            {origin_col: 'created_at', destination_col: 'created_at'}
+                        ],
+                        destination_alias: 'sub',
+                        join_type: 'INNER'
+                    }, 'nodes')
+                    .join('metatypes', {conditions: {origin_col: 'metatype_id', destination_col: 'id'}})
+                    .where().containerID('eq', containerID)
+
+            } else {
+                repo = nodeRepo.where().containerID('eq', containerID);
+            }
+
             if (input.id) {
                 if(Array.isArray(input.id.value) && input.id.value.length === 1) {
                     input.id.value = input.id.value[0];
@@ -1259,7 +1379,8 @@ export default class GraphQLRunner {
                 repo = repo.and().importDataID(input.import_id.operator, input.import_id.value);
             }
 
-            if (input.created_at) {
+            // disallow this filter if pointInTime is supplied
+            if (input.created_at && !resolverOptions?.pointInTime) {
                 if(Array.isArray(input.created_at.value) && input.created_at.value.length === 1) {
                     input.created_at.value = input.created_at.value[0];
                 }
@@ -2064,4 +2185,5 @@ export type ResolverOptions = {
     metatypes?: string[] // metatype names to search
     relationships?: string[] // relationship names to search
     fullSchema?: boolean;
+    pointInTime?: string; // timestamp for use in retrieving historical data and ontology versions
 }

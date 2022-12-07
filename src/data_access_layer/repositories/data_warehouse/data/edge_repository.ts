@@ -328,6 +328,7 @@ export default class EdgeRepository extends Repository implements RepositoryInte
         // if we already have id's or original id's set, then return a new instance of the edge
         if ((e.origin_id && e.destination_id) || (e.origin_original_id && e.destination_original_id)) {
             edges.push(plainToInstance(Edge, {...instanceToPlain(e)}));
+            return Promise.resolve(Result.Success(edges));
         }
 
         // if we have no filters, simply return the array

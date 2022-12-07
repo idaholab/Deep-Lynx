@@ -6,7 +6,9 @@
         <operators-select
             :disabled="disabled"
             @selected="setOperator"
-            :operator="operator"></operators-select>
+            :operator="operator"
+            :custom_operators="operators"
+        ></operators-select>
       </v-col>
       <v-col :cols="6">
         <select-data-source
@@ -36,6 +38,12 @@ export default class DataSourceFilter extends Vue {
 
   @Prop({required: false, default: false})
   disabled?: boolean
+
+  operators = [
+    {text: 'equals', value: 'eq'},
+    {text: 'not equals', value: 'neq'},
+    {text: 'in', value: 'in'},
+  ]
 
   operator = ""
   dataSource: string | string[] = ""
